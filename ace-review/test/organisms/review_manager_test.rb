@@ -67,16 +67,17 @@ class ReviewManagerTest < AceReviewTest
     assert result[:session_dir], "Should have session directory"
     assert Dir.exist?(result[:session_dir]), "Session directory should exist"
 
-    # Check that session files are created with v0.14.0 architecture (ace-bundle workflow)
-    system_prompt_files = Dir.glob(File.join(result[:session_dir], "system-*.prompt.md"))
-    system_context_files = Dir.glob(File.join(result[:session_dir], "system-*.context.md"))
+    # Check that session files are created with organized layout
+    sd = result[:session_dir]
+    system_prompt_files = Dir.glob(File.join(sd, "_prompts", "*.prompt.md"))
+    system_context_files = Dir.glob(File.join(sd, "_prompts", "*.context.md"))
     assert_equal 1, system_prompt_files.size
     assert_equal 1, system_context_files.size
     assert File.exist?(system_prompt_files.first)
     assert File.exist?(system_context_files.first)
-    assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
-    assert File.exist?(File.join(result[:session_dir], "user.context.md"))
-    assert File.exist?(File.join(result[:session_dir], "metadata.yml"))
+    assert File.exist?(File.join(sd, "_subject", "user.prompt.md"))
+    assert File.exist?(File.join(sd, "_subject", "user.context.md"))
+    assert File.exist?(File.join(sd, "metadata.yml"))
   end
 
   def test_execute_review_with_context_creates_context_md
@@ -92,15 +93,15 @@ class ReviewManagerTest < AceReviewTest
 
     assert result[:success], "Review should succeed: #{result[:error]}"
 
-    # Check that context is handled via ace-bundle workflow
+    # Check that context is handled via ace-bundle workflow (organized layout)
     session_dir = result[:session_dir]
-    system_context_file = Dir.glob(File.join(session_dir, "system-*.context.md")).first
-    assert File.exist?(system_context_file), "system.context.md should be created"
+    system_context_file = Dir.glob(File.join(session_dir, "_prompts", "*.context.md")).first
+    assert File.exist?(system_context_file), "system context file should be created in _prompts/"
 
     # Verify context files were created
-    system_prompt_file = Dir.glob(File.join(session_dir, "system-*.prompt.md")).first
+    system_prompt_file = Dir.glob(File.join(session_dir, "_prompts", "*.prompt.md")).first
     assert File.exist?(system_prompt_file)
-    assert File.exist?(File.join(session_dir, "user.prompt.md"))
+    assert File.exist?(File.join(session_dir, "_subject", "user.prompt.md"))
   end
 
   def test_execute_review_with_cache_first_storage
@@ -116,9 +117,9 @@ class ReviewManagerTest < AceReviewTest
     assert result[:success], "Review should succeed: #{result[:error]}"
     assert_equal File.join(@temp_dir, "custom_session"), result[:session_dir]
 
-    # Verify files are created in custom session directory
-    assert File.exist?(Dir.glob(File.join(result[:session_dir], "system-*.prompt.md")).first)
-    assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
+    # Verify files are created in custom session directory (organized layout)
+    assert File.exist?(Dir.glob(File.join(result[:session_dir], "_prompts", "*.prompt.md")).first)
+    assert File.exist?(File.join(result[:session_dir], "_subject", "user.prompt.md"))
   end
 
   def test_v0_13_0_architecture_system_user_prompt_separation
@@ -136,20 +137,19 @@ class ReviewManagerTest < AceReviewTest
 
     session_dir = result[:session_dir]
 
-    # Verify v0.14.0 session structure (ace-bundle workflow)
-    assert File.exist?(Dir.glob(File.join(session_dir, "system-*.context.md")).first), "Should have system.*.context.md"
-    assert File.exist?(Dir.glob(File.join(session_dir, "system-*.prompt.md")).first), "Should have system.*.prompt.md"
-    assert File.exist?(File.join(session_dir, "user.context.md")), "Should have user.context.md"
-    assert File.exist?(File.join(session_dir, "user.prompt.md")), "Should have user.prompt.md"
+    # Verify organized session structure
+    assert File.exist?(Dir.glob(File.join(session_dir, "_prompts", "*.context.md")).first), "Should have _prompts/*.context.md"
+    assert File.exist?(Dir.glob(File.join(session_dir, "_prompts", "*.prompt.md")).first), "Should have _prompts/*.prompt.md"
+    assert File.exist?(File.join(session_dir, "_subject", "user.context.md")), "Should have _subject/user.context.md"
+    assert File.exist?(File.join(session_dir, "_subject", "user.prompt.md")), "Should have _subject/user.prompt.md"
     assert File.exist?(File.join(session_dir, "metadata.yml")), "Should have metadata.yml"
-    # Note: subject.md is no longer created - subject content is handled via ace-bundle workflow
 
     # Verify system prompt has proper structure
-    system_prompt_content = File.read(Dir.glob(File.join(session_dir, "system-*.prompt.md")).first)
+    system_prompt_content = File.read(Dir.glob(File.join(session_dir, "_prompts", "*.prompt.md")).first)
     refute_empty system_prompt_content, "System prompt should not be empty"
 
     # Verify user prompt has proper structure
-    user_prompt_content = File.read(File.join(session_dir, "user.prompt.md"))
+    user_prompt_content = File.read(File.join(session_dir, "_subject", "user.prompt.md"))
     refute_empty user_prompt_content, "User prompt should not be empty"
 
     # Verify metadata reflects new architecture
@@ -403,14 +403,15 @@ class ReviewManagerTest < AceReviewTest
     assert_equal run_keys.sort, result[:system_prompts].keys.sort
     assert_equal run_keys.sort, result[:system_prompt_paths].keys.sort
 
-    prompt_files = Dir.glob(File.join(session_dir, "system-*.prompt.md"))
-    assert_equal 2, prompt_files.size
+    # With deduplication, prompt files are keyed by reviewer name (not run_key)
+    prompt_files = Dir.glob(File.join(session_dir, "_prompts", "*.prompt.md"))
+    # Two reviewers with distinct names → two prompt files
+    reviewer_names = config["reviewers"].map { |r| r["name"] }.uniq
+    assert_equal reviewer_names.size, prompt_files.size
 
     run_keys.each do |run_key|
-      slug = Ace::Review::Atoms::SlugGenerator.generate(run_key)
       assert result[:system_prompt_paths].key?(run_key)
       assert File.exist?(result[:system_prompt_paths][run_key]), "Expected prompt path #{result[:system_prompt_paths][run_key]} to exist"
-      assert_includes(prompt_files, File.join(session_dir, "system-#{slug}.prompt.md"))
     end
   end
 
@@ -718,11 +719,11 @@ class ReviewManagerTest < AceReviewTest
 
     assert result[:success], "compose_review_prompt should succeed with new format"
 
-    # Verify per-reviewer system context and prompt files were created
-    system_context_file = Dir.glob(File.join(session_dir, "system-*.context.md")).first
-    system_prompt_file = Dir.glob(File.join(session_dir, "system-*.prompt.md")).first
-    assert system_context_file, "system context files should exist"
-    assert system_prompt_file, "system prompt files should exist"
+    # Verify per-reviewer system context and prompt files were created (organized layout)
+    system_context_file = Dir.glob(File.join(session_dir, "_prompts", "*.context.md")).first
+    system_prompt_file = Dir.glob(File.join(session_dir, "_prompts", "*.prompt.md")).first
+    assert system_context_file, "system context files should exist in _prompts/"
+    assert system_prompt_file, "system prompt files should exist in _prompts/"
 
     assert File.exist?(system_context_file), "system context file should exist"
     assert File.exist?(system_prompt_file), "system prompt file should exist"
@@ -730,9 +731,9 @@ class ReviewManagerTest < AceReviewTest
     content = File.read(system_prompt_file)
     refute_empty content, "System prompt should not be empty"
 
-    # Verify user.context.md was created
-    user_context_file = File.join(session_dir, "user.context.md")
-    assert File.exist?(user_context_file), "user.context.md should exist"
+    # Verify user.context.md was created in _subject/
+    user_context_file = File.join(session_dir, "_subject", "user.context.md")
+    assert File.exist?(user_context_file), "_subject/user.context.md should exist"
 
     user_content = File.read(user_context_file)
     assert_match(/sections:/, user_content, "User context should have sections")
@@ -2486,6 +2487,31 @@ class ReviewManagerTest < AceReviewTest
     end
 
     mock_runner.verify
+  end
+
+  # parse_subject_diff_range tests
+  def test_parse_subject_diff_range_with_range_and_path
+    range, path_filter = @manager.send(:parse_subject_diff_range, "diff:origin/main..HEAD -- ace-review/lib")
+    assert_equal "origin/main..HEAD", range
+    assert_equal "ace-review/lib", path_filter
+  end
+
+  def test_parse_subject_diff_range_with_range_only
+    range, path_filter = @manager.send(:parse_subject_diff_range, "diff:HEAD~3")
+    assert_equal "HEAD~3", range
+    assert_nil path_filter
+  end
+
+  def test_parse_subject_diff_range_with_nil
+    range, path_filter = @manager.send(:parse_subject_diff_range, nil)
+    assert_nil range
+    assert_nil path_filter
+  end
+
+  def test_parse_subject_diff_range_with_non_diff_subject
+    range, path_filter = @manager.send(:parse_subject_diff_range, "files:*.rb")
+    assert_nil range
+    assert_nil path_filter
   end
 
   private

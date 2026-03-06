@@ -115,6 +115,43 @@ class PresetManagerTest < AceReviewTest
     assert_includes reviewer.prompt["focus"], "prompt://focus/quality/security"
   end
 
+  def test_resolve_preset_includes_partition_key
+    create_test_preset("partitioned", <<~YAML)
+      description: "Partitioned preset"
+      partition: by-concern
+      reviewers:
+        - name: quality
+          providers:
+            - llm:test:test-model
+          prompt:
+            base: "prompt://base/system"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("partitioned")
+
+    assert resolved, "resolve_preset should return a result"
+    assert_equal "by-concern", resolved[:partition]
+  end
+
+  def test_resolve_preset_partition_nil_when_not_set
+    create_test_preset("no_partition", <<~YAML)
+      description: "No partition"
+      reviewers:
+        - name: quality
+          providers:
+            - llm:test:test-model
+          prompt:
+            base: "prompt://base/system"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("no_partition")
+
+    assert resolved, "resolve_preset should return a result"
+    assert_nil resolved[:partition]
+  end
+
   # Composition tests
   def test_load_preset_with_composition_single_reference
     create_test_preset("base", <<~YAML)

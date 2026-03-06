@@ -138,10 +138,18 @@ module Ace
           display_progress(run_key, :querying)
 
           begin
-            # Generate lane-specific output filename
+            # Generate lane-specific output filename using organized layout when available
             run_key_slug = generate_run_key_slug(run_key)
-            model_output_file = File.join(session_dir, "review-#{run_key_slug}.md")
             model_slug = generate_model_slug(model)
+            model_output_file = if Ace::Review::Atoms::SessionLayout.organized?(session_dir)
+                                  rev_name = reviewer.respond_to?(:name) ? reviewer.name : run_key
+                                  layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+                                  reports_subdir = layout.reports_dir(rev_name)
+                                  FileUtils.mkdir_p(reports_subdir)
+                                  layout.report_path(rev_name, model_slug)
+                                else
+                                  File.join(session_dir, "review-#{run_key_slug}.md")
+                                end
 
             result = @llm_executor.execute(
               system_prompt: lane[:system_prompt],

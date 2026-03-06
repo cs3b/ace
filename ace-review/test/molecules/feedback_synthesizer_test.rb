@@ -1082,4 +1082,39 @@ class FeedbackSynthesizerTest < AceReviewTest
       end
     end
   end
+
+  # ============================================================================
+  # JSON Repair Tests
+  # ============================================================================
+
+  def test_repair_truncated_json_closes_braces
+    truncated = '{"findings": [{"title": "Bug", "finding": "desc", "reviewers": ["r1"]'
+    repaired = @synthesizer.send(:repair_truncated_json, truncated)
+
+    parsed = JSON.parse(repaired)
+    assert_equal 1, parsed["findings"].size
+    assert_equal "Bug", parsed["findings"].first["title"]
+  end
+
+  def test_repair_truncated_json_no_op_for_valid_json
+    valid = '{"findings": []}'
+    result = @synthesizer.send(:repair_truncated_json, valid)
+    assert_equal valid, result
+  end
+
+  def test_repair_truncated_json_strips_trailing_partial_string
+    truncated = '{"findings": [{"title": "Bug", "finding": "desc"}, {"title": "Incompl'
+    repaired = @synthesizer.send(:repair_truncated_json, truncated)
+
+    parsed = JSON.parse(repaired)
+    assert_equal 1, parsed["findings"].size
+  end
+
+  def test_extract_json_from_response_repairs_truncated
+    truncated = '{"findings": [{"title": "Issue", "finding": "problem", "reviewers": ["r1"], "priority": "high"'
+    result = @synthesizer.send(:extract_json_from_response, truncated)
+
+    parsed = JSON.parse(result)
+    assert parsed.key?("findings")
+  end
 end

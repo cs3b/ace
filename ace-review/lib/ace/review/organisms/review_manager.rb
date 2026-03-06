@@ -43,7 +43,7 @@ module Ace
           return config_result unless config_result[:success]
 
           # Step 1b: Partition if requested
-          partition_strategy = options.partition || config_result[:config]["partition"] || config_result[:config][:partition]
+          partition_strategy = options.partition || config_result[:config][:partition] || config_result[:config]["partition"]
           if partition_strategy && !partition_strategy.to_s.strip.empty?
             return execute_partitioned_review(options, config_result, partition_strategy.to_s.strip)
           end
@@ -323,6 +323,10 @@ module Ace
         end
 
         # Step 3: Generate system and user prompts via ace-bundle
+        #
+        # Uses organized session layout:
+        #   _subject/  — user context and prompt files
+        #   _prompts/  — system prompts (deduplicated by reviewer name)
         def compose_review_prompt(config, context, subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
           reviewers = Array(config[:reviewers] || config["reviewers"]).compact
@@ -335,6 +339,9 @@ module Ace
               error: "No LLM reviewers with prompts configured. Preset must define reviewer prompts."
             }
           end
+
+          layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+          layout.ensure_directories!
 
           context_config = config[:context] || config["context"] || "project"
 
@@ -353,10 +360,13 @@ module Ace
               error: "No subject found in config. All presets must use subject format."
             }
           end
-          user_context_path = create_context_file(session_dir, subject_config, nil, "user.context.md")
 
-          # Step 3d: Generate user.prompt.md via ace-bundle
-          user_prompt_path = File.join(session_dir, "user.prompt.md")
+          # Write user files to _subject/
+          user_context_path = create_context_file(
+            layout.subject_dir, subject_config, nil, "user.context.md"
+          )
+
+          user_prompt_path = layout.user_prompt_path
           begin
             execute_ace_context(user_context_path, user_prompt_path)
           rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
@@ -371,14 +381,17 @@ module Ace
 
           system_prompts = {}
           system_prompt_paths = {}
+          # Cache of already-generated prompts by reviewer name (deduplication)
+          generated_prompts = {}
 
           reviewer_lanes.each do |lane|
             reviewer = lane[:reviewer]
+            name = reviewer_name(reviewer)
             prompt_config = reviewer_prompt_config(reviewer)
             unless prompt_config.is_a?(Hash) && prompt_config.any?
               return {
                 success: false,
-                error: "LLM reviewer '#{reviewer_name(reviewer)}' must define a prompt."
+                error: "LLM reviewer '#{name}' must define a prompt."
               }
             end
 
@@ -386,36 +399,42 @@ module Ace
             if model.nil? || model.to_s.empty?
               return {
                 success: false,
-                error: "LLM reviewer '#{reviewer_name(reviewer) || "unknown"}' must define a model."
+                error: "LLM reviewer '#{name || "unknown"}' must define a model."
               }
             end
 
             run_key = lane[:run_key]
-            system_slug = Ace::Review::Atoms::SlugGenerator.generate(run_key)
-            system_context_path = create_context_file(
-              session_dir,
-              prompt_config,
-              context_config,
-              "system-#{system_slug}.context.md"
+
+            # Deduplicate: same reviewer name → same prompt content
+            if generated_prompts.key?(name)
+              system_prompts[run_key] = generated_prompts[name][:text]
+              system_prompt_paths[run_key] = generated_prompts[name][:path]
+              next
+            end
+
+            # Write system prompt files to _prompts/ (keyed by reviewer name)
+            sys_context_path = create_context_file(
+              layout.prompts_dir, prompt_config, context_config, "#{Ace::Review::Atoms::SlugGenerator.generate(name)}.context.md"
             )
-            system_prompt_path = File.join(session_dir, "system-#{system_slug}.prompt.md")
+            sys_prompt_path = layout.system_prompt_path(name)
 
             begin
-              execute_ace_context(system_context_path, system_prompt_path)
+              execute_ace_context(sys_context_path, sys_prompt_path)
             rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
               return { success: false, error: "Failed to generate system prompt: #{e.message}" }
             end
 
-            system_prompt_text = File.read(system_prompt_path) if File.exist?(system_prompt_path)
+            system_prompt_text = File.read(sys_prompt_path) if File.exist?(sys_prompt_path)
             if system_prompt_text.nil? || system_prompt_text.empty?
               return {
                 success: false,
-                error: "Failed to generate system prompt for reviewer '#{reviewer_name(reviewer)}'."
+                error: "Failed to generate system prompt for reviewer '#{name}'."
               }
             end
 
+            generated_prompts[name] = { text: system_prompt_text, path: sys_prompt_path }
             system_prompts[run_key] = system_prompt_text
-            system_prompt_paths[run_key] = system_prompt_path
+            system_prompt_paths[run_key] = sys_prompt_path
           end
 
           system_prompt = system_prompts.values.first
@@ -635,8 +654,8 @@ module Ace
         # @param strategy [String] "by_package" or "by_concern"
         # @return [Hash] multi-partition result
         def execute_partitioned_review(options, config_result, strategy)
-          # Collect changed files for partitioning
-          changed_files = collect_changed_files_for_partitioning
+          # Collect changed files for partitioning (respect --subject diff range)
+          changed_files = collect_changed_files_for_partitioning(subject: options.subject)
 
           if changed_files.empty?
             return { success: false, error: "Partition strategy '#{strategy}' found no changed files to partition." }
@@ -726,14 +745,57 @@ module Ace
 
         # Collect changed files for partition building.
         # Uses git diff to determine which files have changed.
-        def collect_changed_files_for_partitioning
+        # When a subject option contains a diff range (e.g. "diff:origin/main..HEAD -- path"),
+        # uses that range and path filter instead of the default origin...HEAD.
+        def collect_changed_files_for_partitioning(subject: nil)
           root = @project_root || Dir.pwd
+
+          diff_range, path_filter = parse_subject_diff_range(subject)
+
+          if diff_range
+            files = git_diff_files(diff_range, root, path_filter: path_filter)
+            return files unless files.empty?
+          end
+
+          # Fallback to default ranges
           files = []
           ["origin...HEAD", "HEAD"].each do |range|
-            stdout, _, status = Open3.capture3("git", "diff", "--name-only", range, chdir: root)
-            files.concat(stdout.lines.map(&:strip).reject(&:empty?)) if status.success?
+            files.concat(git_diff_files(range, root))
           end
           files.uniq
+        rescue StandardError
+          []
+        end
+
+        # Parse diff range and optional path filter from a subject string.
+        # Supports formats like "diff:origin/main..HEAD -- ace-review/lib"
+        # @param subject [String, nil] subject option
+        # @return [Array(String, String)] [range, path_filter] or [nil, nil]
+        def parse_subject_diff_range(subject)
+          return [nil, nil] unless subject.is_a?(String)
+
+          # Match "diff:RANGE" or "diff:RANGE -- PATH"
+          if (match = subject.match(/\Adiff:(.+?)\s+--\s+(.+)\z/))
+            [match[1].strip, match[2].strip]
+          elsif subject.start_with?("diff:")
+            [subject.sub(/\Adiff:/, "").strip, nil]
+          else
+            [nil, nil]
+          end
+        end
+
+        # Run git diff --name-only with optional path filter.
+        # @param range [String] git diff range
+        # @param root [String] working directory
+        # @param path_filter [String, nil] optional path filter (passed after --)
+        # @return [Array<String>] list of changed file paths
+        def git_diff_files(range, root, path_filter: nil)
+          cmd = ["git", "diff", "--name-only", range]
+          cmd += ["--", path_filter] if path_filter
+          stdout, _, status = Open3.capture3(*cmd, chdir: root)
+          return [] unless status.success?
+
+          stdout.lines.map(&:strip).reject(&:empty?)
         rescue StandardError
           []
         end
@@ -1166,7 +1228,13 @@ module Ace
           if review_data[:pr_comment_data]
             feedback_report = Ace::Review::Atoms::PrCommentFormatter.format(review_data[:pr_comment_data])
             if feedback_report && !feedback_report.empty?
-              feedback_file = File.join(session_dir, "review-dev-feedback.md")
+              feedback_file = if Ace::Review::Atoms::SessionLayout.organized?(session_dir)
+                                layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+                                FileUtils.mkdir_p(layout.reports_dir)
+                                layout.flat_report_path("review-dev-feedback.md")
+                              else
+                                File.join(session_dir, "review-dev-feedback.md")
+                              end
               File.write(feedback_file, feedback_report)
             end
           end
@@ -1641,8 +1709,20 @@ module Ace
           end
 
           # Add dev-feedback report if it exists (PR comments) — always plain path
-          dev_feedback_path = File.join(session_dir, "review-dev-feedback.md")
-          report_paths << dev_feedback_path if File.exist?(dev_feedback_path)
+          # Check organized layout first, then flat layout
+          dev_feedback_candidates = if Ace::Review::Atoms::SessionLayout.organized?(session_dir)
+                                      layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+                                      [layout.flat_report_path("review-dev-feedback.md"),
+                                       File.join(session_dir, "review-dev-feedback.md")]
+                                    else
+                                      [File.join(session_dir, "review-dev-feedback.md")]
+                                    end
+          dev_feedback_candidates.each do |path|
+            if File.exist?(path)
+              report_paths << path
+              break
+            end
+          end
 
           report_paths.compact.uniq
         end

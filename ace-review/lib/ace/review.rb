@@ -28,6 +28,7 @@ require_relative "review/atoms/preset_validator"
 require_relative "review/atoms/priority_filter"
 require_relative "review/atoms/provider_ref_validator"
 require_relative "review/atoms/reviewer_run_key_allocator"
+require_relative "review/atoms/session_layout"
 require_relative "review/atoms/slug_generator"
 require_relative "review/atoms/token_estimator"
 

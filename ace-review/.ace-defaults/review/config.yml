@@ -75,9 +75,9 @@ defaults:
 # Feedback items are extracted from review reports for tracking and verification
 feedback:
   enabled: true                           # Enable feedback extraction (default: true)
-  synthesis_model: codex:codex  # Model for synthesizing feedback items
+  synthesis_model: codex:spark  # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
-    - claude:glm
+    - google:gemini-2.5-flash
   consensus_threshold: 0.6               # Weighted consensus threshold (0.0..1.0); applies when reviewer weights are available
 
 # Review presets - load from .ace/review/presets/*.yml

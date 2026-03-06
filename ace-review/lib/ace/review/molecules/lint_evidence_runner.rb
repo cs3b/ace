@@ -20,7 +20,13 @@ module Ace
         def run(reviewer:, session_dir:)
           started_at = Time.now
           slug = Ace::Review::Atoms::SlugGenerator.generate(reviewer.name || "lint")
-          output_file = File.join(session_dir, "review-#{slug}.md")
+          output_file = if Ace::Review::Atoms::SessionLayout.organized?(session_dir)
+                          layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+                          FileUtils.mkdir_p(layout.reports_dir)
+                          layout.flat_report_path("#{slug}.md")
+                        else
+                          File.join(session_dir, "review-#{slug}.md")
+                        end
 
           files = lint_candidate_files
           stdout = ""

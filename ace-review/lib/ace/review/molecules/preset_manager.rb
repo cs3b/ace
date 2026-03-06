@@ -119,6 +119,7 @@ module Ace
             model: models_config.first,
             reviewers: reviewers_config,
             pipeline: pipeline_resolution&.dig(:name),
+            partition: preset["partition"],
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
         end

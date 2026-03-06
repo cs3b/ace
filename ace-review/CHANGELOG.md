@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0] - 2026-03-06
+
+### Added
+- `SessionLayout` atom encapsulating organized session directory structure (`_subject/`, `_prompts/`, `_reports/`, `_synthesis/`)
+- System prompt deduplication by reviewer name — lanes sharing a reviewer share one prompt file
+- `collect_changed_files_for_partitioning` respects `--subject` diff range and path filters (e.g. `diff:origin/main..HEAD -- ace-review/lib`)
+- Truncated JSON repair in `FeedbackSynthesizer` — closes unclosed braces/brackets when LLM response is cut off
+
+### Fixed
+- Partition strategy from preset (`partition: by-concern`) was dropped during `resolve_preset()` — now included in return hash
+- Synthesis model `codex:codex` replaced with `codex:spark`; fallback `claude:glm` (non-existent) replaced with `google:gemini-2.5-flash`
+
+### Changed
+- Session files now use organized directory layout: user files in `_subject/`, system prompts in `_prompts/`, reports in `_reports/{reviewer}/`, synthesis in `_synthesis/`
+- Reports written to `_reports/{reviewer-name}/{provider-slug}.md` instead of flat `review-{run-key}.md`
+- Lint evidence reports written to `_reports/` when organized layout is active
+
 ## [0.52.1] - 2026-03-06
 
 ### Changed

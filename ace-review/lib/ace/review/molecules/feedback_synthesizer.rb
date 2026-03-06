@@ -135,7 +135,13 @@ module Ace
           system_prompt = load_system_prompt
           user_prompt = build_reports_prompt(reports)
 
-          output_file = File.join(session_dir, "feedback-synthesis.json")
+          output_file = if Ace::Review::Atoms::SessionLayout.organized?(session_dir)
+                          layout = Ace::Review::Atoms::SessionLayout.new(session_dir)
+                          FileUtils.mkdir_p(layout.synthesis_dir)
+                          layout.synthesis_output_path
+                        else
+                          File.join(session_dir, "feedback-synthesis.json")
+                        end
 
           display_synthesis_start(reports.size, model || default_synthesis_model)
 
@@ -291,6 +297,9 @@ module Ace
 
           { success: true, items: items, metadata: metadata }
         rescue JSON::ParserError => e
+          snippet = response.to_s.strip
+          snippet = snippet.length > 200 ? "#{snippet[0, 100]}...#{snippet[-100..]}" : snippet
+          warn "[synthesis] JSON parse failed. Response snippet: #{snippet}" if Ace::Review.debug?
           error_result("Invalid JSON response: #{e.message}")
         end
 
@@ -309,7 +318,7 @@ module Ace
 
           # Try to extract JSON from markdown code fence (handles text before/after fence)
           if (match = cleaned.match(/```(?:json)?\s*(.*?)\s*```/m))
-            return match[1].strip
+            return repair_truncated_json(match[1].strip)
           end
 
           # No code fence - try to find JSON object directly
@@ -318,8 +327,33 @@ module Ace
             return json_match[1]
           end
 
-          # Return as-is (already clean JSON or will fail parsing with clear error)
-          cleaned
+          # Try to repair truncated JSON (response cut off mid-token, no closing braces)
+          repair_truncated_json(cleaned)
+        end
+
+        # Attempt to repair truncated JSON by closing unclosed braces/brackets.
+        # LLM responses sometimes get cut off mid-token, leaving invalid JSON.
+        # @param json_str [String] potentially truncated JSON
+        # @return [String] repaired JSON string (or original if not truncated)
+        def repair_truncated_json(json_str)
+          return json_str if json_str.strip.end_with?("}")
+
+          # Count unclosed braces and brackets
+          open_braces = json_str.count("{") - json_str.count("}")
+          open_brackets = json_str.count("[") - json_str.count("]")
+
+          return json_str if open_braces <= 0 && open_brackets <= 0
+
+          # Strip trailing incomplete value (partial string, trailing comma, etc.)
+          repaired = json_str.rstrip.sub(/,?\s*"[^"]*\z/m, "")
+          repaired = repaired.rstrip.chomp(",")
+
+          # Close open brackets then braces
+          repaired += "]" * [open_brackets, 0].max
+          repaired += "}" * [open_braces, 0].max
+
+          warn "[synthesis] Repaired truncated JSON (closed #{open_braces} braces, #{open_brackets} brackets)" if Ace::Review.debug?
+          repaired
         end
 
         # Create a FeedbackItem from synthesized finding data
