@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.791] - 2026-03-06
+
+### Changed
+- **ace-llm v0.27.1**: Renamed preset identifiers from `rosx`→`ro` and `rwsx`→`rw` across all provider preset files, normalized `max_tokens` to 16000, and removed legacy `review-deep`/`review-fast` defaults.
+- **ace-llm-providers-cli v0.22.2**: Removed `--temperature` flag forwarding from Claude Code and Claude OAI CLI clients; temperature now controlled exclusively via preset configuration.
+- **ace-review v0.52.1**: Renamed preset identifiers from `rosx`→`ro` and `rwsx`→`rw` in provider catalogs, review presets, and default LLM provider fallback.
+
 ## [0.9.790] - 2026-03-06
 
 ### Added

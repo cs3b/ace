@@ -126,13 +126,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.22.1)
+    ace-llm-providers-cli (0.22.2)
       ace-llm (~> 0.24)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.27.0)
+    ace-llm (0.27.1)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
       addressable (~> 2.8)
@@ -180,7 +180,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.52.0)
+    ace-review (0.52.1)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
