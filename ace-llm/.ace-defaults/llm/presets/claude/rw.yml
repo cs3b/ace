@@ -1,0 +1,5 @@
+timeout: 600
+max_tokens: 16000
+cli_args:
+  - --permission-mode
+  - acceptEdits

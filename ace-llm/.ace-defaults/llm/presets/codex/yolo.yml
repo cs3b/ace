@@ -1,0 +1,6 @@
+timeout: 900
+max_tokens: 16000
+cli_args:
+  - --full-auto
+  - --sandbox
+  - danger-full-access

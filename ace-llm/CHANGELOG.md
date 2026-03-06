@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-03-06
+
+### Added
+- Support explicit `:low`, `:medium`, `:high`, and `:xhigh` thinking suffixes on fully qualified model targets while preserving existing `@ro`, `@rw`, and `@yolo` preset behavior.
+- Add provider-scoped thinking overlays for Codex and Claude so explicit thinking levels map cleanly to provider-native runtime options.
+
+### Changed
+- Allow `ace-llm query` preset resolution to merge explicit thinking overrides after preset loading and before direct CLI overrides.
+
 ## [0.25.0] - 2026-03-05
 
 ### Added
