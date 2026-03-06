@@ -3,8 +3,8 @@
 description: "Documentation review - completeness and clarity"
 
 instructions:
+  base: "prompt://base/system"
   bundle:
-    base: "prompt://base/system"
     sections:
       format:
         title: "Format Guidelines"
@@ -12,28 +12,31 @@ instructions:
         files:
           - "prompt://format/standard"
       docs_focus:
-        title: "Documentation Review Focus"
-        description: "Focus areas for documentation completeness and clarity"
+        title: "Documentation Focus"
+        description: "Documentation completeness and clarity review"
         files:
           - "prompt://focus/scope/docs"
-      communication:
-        title: "Communication Style"
-        description: "Professional communication guidelines"
+      guidelines:
+        title: "Communication Guidelines"
+        description: "Professional communication style"
         files:
           - "prompt://guidelines/tone"
-      context-project:
-        presets:
-          - "project"
-      context-package:
-        title: "Ace Review Codebase"
-        description: "All ruby files and config examples for Ace Context package"
+      project_docs:
+        title: "Project Documentation"
+        description: "Main project documentation for context"
         files:
-          - "ace-review/lib/**/*.rb"
-          - "ace-review/.ace-defaults/**/*"
+          - "README.md"
+
+bundle: "project"
+
+models:
+  - codex:codex@ro
 
 subject:
   bundle:
     sections:
-      review-that:
+      documentation_files:
+        title: "Documentation Files"
+        description: "Documentation files to review"
         files:
-          - "ace-review/**/*.md"
+          - "**/*.md"

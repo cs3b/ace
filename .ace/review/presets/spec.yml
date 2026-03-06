@@ -1,19 +1,11 @@
 # Specification review - clarity, completeness, and feasibility
-#
-# Requires --subject parameter to specify files to review:
-#   ace-review --preset spec --subject '.ace-tasks/v.0.9.0/tasks/150-*/**/*'
-#
-# For auto-detecting all changed .s.md files on branch, use 'spec-branch' preset.
 
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
 instructions:
+  base: "prompt://base/system"
   bundle:
-    base: "prompt://base/system"
     sections:
-      project_context:
-        presets:
-          - project
       format:
         title: "Format Guidelines"
         description: "Standard output formatting and structure guidelines"
@@ -30,9 +22,16 @@ instructions:
         files:
           - "prompt://guidelines/tone"
 
-models:
-  - claude:opus              # Deep reasoning, architecture analysis
-  - codex:max  # Code-focused, implementation details
-  # - xai:fast
+bundle: "project"
 
-# No subject section - uses CLI --subject parameter directly
+models:
+  - codex:codex@ro
+
+subject:
+  bundle:
+    sections:
+      spec_changes:
+        title: "Specification Changes"
+        description: "Specification files to review"
+        commands:
+          - "git diff origin/main...HEAD -- '**/*.s.md'"
