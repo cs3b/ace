@@ -316,19 +316,15 @@ module Ace
         def extract_json_from_response(response)
           cleaned = response.to_s.strip
 
-          # Try to extract JSON from markdown code fence (handles text before/after fence)
-          if (match = cleaned.match(/```(?:json)?\s*(.*?)\s*```/m))
-            return repair_truncated_json(match[1].strip)
-          end
+          json = if (match = cleaned.match(/```(?:json)?\s*(.*?)\s*```/m))
+                   repair_truncated_json(match[1].strip)
+                 elsif cleaned !~ /\A\s*\{/ && (json_match = cleaned.match(/(\{.*\})/m))
+                   json_match[1]
+                 else
+                   repair_truncated_json(cleaned)
+                 end
 
-          # No code fence - try to find JSON object directly
-          # This handles cases where JSON is embedded in text without fences
-          if cleaned !~ /\A\s*\{/ && (json_match = cleaned.match(/(\{.*\})/m))
-            return json_match[1]
-          end
-
-          # Try to repair truncated JSON (response cut off mid-token, no closing braces)
-          repair_truncated_json(cleaned)
+          strip_trailing_commas(json)
         end
 
         # Attempt to repair truncated JSON by closing unclosed braces/brackets.
@@ -354,6 +350,14 @@ module Ace
 
           warn "[synthesis] Repaired truncated JSON (closed #{open_braces} braces, #{open_brackets} brackets)" if Ace::Review.debug?
           repaired
+        end
+
+        # Strip trailing commas before closing braces/brackets.
+        # LLMs sometimes produce invalid JSON like [{"a": 1},] or {"key": "val",}.
+        # @param json_str [String] JSON string possibly containing trailing commas
+        # @return [String] cleaned JSON string
+        def strip_trailing_commas(json_str)
+          json_str.gsub(/,(\s*[}\]])/, '\1')
         end
 
         # Create a FeedbackItem from synthesized finding data

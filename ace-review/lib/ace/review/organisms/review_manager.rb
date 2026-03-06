@@ -731,16 +731,26 @@ module Ace
         # Build options restricted to a single partition's files.
         def build_partition_options(base_options, partition, partition_dir)
           partition_subject = if partition.files.any?
-                                partition.files.map { |f| "files:#{f}" }.join(Ace::Review::CLI::ARRAY_SEPARATOR)
+                                build_partition_subject(base_options.subject, partition.files)
                               else
                                 base_options.subject
                               end
 
-          new_opts = Models::ReviewOptions.new(base_options.to_h.merge(
+          Models::ReviewOptions.new(base_options.to_h.merge(
             session_dir: partition_dir,
             subject: partition_subject
           ))
-          new_opts
+        end
+
+        # Build a subject for a partition, preserving the original subject format.
+        # For diff subjects, produces a filtered diff; otherwise, an array of file subjects.
+        def build_partition_subject(original_subject, files)
+          diff_range, _ = parse_subject_diff_range(original_subject)
+          if diff_range
+            "diff:#{diff_range} -- #{files.join(' ')}"
+          else
+            files.map { |f| "files:#{f}" }
+          end
         end
 
         # Collect changed files for partition building.

@@ -50,7 +50,7 @@ module Ace
             group_files = files.select do |f|
               next false if matched.include?(f)
 
-              Array(globs).any? { |g| File.fnmatch?(g, f, FLAGS) }
+              Array(globs).any? { |g| file_matches_glob?(f, g) }
             end
             group_files.each { |f| matched.add(f) }
             next if group_files.empty?
@@ -78,6 +78,16 @@ module Ace
           end
 
           partitions
+        end
+
+        # Match a file against a glob pattern, trying both the full path and
+        # the path with the first directory component stripped (for mono-repo layouts
+        # where glob patterns are relative to package root).
+        private_class_method def self.file_matches_glob?(file, glob)
+          return true if File.fnmatch?(glob, file, FLAGS)
+
+          stripped = file.sub(%r{\A[^/]+/}, "")
+          stripped != file && File.fnmatch?(glob, stripped, FLAGS)
         end
 
         private_class_method def self.single_partition(files)

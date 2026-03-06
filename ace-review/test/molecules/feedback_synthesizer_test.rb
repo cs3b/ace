@@ -1110,6 +1110,28 @@ class FeedbackSynthesizerTest < AceReviewTest
     assert_equal 1, parsed["findings"].size
   end
 
+  def test_strip_trailing_commas_in_arrays
+    json_with_trailing = '{"findings": [{"title": "Bug", "finding": "desc"},]}'
+    result = @synthesizer.send(:strip_trailing_commas, json_with_trailing)
+    parsed = JSON.parse(result)
+    assert_equal 1, parsed["findings"].size
+  end
+
+  def test_strip_trailing_commas_in_objects
+    json_with_trailing = '{"key": "value", "other": "val",}'
+    result = @synthesizer.send(:strip_trailing_commas, json_with_trailing)
+    parsed = JSON.parse(result)
+    assert_equal "value", parsed["key"]
+  end
+
+  def test_extract_json_handles_trailing_commas
+    json_with_trailing = '{"findings": [{"title": "Issue", "finding": "problem", "reviewers": ["r1"], "priority": "high",},]}'
+    result = @synthesizer.send(:extract_json_from_response, json_with_trailing)
+    parsed = JSON.parse(result)
+    assert_equal 1, parsed["findings"].size
+    assert_equal "Issue", parsed["findings"].first["title"]
+  end
+
   def test_extract_json_from_response_repairs_truncated
     truncated = '{"findings": [{"title": "Issue", "finding": "problem", "reviewers": ["r1"], "priority": "high"'
     result = @synthesizer.send(:extract_json_from_response, truncated)

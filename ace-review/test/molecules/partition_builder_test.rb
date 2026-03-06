@@ -196,6 +196,55 @@ class PartitionBuilderTest < AceReviewTest
     assert_equal [".ace/review/config.yml"], partitions.first.files
   end
 
+  def test_monorepo_prefixed_paths_match_package_relative_globs
+    create_partition_definition("monorepo", <<~YAML)
+      catch_all: true
+      groups:
+        code:
+          - "lib/**/*.rb"
+          - "test/**/*.rb"
+        config:
+          - "*.yml"
+    YAML
+
+    files = [
+      "ace-review/lib/ace/review/foo.rb",
+      "ace-review/test/molecules/bar_test.rb",
+      "ace-review/config.yml",
+      "README.md"
+    ]
+    partitions = Ace::Review::Molecules::PartitionBuilder.build(
+      subject_files: files, strategy: "monorepo", project_root: @test_dir
+    )
+
+    code_partition = partitions.find { |p| p.metadata["group"] == "code" }
+    config_partition = partitions.find { |p| p.metadata["group"] == "config" }
+    other_partition = partitions.find { |p| p.metadata["group"] == "other" }
+
+    assert code_partition, "Expected code partition to exist"
+    assert_equal ["ace-review/lib/ace/review/foo.rb", "ace-review/test/molecules/bar_test.rb"], code_partition.files
+    assert config_partition, "Expected config partition to exist"
+    assert_equal ["ace-review/config.yml"], config_partition.files
+    assert other_partition, "Expected other partition to exist"
+    assert_equal ["README.md"], other_partition.files
+  end
+
+  def test_non_prefixed_paths_still_match
+    create_partition_definition("direct", <<~YAML)
+      groups:
+        code:
+          - "lib/**/*.rb"
+    YAML
+
+    files = ["lib/foo.rb", "lib/bar/baz.rb"]
+    partitions = Ace::Review::Molecules::PartitionBuilder.build(
+      subject_files: files, strategy: "direct", project_root: @test_dir
+    )
+
+    assert_equal 1, partitions.size
+    assert_equal ["lib/bar/baz.rb", "lib/foo.rb"], partitions.first.files
+  end
+
   private
 
   def create_partition_definition(name, content)

@@ -2514,6 +2514,29 @@ class ReviewManagerTest < AceReviewTest
     assert_nil path_filter
   end
 
+  # build_partition_subject tests
+  def test_build_partition_subject_with_diff_subject
+    result = @manager.send(:build_partition_subject, "diff:origin/main..HEAD -- ace-review/lib", ["lib/a.rb", "lib/b.rb"])
+    assert_equal "diff:origin/main..HEAD -- lib/a.rb lib/b.rb", result
+  end
+
+  def test_build_partition_subject_with_diff_range_only
+    result = @manager.send(:build_partition_subject, "diff:HEAD~3", ["src/x.rb", "src/y.rb"])
+    assert_equal "diff:HEAD~3 -- src/x.rb src/y.rb", result
+  end
+
+  def test_build_partition_subject_with_nil_subject
+    result = @manager.send(:build_partition_subject, nil, ["lib/a.rb", "lib/b.rb"])
+    assert_kind_of Array, result
+    assert_equal ["files:lib/a.rb", "files:lib/b.rb"], result
+  end
+
+  def test_build_partition_subject_with_non_diff_subject
+    result = @manager.send(:build_partition_subject, "files:*.rb", ["lib/a.rb"])
+    assert_kind_of Array, result
+    assert_equal ["files:lib/a.rb"], result
+  end
+
   private
 
   def reviewer_run_key(reviewer)
