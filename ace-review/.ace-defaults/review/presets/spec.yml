@@ -22,6 +22,11 @@ instructions:
         files:
           - "prompt://guidelines/tone"
 
+bundle: "project"
+
+models:
+  - codex:codex@ro
+
 subject:
   bundle:
     sections:

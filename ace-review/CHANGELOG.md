@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.7] - 2026-03-06
+
+### Fixed
+- Make `--dry-run` disable automatic model execution even when project defaults enable `auto_execute`.
+- Allow `@` in review model identifiers so preset models can use `@ro`, `@rw`, and `@yolo` suffixes.
+
+### Changed
+- Reduce the shipped review preset surface to five explicit single-file presets: `code-valid`, `code-fit`, `code-shine`, `docs`, and `spec`.
+- Align both package defaults and repo-level `.ace/review` overrides on the explicit five-preset review model.
+
 ## [0.43.6] - 2026-03-05
 
 ### Changed
