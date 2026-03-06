@@ -1,12 +1,12 @@
 ---
 title: Enhanced FORK Delegation for Complete Workflow Execution
 filename_suggestion: feat-assign-fork-results
-enhanced_at: 2026-02-26 02:48:03.000000000 +00:00
-llm_model: pi:glm
+enhanced_at: 2026-02-26 02:48:03 +0000
+llm_model: "pi:glm"
 id: 8pp478
-status: pending
+status: done
 tags: []
-created_at: '2026-02-26 02:48:01'
+created_at: "2026-02-26 02:48:01"
 ---
 
 # Enhanced FORK Delegation for Complete Workflow Execution
