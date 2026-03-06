@@ -169,7 +169,7 @@ doc-type: [suggested-type]
 **Tasks Created:** [M]
 **Issues Grouped:** [breakdown by priority]
 **Next Steps:**
-- Run `/ace-task-work [task-id]` for each created task
+- Run `/as-task-work [task-id]` for each created task
 - Re-run lint after fixes to verify
 
 ## Error Handling
