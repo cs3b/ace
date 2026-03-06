@@ -47,7 +47,7 @@ module Ace
         option :subject, type: :array, desc: "Subject configuration (can be specified multiple times)"
         option :model, type: :array, desc: "LLM model(s) to use (can be specified multiple times)"
         option :provider, type: :array, desc: "[Deprecated] Override LLM reviewer lanes with provider refs (repeatable). Use --providers-llm instead."
-        option :providers_llm, type: :array, desc: "Catalog name(s) or model ID(s) for LLM reviewers (e.g. ro, rw, codex:codex@rw)"
+        option :providers_llm, type: :array, desc: "Catalog name(s) or model ID(s) for LLM reviewers (e.g. fast, deep, codex:codex@rw)"
         option :providers_tools_lint, type: :array, desc: "Catalog name(s) for tools-lint reviewers (e.g. lint)"
         option :partition, type: :string, desc: "Split subject into partitions before review (by_package or by_concern)"
         option :require_all_reports, type: :boolean, desc: "Require all requested lanes to produce reports before synthesis (default: true)"

@@ -625,7 +625,7 @@ class PresetManagerTest < AceReviewTest
 
   def test_resolve_preset_pipeline_expands_provider_class_via_catalog
     create_llm_catalog(<<~YAML)
-      ro:
+      fast:
         - "codex:spark@ro"
     YAML
     create_tools_lint_catalog(<<~YAML)
@@ -637,7 +637,7 @@ class PresetManagerTest < AceReviewTest
       description: "Correctness review"
       pipeline: phased-valid
       providers:
-        llm: [ro]
+        llm: [fast]
         tools_lint: [lint]
     YAML
     create_test_pipeline("phased-valid", <<~YAML)
@@ -682,9 +682,9 @@ class PresetManagerTest < AceReviewTest
 
   def test_resolve_preset_providers_llm_override_replaces_default
     create_llm_catalog(<<~YAML)
-      ro:
+      fast:
         - "codex:spark@ro"
-      rw:
+      deep:
         - "codex:codex@rw"
     YAML
 
@@ -692,7 +692,7 @@ class PresetManagerTest < AceReviewTest
       description: "Correctness review"
       pipeline: simple-pipeline
       providers:
-        llm: [ro]
+        llm: [fast]
     YAML
     create_test_pipeline("simple-pipeline", <<~YAML)
       always:
@@ -705,20 +705,20 @@ class PresetManagerTest < AceReviewTest
     YAML
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    resolved = manager.resolve_preset("valid", { providers_llm: ["rw"] })
+    resolved = manager.resolve_preset("valid", { providers_llm: ["deep"] })
 
     llm_reviewers = resolved[:reviewers].reject { |r| r.provider_kind.to_s == "tool" }
     assert llm_reviewers.all? { |r| r.model == "codex:codex@rw" }
   end
 
   def test_resolve_preset_providers_llm_inline_model_id_override
-    create_llm_catalog("ro:\n  - \"codex:spark@ro\"\n")
+    create_llm_catalog("fast:\n  - \"codex:spark@ro\"\n")
 
     create_test_preset("valid", <<~YAML)
       description: "Review"
       pipeline: simple-pipeline
       providers:
-        llm: [ro]
+        llm: [fast]
     YAML
     create_test_pipeline("simple-pipeline", <<~YAML)
       always:
@@ -740,13 +740,13 @@ class PresetManagerTest < AceReviewTest
   # Task 3: Deduplication rule
 
   def test_resolve_preset_deduplicates_reviewers_when_optional_matches_always
-    create_llm_catalog("ro:\n  - \"codex:spark@ro\"\n")
+    create_llm_catalog("fast:\n  - \"codex:spark@ro\"\n")
 
     create_test_preset("valid", <<~YAML)
       description: "Review"
       pipeline: dedup-pipeline
       providers:
-        llm: [ro]
+        llm: [fast]
     YAML
     # Pipeline has correctness in always AND in optional — should run only once
     create_test_pipeline("dedup-pipeline", <<~YAML)

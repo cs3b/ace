@@ -1,9 +1,6 @@
-ro:
+fast:
   - "codex:spark@ro"
   - "claude:haiku@ro"
-rw:
-  - "codex:spark@rw"
-  - "claude:haiku@rw"
-yolo:
+deep:
   - "codex:codex@yolo"
   - "google:gemini-2.5-pro@yolo"

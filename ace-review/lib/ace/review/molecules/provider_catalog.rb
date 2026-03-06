@@ -15,8 +15,8 @@ module Ace
       #
       # @example Loading and resolving providers
       #   catalog = ProviderCatalog.new(project_root: "/my/project")
-      #   entries = catalog.resolve(provider_class: "llm", names: ["ro"])
-      #   # => [{"name" => "ro", "model" => "codex:spark@ro"}]
+      #   entries = catalog.resolve(provider_class: "llm", names: ["fast"])
+      #   # => [{"name" => "fast", "model" => "codex:spark@ro"}]
       #
       class ProviderCatalog
         SUPPORTED_CLASSES = %w[llm tools-lint].freeze

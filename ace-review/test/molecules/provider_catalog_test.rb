@@ -6,9 +6,9 @@ class ProviderCatalogTest < AceReviewTest
   def setup
     super
     create_llm_catalog(<<~YAML)
-      ro:
+      fast:
         - "codex:spark@ro"
-      rw:
+      deep:
         - "codex:codex@rw"
     YAML
     create_tools_lint_catalog(<<~YAML)
@@ -19,42 +19,42 @@ class ProviderCatalogTest < AceReviewTest
   end
 
   def test_resolves_llm_catalog_entry_by_name
-    entries = @catalog.resolve(provider_class: "llm", names: ["ro"])
+    entries = @catalog.resolve(provider_class: "llm", names: ["fast"])
     assert_equal 1, entries.size
-    assert_equal "ro", entries.first["name"]
+    assert_equal "fast", entries.first["name"]
     assert_equal "codex:spark@ro", entries.first["model"]
   end
 
   def test_resolves_multiple_llm_entries
-    entries = @catalog.resolve(provider_class: "llm", names: ["ro", "rw"])
+    entries = @catalog.resolve(provider_class: "llm", names: ["fast", "deep"])
     assert_equal 2, entries.size
-    assert_equal "ro", entries.first["name"]
-    assert_equal "rw", entries.last["name"]
+    assert_equal "fast", entries.first["name"]
+    assert_equal "deep", entries.last["name"]
   end
 
   def test_resolves_llm_group_with_multiple_models
     create_llm_catalog(<<~YAML)
-      ro:
+      fast:
         - "codex:spark@ro"
         - "claude:haiku@ro"
     YAML
     catalog = Ace::Review::Molecules::ProviderCatalog.new(project_root: @test_dir)
-    entries = catalog.resolve(provider_class: "llm", names: ["ro"])
+    entries = catalog.resolve(provider_class: "llm", names: ["fast"])
     assert_equal 2, entries.size
-    assert_equal "ro", entries[0]["name"]
+    assert_equal "fast", entries[0]["name"]
     assert_equal "codex:spark@ro", entries[0]["model"]
-    assert_equal "ro", entries[1]["name"]
+    assert_equal "fast", entries[1]["name"]
     assert_equal "claude:haiku@ro", entries[1]["model"]
   end
 
   def test_duplicate_models_produce_duplicate_entries
     create_llm_catalog(<<~YAML)
-      ro:
+      fast:
         - "codex:spark@ro"
         - "codex:spark@ro"
     YAML
     catalog = Ace::Review::Molecules::ProviderCatalog.new(project_root: @test_dir)
-    entries = catalog.resolve(provider_class: "llm", names: ["ro"])
+    entries = catalog.resolve(provider_class: "llm", names: ["fast"])
     assert_equal 2, entries.size
     assert_equal entries[0]["model"], entries[1]["model"]
   end
@@ -96,8 +96,8 @@ class ProviderCatalogTest < AceReviewTest
 
   def test_entry_names_returns_catalog_keys
     names = @catalog.entry_names(provider_class: "llm")
-    assert_includes names, "ro"
-    assert_includes names, "rw"
+    assert_includes names, "fast"
+    assert_includes names, "deep"
   end
 
   def test_returns_empty_when_catalog_file_missing
@@ -111,8 +111,8 @@ class ProviderCatalogTest < AceReviewTest
 
   def test_catalog_caches_loaded_data
     # Call twice and ensure no error on second call (tests memoization)
-    @catalog.resolve(provider_class: "llm", names: ["ro"])
-    entries = @catalog.resolve(provider_class: "llm", names: ["ro"])
+    @catalog.resolve(provider_class: "llm", names: ["fast"])
+    entries = @catalog.resolve(provider_class: "llm", names: ["fast"])
     assert_equal 1, entries.size
   end
 

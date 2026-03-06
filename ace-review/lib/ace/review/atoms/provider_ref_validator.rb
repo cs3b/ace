@@ -16,7 +16,7 @@ module Ace
 
           parts = ref.split(":")
           unless parts.length == 2
-            return failure("Invalid provider reference '#{ref}': use KIND:NAME, for example llm:ro")
+            return failure("Invalid provider reference '#{ref}': use KIND:NAME, for example llm:fast")
           end
 
           kind, name = parts
