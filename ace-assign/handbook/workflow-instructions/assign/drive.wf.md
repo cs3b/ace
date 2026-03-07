@@ -97,6 +97,8 @@ Repeat the following cycle until all phases are done or failed:
   1. Execute the phase and report completion with `ace-assign finish --message`
   2. Attempt execution, capture blocker evidence, and mark failed with `ace-assign fail`
 - Never use report text to "skip" or synthesize completion for planned phases.
+- **Fork-delegation constraint**: If the active phase has `FORK: yes`, the driver MUST delegate via `ace-assign fork-run`. The driver MUST NOT execute fork-marked phases inline, absorb remaining fork children after partial failure, or inject retry phases as top-level siblings. All fork recovery goes through re-fork (see [Fork-Run Crash Recovery](#fork-run-crash-recovery-partial-completion)).
+- **Conditional release in review subtrees**: A `release` phase inside a review cycle (e.g., `[review-pr, apply-feedback, release]`) MUST skip the version bump when prior sibling phases produced no code changes. If `apply-feedback` reported no findings or `git diff HEAD~1 --stat` shows only report files, mark release done with "no-op: no changes to release" instead of bumping.
 
 ### Adaptation Assessment (After Each Phase)
 
@@ -120,6 +122,11 @@ After completing or failing each phase, evaluate whether the assignment needs ad
 - **Metadata hint**: Phase file contains `trigger_on_failure` — if the phase failed, inject the referenced phase type
 
 Use `decision_notes` from phase metadata (if present) as additional guidance for these assessments.
+
+- **Review-cycle circuit breaker**: When a review fork subtree fails due to provider unavailability (not code bugs), evaluate whether to attempt the next review cycle:
+  - If the **first** review cycle (valid) failed on providers: skip remaining cycles (fit, shine). Mark them done with "skipped: provider unavailable for prior cycle" reports.
+  - If the **second** cycle (fit) failed after valid succeeded: skip shine. Valid already captured correctness issues.
+  - **Never retry a provider-failed review cycle more than once.** If the re-fork also fails on providers, mark the cycle done-with-skip and move on.
 
 ### 1. Check Status
 
@@ -346,6 +353,28 @@ When `fork-run` fails not because of a code bug but because an LLM provider time
    ```
 
 **Inline execution constraint**: Only LLM-tool phases may go inline during provider unavailability. Code-producing phases always require a fork for context isolation — wait for recovery or ask the user.
+
+#### Re-Fork After Partial Provider Failure
+
+When a fork subtree has a mix of done, failed, and pending children after a provider failure, the driver recovers by re-forking — not by absorbing remaining work inline.
+
+**Protocol**:
+
+1. **Inject retry as a child** of the failed phase's parent subtree (never as a top-level sibling):
+   ```bash
+   ace-assign add "retry-review-pr" --after ${failed_child} --child \
+     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
+     -i "Retry review-pr after provider recovery."
+   ```
+
+2. **Re-fork the subtree** — fork-run re-enters and picks up pending/retry children:
+   ```bash
+   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
+   ```
+
+3. **Do NOT inject phases as top-level siblings** — retry phases must be children of the original subtree root, never top-level phases like `101` or `121`.
+
+**Anti-pattern**: Driver sees subtree 110 with 110.01 failed, 110.02 and 110.03 pending. Driver executes 110.02 and 110.03 inline. This defeats context isolation and violates the fork-delegation constraint.
 
 ### 3. Execute Current Phase
 
