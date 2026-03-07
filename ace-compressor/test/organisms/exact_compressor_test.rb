@@ -46,12 +46,17 @@ class ExactCompressorTest < AceCompressorTestCase
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([later, earlier]).call
 
-    assert_includes output, "FILE|#{earlier}"
-    assert_includes output, "FILE|#{later}"
+    earlier_file = output.index("FILE|#{earlier}")
+    later_file = output.index("FILE|#{later}")
     earlier_section = output.index("SEC|earlier")
     later_section = output.index("SEC|later")
+    assert earlier_file
+    assert later_file
     assert earlier_section
     assert later_section
+    assert_operator earlier_file, :<, earlier_section
+    assert_operator earlier_section, :<, later_file
+    assert_operator later_file, :<, later_section
     assert_operator earlier_section, :<, later_section
   end
 
@@ -102,6 +107,16 @@ class ExactCompressorTest < AceCompressorTestCase
 
     assert_includes output, "EXAMPLE|tool=ace-git-commit"
     assert_includes output, "FILES|ace-git-commit|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]"
+  end
+
+  def test_prose_example_line_emits_example_record
+    path = File.join(@tmp, "example.md")
+    File.write(path, "# How It Works\n\n**Example: `ace-git-commit`**\n")
+
+    output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
+
+    assert_includes output, "EXAMPLE|tool=ace-git-commit"
+    refute_includes output, "FACT|Example: ace-git-commit"
   end
 
   def test_table_lines_are_preserved_as_table_record
