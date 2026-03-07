@@ -4,32 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.788] - 2026-03-07
+## [0.9.791] - 2026-03-07
 
 ### Technical
-- **ace-assign v0.22.3**: Completed shine-cycle release step for PR #242 after provider/runtime review failures (`claude` inactive, `codex` broken pipe, fallback hang) and confirmation that apply-feedback had no pending items.
+- **ace-assign v0.22.4**: Consolidated root changelog ordering and removed duplicate/no-op entries; added a package release entry for changelog cleanup and test-temp-dir consistency updates.
 
-## [0.9.787] - 2026-03-07
-
-### Fixed
-- **ace-assign v0.22.2**: Normalized `ace-assign create` output path formatting so the `Created:` and hidden-spec provenance lines use consistent path rendering.
-
-### Technical
-- **ace-assign v0.22.2**: Added regression tests covering relative create output formatting and legacy `phases/` source-config preservation.
-
-## [0.9.786] - 2026-03-07
-
-### Technical
-- **ace-assign v0.22.1**: Completed valid-cycle release step for PR #242 after provider/model retry handling in review and confirmation that apply-feedback had no pending medium+ items.
-
-## [0.9.785] - 2026-03-07
-
-### Added
-- **ace-assign v0.22.0**: `ace-assign create` now surfaces hidden-spec provenance in standard output when assignments are created from `.ace-local/assign/jobs/...` specs.
-
-### Changed
-- **ace-assign v0.22.0**: Source-config provenance now preserves existing `jobs/` paths and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` (replacing prior `phases/` archive behavior).
-- **ace-assign v0.22.0**: Updated assign-create workflow/skill tracer contract for `work-on-task --taskref <id>` with deterministic hidden-spec handoff to `ace-assign create FILE`.
 ## [0.9.790] - 2026-03-07
 
 ### Technical
@@ -47,6 +26,9 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.787] - 2026-03-07
 
+### Fixed
+- **ace-assign v0.22.2**: Normalized `ace-assign create` output path formatting so the `Created:` and hidden-spec provenance lines use consistent path rendering.
+
 ### Added
 - **ace-compressor v0.10.0**: Added explicit compact reduction metadata records for loss and deduplicated examples (`LOSS|...`, `EXAMPLE_REF|...`).
 
@@ -55,6 +37,7 @@ All notable changes to this project will be documented in this file.
 
 ### Technical
 - **ace-compressor v0.10.0**: Expanded compact-mode command/organism tests for strategy/loss signaling and mimicry-sensitive example handling.
+- **ace-assign v0.22.2**: Added regression tests covering relative create output formatting and legacy `phases/` source-config preservation.
 
 ## [0.9.786] - 2026-03-07
 
