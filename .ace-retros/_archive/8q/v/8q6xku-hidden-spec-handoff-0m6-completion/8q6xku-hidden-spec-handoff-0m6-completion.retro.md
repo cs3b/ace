@@ -4,7 +4,7 @@ title: hidden-spec-handoff-0m6-completion
 type: standard
 tags: [ace-assign, hidden-spec, validation, 0m6]
 created_at: "2026-03-07 22:23:10"
-status: active
+status: done
 task_ref: 8q5.t.0m6.0
 ---
 
