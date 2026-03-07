@@ -182,7 +182,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_archives_config_to_task_phases_dir
+  def test_start_archives_config_to_task_jobs_dir
     with_temp_cache do |cache_dir|
       task_dir = File.join(cache_dir, "task-folder")
       FileUtils.mkdir_p(task_dir)
@@ -194,13 +194,31 @@ class AssignmentExecutorTest < AceAssignTestCase
       # Original should be gone
       refute File.exist?(config_path), "Original job.yaml should be removed"
 
-      # Archived copy should exist in task's phases/ dir
-      archived = File.join(task_dir, "phases", "#{result[:assignment].id}-job.yml")
-      assert File.exist?(archived), "Archived job.yml should exist in task phases dir"
+      # Archived copy should exist in task's jobs/ dir
+      archived = File.join(task_dir, "jobs", "#{result[:assignment].id}-job.yml")
+      assert File.exist?(archived), "Archived job.yml should exist in task jobs dir"
+      assert_equal archived, result[:assignment].source_config
 
       # Content should be valid YAML
       data = YAML.safe_load_file(archived)
       assert_equal "test-session", data["session"]["name"]
+    end
+  end
+
+  def test_start_preserves_hidden_spec_path_in_assign_jobs_dir
+    with_temp_cache do |cache_dir|
+      hidden_jobs_dir = File.join(cache_dir, ".ace-local", "assign", "jobs")
+      FileUtils.mkdir_p(hidden_jobs_dir)
+      config_path = create_test_config(hidden_jobs_dir, name: "hidden-spec")
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assert File.exist?(config_path), "Hidden spec should remain in-place"
+      assert_equal File.expand_path(config_path), result[:assignment].source_config
+
+      unexpected_archive = File.join(hidden_jobs_dir, "jobs", "#{result[:assignment].id}-job.yml")
+      refute File.exist?(unexpected_archive), "Hidden spec should not be moved into nested jobs/ directory"
     end
   end
 

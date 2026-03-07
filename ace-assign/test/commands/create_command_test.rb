@@ -8,7 +8,6 @@ class CreateCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
 
       # Temporarily override cache dir
-      original_config = Ace::Assign.config.dup
       Ace::Assign.config["cache_dir"] = cache_dir
 
       result = nil
@@ -43,6 +42,25 @@ class CreateCommandTest < AceAssignTestCase
       end
 
       assert_empty output.first.strip
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_create_prints_hidden_spec_path_for_assign_jobs_source
+    with_temp_cache do |cache_dir|
+      hidden_jobs_dir = File.join(cache_dir, ".ace-local", "assign", "jobs")
+      FileUtils.mkdir_p(hidden_jobs_dir)
+      config_path = create_test_config(hidden_jobs_dir, name: "hidden-spec")
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+      end
+
+      assert_includes output.first, "Created from hidden spec:"
+      assert_includes output.first, ".ace-local/assign/jobs/"
 
       Ace::Assign.reset_config!
     end

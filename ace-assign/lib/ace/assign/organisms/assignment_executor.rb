@@ -850,9 +850,9 @@ module Ace
           order.map { |name| index[name] }.compact
         end
 
-        # Archive source config into the task's phases/ directory.
-        # If config is already in a phases/ directory, keeps it in place.
-        # Otherwise moves job.yaml to <task>/phases/<assignment_id>-job.yml for provenance.
+        # Archive source config into the task's jobs/ directory.
+        # If config is already in a jobs/ or phases/ directory, keeps it in place.
+        # Otherwise moves job.yaml to <task>/jobs/<assignment_id>-job.yml for provenance.
         #
         # @param config_path [String] Path to the original job.yaml
         # @param assignment_id [String] Assignment identifier for filename prefix
@@ -861,14 +861,14 @@ module Ace
           expanded_path = File.expand_path(config_path)
           parent_dir = File.dirname(expanded_path)
 
-          # If already in a phases/ directory, keep it there
-          return expanded_path if File.basename(parent_dir) == "phases"
+          # Keep pre-rendered hidden/job specs and legacy phase archives stable.
+          return expanded_path if %w[jobs phases].include?(File.basename(parent_dir))
 
-          # Otherwise, move to task's phases/ directory
-          phases_dir = File.join(parent_dir, "phases")
-          FileUtils.mkdir_p(phases_dir)
+          # Otherwise, move to task's jobs/ directory.
+          jobs_dir = File.join(parent_dir, "jobs")
+          FileUtils.mkdir_p(jobs_dir)
 
-          dest = File.join(phases_dir, "#{assignment_id}-job.yml")
+          dest = File.join(jobs_dir, "#{assignment_id}-job.yml")
           FileUtils.mv(expanded_path, dest)
           dest
         end
