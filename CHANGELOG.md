@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.784] - 2026-03-07
+
+### Changed
+- **ace-compressor v0.7.0**: Migrated exact-mode output to ContextPack/3 and improved section-aware semantic records
+  for deterministic markdown compression output.
+
+### Technical
+- **ace-compressor v0.7.0**: Added canonical markdown normalization and updated tests, CLI help text, and docs to
+  document the new exact-mode contract.
+
 ## [0.9.783] - 2026-03-07
 
 ### Changed

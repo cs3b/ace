@@ -15,16 +15,16 @@ class ExactCompressorTest < AceCompressorTestCase
     super
   end
 
-  def test_emits_context_pack_records_for_single_file
+  def test_emits_context_pack_3_records
     path = File.join(@tmp, "input.md")
-    File.write(path, "# H1\n\nParagraph text")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
 
-    assert_includes output, "H|ContextPack/2|exact"
-    assert_match(%r{S\|1\|.*input\.md}, output)
-    assert_includes output, "M|1|1|H1"
-    assert_includes output, "F|1|Paragraph text"
+    assert_includes output, "H|ContextPack/3|exact"
+    assert_includes output, "FILE|#{path}"
+    assert_includes output, "SEC|vision"
+    assert_includes output, "SUMMARY|Agents can run CLI commands"
   end
 
   def test_raises_for_empty_input
@@ -46,13 +46,13 @@ class ExactCompressorTest < AceCompressorTestCase
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([later, earlier]).call
 
-    assert_match(%r{S\|1\|.*a\.md}, output)
-    assert_match(%r{S\|2\|.*z\.md}, output)
-    earlier_index = output.index("M|1|1|Earlier")
-    later_index = output.index("M|2|1|Later")
-    assert earlier_index
-    assert later_index
-    assert_operator earlier_index, :<, later_index
+    assert_includes output, "FILE|#{earlier}"
+    assert_includes output, "FILE|#{later}"
+    earlier_section = output.index("SEC|earlier")
+    later_section = output.index("SEC|later")
+    assert earlier_section
+    assert later_section
+    assert_operator earlier_section, :<, later_section
   end
 
   def test_directory_with_no_supported_files_raises
@@ -73,27 +73,65 @@ class ExactCompressorTest < AceCompressorTestCase
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
 
-    assert_includes output, "U|1|image-only|![Load](chart.png)"
+    assert_includes output, "U|image-only|![Load](chart.png)"
   end
 
-  def test_fenced_code_emits_fallback_record
+  def test_fenced_code_emits_cmd_record
     path = File.join(@tmp, "code.md")
-    File.write(path, "# Snippet\n\n```ruby\nputs 42\n```")
+    File.write(path, "# Snippet\n\n```bash\nace-git-commit -i \"fix auth bug\"\n```")
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
 
-    assert_includes output, "B|1|fenced-code|```ruby puts 42 ```"
+    assert_includes output, "CMD|ace-git-commit -i \"fix auth bug\""
+    refute_includes output, "B|"
   end
 
-  def test_table_lines_are_preserved_as_table_fact
+  def test_fenced_file_list_emits_files_record
+    path = File.join(@tmp, "files.md")
+    File.write(path, <<~MD)
+      ## Example: ace-git-commit
+
+      ```
+      .ace-defaults/git/commit.yml
+      handbook/prompts/git-commit.system.md
+      exe/ace-git-commit
+      ```
+    MD
+
+    output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
+
+    assert_includes output, "EXAMPLE|tool=ace-git-commit"
+    assert_includes output, "FILES|ace-git-commit|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]"
+  end
+
+  def test_table_lines_are_preserved_as_table_record
     path = File.join(@tmp, "table.md")
     File.write(path, "# Table\n\n| Name | Value |\n|---|---|\n| must | 42 |\n")
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
 
-    assert_includes output, "T|1|\\| Name \\| Value \\| \\|\\|ROW\\|\\| \\|---\\|---\\| \\|\\|ROW\\|\\| \\| must \\| 42 \\|"
+    assert_includes output, "TABLE|\\| Name \\| Value \\| \\|\\|ROW\\|\\| \\|---\\|---\\| \\|\\|ROW\\|\\| \\| must \\| 42 \\|"
     assert_includes output, "must"
     assert_includes output, "42"
+  end
+
+  def test_list_lines_are_encoded_as_array_records
+    path = File.join(@tmp, "list.md")
+    File.write(path, "# Problems\n\n- Context bloat\n- No isolation boundary\n")
+
+    output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
+
+    assert_includes output, "PROBLEMS|[context_bloat,no_isolation_boundary]"
+  end
+
+  def test_rules_and_facts_are_semantic
+    path = File.join(@tmp, "policy.md")
+    File.write(path, "# Policy\n\nAgents can run CLI commands and read files.\n\nTeams must not remove controls.\n")
+
+    output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
+
+    assert_includes output, "RULE|Agents can run CLI commands and read files."
+    assert_includes output, "RULE|Teams must not remove controls."
   end
 
   def test_compact_format_avoids_verbose_record_fields

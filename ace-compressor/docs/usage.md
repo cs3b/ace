@@ -1,6 +1,6 @@
 ---
 doc-type: how-to-guide
-purpose: Usage guide for ace-compressor CLI tool — exact-mode context compression to ContextPack/2.
+purpose: Usage guide for ace-compressor CLI tool — exact-mode context compression to ContextPack/3.
 update:
   update_frequency: on-change
   last-updated: '2026-03-07'
@@ -12,18 +12,17 @@ update:
 
 ## Overview
 
-`ace-compressor` compresses Markdown and text files into a compact `ContextPack/2` format — a
-minimal, machine-readable representation that preserves document structure, headings, facts, tables,
-and rule modalities while reducing exact-mode wire overhead.
+`ace-compressor` compresses Markdown and text files into a compact `ContextPack/3` format — a
+minimal, semantic representation that preserves document structure and meaning while reducing exact-mode
+wire overhead.
 
 **Key Features:**
 
-- **Exact mode**: Lossless structural extraction — every heading, paragraph, table, and rule block
-  is preserved as a typed record.
+- **Exact mode**: Canonical semantic extraction — headings, prose, lists, and code structures are
+  converted into compact typed records.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
-- **Provenance**: A compact source table maps source IDs to file paths once per pack.
-- **Fidelity markers**: Images emit `U|...`; fenced code blocks emit `B|...` rather than failing
-  silently.
+- **Provenance**: A compact source table maps files and sections once per pack.
+- **Fidelity markers**: Images emit `U|...`; fences emit `CMD|`, `FILES|`, `TREE|`, `CODE|`, or `TABLE|`.
 
 ## Quick Start
 
@@ -88,7 +87,7 @@ The canonical cache is still used for freshness checks even when `--output` poin
 ### `--format`
 
 - `path` (default): print the saved pack path
-- `stdio`: print the full `ContextPack/2` content
+- `stdio`: print the full `ContextPack/3` content
 - `stats`: print a short human-readable summary showing cache status, output location, and original vs packed totals
 
 Example stats output:
@@ -103,25 +102,33 @@ Packed:   3,691 B, 37 lines
 Change:   +0.8% bytes, -63.4% lines
 ```
 
-## Output Format: ContextPack/2
+## Output Format: ContextPack/3
 
 Every run emits a stream of pipe-delimited records:
 
 | Record Type | Example | Meaning |
 |-------------|---------|---------|
-| `H|` | `H\|ContextPack/2\|exact` | Header — one per run |
-| `S|` | `S\|1\|docs/vision.md` | Source table entry |
-| `M|` | `M\|1\|2\|Overview` | Section heading |
-| `F|` | `F\|1\|A preserved paragraph fact.` | Fact / paragraph |
-| `T|` | `T\|1\|\| Name \| Value \| \|\|ROW\|\| ...` | Table rows (preserved verbatim) |
-| `U|` | `U\|1\|image-only\|![Chart](chart.png)` | Unresolved image reference |
-| `B|` | `B\|1\|fenced-code\|fenced code payload...` | Fenced code fallback |
+| `H|` | `H\|ContextPack/3\|exact` | Header — one per run |
+| `FILE|` | `FILE\|docs/vision.md` | Source entry |
+| `SEC|` | `SEC\|vision` | Section heading |
+| `SUMMARY|` | `SUMMARY\|A high-level statement` | Overview prose |
+| `FACT|` | `FACT\|A preserved factual statement` | Statement with operational content |
+| `RULE|` | `RULE\|Tooling must avoid side effects` | Policy-style statement |
+| `CONSTRAINT|` | `CONSTRAINT\|No more than 2 retries` | Hard constraints |
+| `PROBLEMS|` | `PROBLEMS\|[context_bloat,isolation_boundary]` | Typed array |
+| `EXAMPLE|` | `EXAMPLE\|tool=ace-git-commit` | Example context marker |
+| `CMD|` | `CMD\|ace-git-commit -i "fix"` | Shell command block |
+| `FILES|` | `FILES\|ace-git-commit\|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]` | File listing |
+| `TREE|` | `TREE\|docs\|src/...` | Tree-shaped block |
+| `CODE|` | `CODE\|ruby\|puts 1` | Generic code block |
+| `TABLE|` | `TABLE\|Name \| Value \| ...` | Table rows (compressed with separators) |
+| `U|` | `U\|image-only\|![Chart](chart.png)` | Unresolved image reference |
 
 The format is intentionally compact:
 
-- source paths appear once in the `S|` table, not on every record
-- section IDs are implicit from record order rather than serialized on each fact
-- record fields use fixed positions instead of repeated `key=value` labels
+- source paths appear once in `FILE|` records, not on every line
+- section scope is implicit from the preceding `SEC|` record
+- record fields use fixed positions, no per-record `src=` fields
 
 ## Common Scenarios
 
@@ -148,16 +155,15 @@ ace-compressor docs/vision.md docs/architecture.md --mode exact --format stdio
 
 **Expected Output** (excerpt):
 ```
-H|ContextPack/2|exact
-S|1|docs/architecture.md
-S|2|docs/vision.md
-M|1|1|ACE - System Architecture
+H|ContextPack/3|exact
+FILE|docs/architecture.md
+SEC|ace_system_architecture
 ...
-M|2|1|ACE Vision
+FILE|docs/vision.md
+SEC|ace_vision
 ```
 
-Files are sorted alphabetically; provenance comes from the `S|` source table plus the source ID in
-each record.
+Files are sorted alphabetically; provenance comes from the `FILE|` order and line sequence.
 
 ### Scenario 3: Compress an entire directory
 
@@ -203,9 +209,9 @@ ace-compressor docs/vision.md --mode exact --format stdio
 | Error | Cause | Exit Code |
 |-------|-------|-----------|
 | `Input source not found: <path>` | File or directory does not exist | 1 |
-| `Input file is empty: <path>` | File has zero bytes | 1 |
-| `Binary file not supported: <path>` | File contains null bytes | 1 |
-| `No supported source files found in directory: <path>` | Directory has no `.md`/`.txt` files | 1 |
+| `Input file is empty. Exact mode requires content: <path>` | Source has zero bytes or no post-frontmatter content | 1 |
+| `Binary input is not supported in exact mode: <path>` | File contains null bytes | 1 |
+| `Directory has no supported markdown/text sources: <path>` | Directory has no supported `.md`/`.txt` files | 1 |
 | No paths provided | Missing `[SOURCES]` argument | 1 |
 
 ## Configuration
@@ -226,7 +232,7 @@ compressor:
 
 ### Problem: Binary file rejected
 
-**Symptom**: `Binary file not supported: image.png`
+**Symptom**: `Binary input is not supported in exact mode: image.png`
 
 **Solution**: Only pass Markdown (`.md`) or text (`.txt`) files. Binary files are never accepted
 even when buried in a directory — the tool skips them automatically during traversal but rejects
@@ -234,13 +240,13 @@ them when passed explicitly.
 
 ### Problem: Empty directory fails
 
-**Symptom**: `No supported source files found in directory: ./tmp`
+**Symptom**: `Directory has no supported markdown/text sources: ./tmp`
 
 **Solution**: Ensure the directory contains at least one `.md` or `.txt` file.
 
 ### Problem: Duplicate paths processed once
 
-**Behaviour**: `ace-compressor file.md file.md` processes `file.md` once and emits one `S|` source
+**Behaviour**: `ace-compressor file.md file.md` processes `file.md` once and emits one `FILE|` source
 entry. Deduplication is automatic.
 
 ### Problem: Fish shell rejects `{hash}` style output paths
@@ -255,8 +261,9 @@ or pass a directory path and let `ace-compressor` derive the hashed filename for
 1. **Use default cache output for repeat work**: repeated runs on unchanged sources reuse the same canonical pack artifact.
 2. **Use `--format stdio` only when a consumer truly needs inline content**: the default `path` output is cheaper and easier to chain.
 3. **Use `--output` for explicit exports**: keep cache as the freshness source, and export copies only when needed.
-4. **Use provenance**: Resolve source IDs through the `S|` table to trace facts back to source documents.
-5. **Read stats as a comparison**: the compact exact format removes most structural overhead, but exact mode can still be slightly larger than the raw source while collapsing line count substantially.
+4. **Use provenance**: use `FILE|` records to trace grouped facts back to source documents.
+5. **Read stats as a comparison**: the compact exact format should show byte and line reductions for
+   normal long-form documentation.
 6. **Check unresolved markers**: Image-heavy docs emit `U|...` records —
    review these if visual content is critical.
 7. **Rely on deterministic ordering**: Multiple files are always sorted alphabetically, making

@@ -10,7 +10,7 @@ module Ace
         class Compress < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
-          desc "Compress markdown/text files into a minimal ContextPack/1"
+          desc "Compress markdown/text files into ContextPack/3 for exact mode"
 
           argument :sources, required: false, type: :array, desc: "File or directory paths"
           option :mode, type: :string, default: "exact", desc: "Compression mode (exact)"

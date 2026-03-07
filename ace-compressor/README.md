@@ -1,6 +1,6 @@
 # ace-compressor
 
-Compresses Markdown and text files into compact `ContextPack/2` records for LLM consumption.
+Compresses Markdown and text files into compact `ContextPack/3` records for LLM consumption.
 
 ## Quick Start
 
