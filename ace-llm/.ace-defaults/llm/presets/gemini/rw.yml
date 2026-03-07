@@ -1,4 +1,6 @@
 timeout: 600
+max_tokens: 16000
 cli_args:
   - --approval-mode
   - auto
+  - --sandbox
