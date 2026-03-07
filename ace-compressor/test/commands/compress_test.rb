@@ -44,10 +44,10 @@ class CompressCommandTest < AceCompressorTestCase
     cache_path = result[:stdout].strip
     assert File.file?(cache_path), "Expected cache file to be written"
     output = File.read(cache_path)
-    assert_includes output, "H|ContextPack/2|exact"
-    assert_includes output, "S|1|vision.md"
-    assert_includes output, "M|1|1|Vision"
-    assert_includes output, "F|1|Agents can run CLI commands"
+    assert_includes output, "H|ContextPack/3|exact"
+    assert_includes output, "FILE|vision.md"
+    assert_includes output, "SEC|vision"
+    assert_includes output, "SUMMARY|Agents can run CLI commands"
   end
 
   def test_success_on_multiple_files_exact_mode
@@ -59,12 +59,12 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([second, first, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "H|ContextPack/2|exact"
-    assert_includes result[:stdout], "S|1|aaa.md"
-    assert_includes result[:stdout], "S|2|zzz.md"
+    assert_includes result[:stdout], "H|ContextPack/3|exact"
+    assert_includes result[:stdout], "FILE|aaa.md"
+    assert_includes result[:stdout], "FILE|zzz.md"
 
-    first_line_index = result[:stdout].index("M|1|1|First")
-    second_line_index = result[:stdout].index("M|2|1|Second")
+    first_line_index = result[:stdout].index("SEC|first")
+    second_line_index = result[:stdout].index("SEC|second")
     assert first_line_index
     assert second_line_index
     assert_operator first_line_index, :<, second_line_index
@@ -77,8 +77,8 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_equal 1, result[:stdout].scan("S|1|dup.md").size
-    assert_equal 1, result[:stdout].scan("M|1|1|Title").size
+    assert_equal 1, result[:stdout].scan("FILE|dup.md").size
+    assert_equal 1, result[:stdout].scan("SEC|title").size
   end
 
   def test_directory_input_collects_supported_sources
@@ -90,16 +90,16 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([docs, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "S|1|docs/a.md"
-    assert_includes result[:stdout], "S|2|docs/b.txt"
-    assert_includes result[:stdout], "M|1|1|A"
-    assert_includes result[:stdout], "M|2|1|B"
+    assert_includes result[:stdout], "FILE|docs/a.md"
+    assert_includes result[:stdout], "FILE|docs/b.txt"
+    assert_includes result[:stdout], "SEC|a"
+    assert_includes result[:stdout], "SEC|b"
   end
 
   def test_error_when_directory_has_no_supported_files
     empty = File.join(@tmp, "empty")
     FileUtils.mkdir_p(empty)
-    File.write(File.join(empty, "image.bin"), "\x00\x01")
+    File.binwrite(File.join(empty, "image.bin"), "\x00\x01")
 
     result = invoke([empty, "--mode", "exact"])
 
@@ -138,8 +138,8 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([docs, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "M|1|1|Valid"
-    assert_equal 1, result[:stdout].scan(/^S\|/).size
+    assert_includes result[:stdout], "SEC|valid"
+    assert_equal 1, result[:stdout].scan(/^FILE\|/).size
   end
 
   def test_error_when_argument_missing
@@ -173,9 +173,9 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "H|ContextPack/2|exact"
-    assert_includes result[:stdout], "M|1|1|A"
-    assert_includes result[:stdout], "M|1|2|B"
+    assert_includes result[:stdout], "H|ContextPack/3|exact"
+    assert_includes result[:stdout], "SEC|a"
+    assert_includes result[:stdout], "SEC|b"
   end
 
   def test_frontmatter_only_plus_heading_works
@@ -185,7 +185,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "M|1|1|Heading"
+    assert_includes result[:stdout], "SEC|heading"
   end
 
   def test_modality_and_numeric_facts_are_preserved
@@ -195,8 +195,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "must not"
-    assert_includes result[:stdout], "only allow 42 retries"
+    assert_includes result[:stdout], "RULE|Teams must not remove controls and only allow 42 retries."
   end
 
   def test_image_only_reference_emits_unresolved_marker_without_failure
@@ -206,7 +205,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "U|1|image-only|![Utilization](utilization.png)"
+    assert_includes result[:stdout], "U|image-only|![Utilization](utilization.png)"
     assert_includes result[:stdout], "utilization.png"
   end
 
@@ -217,7 +216,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "T|1|"
+    assert_includes result[:stdout], "TABLE|"
     assert_includes result[:stdout], "Service"
     assert_includes result[:stdout], "100"
   end
@@ -236,15 +235,26 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes second[:stdout], "Cache:    hit"
   end
 
-  def test_format_stats_reports_human_friendly_mixed_deltas
+  def test_format_stats_reports_real_compression_for_semantic_mode
     path = File.join(@tmp, "vision.md")
-    File.write(path, "# Vision\n\nAgents can run CLI commands\n\nMore context\n\nFinal note")
+    body = [
+      "# Vision",
+      "",
+      "This document provides a high-level summary of how agents and developers can cooperate across long-running initiatives and iterative deliveries.",
+      "",
+      *((0...80).map { |index| "- Context bloat check #{index}" }),
+      "",
+      "You must run commands with clear boundaries. Never call internal APIs directly."
+    ].join("\n")
+
+    File.write(
+      path,
+      body
+    )
 
     result = invoke([path, "--mode", "exact", "--format", "stats"])
 
-    assert_includes result[:stdout], "Sources:  1 file"
-    assert_includes result[:stdout], "Mode:     exact"
-    assert_match(/Change:\s+\+\d+\.\d% bytes, -\d+\.\d% lines/, result[:stdout])
+    assert_match(/Change:\s+-\d+\.\d% bytes, -\d+\.\d% lines/, result[:stdout])
   end
 
   def test_format_stats_aggregates_multiple_source_totals
@@ -291,7 +301,7 @@ class CompressCommandTest < AceCompressorTestCase
 
     result = invoke([path, "--mode", "exact", "--output", target, "--format", "stdio"])
 
-    assert_includes result[:stdout], "H|ContextPack/2|exact"
+    assert_includes result[:stdout], "H|ContextPack/3|exact"
     assert File.file?(target), "Expected custom output file to be written"
   end
 

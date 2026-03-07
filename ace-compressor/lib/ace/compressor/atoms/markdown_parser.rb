@@ -5,6 +5,8 @@ module Ace
     module Atoms
       class MarkdownParser
         HEADING_RE = /\A(#+)\s+(.+)\z/
+        BULLET_LIST_RE = /\A(?:\s*)[-*+]\s+(.+)\z/
+        NUMBERED_LIST_RE = /\A(?:\s*)\d+\.\s+(.+)\z/
         IMAGE_ONLY_RE = /\A!\[[^\]]*\]\([^)]+\)\z/
         TABLE_SEPARATOR_RE = /\A\|?[\-\s:|]+\|?\z/
         FENCE_START_RE = /\A```/
@@ -26,19 +28,35 @@ module Ace
               next
             end
 
+            if layout_separator?(stripped)
+              flush_paragraph(blocks, paragraph_lines)
+              index += 1
+              next
+            end
+
+            if blockquote_marker?(stripped)
+              flush_paragraph(blocks, paragraph_lines)
+              index += 1
+              next
+            end
+
             if stripped.match?(FENCE_START_RE)
               flush_paragraph(blocks, paragraph_lines)
-              fallback_lines = [stripped]
+              language = stripped.sub(FENCE_START_RE, "").strip
+              fence_lines = []
               index += 1
               while index < lines.length
-                candidate = lines[index].strip
-                fallback_lines << candidate
+                candidate = lines[index]
+                break if candidate.strip.match?(FENCE_START_RE)
+
+                fence_lines << candidate
                 index += 1
-                break if candidate.match?(FENCE_START_RE)
               end
+              index += 1 if index < lines.length && lines[index]&.strip&.match?(FENCE_START_RE)
               blocks << {
-                type: :fallback,
-                text: "kind=fenced-code|raw=#{fallback_lines.join(' ')}"
+                type: :fenced_code,
+                language: language,
+                content: fence_lines.join
               }
               next
             end
@@ -47,7 +65,8 @@ module Ace
               flush_paragraph(blocks, paragraph_lines)
               blocks << {
                 type: :unresolved,
-                text: "kind=image-only|raw=#{stripped}"
+                text: stripped,
+                kind: "image-only"
               }
               index += 1
               next
@@ -55,16 +74,36 @@ module Ace
 
             if table_start?(lines, index)
               flush_paragraph(blocks, paragraph_lines)
-              table_lines = [stripped]
-              index += 1
+              table_rows = []
               while index < lines.length
-                candidate = lines[index].strip
-                break if candidate.empty? || !candidate.include?("|")
+                candidate = lines[index]
+                break if candidate.strip.empty?
+                break unless candidate.include?("|")
 
-                table_lines << candidate
+                table_rows << candidate.strip
                 index += 1
               end
-              blocks << { type: :table, text: table_lines.join(" ||ROW|| ") }
+              blocks << { type: :table, rows: table_rows }
+              next
+            end
+
+            if list_start?(stripped)
+              flush_paragraph(blocks, paragraph_lines)
+              list_items = []
+              ordered = false
+              while index < lines.length
+                item_line = lines[index].strip
+                break unless list_start?(item_line)
+
+                ordered = true if ordered_list_line?(item_line)
+                list_items << strip_list_marker(item_line)
+                index += 1
+              end
+              blocks << {
+                type: :list,
+                ordered: ordered,
+                items: list_items
+              }
               next
             end
 
@@ -114,8 +153,28 @@ module Ace
           lines.clear
         end
 
+        def layout_separator?(line)
+          line.match?(/\A(?:[-*_]){3,}\z/)
+        end
+
         def image_only_line?(line)
           line.match?(IMAGE_ONLY_RE)
+        end
+
+        def blockquote_marker?(line)
+          line.match?(/^>+$/)
+        end
+
+        def list_start?(line)
+          line.match?(BULLET_LIST_RE) || line.match?(NUMBERED_LIST_RE)
+        end
+
+        def ordered_list_line?(line)
+          line.match?(NUMBERED_LIST_RE)
+        end
+
+        def strip_list_marker(line)
+          line.sub(BULLET_LIST_RE, "\\1").sub(NUMBERED_LIST_RE, "\\1").strip
         end
 
         def table_start?(lines, index)
