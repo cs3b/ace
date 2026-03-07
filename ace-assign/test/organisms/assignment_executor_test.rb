@@ -523,6 +523,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             - task-load
             - plan-task
             - work-on-task
+            - pre-commit-review
             - verify-test
             - release-minor
           context: fork
@@ -551,6 +552,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes numbers, "010.04"
         assert_includes numbers, "010.05"
         assert_includes numbers, "010.06"
+        assert_includes numbers, "010.07"
         assert_includes numbers, "020"
 
         parent_phase = state.find_by_number("010")
@@ -564,13 +566,15 @@ class AssignmentExecutorTest < AceAssignTestCase
         task_load_phase = state.find_by_number("010.02")
         plan_phase = state.find_by_number("010.03")
         work_phase = state.find_by_number("010.04")
-        verify_phase = state.find_by_number("010.05")
-        release_phase = state.find_by_number("010.06")
+        review_phase = state.find_by_number("010.05")
+        verify_phase = state.find_by_number("010.06")
+        release_phase = state.find_by_number("010.07")
 
         assert_equal "onboard", onboard_phase.name
         assert_equal "plan-task", plan_phase.name
         assert_equal "work-on-task", work_phase.name
         assert_equal "task-load", task_load_phase.name
+        assert_equal "pre-commit-review", review_phase.name
         assert_equal "verify-test", verify_phase.name
         assert_equal "release-minor", release_phase.name
 
@@ -581,6 +585,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_equal "as-onboard", onboard_phase.skill
         assert_equal "as-task-plan", plan_phase.skill
         assert_equal "as-task-work", work_phase.skill
+        assert_nil review_phase.skill
         assert_nil verify_phase.skill
         assert_nil release_phase.skill
 
@@ -588,6 +593,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_nil onboard_phase.context
         assert_nil plan_phase.context
         assert_nil work_phase.context
+        assert_nil review_phase.context
         assert_nil task_load_phase.context
         assert_nil verify_phase.context
         assert_nil release_phase.context
@@ -598,6 +604,8 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes verify_phase.instructions, "Action:"
         assert_includes verify_phase.instructions, "Identify modified packages"
         assert_includes verify_phase.instructions, "ace-test --profile 6"
+        assert_includes review_phase.instructions, "run native `/review`"
+        assert_includes review_phase.instructions, "pre_commit_review_block"
         assert_includes release_phase.instructions, "Action:"
         assert_includes release_phase.instructions, "Run /as-release"
       ensure
