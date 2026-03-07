@@ -10,6 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Restore provider preset defaults under `.ace-defaults/llm/presets/` after the preset refactor dropped `max_tokens: 16000` and rewrote Codex/Gemini sandbox CLI flags; keep the newer 600-second timeout standardization intact.
 
+## [0.26.3] - 2026-03-07
+
+### Changed
+- Improve `--list-providers` output readability: show model count in provider header, wrap long model lists at 78 characters.
+
+## [0.26.2] - 2026-03-07
+
+### Changed
+- Refactor `Configuration#provider` to use `Enumerable#find` for idiomatic Ruby.
+- Use `<<~` HEREDOC for inactive-provider error message in `ProviderModelParser`.
+
+## [0.26.1] - 2026-03-07
+
+### Technical
+- Move `configuration_test.rb` to `test/organisms/` per ADR-017 flat test structure.
+
+## [0.26.0] - 2026-03-07
+
+### Added
+- Added provider allow-list filtering controls through `llm.providers.active` and `ACE_LLM_PROVIDERS_ACTIVE`, including normalization and env override handling.
+- Added configuration and parser tests covering allow-list behavior, env precedence, and inactive-vs-unknown provider classification.
+
+### Changed
+- Updated `ace-llm --list-providers` to show filtered-mode summary and inactive provider section when an allow-list is active.
+
+### Fixed
+- Distinguish inactive providers (configured but filtered out) from unknown providers in query validation errors, with actionable enablement guidance.
+
 ## [0.25.1] - 2026-03-06
 
 ### Added

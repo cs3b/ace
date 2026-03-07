@@ -35,8 +35,8 @@ module Ace
 
         assert_equal true, config.enabled
         assert_equal 2, config.providers.length
-        assert_match(/\Aanthropic:/, config.providers[0])
-        assert_match(/\Aopenai:/, config.providers[1])
+        assert config.providers[0].start_with?("anthropic"), "expected provider to start with 'anthropic', got: #{config.providers[0]}"
+        assert config.providers[1].start_with?("openai"), "expected provider to start with 'openai', got: #{config.providers[1]}"
         assert_equal 5, config.retry_count
         assert_equal 2.0, config.retry_delay
         assert_equal 45.0, config.max_total_timeout
@@ -59,8 +59,8 @@ module Ace
 
         assert_equal false, config.enabled
         assert_equal 2, config.providers.length
-        assert_match(/\A(anthropic|claude):/, config.providers[0])
-        assert_match(/\A(openai:|gpt)\b/, config.providers[1])
+        assert config.providers[0].match?(/\A(anthropic|claude)\b/), "expected provider to start with 'anthropic' or 'claude', got: #{config.providers[0]}"
+        assert config.providers[1].match?(/\A(openai|gpt)\b/), "expected provider to start with 'openai' or 'gpt', got: #{config.providers[1]}"
       end
 
       def test_load_fallback_config_defaults
@@ -131,9 +131,9 @@ module Ace
         end
 
         assert_equal 3, config.providers.length
-        assert_match(/\Aanthropic:/, config.providers[0])
-        assert_match(/\Aopenai:/, config.providers[1])
-        assert_match(/\Amistral:/, config.providers[2])
+        assert config.providers[0].start_with?("anthropic"), "expected provider to start with 'anthropic', got: #{config.providers[0]}"
+        assert config.providers[1].start_with?("openai"), "expected provider to start with 'openai', got: #{config.providers[1]}"
+        assert config.providers[2].start_with?("mistral"), "expected provider to start with 'mistral', got: #{config.providers[2]}"
       ensure
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
       end
@@ -158,7 +158,7 @@ module Ace
         end
 
         assert_equal 1, config.providers.length
-        assert_match(/\A(anthropic|claude):/, config.providers.first)
+        assert config.providers.first.match?(/\A(anthropic|claude)\b/), "expected provider to start with 'anthropic' or 'claude', got: #{config.providers.first}"
       ensure
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
       end

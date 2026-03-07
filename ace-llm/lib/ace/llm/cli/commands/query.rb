@@ -199,27 +199,61 @@ module Ace
 
           registry = Ace::LLM::Molecules::ClientRegistry.new
           providers = registry.list_providers_with_status
+          configuration = Ace::LLM.configuration
 
-          puts "Available LLM Providers:"
+          if configuration.provider_filter_applied?
+            total = configuration.configured_provider_names.length
+            puts "Available LLM Providers (filtered - #{providers.length} of #{total} active):"
+          else
+            puts "Available LLM Providers:"
+          end
           puts ""
 
           providers.each do |provider|
             status = provider[:available] ? "\u2713" : "\u2717"
             api_status = if provider[:api_key_required]
-                           provider[:api_key_present] ? "(API key configured)" : "(API key required)"
+                           provider[:api_key_present] ? "API key configured" : "API key required"
                          else
-                           "(No API key needed)"
+                           "No API key needed"
                          end
 
-            puts "#{status} #{provider[:name]} #{api_status}"
+            models = provider[:models] || []
+            model_count = models.empty? ? "" : " \u00b7 #{models.length} models"
+            puts "#{status} #{provider[:name]}#{model_count} (#{api_status})"
 
-            if provider[:models] && !provider[:models].empty?
-              puts "  Models: #{provider[:models].join(', ')}"
-            end
-
+            print_wrapped_list(models, indent: "  ") unless models.empty?
             puts "  Gem required: #{provider[:gem]}" unless provider[:available]
             puts ""
           end
+
+          return unless configuration.provider_filter_applied?
+
+          inactive = configuration.inactive_provider_names
+          return if inactive.empty?
+
+          puts "Inactive providers (#{inactive.length}):"
+          print_wrapped_list(inactive, indent: "  ")
+          puts ""
+        end
+
+        def print_wrapped_list(items, indent: "  ", max_width: 78)
+          current_line = indent.dup
+
+          items.each_with_index do |item, i|
+            is_last = i == items.length - 1
+            entry = is_last ? item.to_s : "#{item},"
+
+            if current_line == indent
+              current_line << entry
+            elsif current_line.length + 1 + entry.length > max_width
+              puts current_line
+              current_line = "#{indent}#{entry}"
+            else
+              current_line << " #{entry}"
+            end
+          end
+
+          puts current_line unless current_line.strip.empty?
         end
 
         def error_output(message)
