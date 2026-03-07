@@ -1,14 +1,14 @@
 llm:
   providers:
-    active: 
-      - opencode 
-      - pi 
-      - codex 
-      - gemini 
+    active:
+      - opencode
+      - pi
       - codex
+      - gemini
+      - claude
       - openrouter
       - zai
-      - google 
+      - google
   fallback:
     enabled: true
     retry_count: 2
