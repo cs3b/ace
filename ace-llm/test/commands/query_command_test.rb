@@ -134,4 +134,46 @@ class QueryCommandTest < AceLlmTestCase
       assert_match(/alias|Usage:/i, output)
     end
   end
+
+  def test_list_providers_shows_filtered_header_and_inactive_section
+    registry = Struct.new(:list).new(
+      [
+        {
+          name: "google",
+          models: ["gemini-2.5-flash"],
+          gem: "ace-llm",
+          available: true,
+          api_key_required: false,
+          api_key_present: false
+        }
+      ]
+    )
+    def registry.list_providers_with_status
+      list
+    end
+
+    configuration = Struct.new(:applied, :configured, :inactive) do
+      def provider_filter_applied?
+        applied
+      end
+
+      def configured_provider_names
+        configured
+      end
+
+      def inactive_provider_names
+        inactive
+      end
+    end.new(true, %w[google anthropic], ["anthropic"])
+
+    Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+      Ace::LLM.stub(:configuration, configuration) do
+        output, = capture_io { Ace::LLM::CLI::Commands::Query.new.send(:list_providers) }
+        assert_match(/Available LLM Providers \(filtered - 1 of 2 active\):/, output)
+        assert_match(/google.*1 models/, output)
+        assert_match(/Inactive providers \(1\):/, output)
+        assert_match(/anthropic/, output)
+      end
+    end
+  end
 end
