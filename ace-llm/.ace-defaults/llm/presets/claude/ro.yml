@@ -1,4 +1,4 @@
-timeout: 300
+timeout: 600
 cli_args:
   - --permission-mode
   - plan
