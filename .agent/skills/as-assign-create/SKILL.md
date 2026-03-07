@@ -1,6 +1,6 @@
 ---
 name: as-assign-create
-description: Create a new assignment from job.yaml
+description: Create a new assignment from a rendered hidden spec
 # bundle: wfi://assign/create
 # agent: general-purpose
 user-invocable: true
@@ -10,7 +10,7 @@ allowed-tools:
   - Read
   - Write
   - AskUserQuestion
-argument-hint: "[path/to/job.yaml]"
+argument-hint: "[work-on-task --taskref <id>]"
 last_modified: 2026-02-11
 source: ace-assign
 ---
