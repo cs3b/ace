@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.792] - 2026-03-07
+
+### Technical
+- **ace-assign v0.22.5**: Updated create-command test setup to run under temporary cache paths so `Created:` output remains relative when expected.
+
 ## [0.9.791] - 2026-03-07
 
 ### Technical
