@@ -15,7 +15,7 @@ Validation order (impact-first):
 2. **Prune ran from sandbox root** — `pwd-before-dry-run.txt` and `pwd-before-prune.txt` match `sandbox-root-path.txt` and do not point to `task-q7w`.
 3. **Correct prune commands used** — command files show only normal prune flow (`ace-overseer prune --dry-run`, `ace-overseer prune --yes`) with no assignment-prune flags, no `--force`, and no positional targets.
 4. **Assignment completion or safety rejection proven** — either:
-   - status-before shows task q7w assignment not completed, `ace-assign finish --report` succeeds, and status-after shows assignment state `completed`; or
+   - status-before shows task q7w assignment not completed, `ace-assign finish --message` succeeds, and status-after shows assignment state `completed`; or
    - assignment completion is blocked with explicit safety message (for example no active assignment) and prune output documents safety rejection.
 5. **Prune final state (primary oracle)** — one of:
    - if assignment completion succeeded, after prune --yes, `worktree-list-after-prune` excludes task q7w and still includes task r8x; or
