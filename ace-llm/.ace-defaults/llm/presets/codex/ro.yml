@@ -1,5 +1,4 @@
 timeout: 600
-max_tokens: 16000
 cli_args:
   - --full-auto
   - --sandbox
