@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-07
+
+### Added
+- `ace-assign create` now reports hidden-spec provenance with `Created from hidden spec: ...` when source config is under `.ace-local/assign/jobs/`.
+- Added create-command and assignment-executor coverage for hidden-spec path retention and provenance output.
+
+### Changed
+- Assignment source-config archiving now preserves existing `jobs/` paths (including hidden specs in `.ace-local/assign/jobs/`) and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` instead of `phases/`.
+- `assign/create` workflow and `as-assign-create` skill contract now document the tracer path `work-on-task --taskref <id>` with hidden-spec rendering and deterministic `ace-assign create FILE` handoff.
+
 ## [0.21.3] - 2026-03-07
 
 ### Technical
