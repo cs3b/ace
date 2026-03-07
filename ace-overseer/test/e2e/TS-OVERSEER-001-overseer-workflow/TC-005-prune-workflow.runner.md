@@ -19,7 +19,7 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/sandbox-root-path.txt` — absolute sandbox root path used for overseer prune commands
 - Assignment completion evidence for task 8pp.t.q7w:
   - `results/tc/05/task-q7w-assign-status-before.stdout`, `.stderr`, `.exit`
-  - `results/tc/05/task-q7w-phase-report.md` (report file passed to `ace-assign finish --report`)
+  - `results/tc/05/task-q7w-phase-report.md` (report file passed to `ace-assign finish --message`)
   - `results/tc/05/task-q7w-assign-report.stdout`, `.stderr`, `.exit`
   - `results/tc/05/task-q7w-assign-status-after.stdout`, `.stderr`, `.exit`
 - Prune invocation guardrails:
@@ -41,7 +41,7 @@ Save all output to `results/tc/05/`. Capture:
 - Resolve task 8pp.t.q7w worktree path first (for example from `ace-git-worktree list`); save it to `results/tc/05/task-q7w-worktree-path.txt`.
 - Complete task 8pp.t.q7w assignment before prune checks:
   - Run `ace-assign status --format json` in task 8pp.t.q7w worktree (before), for example via `(cd "$TASK_Q7W_WORKTREE" && ...)`.
-  - Run `ace-assign finish --report <report-file>` in task 8pp.t.q7w worktree.
+  - Run `ace-assign finish --message <report-file>` in task 8pp.t.q7w worktree.
   - Re-check `ace-assign status --format json` (after), expecting assignment state `completed`.
   - Keep report and all captures under sandbox root `results/tc/05/` even while executing commands from inside the worktree.
 - Task 8pp.t.r8x should remain pending/active (so prune preserves it).
