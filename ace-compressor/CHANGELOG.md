@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-03-07
+
+### Technical
+- Applied shine-cycle polish to compact mode internals: added high-level class documentation and replaced table-strategy magic numbers with named constants.
+
+## [0.10.2] - 2026-03-07
+
+### Technical
+- Completed fit-cycle review/apply-feedback/release flow for PR #243; no actionable findings remained after feedback synthesis retries.
+
+## [0.10.1] - 2026-03-07
+
+### Technical
+- Completed valid-cycle review/apply-feedback/release flow for PR #243; no medium+ correctness findings required code changes.
+
+## [0.10.0] - 2026-03-07
+
+### Added
+- Added explicit compact-mode reduction metadata records: `LOSS|...` and `EXAMPLE_REF|...`.
+- Added cross-source example deduplication that collapses duplicate examples to references with provenance.
+
+### Changed
+- Changed compact table encoding to emit explicit per-table strategy metadata (`preserve`, `schema_plus_key_rows`, `summarize_with_loss`).
+- Changed compact table reduction to report data-row-only retained/original counts and preserve sensitive table content.
+- Updated compact usage documentation to include the new `TABLE|...|strategy=...`, `LOSS|...`, and `EXAMPLE_REF|...` contract.
+
+### Technical
+- Expanded compact organism/command regression coverage for table strategy selection, loss signaling, example-ref collapse, and mimicry-required example preservation.
+
+## [0.9.0] - 2026-03-07
+
+### Added
+- Added mixed-source compact-mode behavior with per-source policy classes (`narrative-heavy`, `mixed`, `rule-heavy`) and fidelity/refusal metadata records (`FIDELITY|`, `REFUSAL|`, `GUIDANCE|`).
+- Added rule-preservation fidelity checks for mixed documents (`compact_with_exact_rule_sections`) so policy-bearing records can pass compact mode without forced refusal.
+
+### Changed
+- Changed compact-mode execution to preserve safe-source output even when other sources refuse and to return non-zero outcome when refusal metadata is present.
+- Added compatibility for interface-contract invocations with optional leading `compress` verb (`ace-compressor compress ...`).
+
+### Technical
+- Expanded classifier, compact organism, and command test coverage for mixed-doc pass/fail paths, partial-refusal output retention, and refusal-driven exit semantics.
+
+## [0.8.0] - 2026-03-07
+
+### Added
+- Added compact-mode narrative policy classification with runtime `POLICY|class=...|action=...` metadata records.
+- Added `CompactCompressor` and classifier atoms for `narrative-heavy` aggressive compaction and `unknown` conservative fallback.
+
+### Changed
+- Extended CLI/runtime mode support from exact-only to `exact|compact`, including mode-aware validation and dispatch.
+- Generalized explicit binary/empty-input error messaging to reflect the active compression mode.
+
+### Technical
+- Added compact-mode organism/command/atom tests and regression checks for policy emission, fallback behavior, and size reduction versus exact mode.
+- Updated README and usage docs with compact-mode command examples and output contract details.
+
 ## [0.7.1] - 2026-03-07
 
 ### Fixed
