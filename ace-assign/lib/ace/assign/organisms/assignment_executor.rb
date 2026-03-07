@@ -713,6 +713,8 @@ module Ace
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
             "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion."
+          when "pre-commit-review"
+            pre_commit_review_action_instructions(task_hint: task_hint)
           when "verify-test"
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
           when "release", "release-minor"
@@ -731,6 +733,46 @@ module Ace
 
           lines = parent_text.lines.map(&:strip).reject(&:empty?)
           lines.map { |line| "- #{line}" }.join("\n")
+        end
+
+        def pre_commit_review_action_instructions(task_hint:)
+          subtree_cfg = normalized_subtree_config
+          allowlist = subtree_cfg[:native_review_clients]
+          allowlist_text = allowlist.empty? ? "<none>" : allowlist.join(", ")
+
+          lines = []
+          lines << "- Resolve subtree review config#{task_hint}: pre_commit_review=#{subtree_cfg[:pre_commit_review]}, mode=#{subtree_cfg[:pre_commit_review_provider]}, block=#{subtree_cfg[:pre_commit_review_block]}."
+          if subtree_cfg[:pre_commit_review] == false || subtree_cfg[:pre_commit_review_provider] == "skip"
+            lines << "- Pre-commit review is disabled by config; mark this phase skipped with the config reason and continue."
+            return lines.join("\n")
+          end
+
+          lines << "- Detect active client/provider from fork session metadata first (`.ace-local/assign/<assignment-id>/sessions/<fork-root>-session.yml`, key: provider)."
+          lines << "- If session metadata is unavailable, fallback to `execution.provider` from assign config."
+          lines << "- Allowed native review clients: #{allowlist_text}."
+          lines << "- If detected client is allowed and mode is `auto` or `native`, run native `/review` on the current diff."
+          lines << "- If client is not allowed or native `/review` is unavailable, skip this phase gracefully and continue."
+          lines << "- Summarize findings with severity counts and keep raw output when structure is incomplete."
+          lines << "- If `pre_commit_review_block` is true and a critical finding is confidently detected, fail this phase with evidence to block release."
+          lines.join("\n")
+        end
+
+        def normalized_subtree_config
+          subtree = Ace::Assign.config["subtree"]
+          subtree = {} unless subtree.is_a?(Hash)
+
+          config = {
+            pre_commit_review: subtree.key?("pre_commit_review") ? subtree["pre_commit_review"] : true,
+            pre_commit_review_provider: (subtree["pre_commit_review_provider"] || "auto").to_s,
+            pre_commit_review_block: subtree.key?("pre_commit_review_block") ? subtree["pre_commit_review_block"] : false,
+            native_review_clients: Array(subtree["native_review_clients"]).map(&:to_s).map(&:strip).reject(&:empty?)
+          }
+
+          if config[:pre_commit_review] && config[:native_review_clients].empty?
+            warn "[ace-assign] pre_commit_review enabled but native_review_clients is empty - review will always skip"
+          end
+
+          config
         end
 
         # Resolve task reference from explicit metadata first, then parent instruction text.

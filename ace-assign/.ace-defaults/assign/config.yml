@@ -28,6 +28,14 @@ execution:
   provider: "claude:opus"
   timeout: 1800
 
+# Subtree execution behavior
+subtree:
+  pre_commit_review: true
+  pre_commit_review_provider: "auto" # auto | native | skip
+  pre_commit_review_block: false
+  native_review_clients:
+    - "claude"
+
 # Provider-level defaults for CLI invocation
 providers:
   cli:

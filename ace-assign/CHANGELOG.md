@@ -7,24 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-03-07
+
+### Technical
+- Completed shine-cycle assignment release step for PR #241: review execution remained blocked by upstream provider broken-pipe errors, and apply-feedback confirmed no pending items to apply.
+
 ## [0.21.2] - 2026-03-07
 
-### Changed
-- Simplified `resolve_report_content` in `finish` command by removing redundant intermediate variable.
+### Technical
+- Completed fit-cycle assignment release step for PR #241: review execution failed upstream with provider broken-pipe errors, and apply-feedback confirmed no pending items in session context.
 
 ## [0.21.1] - 2026-03-07
 
-### Fixed
-- Update stale E2E constraint in TC-002-auto-completion runner: `--message` value is a file path only when the path exists on disk, not unconditionally.
+### Technical
+- Completed valid-cycle feedback application pass for PR #241 and confirmed there were no pending medium+ review feedback items to apply before release.
 
 ## [0.21.0] - 2026-03-07
 
-### Changed
-- `ace-assign finish` now uses `--message/-m` for report input and accepts either inline content or an existing file path.
-- Report input resolution order for `finish` is now `--message` (inline or file) → stdin → error.
+### Added
+- New `pre-commit-review` phase catalog entry for subtree task workflows, enabling native client review gate behavior before verification/release.
+- New subtree review defaults in assign config: `pre_commit_review`, `pre_commit_review_provider`, `pre_commit_review_block`, and `native_review_clients`.
 
-### Removed
-- Removed `ace-assign finish --report` pre-1.0 compatibility path.
+### Changed
+- `task/work` workflow sub-phase sequence now includes `pre-commit-review` between `work-on-task` and `verify-test`.
+- Child phase instruction generation now renders config-aware native review run/skip/block guidance for `pre-commit-review`.
 
 ## [0.20.1] - 2026-03-05
 
