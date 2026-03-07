@@ -67,10 +67,18 @@ All notable changes to this project will be documented in this file.
 - **ace-compressor v0.4.0**: Added explicit exact-mode unresolved markers for image-only references and fallback markers for fenced code blocks, improving fidelity visibility for unsupported markdown constructs.
 
 ### Fixed
+- **ace-assign v0.21.1**: Corrected stale E2E constraint in TC-002-auto-completion runner — clarified that `--message` resolves as file content only when the path exists on the disk.
 - **ace-compressor v0.4.0**: Hardened exact-mode preservation for rule-heavy and numeric content with regression coverage to prevent silent semantic drift.
 - **ace-compressor v0.4.0**: Ensured table-bearing markdown content is represented explicitly in output records rather than being silently dropped.
 
+### Removed
+- **ace-assign v0.21.0**: Removed `ace-assign finish --report` in favor of the unified `--message` contract.
+
+### Changed
+- **ace-assign v0.21.0**: `ace-assign finish` now uses `--message/-m` and accepts either inline report content or an existing file path, with resolution order `--message` → stdin → error.
+
 ### Technical
+- **ace-assign v0.21.2**: Removed redundant intermediate variable in `resolve_report_content` (`finish` command).
 - **ace-compressor v0.4.0**: Expanded command and organism tests for unresolved/fallback/table behavior and exact-mode policy fidelity checks.
 
 ## [0.9.776] - 2026-03-06
