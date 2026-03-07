@@ -222,6 +222,23 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_start_preserves_legacy_phase_archive_path
+    with_temp_cache do |cache_dir|
+      legacy_phases_dir = File.join(cache_dir, "task-folder", "phases")
+      FileUtils.mkdir_p(legacy_phases_dir)
+      config_path = create_test_config(legacy_phases_dir, name: "legacy-phase-spec")
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assert File.exist?(config_path), "Legacy phases config should remain in-place"
+      assert_equal File.expand_path(config_path), result[:assignment].source_config
+
+      unexpected_archive = File.join(legacy_phases_dir, "jobs", "#{result[:assignment].id}-job.yml")
+      refute File.exist?(unexpected_archive), "Legacy phases config should not be moved into nested jobs/ directory"
+    end
+  end
+
   def test_full_workflow
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
