@@ -9,7 +9,7 @@ This document describes the exit codes returned by the `ace-assign` CLI.
 | 0 | Success | Command executed successfully |
 | 1 | General error | Unhandled error, invalid phase reference, finish rejected on stalled queue |
 | 2 | No active assignment | Running `status` or `finish` when no assignment is active |
-| 3 | File not found | Config file or report file does not exist |
+| 3 | File not found | Config file does not exist |
 
 ## Exit Code Details
 
@@ -26,6 +26,7 @@ The command executed successfully. This includes:
 An error occurred that doesn't fit into other categories:
 - Invalid phase reference (e.g., `finish` with invalid phase number)
 - Report rejected when queue is stalled (no phase currently in progress)
+- Missing report input for `finish` (`--message` absent/blank and no piped stdin)
 - Other unhandled errors
 
 ### Exit Code 2: No Active Assignment
@@ -36,7 +37,6 @@ No active assignment exists. Commands that require an active assignment return t
 ### Exit Code 3: File Not Found
 A required file could not be found:
 - Config file does not exist when running `create`
-- Report file does not exist when running `finish --report`
 
 ## See Also
 

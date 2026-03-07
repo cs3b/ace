@@ -45,7 +45,7 @@ Use explicit flags to propagate assignment context across subprocesses and tools
 ```bash
 # Explicitly target assignment on every command
 ace-assign status --assignment abc123
-ace-assign finish --report done.md --assignment abc123
+ace-assign finish --message done.md --assignment abc123
 ace-assign fail --message "err" --assignment abc123
 ```
 
@@ -55,10 +55,10 @@ For split-task delegation, run the entire subtree in one forked process:
 
 ```bash
 ace-assign status --assignment abc123@010.01
-ace-assign finish --report done.md --assignment abc123@010.01
+ace-assign finish --message done.md --assignment abc123@010.01
 ```
 
-When an assignment target includes scope (`<id>@<root>`), `ace-assign finish --report` advances only within that subtree and stops when the subtree is complete.
+When an assignment target includes scope (`<id>@<root>`), `ace-assign finish --message` advances only within that subtree and stops when the subtree is complete.
 
 Helper command:
 
@@ -83,7 +83,7 @@ ace-assign select --clear
 
 # Target specific assignment without switching
 ace-assign status --assignment <id>
-ace-assign finish --report done.md --assignment <id>
+ace-assign finish --message done.md --assignment <id>
 ```
 
 ## Execution Loop
@@ -94,7 +94,7 @@ Repeat the following cycle until all phases are done or failed:
 
 - Planned phases are mandatory work items. Do not skip them by judgment.
 - For each active phase, do exactly one of:
-  1. Execute the phase and report completion with `ace-assign finish --report`
+  1. Execute the phase and report completion with `ace-assign finish --message`
   2. Attempt execution, capture blocker evidence, and mark failed with `ace-assign fail`
 - Never use report text to "skip" or synthesize completion for planned phases.
 
@@ -282,7 +282,7 @@ When `fork-run` exits non-zero but has made partial progress (uncommitted files,
    - [list of components not yet implemented]
    - [tests not yet written]
    EOF
-   ace-assign finish --report /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_phase}
+   ace-assign finish --message /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_phase}
    ```
 
 3. **Inject recovery phases** — Add new child phases for the remaining work:
@@ -411,12 +411,12 @@ All setup prerequisites are now satisfied.
 EOF
 
 # Submit report to advance the queue
-ace-assign finish --report /tmp/phase-report.md ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+ace-assign finish --message /tmp/phase-report.md ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
 ```
 
 ### 6. Verify State Transition (Required)
 
-After each `ace-assign finish --report` or `ace-assign fail`, verify queue state:
+After each `ace-assign finish --message` or `ace-assign fail`, verify queue state:
 
 ```bash
 POST_STATUS=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} 2>&1)
@@ -499,7 +499,7 @@ When executing a phase with a `skill:` field:
 2. **Extract parameters** - Get task IDs, PR numbers from instructions
 3. **Invoke skill** - Run the referenced skill command
 4. **Follow skill workflow** - Complete the skill's process
-5. **Report completion** - Use `ace-assign finish --report` with results
+5. **Report completion** - Use `ace-assign finish --message` with results
 
 ### Common Skill References
 
@@ -598,7 +598,7 @@ $ /as-onboard
 [Onboarding workflow runs...]
 
 # 3. Write report
-$ ace-assign finish --report onboard-complete.md
+$ ace-assign finish --message onboard-complete.md
 Phase 010 marked done, advancing to 020
 
 # 4. Check status again
@@ -610,7 +610,7 @@ $ /as-task-work 148
 [Task workflow runs...]
 
 # 6. Report and continue...
-$ ace-assign finish --report task-done.md
+$ ace-assign finish --message task-done.md
 
 # 7. Eventually...
 $ ace-assign status

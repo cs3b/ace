@@ -16,7 +16,7 @@ class FinishCommandTest < AceAssignTestCase
 
       result = nil
       output = capture_io do
-        result = Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+        result = Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Phase 010 (init) completed"
@@ -37,7 +37,7 @@ class FinishCommandTest < AceAssignTestCase
       executor.start(config_path) # 010 in_progress
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(step: "010", report: report_path)
+        Ace::Assign::CLI::Commands::Finish.new.call(step: "010", message: report_path)
       end
 
       assert_includes output.first, "Phase 010 (init) completed"
@@ -47,7 +47,7 @@ class FinishCommandTest < AceAssignTestCase
     end
   end
 
-  def test_finish_with_missing_file
+  def test_finish_with_nonexistent_path_uses_inline_message
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -56,12 +56,14 @@ class FinishCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
-        Ace::Assign::CLI::Commands::Finish.new.call(report: "nonexistent.md")
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Finish.new.call(message: "nonexistent.md")
       end
+      assert_includes output.first, "Phase 010 (init) completed"
 
-      assert_equal 3, error.exit_code
-      assert_includes error.message, "not found"
+      assignment_cache = Dir.glob(File.join(cache_dir, "*/reports/010-init.r.md")).first
+      report_saved = File.read(assignment_cache)
+      assert_includes report_saved, "nonexistent.md"
 
       Ace::Assign.reset_config!
     end
@@ -74,7 +76,7 @@ class FinishCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       error = assert_raises(Ace::Core::CLI::Error) do
-        Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
 
       assert_equal 2, error.exit_code
@@ -101,7 +103,7 @@ class FinishCommandTest < AceAssignTestCase
 
       output = capture_io do
         Ace::Assign::CLI::Commands::Finish.new.call(
-          report: report_path,
+          message: report_path,
           assignment: target_id
         )
       end
@@ -145,7 +147,7 @@ class FinishCommandTest < AceAssignTestCase
 
       output = capture_io do
         Ace::Assign::CLI::Commands::Finish.new.call(
-          report: report_path,
+          message: report_path,
           assignment: "#{target_id}@020"
         )
       end
@@ -214,7 +216,7 @@ class FinishCommandTest < AceAssignTestCase
     end
   end
 
-  def test_finish_file_report_takes_precedence_over_stdin
+  def test_finish_message_takes_precedence_over_stdin
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       report_path = create_report(cache_dir, "file report content")
@@ -230,7 +232,7 @@ class FinishCommandTest < AceAssignTestCase
       $stdin = stdin
 
       output = capture_io do
-        cmd.call(report: report_path)
+        cmd.call(message: report_path)
       end
 
       assert_includes output.first, "Phase 010 (init) completed"
@@ -258,7 +260,7 @@ class FinishCommandTest < AceAssignTestCase
 
       # Finish 010 via CLI — auto-advances to 020
       finish_output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
       assert_includes finish_output.first, "Phase 010 (init) completed"
       assert_includes finish_output.first, "Advancing to phase 020"
@@ -271,7 +273,7 @@ class FinishCommandTest < AceAssignTestCase
 
       # Finish 020 via CLI — auto-advances to 030
       finish_output2 = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
       assert_includes finish_output2.first, "Phase 020 (build) completed"
       assert_includes finish_output2.first, "Advancing to phase 030"
@@ -286,5 +288,43 @@ class FinishCommandTest < AceAssignTestCase
     end
 
     assert_includes error.message, "Positional STEP targeting is only supported"
+  end
+
+  def test_finish_with_empty_message_rejected
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::Finish.new.call(message: "")
+      end
+
+      assert_equal 1, error.exit_code
+      assert_equal "Missing report input: provide --message <string|file> or pipe stdin.", error.message
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_finish_with_whitespace_message_rejected
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::Finish.new.call(message: "   ")
+      end
+
+      assert_equal 1, error.exit_code
+      assert_equal "Missing report input: provide --message <string|file> or pipe stdin.", error.message
+    ensure
+      Ace::Assign.reset_config!
+    end
   end
 end

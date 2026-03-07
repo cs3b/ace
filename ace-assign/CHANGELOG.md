@@ -7,10 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.20.2] - 2026-03-07
+## [0.21.2] - 2026-03-07
 
-### Added
-- Provider-unavailability recovery protocol for `fork-run` failures in `drive.wf.md` — distinguishes LLM-tool phases (inline retry allowed) from code phases (must re-fork), with detection heuristics and classified recovery steps.
+### Changed
+- Simplified `resolve_report_content` in `finish` command by removing redundant intermediate variable.
+
+## [0.21.1] - 2026-03-07
+
+### Fixed
+- Update stale E2E constraint in TC-002-auto-completion runner: `--message` value is a file path only when the path exists on disk, not unconditionally.
+
+## [0.21.0] - 2026-03-07
+
+### Changed
+- `ace-assign finish` now uses `--message/-m` for report input and accepts either inline content or an existing file path.
+- Report input resolution order for `finish` is now `--message` (inline or file) → stdin → error.
+
+### Removed
+- Removed `ace-assign finish --report` pre-1.0 compatibility path.
 
 ## [0.20.1] - 2026-03-05
 
