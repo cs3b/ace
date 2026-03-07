@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-07
+
+### Changed
+- Migrated exact-mode output to ContextPack/3 with semantic canonical encoding for headings, prose,
+  lists, and fenced/table content.
+- Introduced section-scoped output (`FILE|`, `SEC|`) and typed semantic records (`SUMMARY|`, `FACT|`, `RULE|`,
+  `CONSTRAINT|`, `PROBLEMS|`, `EXAMPLE|`, `CMD|`, `FILES|`, `TREE|`, `CODE|`) in the exact-mode wire format.
+
+### Added
+- Added a canonical block transformation layer between markdown parsing and pack encoding for deterministic markdown normalization.
+
+### Technical
+- Updated tests, CLI help text, and docs to describe the ContextPack/3 contract.
+
 ## [0.6.0] - 2026-03-07
 
 ### Changed

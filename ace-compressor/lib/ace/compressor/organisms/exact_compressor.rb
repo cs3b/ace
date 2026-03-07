@@ -17,6 +17,7 @@ module Ace
           @paths = Array(paths)
           @verbose = verbose
           @parser = Ace::Compressor::Atoms::MarkdownParser.new
+          @transformer = Ace::Compressor::Atoms::CanonicalBlockTransformer
           @ignored_paths = []
         end
 
@@ -66,16 +67,13 @@ module Ace
 
         def compress_sources(sources)
           lines = [Ace::Compressor::Models::ContextPack.header("exact")]
-          source_ids = {}
 
-          sources.each_with_index do |source, index|
-            source_id = index + 1
-            source_ids[source] = source_id
-            lines << Ace::Compressor::Models::ContextPack.source_line(source_id, source_label(source))
+          sources.each do |source|
+            source_label = source_label(source)
+            lines << Ace::Compressor::Models::ContextPack.file_line(source_label)
           end
 
           sources.each do |source|
-            source_id = source_ids.fetch(source)
             text = File.read(source)
             if text.strip.empty?
               raise Ace::Compressor::Error, "Input file is empty. Exact mode requires content: #{source}"
@@ -85,20 +83,18 @@ module Ace
               raise Ace::Compressor::Error,
                     "Input file is empty after frontmatter removal. Exact mode requires content: #{source}"
             end
-
-            blocks.each do |block|
-              if block[:type] == :heading
-                lines << Ace::Compressor::Models::ContextPack.heading_line(source_id, block[:level], block[:text])
-              else
-                lines << fact_line_for(source_id, block)
-              end
-            end
+            lines.concat transformed_lines(source, blocks)
           end
 
           lines.join("\n")
         end
 
         private
+
+        def transformed_lines(source, blocks)
+          transformer = @transformer.new(source)
+          transformer.call(blocks)
+        end
 
         def collect_supported_directory_files(directory)
           supported = []
@@ -145,43 +141,6 @@ module Ace
           sample.include?("\x00")
         rescue StandardError
           false
-        end
-
-        def normalize_fact_text(block)
-          case block[:type]
-          when :unresolved
-            [:unresolved, normalize_kind_payload(block[:text])]
-          when :fallback
-            [:fallback, normalize_kind_payload(block[:text])]
-          when :table
-            [:table, block[:text]]
-          else
-            [:text, block[:text]]
-          end
-        end
-
-        def fact_line_for(source_id, block)
-          type, payload = normalize_fact_text(block)
-
-          case type
-          when :unresolved
-            kind, raw = payload
-            Ace::Compressor::Models::ContextPack.unresolved_line(source_id, kind, raw)
-          when :fallback
-            kind, raw = payload
-            Ace::Compressor::Models::ContextPack.fallback_line(source_id, kind, raw)
-          when :table
-            Ace::Compressor::Models::ContextPack.table_line(source_id, payload)
-          else
-            Ace::Compressor::Models::ContextPack.fact_line(source_id, payload)
-          end
-        end
-
-        def normalize_kind_payload(text)
-          parts = text.to_s.split("|raw=", 2)
-          kind = parts.first.sub(/\Akind=/, "")
-          raw = parts[1].to_s
-          [kind, raw]
         end
 
         def source_label(source)

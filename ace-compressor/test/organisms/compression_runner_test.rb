@@ -49,7 +49,7 @@ class CompressionRunnerTest < AceCompressorTestCase
 
   def test_cache_hit_backfills_new_stats_metadata_fields
     path = File.join(@tmp, "input.md")
-    File.write(path, "# Heading\n\nContent\n\nMore text\n\nFinal note")
+    File.write(path, "# Why Problems\n\n" + (0...80).map { |index| "- Isolate boundary check #{index}" }.join("\n"))
 
     initial = Ace::Compressor::Organisms::CompressionRunner.new([path], mode: "exact", format: "path").call
     metadata_path = initial[:output_path].sub(/\.pack\z/, ".json")
@@ -65,8 +65,7 @@ class CompressionRunnerTest < AceCompressorTestCase
 
     assert_includes result[:console_output], "Original:"
     assert refreshed["original_bytes"] > 0
-    assert_equal 7, refreshed["original_lines"]
-    assert refreshed["packed_bytes"] > refreshed["original_bytes"]
+    assert refreshed["packed_bytes"] < refreshed["original_bytes"]
     assert refreshed["packed_lines"] < refreshed["original_lines"]
   end
 end
