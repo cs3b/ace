@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.785] - 2026-03-07
+
+### Added
+- **ace-assign v0.22.0**: `ace-assign create` now surfaces hidden-spec provenance in standard output when assignments are created from `.ace-local/assign/jobs/...` specs.
+
+### Changed
+- **ace-assign v0.22.0**: Source-config provenance now preserves existing `jobs/` paths and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` (replacing prior `phases/` archive behavior).
+- **ace-assign v0.22.0**: Updated assign-create workflow/skill tracer contract for `work-on-task --taskref <id>` with deterministic hidden-spec handoff to `ace-assign create FILE`.
 ## [0.9.790] - 2026-03-07
 
 ### Technical
@@ -46,12 +54,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **ace-compressor v0.8.0**: Added compact narrative mode with runtime policy metadata (`POLICY|class=...|action=...`) and deterministic classification for `narrative-heavy` vs `unknown` sources.
+- **ace-assign v0.22.0**: `ace-assign create` now surfaces hidden-spec provenance in standard output when assignments are created from `.ace-local/assign/jobs/...` specs.
 
 ### Changed
 - **ace-compressor v0.8.0**: Extended CLI mode support to `--mode compact` with mode-aware compressor dispatch and conservative fallback behavior for ambiguous docs.
-
-### Technical
 - **ace-compressor v0.8.0**: Added compact-mode classifier/compressor test coverage, preserved imperative-rule survivability under aggressive compaction, and updated usage/README contracts.
+- **ace-assign v0.22.0**: Source-config provenance now preserves existing `jobs/` paths and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` (replacing prior `phases/` archive behavior).
+- **ace-assign v0.22.0**: Updated assign-create workflow/skill tracer contract for `work-on-task --taskref <id>` with deterministic hidden-spec handoff to `ace-assign create FILE`.
 
 ## [0.9.780] - 2026-03-07
 
