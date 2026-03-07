@@ -1,4 +1,4 @@
-timeout: 900
+timeout: 600
 cli_args:
   - --approval-mode
   - yolo
