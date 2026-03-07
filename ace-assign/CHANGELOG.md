@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.22.3] - 2026-03-07
+## [0.22.4] - 2026-03-07
 
 ### Technical
-- Completed shine-cycle release step for PR #242: `review-pr` failed due provider/runtime errors (`claude` inactive, `codex` broken pipe, fallback run hang), and `apply-feedback` confirmed no pending feedback items.
+- **ace-assign v0.22.4**: Removed no-op release entries from package changelog history (`0.22.3`, `0.22.1`) and refactored a create-command path-relativity test to use the shared temporary cache helper.
 
 ## [0.22.2] - 2026-03-07
 
@@ -19,11 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 - Added regression coverage for relative create output formatting and legacy `phases/` source-config path preservation.
-
-## [0.22.1] - 2026-03-07
-
-### Technical
-- Completed valid-cycle release step for PR #242: review execution required provider/model retries and apply-feedback confirmed no pending medium+ findings.
 
 ## [0.22.0] - 2026-03-07
 
