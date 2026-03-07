@@ -1,4 +1,4 @@
-# Hidden Spec Handoff - Draft Usage
+# Hidden Spec Handoff - Usage
 
 ## API Surface
 - [x] CLI (user-facing commands)
@@ -16,9 +16,16 @@
 /as-assign-create work-on-task --taskref 123
 
 # Expected output:
-# Assignment is created
-# The normalized spec lives under .ace-local/assign/jobs/
+# Assignment: work-on-task-123 (<id>)
+# Created: .ace-local/assign/<id>/
+# Created from hidden spec: .ace-local/assign/jobs/<timestamp>-work-on-task-123.yml
+# Phase 010: ...
 ```
+
+**Behavior contract:**
+- Hidden spec is rendered under `.ace-local/assign/jobs/`.
+- Runtime handoff remains deterministic through `ace-assign create FILE`.
+- Assignment metadata retains hidden spec provenance path.
 
 ### Scenario 2: Creation failure stays deterministic
 
@@ -31,6 +38,3 @@
 # Hidden-spec rendering or ace-assign create reports a concrete error
 # No partial assignment is left active
 ```
-
-## Notes for Implementer
-- Full usage documentation to be completed during work-on-task phase using `wfi://docs/update-usage`
