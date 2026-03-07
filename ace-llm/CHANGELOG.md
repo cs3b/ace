@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Restore provider preset defaults under `.ace-defaults/llm/presets/` after the preset refactor dropped `max_tokens: 16000` and rewrote Codex/Gemini sandbox CLI flags; keep the newer 600-second timeout standardization intact.
+
 ## [0.25.1] - 2026-03-06
 
 ### Added
