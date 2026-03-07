@@ -317,28 +317,30 @@ When `fork-run` fails not because of a code bug but because an LLM provider time
    - **LLM-tool phase** — Work that invokes an LLM-backed tool as its primary action (e.g., `ace-review`, `ace-lint`, audit, summarize). The fork existed to isolate the LLM call, not to produce code.
    - **Code phase** — Work that produces or modifies source code (e.g., implement, fix, refactor). The fork existed for context isolation of code-producing work.
 
-3. **Recover based on classification**:
+3. **Fork-side action** — The fork MUST only fail and exit. It must NEVER inject phases:
+   ```bash
+   # Mark the crashed phase as failed with evidence, then exit
+   ace-assign fail --message "Provider unavailable: <error details>" \
+     --assignment ${ASSIGNMENT_ID}@${failed_phase}
+   # EXIT — do not add phases, do not retry, do not modify the assignment tree
+   ```
+
+   **Forks NEVER inject phases outside their subtree scope. Recovery decisions belong to the driver.**
+
+4. **Driver-side recovery** — After detecting a fork failure, the driver classifies and recovers:
 
    **LLM-tool phases** → execute equivalent work inline at driver level:
    ```bash
-   # Mark the crashed phase as failed with evidence
-   ace-assign fail --message "Provider unavailable: <error details>" \
-     --assignment ${ASSIGNMENT_ID}@${failed_phase}
+   # Option A: Execute inline (for LLM-tool phases only)
+   # Read changed files, analyze each, write review report directly
 
-   # Add a retry phase to the driver's queue (not inside the fork subtree)
-   ace-assign add "retry-<phase-name>" \
+   # Option B: Add retry as a child of the failed phase's parent
+   ace-assign add "retry-<phase-name>" --after <failed_phase> --child \
      -i "Provider was unavailable for forked <phase-name>. Execute equivalent work inline: <specific instructions>"
-
-   # When the retry phase activates, perform the work directly
-   # Example for review: read changed files, analyze each, write review report
    ```
 
    **Code phases** → do NOT execute inline. Wait for provider recovery or escalate:
    ```bash
-   # Mark failed with evidence
-   ace-assign fail --message "Provider unavailable: <error details>" \
-     --assignment ${ASSIGNMENT_ID}@${failed_phase}
-
    # Ask user whether to wait and retry later
    # Do NOT attempt the code work inline — context isolation is required
    ```
