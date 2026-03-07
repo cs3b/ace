@@ -10,6 +10,7 @@ module Ace
         SUMMARY_SECTION_RE = /(overview|summary|vision|purpose|goal|why|motivation|introduction|intro)/i
         EXAMPLE_HEADING_RE = /\Aexample\s*:\s*(.+)\z/i
         PROBLEM_SECTION_RE = /(problems?|issues?|risks?|pitfalls?|drawbacks?)/i
+        PROBLEM_CONTEXT_RE = /\b(?:suffer from|struggle with|problems?|issues?|risks?|pitfalls?|drawbacks?|pain points?)\b/i
         TREE_LINE_RE = /[│├└╰]\-\-/
         FILE_PATH_RE = /\A(?:\.{1,2}\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\z/
         SHELL_LANGS = %w[bash sh shell zsh fish cmd powershell ps1].freeze
@@ -18,6 +19,7 @@ module Ace
           @source = source
           @current_section = nil
           @example_tool = nil
+          @last_text = nil
         end
 
         def call(blocks)
@@ -56,10 +58,12 @@ module Ace
           if match
             tool = heading_tool_slug(match[1].to_s)
             @example_tool = tool
+            @last_text = nil
             "EXAMPLE|tool=#{tool}"
           else
             @example_tool = nil
             @current_section = heading_slug(heading)
+            @last_text = nil
             Ace::Compressor::Models::ContextPack.section_line(@current_section)
           end
         end
@@ -67,6 +71,13 @@ module Ace
         def text_record(raw_text)
           text = normalize_inline(raw_text.to_s)
           return nil if text.empty?
+
+          example_match = text.match(EXAMPLE_HEADING_RE)
+          if example_match
+            @example_tool = heading_tool_slug(example_match[1].to_s)
+            @last_text = text
+            return Ace::Compressor::Models::ContextPack.example_line(@example_tool)
+          end
 
           kind =
             if text_summary?
@@ -80,6 +91,8 @@ module Ace
             else
               :fact
             end
+
+          @last_text = text
 
           case kind
           when :summary
@@ -97,13 +110,12 @@ module Ace
           items = Array(block[:items]).map { |item| list_item_slug(item.to_s) }.reject(&:empty?)
           return [] if items.empty?
 
-          list_key = if section_contains_problems?(@current_section)
-                       "problems"
-                     else
-                       @current_section.to_s.empty? ? "items" : @current_section
-                     end
-
-          [Ace::Compressor::Models::ContextPack.list_line(list_key, items)]
+          if problem_list_context?
+            [Ace::Compressor::Models::ContextPack.problems_line(items)]
+          else
+            list_key = @current_section.to_s.empty? ? "items" : @current_section
+            [Ace::Compressor::Models::ContextPack.list_line(list_key, items)]
+          end
         end
 
         def fenced_code_lines(block)
@@ -174,6 +186,10 @@ module Ace
 
         def section_contains_problems?(section)
           PROBLEM_SECTION_RE.match?(section.to_s.tr("_", " "))
+        end
+
+        def problem_list_context?
+          section_contains_problems?(@current_section) || PROBLEM_CONTEXT_RE.match?(@last_text.to_s)
         end
 
         def heading_slug(text)

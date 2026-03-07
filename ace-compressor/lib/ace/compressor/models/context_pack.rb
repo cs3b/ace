@@ -45,7 +45,9 @@ module Ace
 
         def self.list_line(list_key, items)
           values = Array(items).map { |item| escape(item) }.join(",")
-          "#{escape(list_key).upcase}|[#{values}]"
+          key = list_key.to_s.strip
+          key = "items" if key.empty?
+          "LIST|#{escape(key)}|[#{values}]"
         end
 
         def self.example_line(tool)

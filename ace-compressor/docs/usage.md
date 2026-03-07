@@ -21,7 +21,7 @@ wire overhead.
 - **Exact mode**: Canonical semantic extraction — headings, prose, lists, and code structures are
   converted into compact typed records.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
-- **Provenance**: A compact source table maps files and sections once per pack.
+- **Provenance**: `FILE|` and `SEC|` records establish scope inline; no separate source table is emitted.
 - **Fidelity markers**: Images emit `U|...`; fences emit `CMD|`, `FILES|`, `TREE|`, `CODE|`, or `TABLE|`.
 
 ## Quick Start
@@ -99,7 +99,7 @@ Sources:  1 file
 Mode:     exact
 Original: 3,663 B, 101 lines
 Packed:   3,691 B, 37 lines
-Change:   +0.8% bytes, -63.4% lines
+Change:   -6.2% bytes, -63.4% lines
 ```
 
 ## Output Format: ContextPack/3
@@ -109,13 +109,14 @@ Every run emits a stream of pipe-delimited records:
 | Record Type | Example | Meaning |
 |-------------|---------|---------|
 | `H|` | `H\|ContextPack/3\|exact` | Header — one per run |
-| `FILE|` | `FILE\|docs/vision.md` | Source entry |
+| `FILE|` | `FILE\|docs/vision.md` | Source scope marker |
 | `SEC|` | `SEC\|vision` | Section heading |
 | `SUMMARY|` | `SUMMARY\|A high-level statement` | Overview prose |
 | `FACT|` | `FACT\|A preserved factual statement` | Statement with operational content |
 | `RULE|` | `RULE\|Tooling must avoid side effects` | Policy-style statement |
 | `CONSTRAINT|` | `CONSTRAINT\|No more than 2 retries` | Hard constraints |
 | `PROBLEMS|` | `PROBLEMS\|[context_bloat,isolation_boundary]` | Typed array |
+| `LIST|` | `LIST\|core_principles\|[cli_first,transparent_inspectable]` | Generic typed array scoped to a section |
 | `EXAMPLE|` | `EXAMPLE\|tool=ace-git-commit` | Example context marker |
 | `CMD|` | `CMD\|ace-git-commit -i "fix"` | Shell command block |
 | `FILES|` | `FILES\|ace-git-commit\|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]` | File listing |
@@ -126,7 +127,7 @@ Every run emits a stream of pipe-delimited records:
 
 The format is intentionally compact:
 
-- source paths appear once in `FILE|` records, not on every line
+- file scope is established by the current `FILE|` record, not repeated on every line
 - section scope is implicit from the preceding `SEC|` record
 - record fields use fixed positions, no per-record `src=` fields
 
