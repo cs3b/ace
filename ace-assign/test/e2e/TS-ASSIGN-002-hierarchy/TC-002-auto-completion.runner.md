@@ -21,19 +21,19 @@ Save all output to `results/tc/02/`. Capture:
 ## Constraints
 
 ### Command Discipline (required)
-- Use `ace-assign finish --report <report-file> --assignment "<assignment-id>@<phase-number>"` for targeted completions.
+- Use `ace-assign finish --message <report-file> --assignment "<assignment-id>@<phase-number>"` for targeted completions.
 - Do **not** pass `<assignment-id>@<phase>` as the positional report file argument.
-- Always provide a real report file path as the first positional argument.
+- When providing a file path to `--message`, ensure the file exists at the path (so it resolves as file content, not inline string).
 
 ### Single-Level Auto-Completion
 - Create assignment from `fixtures/completion/job-single-level.yaml`.
 - Add two children under parent 010.
 - Verify parent cannot complete while children are incomplete.
 - Set parent to pending, activate first child, complete it with:
-  - `ace-assign finish --report fixtures/completion/child1-report.md --assignment "<assignment-id>@010.01"`
+  - `ace-assign finish --message fixtures/completion/child1-report.md --assignment "<assignment-id>@010.01"`
 - Verify child two becomes current, parent still pending.
 - Complete second child with:
-  - `ace-assign finish --report fixtures/completion/child2-report.md --assignment "<assignment-id>@010.02"`
+  - `ace-assign finish --message fixtures/completion/child2-report.md --assignment "<assignment-id>@010.02"`
 - Verify parent auto-completes with "Auto-completed" report at reports/010-parent-job.r.md.
 - Verify workflow advances to next top-level phase (020-final-step).
 
@@ -42,7 +42,7 @@ Save all output to `results/tc/02/`. Capture:
 - Add parent under 010 (`add --after 010 --child`), add grandchild under parent (`add --after 010.01 --child`).
 - Set 010 and 010.01 to pending, activate grandchild.
 - Complete grandchild with:
-  - `ace-assign finish --report fixtures/completion/grandchild-report.md --assignment "<assignment-id>@010.01.01"`
+  - `ace-assign finish --message fixtures/completion/grandchild-report.md --assignment "<assignment-id>@010.01.01"`
 - Verify cascade: grandchild done, parent auto-completes, grandparent auto-completes.
 - Next top-level phase (020-next-task) becomes current.
 - All artifacts must come from real tool execution.

@@ -72,7 +72,7 @@ module Ace
         "ace-assign create --preset review     # Start review assignment",
         "ace-assign status                     # Current phase progress",
         "ace-assign start                      # Start next workable phase",
-        "ace-assign finish --report done.md    # Complete active phase",
+        "ace-assign finish --message done.md    # Complete active phase",
         "cat report.md | ace-assign finish     # Complete phase via stdin",
         "ace-assign fork-run 010.01            # Run subtree in subprocess"
       ].freeze

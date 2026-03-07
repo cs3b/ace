@@ -12,7 +12,7 @@ module Ace
           desc "Complete in-progress phase with report content"
 
           argument :step, required: false, desc: "Phase number to finish (active assignment only)"
-          option :report, desc: "Path to report file"
+          option :message, aliases: ["-m"], desc: "Report content: string, file path, or pipe stdin"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -62,21 +62,13 @@ module Ace
           private
 
           def resolve_report_content(options)
-            report_path = options[:report]&.strip
-            file_content = nil
+            message = options[:message]&.strip
+            return File.read(message) if message && !message.empty? && File.exist?(message)
+            return message if message && !message.empty?
 
-            if report_path && !report_path.empty?
-              raise ConfigNotFoundError, "Report file not found: #{report_path}" unless File.exist?(report_path)
+            content = read_stdin_if_piped
 
-              file_content = File.read(report_path)
-            end
-
-            return file_content if file_content
-
-            stdin_content = read_stdin_if_piped
-            content = stdin_content
-
-            raise Error, "Missing report input: provide --report <file> or pipe stdin." if content.nil? || content.strip.empty?
+            raise Error, "Missing report input: provide --message <string|file> or pipe stdin." if content.nil? || content.strip.empty?
 
             content
           end
