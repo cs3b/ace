@@ -301,7 +301,49 @@ When `fork-run` exits non-zero but has made partial progress (uncommitted files,
    ace-assign fork-run --root ${FORK_ROOT} --assignment ${ASSIGNMENT_ID}
    ```
 
-**Key principle**: Never execute fork work inline. The fork boundary exists for context isolation. If a fork crashes, recover and re-fork — don't absorb the work into the driver.
+**Key principle**: Never execute fork work inline — except for LLM-tool phases during provider unavailability (see below). The fork boundary exists for context isolation. If a fork crashes due to a code issue, recover and re-fork — don't absorb the work into the driver.
+
+#### Fork-Run Failure: Provider Unavailability
+
+When `fork-run` fails not because of a code bug but because an LLM provider timed out, hung, or returned no output, re-forking will crash the same way in a loop.
+
+**Detection heuristics**: fork-run exit != 0 AND the failed phase error or last fork message indicates a timeout, hang, or empty response — not a code bug (no stack trace, no test failure, no syntax error).
+
+**Recovery protocol**:
+
+1. **Confirm provider failure** — Read the fork's last message and failed phase error. Look for: model timeout, API unavailability, empty/truncated response, connection reset, or tool hang with no output.
+
+2. **Classify the failed phase**:
+   - **LLM-tool phase** — Work that invokes an LLM-backed tool as its primary action (e.g., `ace-review`, `ace-lint`, audit, summarize). The fork existed to isolate the LLM call, not to produce code.
+   - **Code phase** — Work that produces or modifies source code (e.g., implement, fix, refactor). The fork existed for context isolation of code-producing work.
+
+3. **Recover based on classification**:
+
+   **LLM-tool phases** → execute equivalent work inline at driver level:
+   ```bash
+   # Mark the crashed phase as failed with evidence
+   ace-assign fail --message "Provider unavailable: <error details>" \
+     --assignment ${ASSIGNMENT_ID}@${failed_phase}
+
+   # Add a retry phase to the driver's queue (not inside the fork subtree)
+   ace-assign add "retry-<phase-name>" \
+     -i "Provider was unavailable for forked <phase-name>. Execute equivalent work inline: <specific instructions>"
+
+   # When the retry phase activates, perform the work directly
+   # Example for review: read changed files, analyze each, write review report
+   ```
+
+   **Code phases** → do NOT execute inline. Wait for provider recovery or escalate:
+   ```bash
+   # Mark failed with evidence
+   ace-assign fail --message "Provider unavailable: <error details>" \
+     --assignment ${ASSIGNMENT_ID}@${failed_phase}
+
+   # Ask user whether to wait and retry later
+   # Do NOT attempt the code work inline — context isolation is required
+   ```
+
+**Inline execution constraint**: Only LLM-tool phases may go inline during provider unavailability. Code-producing phases always require a fork for context isolation — wait for recovery or ask the user.
 
 ### 3. Execute Current Phase
 
@@ -479,6 +521,7 @@ When executing a phase with a `skill:` field:
 | Phase fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
 | Unclear instructions | Ask user for clarification |
+| Provider/tool unavailable | For fork phases: see Provider-Unavailability Recovery. For inline phases: attempt with alternate model, then fail with evidence |
 
 ## Assignment State Reference
 

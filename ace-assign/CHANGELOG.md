@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-03-07
+
+### Added
+- Provider-unavailability recovery protocol for `fork-run` failures in `drive.wf.md` — distinguishes LLM-tool phases (inline retry allowed) from code phases (must re-fork), with detection heuristics and classified recovery steps.
+
 ## [0.20.1] - 2026-03-05
 
 ### Fixed
