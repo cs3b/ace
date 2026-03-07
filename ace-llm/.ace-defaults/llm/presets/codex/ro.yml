@@ -1,4 +1,4 @@
-timeout: 300
+timeout: 600
 sandbox: read-only
 cli_args:
   - --full-auto

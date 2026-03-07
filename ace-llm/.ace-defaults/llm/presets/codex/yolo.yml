@@ -1,4 +1,4 @@
-timeout: 900
+timeout: 600
 sandbox: danger-full-access
 cli_args:
   - --full-auto
