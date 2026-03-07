@@ -4,7 +4,7 @@ title: automatic-drive-issues-0m6
 type: standard
 tags: [ace-assign, drive, automation, provider-resilience]
 created_at: "2026-03-07 20:37:33"
-status: active
+status: done
 task_ref: 8q5.t.0m6.0
 ---
 
