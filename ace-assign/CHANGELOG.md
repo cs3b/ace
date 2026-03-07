@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.5] - 2026-03-07
+
+### Technical
+- Updated create-command path-relativity test setup to run from the temporary cache directory so `Created:` output remains relative when expected.
+
 ## [0.22.4] - 2026-03-07
 
 ### Technical
