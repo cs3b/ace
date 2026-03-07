@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.785] - 2026-03-07
+
+### Fixed
+- **ace-compressor v0.7.1**: Corrected ContextPack/3 exact-mode scoping so `FILE|...` records now bracket the right source content, stabilized generic list output as `LIST|section|[...]`, and canonicalized prose `Example:` markers into `EXAMPLE|tool=...`.
+
+### Technical
+- **ace-compressor v0.7.1**: Updated package docs, changelogs, and focused regression coverage to lock the finalized exact-mode wire contract.
+
 ## [0.9.784] - 2026-03-07
 
 ### Changed

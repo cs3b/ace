@@ -71,9 +71,6 @@ module Ace
           sources.each do |source|
             source_label = source_label(source)
             lines << Ace::Compressor::Models::ContextPack.file_line(source_label)
-          end
-
-          sources.each do |source|
             text = File.read(source)
             if text.strip.empty?
               raise Ace::Compressor::Error, "Input file is empty. Exact mode requires content: #{source}"

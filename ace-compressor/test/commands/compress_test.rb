@@ -60,14 +60,29 @@ class CompressCommandTest < AceCompressorTestCase
 
     assert_equal "", result[:stderr]
     assert_includes result[:stdout], "H|ContextPack/3|exact"
-    assert_includes result[:stdout], "FILE|aaa.md"
-    assert_includes result[:stdout], "FILE|zzz.md"
-
+    first_file_index = result[:stdout].index("FILE|aaa.md")
+    second_file_index = result[:stdout].index("FILE|zzz.md")
     first_line_index = result[:stdout].index("SEC|first")
     second_line_index = result[:stdout].index("SEC|second")
+    assert first_file_index
+    assert second_file_index
     assert first_line_index
     assert second_line_index
+    assert_operator first_file_index, :<, first_line_index
+    assert_operator first_line_index, :<, second_file_index
+    assert_operator second_file_index, :<, second_line_index
     assert_operator first_line_index, :<, second_line_index
+  end
+
+  def test_prose_example_line_emits_example_record
+    path = File.join(@tmp, "example.md")
+    File.write(path, "# How It Works\n\n**Example: `ace-git-commit`**\n")
+
+    result = invoke([path, "--mode", "exact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "EXAMPLE|tool=ace-git-commit"
+    refute_includes result[:stdout], "FACT|Example: ace-git-commit"
   end
 
   def test_duplicate_explicit_paths_are_collapsed
