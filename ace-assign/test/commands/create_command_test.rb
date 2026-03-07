@@ -69,20 +69,22 @@ class CreateCommandTest < AceAssignTestCase
   def test_create_prints_created_path_relative_to_pwd_when_possible
     with_temp_cache do |tmp_dir|
       begin
-        hidden_jobs_dir = File.join(tmp_dir, ".ace-local", "assign", "jobs")
-        FileUtils.mkdir_p(hidden_jobs_dir)
-        config_path = create_test_config(hidden_jobs_dir, name: "hidden-spec-relative")
+        Dir.chdir(tmp_dir) do
+          hidden_jobs_dir = File.join(".ace-local", "assign", "jobs")
+          FileUtils.mkdir_p(hidden_jobs_dir)
+          config_path = create_test_config(hidden_jobs_dir, name: "hidden-spec-relative")
 
-        Ace::Assign.config["cache_dir"] = File.join(tmp_dir, ".ace-local", "assign")
+          Ace::Assign.config["cache_dir"] = File.join(".ace-local", "assign")
 
-        output = capture_io do
-          Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+          output = capture_io do
+            Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+          end
+
+          created_line = output.first.lines.find { |line| line.start_with?("Created: ") }
+          refute_nil created_line
+          refute_match(%r{\ACreated: /}, created_line)
+          assert_includes created_line, ".ace-local/assign/"
         end
-
-        created_line = output.first.lines.find { |line| line.start_with?("Created: ") }
-        refute_nil created_line
-        refute_match(%r{\ACreated: /}, created_line)
-        assert_includes created_line, "#{File.basename(tmp_dir)}/.ace-local/assign/"
       ensure
         Ace::Assign.reset_config!
       end
