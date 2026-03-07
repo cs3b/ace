@@ -1,0 +1,3 @@
+default_mode: exact
+default_format: path
+cache_dir: .ace-local/compressor
