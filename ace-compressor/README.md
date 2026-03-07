@@ -8,6 +8,9 @@ Compresses Markdown and text files into compact `ContextPack/3` records for LLM 
 # Single file
 ace-compressor docs/vision.md --mode exact
 
+# Compact narrative-heavy docs with policy metadata
+ace-compressor docs/vision.md --mode compact --format stdio
+
 # Directory
 ace-compressor docs/ --mode exact
 

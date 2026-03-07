@@ -18,6 +18,26 @@ module Ace
           "FILE|#{escape(source)}"
         end
 
+        def self.policy_line(doc_class:, action:)
+          "POLICY|class=#{escape(doc_class)}|action=#{escape(action)}"
+        end
+
+        def self.fidelity_line(source:, status:, check:, details: nil)
+          line = "FIDELITY|source=#{escape(source)}|status=#{escape(status)}|check=#{escape(check)}"
+          details_text = details.to_s.strip
+          return line if details_text.empty?
+
+          "#{line}|details=#{escape(details_text)}"
+        end
+
+        def self.refusal_line(source:, reason:, failed_check:)
+          "REFUSAL|source=#{escape(source)}|reason=#{escape(reason)}|failed_check=#{escape(failed_check)}"
+        end
+
+        def self.guidance_line(source:, retry_with:)
+          "GUIDANCE|source=#{escape(source)}|retry_with=#{escape(retry_with)}"
+        end
+
         def self.section_line(title)
           "SEC|#{escape(title)}"
         end
@@ -71,8 +91,43 @@ module Ace
           "CODE|#{escape(language_value)}|#{escape(code)}"
         end
 
-        def self.table_line(rows)
-          "TABLE|#{escape(rows)}"
+        def self.table_line(rows, table_id: nil, strategy: nil)
+          if table_id.to_s.strip.empty? && strategy.to_s.strip.empty?
+            return "TABLE|#{escape(rows)}"
+          end
+
+          fields = []
+          fields << "id=#{escape(table_id)}" unless table_id.to_s.strip.empty?
+          fields << "strategy=#{escape(strategy)}" unless strategy.to_s.strip.empty?
+          fields << "rows=#{escape(rows)}"
+          "TABLE|#{fields.join('|')}"
+        end
+
+        def self.loss_line(kind:, target:, strategy:, original:, retained:, unit:, source: nil, details: nil)
+          unit_key = unit.to_s.strip
+          unit_key = "items" if unit_key.empty?
+          unit_key = unit_key.gsub(/[^a-z0-9_]/i, "_")
+
+          original_count = original.to_i
+          retained_count = retained.to_i
+          dropped_count = [original_count - retained_count, 0].max
+
+          line = [
+            "LOSS|kind=#{escape(kind)}",
+            "target=#{escape(target)}",
+            "strategy=#{escape(strategy)}",
+            "original_#{unit_key}=#{escape(original_count)}",
+            "retained_#{unit_key}=#{escape(retained_count)}",
+            "dropped_#{unit_key}=#{escape(dropped_count)}"
+          ].join("|")
+
+          line += "|source=#{escape(source)}" unless source.to_s.strip.empty?
+          line += "|details=#{escape(details)}" unless details.to_s.strip.empty?
+          line
+        end
+
+        def self.example_ref_line(tool:, source:, original_source:, reason: "duplicate")
+          "EXAMPLE_REF|tool=#{escape(tool)}|source=#{escape(source)}|original_source=#{escape(original_source)}|reason=#{escape(reason)}"
         end
 
         def self.unresolved_line(kind, raw)

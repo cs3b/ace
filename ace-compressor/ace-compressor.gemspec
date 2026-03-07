@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Compress markdown context into structured packs for agents"
-  spec.description = "ace-compressor provides exact-mode context compression with structured ContextPack output."
+  spec.description = "ace-compressor provides exact and compact context compression with structured ContextPack output."
   spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

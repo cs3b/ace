@@ -50,6 +50,111 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes output, "SUMMARY|Agents can run CLI commands"
   end
 
+  def test_supports_optional_compress_verb_prefix
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
+
+    result = invoke(["compress", path, "--mode", "exact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "H|ContextPack/3|exact"
+    assert_includes result[:stdout], "FILE|vision.md"
+  end
+
+  def test_success_on_single_file_compact_mode_emits_aggressive_policy
+    path = File.join(@tmp, "vision.md")
+    File.write(path, <<~MD)
+      # Vision
+
+      ## Overview
+      Agents and developers collaborate through shared command-line workflows.
+
+      ## Core Principles
+      The process should remain deterministic, transparent, and inspectable.
+      Teams must not remove safety constraints.
+
+      ## Why ACE Exists
+      Narrative-heavy docs contain repeated framing text that compact mode can trim.
+      Narrative-heavy docs contain repeated framing text that compact mode can trim.
+    MD
+
+    exact = invoke([path, "--mode", "exact", "--format", "stdio"])
+    compact = invoke([path, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal "", compact[:stderr]
+    assert_includes compact[:stdout], "H|ContextPack/3|compact"
+    assert_includes compact[:stdout], "POLICY|class=narrative-heavy|action=aggressive_compact"
+    assert_operator compact[:stdout].bytesize, :<, exact[:stdout].bytesize
+  end
+
+  def test_compact_mode_uses_conservative_policy_for_unknown_class
+    path = File.join(@tmp, "custom-notes.md")
+    File.write(path, "# Scratchpad\n\nalpha beta gamma\n\n- todo one\n- todo two\n")
+
+    result = invoke([path, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "POLICY|class=unknown|action=conservative_compact"
+  end
+
+  def test_compact_mode_mixed_single_source_emits_fidelity_pass
+    path = File.join(@tmp, "blueprint.md")
+    File.write(path, <<~MD)
+      # Overview
+
+      This document explains repository structure and contributor workflow.
+
+      ## Policy
+      Teams must not edit archived retrospectives without explicit approval.
+      Only use .ace-local for generated local artifacts.
+    MD
+
+    result = invoke([path, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "POLICY|class=mixed|action=compact_with_exact_rule_sections"
+    assert_includes result[:stdout], "FIDELITY|source=blueprint.md|status=pass|check=exact_rule_sections"
+    refute_includes result[:stdout], "REFUSAL|"
+  end
+
+  def test_compact_mode_mixed_sources_preserves_safe_output_and_returns_non_zero_on_refusal
+    safe = File.join(@tmp, "vision.md")
+    unsafe = File.join(@tmp, "decisions.md")
+
+    File.write(safe, <<~MD)
+      # Vision
+
+      ## Overview
+      Agents and developers collaborate through shared command-line workflows.
+
+      ## Core Principles
+      The process should remain deterministic and inspectable.
+    MD
+
+    File.write(unsafe, <<~MD)
+      # Policy Decisions
+
+      All workflows must be self-contained.
+
+      ## Impact
+      Agents should never skip required validation.
+
+      ## Requirements
+      Commands must include exact error evidence.
+
+      Only use approved paths for temporary files.
+    MD
+
+    result = invoke([safe, unsafe, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stdout], "POLICY|class=narrative-heavy|action=aggressive_compact"
+    assert_includes result[:stdout], "FILE|vision.md"
+    assert_includes result[:stdout], "REFUSAL|source=decisions.md|reason=rule-heavy|failed_check=compact_preflight"
+    assert_includes result[:stdout], "GUIDANCE|source=decisions.md|retry_with=--mode exact"
+    assert_includes result[:stderr], "One or more sources were refused in compact mode"
+  end
+
   def test_success_on_multiple_files_exact_mode
     second = File.join(@tmp, "zzz.md")
     first = File.join(@tmp, "aaa.md")
@@ -130,6 +235,16 @@ class CompressCommandTest < AceCompressorTestCase
 
     assert_equal 1, result[:result]
     assert_includes result[:stderr], "Binary input is not supported in exact mode"
+  end
+
+  def test_error_on_explicit_binary_file_in_compact_mode
+    binary = File.join(@tmp, "sample.bin")
+    File.binwrite(binary, "\x00\x01\x02\x03")
+
+    result = invoke([binary, "--mode", "compact"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Binary input is not supported in compact mode"
   end
 
   def test_verbose_reports_ignored_files_from_directory
@@ -234,6 +349,54 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes result[:stdout], "TABLE|"
     assert_includes result[:stdout], "Service"
     assert_includes result[:stdout], "100"
+  end
+
+  def test_compact_mode_emits_table_strategy_and_loss_metadata
+    path = File.join(@tmp, "vision.md")
+    File.write(path, <<~MD)
+      # Vision
+
+      ## Capacity
+      | Tier | QPS |
+      |---|---|
+      | free | 10 |
+      | team | 50 |
+      | pro | 100 |
+      | scale | 250 |
+      | enterprise | 500 |
+      | burst | 800 |
+      | max | 1000 |
+    MD
+
+    result = invoke([path, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "TABLE|id=vision_t1|strategy=summarize_with_loss|rows="
+    assert_includes result[:stdout], "LOSS|kind=table|target=vision_t1|strategy=summarize_with_loss"
+    assert_includes result[:stdout], "original_rows=7"
+    assert_includes result[:stdout], "retained_rows=1"
+  end
+
+  def test_compact_mode_collapses_duplicate_examples_to_refs
+    first = File.join(@tmp, "first.md")
+    second = File.join(@tmp, "second.md")
+    content = <<~MD
+      # How It Works
+
+      ## Example: ace-git-commit
+      ```bash
+      ace-git-commit -i "fix auth bug"
+      ```
+    MD
+    File.write(first, content)
+    File.write(second, content)
+
+    result = invoke([first, second, "--mode", "compact", "--format", "stdio"])
+
+    assert_equal "", result[:stderr]
+    assert_equal 1, result[:stdout].scan("EXAMPLE|tool=ace-git-commit").size
+    assert_includes result[:stdout], "EXAMPLE_REF|tool=ace-git-commit|source=second.md|original_source=first.md|reason=duplicate_example"
+    assert_includes result[:stdout], "LOSS|kind=example|target=ace-git-commit|strategy=reference"
   end
 
   def test_format_stats_reports_cache_hit_on_second_run

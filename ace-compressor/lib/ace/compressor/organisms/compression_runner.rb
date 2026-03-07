@@ -5,6 +5,7 @@ module Ace
     module Organisms
       class CompressionRunner
         SUPPORTED_FORMATS = %w[path stdio stats].freeze
+        SUPPORTED_MODES = %w[exact compact].freeze
 
         def initialize(paths, mode:, output: nil, format: nil, verbose: false)
           @paths = Array(paths)
@@ -17,8 +18,9 @@ module Ace
 
         def call
           raise Ace::Compressor::Error, "Unsupported format '#{@format}'. Use --format path, stdio, or stats" unless SUPPORTED_FORMATS.include?(@format)
+          raise Ace::Compressor::Error, "Unsupported mode '#{@mode}'. Use --mode exact or --mode compact" unless SUPPORTED_MODES.include?(@mode)
 
-          compressor = ExactCompressor.new(@paths, verbose: @verbose)
+          compressor = compressor_for_mode
           sources = compressor.resolve_sources
           manifest = @cache_store.manifest(mode: @mode, sources: sources)
           canonical = @cache_store.canonical_paths(mode: @mode, sources: sources, manifest_key: manifest["key"])
@@ -45,6 +47,7 @@ module Ace
           )
 
           @cache_store.write_output(output_path, content) unless output_path == canonical[:pack_path]
+          refusal_lines = refusal_lines(content)
 
           {
             console_output: format_console_output(
@@ -54,7 +57,9 @@ module Ace
               metadata: metadata
             ),
             ignored_paths: compressor.ignored_paths,
-            output_path: output_path
+            output_path: output_path,
+            refusal_lines: refusal_lines,
+            exit_code: refusal_lines.empty? ? 0 : 1
           }
         end
 
@@ -110,6 +115,18 @@ module Ace
             metadata: metadata
           )
           metadata
+        end
+
+        def compressor_for_mode
+          if @mode == "compact"
+            CompactCompressor.new(@paths, verbose: @verbose)
+          else
+            ExactCompressor.new(@paths, verbose: @verbose, mode_label: @mode)
+          end
+        end
+
+        def refusal_lines(content)
+          content.to_s.lines.map(&:strip).select { |line| line.start_with?("REFUSAL|") }
         end
       end
     end
