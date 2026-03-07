@@ -4,8 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.785] - 2026-03-07
+## [0.9.780] - 2026-03-07
 
+### Technical
+- **ace-assign v0.21.3**: Completed shine-cycle release step for PR #241 after repeated review-provider failures (`Broken pipe`) and confirmed no pending apply-feedback items.
+
+## [0.9.779] - 2026-03-07
+
+### Technical
+- **ace-assign v0.21.2**: Completed fit-cycle release step for PR #241 after recorded review-provider failures (`Broken pipe`) and confirmed no pending apply-feedback items in session context.
+
+## [0.9.778] - 2026-03-07
+
+### Technical
+- **ace-assign v0.21.1**: Completed the valid-cycle apply-feedback pass for PR #241 and confirmed there were no pending medium+ review feedback items before releasing.
+
+## [0.9.777] - 2026-03-07
+
+### Added
+- **ace-assign v0.21.0**: Added subtree `pre-commit-review` phase support with configurable native client review defaults (`pre_commit_review`, provider mode, blocking toggle, and native client allowlist).
+
+### Added
+- **ace-task v0.21.0**: `task/work` workflow now includes `pre-commit-review` sub-phase between `work-on-task` and `verify-test`.
+
+### Changed
+- **ace-assign v0.21.0**: `task/work` forked sub-phase flow now inserts `pre-commit-review` between `work-on-task` and `verify-test`, with config-aware run/skip/block guidance in generated phase instructions.
+
+## [0.9.776] - 2026-03-06
 
 ### Fixed
 - **ace-compressor v0.7.1**: Corrected ContextPack/3 exact-mode scoping so `FILE|...` records now bracket the right source content, stabilized generic list output as `LIST|section|[...]`, and canonicalized prose `Example:` markers into `EXAMPLE|tool=...`.
