@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.788] - 2026-03-07
+
+### Technical
+- **ace-assign v0.22.3**: Completed shine-cycle release step for PR #242 after provider/runtime review failures (`claude` inactive, `codex` broken pipe, fallback hang) and confirmation that apply-feedback had no pending items.
+
+## [0.9.787] - 2026-03-07
+
+### Fixed
+- **ace-assign v0.22.2**: Normalized `ace-assign create` output path formatting so the `Created:` and hidden-spec provenance lines use consistent path rendering.
+
+### Technical
+- **ace-assign v0.22.2**: Added regression tests covering relative create output formatting and legacy `phases/` source-config preservation.
+
+## [0.9.786] - 2026-03-07
+
+### Technical
+- **ace-assign v0.22.1**: Completed valid-cycle release step for PR #242 after provider/model retry handling in review and confirmation that apply-feedback had no pending medium+ items.
+
 ## [0.9.785] - 2026-03-07
 
 ### Added
