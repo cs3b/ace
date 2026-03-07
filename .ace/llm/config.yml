@@ -1,4 +1,14 @@
 llm:
+  providers:
+    active: 
+      - opencode 
+      - pi 
+      - codex 
+      - gemini 
+      - codex
+      - openrouter
+      - zai
+      - google 
   fallback:
     enabled: true
     retry_count: 2
@@ -9,4 +19,4 @@ llm:
       cco: [codex, pi]
       codex: [pi]
     providers:
-      - zai:glm-5 
+      - zai:glm-5
