@@ -1,6 +1,4 @@
 timeout: 300
-max_tokens: 16000
+sandbox: read-only
 cli_args:
   - --full-auto
-  - --sandbox
-  - read-only
