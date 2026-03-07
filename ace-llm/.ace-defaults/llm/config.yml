@@ -2,6 +2,15 @@
 # Override in .ace/llm/config.yml for project-specific settings
 
 llm:
+  # Optional allow-list of active providers.
+  # When unset, null, or empty, all discovered providers remain available.
+  # Example:
+  # providers:
+  #   active:
+  #     - google
+  #     - anthropic
+  providers: {}
+
   # Default timeout in seconds for LLM requests
   # CLI providers (opencode, claude, codex, gemini) may need longer
   # due to subprocess overhead and "thinking" phases

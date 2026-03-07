@@ -50,8 +50,7 @@ module Ace
           if parts.length == 1
             provider = normalize_provider(parts[0])
             unless supported_providers.include?(provider)
-              return create_error_result(original_input,
-                "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
+              return create_error_result(original_input, provider_validation_error(provider, supported_providers))
             end
 
             model = default_model_for(provider)
@@ -61,8 +60,7 @@ module Ace
           provider = normalize_provider(parts[0])
           model_with_suffix = parts[1].strip
           unless supported_providers.include?(provider)
-            return create_error_result(original_input,
-              "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
+            return create_error_result(original_input, provider_validation_error(provider, supported_providers))
           end
 
           model, thinking_level, thinking_error = split_thinking_suffix(model_with_suffix)
@@ -132,6 +130,28 @@ module Ace
 
         def create_error_result(input, error)
           ParseResult.new(nil, nil, nil, nil, false, error, input)
+        end
+
+        def provider_validation_error(provider, supported_providers)
+          return unknown_provider_error(provider, supported_providers) unless inactive_provider?(provider)
+
+          active = Ace::LLM.configuration.active_provider_names
+          active_display = active.empty? ? "(none)" : active.join(", ")
+          <<~MSG.strip
+            Provider '#{provider}' is inactive. It exists but is not in llm.providers.active.
+            To enable it, add '#{provider}' to llm.providers.active in your config.
+            Active providers: #{active_display}
+          MSG
+        end
+
+        def unknown_provider_error(provider, supported_providers)
+          "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}"
+        end
+
+        def inactive_provider?(provider)
+          Ace::LLM.configuration.provider_inactive?(provider)
+        rescue StandardError
+          false
         end
       end
     end
