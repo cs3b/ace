@@ -13,9 +13,10 @@ module Ace
 
         attr_reader :ignored_paths
 
-        def initialize(paths, verbose: false)
+        def initialize(paths, verbose: false, mode_label: "exact")
           @paths = Array(paths)
           @verbose = verbose
+          @mode_label = mode_label
           @parser = Ace::Compressor::Atoms::MarkdownParser.new
           @transformer = Ace::Compressor::Atoms::CanonicalBlockTransformer
           @ignored_paths = []
@@ -73,12 +74,12 @@ module Ace
             lines << Ace::Compressor::Models::ContextPack.file_line(source_label)
             text = File.read(source)
             if text.strip.empty?
-              raise Ace::Compressor::Error, "Input file is empty. Exact mode requires content: #{source}"
+              raise Ace::Compressor::Error, "Input file is empty. #{mode_title} mode requires content: #{source}"
             end
             blocks = @parser.call(text)
             if blocks.empty?
               raise Ace::Compressor::Error,
-                    "Input file is empty after frontmatter removal. Exact mode requires content: #{source}"
+                    "Input file is empty after frontmatter removal. #{mode_title} mode requires content: #{source}"
             end
             lines.concat transformed_lines(source, blocks)
           end
@@ -117,7 +118,7 @@ module Ace
         def validate_explicit_file!(expanded, original)
           unless supported_extension?(expanded)
             if binary_file?(expanded)
-              raise Ace::Compressor::Error, "Binary input is not supported in exact mode: #{original}"
+              raise Ace::Compressor::Error, "Binary input is not supported in #{mode_label} mode: #{original}"
             end
 
             raise Ace::Compressor::Error,
@@ -126,7 +127,7 @@ module Ace
 
           return unless binary_file?(expanded)
 
-          raise Ace::Compressor::Error, "Binary input is not supported in exact mode: #{original}"
+          raise Ace::Compressor::Error, "Binary input is not supported in #{mode_label} mode: #{original}"
         end
 
         def supported_extension?(path)
@@ -149,6 +150,14 @@ module Ace
           source
         rescue ArgumentError
           source
+        end
+
+        def mode_label
+          @mode_label.to_s.strip.empty? ? "exact" : @mode_label
+        end
+
+        def mode_title
+          mode_label.capitalize
         end
       end
     end

@@ -1,6 +1,6 @@
 ---
 doc-type: how-to-guide
-purpose: Usage guide for ace-compressor CLI tool — exact-mode context compression to ContextPack/3.
+purpose: Usage guide for ace-compressor CLI tool — exact and compact context compression to ContextPack/3.
 update:
   update_frequency: on-change
   last-updated: '2026-03-07'
@@ -13,22 +13,27 @@ update:
 ## Overview
 
 `ace-compressor` compresses Markdown and text files into a compact `ContextPack/3` format — a
-minimal, semantic representation that preserves document structure and meaning while reducing exact-mode
-wire overhead.
+minimal, semantic representation that preserves document structure and meaning while reducing wire overhead.
 
 **Key Features:**
 
 - **Exact mode**: Canonical semantic extraction — headings, prose, lists, and code structures are
   converted into compact typed records.
+- **Compact mode**: Policy-driven narrative compaction with runtime metadata:
+  `POLICY|class=<...>|action=<...>`.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
 - **Provenance**: `FILE|` and `SEC|` records establish scope inline; no separate source table is emitted.
-- **Fidelity markers**: Images emit `U|...`; fences emit `CMD|`, `FILES|`, `TREE|`, `CODE|`, or `TABLE|`.
+- **Fidelity markers**: Images emit `U|...`; compact reductions emit explicit `TABLE|...|strategy=...`,
+  `LOSS|...`, and `EXAMPLE_REF|...` records.
 
 ## Quick Start
 
 ```bash
 # Compress a single Markdown file
 ace-compressor docs/vision.md --mode exact
+
+# Compact narrative docs with runtime policy metadata
+ace-compressor docs/vision.md --mode compact --format stdio
 
 # Expected output:
 /absolute/path/to/.ace-local/compressor/exact/docs/vision.<hash>.exact.pack
@@ -43,6 +48,9 @@ ace-compressor docs/vision.md --mode exact
 ```bash
 # Single file
 ace-compressor <file> --mode exact
+
+# Single file (compact mode)
+ace-compressor <file> --mode compact
 
 # Multiple files
 ace-compressor file1.md file2.md --mode exact
@@ -61,7 +69,7 @@ ace-compressor docs/ --mode exact --verbose
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--mode` | | Compression mode (`exact`) | `exact` |
+| `--mode` | | Compression mode (`exact`, `compact`) | `exact` |
 | `--output` | `-o` | Save output to file or directory path | canonical cache path |
 | `--format` | `-f` | Console output format: `path`, `stdio`, `stats` | `path` |
 | `--verbose` | `-v` | Show skipped files during directory traversal | `false` |
@@ -110,6 +118,7 @@ Every run emits a stream of pipe-delimited records:
 |-------------|---------|---------|
 | `H|` | `H\|ContextPack/3\|exact` | Header — one per run |
 | `FILE|` | `FILE\|docs/vision.md` | Source scope marker |
+| `POLICY|` | `POLICY\|class=narrative-heavy\|action=aggressive_compact` | Compact-mode runtime policy decision |
 | `SEC|` | `SEC\|vision` | Section heading |
 | `SUMMARY|` | `SUMMARY\|A high-level statement` | Overview prose |
 | `FACT|` | `FACT\|A preserved factual statement` | Statement with operational content |
@@ -118,11 +127,13 @@ Every run emits a stream of pipe-delimited records:
 | `PROBLEMS|` | `PROBLEMS\|[context_bloat,isolation_boundary]` | Typed array |
 | `LIST|` | `LIST\|core_principles\|[cli_first,transparent_inspectable]` | Generic typed array scoped to a section |
 | `EXAMPLE|` | `EXAMPLE\|tool=ace-git-commit` | Example context marker |
+| `EXAMPLE_REF|` | `EXAMPLE_REF\|tool=ace-git-commit\|source=docs/b.md\|original_source=docs/a.md\|reason=duplicate_example` | Ref to previously emitted example |
 | `CMD|` | `CMD\|ace-git-commit -i "fix"` | Shell command block |
 | `FILES|` | `FILES\|ace-git-commit\|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]` | File listing |
 | `TREE|` | `TREE\|docs\|src/...` | Tree-shaped block |
 | `CODE|` | `CODE\|ruby\|puts 1` | Generic code block |
-| `TABLE|` | `TABLE\|Name \| Value \| ...` | Table rows (compressed with separators) |
+| `TABLE|` | `TABLE\|id=vision_t1\|strategy=schema_plus_key_rows\|rows=\| Tier \| QPS \| ...` | Compact table with explicit strategy |
+| `LOSS|` | `LOSS\|kind=table\|target=vision_t1\|strategy=schema_plus_key_rows\|original_rows=7\|retained_rows=2\|dropped_rows=5` | Explicitly reports what was removed |
 | `U|` | `U\|image-only\|![Chart](chart.png)` | Unresolved image reference |
 
 The format is intentionally compact:

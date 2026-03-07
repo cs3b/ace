@@ -10,10 +10,12 @@ module Ace
         class Compress < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
-          desc "Compress markdown/text files into ContextPack/3 for exact mode"
+          SUPPORTED_MODES = %w[exact compact].freeze
+
+          desc "Compress markdown/text files into ContextPack/3 records"
 
           argument :sources, required: false, type: :array, desc: "File or directory paths"
-          option :mode, type: :string, default: "exact", desc: "Compression mode (exact)"
+          option :mode, type: :string, default: "exact", desc: "Compression mode (exact|compact)"
           option :output, type: :string, aliases: ["-o"], desc: "Save output to file or directory path"
           option :format, type: :string, aliases: ["-f"], desc: "Console output format: path|stdio|stats"
           option :version, type: :boolean, desc: "Show version information"
@@ -27,15 +29,15 @@ module Ace
               return 0
             end
 
-            sources = options[:sources] || []
+            sources = normalize_sources(options[:sources] || [])
             if sources.empty?
               raise Ace::Core::CLI::Error,
-                    "Missing input path. Usage: ace-compressor <file-or-dir> [more-paths...] --mode exact"
+                    "Missing input path. Usage: ace-compressor <file-or-dir> [more-paths...] --mode <exact|compact>"
             end
 
             mode = (options[:mode] || "exact").to_s
-            unless mode == "exact"
-              raise Ace::Core::CLI::Error, "Unsupported mode '#{mode}'. Only --mode exact is available in this slice"
+            unless SUPPORTED_MODES.include?(mode)
+              raise Ace::Core::CLI::Error, "Unsupported mode '#{mode}'. Use --mode exact or --mode compact"
             end
 
             runner = Ace::Compressor::Organisms::CompressionRunner.new(
@@ -50,8 +52,20 @@ module Ace
               result[:ignored_paths].each { |path| $stderr.puts "Ignoring unsupported file: #{path}" }
             end
             puts result[:console_output]
+            if result[:exit_code].to_i.nonzero?
+              raise Ace::Core::CLI::Error,
+                    "One or more sources were refused in compact mode. Retry refused sources with --mode exact"
+            end
           rescue Ace::Compressor::Error => e
             raise Ace::Core::CLI::Error, e.message
+          end
+
+          private
+
+          def normalize_sources(sources)
+            values = Array(sources).dup
+            values.shift if values.first == "compress"
+            values
           end
         end
       end
