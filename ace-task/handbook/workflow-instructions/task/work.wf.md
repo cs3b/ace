@@ -7,6 +7,7 @@ assign:
     - task-load
     - plan-task
     - work-on-task
+    - pre-commit-review
     - verify-test
     - release-minor
   context: fork
@@ -23,6 +24,7 @@ You have context sources already loaded from prior sub-phases:
 - **Project** (`project-base`) — vision, architecture, CLI tools, conventions, and repo-level onboarding context
 - **Task** (`ace-bundle task://<ref>`) — behavioral spec, success criteria, interface contract
 - **Plan** (`ace-task plan <ref> --content`) — implementation checklist with steps, file paths, verification commands
+- **Pre-commit review** runs after implementation and before verification when enabled
 - **Verification** runs in-tree per-package only via `verify-test` before subtree release; no full suite is executed at this level
 
 If the plan is missing or stale: run `ace-task plan <ref> --content` and wait before proceeding.
