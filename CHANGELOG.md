@@ -4,9 +4,67 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.776] - 2026-03-06
+## [0.9.783] - 2026-03-07
+
+### Changed
+- **ace-compressor v0.6.0**: Replaced verbose `ContextPack/1` exact-mode records with compact `ContextPack/2` output using a source table and implicit section context, cutting most structural overhead from packed content.
+
+### Technical
+- **ace-compressor v0.6.0**: Updated exact-mode tests, cache-key inputs, README, and usage docs to the new `ContextPack/2` wire format and compact record grammar.
+
+## [0.9.782] - 2026-03-07
+
+### Added
+- **ace-assign v0.20.2**: Provider-unavailability recovery protocol for `fork-run` failures — distinguishes LLM-tool phases (inline retry allowed) from code phases (must re-fork), with detection heuristics and error-handling table entry.
+
+## [0.9.781] - 2026-03-07
+
+### Changed
+- **ace-compressor v0.5.0**: Switched to a single-command CLI, added canonical cache-backed `--output` handling, and made `--format stats` human-readable with original-vs-packed byte and line comparisons.
+
+### Technical
+- **ace-compressor v0.5.0**: Added cache manifest metadata/backfill for source and packed totals, plus new command and organism coverage for cache reuse and stats reporting.
+
+## [0.9.780] - 2026-03-07
+
+### Technical
+- **ace-compressor v0.4.3**: Polish — removed dead `return 0` in CLI command; expanded README with multi-source examples and docs link.
+
+## [0.9.779] - 2026-03-07
+
+### Technical
+- **ace-compressor v0.4.2**: Removed redundant `uniq` pass in directory traversal (fit-cycle cleanup).
+
+## [0.9.778] - 2026-03-07
 
 ### Fixed
+- **ace-compressor v0.4.1**: Binary files with supported extensions (`.md`, `.txt`) inside directories are now correctly skipped during traversal rather than being silently included and producing corrupt ContextPack output.
+
+### Technical
+- **ace-compressor v0.4.1**: Added `docs/usage.md` with complete CLI reference, output format table, usage scenarios, error conditions, and troubleshooting guide.
+
+## [0.9.777] - 2026-03-07
+
+### Added
+- **ace-compressor v0.4.0**: Added explicit exact-mode unresolved markers for image-only references and fallback markers for fenced code blocks, improving fidelity visibility for unsupported markdown constructs.
+
+### Fixed
+- **ace-compressor v0.4.0**: Hardened exact-mode preservation for rule-heavy and numeric content with regression coverage to prevent silent semantic drift.
+- **ace-compressor v0.4.0**: Ensured table-bearing markdown content is represented explicitly in output records rather than being silently dropped.
+
+### Technical
+- **ace-compressor v0.4.0**: Expanded command and organism tests for unresolved/fallback/table behavior and exact-mode policy fidelity checks.
+
+## [0.9.776] - 2026-03-06
+
+### Added
+- **ace-compressor v0.3.0**: Added exact-mode support for multi-file and directory inputs with deterministic ordering and merged output.
+
+### Fixed
+- **ace-compressor v0.3.0**: Added explicit failures for binary file inputs and empty-source directories, while preserving directory traversal behavior that ignores unsupported files by default.
+
+### Technical
+- **ace-compressor v0.3.0**: Expanded command/organism test coverage for multi-source exact-mode contracts (duplicates, directory traversal, verbose ignored-file reporting, and deterministic ordering).
 - **ace-review v0.43.7**: `--dry-run` now suppresses model execution even when review defaults enable `auto_execute`.
 - **ace-review v0.43.7**: Review model validation now accepts `@ro`, `@rw`, and `@yolo` style suffixes.
 
@@ -16,11 +74,17 @@ All notable changes to this project will be documented in this file.
 ## [0.9.775] - 2026-03-06
 
 ### Added
+- **ace-compressor v0.2.0**: Introduced a new `ace-compressor` gem with a runnable exact-mode single-file compression path (`ace-compressor compress <file> --mode exact`) that emits minimal structured `ContextPack/1` records.
 - **ace-llm v0.25.1**: Added explicit `:low|medium|high|xhigh` thinking-level suffix support for fully qualified model targets while preserving `@ro`, `@rw`, and `@yolo` execution presets.
 - **ace-llm v0.25.1**: Added provider-scoped thinking overlays for Codex and Claude so explicit thinking levels map to provider-native runtime controls.
 
 ### Changed
 - **ace-llm v0.25.1**: Query resolution now applies explicit thinking overrides after preset loading and before direct CLI overrides.
+### Fixed
+- **ace-compressor v0.2.0**: Added explicit non-zero error handling for missing file arguments, missing files, and empty input content in exact mode.
+
+### Technical
+- **ace-compressor v0.2.0**: Added package test coverage (atoms, organisms, commands), workspace registration (`Gemfile`), and executable wrapper (`bin/ace-compressor`) for repo-level command invocation.
 
 ## [0.9.774] - 2026-03-06
 
