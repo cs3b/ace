@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.20.1)
+    ace-assign (0.20.2)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.8)
@@ -27,6 +27,14 @@ PATH
       ace-support-fs (~> 0.2)
       ace-support-nav (~> 0.18)
       dry-cli (~> 1.0)
+
+PATH
+  remote: ace-compressor
+  specs:
+    ace-compressor (0.6.0)
+      ace-support-config (~> 0.8)
+      ace-support-core (~> 0.25)
+      dry-cli (~> 1.1)
 
 PATH
   remote: ace-demo
@@ -432,6 +440,7 @@ DEPENDENCIES
   ace-assign!
   ace-b36ts!
   ace-bundle!
+  ace-compressor!
   ace-demo!
   ace-docs!
   ace-git!
