@@ -136,6 +136,28 @@ parent: "012"  # Updated if parent was also renumbered
 ---
 ```
 
+## Creating Assignments
+
+### From Job File
+
+```bash
+ace-assign create path/to/job.yaml
+```
+
+Output shows the assignment ID, cache directory, and first phase instructions.
+
+### Hidden Spec Provenance
+
+When an assignment is created from a hidden spec (rendered under `.ace-local/assign/jobs/`), the create output includes a provenance line:
+
+```
+Assignment: work-on-task-123 (abc123)
+Created: .ace-local/assign/abc123/
+Created from hidden spec: .ace-local/assign/jobs/1741234567-work-on-task-123.yml
+```
+
+The hidden spec is retained after creation for traceability. Assignment metadata references the spec location for status and debug flows.
+
 ## Exit Codes
 
 | Code | Meaning |
