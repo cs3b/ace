@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.790] - 2026-03-07
+
+### Technical
+- **ace-compressor v0.10.3**: Applied shine-cycle polish in compact mode by adding class-level docs and replacing table-strategy magic numbers with named constants.
+
+## [0.9.789] - 2026-03-07
+
+### Technical
+- **ace-compressor v0.10.2**: Completed fit-cycle release step for PR #243; no actionable feedback items remained after review-feedback synthesis retries.
+
+## [0.9.788] - 2026-03-07
+
+### Technical
+- **ace-compressor v0.10.1**: Completed valid-cycle release pass for PR #243 after correctness review found no pending medium+ feedback items.
+
+## [0.9.787] - 2026-03-07
+
+### Added
+- **ace-compressor v0.10.0**: Added explicit compact reduction metadata records for loss and deduplicated examples (`LOSS|...`, `EXAMPLE_REF|...`).
+
+### Changed
+- **ace-compressor v0.10.0**: Compact table output now declares per-table strategy (`preserve`, `schema_plus_key_rows`, `summarize_with_loss`) and reports retained/original data-row counts explicitly.
+
+### Technical
+- **ace-compressor v0.10.0**: Expanded compact-mode command/organism tests for strategy/loss signaling and mimicry-sensitive example handling.
+
+## [0.9.786] - 2026-03-07
+
+### Added
+- **ace-compressor v0.9.0**: Added mixed-source compact behavior with explicit fidelity/refusal metadata (`FIDELITY|`, `REFUSAL|`, `GUIDANCE|`) and mixed-doc rule-preservation handling (`action=compact_with_exact_rule_sections`).
+
+### Changed
+- **ace-compressor v0.9.0**: Compact mode now preserves safe-source output when another source refuses and returns non-zero when refusal metadata is present.
+- **ace-compressor v0.9.0**: Added optional `ace-compressor compress ...` compatibility while retaining direct `ace-compressor <sources...>` usage.
+
+### Technical
+- **ace-compressor v0.9.0**: Expanded classifier/organism/command coverage for mixed-doc fidelity pass, rule-heavy refusal, and partial-failure exit semantics.
+
+## [0.9.785] - 2026-03-07
+
+### Added
+- **ace-compressor v0.8.0**: Added compact narrative mode with runtime policy metadata (`POLICY|class=...|action=...`) and deterministic classification for `narrative-heavy` vs `unknown` sources.
+
+### Changed
+- **ace-compressor v0.8.0**: Extended CLI mode support to `--mode compact` with mode-aware compressor dispatch and conservative fallback behavior for ambiguous docs.
+
+### Technical
+- **ace-compressor v0.8.0**: Added compact-mode classifier/compressor test coverage, preserved imperative-rule survivability under aggressive compaction, and updated usage/README contracts.
+
 ## [0.9.780] - 2026-03-07
 
 ### Technical
