@@ -1,226 +1,145 @@
 ---
 name: assign/create
 allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Create a new assignment workflow from job.yaml
-argument-hint: "[path/to/job.yaml]"
+description: Create a new assignment from a hidden rendered spec
 doc-type: workflow
-purpose: workflow instruction for creating ace-assign assignments
+purpose: workflow instruction for rendering one smart-create path into hidden spec and calling deterministic ace-assign create
+argument-hint: "[work-on-task --taskref <id>]"
 
 update:
   frequency: on-change
-  last-updated: '2026-01-28'
+  last-updated: '2026-03-07'
 ---
 
 # Create Assignment Workflow
 
 ## Purpose
 
-Create a new ace-assign workflow from a job.yaml configuration file. This initializes the work queue and sets up the assignment directory structure.
+Create an assignment through one proven smart-create tracer path while preserving deterministic runtime behavior:
 
-## Prerequisites
+1. Render a normalized hidden spec under `.ace-local/assign/jobs/`
+2. Call `ace-assign create <hidden-spec-path>`
+3. Surface standard create output plus hidden-spec provenance
 
-- A valid `job.yaml` file exists with `session:` and `steps:` sections
-- `ace-assign` CLI tool is installed and available
+This workflow intentionally validates one path end-to-end before broadening the interface.
+
+## Supported Tracer Path
+
+```bash
+/as-assign-create work-on-task --taskref 123
+```
+
+Only this path is required for this slice. Equivalent freeform phrase parsing is deferred.
+
+## Runtime Boundary (Hard Rule)
+
+`ace-assign create FILE` remains the deterministic runtime boundary.
+
+- This workflow may parse the user request and render YAML.
+- The CLI create command must still ingest a concrete file path.
+- Do not add natural-language parsing inside `ace-assign create`.
 
 ## Process
 
-### 1. Locate job.yaml
+### 1. Parse Input
 
-Use the path provided as argument. If no path given, look for `job.yaml` in the current task directory.
+Validate the tracer input shape:
+- Preset: `work-on-task`
+- Required parameter: `--taskref <id>`
 
-### 2. Validate Configuration
+If input does not match this path, fail with a concrete unsupported-input message.
 
-Read the job.yaml file and verify it has the required structure:
+### 2. Render Hidden Spec
+
+Create hidden spec directory if missing:
+
+```bash
+mkdir -p .ace-local/assign/jobs
+```
+
+Render normalized YAML to a timestamped file:
+
+```bash
+.ace-local/assign/jobs/<timestamp>-work-on-task-<taskref>.yml
+```
+
+Minimal required structure:
 
 ```yaml
 session:
-  name: my-workflow
-  description: Optional description
+  name: work-on-task-123
+  description: Work on task 123.
 
 steps:
-  - name: init
-    instructions: |
-      Set up the project structure.
-      Report when done: ace-assign finish --message init.md
+  - name: work-on-task
+    skill: as-task-work
+    taskref: "123"
+    instructions:
+      - "Work on task 123."
+      - "Implement the required changes following project conventions."
 ```
 
-Required elements:
-- `session.name` is set
-- `steps` array exists with at least one phase
-- Each phase has `name` and `instructions`
-- No unresolved `{{placeholder}}` tokens remain
+Rules:
+- Each invocation writes a new file (no in-place mutation of previous hidden specs).
+- The hidden spec is internal provenance; users are not required to edit it.
 
-### 3. Create Assignment
+### 3. Create Assignment Deterministically
 
-Run the create command:
+Invoke CLI boundary with rendered spec:
 
 ```bash
-ace-assign create <path-to-job.yaml>
-```
-
-This creates the assignment directory at `.ace-local/assign/<session-id>/` with:
-
-```
-.ace-local/assign/<session-id>/
-├── assignment.yaml               # Assignment metadata
-├── phases/                       # Phase files (.ph.md extension)
-│   ├── 010-init.ph.md           # pending
-│   ├── 020-implement.ph.md      # pending
-│   └── 030-test.ph.md           # pending
-└── reports/                      # Report files (.r.md extension)
-    └── (created as phases complete)
+ace-assign create .ace-local/assign/jobs/<timestamp>-work-on-task-<taskref>.yml
 ```
 
 ### 4. Report Result
 
-Show the user:
-- Assignment ID and name
-- Assignment directory path
-- Total phase count
-- First phase to work on
+Display assignment summary plus hidden-spec provenance line.
 
-Example output:
+Expected output shape:
+
+```text
+Assignment: work-on-task-123 (<id>)
+Created: .ace-local/assign/<id>/
+Created from hidden spec: .ace-local/assign/jobs/<timestamp>-work-on-task-123.yml
+
+Phase 010: ...
 ```
-Assignment: work-on-task-123 (8or5kx)
-Created: .ace-local/assign/8or5kx/
-
-Phases: 3 total
-  010: onboard [in_progress]
-  020: work-on-task [pending]
-  030: finalize [pending]
-
-First phase: onboard
-
-Instructions:
-Onboard yourself to the codebase.
-Load context and understand the project structure.
-```
-
-## Job Configuration Format
-
-### Full Structure
-
-```yaml
-session:
-  name: my-workflow
-  description: Optional description of the workflow
-
-steps:
-  - name: init
-    instructions: |
-      Set up the project structure.
-      Report when done: ace-assign finish --message init.md
-
-  - name: implement
-    skill: as-task-work      # Optional skill reference
-    instructions: |
-      Implement the feature.
-      Report when done: ace-assign finish --message impl.md
-
-  - name: test
-    instructions: |
-      Run tests and verify.
-      Report when done: ace-assign finish --message test.md
-```
-
-### Skill-Aware Phases
-
-Phases can include a `skill:` field that references a Claude Code skill to invoke:
-
-```yaml
-- name: work-on-task
-  skill: as-task-work
-  instructions: |
-    Work on task 123.
-    Follow project conventions.
-```
-
-When executing this phase, invoke `/as-task-work 123` then follow the skill workflow.
-
-### Common Skill References
-
-| Skill | Invocation | Purpose |
-|-------|-----------|---------|
-| `ace-onboard` | `/as-onboard` | Load project context |
-| `ace-task-work` | `/as-task-work <taskref>` | Implement task changes |
-| `ace-github-pr-create` | `/as-github-pr-create` | Create pull request |
-| `ace-review-pr` | `/as-review-pr [pr#]` | Review code changes |
-| `ace-git-commit` | `/as-git-commit` | Generate commit message |
-| `ace-github-pr-update` | `/as-github-pr-update` | Update PR description |
-
-### Parameter Passing
-
-Extract parameters from instructions for skill invocation:
-
-```yaml
-- name: work-on-task
-  skill: as-task-work
-  instructions: |
-    Work on task 148.          # Extract "148" as taskref
-    Implement required changes.
-```
-
-Agent Action: Run `/as-task-work 148`
-
-### Dynamic Parameter Updates
-
-Some phases need parameters from previous phases (e.g., PR number):
-
-```yaml
-- name: create-pr
-  skill: as-github-pr-create
-  instructions: |
-    Create a pull request.
-    Capture the PR number for subsequent review phases.
-    Update the next phases with the PR number.
-```
-
-When completing this phase:
-1. Note the PR number from the skill output
-2. Mentally track for subsequent review phases
-3. Report includes the PR number for reference
-
-## Assignment Archiving
-
-When `ace-assign create job.yaml` runs, the source job.yaml is automatically archived to `<task>/jobs/{session_id}-job.yml`. This keeps the task folder clean while preserving the job recipe for provenance.
-
-**Note:** The archived file is for historical reference only—always use `ace-assign status` to query the current assignment state.
 
 ## Error Handling
 
 | Scenario | Action |
 |----------|--------|
-| job.yaml not found | Check current directory or ask user for path |
-| Invalid format | Show required structure and examples |
-| Missing required fields | Report which fields are missing |
-| Unresolved placeholders | Report which parameters need values |
+| Unsupported tracer input | Return concrete validation error; no assignment created |
+| Hidden-spec render failure | Return concrete render error; no assignment created |
+| `ace-assign create` rejection | Surface CLI error unchanged |
 
-## Exit Codes
+## Edge Cases
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success - assignment created |
-| 1 | General error |
-| 3 | File not found (job.yaml) |
-| 4 | Invalid configuration format |
+- Re-running the same command creates a new hidden spec file.
+- Hidden spec path remains stable in assignment metadata after creation.
+- Quiet mode for `ace-assign create` suppresses non-essential output (including provenance line).
 
 ## Success Criteria
 
-- job.yaml successfully validated
-- Assignment directory created with structure intact
-- Assignment metadata written to assignment.yaml
-- Phase files created with proper status (pending)
-- Clear summary provided to user
-- User knows how to proceed (drive assignment)
+- Hidden spec is written under `.ace-local/assign/jobs/`
+- `ace-assign create FILE` receives the rendered spec path
+- Assignment metadata preserves hidden spec path provenance
+- User sees assignment summary and hidden-spec provenance in normal output
+
+## Verification
+
+```bash
+# Validate hidden spec references exist in implementation
+rg -n "\.ace-local/assign/jobs|Created from hidden spec" ace-assign
+
+# Validate package behavior
+ace-test ace-assign
+```
 
 ## Next Steps
 
-After creating the assignment, use the drive workflow to work through phases:
+After assignment creation:
 
 ```bash
-# Check status
-ace-assign status
-
-# Drive execution through the workflow
-/as-assign-drive
+/as-assign-drive <assignment-id>
 ```
