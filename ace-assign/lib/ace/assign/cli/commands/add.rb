@@ -52,7 +52,7 @@ module Ace
               end
             end
 
-            instructions = options[:instructions] || "Complete this phase and finish with: ace-assign finish --report report.md"
+            instructions = options[:instructions] || "Complete this phase and finish with: ace-assign finish --message report.md"
 
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)

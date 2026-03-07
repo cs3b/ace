@@ -17,7 +17,7 @@ Save all output to `results/tc/03/`. Capture:
 ### Error 1: Advance Parent with Incomplete Children
 - Create assignment from `fixtures/errors/job.yaml`.
 - Add two children under parent 010 (`add --after 010 --child`).
-- Attempt to complete parent with `ace-assign finish --report fixtures/errors/parent-report.md`.
+- Attempt to complete parent with `ace-assign finish --message fixtures/errors/parent-report.md`.
 - Verify: non-zero exit code, error message mentions "incomplete children", error lists child phase numbers (010.01, 010.02).
 
 ### Error 2: Invalid --after Reference

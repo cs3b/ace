@@ -58,8 +58,8 @@ After an assignment is created, the first workable phase is started automaticall
 
 ```bash
 # Normal sequential flow
-ace-assign finish --report done.md   # completes 010, auto-starts 020
-ace-assign finish --report done.md   # completes 020, auto-starts 030
+ace-assign finish --message done.md   # completes 010, auto-starts 020
+ace-assign finish --message done.md   # completes 020, auto-starts 030
 ```
 
 Use `ace-assign start` explicitly for recovery or subtree entry:
@@ -76,11 +76,11 @@ printf "Done: implemented feature\n" | ace-assign finish
 cat report.md | ace-assign finish
 ```
 
-When both `--report` and stdin are provided, `--report` file content takes precedence.
+When both `--message` and stdin are provided, `--message` takes precedence.
 
 ### Completion Semantics
 
-1. **Leaf phases** (no children): Complete via `ace-assign finish --report <file>` or piped stdin
+1. **Leaf phases** (no children): Complete via `ace-assign finish --message <string|file>` or piped stdin
 2. **Parent phases**: Auto-complete when ALL children are done
 3. **Multi-level**: Completion cascades up the tree
 
@@ -171,7 +171,7 @@ Suppress output for scripting:
 
 ```bash
 ace-assign add task -i "..." --quiet
-ace-assign finish --report report.md --quiet
+ace-assign finish --message report.md --quiet
 ```
 
 ## Workflow Patterns
@@ -185,7 +185,7 @@ phases:
   - name: implement
     instructions: |
       Implement the feature.
-      When done, run: ace-assign finish --report impl.md
+      When done, run: ace-assign finish --message impl.md
 ```
 
 Then dynamically add verification:

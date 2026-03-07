@@ -313,7 +313,7 @@ module Ace
             puts "  Assignment: #{assignment.id}"
             puts
             puts "After completing, run:"
-            puts "  ace-assign finish --report <report-file.md>"
+            puts "  ace-assign finish --message <report-file.md>"
             puts
             puts "To execute entire subtree in one forked process:"
             puts "  ace-assign fork-run --root #{phase.number} --assignment #{assignment.id}"

@@ -34,7 +34,7 @@ ace-assign create job.yaml
 ace-assign status
 
 # Complete current phase with a report
-ace-assign finish --report my-report.md
+ace-assign finish --message my-report.md
 
 # Mark phase as failed
 ace-assign fail --message "Tests failed"
@@ -59,17 +59,17 @@ phases:
   - name: init
     instructions:
       - Set up the project structure.
-      - "Report when done: ace-assign finish --report init-report.md"
+      - "Report when done: ace-assign finish --message init-report.md"
 
   - name: implement
     instructions:
       - Implement the feature.
-      - "Report when done: ace-assign finish --report impl-report.md"
+      - "Report when done: ace-assign finish --message impl-report.md"
 
   - name: test
     instructions:
       - Run tests and verify.
-      - "Report when done: ace-assign finish --report test-report.md"
+      - "Report when done: ace-assign finish --message test-report.md"
 ```
 
 ## Assignment Storage
@@ -157,7 +157,7 @@ Display current queue state (shows hierarchy by default, use `--flat` for flat v
 ### `start [STEP]`
 Start next workable pending phase, or an explicit pending `STEP` in the active assignment.
 
-### `finish [STEP] --report FILE`
+### `finish [STEP] --message VALUE`
 Complete current in-progress phase with report content.
 
 ### `fail --message TEXT`
@@ -229,7 +229,7 @@ When `ace-assign status` encounters a fork phase:
 1. Outputs Task tool instructions instead of raw instructions
 2. Orchestrating agent invokes Task tool with phase content
 3. Subagent executes in isolated context
-4. Orchestrator captures response and submits via `ace-assign finish --report ...`
+4. Orchestrator captures response and submits via `ace-assign finish --message ...`
 
 ### Best Practice: Separate Work and Verification
 
