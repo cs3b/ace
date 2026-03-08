@@ -100,7 +100,7 @@ module Ace
                 puts
                 print_scoped_fork_pid_info(scoped_fork_phase)
 
-                if current_for_display.fork?
+                if current_for_display.fork? && %i[pending in_progress].include?(current_for_display.status)
                   # Fork context: output Task tool instructions
                   print_fork_instructions(current_for_display, assignment)
                 else
@@ -150,6 +150,10 @@ module Ace
               status: phase.status.to_s,
               skill: phase.skill,
               context: phase.context,
+              batch_parent: phase.batch_parent,
+              parallel: phase.parallel,
+              max_parallel: phase.max_parallel,
+              fork_retry_limit: phase.fork_retry_limit,
               parent: phase.parent
             }.compact
           end
@@ -162,7 +166,7 @@ module Ace
 
             scoped_phases = state.subtree_phases(root.number)
             scoped_state = Models::QueueState.new(phases: scoped_phases, assignment: state.assignment)
-            current = scoped_state.current || scoped_state.next_workable || root
+            current = scoped_state.current || scoped_state.next_workable
 
             { state: scoped_state, current: current, root: root.number }
           end
@@ -256,8 +260,8 @@ module Ace
               # Status with icon
               status_icon = STATUS_ICONS[phase.status] || phase.status.to_s.capitalize
 
-              # Fork indicator - explicit signal that this phase must be delegated
-              fork_info = children.any? ? "yes" : ""
+              # Fork indicator reflects execution context, not child presence.
+              fork_info = phase.fork? ? "yes" : ""
 
               # Children count (progress visibility)
               child_info = if children.any?

@@ -1,3 +1,11 @@
+---
+doc-type: user
+purpose: User-facing usage guide for ace-assign commands, hierarchy behavior, and fork execution workflows.
+update:
+  frequency: on-change
+  last-updated: '2026-03-08'
+---
+
 # ace-assign Usage Guide
 
 Comprehensive guide to ace-assign commands and features.
@@ -164,9 +172,9 @@ The hidden spec is retained after creation for traceability. Assignment metadata
 |------|---------|
 | 0 | Success |
 | 1 | General error |
-| 2 | Configuration error |
-| 3 | Assignment not found |
-| 4 | No current phase |
+| 2 | Assignment error (no active assignment or assignment not found) |
+| 3 | Configuration not found |
+| 4 | Phase not found |
 | 130 | Interrupted (SIGINT) |
 
 See [exit-codes.md](exit-codes.md) for details.

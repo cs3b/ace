@@ -83,6 +83,10 @@ module Ace
             parent: fields[:parent],
             skill: fields[:skill],
             context: fields[:context],
+            batch_parent: fields[:batch_parent],
+            parallel: fields[:parallel],
+            max_parallel: fields[:max_parallel],
+            fork_retry_limit: fields[:fork_retry_limit],
             stall_reason: fields[:stall_reason],
             file_path: file_path
           )

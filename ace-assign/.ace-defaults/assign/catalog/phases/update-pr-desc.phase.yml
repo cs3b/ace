@@ -1,6 +1,12 @@
 name: update-pr-desc
 skill: as-github-pr-update
 description: Update PR description with implementation summary and final state
+intent:
+  phrases:
+    - "update pr description"
+    - "update pull request description"
+    - "refresh pr description"
+    - "sync pr description"
 
 prerequisites:
   - name: create-pr

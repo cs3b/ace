@@ -24,6 +24,7 @@ module Ace
 
         attr_reader :number, :name, :status, :instructions, :report, :error,
                     :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
+                    :batch_parent, :parallel, :max_parallel, :fork_retry_limit,
                     :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
                     :stall_reason
 
@@ -40,6 +41,10 @@ module Ace
         # @param file_path [String, nil] Path to phase file
         # @param skill [String, nil] Skill reference for this phase (e.g., "ace-task-work")
         # @param context [String, nil] Execution context ("fork" for Task tool execution)
+        # @param batch_parent [Boolean, nil] Whether phase is a batch scheduling parent
+        # @param parallel [Boolean, nil] Batch scheduling mode hint (true=parallel, false=sequential)
+        # @param max_parallel [Integer, nil] Max concurrent children for parallel batches
+        # @param fork_retry_limit [Integer, nil] Retry attempts allowed per failed child
         # @param fork_launch_pid [Integer, nil] PID of the process that launched the fork run
         # @param fork_tracked_pids [Array<Integer>, nil] Observed subprocess/descendant PIDs during fork execution
         # @param fork_pid_updated_at [Time, nil] Timestamp when fork PID metadata was last updated
@@ -48,10 +53,15 @@ module Ace
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
                        started_at: nil, completed_at: nil, added_by: nil, parent: nil,
                        file_path: nil, skill: nil, context: nil,
+                       batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
                        fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
                        fork_pid_file: nil, stall_reason: nil)
           validate_status!(status)
           validate_context!(context) if context
+          validate_boolean!(:batch_parent, batch_parent)
+          validate_boolean!(:parallel, parallel)
+          validate_positive_integer!(:max_parallel, max_parallel)
+          validate_non_negative_integer!(:fork_retry_limit, fork_retry_limit)
 
           @number = number.freeze
           @name = name.freeze
@@ -66,6 +76,10 @@ module Ace
           @file_path = file_path&.freeze
           @skill = skill&.freeze
           @context = context&.freeze
+          @batch_parent = batch_parent.nil? ? nil : !!batch_parent
+          @parallel = parallel.nil? ? nil : !!parallel
+          @max_parallel = max_parallel&.to_i
+          @fork_retry_limit = fork_retry_limit&.to_i
           @fork_launch_pid = fork_launch_pid&.to_i
           @fork_tracked_pids = Array(fork_tracked_pids).map(&:to_i).uniq.sort.freeze
           @fork_pid_updated_at = fork_pid_updated_at
@@ -113,6 +127,10 @@ module Ace
             "status" => status.to_s,
             "skill" => skill,
             "context" => context,
+            "batch_parent" => batch_parent,
+            "parallel" => parallel,
+            "max_parallel" => max_parallel,
+            "fork_retry_limit" => fork_retry_limit,
             "started_at" => started_at&.iso8601,
             "completed_at" => completed_at&.iso8601,
             "fork_launch_pid" => fork_launch_pid,
@@ -149,6 +167,26 @@ module Ace
           return if VALID_CONTEXTS.include?(context)
 
           raise ArgumentError, "Invalid context '#{context}'. Valid values: #{VALID_CONTEXTS.join(', ')}"
+        end
+
+        def validate_boolean!(field_name, value)
+          return if value.nil? || value == true || value == false
+
+          raise ArgumentError, "Invalid #{field_name}: #{value.inspect}. Must be true, false, or nil"
+        end
+
+        def validate_positive_integer!(field_name, value)
+          return if value.nil?
+          return if value.is_a?(Integer) && value.positive?
+
+          raise ArgumentError, "Invalid #{field_name}: #{value.inspect}. Must be an integer > 0"
+        end
+
+        def validate_non_negative_integer!(field_name, value)
+          return if value.nil?
+          return if value.is_a?(Integer) && value >= 0
+
+          raise ArgumentError, "Invalid #{field_name}: #{value.inspect}. Must be an integer >= 0"
         end
       end
     end

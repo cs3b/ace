@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-03-08
+
+### Changed
+- Clarified batch-parallel scheduling in `assign/drive` and `assign/run-in-batches`: `max_parallel` is a rolling in-flight concurrency cap (slot refill), not a fixed wave size.
+- Added explicit rolling scheduler-loop guidance for parallel batch execution in `assign/drive`.
+- Added user-document tracking frontmatter to `ace-assign` user docs (`README.md`, `docs/usage.md`).
+
+### Technical
+- Added missing guide frontmatter to `handbook/guides/fork-context.g.md` so package docs are consistently tracked by `ace-docs`.
+
+
+## [0.26.1] - 2026-03-08
+
+### Fixed
+- `fork-run` now marks scoped leaf fork roots as `in_progress` before launching, preventing pending-state drift that could trigger repeated self-delegation loops in batch child execution.
+- Scoped `status` output no longer shows fork execution guidance for already-completed fork phases.
+
+### Changed
+- Updated `assign/drive` workflow delegation rules to explicitly prevent calling `fork-run` again when already operating inside the same scoped fork boundary.
+
+### Technical
+- Added regressions for leaf-root fork activation and scoped done-phase status guidance behavior.
+
+## [0.26.0] - 2026-03-08
+
+### Added
+- Added batch scheduling metadata (`batch_parent`, `parallel`, `max_parallel`, `fork_retry_limit`) to phase parsing/model/status JSON so assignment drivers can orchestrate controlled fork fan-out.
+- Added `--max-parallel` guidance to run-in-batches workflow/skill contracts with default parallel cap semantics.
+
+### Fixed
+- Corrected status `FORK` column semantics to reflect `context: fork` instead of child presence, preventing non-fork batch parents from being misinterpreted as fork targets.
+
+### Changed
+- Updated run-in-batches guidance so `--sequential` now preserves per-item fork execution while switching scheduler mode to sequential metadata.
+- Updated drive workflow delegation guidance to use fork-context signals and document retry-then-stop behavior for parallel child failures.
+
+## [0.25.1] - 2026-03-08
+
+### Changed
+- Removed the legacy `as-assign-start` compatibility skill entrypoint.
+
+### Technical
+- Removed the `assign/start` legacy compatibility workflow file and retained `assign/create` as the public creation flow.
+
+## [0.25.0] - 2026-03-08
+
+### Added
+- Added phrase-intent metadata (`intent.phrases`) for core compose targets: `work-on-task`, `verify-test-suite`, `reorganize-commits`, `push-to-remote`, `create-pr`, and `update-pr-desc`.
+- Added new compose-target phases `squash-changelog` and `rebase-with-main` with skill mappings to `as-docs-squash-changelog` and `as-git-rebase`.
+
+### Changed
+- Reworked `assign/create` workflow to support preset input, explicit step-list intent, freeform high-level intent, and job-file passthrough while preserving deterministic `ace-assign create FILE` runtime boundary.
+- Reworked `assign/compose` workflow with deterministic phrase matching, explicit-intent precedence, and named hard-rule reorder explanations.
+- Extended composition hard-ordering guidance with `squash-before-rebase`, `rebase-before-push`, and `rebase-before-update-pr`.
+
+### Technical
+- Added workflow-level guidance clarifying that skill-backed phase expansion stays runtime-owned via `assign.source` during `ace-assign create`.
+
+## [0.24.0] - 2026-03-08
+
+### Added
+- Added `codex` to the default `subtree.native_review_clients` allow-list so subtree pre-commit review can use native `/review` in Codex runtimes.
+
+### Technical
+- Updated assignment-executor skill-source regression fixtures to the current `wfi://task/work` resolution path and `ace-task` workflow layout.
+
 ## [0.23.1] - 2026-03-08
 
 ### Fixed
@@ -19,6 +85,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Remove hardcoded `providers.cli_args` config; use ace-llm `@preset` suffixes for provider permission flags
+- Reframed the public assignment UX around `as-assign-create` + `as-assign-drive`, including explicit `--run` create-to-drive handoff guidance in the create workflow.
+- Reclassified `as-assign-start` and `as-assign-prepare` as legacy/internal compatibility skills (`user-invocable: false`) so they are no longer presented as primary public entrypoints.
+
+### Technical
+- Updated `assign/start` workflow positioning and fixture usage comments to stop teaching prepare/start as the recommended public flow.
+- Expanded task usage documentation for this slice with explicit create-only, create-then-drive, and advanced `ace-assign create FILE` scenarios plus `--run` edge handling notes.
 
 ## [0.22.7] - 2026-03-08
 
