@@ -3,7 +3,7 @@
 ## API Surface
 - [x] CLI (user-facing commands)
 - [x] Developer API (modules, classes)
-- [ ] Agent API (workflows, protocols, slash commands)
+- [x] Agent API (workflows, protocols, slash commands)
 - [x] Configuration (config keys, env vars)
 
 ## Usage Scenarios
@@ -29,19 +29,19 @@ ace-assign catalog
 
 ### Scenario 2: Compose Assignment from Cross-Gem Phases
 
-**Goal**: Build an assignment that uses phases from different gems
+**Goal**: Build an assignment that uses phases from different gems through the workflow surface
 
 ```bash
-ace-assign compose --phases onboard,work-on-task,run-review,create-pr
+/as-assign-compose "onboard, work-on-task, review-pr, create-pr"
 
 # Expected output:
-# Composed assignment from 4 phases:
+# Proposed assignment from 4 phases:
 #   010: onboard (ace-assign)
 #   020: work-on-task (ace-task)
-#   030: run-review (ace-review)
+#   030: review-pr (ace-review)
 #   040: create-pr (ace-assign)
 #
-# Job saved: .ace-local/assign/jobs/composed-2026-03-06.yaml
+# Ready for hidden job generation / create flow
 ```
 
 ### Scenario 3: Phase from Uninstalled Gem
@@ -49,7 +49,7 @@ ace-assign compose --phases onboard,work-on-task,run-review,create-pr
 **Goal**: Clear error when referencing a phase from a gem that isn't installed
 
 ```bash
-ace-assign compose --phases onboard,vulnerability-scan,create-pr
+/as-assign-compose "onboard, vulnerability-scan, create-pr"
 
 # Expected output:
 # Error: Phase 'vulnerability-scan' not found in catalog
