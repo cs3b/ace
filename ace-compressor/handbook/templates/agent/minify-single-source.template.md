@@ -20,5 +20,6 @@ Rules:
 - Preserve explicit identities: tool names, ADR numbers, path fragments, acronyms, command names, and distinguishing nouns.
 - Remove repeated phrasing and boilerplate.
 - Prefer concise, information-dense wording.
+- Make list items aggressively short while keeping item identity. Prefer `config` over `configuration`, `docs` over `documentation`, `arch` over `architecture`, and drop filler tokens like `with`, `for`, `and`, `the`.
 - Do not invent new facts.
 - Do not emit any wrapper text before or after the JSON object.
