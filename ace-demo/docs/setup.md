@@ -34,6 +34,14 @@ Install via your system package manager.
 
 Verify: `ttyd --version`
 
+### ffmpeg (for `retime` and playback postprocess)
+
+`ffmpeg` is required only when using:
+- `ace-demo retime`
+- `ace-demo record` with `--playback-speed` or configured postprocess speed
+
+Verify: `ffmpeg -version`
+
 ---
 
 ## Arch Linux

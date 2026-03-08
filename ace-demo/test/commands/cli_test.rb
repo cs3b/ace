@@ -26,6 +26,7 @@ class CliTest < AceDemoTestCase
     assert_includes output, "list"
     assert_includes output, "show"
     assert_includes output, "record"
+    assert_includes output, "retime"
     assert_includes output, "attach"
   end
 
@@ -123,6 +124,93 @@ class CliTest < AceDemoTestCase
   def test_record_with_pr_dry_run_prints_preview
     result = invoke(["record", "hello", "--pr", "123", "--dry-run"])
     assert_includes result[:stdout], "[dry-run] Would record tape: hello (format: gif)"
+  end
+
+  def test_record_with_playback_speed_retimes_and_attaches_retimed_output
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref == "hello"
+        raise "bad output" unless output.nil?
+        raise "bad format" unless format == "gif"
+        ".ace-local/demo/hello.gif"
+      end
+    end.new
+
+    fake_retimer = Class.new do
+      attr_reader :kwargs
+
+      def retime(**kwargs)
+        @kwargs = kwargs
+        {
+          input_path: kwargs[:input_path],
+          output_path: ".ace-local/demo/hello-4x.gif",
+          speed: kwargs[:speed],
+          dry_run: false
+        }
+      end
+    end.new
+
+    fake_attacher = Class.new do
+      def attach(file:, pr:, dry_run:)
+        raise "bad file" unless file == ".ace-local/demo/hello-4x.gif"
+        raise "bad pr" unless pr == "123"
+        raise "bad dry_run" unless dry_run == false
+        {
+          dry_run: false,
+          pr: pr,
+          asset_name: "hello-4x.gif",
+          asset_url: "https://github.com/org/repo/releases/download/demo-assets/hello-4x.gif",
+          comment_body: "## Demo: hello"
+        }
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      Ace::Demo::Molecules::MediaRetimer.stub(:new, fake_retimer) do
+        Ace::Demo::Organisms::DemoAttacher.stub(:new, fake_attacher) do
+          result = invoke(["record", "hello", "--playback-speed", "4x", "--pr", "123"])
+          assert_includes result[:stdout], "Recorded: .ace-local/demo/hello.gif"
+          assert_includes result[:stdout], "Retimed: .ace-local/demo/hello-4x.gif (4x)"
+          assert_includes result[:stdout], "Uploaded: hello-4x.gif"
+          assert_equal ".ace-local/demo/hello.gif", fake_retimer.kwargs[:input_path]
+          assert_equal "4x", fake_retimer.kwargs[:speed]
+        end
+      end
+    end
+  end
+
+  def test_record_uses_configured_playback_speed
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref == "hello"
+        raise "bad format" unless format == "gif"
+        ".ace-local/demo/hello.gif"
+      end
+    end.new
+
+    fake_retimer = Class.new do
+      attr_reader :speed
+
+      def retime(**kwargs)
+        @speed = kwargs[:speed]
+        {
+          input_path: kwargs[:input_path],
+          output_path: ".ace-local/demo/hello-8x.gif",
+          speed: kwargs[:speed],
+          dry_run: false
+        }
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      Ace::Demo::Molecules::MediaRetimer.stub(:new, fake_retimer) do
+        Ace::Demo.stub(:config, { "record" => { "postprocess" => { "playback_speed" => "8x" } } }) do
+          result = invoke(["record", "hello"])
+          assert_includes result[:stdout], "Retimed: .ace-local/demo/hello-8x.gif (8x)"
+          assert_equal "8x", fake_retimer.speed
+        end
+      end
+    end
   end
 
   def test_record_inline_with_commands
