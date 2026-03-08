@@ -63,6 +63,7 @@ The scope should be the name of the component, module, or area affected. Example
    - Code cleanup without changing behavior → refactor
    - Documentation of the software → docs
    - Task specs, planning docs, retros, ideas → spec
+   - Use `chore` only for maintenance/build/config-only changes
 
 3. **Identify the scope** from:
    - File paths and directories
@@ -122,6 +123,7 @@ Include troubleshooting section for common setup issues.
 3. **Be consistent**: Follow the same format and style throughout the project
 4. **Focus on why**: The diff shows what changed, the message should explain why
 5. **One logical change**: Each commit should represent one logical change
+6. **Avoid generic chore drift**: If code behavior changes, prefer `feat`, `fix`, or `refactor` over `chore`
 
 ## Special Considerations
 

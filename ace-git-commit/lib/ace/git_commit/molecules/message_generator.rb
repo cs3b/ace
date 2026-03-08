@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
-require "set"
+require "json"
 
 module Ace
   module GitCommit
@@ -11,6 +11,9 @@ module Ace
         DEFAULT_MODEL = "glite"
         MAX_TOKENS = 8192
         SYSTEM_PROMPT_PATH = "ace-git-commit/handbook/prompts/git-commit.system.md"
+        COMMIT_HEADER_PATTERN = /\A(feat|fix|docs|style|refactor|test|chore|spec|perf|build|ci|revert)(\([^)]+\))?:\s+\S+/.freeze
+
+        class BatchParseError < StandardError; end
 
         def initialize(config = nil)
           @config = config || {}
@@ -68,6 +71,11 @@ module Ace
           )
 
           parse_batch_response(response[:text], groups_context)
+        rescue BatchParseError => e
+          repaired = retry_batch_parse(groups_context, intention, response[:text], e.message, config)
+          return repaired if repaired
+
+          raise Error, "Failed to generate batch commit messages: #{e.message}"
         rescue Ace::LLM::Error => e
           raise Error, "Failed to generate batch commit messages: #{e.message}"
         end
@@ -117,14 +125,20 @@ module Ace
             - Core packages before config packages
             - But use judgment - sometimes config must come first if it enables the feature
 
-            Output format (IN YOUR RECOMMENDED COMMIT ORDER):
-            ---GROUP scope-name---
-            <commit message>
-            ---GROUP another-scope---
-            <commit message>
-            ... and so on
+            OUTPUT MUST BE STRICT JSON ONLY (no markdown, no prose, no code fences):
+            {
+              "order": ["scope-a", "scope-b"],
+              "messages": [
+                {"scope": "scope-a", "message": "feat(scope-a): ..."},
+                {"scope": "scope-b", "message": "fix(scope-b): ..."}
+              ]
+            }
 
-            IMPORTANT: Use exactly "---GROUP scope-name---" format with the actual scope name.
+            HARD RULES:
+            - "order" must include every scope exactly once
+            - "messages" must include every scope exactly once
+            - each "message" must start with a valid conventional commit header
+            - do not use "chore" unless the diff is actually build/config/maintenance only
           PROMPT
         end
 
@@ -138,7 +152,8 @@ module Ace
 
           prompt << "Generate #{groups_context.length} DISTINCT commit messages for these groups."
           prompt << "OUTPUT THEM IN YOUR RECOMMENDED COMMIT ORDER (implementation first, docs last)."
-          prompt << "Use ---GROUP scope-name--- format with the exact scope name shown below."
+          prompt << "Return STRICT JSON only with keys: order, messages."
+          prompt << "Messages format: <type>(<scope>): <subject>"
           prompt << ""
 
           groups_context.each_with_index do |ctx, _index|
@@ -174,114 +189,108 @@ module Ace
           prompt.join("\n")
         end
 
-        # Parse batch response and return ordered results
-        # @param response [String] LLM response
-        # @param groups_context [Array<Hash>] Original groups context
-        # @return [Hash] { messages: Array<String>, order: Array<String> } ordered by LLM recommendation
         def parse_batch_response(response, groups_context)
           return { messages: [clean_commit_message(response)], order: [groups_context.first[:scope_name]] } if groups_context.length == 1
 
-          # Parse groups with their scope names
-          # Format: ---GROUP scope-name---
-          parsed = {}
-          current_scope = nil
-          current_content = []
-
-          response.lines.each do |line|
-            if line =~ /---GROUP\s+(.+?)---/i
-              # Save previous group
-              if current_scope
-                parsed[current_scope] = clean_commit_message(current_content.join)
-              end
-              current_scope = $1.strip
-              current_content = []
-            elsif current_scope
-              current_content << line
-            end
-          end
-
-          # Save last group
-          if current_scope
-            parsed[current_scope] = clean_commit_message(current_content.join)
-          end
-
-          # Build ordered results based on LLM output order
           scope_names = groups_context.map { |g| g[:scope_name] }
-          llm_order = parsed.keys
+          parsed = parse_batch_json(response)
+          order = Array(parsed["order"])
+          messages_array = Array(parsed["messages"])
 
-          # Match LLM scope names to our scope names using priority-based matching
-          ordered_scopes = []
-          ordered_messages = []
-          used_scopes = Set.new
+          message_by_scope = {}
+          messages_array.each do |item|
+            next unless item.is_a?(Hash)
 
-          llm_order.each do |llm_scope|
-            matched = match_scope_name(llm_scope, scope_names, used_scopes)
-            if matched
-              used_scopes.add(matched)
-              ordered_scopes << matched
-              ordered_messages << parsed[llm_scope]
-            end
+            scope = item["scope"] || item[:scope]
+            message = item["message"] || item[:message]
+            next if scope.nil? || message.nil?
+
+            message_by_scope[scope.to_s] = clean_commit_message(message.to_s)
           end
 
-          # Add any missing scopes at the end (fallback)
-          scope_names.each do |scope|
-            unless ordered_scopes.include?(scope)
-              ordered_scopes << scope
-              # Try to find a message from parsed that wasn't matched, or generate fallback
-              fallback_msg = find_unmatched_message(scope, parsed, ordered_messages) ||
-                             "chore: update #{scope}"
-              ordered_messages << fallback_msg
-            end
+          validate_scope_list!("order", order, scope_names)
+          validate_scope_list!("messages", message_by_scope.keys, scope_names)
+
+          ordered_messages = order.map do |scope|
+            msg = message_by_scope[scope]
+            validate_commit_header!(scope, msg)
+            msg
           end
 
-          { messages: ordered_messages, order: ordered_scopes }
+          { messages: ordered_messages, order: order }
         end
 
-        # Match LLM scope name to actual scope names with priority-based matching
-        # Priority: 1) exact match, 2) case-insensitive exact, 3) careful substring match
-        # @param llm_scope [String] Scope name from LLM response
-        # @param scope_names [Array<String>] Valid scope names
-        # @param used_scopes [Set<String>] Already matched scopes
-        # @return [String, nil] Matched scope name or nil
-        def match_scope_name(llm_scope, scope_names, used_scopes)
-          available = scope_names.reject { |s| used_scopes.include?(s) }
-          return nil if available.empty?
-
-          # 1. Exact match (case-sensitive)
-          exact = available.find { |s| s == llm_scope }
-          return exact if exact
-
-          # 2. Case-insensitive exact match
-          case_insensitive = available.find { |s| s.downcase == llm_scope.downcase }
-          return case_insensitive if case_insensitive
-
-          # 3. Substring match with minimum length requirement to avoid false positives
-          # Only match if substring is significant (>= 4 chars or >= 50% of shorter string)
-          substring_match = available.find do |s|
-            min_len = [4, [s.length, llm_scope.length].min / 2].max
-            (s.downcase.include?(llm_scope.downcase) && llm_scope.length >= min_len) ||
-              (llm_scope.downcase.include?(s.downcase) && s.length >= min_len)
-          end
-
-          if substring_match
-            warn "[ace-git-commit] Scope name fallback: LLM returned '#{llm_scope}', matched to '#{substring_match}' via substring"
-          end
-
-          substring_match
+        def parse_batch_json(response)
+          raw = response.to_s.strip
+          raw = raw.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "").strip
+          raw = extract_json_block(raw)
+          JSON.parse(raw)
+        rescue JSON::ParserError => e
+          raise BatchParseError, "Invalid batch JSON: #{e.message}"
         end
 
-        # Find an unmatched message from parsed responses for fallback
-        def find_unmatched_message(scope, parsed, already_used)
-          # Try to find a message that mentions this scope but wasn't matched
-          parsed.each do |llm_scope, message|
-            next if already_used.include?(message)
+        def extract_json_block(text)
+          start_idx = text.index("{")
+          end_idx = text.rindex("}")
+          raise BatchParseError, "Batch response does not include a JSON object." unless start_idx && end_idx
 
-            # Check if the message content references this scope
-            if message.downcase.include?(scope.downcase)
-              return message
-            end
-          end
+          text[start_idx..end_idx]
+        end
+
+        def validate_scope_list!(label, actual, expected)
+          actual = actual.map(&:to_s)
+          missing = expected - actual
+          extra = actual - expected
+          duplicates = actual.group_by(&:itself).select { |_k, v| v.length > 1 }.keys
+
+          return if missing.empty? && extra.empty? && duplicates.empty?
+
+          parts = []
+          parts << "missing=#{missing.join(',')}" unless missing.empty?
+          parts << "extra=#{extra.join(',')}" unless extra.empty?
+          parts << "duplicates=#{duplicates.join(',')}" unless duplicates.empty?
+          raise BatchParseError, "#{label} scope validation failed (#{parts.join(' | ')})"
+        end
+
+        def validate_commit_header!(scope, message)
+          return if message && message.match?(COMMIT_HEADER_PATTERN)
+
+          raise BatchParseError, "Invalid commit header for scope '#{scope}': #{message.inspect}"
+        end
+
+        def retry_batch_parse(groups_context, intention, previous_response, reason, config)
+          warn "[ace-git-commit] Batch parse failed, retrying with strict JSON repair: #{reason}"
+
+          repair_prompt = build_batch_repair_user_prompt(groups_context, intention, previous_response, reason)
+          repair_response = Ace::LLM::QueryInterface.query(
+            resolve_model(config),
+            repair_prompt,
+            system: load_batch_system_prompt,
+            temperature: 0.2,
+            timeout: 120,
+            max_tokens: MAX_TOKENS
+          )
+
+          parse_batch_response(repair_response[:text], groups_context)
+        rescue BatchParseError => e
+          warn "[ace-git-commit] Batch parse retry failed: #{e.message}"
           nil
+        end
+
+        def build_batch_repair_user_prompt(groups_context, intention, bad_response, reason)
+          scope_names = groups_context.map { |g| g[:scope_name] }
+          prompt = []
+          prompt << "Your previous response was invalid for strict JSON batch commit output."
+          prompt << "Reason: #{reason}"
+          prompt << "Allowed scopes: #{scope_names.join(', ')}"
+          prompt << "Intention/context: #{intention}" if intention && !intention.empty?
+          prompt << ""
+          prompt << "Previous response:"
+          prompt << bad_response.to_s
+          prompt << ""
+          prompt << "Return ONLY valid JSON in this exact shape:"
+          prompt << '{"order":["scope-a","scope-b"],"messages":[{"scope":"scope-a","message":"feat(scope-a): ..."},{"scope":"scope-b","message":"fix(scope-b): ..."}]}'
+          prompt.join("\n")
         end
 
         def resolve_model(config_override)
