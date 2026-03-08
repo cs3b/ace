@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.8] - 2026-03-08
+
+### Fixed
+- Resolve review preset/config discovery from the caller's explicit `project_root` and gem-default preset files, preventing temp-dir context extraction from crashing after project-root hardening in `ace-support-fs`.
+
+### Technical
+- Add regression coverage for gem-default preset discovery and temp-dir file-path context extraction.
+
 ## [0.43.7] - 2026-03-06
 
 ### Fixed

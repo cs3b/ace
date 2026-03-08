@@ -70,6 +70,23 @@ class PresetManagerTest < AceReviewTest
     assert_includes presets, "file_preset"
   end
 
+  def test_lists_gem_default_presets_without_local_config
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    presets = manager.available_presets
+
+    assert_includes presets, "code-valid"
+    assert_includes presets, "code-fit"
+  end
+
+  def test_loads_gem_default_preset_without_local_config
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("code-valid")
+
+    refute_nil preset
+    assert_equal "Correctness review - does the code work correctly?", preset["description"]
+    assert_equal "project", preset["bundle"]
+  end
+
   def test_preset_exists_check
     create_test_config(<<~YAML)
       presets:
