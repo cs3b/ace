@@ -60,9 +60,6 @@ module Ace
           # Add presets from preset directory
           presets.concat(file_presets)
 
-          # Add default presets if no config exists
-          presets.concat(Ace::Review.default_presets.keys) if presets.empty?
-
           presets.uniq.sort
         end
 
@@ -274,9 +271,6 @@ module Ace
             return path.absolute? ? custom_path : File.join(project_root, custom_path)
           end
 
-          # Use ace-config ConfigFinder to locate config in cascade
-          finder = Ace::Support::Config.finder
-
           # Try review/config.yml first, then fallbacks
           config_patterns = [
             "review/config.yml",
@@ -284,7 +278,7 @@ module Ace
           ]
 
           config_patterns.each do |pattern|
-            path = finder.find_file(pattern)
+            path = config_finder.find_file(pattern)
             return path if path
           end
 
@@ -318,8 +312,7 @@ module Ace
           end
 
           # Use ace-config ConfigFinder to find preset in cascade
-          finder = Ace::Support::Config.finder
-          preset_file = finder.find_file("review/presets/#{preset_name}.yml")
+          preset_file = config_finder.find_file("review/presets/#{preset_name}.yml")
 
           if preset_file && File.exist?(preset_file)
             content = File.read(preset_file)
@@ -358,33 +351,10 @@ module Ace
         def file_presets
           presets = []
 
-          # Find all preset directories in cascade using ace-support-fs
-          require "ace/support/fs"
-          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
-          config_dirs = traverser.find_config_directories
-
-          # Check each config directory for review/presets
-          config_dirs.each do |dir|
-            preset_dir = File.join(dir, "review/presets")
+          preset_dirs.each do |preset_dir|
             next unless Dir.exist?(preset_dir)
 
-            Dir.glob("#{preset_dir}/*.yml").each do |file|
-              presets << File.basename(file, ".yml")
-            end
-          end
-
-          # Check home directory
-          home_preset_dir = File.expand_path("~/.ace/review/presets")
-          if Dir.exist?(home_preset_dir)
-            Dir.glob("#{home_preset_dir}/*.yml").each do |file|
-              presets << File.basename(file, ".yml")
-            end
-          end
-
-          # Also check project fallback
-          preset_dir = File.join(project_root, ".ace/review/presets")
-          if Dir.exist?(preset_dir)
-            Dir.glob("#{preset_dir}/*.yml").each do |file|
+            Dir.glob(File.join(preset_dir, "*.yml")).sort.each do |file|
               presets << File.basename(file, ".yml")
             end
           end
@@ -393,6 +363,26 @@ module Ace
         rescue StandardError => e
           warn "Failed to find preset files: #{e.message}" if Ace::Review.debug?
           []
+        end
+
+        def config_finder
+          @config_finder ||= Ace::Support::Config::Molecules::ConfigFinder.new(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root,
+            start_path: project_root
+          )
+        end
+
+        def preset_dirs
+          dirs = config_finder.search_paths.map { |dir| File.join(dir, "review/presets") }
+          dirs << File.join(gem_root, ".ace-defaults", "review", "presets")
+          dirs.uniq
+        end
+
+        def gem_root
+          @gem_root ||= Gem.loaded_specs["ace-review"]&.gem_dir ||
+                        File.expand_path("../../../..", __dir__)
         end
 
         def merge_with_defaults(preset)
