@@ -1,9 +1,9 @@
 ---
 name: as-assign-prepare
-description: Prepare job.yaml from preset or informal instructions
+description: Legacy/internal helper to prepare job.yaml from preset or informal instructions
 # bundle: wfi://assign/prepare
 # agent: general-purpose
-user-invocable: true
+user-invocable: false
 allowed-tools:
   - Bash(ls:*)
   - Bash(cat:*)

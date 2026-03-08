@@ -7,6 +7,7 @@ require_relative "cli/commands/attach"
 require_relative "cli/commands/list"
 require_relative "cli/commands/show"
 require_relative "cli/commands/create"
+require_relative "cli/commands/retime"
 require_relative "version"
 
 module Ace
@@ -20,6 +21,7 @@ module Ace
         ["list", "List available demo tapes"],
         ["show", "Show metadata and contents for a demo tape"],
         ["record", "Record a VHS tape to gif/mp4/webm"],
+        ["retime", "Post-process recording speed for gif/mp4/webm"],
         ["attach", "Attach an existing demo GIF to a PR"],
         ["create", "Create a new demo tape from shell commands"]
       ].freeze
@@ -34,6 +36,7 @@ module Ace
         "ace-demo record my-demo --timeout 3s --width 1200 -- \"git status\"",
         "ace-demo attach .ace-local/demo/hello.gif --pr 123",
         "ace-demo record hello --pr 123 --dry-run",
+        "ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x",
         "ace-demo create my-demo -- \"git status\" \"make deploy\"",
         "ace-demo create my-demo --desc \"Deploy flow\" --dry-run -- \"echo hello\"",
         "ace-demo create my-demo --timeout 3s --width 1200 -- \"git status\""
@@ -42,6 +45,7 @@ module Ace
       register "list", Commands::List
       register "show", Commands::Show
       register "record", Commands::Record
+      register "retime", Commands::Retime
       register "attach", Commands::Attach
       register "create", Commands::Create
 

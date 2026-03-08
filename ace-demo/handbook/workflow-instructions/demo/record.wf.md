@@ -14,7 +14,7 @@ update:
 
 ## Purpose
 
-Record terminal demos using `ace-demo record`. Supports two modes: tape-based recording from existing `.tape` files, and inline recording from ad-hoc commands. Optionally uploads and attaches the result to a GitHub PR.
+Record terminal demos using `ace-demo record`. Supports two modes: tape-based recording from existing `.tape` files, and inline recording from ad-hoc commands. Optionally postprocesses playback speed and attaches the result to a GitHub PR.
 
 ## Context
 
@@ -89,6 +89,28 @@ Preview attachment without recording or posting:
 ace-demo record <tape-name> --pr 235 --dry-run
 ```
 
+### Postprocess Playback Speed
+
+Generate both original and retimed outputs:
+
+```bash
+ace-demo record hello --playback-speed 4x
+```
+
+Postprocess existing files directly:
+
+```bash
+ace-demo retime .ace-local/demo/hello.gif --playback-speed 8x
+```
+
+Config default (auto postprocess on `record`):
+
+```yaml
+record:
+  postprocess:
+    playback_speed: 4x
+```
+
 ### Environment Variable Passing
 
 Tapes using `$VAR` placeholders expand from the calling shell:
@@ -111,9 +133,10 @@ TEST_PATH=ace-bundle ace-demo record test
 | `--width <px>` | Terminal width — inline mode (default: 960) |
 | `--height <px>` | Terminal height — inline mode (default: 480) |
 | `--font-size <n>` | Font size — inline mode (default: 16) |
+| `--playback-speed <speed>` | Postprocess speed: `1x`, `2x`, `4x`, `8x` |
 
 ## Success Criteria
 
-- Recording file produced in `.ace-local/demo/`
+- Recording file produced in `.ace-local/demo/` (plus optional retimed artifact)
 - If `--pr` used: demo uploaded to `demo-assets` release and comment posted on PR
 - If `--dry-run`: preview printed, no side effects

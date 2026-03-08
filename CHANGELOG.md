@@ -4,18 +4,58 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.798] - 2026-03-08
+
+### Fixed
+- **ace-assign v0.26.0**: Corrected status `FORK` semantics to represent `context: fork` instead of child-count presence.
+- **ace-assign v0.26.1**: Fixed fork leaf execution startup by marking scoped leaf roots `in_progress` before launcher handoff, preventing pending-state drift and repeated self-fork attempts.
+- **ace-assign v0.26.1**: Scoped status views for completed fork phases no longer print actionable fork-run execution instructions.
+- **ace-review v0.43.8**: Fixed review preset discovery for temp-dir callers by resolving config/presets from the explicit project root plus gem-default preset files, preventing `ContextExtractor` crashes after the `ace-support-fs` project-root hardening.
+- **ace-support-fs v0.2.1**: Fixed project-root detection so `PROJECT_ROOT_PATH` is only used when it encloses the active start path, preventing traversal from honoring unrelated roots.
+
+### Added
+- **ace-assign v0.25.0**: Added explicit phrase-intent metadata for compose phase resolution and introduced new `squash-changelog` and `rebase-with-main` catalog phases mapped to existing docs/git skills.
+- **ace-assign v0.26.0**: Added batch scheduling metadata and `--max-parallel` contract guidance for controlled fork fan-out orchestration.
+- **ace-demo v0.8.0**: Added `ace-demo retime` for postprocessing GIF/MP4/WebM recordings into faster playback variants with validated playback speeds.
+- **ace-demo v0.8.0**: Added a reusable `assign-drive-showcase` demo tape to demonstrate batch delegation and assignment driving flow.
+- **ace-docs v0.23.0**: Added package/glob scoped document selection via repeatable `--package` and `--glob` options across status/discover/update/validate/analyze-consistency workflows.
+
+### Changed
+- **ace-assign v0.25.0**: Reworked `assign/create` and `assign/compose` workflows to treat explicit user steps as primary intent, apply hard ordering with named-rule explanations, and preserve runtime `assign.source` phase expansion boundaries.
+- **ace-assign v0.25.1**: Removed the legacy `as-assign-start` compatibility entrypoint and retired the `assign/start` workflow in favor of the existing public create/drive flow.
+- **ace-assign v0.26.0**: Updated batch/drive workflow guidance so sequential mode still forks each item and parallel mode documents retry-then-stop handling.
+- **ace-assign v0.26.1**: Clarified `assign/drive` delegation boundaries to forbid re-running `fork-run` for the same already-entered scoped root.
+- **ace-assign v0.26.2**: Clarified batch-parallel scheduling semantics so `max_parallel` is treated as a rolling in-flight concurrency cap with immediate slot refill guidance in assignment drive workflows.
+- **ace-demo v0.8.0**: Extended `ace-demo record` with playback-speed postprocessing (CLI + config fallback) while preserving original artifacts and attaching retimed outputs for PR demo uploads.
+- **ace-docs v0.23.0**: Applied scoped selection during registry discovery and updated docs/update workflow guidance and CLI usage examples for scoped operations.
+
+### Technical
+- **ace-assign v0.25.0**: Added composition-order rules for changelog-squash/rebase sequencing (`squash-before-rebase`, `rebase-before-push`, `rebase-before-update-pr`) to keep reorder behavior explainable.
+- **ace-assign v0.26.1**: Added command-level regression tests for leaf fork activation and scoped done-phase status rendering.
+- **ace-assign v0.26.2**: Added/normalized frontmatter tracking on package user/guide docs (`README.md`, `docs/usage.md`, `handbook/guides/fork-context.g.md`) for consistent `ace-docs` management.
+- **ace-bundle v0.31.12**: Updated top-level preset composition integration coverage to assert `BundleData` composition metadata via `metadata` while keeping rendered output assertions content-focused.
+- **ace-demo v0.8.0**: Added parser/retimer test coverage and updated demo docs/workflows for retime setup, usage, and postprocess defaults.
+- **ace-docs v0.23.0**: Added scope normalization and scoped selection regression tests, and reduced expected no-frontmatter loader noise in scoped command output.
+- **ace-review v0.43.8**: Added regression coverage for gem-default preset discovery and temp-dir file-path context extraction.
+- **ace-support-fs v0.2.1**: Added regression tests for env-root fallback behavior and stabilized traversal molecule fixtures against ambient system config directories.
+
 ## [0.9.797] - 2026-03-08
 
 ### Added
 - **ace-handbook v0.10.0**: Added `release/publish` as the coordinated multi-package release workflow, including modified-package auto-detection and shared package/root changelog updates.
+- **ace-assign v0.24.0**: Added `codex` to the default subtree native-review client allow-list so `pre-commit-review` can run native `/review` in Codex runtimes.
 
 ### Fixed
 - **ace-assign v0.23.1**: Fixed assignment release guidance so `release*` phases publish all modified packages through `/as-release`, including suffixed review-cycle release steps.
 
 ### Technical
 - **ace-task v0.22.2**: Updated project-management and roadmap docs to use the canonical `release/publish` workflow references.
+- **ace-assign v0.24.0**: Updated assignment-executor regression fixtures to the current `wfi://task/work` assign-source and `ace-task` workflow-path layout.
 
 ## [0.9.796] - 2026-03-08
+
+### Changed
+- **ace-assign v0.23.0**: Consolidated public assignment guidance on `as-assign-create` + `as-assign-drive`, documented workflow-level `--run` handoff behavior, and demoted legacy `as-assign-prepare` / `as-assign-start` skills from public invocability.
 
 ### Fixed
 - **ace-task v0.22.1**: Removed stale `task.plan.cli_args` provider mapping from `ace-task plan` so plan generation now follows `provider:model@preset` directly after migration.

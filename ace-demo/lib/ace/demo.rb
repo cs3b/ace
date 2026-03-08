@@ -11,6 +11,7 @@ require_relative "demo/atoms/tape_metadata_parser"
 require_relative "demo/atoms/tape_search_dirs"
 require_relative "demo/atoms/attach_output_printer"
 require_relative "demo/atoms/tape_content_generator"
+require_relative "demo/atoms/playback_speed_parser"
 require_relative "demo/models/execution_result"
 require_relative "demo/molecules/vhs_executor"
 require_relative "demo/molecules/tape_resolver"
@@ -18,6 +19,7 @@ require_relative "demo/molecules/tape_writer"
 require_relative "demo/molecules/tape_scanner"
 require_relative "demo/molecules/gh_asset_uploader"
 require_relative "demo/molecules/inline_recorder"
+require_relative "demo/molecules/media_retimer"
 require_relative "demo/molecules/demo_comment_poster"
 require_relative "demo/organisms/demo_recorder"
 require_relative "demo/organisms/demo_attacher"
@@ -30,6 +32,8 @@ module Ace
     class TapeNotFoundError < Error; end
     class VhsNotFoundError < Error; end
     class VhsExecutionError < Error; end
+    class FfmpegNotFoundError < Error; end
+    class MediaRetimeError < Error; end
     class GhAuthenticationError < Error; end
     class PrNotFoundError < Error; end
     class GhUploadError < Error; end
