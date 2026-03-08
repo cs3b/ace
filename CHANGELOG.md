@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.793] - 2026-03-08
+
+### Fixed
+- **ace-assign v0.22.6**: Child-phase injection now rebalances active execution from a newly blocked parent to the next workable child in the subtree, restoring hierarchical completion flows in TS-ASSIGN-002 auto-completion scenarios.
+
+### Technical
+- **ace-assign v0.22.6**: Added pending-state writer helper and regression coverage for parent/child/grandchild rebalance paths, and hardened TS-ASSIGN-002 fork-scope verification to use JSON status oracles.
+
 ## [0.9.792] - 2026-03-07
 
 ### Technical

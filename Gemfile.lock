@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.22.5)
+    ace-assign (0.22.6)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-config (~> 0.8)
