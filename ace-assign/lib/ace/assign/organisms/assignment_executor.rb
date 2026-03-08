@@ -338,6 +338,8 @@ module Ace
             parent: as_child ? after : nil
           )
 
+          rebalance_after_child_injection(assignment: assignment, state: state, parent_number: after) if as_child && after
+
           # Update assignment timestamp
           assignment_manager.update(assignment)
 
@@ -871,6 +873,16 @@ module Ace
           dest = File.join(jobs_dir, "#{assignment_id}-job.yml")
           FileUtils.mv(expanded_path, dest)
           dest
+        end
+
+        def rebalance_after_child_injection(assignment:, state:, parent_number:)
+          current = state.current
+          return unless current && current.number == parent_number
+
+          phase_writer.mark_pending(current.file_path)
+          rebalanced_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          next_phase = rebalanced_state.next_workable_in_subtree(parent_number)
+          phase_writer.mark_in_progress(next_phase.file_path) if next_phase
         end
 
         # Normalize instructions to a string.

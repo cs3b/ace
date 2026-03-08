@@ -12,15 +12,15 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Assignment created** — `create.exit` contains `0`. Assignment ID captured.
-2. **Initial state** — `status-initial.stdout` shows current phase as 010-precheck (outside subtree).
-3. **Scoped subtree detected** — `status-scoped.stdout` includes phase 020 subtree entries.
-4. **Scoped view** — `status-scoped.stdout` shows subtree phases: 020, 020.01 (onboard), 020.02 (plan-task), 020.03 (work-on-task), and excludes out-of-scope phases 010/030.
+2. **Initial state** — `status-initial.json` reports `current_phase.number == "010"` and `current_phase.name == "precheck"`.
+3. **Scoped subtree detected** — `status-scoped.json` contains only phases 020, 020.01, 020.02, and 020.03.
+4. **Scoped view** — `status-scoped.json` reports `current_phase.number == "020.01"` and excludes out-of-scope phases 010/030.
 5. **No state mutations** — `phase-states-before.stdout` and `phase-states-after.stdout` match. No phases changed state from scoped inspection.
-6. **Unscoped unchanged** — `status-after-scope.stdout` still shows 010-precheck as current phase.
+6. **Unscoped unchanged** — `status-after-scope.json` reports `current_phase.number == "010"` and `current_phase.name == "precheck"`.
 
 ## Verdict
 
 - **PASS**: Scoped status shows only subtree phases, resolves subtree current phase, and causes no state mutations.
 - **FAIL**: Scoped view shows wrong phases, state mutations occurred, or current phase changed.
 
-Report: `PASS` or `FAIL` with evidence (scoped output excerpts, state comparison).
+Report: `PASS` or `FAIL` with evidence from the JSON oracle files first, then stdout excerpts if needed.

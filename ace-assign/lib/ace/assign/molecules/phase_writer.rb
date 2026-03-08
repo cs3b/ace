@@ -70,6 +70,20 @@ module Ace
           })
         end
 
+        # Mark phase as pending again after it becomes blocked by newly added children.
+        #
+        # @param file_path [String] Path to phase file
+        # @return [String] Updated file path
+        def mark_pending(file_path)
+          update_frontmatter(file_path, {
+            "status" => "pending",
+            "started_at" => nil,
+            "completed_at" => nil,
+            "error" => nil,
+            "stall_reason" => nil
+          })
+        end
+
         # Mark phase as done with report
         #
         # @param file_path [String] Path to phase file

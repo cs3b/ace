@@ -400,6 +400,82 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_add_child_under_active_phase_rebalances_to_child
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        { "name" => "parent-job", "instructions" => "Parent work" },
+        { "name" => "final-step", "instructions" => "Final work" }
+      ])
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assert_equal "010", result[:current].number
+
+      result = executor.add("child-task-1", "Child work", after: "010", as_child: true)
+
+      assert_equal "010.01", result[:state].current.number
+      assert_equal :pending, result[:state].find_by_number("010").status
+      assert_equal :in_progress, result[:state].find_by_number("010.01").status
+      assert_nil result[:state].find_by_number("010").started_at
+    end
+  end
+
+  def test_add_grandchild_under_active_child_rebalances_to_grandchild
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        { "name" => "grandparent", "instructions" => "Top level" },
+        { "name" => "next-task", "instructions" => "Next task" }
+      ])
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+      child_result = executor.add("parent", "Parent work", after: "010", as_child: true)
+
+      assert_equal "010.01", child_result[:state].current.number
+
+      result = executor.add("grandchild", "Grandchild work", after: "010.01", as_child: true)
+
+      assert_equal "010.01.01", result[:state].current.number
+      assert_equal :pending, result[:state].find_by_number("010.01").status
+      assert_equal :in_progress, result[:state].find_by_number("010.01.01").status
+    end
+  end
+
+  def test_add_child_under_non_active_phase_keeps_existing_current
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      report_path = create_report(cache_dir, "done")
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+      executor.advance(report_path)
+
+      result = executor.add("late-child", "Late child", after: "010", as_child: true)
+
+      assert_equal "020", result[:state].current.number
+      assert_equal :done, result[:state].find_by_number("010").status
+      assert_equal :pending, result[:state].find_by_number("010.01").status
+    end
+  end
+
+  def test_add_sibling_does_not_change_current_phase
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assert_equal "010", result[:current].number
+
+      result = executor.add("sibling-check", "Sibling work", after: "010")
+
+      assert_equal "010", result[:state].current.number
+      assert_equal :in_progress, result[:state].find_by_number("010").status
+      assert_equal :pending, result[:added].status
+    end
+  end
+
   def test_add_multiple_children
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
