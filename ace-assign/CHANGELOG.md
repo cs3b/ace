@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.7] - 2026-03-08
+
+### Technical
+- Stabilized create-command path-relativity test setup by pinning `PROJECT_ROOT_PATH` to the temp workspace and clearing `ProjectRootFinder` cache around the test.
+
 ## [0.22.6] - 2026-03-08
 
 ### Fixed
