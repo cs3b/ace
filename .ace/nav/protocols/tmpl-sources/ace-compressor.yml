@@ -1,0 +1,11 @@
+---
+# Template Sources Protocol Configuration for ace-compressor gem
+name: ace-compressor
+type: gem
+description: Agent compression templates from ace-compressor gem
+priority: 10
+
+config:
+  relative_path: handbook/templates
+  pattern: "**/*.template.md"
+  enabled: true
