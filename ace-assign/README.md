@@ -1,3 +1,11 @@
+---
+doc-type: user
+purpose: User-facing overview and quick-start guide for ace-assign assignment workflow management.
+update:
+  frequency: on-change
+  last-updated: '2026-03-08'
+---
+
 # ace-assign
 
 Work queue-based assignment management for AI-assisted workflows.

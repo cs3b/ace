@@ -35,6 +35,7 @@ subtree:
   pre_commit_review_block: false
   native_review_clients:
     - "claude"
+    - "codex"
 
 # Provider-level defaults for CLI invocation
 providers:

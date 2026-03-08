@@ -1,7 +1,8 @@
 # Multi-task workflow: batch implement → release → PR → review cycles → reorganize → push
-# Usage: /as-assign-prepare work-on-tasks --taskrefs 148,149,150
-#        /as-assign-prepare work-on-tasks --taskrefs 148-152
-#        /as-assign-prepare work-on-tasks --taskrefs "240.*"
+# Legacy fixture source for prepare path.
+# Public usage: /as-assign-create work-on-tasks --taskrefs 148,149,150
+#               /as-assign-create work-on-tasks --taskrefs 148-152
+#               /as-assign-create work-on-tasks --taskrefs "240.*"
 
 name: work-on-tasks
 description: Work on multiple tasks with PR, review cycles, release, and clean history

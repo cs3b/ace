@@ -1,6 +1,12 @@
 name: reorganize-commits
 skill: as-git-reorganize-commits
 description: Reorganize commits into logical groups for clean history
+intent:
+  phrases:
+    - "reorganize commits"
+    - "clean up commits"
+    - "rewrite commit history"
+    - "tidy commit history"
 
 prerequisites:
   - name: work-on-task

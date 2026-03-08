@@ -1,6 +1,12 @@
 name: create-pr
 skill: as-github-pr-create
 description: Create a pull request for the implemented changes
+intent:
+  phrases:
+    - "create pr"
+    - "create a pr"
+    - "open pr"
+    - "open pull request"
 
 prerequisites:
   - name: work-on-task

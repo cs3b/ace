@@ -43,6 +43,21 @@ ordering:
     after: push-to-remote
     note: "Reorganize rewrites history, so must come before push"
 
+  - rule: squash-before-rebase
+    before: squash-changelog
+    after: rebase-with-main
+    note: "Consolidate changelog entries before rebasing to reduce conflict churn"
+
+  - rule: rebase-before-push
+    before: rebase-with-main
+    after: push-to-remote
+    note: "Rebase should happen before publishing commits to remote"
+
+  - rule: rebase-before-update-pr
+    before: rebase-with-main
+    after: update-pr-desc
+    note: "PR description should reflect post-rebase branch state"
+
   - rule: push-before-update-pr
     before: push-to-remote
     after: update-pr-desc
@@ -153,7 +168,7 @@ conditional:
   - when: "assignment includes work-on-task or fix-bug"
     suggest: [verify-test-suite]
     strength: required
-    note: "Test suite verification with profiling catches slow tests and regressions before release"
+    note: "Test suite verification with profiling catches slow tests and regressions before release. In explicit-step mode this remains advisory unless policy elevates it."
 
   - when: "assignment includes work-on-task and touches CLI commands or public API"
     suggest: [verify-e2e, update-docs]

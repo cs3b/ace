@@ -65,6 +65,8 @@ class StatusCommandTest < AceAssignTestCase
       assert_equal "in_progress", payload.dig("phases", 0, "status")
       assert_equal "010", payload.dig("current_phase", "number")
       assert_equal "init", payload.dig("current_phase", "name")
+      assert_nil payload.dig("phases", 0, "parallel")
+      assert_nil payload.dig("phases", 0, "max_parallel")
 
       Ace::Assign.reset_config!
     end
@@ -88,6 +90,65 @@ class StatusCommandTest < AceAssignTestCase
       assert_equal "completed", payload.dig("assignment", "state")
       assert_nil payload["current_phase"]
       assert_equal "3/3 done", payload["progress"]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_json_includes_batch_scheduler_metadata
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "batch-items",
+          "instructions" => "Batch parent",
+          "batch_parent" => true,
+          "parallel" => true,
+          "max_parallel" => 3,
+          "fork_retry_limit" => 1
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: result[:assignment].id)
+      end
+
+      payload = JSON.parse(output.first)
+      phase = payload.fetch("phases").first
+      assert_equal true, phase["batch_parent"]
+      assert_equal true, phase["parallel"]
+      assert_equal 3, phase["max_parallel"]
+      assert_equal 1, phase["fork_retry_limit"]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_with_scoped_done_fork_phase_omits_fork_execution_guidance
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      report = create_report(cache_dir, "done")
+      executor.advance(report)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
+      end
+
+      assert_includes output.first, "Assignment completed!"
+      refute_includes output.first, "Current Phase:"
+      refute_includes output.first, "Execute this phase in a forked context:"
+      refute_includes output.first, "To execute entire subtree in one forked process:"
 
       Ace::Assign.reset_config!
     end
@@ -392,18 +453,20 @@ class StatusCommandTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       phases = [
         {
-          "name" => "work-on-task",
-          "instructions" => "Implement task 235.01",
-          "context" => "fork",
-          "sub_phases" => %w[onboard plan-task implement]
+          "name" => "batch-items",
+          "instructions" => "Batch container without fork context",
+          "batch_parent" => true,
+          "parallel" => true,
+          "max_parallel" => 3
         },
-        { "name" => "finalize", "instructions" => "Finalize work" }
+        { "name" => "fork-leaf", "instructions" => "Run leaf in fork", "context" => "fork" }
       ]
       config_path = create_test_config(cache_dir, steps: phases)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
+      executor.add("child-inline", "Inline child", after: "010", as_child: true)
 
       output = capture_io do
         Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
@@ -412,15 +475,15 @@ class StatusCommandTest < AceAssignTestCase
       # Header should include FORK column
       assert_includes output.first, "FORK"
 
-      # Phase with children (010) should show "yes" in FORK column
-      # Match pattern: 010 followed by whitespace, then status, then "work-on-task", then "yes"
-      assert_match(/010\s+.*work-on-task\s+yes\s+\(0\/3 done\)/, output.first)
+      # Phase with children (010) but no fork context should not show "yes" in FORK column.
+      assert_match(/010\s+.*batch-items\s+\s+\(0\/1 done\)/, output.first)
+      refute_match(/010\s+.*batch-items\s+yes/, output.first)
 
-      # Child phases (010.01, 010.02, 010.03) should have empty FORK column (no "yes" after their names)
-      refute_match(/010\.01\s+.*onboard\s+yes/, output.first)
+      # Child phase without fork context should not show "yes".
+      refute_match(/010\.01\s+.*child-inline\s+yes/, output.first)
 
-      # Phase without children (020) should not show "yes" in FORK column
-      refute_match(/020\s+.*finalize\s+yes/, output.first)
+      # Leaf phase with context: fork should show "yes" even without children.
+      assert_match(/020\s+.*fork-leaf\s+yes/, output.first)
 
       Ace::Assign.reset_config!
     end

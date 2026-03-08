@@ -60,10 +60,11 @@ module Ace
               raise InvalidPhaseStateError, "Cannot fork-run subtree #{root_phase.number}: multiple phases are already in progress (#{active_refs})."
             end
 
-            # Mark first workable child as in_progress only when no subtree phase is active.
+            # Mark the next workable phase as in_progress only when no subtree phase is active.
+            # For leaf fork roots, this activates the root itself.
             if active_in_subtree.empty?
               first_workable = state.next_workable_in_subtree(root_phase.number)
-              if first_workable && first_workable.number != root_phase.number
+              if first_workable
                 phase_writer = Molecules::PhaseWriter.new
                 phase_writer.mark_in_progress(first_workable.file_path)
               end

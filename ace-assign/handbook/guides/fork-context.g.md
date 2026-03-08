@@ -1,3 +1,11 @@
+---
+doc-type: guide
+purpose: Explain fork context execution model, boundaries, and recovery patterns for ace-assign subtree delegation.
+update:
+  frequency: on-change
+  last-updated: '2026-03-08'
+---
+
 # Fork Context Guide
 
 ## Overview

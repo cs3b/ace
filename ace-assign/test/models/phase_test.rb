@@ -261,4 +261,37 @@ class PhaseTest < AceAssignTestCase
     fm = phase.to_frontmatter
     refute fm.key?("stall_reason")
   end
+
+  def test_batch_scheduler_metadata_round_trips_to_frontmatter
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "batch-items",
+      status: :pending,
+      instructions: "Batch instructions",
+      batch_parent: true,
+      parallel: true,
+      max_parallel: 3,
+      fork_retry_limit: 1
+    )
+
+    fm = phase.to_frontmatter
+    assert_equal true, fm["batch_parent"]
+    assert_equal true, fm["parallel"]
+    assert_equal 3, fm["max_parallel"]
+    assert_equal 1, fm["fork_retry_limit"]
+  end
+
+  def test_rejects_invalid_max_parallel
+    error = assert_raises(ArgumentError) do
+      Ace::Assign::Models::Phase.new(
+        number: "010",
+        name: "batch-items",
+        status: :pending,
+        instructions: "Test",
+        max_parallel: 0
+      )
+    end
+
+    assert_match(/max_parallel/, error.message)
+  end
 end

@@ -1,0 +1,28 @@
+name: rebase-with-main
+skill: as-git-rebase
+description: Rebase current branch onto origin/main while preserving changelog intent
+intent:
+  phrases:
+    - "rebase with main"
+    - "rebase with origin main"
+    - "rebase onto main"
+    - "sync with main"
+
+prerequisites:
+  - name: work-on-task
+    strength: recommended
+    reason: "Rebase is typically done after local work is ready"
+
+produces: [rebased-history]
+consumes: [commits, remote-main]
+
+context:
+  default: null
+  reason: "Rebase rewrites local git history and must run in main context"
+
+when_to_skip:
+  - "Branch already contains latest origin/main"
+  - "Repository policy forbids rebasing this branch"
+
+effort: light
+tags: [git, history, rebase]
