@@ -99,7 +99,7 @@ class CompressionRunnerTest < AceCompressorTestCase
     end
   end
 
-  def test_agent_mode_degraded_fallback_reports_fallback_lines_and_zero_exit
+  def test_agent_mode_simple_output_reports_no_refusals_or_fallbacks
     path = File.join(@tmp, "input.md")
     File.write(path, "# Heading\n\nContent")
 
@@ -116,9 +116,8 @@ class CompressionRunnerTest < AceCompressorTestCase
 
       def compress_sources(_sources)
         [
-          "H|ContextPack/3|exact",
+          "H|ContextPack/3|agent",
           "FILE|input.md",
-          "FALLBACK|source=input.md|from=agent|to=exact|reason=validation_failed|check=agent_validation",
           "FACT|Content"
         ].join("\n")
       end
@@ -129,8 +128,9 @@ class CompressionRunnerTest < AceCompressorTestCase
 
       assert_equal 0, result[:exit_code]
       assert_empty result[:refusal_lines]
-      assert_equal 1, result[:fallback_lines].size
-      assert_includes result[:console_output], "FALLBACK|source=input.md|from=agent|to=exact|reason=validation_failed"
+      assert_empty result[:fallback_lines]
+      assert_includes result[:console_output], "H|ContextPack/3|agent"
+      assert_includes result[:console_output], "FACT|Content"
     end
   end
 end

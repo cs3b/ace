@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.800] - 2026-03-08
+
+### Fixed
+- **ace-compressor v0.14.0**: Moved agent-mode model/template defaults into config and `tmpl://` resources, and eliminated prompt leakage by rebuilding agent mode as payload-only rewriting over exact output.
+
+### Changed
+- **ace-compressor v0.14.0**: Agent mode now keeps `ContextPack` structure deterministic while compacting `SUMMARY|`, `FACT|`, and long `LIST|...` payloads so sample docs compress beyond exact mode without refusal/fallback wrappers.
+
+### Technical
+- **ace-compressor v0.14.0**: Updated agent tests/docs/cache contract for JSON payload rewriting and added regression coverage against prompt scaffolding appearing in generated packs.
+
 ## [0.9.799] - 2026-03-08
 
 ### Fixed
