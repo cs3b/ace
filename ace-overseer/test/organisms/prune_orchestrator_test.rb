@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stringio"
+require "tmpdir"
 require_relative "../test_helper"
 
 class PruneOrchestratorTest < AceOverseerTestCase
@@ -25,15 +26,21 @@ class PruneOrchestratorTest < AceOverseerTestCase
   end
 
   class FakeManager
-    attr_reader :remove_calls
+    attr_reader :remove_calls, :prune_calls
 
     def initialize(worktrees)
       @worktrees = worktrees
       @remove_calls = []
+      @prune_calls = 0
     end
 
     def list_all(**_options)
       { success: true, worktrees: @worktrees }
+    end
+
+    def prune
+      @prune_calls += 1
+      { success: true }
     end
 
     def remove(path, **options)
@@ -52,6 +59,24 @@ class PruneOrchestratorTest < AceOverseerTestCase
       candidate = @candidates[@index]
       @index += 1
       candidate
+    end
+  end
+
+  class RaisingChecker
+    def check(**_kwargs)
+      raise "boom"
+    end
+  end
+
+  class PathAwareChecker
+    def initialize(candidate)
+      @candidate = candidate
+    end
+
+    def check(worktree_path:, **_kwargs)
+      raise Errno::ENOENT, worktree_path if worktree_path.include?("/missing/")
+
+      @candidate
     end
   end
 
@@ -96,6 +121,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal true, result[:dry_run]
     assert_equal 1, result[:safe].length
     assert_equal [], manager.remove_calls
+    assert_equal 1, manager.prune_calls
   end
 
   def test_yes_prunes_only_safe_candidates
@@ -289,6 +315,69 @@ class PruneOrchestratorTest < AceOverseerTestCase
 
     assert_equal 1, result[:pruned].length
     assert_equal "/wt/task.231", manager.remove_calls.first[:path]
+  end
+
+  def test_ignores_non_task_worktrees
+    manager = FakeManager.new([
+      NonTaskWorktree.new("/wt/ace-improve-review"),
+      FakeWorktree.new("/wt/task.230", "230")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true)
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {}
+    )
+
+    result = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
+
+    assert_equal 1, result[:safe].length
+    assert_equal "230", result[:safe].first.task_id
+  end
+
+  def test_marks_missing_worktree_paths_as_unsafe_without_crashing
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.236", "236"),
+      FakeWorktree.new("/missing/task.237", "237")
+    ])
+    checker = PathAwareChecker.new(build_candidate(task_id: "236", safe: true))
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {}
+    )
+
+    result = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
+
+    assert_equal 1, result[:safe].length
+    assert_equal 1, result[:unsafe].length
+    assert_includes result[:unsafe].first.reasons.join(", "), "worktree directory missing"
+  end
+
+  def test_checker_errors_are_converted_to_unsafe_candidates
+    Dir.mktmpdir("task.238") do |worktree|
+      manager = FakeManager.new([FakeWorktree.new(worktree, "238")])
+      checker = RaisingChecker.new
+
+      orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+        worktree_manager: manager,
+        prune_checker: checker,
+        tmux_executor: FakeTmuxExecutor.new,
+        config: {}
+      )
+
+      result = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
+
+      assert_equal 0, result[:safe].length
+      assert_equal 1, result[:unsafe].length
+      assert_includes result[:unsafe].first.reasons.join(", "), "prune safety check failed"
+    end
   end
 
   def test_force_with_targets

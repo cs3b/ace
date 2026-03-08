@@ -25,16 +25,19 @@ module Ace
           progress = on_progress || ->(_msg) {}
 
           progress.call("Scanning worktrees...")
+          prune_stale_metadata(progress)
           result = @worktree_manager.list_all(show_tasks: true)
           raise Error, result[:error] || "Failed to list worktrees" unless result[:success]
 
-          worktrees = Array(result[:worktrees]).reject(&:bare)
-          worktrees = filter_by_targets(worktrees, targets) if targets.any?
+          all_worktrees = Array(result[:worktrees]).reject(&:bare)
+          worktrees = if targets.any?
+                        filter_by_targets(all_worktrees, targets)
+                      else
+                        all_worktrees.select(&:task_associated?)
+                      end
 
           progress.call("Checking #{worktrees.length} worktree(s)...")
-          checked = worktrees.map do |worktree|
-            @prune_checker.check(worktree_path: worktree.path, task_ref: worktree.task_id)
-          end
+          checked = worktrees.map { |worktree| check_candidate(worktree) }
 
           safe = checked.select(&:safe_to_prune?)
           unsafe = checked.reject(&:safe_to_prune?)
@@ -146,6 +149,34 @@ module Ace
               unsafe.each { |c| output.puts("  task.#{c.task_id} — #{c.reasons.join(", ")}") }
             end
           end
+        end
+
+        def check_candidate(worktree)
+          @prune_checker.check(worktree_path: worktree.path, task_ref: worktree.task_id)
+        rescue Errno::ENOENT, Errno::ENOTDIR
+          unsafe_candidate(worktree, "worktree directory missing")
+        rescue StandardError => e
+          unsafe_candidate(worktree, "prune safety check failed: #{e.message}")
+        end
+
+        def unsafe_candidate(worktree, reason)
+          Models::PruneCandidate.new(
+            task_id: worktree.task_id || "unknown",
+            worktree_path: worktree.path,
+            assignment_complete: false,
+            task_done: false,
+            git_clean: false,
+            reasons: [reason]
+          )
+        end
+
+        def prune_stale_metadata(progress)
+          result = @worktree_manager.prune
+          return if result.nil? || result[:success]
+
+          progress.call("Warning: failed to prune stale worktree metadata: #{result[:error]}")
+        rescue StandardError => e
+          progress.call("Warning: failed to prune stale worktree metadata: #{e.message}")
         end
 
         def close_tmux_window(worktree_path)

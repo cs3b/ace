@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.21] - 2026-03-08
+
+### Fixed
+- `WorktreeProvisioner` now recovers from stale worktree metadata by pruning and retrying provisioning, and raises actionable errors when paths remain missing.
+- `PruneOrchestrator` no longer crashes on missing/prunable worktree paths and marks those entries as unsafe candidates instead.
+
+### Changed
+- `prune` now runs a stale metadata prune pass before scanning and defaults to task-associated worktrees when no explicit targets are provided.
+
 ## [0.4.20] - 2026-03-05
 
 ### Changed
