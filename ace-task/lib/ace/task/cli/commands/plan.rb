@@ -58,9 +58,7 @@ module Ace
 
             context_files = capture_context_files(task)
             model = options[:model] || default_model(config)
-            cli_args_map = config.dig("task", "plan", "cli_args") || {}
-            cli_args = provider_cli_args(model, cli_args_map)
-            generator = plan_generator(model, cli_args: cli_args)
+            generator = plan_generator(model)
             content = generator.generate(
               task: task,
               context_files: context_files,
@@ -113,24 +111,6 @@ module Ace
 
           def default_model(config)
             config.dig("task", "plan", "model") || "gemini:flash-latest"
-          end
-
-          def provider_cli_args(provider_model, cli_args_map)
-            return nil if cli_args_map.nil? || cli_args_map.empty?
-            return nil if provider_model.nil? || provider_model.strip.empty?
-
-            raw_provider = provider_model.split(":", 2).first
-            direct_match = cli_args_map[raw_provider]
-            return direct_match if direct_match
-
-            require "ace/llm"
-            parser = Ace::LLM::Molecules::ProviderModelParser.new
-            result = parser.parse(provider_model)
-            return nil unless result.valid?
-
-            cli_args_map[result.provider]
-          rescue LoadError, NameError
-            nil
           end
         end
       end
