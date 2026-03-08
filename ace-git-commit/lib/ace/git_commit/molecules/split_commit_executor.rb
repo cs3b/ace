@@ -111,7 +111,7 @@ module Ace
           if cli_model
             # CLI flag overrides all group models - can batch
             config_override = { "model" => cli_model }
-            @message_generator.generate_batch(
+            return @message_generator.generate_batch(
               groups_context,
               intention: options.intention,
               config: config_override
@@ -119,15 +119,18 @@ module Ace
           elsif models_used.length <= 1
             # All groups use same model (or no model) - can batch
             config_override = models_used.first ? { "model" => models_used.first } : {}
-            @message_generator.generate_batch(
+            return @message_generator.generate_batch(
               groups_context,
               intention: options.intention,
               config: config_override
             )
-          else
-            # Different models per scope - generate sequentially by model
-            generate_segmented_by_model(groups_context, options.intention)
           end
+
+          # Different models per scope - generate sequentially by model
+          generate_segmented_by_model(groups_context, options.intention)
+        rescue Error => e
+          warn "[ace-git-commit] Batch generation failed, falling back to per-scope generation: #{e.message}" unless options.quiet
+          generate_per_scope_messages(groups_context, options)
         end
 
         # Generate messages segmented by model when groups have different model configs
@@ -176,12 +179,33 @@ module Ace
           missing_groups = groups.reject { |g| order.include?(g.scope_name) }
           aligned_groups.concat(missing_groups)
 
-          # Extend messages array if needed for missing groups
-          aligned_messages = messages.dup
-          missing_groups.each { |g| aligned_messages << "chore: update #{g.scope_name}" }
+          # Extend messages array for missing groups by mapping from scope->message.
+          message_by_scope = order.each_with_index.to_h { |scope, idx| [scope, messages[idx]] }
+          aligned_messages = aligned_groups.map { |g| message_by_scope[g.scope_name] }
+          if aligned_messages.any?(&:nil?)
+            missing = aligned_groups.each_with_index.filter_map { |g, idx| g.scope_name if aligned_messages[idx].nil? }
+            raise Error, "Missing generated message(s) for scope(s): #{missing.join(', ')}"
+          end
 
           # Always sort by commit type - more reliable than LLM ordering
           sort_by_commit_type(aligned_groups, aligned_messages)
+        end
+
+        def generate_per_scope_messages(groups_context, options)
+          messages = groups_context.map do |ctx|
+            config = {}
+            config["model"] = options.model if options.model
+            config["model"] = ctx[:model] if options.model.nil? && ctx[:model]
+
+            @message_generator.generate(
+              ctx[:diff],
+              intention: options.intention,
+              files: ctx[:files],
+              config: config
+            )
+          end
+
+          { messages: messages, order: groups_context.map { |ctx| ctx[:scope_name] } }
         end
 
         def sort_by_commit_type(groups, messages)

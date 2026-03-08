@@ -370,4 +370,55 @@ class SplitCommitExecutorTest < TestCase
     assert_equal 1, result.records.count { |r| r.status == :success }
     assert_equal 1, result.records.count { |r| r.status == :skipped }
   end
+
+  def test_falls_back_to_per_scope_generation_when_batch_fails
+    git = FakeGit.new
+    diff = FakeDiff.new
+    stager = FakeStager.new
+
+    generator = Class.new do
+      def generate_batch(*)
+        raise Ace::GitCommit::Error, "batch parse failed"
+      end
+
+      def generate(_diff, intention: nil, files: [], config: nil)
+        scope = files.first.split("/").first
+        return "feat(ace-assign): improve split fallback reliability" if scope == "ace-assign"
+        "fix(ace-docs): correct changelog grouping examples"
+      end
+    end.new
+
+    executor = Ace::GitCommit::Molecules::SplitCommitExecutor.new(
+      git_executor: git,
+      diff_analyzer: diff,
+      file_stager: stager,
+      message_generator: generator
+    )
+
+    groups = [
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "ace-assign",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["ace-assign/lib/a.rb"]
+      ),
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "ace-docs",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["ace-docs/lib/b.rb"]
+      )
+    ]
+
+    options = Ace::GitCommit::Models::CommitOptions.new(quiet: true)
+    result = executor.execute(groups, options)
+
+    assert result.success?
+    commit_messages = git.executed.filter_map do |args|
+      args[2] if args[0] == "commit" && args[1] == "-m"
+    end
+    assert_includes commit_messages, "feat(ace-assign): improve split fallback reliability"
+    assert_includes commit_messages, "fix(ace-docs): correct changelog grouping examples"
+    refute commit_messages.any? { |msg| msg.start_with?("chore: update") }
+  end
 end
