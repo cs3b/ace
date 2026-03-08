@@ -17,6 +17,32 @@ module Ace
         ].freeze
         LIST_REWRITE_MIN_ITEMS = 5
         LIST_REWRITE_MIN_BYTES = 140
+        LIST_STOPWORDS = %w[
+          a an and as at by for from in into is of on or that the this to via with within
+        ].freeze
+        LIST_TOKEN_MAP = {
+          "architecture" => "arch",
+          "architectural" => "arch",
+          "configuration" => "config",
+          "documentation" => "docs",
+          "generation" => "gen",
+          "management" => "mgmt",
+          "repository" => "repo",
+          "repositories" => "repos",
+          "development" => "dev",
+          "integration" => "integr",
+          "execution" => "exec",
+          "reporting" => "reports",
+          "organization" => "org",
+          "organizations" => "orgs",
+          "capabilities" => "caps",
+          "capability" => "cap",
+          "foundation" => "base",
+          "tracking" => "track",
+          "powered" => "pwr",
+          "detected" => "detect",
+          "matching" => "match"
+        }.freeze
 
         attr_reader :ignored_paths
 
@@ -240,7 +266,23 @@ module Ace
         end
 
         def normalize_list_item(text)
-          text.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_+|_+\z/, "").gsub(/_{2,}/, "_")
+          tokens = text.to_s.downcase.gsub(/[^a-z0-9]+/, "_").split("_").reject(&:empty?)
+          tokens = compact_list_tokens(tokens)
+          tokens.join("_")
+        end
+
+        def compact_list_tokens(tokens)
+          compacted = Array(tokens).filter_map do |token|
+            next if LIST_STOPWORDS.include?(token)
+
+            LIST_TOKEN_MAP.fetch(token, token)
+          end
+
+          compacted = compacted.each_with_object([]) do |token, result|
+            result << token unless result.last == token
+          end
+
+          compacted.empty? ? Array(tokens).first(1) : compacted
         end
 
         def record_payload(line)

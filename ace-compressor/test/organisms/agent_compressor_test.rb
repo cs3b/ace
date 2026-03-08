@@ -36,7 +36,7 @@ class AgentCompressorTest < AceCompressorTestCase
 
     assert_equal "shared cli workflows for humans and agents", rewrites["r1"][:payload]
     assert_equal "trimmed supporting fact", rewrites["r2"][:payload]
-    assert_equal %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_docs], rewrites["r3"][:items]
+    assert_equal %w[ace_support_core_base ace_bundle_protocol_loading ace_docs_frontmatter_docs], rewrites["r3"][:items]
   end
 
   def test_rewrite_payloads_accepts_json_code_fences
@@ -75,6 +75,20 @@ class AgentCompressorTest < AceCompressorTestCase
     ])
 
     assert_equal({}, rewrites)
+  end
+
+  def test_list_rewrite_applies_deterministic_token_compaction
+    rewriter = build_rewriter(agent_output: JSON.generate(
+      "records" => [
+        { "id" => "r1", "items" => ["configuration_management_foundation", "documentation_management_with_frontmatter_tracking"] }
+      ]
+    ))
+
+    rewrites = rewriter.send(:rewrite_payloads, [
+      { id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[configuration_management_foundation documentation_management_with_frontmatter_tracking] }
+    ])
+
+    assert_equal %w[config_mgmt_base docs_mgmt_frontmatter_track], rewrites["r1"][:items]
   end
 
   def test_uses_template_uri_from_config_for_ace_bundle
@@ -180,7 +194,7 @@ class AgentCompressorTest < AceCompressorTestCase
     assert_includes output, "H|ContextPack/3|agent"
     assert_includes output, "FILE|architecture.md"
     assert_includes output, "SUMMARY|shared cli workflows for humans and agents"
-    assert_includes output, "LIST|components|[ace_support_core_foundation,ace_bundle_protocol_loading,ace_docs_frontmatter_tracking,ace_review_llm_analysis,ace_search_pattern_matching]"
+    assert_includes output, "LIST|components|[ace_support_core_base,ace_bundle_protocol_loading,ace_docs_frontmatter_track,ace_review_llm_analysis,ace_search_pattern_match]"
     assert_includes output, "RULE|Commands must remain deterministic."
   end
 
