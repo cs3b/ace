@@ -1,4 +1,4 @@
-# Skill Protocol Discovery - Draft Usage
+# Canonical Skill Discovery - Draft Usage
 
 ## API Surface
 - [x] CLI (user-facing commands)
@@ -8,37 +8,37 @@
 
 ## Usage Scenarios
 
-### Scenario 1: List canonical package skills
+### Scenario 1: List canonical skills
 
-**Goal**: Discover the canonical skills available across registered gems.
+**Goal**: Discover canonical package skills across all supported types.
 
 ```bash
 ace-nav skill://*
 
 # Expected output:
-# Canonical skills are listed from registered package handbook/skills sources.
+# Canonical skills from registered package handbook/skills sources are listed.
 ```
 
 ### Scenario 2: Resolve one canonical skill
 
-**Goal**: Find the authoritative path for a specific skill name.
+**Goal**: Resolve the authoritative package-owned file for a skill name.
 
 ```bash
-ace-nav skill://as-task-work
+ace-nav skill://as-task-plan
 
 # Expected output:
-# /home/mc/ace-meta/ace-task/handbook/skills/as-task-work/SKILL.md
+# /home/mc/ace-meta/ace-task/handbook/skills/as-task-plan/SKILL.md
 ```
 
 ### Scenario 3: Unknown skill lookup
 
-**Goal**: Return a deterministic error for a missing canonical skill.
+**Goal**: Return a deterministic not-found result for a missing canonical skill.
 
 ```bash
 ace-nav skill://missing-skill
 
 # Expected output:
-# Not found in registered skill sources
+# Not found in registered canonical skill sources
 ```
 
 ## Notes for Implementer
