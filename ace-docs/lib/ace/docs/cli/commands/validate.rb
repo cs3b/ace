@@ -6,6 +6,7 @@ require "colorize"
 require "open3"
 require_relative "../../organisms/document_registry"
 require_relative "../../organisms/validator"
+require_relative "scope_options"
 
 module Ace
   module Docs
@@ -16,6 +17,7 @@ module Ace
         # This command handles document validation.
         class Validate < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include ScopeOptions
 
           # Exit codes
           EXIT_SUCCESS = 0
@@ -43,7 +45,9 @@ module Ace
             "docs/**/*.md                 # Validate by pattern",
             "--syntax                     # Run syntax validation only",
             "--semantic                   # Run semantic validation only",
-            "--all                        # Run all validation types"
+            "--all                        # Run all validation types",
+            "--package ace-docs           # Scope validation to one package",
+            "--glob 'ace-docs/**/*.md'    # Scope validation by glob"
           ]
 
           argument :pattern, required: false, desc: "File or pattern to validate"
@@ -51,6 +55,8 @@ module Ace
           option :syntax, type: :boolean, desc: "Run syntax validation using linters"
           option :semantic, type: :boolean, desc: "Run semantic validation using LLM"
           option :all, type: :boolean, desc: "Run all validation types"
+          option :package, type: :array, desc: "Scope to package(s), e.g. --package ace-docs"
+          option :glob, type: :array, desc: "Scope by glob(s), e.g. --glob 'ace-docs/**/*.md'"
 
           # Standard options
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -70,7 +76,11 @@ module Ace
           private
 
           def execute_validate(pattern, options)
-            registry = Ace::Docs::Organisms::DocumentRegistry.new
+            scope_globs = normalized_scope_globs(options, project_root: options[:project_root])
+            registry = Ace::Docs::Organisms::DocumentRegistry.new(
+              project_root: options[:project_root],
+              scope_globs: scope_globs
+            )
             documents = select_documents(registry, pattern)
 
             if documents.empty?
@@ -110,7 +120,11 @@ module Ace
                 doc ? [doc] : []
               else
                 # Treat as glob pattern
-                registry.all.select { |d| File.fnmatch(pattern, d.path) }
+                registry.all.select do |doc|
+                  rel = doc.relative_path || doc.path
+                  File.fnmatch?(pattern, rel, File::FNM_PATHNAME | File::FNM_EXTGLOB) ||
+                    File.fnmatch?(pattern, doc.path, File::FNM_PATHNAME | File::FNM_EXTGLOB)
+                end
               end
             else
               registry.all

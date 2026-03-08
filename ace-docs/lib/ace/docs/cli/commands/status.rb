@@ -5,6 +5,7 @@ require "ace/core"
 require "terminal-table"
 require "colorize"
 require_relative "../../organisms/document_registry"
+require_relative "scope_options"
 
 module Ace
   module Docs
@@ -15,6 +16,7 @@ module Ace
         # This command shows document freshness and update status.
         class Status < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include ScopeOptions
 
           desc <<~DESC.strip
             Show status of all managed documents
@@ -37,12 +39,16 @@ module Ace
             "--type handbook              # Filter by document type",
             "--needs-update               # Show only documents needing update",
             "--freshness stale            # Filter by freshness status",
-            "--freshness current          # Filter by freshness status"
+            "--freshness current          # Filter by freshness status",
+            "--package ace-docs           # Scope to one package",
+            "--glob 'ace-docs/**/*.md'    # Scope by glob"
           ]
 
           option :type, type: :string, desc: "Filter by document type"
           option :needs_update, type: :boolean, desc: "Show only documents needing update"
           option :freshness, type: :string, desc: "Filter by freshness status (current/stale/outdated)"
+          option :package, type: :array, desc: "Scope to package(s), e.g. --package ace-docs"
+          option :glob, type: :array, desc: "Scope by glob(s), e.g. --glob 'ace-docs/**/*.md'"
 
           # Standard options
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -56,7 +62,7 @@ module Ace
           private
 
           def execute_status(options)
-            registry = create_registry(options[:project_root])
+            registry = create_registry(options)
             documents = filter_documents(registry, options)
 
             if documents.empty?
@@ -72,12 +78,14 @@ module Ace
             raise Ace::Core::CLI::Error.new(e.message)
           end
 
-          def create_registry(project_root = nil)
-            if project_root
-              Ace::Docs::Organisms::DocumentRegistry.new(project_root: project_root)
-            else
-              Ace::Docs::Organisms::DocumentRegistry.new
-            end
+          def create_registry(options)
+            project_root = options[:project_root]
+            scope_globs = normalized_scope_globs(options, project_root: project_root)
+
+            Ace::Docs::Organisms::DocumentRegistry.new(
+              project_root: project_root,
+              scope_globs: scope_globs
+            )
           end
 
           def filter_documents(registry, options)

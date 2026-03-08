@@ -55,6 +55,14 @@ ace-docs update [file] --set last-updated=today
 # Or filter by type
 ace-docs status --type guide
 ace-docs analyze --all --type guide
+
+# Scope to one package
+ace-docs status --package ace-assign
+ace-docs validate --package ace-assign --all
+
+# Scope with glob (bare package path is normalized)
+ace-docs status --glob ace-assign
+ace-docs validate --glob "ace-assign/docs/**/*.md" --syntax
 ```
 
 ## Input Handling
@@ -77,9 +85,13 @@ When using filters or bulk operations, the workflow starts with status check:
    - `--preset standard`
 3. **Type filtering**: Update by document type
    - `--type guide`
-4. **Status-based**: Documents needing update
+4. **Scope filtering**: Restrict by package or path glob
+   - `--package ace-assign`
+   - `--glob ace-assign` (normalized to `ace-assign/**/*.md`)
+   - `--glob "ace-assign/docs/**/*.md"`
+5. **Status-based**: Documents needing update
    - `--needs-update` (default when no files specified)
-5. **All documents**: Process everything
+6. **All documents**: Process everything
    - `--all`
 
 **Decision Rule**: If specific file paths are provided → skip to analysis. Otherwise → start with status check.

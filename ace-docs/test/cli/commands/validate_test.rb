@@ -36,6 +36,7 @@ module Ace
             # then filters by fnmatch - with no matches, returns empty array
             mock_doc = Object.new
             mock_doc.define_singleton_method(:path) { "some/other/file.md" }
+            mock_doc.define_singleton_method(:relative_path) { "some/other/file.md" }
 
             mock_registry = Object.new
             mock_registry.define_singleton_method(:all) { [mock_doc] }
@@ -49,10 +50,13 @@ module Ace
           def test_select_documents_with_pattern
             mock_doc1 = Minitest::Mock.new
             mock_doc1.expect(:path, "docs/guide1.md")
+            mock_doc1.expect(:relative_path, "docs/guide1.md")
             mock_doc2 = Minitest::Mock.new
             mock_doc2.expect(:path, "docs/guide2.md")
+            mock_doc2.expect(:relative_path, "docs/guide2.md")
             mock_doc3 = Minitest::Mock.new
             mock_doc3.expect(:path, "src/code.rb")
+            mock_doc3.expect(:relative_path, "src/code.rb")
 
             mock_registry = Minitest::Mock.new
             mock_registry.expect(:all, [mock_doc1, mock_doc2, mock_doc3])
@@ -61,6 +65,20 @@ module Ace
             File.stub :exist?, false, ["docs/*.md"] do
               result = @command.send(:select_documents, mock_registry, "docs/*.md")
               assert_equal 2, result.size
+            end
+          end
+
+          def test_select_documents_with_pattern_uses_relative_path
+            doc = Object.new
+            doc.define_singleton_method(:path) { "/tmp/project/docs/guide.md" }
+            doc.define_singleton_method(:relative_path) { "docs/guide.md" }
+
+            mock_registry = Object.new
+            mock_registry.define_singleton_method(:all) { [doc] }
+
+            File.stub :exist?, false, ["docs/*.md"] do
+              result = @command.send(:select_documents, mock_registry, "docs/*.md")
+              assert_equal 1, result.size
             end
           end
 

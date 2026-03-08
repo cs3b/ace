@@ -99,6 +99,26 @@ module Ace
             assert combined.include?("No managed documents found")
           end
 
+          def test_status_command_with_package_scope
+            FileUtils.mkdir_p("ace-assign/docs")
+            File.write("ace-assign/docs/usage.md", <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: Package usage docs
+              ---
+
+              # Usage
+            MARKDOWN
+
+            command = Status.new
+            output = capture_io do
+              command.call(package: ["ace-assign"], project_root: @temp_dir)
+            end.first
+
+            assert output.include?("usage.md")
+            refute output.include?("current.md")
+          end
+
           private
 
           def create_test_documents

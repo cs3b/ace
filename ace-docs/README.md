@@ -51,6 +51,12 @@ ace-docs status --needs-update
 
 # Filter by document type
 ace-docs status --type guide
+
+# Scope to one package
+ace-docs status --package ace-assign
+
+# Scope by glob (bare path is normalized)
+ace-docs status --glob ace-assign
 ```
 
 ### 3. Analyze Changes
@@ -101,6 +107,9 @@ ace-docs update CHANGELOG.md --set last-updated="2025-11-15 14:30"
 
 # Update all documents of a type
 ace-docs update --preset guides --set last-updated=now
+
+# Bulk update scoped to a package
+ace-docs update --package ace-assign --set last-updated=today
 ```
 
 ### 6. Validate Documents
