@@ -1,95 +1,26 @@
 # frozen_string_literal: true
 
+require "json"
 require "open3"
-require "pathname"
-require "tempfile"
 
 module Ace
   module Compressor
     module Organisms
+      # Agent mode keeps exact ContextPack structure and asks the LLM to rewrite
+      # only compressible payloads. The model never emits headers, file markers,
+      # or section markers.
       class AgentCompressor
-        PROVIDER_UNAVAILABLE_CHECK = "provider_unavailable"
-        VALIDATION_CHECK = "agent_validation"
-        REQUIRED_PASSTHROUGH_PREFIXES = [
-          "RULE|",
-          "CONSTRAINT|",
-          "U|",
-          "CMD|",
-          "EXAMPLE|",
-          "TABLE|"
+        PAYLOAD_PREFIXES = ["SUMMARY|", "FACT|"].freeze
+        PROTECTED_PREFIXES = [
+          "RULE|", "CONSTRAINT|", "CMD|", "TABLE|", "U|", "CODE|", "PROBLEMS|",
+          "EXAMPLE|", "EXAMPLE_REF|", "FILES|", "TREE|", "LOSS|"
         ].freeze
-        NUMERIC_FIDELITY_PREFIXES = [
-          "RULE|",
-          "CONSTRAINT|",
-          "FACT|",
-          "CMD|",
-          "TABLE|",
-          "CODE|"
-        ].freeze
-        STRUCTURED_SIGNAL_PREFIXES = [
-          "RULE|",
-          "CONSTRAINT|",
-          "FACT|",
-          "PROBLEMS|",
-          "LIST|",
-          "EXAMPLE|",
-          "EXAMPLE_REF|",
-          "CMD|",
-          "FILES|",
-          "TREE|",
-          "CODE|",
-          "TABLE|",
-          "U|",
-          "LOSS|"
-        ].freeze
-        ALLOWED_RECORD_PREFIXES = [
-          "H|",
-          "FILE|",
-          "POLICY|",
-          "FIDELITY|",
-          "REFUSAL|",
-          "GUIDANCE|",
-          "FALLBACK|",
-          "SEC|",
-          "SUMMARY|",
-          "FACT|",
-          "RULE|",
-          "CONSTRAINT|",
-          "PROBLEMS|",
-          "LIST|",
-          "EXAMPLE|",
-          "EXAMPLE_REF|",
-          "CMD|",
-          "FILES|",
-          "TREE|",
-          "CODE|",
-          "TABLE|",
-          "LOSS|",
-          "U|"
-        ].freeze
-        SEMANTIC_PAYLOAD_PREFIXES = [
-          "FACT|",
-          "RULE|",
-          "CONSTRAINT|",
-          "PROBLEMS|",
-          "LIST|"
-        ].freeze
-        REQUIRED_RECORD_AUTOFILL_THRESHOLD = 4
-        SPIKE_VALIDATED_CONCEPTS = [
-          "prompt_composed_flow",
-          "structured_input_contract",
-          "validator_visible_outcome"
-        ].freeze
-        SPIKE_DEFERRED_CONCEPTS = [
-          "corpus_level_behavior",
-          "cross_source_optimization",
-          "final_ratio_tuning"
-        ].freeze
+        LIST_REWRITE_MIN_ITEMS = 5
+        LIST_REWRITE_MIN_BYTES = 140
 
         attr_reader :ignored_paths
 
         def initialize(paths, verbose: false, shell_runner: nil)
-          @resolver = ExactCompressor.new(paths, verbose: verbose, mode_label: "agent")
           @exact = ExactCompressor.new(paths, verbose: verbose, mode_label: "agent")
           @shell_runner = shell_runner || method(:default_shell_runner)
         end
@@ -99,355 +30,239 @@ module Ace
         end
 
         def resolve_sources
-          @resolver.resolve_sources
+          @exact.resolve_sources
         end
 
         def ignored_paths
-          @resolver.ignored_paths
+          @exact.ignored_paths
         end
 
         def compress_sources(sources)
-          baseline = nil
-          source_labels = nil
-          baseline = @exact.compress_sources(sources)
-          source_labels = extract_source_labels(baseline)
-          required_lines = required_record_lines(baseline)
-          required_numbers = required_numeric_tokens(baseline)
-          semantic_seeds = semantic_seed_lines(baseline)
-          prompt = compose_prompt(
-            baseline,
-            required_lines: required_lines,
-            required_numbers: required_numbers
-          )
+          exact_output = @exact.compress_sources(sources)
+          exact_lines = normalize_output_lines(exact_output)
+          return exact_output if exact_lines.empty?
 
-          agent_output = invoke_agent(prompt)
-          normalized_output = normalize_agent_output(
-            agent_output,
-            source_labels,
-            required_lines: required_lines,
-            semantic_seed_lines: semantic_seeds
-          )
-          validate = validate_agent_output(
-            normalized_output,
-            baseline,
-            source_labels,
-            required_lines: required_lines,
-            required_numbers: required_numbers
-          )
-          unless validate[:ok]
-            return build_failure_pack(
-              baseline: baseline,
-              source_labels: source_labels,
-              check: VALIDATION_CHECK,
-              details: validate[:details],
-              reason: "validation_failed"
-            )
-          end
-
-          build_success_pack(normalized_output)
-        rescue Ace::Compressor::Error => e
-          raise unless e.message.start_with?("Agent provider unavailable:")
-
-          labels = source_labels || Array(sources).map { |source| source_label(source) }
-          fallback_baseline = baseline || @exact.compress_sources(sources)
-          build_failure_pack(
-            baseline: fallback_baseline,
-            source_labels: labels,
-            check: PROVIDER_UNAVAILABLE_CHECK,
-            details: e.message,
-            reason: "provider_unavailable"
-          )
-        rescue StandardError => e
-          labels = source_labels || Array(sources).map { |source| source_label(source) }
-          fallback_baseline = baseline || @exact.compress_sources(sources)
-          build_failure_pack(
-            baseline: fallback_baseline,
-            source_labels: labels,
-            check: PROVIDER_UNAVAILABLE_CHECK,
-            details: e.message,
-            reason: "provider_unavailable"
-          )
+          job = build_rewrite_job(exact_lines)
+          rewrites = rewrite_payloads(job[:records])
+          rebuild_output(job[:entries], rewrites)
         end
 
         private
 
-        def compose_prompt(structured_input, required_lines:, required_numbers:)
-          prompt_config = Tempfile.new(["ace-compressor-agent-spike", ".yml"])
-          input_file = Tempfile.new(["ace-compressor-agent-input", ".pack"])
-          begin
-            input_file.write(structured_input)
-            input_file.flush
-            prompt_config.write(
-              bundle_config(
-                input_file.path,
-                required_lines: required_lines,
-                required_numbers: required_numbers
-              )
-            )
-            prompt_config.flush
+        def build_rewrite_job(exact_lines)
+          entries = [Ace::Compressor::Models::ContextPack.header("agent")]
+          records = []
+          current_file = nil
+          current_section = nil
+          next_id = 1
 
-            execute_command(["ace-bundle", prompt_config.path]).strip
-          ensure
-            prompt_config.close!
-            input_file.close!
+          Array(exact_lines).drop(1).each do |line|
+            if line.start_with?("FILE|")
+              current_file = line.sub("FILE|", "").strip
+              entries << line
+              next
+            end
+
+            if line.start_with?("SEC|")
+              current_section = line.sub("SEC|", "").strip
+              entries << line
+              next
+            end
+
+            record = rewrite_record_for(line, current_file, current_section, next_id)
+            if record
+              records << record
+              entries << { rewrite_id: record[:id], original_line: line }
+              next_id += 1
+            else
+              entries << line
+            end
+          end
+
+          { entries: entries, records: records }
+        end
+
+        def rewrite_record_for(line, current_file, current_section, next_id)
+          return nil if line.start_with?(*PROTECTED_PREFIXES)
+
+          if line.start_with?(*PAYLOAD_PREFIXES)
+            type = line.split("|", 2).first
+            return {
+              id: record_id(next_id),
+              type: type,
+              file: current_file,
+              section: current_section,
+              payload: record_payload(line)
+            }
+          end
+
+          return nil unless line.start_with?("LIST|")
+
+          name, items = parse_list_line(line)
+          return nil unless list_rewrite_eligible?(line, items)
+
+          {
+            id: record_id(next_id),
+            type: "LIST",
+            file: current_file,
+            section: current_section,
+            name: name,
+            items: items
+          }
+        end
+
+        def list_rewrite_eligible?(line, items)
+          return false if items.empty?
+
+          items.length >= LIST_REWRITE_MIN_ITEMS || line.bytesize >= LIST_REWRITE_MIN_BYTES
+        end
+
+        def rewrite_payloads(records)
+          return {} if records.empty?
+
+          prompt = compose_prompt(records)
+          response = invoke_agent(prompt)
+          extract_rewrites(records, response)
+        rescue Ace::Compressor::Error, JSON::ParserError
+          {}
+        end
+
+        def compose_prompt(records)
+          <<~PROMPT
+            #{agent_template}
+
+            <records_json>
+            #{JSON.pretty_generate("records" => prompt_records(records))}
+            </records_json>
+          PROMPT
+        end
+
+        def prompt_records(records)
+          Array(records).map do |record|
+            base = {
+              "id" => record[:id],
+              "type" => record[:type],
+              "file" => record[:file],
+              "section" => record[:section]
+            }
+
+            if record[:type] == "LIST"
+              base.merge("items" => record[:items])
+            else
+              base.merge("payload" => record[:payload])
+            end
           end
         end
 
-        def bundle_config(input_path, required_lines:, required_numbers:)
-          <<~YAML
-            bundle:
-              base: #{agent_prompt_template_path}
-              sections:
-                contract:
-                  content: |
-                    Output contract:
-                    - Return only pipe-delimited ContextPack records.
-                    - First line MUST be exactly `H|ContextPack/3|agent`.
-                    - Emit `FILE|...` scope lines for every source in the input.
-                    - Prefer factual/typed records over broad `SUMMARY|` narrative output.
-                    - If table rows or executable examples are reduced, include explicit `LOSS|` and/or `EXAMPLE_REF|` markers.
-                required_records:
-                  content: |
-#{indent_block(required_record_instructions(required_lines), 20)}
-                required_numbers:
-                  content: |
-#{indent_block(required_number_instructions(required_numbers), 20)}
-                input:
-                  files:
-                    - #{input_path}
-          YAML
+        def agent_template
+          @agent_template ||= execute_command(["ace-bundle", agent_template_uri]).strip
         end
 
         def invoke_agent(prompt)
-          provider = Ace::Compressor.config["agent_provider"].to_s.strip
-          provider = "gflash" if provider.empty?
-          response = execute_command(["ace-llm", provider, prompt])
-          response.strip
-        rescue Ace::Compressor::Error => e
-          raise Ace::Compressor::Error, "Agent provider unavailable: #{e.message}"
+          execute_command(["ace-llm", agent_model, prompt]).strip
         end
 
-        def validate_agent_output(agent_output, baseline, source_labels, required_lines:, required_numbers:)
-          lines = normalize_output_lines(agent_output)
-          return { ok: false, details: "missing_header" } unless lines.first == "H|ContextPack/3|agent"
+        def extract_rewrites(records, response)
+          parsed = parse_agent_response(response)
+          rewrites = {}
+          records_by_id = Array(records).each_with_object({}) { |record, hash| hash[record[:id]] = record }
 
-          output_scopes = extract_source_labels_from_lines(lines)
-          source_labels.each do |label|
-            next if source_scope_present?(label, output_scopes)
+          Array(parsed.fetch("records", [])).each do |candidate|
+            original = records_by_id[candidate["id"]]
+            next unless original
 
-            available = output_scopes.empty? ? "none" : output_scopes.join(",")
-            return { ok: false, details: "missing_file_scope=#{label};available=#{available}" }
+            rewrite = normalized_rewrite(original, candidate)
+            rewrites[original[:id]] = rewrite if rewrite
           end
 
-          unknown_records = lines.reject { |line| line.start_with?(*ALLOWED_RECORD_PREFIXES) }
-          return { ok: false, details: "unknown_record_prefixes=#{unknown_records.size}" } unless unknown_records.empty?
+          rewrites
+        end
 
-          missing = required_lines.reject { |line| lines.include?(line) }
-          return { ok: false, details: "missing_required_records=#{missing.size}" } unless missing.empty?
+        def parse_agent_response(response)
+          payload = response.to_s.strip
+          payload = payload.sub(/\A```(?:json)?\s*/i, "")
+          payload = payload.sub(/\s*```\z/, "")
+          JSON.parse(payload)
+        end
 
-          missing_numbers = required_numbers.reject { |token| numeric_token_present?(lines, token) }
-          return { ok: false, details: "missing_numeric_tokens=#{missing_numbers.size}" } unless missing_numbers.empty?
+        def normalized_rewrite(original, candidate)
+          case original[:type]
+          when "SUMMARY", "FACT"
+            payload = normalize_payload_text(candidate["payload"])
+            return nil if payload.empty?
 
-          return { ok: false, details: "missing_semantic_payload" } if missing_semantic_payload?(lines, baseline)
+            { type: original[:type], payload: payload }
+          when "LIST"
+            items = Array(candidate["items"]).map { |item| normalize_list_item(item) }
+            return nil unless items.length == original[:items].length
+            return nil if items.any?(&:empty?)
 
-          return { ok: false, details: "summary_only_output" } if summary_only_output?(lines)
+            { type: "LIST", name: original[:name], items: items }
+          end
+        end
 
-          return { ok: false, details: "not_smaller_than_exact" } unless lines.join("\n").bytesize < baseline.bytesize
+        def rebuild_output(entries, rewrites)
+          Array(entries).map do |entry|
+            next entry if entry.is_a?(String)
 
-          { ok: true, details: "all_required_records_preserved" }
+            rewrite = rewrites[entry[:rewrite_id]]
+            rewrite ? render_rewrite(rewrite) : entry[:original_line]
+          end.join("\n")
+        end
+
+        def render_rewrite(rewrite)
+          case rewrite[:type]
+          when "SUMMARY", "FACT"
+            "#{rewrite[:type]}|#{rewrite[:payload]}"
+          when "LIST"
+            "LIST|#{rewrite[:name]}|[#{rewrite[:items].join(",")}]"
+          else
+            raise Ace::Compressor::Error, "Unsupported agent rewrite type: #{rewrite[:type]}"
+          end
+        end
+
+        def parse_list_line(line)
+          _prefix, name, raw_items = line.split("|", 3)
+          items = raw_items.to_s.sub(/\A\[/, "").sub(/\]\z/, "").split(",").map(&:strip).reject(&:empty?)
+          [name.to_s, items]
+        end
+
+        def record_id(index)
+          "r#{index}"
         end
 
         def normalize_output_lines(output)
           output.to_s.lines.map(&:strip).reject(&:empty?)
         end
 
-        def normalize_agent_output(agent_output, source_labels, required_lines:, semantic_seed_lines:)
-          lines = normalize_output_lines(agent_output)
-          return lines.join("\n") if lines.empty?
-
-          if Array(source_labels).size == 1
-            expected_scope = source_labels.first
-            without_file_scope = lines.reject { |line| line.start_with?("FILE|") }
-            if without_file_scope.first&.start_with?("H|")
-              lines = [without_file_scope.first, "FILE|#{expected_scope}", *without_file_scope[1..]]
-            else
-              lines = ["FILE|#{expected_scope}", *without_file_scope]
-            end
-          end
-
-          lines = canonicalize_nonstandard_records(lines)
-          lines = backfill_required_records(lines, required_lines)
-          lines = backfill_semantic_seed_lines(lines, semantic_seed_lines)
-          lines.join("\n")
+        def normalize_payload_text(text)
+          text.to_s.gsub(/\s+/, " ").strip
         end
 
-        def canonicalize_nonstandard_records(lines)
-          Array(lines).map do |line|
-            next line if line.start_with?(*ALLOWED_RECORD_PREFIXES)
-            next line unless line.include?("|")
+        def normalize_list_item(text)
+          text.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_+|_+\z/, "").gsub(/_{2,}/, "_")
+        end
 
-            prefix, payload = line.split("|", 2)
-            prefix_text = prefix.to_s.downcase.gsub(/[^a-z0-9]+/, "_").sub(/\A_+/, "").sub(/_+\z/, "")
-            payload_text = payload.to_s.gsub("|", " ").strip
-            fact_text = prefix_text.empty? ? payload_text : "#{prefix_text}=#{payload_text}"
-            Ace::Compressor::Models::ContextPack.fact_line(fact_text)
+        def record_payload(line)
+          line.to_s.split("|", 2).last.to_s
+        end
+
+        def agent_model
+          @agent_model ||= begin
+            config = Ace::Compressor.config
+            model = config["agent_model"].to_s.strip
+            model = config["agent_provider"].to_s.strip if model.empty?
+            raise Ace::Compressor::Error, "Agent model not configured: set compressor.agent_model" if model.empty?
+            model
           end
         end
 
-        def backfill_required_records(lines, required_lines)
-          required = Array(required_lines).uniq
-          return lines if required.size < REQUIRED_RECORD_AUTOFILL_THRESHOLD
-
-          missing = required.reject { |line| lines.include?(line) }
-          return lines if missing.empty?
-
-          lines + missing
-        end
-
-        def backfill_semantic_seed_lines(lines, semantic_seed_lines)
-          seeds = Array(semantic_seed_lines).uniq
-          return lines if seeds.empty?
-
-          has_seed = seeds.any? { |line| lines.include?(line) }
-          return lines if has_seed
-
-          lines + seeds
-        end
-
-        def build_success_pack(agent_output)
-          lines = normalize_output_lines(agent_output)
-          lines << Ace::Compressor::Models::ContextPack.list_line("validated_concepts", SPIKE_VALIDATED_CONCEPTS)
-          lines << Ace::Compressor::Models::ContextPack.list_line("deferred_concepts", SPIKE_DEFERRED_CONCEPTS)
-          lines.join("\n")
-        end
-
-        def required_record_lines(baseline)
-          baseline.to_s.lines.map(&:strip).select do |line|
-            line.start_with?(*REQUIRED_PASSTHROUGH_PREFIXES)
-          end.uniq
-        end
-
-        def required_numeric_tokens(baseline)
-          baseline.to_s.lines.map(&:strip).filter_map do |line|
-            next unless line.start_with?(*NUMERIC_FIDELITY_PREFIXES)
-
-            line.scan(/\b\d+(?:\.\d+)?\b/)
-          end.flatten.uniq
-        end
-
-        def semantic_seed_lines(baseline)
-          baseline.to_s.lines.map(&:strip).select do |line|
-            line.start_with?("FACT|", "LIST|", "PROBLEMS|")
-          end.take(3)
-        end
-
-        def numeric_token_present?(lines, token)
-          pattern = /(?<!\d)#{Regexp.escape(token)}(?!\d)/
-          lines.any? { |line| line.match?(pattern) }
-        end
-
-        def summary_only_output?(lines)
-          payload = lines.reject { |line| line.start_with?("H|", "FILE|") }
-          return false if payload.empty?
-
-          structured = payload.any? { |line| line.start_with?(*STRUCTURED_SIGNAL_PREFIXES) }
-          return false if structured
-
-          payload.all? { |line| line.start_with?("SEC|", "SUMMARY|") }
-        end
-
-        def missing_semantic_payload?(lines, baseline)
-          baseline_has_semantic = baseline.to_s.lines.any? do |line|
-            line.strip.start_with?(*SEMANTIC_PAYLOAD_PREFIXES)
+        def agent_template_uri
+          @agent_template_uri ||= begin
+            template_uri = Ace::Compressor.config["agent_template_uri"].to_s.strip
+            raise Ace::Compressor::Error, "Agent template URI not configured: set compressor.agent_template_uri" if template_uri.empty?
+            template_uri
           end
-          return false unless baseline_has_semantic
-
-          !lines.any? { |line| line.start_with?(*SEMANTIC_PAYLOAD_PREFIXES) }
-        end
-
-        def required_record_instructions(required_lines)
-          return "- No strict pass-through records were detected in the baseline." if required_lines.empty?
-
-          required_lines.map { |line| "- #{line}" }.join("\n")
-        end
-
-        def required_number_instructions(required_numbers)
-          return "- No numeric-fidelity tokens detected in baseline." if required_numbers.empty?
-
-          required_numbers.map { |token| "- #{token}" }.join("\n")
-        end
-
-        def indent_block(text, spaces)
-          indent = " " * spaces
-          text.to_s.lines.map { |line| "#{indent}#{line}".rstrip }.join("\n")
-        end
-
-        def agent_prompt_template_path
-          @agent_prompt_template_path ||= begin
-            gem_root = ::Gem.loaded_specs["ace-compressor"]&.gem_dir || File.expand_path("../../../../..", __dir__)
-            template_path = File.join(gem_root, "handbook", "templates", "agent", "minify-single-source.template.md")
-            raise Ace::Compressor::Error, "Agent prompt template not found: #{template_path}" unless File.file?(template_path)
-
-            template_path
-          end
-        end
-
-        def build_failure_pack(baseline:, source_labels:, check:, details:, reason:)
-          lines = normalize_output_lines(baseline)
-          Array(source_labels).each do |label|
-            lines << Ace::Compressor::Models::ContextPack.fidelity_line(
-              source: label,
-              status: "fail",
-              check: check,
-              details: details
-            )
-            lines << Ace::Compressor::Models::ContextPack.fallback_line(
-              source: label,
-              from: "agent",
-              to: "exact",
-              reason: reason,
-              check: check,
-              details: details
-            )
-          end
-          lines << Ace::Compressor::Models::ContextPack.list_line("validated_concepts", SPIKE_VALIDATED_CONCEPTS)
-          lines << Ace::Compressor::Models::ContextPack.list_line("deferred_concepts", SPIKE_DEFERRED_CONCEPTS)
-          lines.join("\n")
-        end
-
-        def extract_source_labels(content)
-          content.to_s.lines.filter_map do |line|
-            next unless line.start_with?("FILE|")
-
-            line.sub("FILE|", "").strip
-          end
-        end
-
-        def extract_source_labels_from_lines(lines)
-          Array(lines).filter_map do |line|
-            next unless line.start_with?("FILE|")
-
-            line.sub("FILE|", "").strip
-          end
-        end
-
-        def source_scope_present?(expected_scope, output_scopes)
-          return true if output_scopes.include?(expected_scope)
-
-          expected_basename = File.basename(expected_scope.to_s)
-          basename_matches = output_scopes.select { |scope| File.basename(scope.to_s) == expected_basename }
-          basename_matches.size == 1
-        end
-
-        def source_label(source)
-          pathname = Pathname.new(source)
-          project_root = Pathname.new(Dir.pwd)
-          relative = pathname.relative_path_from(project_root).to_s
-          return relative unless relative.start_with?("..")
-
-          source
-        rescue ArgumentError
-          source
         end
 
         def execute_command(command)

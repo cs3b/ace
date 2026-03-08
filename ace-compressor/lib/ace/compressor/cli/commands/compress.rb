@@ -52,9 +52,6 @@ module Ace
               result[:ignored_paths].each { |path| $stderr.puts "Ignoring unsupported file: #{path}" }
             end
             puts result[:console_output]
-            if mode == "agent" && Array(result[:fallback_lines]).any?
-              $stderr.puts fallback_notice_for(Array(result[:fallback_lines]).size)
-            end
             if result[:exit_code].to_i.nonzero?
               raise Ace::Core::CLI::Error, refusal_message_for(mode)
             end
@@ -76,11 +73,6 @@ module Ace
             else
               "One or more sources were refused in #{mode} mode. Retry refused sources with --mode exact"
             end
-          end
-
-          def fallback_notice_for(count)
-            source_label = count == 1 ? "source" : "sources"
-            "Agent mode degraded to exact output for #{count} #{source_label}. Inspect FALLBACK records for details."
           end
         end
       end

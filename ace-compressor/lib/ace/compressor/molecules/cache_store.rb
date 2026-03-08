@@ -12,7 +12,7 @@ module Ace
         PACK_EXTENSION = ".pack"
         METADATA_EXTENSION = ".json"
         SHORT_KEY_LENGTH = 12
-        AGENT_CACHE_CONTRACT = "agent-fallback-exact-v1"
+        AGENT_CACHE_CONTRACT = "agent-payload-rewrite-v4"
 
         def initialize(cache_root: nil, project_root: Dir.pwd)
           @cache_root = File.expand_path(cache_root || default_cache_root, project_root)
