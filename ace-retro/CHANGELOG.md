@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-08
+
+### Changed
+- Remove hardcoded `providers.cli_args` config; use ace-llm `@preset` suffixes for provider permission flags
+
 ## [0.10.1] - 2026-03-04
 
 ### Fixed
