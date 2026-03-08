@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-03-08
+
+### Technical
+- Updated project-management and roadmap handbook references to use the canonical `release/publish` workflow name and `wfi://release/publish` URI.
+
 ## [0.22.1] - 2026-03-08
 
 ### Fixed

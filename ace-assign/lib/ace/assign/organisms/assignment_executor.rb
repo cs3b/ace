@@ -719,8 +719,8 @@ module Ace
             pre_commit_review_action_instructions(task_hint: task_hint)
           when "verify-test"
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
-          when "release", "release-minor"
-            "- Run /as-release to bump version and update both package and root changelogs."
+          when /\Arelease(?:-.+)?\z/
+            "- Run /as-release to release all modified packages and update both package and root changelogs."
           else
             "- Execute the #{sub_name} step."
           end
