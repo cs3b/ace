@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-03-08
+
+### Technical
+- Removed obsolete doctor CLI test coverage for deleted `provider_cli_args` behavior and corrected quiet-mode unhealthy test block closure.
+
 ## [0.14.0] - 2026-03-08
 
 ### Changed
