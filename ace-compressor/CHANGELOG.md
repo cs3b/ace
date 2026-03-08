@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-03-08
+
+### Fixed
+- Moved agent-mode model and prompt-template defaults out of Ruby and into `ace-compressor` config/protocol defaults.
+- Registered `ace-compressor` template sources under gem-local `.ace-defaults/nav/protocols/tmpl-sources/` so agent prompts resolve via `tmpl://`.
+- Rebuilt agent mode as payload-only rewriting over exact output so the LLM rewrites `SUMMARY|`, `FACT|`, and long `LIST|...` values without regenerating `ContextPack` structure or leaking prompt scaffolding into packs.
+
+### Technical
+- Added regression coverage for config-driven `agent_model`, `agent_template_uri`, and deprecated `agent_provider` fallback behavior.
+- Bumped the agent cache contract to invalidate stale refusal/fallback artifacts from earlier agent-mode implementations.
+
 ## [0.13.0] - 2026-03-08
 
 ### Added

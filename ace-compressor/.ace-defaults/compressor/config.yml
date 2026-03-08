@@ -1,3 +1,9 @@
 default_mode: exact
 default_format: path
 cache_dir: .ace-local/compressor
+
+# Model alias or provider:model used for agent-mode prompt minification.
+agent_model: gflash
+
+# Template resource used to compose the agent-mode system prompt via ace-bundle.
+agent_template_uri: tmpl://agent/minify-single-source

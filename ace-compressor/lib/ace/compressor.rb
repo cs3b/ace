@@ -21,13 +21,34 @@ module Ace
 
     def self.config
       @config ||= begin
-        resolver = Ace::Support::Config.create
-        resolver.resolve_namespace("compressor").to_h
+        gem_root = Gem.loaded_specs["ace-compressor"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
+
+        resolver = Ace::Support::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
+
+        config = resolver.resolve_namespace("compressor").to_h
+        config.empty? ? load_gem_defaults_fallback(gem_root) : config
       end
     end
 
     def self.reset_config!
       @config = nil
     end
+
+    def self.load_gem_defaults_fallback(gem_root = nil)
+      root = gem_root || Gem.loaded_specs["ace-compressor"]&.gem_dir ||
+             File.expand_path("../..", __dir__)
+      defaults_path = File.join(root, ".ace-defaults", "compressor", "config.yml")
+      return {} unless File.exist?(defaults_path)
+
+      YAML.safe_load_file(defaults_path, aliases: true) || {}
+    rescue StandardError
+      {}
+    end
+    private_class_method :load_gem_defaults_fallback
   end
 end

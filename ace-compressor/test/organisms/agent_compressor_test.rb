@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "tmpdir"
 require "fileutils"
 require_relative "../test_helper"
@@ -18,199 +19,217 @@ class AgentCompressorTest < AceCompressorTestCase
     super
   end
 
-  def test_returns_agent_output_with_concept_inventory_when_validation_passes
-    source = File.join(@tmp, "policy.md")
-    File.write(source, "# Policy\n\nTeams must not remove controls.\n")
-    shell_runner = lambda do |command|
+  def test_rewrite_payloads_returns_replacements_for_summary_fact_and_list_records
+    rewriter = build_rewriter(agent_output: JSON.generate(
+      "records" => [
+        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" },
+        { "id" => "r2", "payload" => "trimmed supporting fact" },
+        { "id" => "r3", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_docs] }
+      ]
+    ))
+
+    rewrites = rewriter.send(:rewrite_payloads, [
+      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Agents and developers collaborate through shared command-line workflows." },
+      { id: "r2", type: "FACT", file: "vision.md", section: "overview", payload: "This supporting fact is verbose." },
+      { id: "r3", type: "LIST", file: "vision.md", section: "tools", name: "tools", items: %w[ace_support_core_configuration_management_foundation ace_bundle_project_context_loading ace_docs_documentation_management] }
+    ])
+
+    assert_equal "shared cli workflows for humans and agents", rewrites["r1"][:payload]
+    assert_equal "trimmed supporting fact", rewrites["r2"][:payload]
+    assert_equal %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_docs], rewrites["r3"][:items]
+  end
+
+  def test_rewrite_payloads_accepts_json_code_fences
+    rewriter = build_rewriter(agent_output: <<~JSON)
+      ```json
+      {"records":[{"id":"r1","payload":"compressed"}]}
+      ```
+    JSON
+
+    rewrites = rewriter.send(:rewrite_payloads, [
+      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+    ])
+
+    assert_equal "compressed", rewrites["r1"][:payload]
+  end
+
+  def test_rewrite_payloads_returns_empty_hash_for_invalid_json
+    rewriter = build_rewriter(agent_output: "not json")
+
+    rewrites = rewriter.send(:rewrite_payloads, [
+      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+    ])
+
+    assert_equal({}, rewrites)
+  end
+
+  def test_list_rewrite_requires_same_item_count
+    rewriter = build_rewriter(agent_output: JSON.generate(
+      "records" => [
+        { "id" => "r1", "items" => ["one_short_item"] }
+      ]
+    ))
+
+    rewrites = rewriter.send(:rewrite_payloads, [
+      { id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[first_item second_item] }
+    ])
+
+    assert_equal({}, rewrites)
+  end
+
+  def test_uses_template_uri_from_config_for_ace_bundle
+    bundle_commands = []
+    shell_override = lambda do |command|
+      bundle_commands << command if command.first == "ace-bundle"
       if command.first == "ace-bundle"
-        ["spike prompt", "", successful_status]
+        ["payload rewriter template", "", successful_status]
       else
-        [
-          "H|ContextPack/3|agent\nFILE|policy.md\nRULE|Teams must not remove controls.\n",
-          "",
-          successful_status
-        ]
+        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
       end
     end
+    rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
 
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
+    with_compressor_config(
+      "agent_model" => "glite",
+      "agent_template_uri" => "tmpl://agent/custom-minify"
+    ) do
+      rewriter.send(:rewrite_payloads, [
+        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+      ])
+    end
+
+    assert_equal ["ace-bundle", "tmpl://agent/custom-minify"], bundle_commands.first
+  end
+
+  def test_uses_agent_model_from_config_for_ace_llm
+    llm_commands = []
+    shell_override = lambda do |command|
+      llm_commands << command if command.first == "ace-llm"
+      if command.first == "ace-bundle"
+        ["payload rewriter template", "", successful_status]
+      else
+        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
+      end
+    end
+    rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
+
+    with_compressor_config(
+      "agent_model" => "glite",
+      "agent_template_uri" => "tmpl://agent/minify-single-source"
+    ) do
+      rewriter.send(:rewrite_payloads, [
+        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+      ])
+    end
+
+    assert_equal "ace-llm", llm_commands.first[0]
+    assert_equal "glite", llm_commands.first[1]
+    assert_includes llm_commands.first[2], "<records_json>"
+  end
+
+  def test_uses_deprecated_agent_provider_when_agent_model_is_unset
+    llm_commands = []
+    shell_override = lambda do |command|
+      llm_commands << command if command.first == "ace-llm"
+      if command.first == "ace-bundle"
+        ["payload rewriter template", "", successful_status]
+      else
+        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
+      end
+    end
+    rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
+
+    with_compressor_config(
+      "agent_provider" => "legacy-provider",
+      "agent_template_uri" => "tmpl://agent/minify-single-source"
+    ) do
+      rewriter.send(:rewrite_payloads, [
+        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+      ])
+    end
+
+    assert_equal "legacy-provider", llm_commands.first[1]
+  end
+
+  def test_compress_sources_keeps_structure_and_protected_records_exact
+    source = File.join(@tmp, "architecture.md")
+    File.write(source, <<~MD)
+      # Architecture
+
+      ## Overview
+      Agents and developers collaborate through shared command-line workflows.
+
+      ## Components
+      - ace-support-core configuration management foundation
+      - ace-bundle project context loading with protocol support
+      - ace-docs documentation management with frontmatter tracking
+      - ace-review preset-based code review with llm-powered analysis
+      - ace-search unified file and content search with auto-detected matching
+
+      ## Rules
+      Commands must remain deterministic.
+    MD
+
+    output = build_rewriter(agent_output: JSON.generate(
+      "records" => [
+        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" },
+        { "id" => "r2", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_tracking ace_review_llm_analysis ace_search_pattern_matching] }
+      ]
+    )).compress_sources([source])
 
     assert_includes output, "H|ContextPack/3|agent"
-    assert_includes output, "FILE|policy.md"
-    assert_includes output, "RULE|Teams must not remove controls."
-    assert_includes output, "LIST|validated_concepts|"
-    assert_includes output, "LIST|deferred_concepts|"
-    refute_includes output, "REFUSAL|"
-    refute_includes output, "FALLBACK|"
+    assert_includes output, "FILE|architecture.md"
+    assert_includes output, "SUMMARY|shared cli workflows for humans and agents"
+    assert_includes output, "LIST|components|[ace_support_core_foundation,ace_bundle_protocol_loading,ace_docs_frontmatter_tracking,ace_review_llm_analysis,ace_search_pattern_matching]"
+    assert_includes output, "RULE|Commands must remain deterministic."
   end
 
-  def test_returns_exact_fallback_markers_when_agent_output_fails_validation
-    source = File.join(@tmp, "policy.md")
-    File.write(source, "# Policy\n\nTeams must not remove controls.\n")
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["spike prompt", "", successful_status]
-      else
-        ["H|ContextPack/3|agent\nFILE|policy.md\nSUMMARY|lost the rule\n", "", successful_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "H|ContextPack/3|exact"
-    assert_includes output, "FILE|policy.md"
-    assert_includes output, "FIDELITY|source=policy.md|status=fail|check=agent_validation"
-    assert_includes output, "FALLBACK|source=policy.md|from=agent|to=exact|reason=validation_failed|check=agent_validation"
-    refute_includes output, "REFUSAL|"
-  end
-
-  def test_returns_provider_unavailable_exact_fallback_when_ace_llm_fails
-    source = File.join(@tmp, "policy.md")
-    File.write(source, "# Policy\n\nTeams must not remove controls.\n")
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["spike prompt", "", successful_status]
-      else
-        ["", "provider timeout", failed_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "H|ContextPack/3|exact"
-    assert_includes output, "FILE|policy.md"
-    assert_includes output, "FIDELITY|source=policy.md|status=fail|check=provider_unavailable"
-    assert_includes output, "FALLBACK|source=policy.md|from=agent|to=exact|reason=provider_unavailable|check=provider_unavailable"
-    refute_includes output, "REFUSAL|"
-  end
-
-  def test_rule_heavy_source_can_succeed_when_required_records_are_preserved
-    source = File.join(@tmp, "decisions.md")
+  def test_compress_sources_never_emits_prompt_leakage_markers
+    source = File.join(@tmp, "vision.md")
     File.write(source, <<~MD)
-      # Decisions
+      # Vision
 
-      All workflows must be self-contained.
-      Commands must include exact error evidence.
+      ## Overview
+      Agents and developers collaborate through shared command-line workflows.
     MD
-    baseline = Ace::Compressor::Organisms::ExactCompressor.new([source], mode_label: "agent").call
-    required_lines = baseline.lines.map(&:strip).select do |line|
-      line.start_with?("RULE|", "CONSTRAINT|", "U|", "CMD|", "EXAMPLE|", "TABLE|")
-    end
-    agent_output = ["H|ContextPack/3|agent", "FILE|decisions.md", *required_lines].join("\n")
-    shell_runner = lambda do |command|
+
+    output = build_rewriter(agent_output: JSON.generate(
+      "records" => [
+        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" }
+      ]
+    )).compress_sources([source])
+
+    refute_includes output, "SEC|contract"
+    refute_includes output, "SEC|input"
+    refute_includes output, "Output contract:"
+    refute_includes output, "/tmp/ace-compressor-agent-input"
+  end
+
+  private
+
+  def build_rewriter(agent_output:, shell_override: nil)
+    shell_runner = shell_override || lambda do |command|
       if command.first == "ace-bundle"
-        ["minify prompt", "", successful_status]
+        ["payload rewriter template", "", successful_status]
       else
         [agent_output, "", successful_status]
       end
     end
 
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "H|ContextPack/3|agent"
-    assert_includes output, "FILE|decisions.md"
-    required_lines.each { |line| assert_includes output, line }
-    refute_includes output, "REFUSAL|"
-    refute_includes output, "FALLBACK|"
+    Ace::Compressor::Organisms::AgentCompressor.new([], shell_runner: shell_runner)
   end
 
-  def test_rejects_output_when_required_example_or_command_records_are_missing
-    source = File.join(@tmp, "example.md")
-    File.write(source, <<~MD)
-      # How It Works
-
-      ## Example: ace-git-commit
-      ```bash
-      ace-git-commit -i "fix auth bug"
-      ```
-    MD
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["minify prompt", "", successful_status]
-      else
-        ["H|ContextPack/3|agent\nFILE|example.md\nSUMMARY|compressed\n", "", successful_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "details=missing_required_records="
-    assert_includes output, "FALLBACK|source=example.md|from=agent|to=exact|reason=validation_failed|check=agent_validation"
-    refute_includes output, "REFUSAL|"
+  def with_compressor_config(values)
+    original = Ace::Compressor.instance_variable_get(:@config)
+    Ace::Compressor.instance_variable_set(:@config, values)
+    yield
+  ensure
+    Ace::Compressor.instance_variable_set(:@config, original)
   end
-
-  def test_rejects_output_when_numeric_tokens_are_missing
-    source = File.join(@tmp, "stats.md")
-    File.write(source, <<~MD)
-      # Script
-
-      ```ruby
-      retry_count = 42
-      ```
-    MD
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["minify prompt", "", successful_status]
-      else
-        ["H|ContextPack/3|agent\nFILE|stats.md\nCODE|ruby|retry_count = many\n", "", successful_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "details=missing_numeric_tokens="
-    assert_includes output, "FALLBACK|source=stats.md|from=agent|to=exact|reason=validation_failed|check=agent_validation"
-    refute_includes output, "REFUSAL|"
-  end
-
-  def test_rejects_summary_only_output
-    source = File.join(@tmp, "narrative.md")
-    File.write(source, "# Narrative\n\nThis document describes the background context for the feature.\n")
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["minify prompt", "", successful_status]
-      else
-        ["H|ContextPack/3|agent\nFILE|narrative.md\nSUMMARY|Short summary only.\n", "", successful_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_match(/details=(summary_only_output|missing_semantic_payload|not_smaller_than_exact)/, output)
-    assert_includes output, "FALLBACK|source=narrative.md|from=agent|to=exact|reason=validation_failed|check=agent_validation"
-    refute_includes output, "REFUSAL|"
-  end
-
-  def test_rejects_output_when_not_smaller_than_exact_baseline
-    source = File.join(@tmp, "short.md")
-    File.write(source, "# Short\n\ntiny\n")
-    long_fact = "FACT|" + ("x" * 300)
-    shell_runner = lambda do |command|
-      if command.first == "ace-bundle"
-        ["minify prompt", "", successful_status]
-      else
-        ["H|ContextPack/3|agent\nFILE|short.md\n#{long_fact}\n", "", successful_status]
-      end
-    end
-
-    output = Ace::Compressor::Organisms::AgentCompressor.new([source], shell_runner: shell_runner).call
-
-    assert_includes output, "details=not_smaller_than_exact"
-    assert_includes output, "FALLBACK|source=short.md|from=agent|to=exact|reason=validation_failed|check=agent_validation"
-    refute_includes output, "REFUSAL|"
-  end
-
-  private
 
   def successful_status
     Object.new.tap do |status|
       status.define_singleton_method(:success?) { true }
-    end
-  end
-
-  def failed_status
-    Object.new.tap do |status|
-      status.define_singleton_method(:success?) { false }
     end
   end
 end

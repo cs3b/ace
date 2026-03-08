@@ -199,7 +199,7 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes result[:stderr], "--mode agent"
   end
 
-  def test_agent_mode_degraded_fallback_reports_notice_without_non_zero_exit
+  def test_agent_mode_returns_output_without_refusal_guidance
     path = File.join(@tmp, "vision.md")
     File.write(path, "# Vision\n\nAgents can run CLI commands")
 
@@ -216,10 +216,8 @@ class CompressCommandTest < AceCompressorTestCase
 
       def compress_sources(_sources)
         [
-          "H|ContextPack/3|exact",
+          "H|ContextPack/3|agent",
           "FILE|vision.md",
-          "FIDELITY|source=vision.md|status=fail|check=provider_unavailable|details=Agent provider unavailable",
-          "FALLBACK|source=vision.md|from=agent|to=exact|reason=provider_unavailable|check=provider_unavailable",
           "RULE|Agents can run CLI commands"
         ].join("\n")
       end
@@ -228,10 +226,11 @@ class CompressCommandTest < AceCompressorTestCase
     Ace::Compressor::Organisms::AgentCompressor.stub(:new, ->(*) { fake.new }) do
       result = invoke([path, "--mode", "agent", "--format", "stdio"])
 
-      assert_nil result[:result]
-      assert_includes result[:stdout], "H|ContextPack/3|exact"
-      assert_includes result[:stdout], "FALLBACK|source=vision.md|from=agent|to=exact|reason=provider_unavailable"
-      assert_includes result[:stderr], "Agent mode degraded to exact output"
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "H|ContextPack/3|agent"
+      assert_includes result[:stdout], "FILE|vision.md"
+      refute_includes result[:stdout], "REFUSAL|"
+      refute_includes result[:stdout], "GUIDANCE|"
     end
   end
 

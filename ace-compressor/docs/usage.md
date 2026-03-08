@@ -21,8 +21,7 @@ minimal, semantic representation that preserves document structure and meaning w
   converted into compact typed records.
 - **Compact mode**: Policy-driven narrative compaction with runtime metadata:
   `POLICY|class=<...>|action=<...>`.
-- **Agent mode (single-source)**: Prompt-guided minification for one source with validator-visible fidelity gates.
-- **Agent degraded fallback**: Provider/validator failures degrade to exact output with explicit `FALLBACK|...` metadata.
+- **Agent mode**: Runs exact extraction first, then uses the LLM only to rewrite selected payloads (`SUMMARY|`, `FACT|`, and long `LIST|...` values) while keeping record structure deterministic.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
 - **Provenance**: `FILE|` and `SEC|` records establish scope inline; no separate source table is emitted.
 - **Fidelity markers**: Images emit `U|...`; compact reductions emit explicit `TABLE|...|strategy=...`,
@@ -85,6 +84,22 @@ ace-compressor docs/ --mode exact --verbose
 | `--debug` | `-d` | Show debug output | `false` |
 | `--help` | `-h` | Show help | |
 
+### Agent Mode Configuration
+
+Agent mode reads its defaults from `ace-compressor/.ace-defaults/compressor/config.yml` and follows the standard ACE config cascade.
+
+Project override example:
+
+```yaml
+# .ace/compressor/config.yml
+agent_model: glite
+agent_template_uri: tmpl://agent/minify-single-source
+```
+
+`agent_template_uri` must resolve through `tmpl://`; agent mode should not hardcode handbook template paths in Ruby.
+
+Agent mode keeps `H|`, `FILE|`, `SEC|`, and protected records deterministic. The LLM is used only to rewrite payload text, not to regenerate full `ContextPack` records.
+
 ## Output Contract
 
 `ace-compressor` separates saved output from console output:
@@ -127,10 +142,9 @@ Every run emits a stream of pipe-delimited records:
 | `H|` | `H\|ContextPack/3\|exact` | Header — one per run |
 | `FILE|` | `FILE\|docs/vision.md` | Source scope marker |
 | `POLICY|` | `POLICY\|class=narrative-heavy\|action=aggressive_compact` | Compact-mode runtime policy decision |
-| `FIDELITY|` | `FIDELITY\|source=docs/architecture.md\|status=pass\|check=agent_validation` | Fidelity gate status (compact/agent) |
+| `FIDELITY|` | `FIDELITY\|source=docs/architecture.md\|status=pass\|check=exact_rule_sections` | Fidelity gate status emitted by compact mode |
 | `REFUSAL|` | `REFUSAL\|source=docs/architecture.md\|reason=rule-heavy\|failed_check=compact_preflight` | Explicit refusal when compact-mode policy gates fail |
-| `FALLBACK|` | `FALLBACK\|source=docs/architecture.md\|from=agent\|to=exact\|reason=validation_failed\|check=agent_validation` | Explicit degraded-success marker for agent fallback |
-| `GUIDANCE|` | `GUIDANCE\|source=docs/architecture.md\|retry_with=--mode exact` | Retry guidance for refused output |
+| `GUIDANCE|` | `GUIDANCE\|source=docs/architecture.md\|retry_with=--mode compact` | Retry guidance for refused output |
 | `SEC|` | `SEC\|vision` | Section heading |
 | `SUMMARY|` | `SUMMARY\|A high-level statement` | Overview prose |
 | `FACT|` | `FACT\|A preserved factual statement` | Statement with operational content |
@@ -228,9 +242,9 @@ ace-compressor docs/vision.md --mode exact --output .ace-local/export/
 ace-compressor docs/vision.md --mode exact --format stdio
 ```
 
-### Scenario 7: Agent single-source minification path
+### Scenario 7: Agent payload compaction path
 
-**Goal**: Produce compressed `ContextPack/3|agent` output for one source while preserving critical structured records.
+**Goal**: Keep exact structure and imperative records, while compacting prose, repeated factual phrasing, and long list payloads with the LLM.
 
 ```bash
 ace-compressor docs/architecture.md --mode agent --format stdio
@@ -241,15 +255,9 @@ ace-compressor docs/architecture.md --mode agent --format stdio
 H|ContextPack/3|agent
 FILE|docs/architecture.md
 ...
-LIST|validated_concepts|[prompt_composed_flow,structured_input_contract,validator_visible_outcome]
-LIST|deferred_concepts|[corpus_level_behavior,cross_source_optimization,final_ratio_tuning]
+SEC|overview
+SUMMARY|ACE uses ATOM building blocks and protocol-addressable workflows.
 ```
-
-If provider access fails or validation detects missing required records, output degrades to exact and includes:
-- `FIDELITY|...|status=fail`
-- `FALLBACK|...|from=agent|to=exact|...`
-
-Degraded agent fallback exits `0` and prints a human-readable notice on stderr.
 
 ## Error Conditions
 
