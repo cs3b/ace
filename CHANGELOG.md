@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.795] - 2026-03-08
+
+### Fixed
+- **ace-overseer v0.4.21**: Restored resilience for stale/prunable worktree paths by recovering `work-on` provisioning after metadata drift and preventing `prune` from crashing on missing worktree directories.
+
+### Changed
+- **ace-overseer v0.4.21**: `prune` now performs pre-scan stale-metadata cleanup and limits default scans to task-associated worktrees unless explicit targets are provided.
+
 ## [0.9.794] - 2026-03-08
 
 ### Technical
