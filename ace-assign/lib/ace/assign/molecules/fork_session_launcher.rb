@@ -28,7 +28,6 @@ module Ace
         def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
-          merged_cli_args = merge_cli_args(required_cli_args_for(resolved_provider), cli_args)
           scoped_assignment = "#{assignment_id}@#{fork_root}"
           last_msg_file = build_last_message_file(cache_dir, fork_root)
 
@@ -36,7 +35,7 @@ module Ace
             resolved_provider,
             "/as-assign-drive #{scoped_assignment}",
             system: nil,
-            cli_args: merged_cli_args,
+            cli_args: cli_args,
             timeout: resolved_timeout,
             fallback: false,
             last_message_file: last_msg_file
@@ -96,21 +95,6 @@ module Ace
           sessions_dir = File.join(cache_dir, "sessions")
           FileUtils.mkdir_p(sessions_dir)
           File.join(sessions_dir, "#{fork_root}-last-message.md")
-        end
-
-        def required_cli_args_for(provider_model)
-          provider = provider_model.to_s.split(":").first
-          config.dig("providers", "cli_args", provider)
-        end
-
-        # @param required [String, Array<String>, nil] Provider-required args
-        # @param user_provided [String, Array<String>, nil] User-provided args
-        # @return [String, nil] Merged args string
-        def merge_cli_args(required, user_provided)
-          parts = [required, user_provided].flat_map { |value| Array(value) }.map(&:to_s).map(&:strip).reject(&:empty?)
-          return nil if parts.empty?
-
-          parts.join(" ")
         end
       end
     end

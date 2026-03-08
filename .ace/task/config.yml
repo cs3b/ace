@@ -18,17 +18,8 @@ task:
     recently_done_limit: 9
 
   # Doctor command: LLM model for agent-assisted fix
-  doctor_agent_model: "gemini:flash-latest"
-
-  # Doctor command: CLI args per provider for agent sessions
-  doctor_cli_args:
-    gemini: "yolo"
+  doctor_agent_model: "gemini:flash-latest@yolo"
 
   # Plan command defaults
   plan:
-    model: "gemini:pro-latest"
-    # Required CLI args per provider for plan generation sessions
-    cli_args:
-      claude: "--permission-mode plan"
-      codex: "--sandbox read-only"
-      gemini: "--approval-mode plan"
+    model: "gemini:pro-latest@ro"

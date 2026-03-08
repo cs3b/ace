@@ -10,20 +10,9 @@ module Ace
         # deterministic runner/verifier pipeline.
         # Provider lists and CLI args are configurable via config.yml.
         class CliProviderAdapter
-          # Legacy shorthand values that still appear in existing configs and should map
-          # to explicit flags for deterministic command behavior.
-          CLI_ARG_ALIAS = {
-            "full-auto" => ["--sandbox danger-full-access", "--ask-for-approval never"],
-            "dangerously-bypass-approvals-and-sandbox" => ["--sandbox danger-full-access", "--ask-for-approval never"]
-          }.freeze
-
           # @param config [Hash] Configuration hash (string keys) with providers section
           def initialize(config = {})
             @cli_providers = config.dig("providers", "cli") || %w[claude gemini codex codexoss opencode pi]
-            @cli_args_map = config.dig("providers", "cli_args") || {
-              "claude" => ["dangerously-skip-permissions"],
-              "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"]
-            }
           end
 
           # Check if a provider string refers to a CLI provider
@@ -42,14 +31,6 @@ module Ace
             provider_string.to_s.split(":").first.to_s
           end
 
-          # Get required CLI args for a provider
-          #
-          # @param provider_string [String] Provider:model string
-          # @return [String, nil] Required CLI args as a legacy string
-          def self.required_cli_args(provider_string)
-            default_instance.required_cli_args(provider_string)
-          end
-
           # Instance method: check if a provider string refers to a CLI provider
           #
           # @param provider_string [String] Provider:model string
@@ -57,43 +38,6 @@ module Ace
           def cli_provider?(provider_string)
             name = self.class.provider_name(provider_string)
             @cli_providers.include?(name)
-          end
-
-          # Instance method: get required CLI args for a provider
-          #
-          # @param provider_string [String] Provider:model string
-          # @return [String, nil] Required CLI args as a legacy string
-          def required_cli_args(provider_string)
-            name = self.class.provider_name(provider_string)
-            args = required_cli_args_list_from(name)
-            return nil if args.nil?
-
-            args.join(" ")
-          end
-
-          # @return [Array<String>, nil] Required CLI args as an array
-          def required_cli_args_list(provider_string)
-            name = self.class.provider_name(provider_string)
-            required_cli_args_list_from(name)
-          end
-
-          # @return [Array<String>, nil] Required CLI args as an array
-          def self.required_cli_args_list(provider_string)
-            default_instance.required_cli_args_list(provider_string)
-          end
-
-          private
-
-          def required_cli_args_list_from(provider_name)
-            value = @cli_args_map[provider_name]
-            return nil if value.nil?
-
-            args = Array(value).map(&:to_s).map(&:strip).reject(&:empty?)
-            return nil if args.empty?
-
-            return CLI_ARG_ALIAS[args.first] if args.length == 1 && CLI_ARG_ALIAS.key?(args.first)
-
-            args
           end
 
           def build_execution_prompt(command:, tc_mode:)
@@ -212,8 +156,6 @@ module Ace
           def self.reset_default_instance!
             @default_instance = nil
           end
-
-          private
 
         end
 
