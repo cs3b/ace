@@ -26,7 +26,7 @@ workflow_source_paths:
 # Fork execution defaults
 execution:
   # provider: "codex:spark"
-  provider: "codex:codex"
+  provider: "codex:codex@yolo"
   # provider: "claude:sonnet"
   timeout: 1800
 
@@ -40,12 +40,3 @@ providers:
     - "codexoss"
     - "opencode"
     - "pi"
-  cli_args:
-    claude:
-      - "dangerously-skip-permissions"
-    claudeoai:
-      - "dangerously-skip-permissions"
-    codex:
-      - "dangerously-bypass-approvals-and-sandbox"
-    codexoss:
-      - "full-auto"
