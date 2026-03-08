@@ -196,6 +196,35 @@ module Ace
             end
           end
 
+          def test_ignores_env_root_outside_start_path_without_markers
+            with_temp_dir({}) do |start_dir|
+              with_temp_dir({}) do |other_root|
+                finder = ProjectRootFinder.new(
+                  start_path: start_dir,
+                  markers: [".nonexistent-marker"]
+                )
+                finder.stub(:env_project_root, other_root) do
+                  result = finder.find
+
+                  assert_nil result
+                end
+              end
+            end
+          end
+
+          def test_ignores_env_root_outside_start_path_and_falls_back_to_markers
+            with_temp_dir(".git" => "") do |start_dir|
+              with_temp_dir({}) do |other_root|
+                finder = ProjectRootFinder.new(start_path: start_dir)
+                finder.stub(:env_project_root, other_root) do
+                  result = finder.find
+
+                  assert_equal start_dir, result
+                end
+              end
+            end
+          end
+
           def test_ignores_invalid_env_path
             with_temp_dir(".git" => "") do |tmpdir|
               finder = ProjectRootFinder.new(start_path: tmpdir)
