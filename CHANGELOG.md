@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.796] - 2026-03-08
+
+### Fixed
+- **ace-task v0.22.1**: Removed stale `task.plan.cli_args` provider mapping from `ace-task plan` so plan generation now follows `provider:model@preset` directly after migration.
+
+### Technical
+- **ace-idea v0.14.1**: Removed obsolete doctor CLI test coverage for deleted `provider_cli_args` behavior and corrected quiet-mode unhealthy test block closure.
+
 ## [0.9.795] - 2026-03-08
 
 ### Fixed
