@@ -24,7 +24,7 @@ This workflow is a lightweight orchestrator that chains the 3-stage E2E test pip
          ├─► Stage 3: /as-e2e-rewrite   (execute)
          │        └─► Updated test files
          │
-         └─► (optional) /as-e2e-runs     (verify)
+         └─► (optional) /as-assign-run-in-batches     (verify)
 ```
 
 ## Arguments
@@ -91,9 +91,11 @@ Capture the execution summary with files created, modified, and deleted.
 
 If `--run-tests` flag is provided, verify the rewritten tests:
 
+```bash
+/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run
 ```
-/as-e2e-runs {PACKAGE}
-```
+
+Provide an explicit `--items` list from the scenarios you want to verify.
 
 Capture test results for the final summary.
 
@@ -125,7 +127,7 @@ Produce a combined summary of the full pipeline run:
 
 ### Next Steps
 
-1. {If tests not run: Run `/as-e2e-runs {PACKAGE}` to verify}
+1. {If tests not run: Run `/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run` to verify}
 2. {If tests failed: Investigate failures}
 3. Commit changes with `/as-git-commit`
 ```

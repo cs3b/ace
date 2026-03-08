@@ -231,7 +231,7 @@ Present the execution summary:
 ### Next Steps
 
 1. Review the created/modified TC files
-2. Run `/as-e2e-runs {PACKAGE}` to verify all tests pass
+2. Run `/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run` to verify all tests pass
 3. Commit changes with `/as-git-commit`
 ```
 
