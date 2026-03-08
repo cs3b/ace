@@ -850,16 +850,8 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       refute_nil received_sandbox, "sandbox_path should be set"
-      assert File.exist?(File.join(received_sandbox, "scenario.yml")),
-        "scenario.yml must be copied to sandbox for execute.wf.md discovery"
-      assert File.exist?(File.join(received_sandbox, "runner.yml.md")),
-        "runner config must be copied to sandbox"
-      assert File.exist?(File.join(received_sandbox, "verifier.yml.md")),
-        "verifier config must be copied to sandbox"
-      assert File.exist?(File.join(received_sandbox, "TC-001-check.runner.md")),
-        "TC-001 runner file must be copied to sandbox"
-      assert File.exist?(File.join(received_sandbox, "TC-002-check.verify.md")),
-        "TC-002 verifier file must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "sample.txt")),
+        "fixture files must be copied to sandbox for setup execution"
     end
   end
 

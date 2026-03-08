@@ -13,10 +13,4 @@ retro:
   special_folder_prefix: "_"
 
   # LLM model for doctor --auto-fix-with-agent
-  doctor_agent_model: gemini:flash-latest
-
-  # Provider-specific CLI args for doctor agent runs
-  doctor:
-    cli_args:
-      gemini:
-        - "yolo"
+  doctor_agent_model: gemini:flash-latest@yolo

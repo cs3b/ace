@@ -88,14 +88,9 @@ module Ace
               )
             end
 
-            merged_args = merge_cli_args(
-              Atoms::CliProviderAdapter.required_cli_args_list(@provider),
-              cli_args
-            )
-
             pipeline_executor.execute(
               scenario: scenario,
-              cli_args: merged_args,
+              cli_args: cli_args,
               sandbox_path: resolved_sandbox_path,
               report_dir: resolved_report_dir,
               env_vars: env_vars,
@@ -200,14 +195,9 @@ module Ace
                 sandbox_path: sandbox_path, run_id: run_id, env_vars: env_vars
               )
 
-              merged_args = merge_cli_args(
-                Atoms::CliProviderAdapter.required_cli_args_list(@provider),
-                cli_args
-              )
-
               response = Ace::LLM::QueryInterface.query(
                 @provider, prompt,
-                system: nil, cli_args: merged_args,
+                system: nil, cli_args: cli_args,
                 timeout: @timeout, fallback: false,
                 subprocess_env: env_vars
               )
@@ -289,18 +279,6 @@ module Ace
               error: "#{e.class}: #{e.message}",
               started_at: started_at, completed_at: Time.now
             )
-          end
-
-          # Merge required CLI args with user-provided args
-          #
-          # @param required [String, Array<String>, nil] Provider-required args
-          # @param user_provided [String, Array<String>, nil] User-provided args
-          # @return [String, nil] Merged args string
-          def merge_cli_args(required, user_provided)
-            parts = [required, user_provided].flat_map { |value| Array(value) }.map(&:to_s).map(&:strip).reject(&:empty?)
-            return nil if parts.empty?
-
-            parts.join(" ")
           end
 
           # Detect common failure modes where the agent did not execute the

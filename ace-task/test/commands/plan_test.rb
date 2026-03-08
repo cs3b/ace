@@ -83,25 +83,25 @@ class TaskPlanCommandTest < AceTaskTestCase
     assert_includes result[:stdout], "# Plan for 8pp.t.q7w"
   end
 
-  def test_default_model_passes_gemini_plan_cli_args
+  def test_default_model_uses_ro_preset_and_no_cli_args
     run_cli(%w[plan q7w --refresh])
 
-    assert_equal "gemini:pro-latest", FakeGenerator.last_init_kwargs[:model]
-    assert_equal ["--approval-mode plan"], FakeGenerator.last_init_kwargs[:cli_args]
+    assert_equal "gemini:pro-latest@ro", FakeGenerator.last_init_kwargs[:model]
+    assert_nil FakeGenerator.last_init_kwargs[:cli_args]
   end
 
-  def test_model_override_passes_codex_cli_args
+  def test_model_override_does_not_inject_codex_cli_args
     run_cli(%w[plan q7w --refresh --model codex:codex])
 
     assert_equal "codex:codex", FakeGenerator.last_init_kwargs[:model]
-    assert_equal ["--sandbox read-only"], FakeGenerator.last_init_kwargs[:cli_args]
+    assert_nil FakeGenerator.last_init_kwargs[:cli_args]
   end
 
-  def test_model_override_passes_gemini_cli_args
+  def test_model_override_does_not_inject_gemini_cli_args
     run_cli(%w[plan q7w --refresh --model gemini:pro-latest])
 
     assert_equal "gemini:pro-latest", FakeGenerator.last_init_kwargs[:model]
-    assert_equal ["--approval-mode plan"], FakeGenerator.last_init_kwargs[:cli_args]
+    assert_nil FakeGenerator.last_init_kwargs[:cli_args]
   end
 
   def test_unknown_provider_has_no_cli_args

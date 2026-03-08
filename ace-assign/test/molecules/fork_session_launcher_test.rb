@@ -23,26 +23,26 @@ class ForkSessionLauncherTest < AceAssignTestCase
   def test_launch_uses_config_defaults_and_passes_scoped_assignment_argument
     fake = FakeQueryInterface.new
     config = {
-      "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 },
-      "providers" => { "cli_args" => { "codex" => ["full-auto"] } }
+      "execution" => { "provider" => "codex:gpt-5@yolo", "timeout" => 900 },
+      "providers" => {}
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010.01")
 
     call = fake.calls.last
-    assert_equal "codex:gpt-5", call[:provider_model]
+    assert_equal "codex:gpt-5@yolo", call[:provider_model]
     assert_equal "/as-assign-drive abc123@010.01", call[:prompt]
-    assert_equal "full-auto", call[:options][:cli_args]
+    assert_nil call[:options][:cli_args]
     assert_equal 900, call[:options][:timeout]
     assert_equal false, call[:options][:fallback]
   end
 
-  def test_launch_merges_required_and_user_cli_args
+  def test_launch_passes_user_cli_args_without_merging
     fake = FakeQueryInterface.new
     config = {
-      "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 },
-      "providers" => { "cli_args" => { "claude" => ["dangerously-skip-permissions"] } }
+      "execution" => { "provider" => "claude:sonnet@yolo", "timeout" => 1800 },
+      "providers" => {}
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
@@ -53,28 +53,21 @@ class ForkSessionLauncherTest < AceAssignTestCase
     )
 
     call = fake.calls.last
-    assert_equal "dangerously-skip-permissions --model-settings x", call[:options][:cli_args]
+    assert_equal "--model-settings x", call[:options][:cli_args]
   end
 
-  def test_launch_merges_array_and_string_cli_args
+  def test_launch_passes_nil_cli_args_when_not_provided
     fake = FakeQueryInterface.new
     config = {
-      "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 },
-      "providers" => { "cli_args" => { "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"] } }
+      "execution" => { "provider" => "codex:gpt-5@yolo", "timeout" => 900 },
+      "providers" => {}
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
-    launcher.launch(
-      assignment_id: "abc123",
-      fork_root: "010",
-      cli_args: "--model-settings x"
-    )
+    launcher.launch(assignment_id: "abc123", fork_root: "010")
 
     call = fake.calls.last
-    assert_equal(
-      "--sandbox danger-full-access --ask-for-approval never --model-settings x",
-      call[:options][:cli_args]
-    )
+    assert_nil call[:options][:cli_args]
   end
 
   def test_launch_passes_last_message_file_when_cache_dir_provided

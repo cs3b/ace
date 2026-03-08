@@ -63,73 +63,24 @@ class SkillPromptBuilderTest < Minitest::Test
     assert_equal "glite", SkillPromptBuilder.provider_name("glite")
   end
 
-  # --- Required CLI Args ---
-
-  def test_required_cli_args_for_claude
-    assert_equal "dangerously-skip-permissions", SkillPromptBuilder.required_cli_args("claude:sonnet")
-  end
-
-  def test_required_cli_args_for_codex
-    assert_equal "--sandbox danger-full-access --ask-for-approval never", SkillPromptBuilder.required_cli_args("codex:latest")
-  end
-
-  def test_required_cli_args_nil_for_gemini
-    assert_nil SkillPromptBuilder.required_cli_args("gemini:flash")
-  end
-
-  def test_required_cli_args_nil_for_api_provider
-    assert_nil SkillPromptBuilder.required_cli_args("google:gemini-2.5-flash")
-  end
-
   # --- Config Injection ---
 
   def test_custom_config_overrides_cli_providers
     config = {
       "providers" => {
-        "cli" => %w[custom-cli],
-        "cli_args" => {"custom-cli" => "auto-mode"}
+        "cli" => %w[custom-cli]
       }
     }
     builder = SkillPromptBuilder.new(config)
 
     assert builder.cli_provider?("custom-cli:model")
     refute builder.cli_provider?("claude:sonnet")
-    assert_equal "auto-mode", builder.required_cli_args("custom-cli:model")
   end
 
   def test_empty_config_uses_defaults
     builder = SkillPromptBuilder.new({})
 
     assert builder.cli_provider?("claude:sonnet")
-    assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
-  end
-
-  def test_required_cli_args_supports_array_and_string_config_values
-    builder = SkillPromptBuilder.new(
-      "providers" => {
-        "cli_args" => {
-          "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"],
-          "claude" => "dangerously-skip-permissions"
-        }
-      }
-    )
-
-    assert_equal "--sandbox danger-full-access --ask-for-approval never", builder.required_cli_args("codex:latest")
-    assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
-  end
-
-  def test_required_cli_args_list_supports_array_and_string_config_values
-    builder = SkillPromptBuilder.new(
-      "providers" => {
-        "cli_args" => {
-          "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"],
-          "claude" => "dangerously-skip-permissions"
-        }
-      }
-    )
-
-    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], builder.required_cli_args_list("codex:latest")
-    assert_equal ["dangerously-skip-permissions"], builder.required_cli_args_list("claude:sonnet")
   end
 
   # --- Skill Name Coupling (guards against rename drift) ---
@@ -139,8 +90,8 @@ class SkillPromptBuilderTest < Minitest::Test
     # If the skill is renamed, the directory name changes and this test fails,
     # forcing the developer to also update SkillPromptBuilder.
     skills_dir    = File.expand_path("../../handbook/skills", __dir__)
-    skill_dir     = File.join(skills_dir, "ace-e2e-run")
-    # Skill name matches directory name (ace-e2e-run)
+    skill_dir     = File.join(skills_dir, "as-e2e-run")
+    # Skill name matches directory name (as-e2e-run)
     expected_name = File.basename(skill_dir)
 
     scenario   = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
