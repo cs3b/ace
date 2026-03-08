@@ -46,6 +46,16 @@ document_types:
         - endpoints: from-routes
         - schemas: from-models
 
+  # User-facing documentation
+  user:
+    paths:
+      - "README.md"
+      - "*/README.md"
+      - "*/docs/**/*.md"
+    defaults:
+      update_frequency: on-change
+      max_lines: 1200
+
   # Templates
   template:
     paths:
@@ -101,3 +111,4 @@ ignore:
   - "**/coverage/**"
   - "**/_legacy/**"
   - "**/.ace-tasks/done/**"
+  - "*/test/e2e/**/*.md"
