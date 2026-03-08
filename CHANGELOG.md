@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.799] - 2026-03-08
+
+### Fixed
+- **ace-git-commit v0.19.2**: Hardened split-commit batch message generation with strict JSON parsing/validation and explicit repair retry handling.
+- **ace-git-commit v0.19.2**: Removed generic `chore: update <scope>` fallback by using per-scope message generation when batch parsing fails.
+
+### Changed
+- **ace-git-commit v0.19.2**: Strengthened commit prompt guidance to reduce overuse of generic `chore` messages for feature and fix changes.
+
+### Technical
+- **ace-git-commit v0.19.2**: Added regression coverage for strict batch parsing, retry behavior, and per-scope fallback message generation.
+
 ## [0.9.798] - 2026-03-08
 
 ### Fixed
