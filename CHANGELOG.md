@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.794] - 2026-03-08
+
+### Technical
+- **ace-assign v0.22.7**: Stabilized create-command path-relativity tests under `mise` by scoping `PROJECT_ROOT_PATH` to test temp roots and clearing cached project-root resolution.
+
 ## [0.9.793] - 2026-03-08
 
 ### Fixed
