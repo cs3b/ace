@@ -8,7 +8,7 @@ purpose: workflow instruction for driving ace-assign assignment execution
 
 update:
   frequency: on-change
-  last-updated: '2026-02-17'
+  last-updated: '2026-03-08'
 ---
 
 # Drive Assignment Workflow
@@ -31,11 +31,27 @@ When working with multiple concurrent assignments, the active assignment is reso
 3. `.latest` symlink (auto-updated on any activity)
 4. Scan all assignments (fallback)
 
-If this workflow is invoked with an argument (for example `/as-assign-drive abc123@010.01`), treat that value as the assignment target for the entire loop and append `--assignment <target>` to all `ace-assign` commands.
+If this workflow is invoked with an argument (for example `/as-assign-drive abc123@010.01`), treat that value as the initial assignment target. If no argument is provided, resolve one active assignment and pin it for the entire loop.
 
 ```bash
 # Set once from workflow argument (empty when not provided)
-ASSIGNMENT_TARGET="abc123@010.01"
+ASSIGNMENT_TARGET="${1:-}"
+
+# Resolve and pin assignment identity for the full drive loop
+if [ -n "$ASSIGNMENT_TARGET" ]; then
+  STATUS_JSON=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
+else
+  # Only here: resolve active assignment once before pinning target
+  STATUS_JSON=$(ace-assign status --format json)
+fi
+ASSIGNMENT_ID=$(echo "$STATUS_JSON" | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
+if [ -z "$ASSIGNMENT_ID" ]; then
+  echo "No active assignment found"
+  exit 1
+fi
+if [ -z "$ASSIGNMENT_TARGET" ]; then
+  ASSIGNMENT_TARGET="$ASSIGNMENT_ID"
+fi
 ```
 
 ### Explicit Assignment Targeting (Recommended)
@@ -48,6 +64,8 @@ ace-assign status --assignment abc123
 ace-assign finish --message done.md --assignment abc123
 ace-assign fail --message "err" --assignment abc123
 ```
+
+Once `ASSIGNMENT_TARGET` is pinned, do not run unscoped execution commands (`status`, `start`, `finish`, `fail`, `retry`, `add`) inside the drive loop.
 
 ### Subtree Fork Scope (Explicit `@<phase-number>`)
 
@@ -106,17 +124,17 @@ After completing or failing each phase, evaluate whether the assignment needs ad
 
 - **Test failures detected** → Consider adding a fix-tests phase:
   ```bash
-  ace-assign add "fix-tests" --instructions "Fix failing tests identified in phase NNN"
-  ```
+  ace-assign add "fix-tests" --instructions "Fix failing tests identified in phase NNN" --assignment "$ASSIGNMENT_TARGET"
+   ```
 
 - **Review found critical issues** → Consider adding an apply-critical-fixes phase:
   ```bash
-  ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding"
+  ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding" --assignment "$ASSIGNMENT_TARGET"
   ```
 
 - **Missing prerequisite discovered** → Consider adding the prerequisite phase:
   ```bash
-  ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during phase NNN"
+  ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during phase NNN" --assignment "$ASSIGNMENT_TARGET"
   ```
 
 - **Metadata hint**: Phase file contains `trigger_on_failure` — if the phase failed, inject the referenced phase type
@@ -131,11 +149,12 @@ Use `decision_notes` from phase metadata (if present) as additional guidance for
 ### 1. Check Status
 
 ```bash
-STATUS_OUTPUT=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} 2>&1)
+STATUS_OUTPUT=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" 2>&1)
 echo "$STATUS_OUTPUT"
 ```
 
 Read the output to identify:
+- Assignment ID (must remain equal to pinned `ASSIGNMENT_ID`)
 - Current phase number, name, and status
 - Current phase's instructions
 - Current phase's skill reference (if any)
@@ -149,58 +168,94 @@ Before executing the current phase inline, check whether the active phase is ins
 
 #### Delegation Rule
 
-**FORK SIGNAL**: If a phase row shows `yes` in the FORK column, it has children and MUST be delegated via `fork-run`.
+**FORK SIGNAL**: If a phase row shows `yes` in the `FORK` column, the phase itself has `context: fork` and MUST be delegated via `fork-run`.
 
 | Column | Meaning | Action |
 |--------|---------|--------|
-| `FORK: yes` | Phase has child phases | Delegate via `fork-run` |
-| `FORK: ` (empty) | No children | Execute inline |
+| `FORK: yes` | Phase has `context: fork` | Delegate via `fork-run` |
+| `FORK: ` (empty) | Phase is not fork-enabled | Execute inline (or inspect fork-enabled children if batch parent) |
 
 **Example status output:**
 ```
 NUMBER       STATUS       NAME                           FORK   CHILDREN
 ------------------------------------------------------------------------------
 010          ✓ Done       onboard
-020          ○ Pending    work-on-task                   yes    (0/5 done)
+020          ○ Pending    implement-step                 yes
 ```
 
-Phase 020 shows `FORK: yes` → you MUST run:
+Phase 020 shows `FORK: yes` → run:
 ```bash
 ace-assign fork-run --assignment <id>@020
 ```
 
-**Do NOT execute child phases (020.01, 020.02, etc.) inline.**
+**Delegation boundary rule**
 
-- If status output is already scoped to `Current Phase: <root>.*` based on explicit `--assignment <id>@<root>`, continue inline.
-- If the current phase is a top-level phase with `FORK: yes`, delegate immediately.
+- Outside a delegated fork scope, do NOT execute fork phases inline.
+- If status output is already scoped to `Current Phase: <root>.*` via `--assignment <id>@<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
+- If the current phase is a top-level phase with `FORK: yes` and no matching scope is active, delegate immediately.
 
 #### Nested Batch Containers (Container → Fork Children)
 
-A batch container (e.g., `010`) may show `FORK: yes` because it has fork-enabled children, even though the container itself is **not** fork-enabled (no `context: fork`). In this case, do **not** fork-run the container — iterate its children instead.
+A batch container (e.g., `010`) may have children but no fork context itself (`FORK` column empty). In that case, delegate child phases according to scheduler metadata on the parent:
+
+- `batch_parent: true`
+- `parallel: true|false`
+- `max_parallel: <N>`
+- `fork_retry_limit: <N>` (default `1`)
 
 **How to distinguish:**
-- **Direct fork target**: Phase has `context: fork` in its definition → fork-run the phase directly.
-- **Batch container with fork children**: Phase has `FORK: yes` but its children (e.g., `010.01`, `010.02`) are the ones with `context: fork` → iterate children sequentially, fork-running each pending child.
+- **Direct fork target**: `FORK: yes` on the current phase → fork-run the current phase.
+- **Batch container**: `FORK: ` on parent, but children include `FORK: yes` phases.
 
 **Pattern for batch containers:**
 ```bash
-# Container 010 has FORK: yes but is itself a batch container
-# Its children 010.01, 010.02, etc. are the fork targets
-for CHILD in $(ace-assign status --assignment ${ASSIGNMENT_ID} --format json | \
-  ruby -rjson -e 'JSON.parse(STDIN.read)["phases"].select { |p| p["number"].start_with?("010.") && p["status"] == "pending" }.each { |p| puts p["number"] }'); do
-  ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${CHILD}"
-  # Check status after each child completes before forking the next
-done
+# Read scheduler metadata from parent phase 010
+# parallel=false  => sequential, still fork every child
+# parallel=true   => windowed fork concurrency with max_parallel
 ```
 
-**Key rule**: Fork-run should target the first pending child with `context: fork`, not the container itself. After each child fork completes, check status and fork the next pending child.
+**Sequential mode (`parallel: false`)**
+
+- Iterate pending child phases in number order.
+- For each child with `FORK: yes`, run:
+  - `ace-assign fork-run --assignment <id>@<child>`
+- Re-check status after each child.
+
+**Parallel mode (`parallel: true`)**
+
+- `max_parallel` is an in-flight concurrency cap, not a wave size.
+- Maintain up to `max_parallel` in-flight child `fork-run` processes.
+- Launch only child phases with `FORK: yes`.
+- Refill a free slot immediately when any child completes, until pending queue is empty.
+- Do not launch a fixed group and wait for the whole group to finish before launching more work.
+
+**Rolling scheduler loop (required)**
+
+1. Build pending fork-child queue in phase-number order.
+2. Launch children until `in_flight == max_parallel` or pending is empty.
+3. Wait for any in-flight child to finish, then record done/failed state.
+4. If child succeeded, immediately launch the next pending child; if no pending remains, continue draining in-flight children.
+5. Stop only when both pending and in-flight are empty.
+
+**Failure policy (retry-then-stop)**
+
+- On any child failure:
+  - Pause launching new children immediately.
+  - Wait for in-flight children to finish.
+  - Retry failed child once (`fork_retry_limit=1` default).
+  - If retry succeeds, resume launches.
+  - If retry fails, stop driving and fail the batch subtree.
 
 #### Example
 
 ```bash
-FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/^\([0-9.]*\).*yes\s*(.*/\1/p' | head -1)
+STATUS_JSON=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
+ASSIGNMENT_ID=$(echo "$STATUS_JSON" | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
+FORK_ROOT=$(echo "$STATUS_JSON" | ruby -rjson -e '
+  p = JSON.parse(STDIN.read)["current_phase"]
+  puts p["number"] if p && p["context"] == "fork"
+')
 if [ -n "$FORK_ROOT" ]; then
-  ASSIGNMENT_ID=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} --format json | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
   # Re-check status after subtree delegation completes
   continue
@@ -215,8 +270,15 @@ fi
 > # Run fork-run in background (use run_in_background: true in Claude Code)
 > ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
 >
-> # Poll ace-assign status every 5 minutes until subtree completes
-> while ! ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" 2>&1 | grep -q "${FORK_ROOT}.*Done\|${FORK_ROOT}.*Failed"; do
+> # Poll scoped status every 5 minutes until subtree completes
+> while true; do
+>   STATUS_JSON=$(ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" --format json)
+>   COMPLETE=$(echo "$STATUS_JSON" | ruby -rjson -e '
+>     json = JSON.parse(STDIN.read)
+>     phases = json["phases"] || []
+>     puts phases.all? { |phase| phase["status"] == "done" || phase["status"] == "failed" }
+>   ')
+>   [ "$COMPLETE" = "true" ] && break
 >   sleep 300
 > done
 > ```
@@ -258,7 +320,7 @@ After all fork subtrees within a batch container complete, the container auto-ma
 
 **After verifying all fork subtree reports**, if `ace-assign status` shows no Active phase (all completed phases but no new in-progress phase), run:
 ```bash
-ace-assign start ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+ace-assign start --assignment "$ASSIGNMENT_TARGET"
 ```
 This advances the queue to the next pending top-level phase.
 
@@ -296,16 +358,18 @@ When `fork-run` exits non-zero but has made partial progress (uncommitted files,
    ```bash
    # Recovery onboard: re-read the plan and progress reports
    ace-assign add "recovery-onboard" --after ${last_done_phase} --child \
+     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
      -i "Read reports from plan-task and work-on-task phases to understand progress. Continue implementation from where it stopped."
 
    # Continue work phase
    ace-assign add "continue-work" --after recovery-onboard --child \
+     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
      -i "Complete remaining implementation. Check git log and existing files to avoid redoing work."
-   ```
+  ```
 
 4. **Re-fork** — The injected phases are pending, so fork-run will pick them up:
    ```bash
-   ace-assign fork-run --root ${FORK_ROOT} --assignment ${ASSIGNMENT_ID}
+   ace-assign fork-run --assignment ${ASSIGNMENT_ID}@${FORK_ROOT}
    ```
 
 **Key principle**: Never execute fork work inline — except for LLM-tool phases during provider unavailability (see below). The fork boundary exists for context isolation. If a fork crashes due to a code issue, recover and re-fork — don't absorb the work into the driver.
@@ -343,6 +407,7 @@ When `fork-run` fails not because of a code bug but because an LLM provider time
 
    # Option B: Add retry as a child of the failed phase's parent
    ace-assign add "retry-<phase-name>" --after <failed_phase> --child \
+     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
      -i "Provider was unavailable for forked <phase-name>. Execute equivalent work inline: <specific instructions>"
    ```
 
@@ -420,7 +485,7 @@ For external-facing phases (for example PR/review/release/push/update lifecycle 
 - Mark phase failed with evidence (do not report synthetic completion).
 
 ```bash
-ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assignment "$ASSIGNMENT_TARGET"
 ```
 
 ### 5. Write Report (Only After Real Execution)
@@ -442,7 +507,7 @@ All setup prerequisites are now satisfied.
 EOF
 
 # Submit report to advance the queue
-ace-assign finish --message /tmp/phase-report.md ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+ace-assign finish --message /tmp/phase-report.md --assignment "$ASSIGNMENT_TARGET"
 ```
 
 ### 6. Verify State Transition (Required)
@@ -450,7 +515,7 @@ ace-assign finish --message /tmp/phase-report.md ${ASSIGNMENT_TARGET:+--assignme
 After each `ace-assign finish --message` or `ace-assign fail`, verify queue state:
 
 ```bash
-POST_STATUS=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} 2>&1)
+POST_STATUS=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" 2>&1)
 echo "$POST_STATUS"
 ```
 
@@ -465,7 +530,7 @@ If a phase cannot be completed:
 
 ```bash
 # Mark phase as failed with reason
-ace-assign fail --message "Tests failed: test_greet, test_shout" ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+ace-assign fail --message "Tests failed: test_greet, test_shout" --assignment "$ASSIGNMENT_TARGET"
 ```
 
 Then decide on next action:
@@ -473,7 +538,7 @@ Then decide on next action:
 #### Option A: Retry the Failed Phase
 
 ```bash
-ace-assign retry <phase-number>
+ace-assign retry <phase-number> --assignment "$ASSIGNMENT_TARGET"
 ```
 
 Creates a new phase linked to the original. Original remains visible as failed.
@@ -481,7 +546,7 @@ Creates a new phase linked to the original. Original remains visible as failed.
 #### Option B: Add a Fix Phase
 
 ```bash
-ace-assign add "fix-issue" --instructions "Fix the failing tests and verify"
+ace-assign add "fix-issue" --instructions "Fix the failing tests and verify" --assignment "$ASSIGNMENT_TARGET"
 ```
 
 New phase is inserted after the current in-progress phase.
@@ -502,7 +567,7 @@ Check status again:
 When `ace-assign status` shows all phases as `done`:
 
 ```bash
-ace-assign status
+ace-assign status --assignment "$ASSIGNMENT_TARGET"
 ```
 
 Example output:
@@ -620,8 +685,11 @@ Each phase has:
 ## Example Assignment Flow
 
 ```bash
+# 0. Pin assignment for this loop
+$ ASSIGNMENT_TARGET=8or5kx
+
 # 1. Check status
-$ ace-assign status
+$ ace-assign status --assignment "$ASSIGNMENT_TARGET"
 Phase 010: onboard [in_progress]
 
 # 2. Execute phase (has skill: onboard)
@@ -629,11 +697,11 @@ $ /as-onboard
 [Onboarding workflow runs...]
 
 # 3. Write report
-$ ace-assign finish --message onboard-complete.md
+$ ace-assign finish --message onboard-complete.md --assignment "$ASSIGNMENT_TARGET"
 Phase 010 marked done, advancing to 020
 
 # 4. Check status again
-$ ace-assign status
+$ ace-assign status --assignment "$ASSIGNMENT_TARGET"
 Phase 020: work-on-task [in_progress]
 
 # 5. Execute next phase (has skill: as-task-work)
@@ -641,9 +709,9 @@ $ /as-task-work 148
 [Task workflow runs...]
 
 # 6. Report and continue...
-$ ace-assign finish --message task-done.md
+$ ace-assign finish --message task-done.md --assignment "$ASSIGNMENT_TARGET"
 
 # 7. Eventually...
-$ ace-assign status
+$ ace-assign status --assignment "$ASSIGNMENT_TARGET"
 All phases complete!
 ```

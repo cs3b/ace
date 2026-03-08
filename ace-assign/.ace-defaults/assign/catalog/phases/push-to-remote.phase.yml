@@ -1,6 +1,12 @@
 name: push-to-remote
 skill: null
 description: Push all changes to the remote repository
+intent:
+  phrases:
+    - "push to remote"
+    - "push branch"
+    - "publish branch"
+    - "push changes"
 
 prerequisites:
   - name: work-on-task

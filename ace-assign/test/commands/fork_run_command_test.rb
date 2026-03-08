@@ -212,6 +212,51 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  def test_fork_run_marks_leaf_root_as_in_progress_before_launch
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        { "name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          writer = Ace::Assign::Molecules::PhaseWriter.new
+
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          leaf = state.find_by_number(fork_root)
+          @snapshot[:leaf_status] = leaf&.status
+
+          writer.mark_done(leaf.file_path, report_content: "Done", reports_dir: assignment.reports_dir) if leaf
+        end
+      end
+
+      capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
+        ).call(assignment: "#{result[:assignment].id}@020")
+      end
+
+      assert_equal :in_progress, launch_snapshot[:leaf_status]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_fork_run_reuses_existing_active_phase_in_subtree
     with_temp_cache do |cache_dir|
       phases = [

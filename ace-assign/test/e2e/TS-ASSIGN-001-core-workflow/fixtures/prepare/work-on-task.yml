@@ -1,5 +1,6 @@
 # Full task workflow: implement → release → PR → review cycles → reorganize → push
-# Usage: /as-assign-prepare work-on-task --taskref 123
+# Legacy fixture source for prepare path.
+# Public usage: /as-assign-create work-on-task --taskref 123
 
 name: work-on-task
 description: Work on a task with PR, review cycles, release, and clean history

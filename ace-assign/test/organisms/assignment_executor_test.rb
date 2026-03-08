@@ -3,6 +3,8 @@
 require_relative "../test_helper"
 
 class AssignmentExecutorTest < AceAssignTestCase
+  include Ace::TestSupport::ConfigHelpers
+
   def test_start_creates_assignment_and_phases
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -50,6 +52,13 @@ class AssignmentExecutorTest < AceAssignTestCase
         executor.status
       end
     end
+  end
+
+  def test_load_gem_defaults_include_codex_native_review_client
+    allowlist = Ace::Assign.load_gem_defaults.dig("subtree", "native_review_clients")
+
+    assert_includes allowlist, "claude"
+    assert_includes allowlist, "codex"
   end
 
   def test_advance_completes_phase_and_moves_to_next
@@ -616,17 +625,17 @@ class AssignmentExecutorTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       FileUtils.mkdir_p(File.join(project_root, ".claude", "skills", "ace_work-on-task"))
-      FileUtils.mkdir_p(File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
 
       File.write(File.join(project_root, ".claude", "skills", "ace_work-on-task", "SKILL.md"), <<~MD)
         ---
         name: as-task-work
         assign:
-          source: wfi://work-on-task
+          source: wfi://task/work
         ---
       MD
 
-      File.write(File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "work-on-task.wf.md"), <<~MD)
+      File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
           sub-phases:
@@ -645,83 +654,115 @@ class AssignmentExecutorTest < AceAssignTestCase
         { "name" => "work-on-task", "skill" => "as-task-work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review changes" }
       ]
+      workflow_paths = [
+        File.join(project_root, "ace-task", "handbook", "workflow-instructions")
+      ]
+      project_assign_config = File.join(project_root, ".ace", "assign", "config.yml")
+      FileUtils.mkdir_p(File.dirname(project_assign_config))
+      File.write(project_assign_config, {
+        "workflow_source_paths" => workflow_paths,
+        "subtree" => {
+          "pre_commit_review" => true,
+          "pre_commit_review_provider" => "auto",
+          "pre_commit_review_block" => false,
+          "native_review_clients" => %w[claude codex]
+        }
+      }.to_yaml)
       config_path = create_test_config(project_root, steps: phases)
 
-      Dir.chdir(project_root) do
-        original_project_root = ENV["PROJECT_ROOT_PATH"]
-        ENV["PROJECT_ROOT_PATH"] = project_root
-        Ace::Assign.reset_config!
-        executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-        result = executor.start(config_path)
-        state = result[:state]
-        numbers = state.all_numbers
+      with_real_config do
+        Dir.chdir(project_root) do
+          original_project_root = ENV["PROJECT_ROOT_PATH"]
+          original_home = ENV["HOME"]
+          Dir.mktmpdir("ace-assign-home") do |temp_home|
+            ENV["PROJECT_ROOT_PATH"] = project_root
+            ENV["HOME"] = temp_home
+            Ace::Assign.reset_config!
 
-        assert_includes numbers, "010"
-        assert_includes numbers, "010.01"
-        assert_includes numbers, "010.02"
-        assert_includes numbers, "010.03"
-        assert_includes numbers, "010.04"
-        assert_includes numbers, "010.05"
-        assert_includes numbers, "010.06"
-        assert_includes numbers, "010.07"
-        assert_includes numbers, "020"
+            executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+            result = executor.start(config_path)
+            state = result[:state]
+            numbers = state.all_numbers
 
-        parent_phase = state.find_by_number("010")
-        assert_equal "fork", parent_phase.context
-        assert_nil parent_phase.skill
-        assert_includes parent_phase.instructions, "Subtree root orchestrator phase."
-        assert_includes parent_phase.instructions, "ace-assign fork-run --assignment <assignment-id>@010"
-        assert_includes parent_phase.instructions, "Do work"
+            assert_includes numbers, "010"
+            assert_includes numbers, "010.01"
+            assert_includes numbers, "010.02"
+            assert_includes numbers, "010.03"
+            assert_includes numbers, "010.04"
+            assert_includes numbers, "010.05"
+            assert_includes numbers, "010.06"
+            assert_includes numbers, "010.07"
+            assert_includes numbers, "020"
 
-        onboard_phase = state.find_by_number("010.01")
-        task_load_phase = state.find_by_number("010.02")
-        plan_phase = state.find_by_number("010.03")
-        work_phase = state.find_by_number("010.04")
-        review_phase = state.find_by_number("010.05")
-        verify_phase = state.find_by_number("010.06")
-        release_phase = state.find_by_number("010.07")
+            parent_phase = state.find_by_number("010")
+            assert_equal "fork", parent_phase.context
+            assert_nil parent_phase.skill
+            assert_includes parent_phase.instructions, "Subtree root orchestrator phase."
+            assert_includes parent_phase.instructions, "ace-assign fork-run --assignment <assignment-id>@010"
+            assert_includes parent_phase.instructions, "Do work"
 
-        assert_equal "onboard", onboard_phase.name
-        assert_equal "plan-task", plan_phase.name
-        assert_equal "work-on-task", work_phase.name
-        assert_equal "task-load", task_load_phase.name
-        assert_equal "pre-commit-review", review_phase.name
-        assert_equal "verify-test", verify_phase.name
-        assert_equal "release-minor", release_phase.name
+            onboard_phase = state.find_by_number("010.01")
+            task_load_phase = state.find_by_number("010.02")
+            plan_phase = state.find_by_number("010.03")
+            work_phase = state.find_by_number("010.04")
+            review_phase = state.find_by_number("010.05")
+            verify_phase = state.find_by_number("010.06")
+            release_phase = state.find_by_number("010.07")
 
-        # First actionable child is activated (parent container is skipped)
-        assert_equal "010.01", result[:current].number
+            assert_equal "onboard", onboard_phase.name
+            assert_equal "plan-task", plan_phase.name
+            assert_equal "work-on-task", work_phase.name
+            assert_equal "task-load", task_load_phase.name
+            assert_equal "pre-commit-review", review_phase.name
+            assert_equal "verify-test", verify_phase.name
+            assert_equal "release-minor", release_phase.name
 
-        # Child phases materialize from phase catalog metadata
-        assert_equal "as-onboard", onboard_phase.skill
-        assert_equal "as-task-plan", plan_phase.skill
-        assert_equal "as-task-work", work_phase.skill
-        assert_nil review_phase.skill
-        assert_nil verify_phase.skill
-        assert_nil release_phase.skill
+            # First actionable child is activated (parent container is skipped)
+            assert_equal "010.01", result[:current].number
 
-        # Parent is fork context: children remain non-fork and execute in same delegated subtree process
-        assert_nil onboard_phase.context
-        assert_nil plan_phase.context
-        assert_nil work_phase.context
-        assert_nil review_phase.context
-        assert_nil task_load_phase.context
-        assert_nil verify_phase.context
-        assert_nil release_phase.context
+            # Child phases materialize from phase catalog metadata
+            assert_equal "as-onboard", onboard_phase.skill
+            assert_equal "as-task-plan", plan_phase.skill
+            assert_equal "as-task-work", work_phase.skill
+            assert_nil review_phase.skill
+            assert_nil verify_phase.skill
+            assert_nil release_phase.skill
 
-        # Child instructions include parent task context for parameter extraction
-        assert_includes work_phase.instructions, "Task context:"
-        assert_includes work_phase.instructions, "Do work"
-        assert_includes verify_phase.instructions, "Action:"
-        assert_includes verify_phase.instructions, "Identify modified packages"
-        assert_includes verify_phase.instructions, "ace-test --profile 6"
-        assert_includes review_phase.instructions, "run native `/review`"
-        assert_includes review_phase.instructions, "pre_commit_review_block"
-        assert_includes release_phase.instructions, "Action:"
-        assert_includes release_phase.instructions, "Run /as-release"
-        assert_includes release_phase.instructions, "release all modified packages"
-      ensure
-        Ace::Assign.reset_config!
+            # Parent is fork context: children remain non-fork and execute in same delegated subtree process
+            assert_nil onboard_phase.context
+            assert_nil plan_phase.context
+            assert_nil work_phase.context
+            assert_nil review_phase.context
+            assert_nil task_load_phase.context
+            assert_nil verify_phase.context
+            assert_nil release_phase.context
+
+            # Child instructions include parent task context for parameter extraction
+            assert_includes work_phase.instructions, "Task context:"
+            assert_includes work_phase.instructions, "Do work"
+            assert_includes verify_phase.instructions, "Action:"
+            assert_includes verify_phase.instructions, "Identify modified packages"
+            assert_includes verify_phase.instructions, "ace-test --profile 6"
+            assert_includes review_phase.instructions, "run native `/review`"
+            assert_includes review_phase.instructions, "Allowed native review clients: claude, codex."
+            assert_includes review_phase.instructions, "pre_commit_review_block"
+            assert_includes release_phase.instructions, "Action:"
+            assert_includes release_phase.instructions, "Run /as-release"
+            assert_includes release_phase.instructions, "release all modified packages"
+          end
+        ensure
+          if original_home.nil?
+            ENV.delete("HOME")
+          else
+            ENV["HOME"] = original_home
+          end
+          if original_project_root.nil?
+            ENV.delete("PROJECT_ROOT_PATH")
+          else
+            ENV["PROJECT_ROOT_PATH"] = original_project_root
+          end
+          Ace::Assign.reset_config!
+        end
       end
     end
   end

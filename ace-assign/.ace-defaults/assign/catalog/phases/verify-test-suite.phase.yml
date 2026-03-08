@@ -1,6 +1,13 @@
 name: verify-test-suite
 skill: as-test-verify-suite
 description: Run package test suites with profiling to verify correctness and performance
+intent:
+  phrases:
+    - "run tests"
+    - "run test suite"
+    - "verify tests"
+    - "test changes"
+    - "check tests"
 
 prerequisites:
   - name: work-on-task

@@ -89,6 +89,27 @@ class PhaseFileParserTest < AceAssignTestCase
     assert_equal "/tmp/010.pid.yml", result[:fork_pid_file]
   end
 
+  def test_extract_fields_with_batch_scheduler_metadata
+    parsed = {
+      frontmatter: {
+        "name" => "batch-items",
+        "status" => "pending",
+        "batch_parent" => true,
+        "parallel" => true,
+        "max_parallel" => "3",
+        "fork_retry_limit" => "1"
+      },
+      body: "Batch orchestration."
+    }
+
+    result = Ace::Assign::Atoms::PhaseFileParser.extract_fields(parsed)
+
+    assert_equal true, result[:batch_parent]
+    assert_equal true, result[:parallel]
+    assert_equal 3, result[:max_parallel]
+    assert_equal 1, result[:fork_retry_limit]
+  end
+
   def test_extract_fields_without_context
     parsed = {
       frontmatter: {

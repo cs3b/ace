@@ -51,6 +51,10 @@ module Ace
             status: (fm["status"] || "pending").to_sym,
             skill: fm["skill"],
             context: context, # "fork" triggers Task tool execution
+            batch_parent: parse_boolean(fm["batch_parent"]),
+            parallel: parse_boolean(fm["parallel"]),
+            max_parallel: parse_positive_integer(fm["max_parallel"]),
+            fork_retry_limit: parse_non_negative_integer(fm["fork_retry_limit"]),
             started_at: parse_time(fm["started_at"]),
             completed_at: parse_time(fm["completed_at"]),
             fork_launch_pid: parse_integer(fm["fork_launch_pid"]),
@@ -168,6 +172,34 @@ module Ace
           Array(value).map { |v| parse_integer(v) }.compact.uniq.sort
         end
         private_class_method :parse_integer_array
+
+        def self.parse_boolean(value)
+          return nil if value.nil?
+          return value if value == true || value == false
+
+          normalized = value.to_s.strip.downcase
+          return true if %w[true yes 1].include?(normalized)
+          return false if %w[false no 0].include?(normalized)
+
+          nil
+        end
+        private_class_method :parse_boolean
+
+        def self.parse_positive_integer(value)
+          parsed = parse_integer(value)
+          return nil if parsed.nil? || parsed <= 0
+
+          parsed
+        end
+        private_class_method :parse_positive_integer
+
+        def self.parse_non_negative_integer(value)
+          parsed = parse_integer(value)
+          return nil if parsed.nil? || parsed.negative?
+
+          parsed
+        end
+        private_class_method :parse_non_negative_integer
       end
     end
   end

@@ -1,0 +1,28 @@
+name: squash-changelog
+skill: as-docs-squash-changelog
+description: Squash multiple changelog entries into one before merge
+intent:
+  phrases:
+    - "squash changelog"
+    - "squash changelog entries"
+    - "consolidate changelog"
+    - "merge changelog entries"
+
+prerequisites:
+  - name: release
+    strength: recommended
+    reason: "Most useful after release notes have been generated"
+
+produces: [changelog-entries]
+consumes: [changelog-entries]
+
+context:
+  default: null
+  reason: "Changelog edits and git staging happen in main context"
+
+when_to_skip:
+  - "There is only one relevant changelog entry"
+  - "Changelog has already been consolidated for this branch"
+
+effort: trivial
+tags: [docs, changelog, release]
