@@ -68,11 +68,11 @@ class CLIPresetCompositionTest < AceTestCase
   # Helper: Load and merge multiple presets via API (equivalent to CLI `-p preset1 -p preset2`)
   # Tests CLI preset composition without subprocess overhead
   # @param preset_names [Array<String>] Names of presets to load and merge
-  # @return [String] The generated context content with composed presets
+  # @return [Ace::Bundle::Models::BundleData] The generated bundle with metadata and content
   def load_multiple_presets(preset_names)
     result = Ace::Bundle.load_multiple_presets(preset_names)
     refute result.metadata[:error], "API should not have errors: #{result.metadata[:error]}"
-    result.content
+    result
   end
 
   # Helper: Inspect merged config via API (equivalent to CLI `--inspect-config`)
@@ -124,16 +124,20 @@ class CLIPresetCompositionTest < AceTestCase
   def test_cli_loads_top_level_presets_in_single_preset
     # The "extended" preset has: context: presets: [base]
     # Loading just "extended" should compose with base preset
-    output = load_multiple_presets(%w[extended])
+    result = load_multiple_presets(%w[extended])
 
-    # Key verification: composition happened correctly
-    # The output should show that both presets were composed
-    assert_match(/composed.*true/i, output, "Should show that preset was composed")
-    assert_match(/composed_from.*base.*extended/i, output, "Should show composition chain includes both presets")
+    # Key verification: composition metadata is preserved on the BundleData object
+    assert_equal true, result.metadata[:composed], "Should mark the bundle as composed"
+    assert_equal %w[base extended], result.metadata[:composed_from],
+                 "Should record the full composition chain"
 
-    # Both preset bodies should be present
-    assert_match(/Base preset content/, output, "Should include base preset body")
-    assert_match(/Extended preset content/, output, "Should include extended preset body")
+    # Preset body content is stored in metadata, not injected into rendered bundle output
+    assert_match(/Base preset content/, result.metadata[:preset_content], "Should retain base preset body")
+    assert_match(/Extended preset content/, result.metadata[:preset_content], "Should retain extended preset body")
+
+    # Rendered output should contain merged file content from both presets
+    assert_match(/Test file 1 content/, result.content, "Should include base preset file content")
+    assert_match(/Test file 2 content/, result.content, "Should include extended preset file content")
   end
 
   def test_cli_top_level_presets_with_inspect_config

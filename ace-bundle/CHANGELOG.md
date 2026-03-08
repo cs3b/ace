@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.12] - 2026-03-08
+
+### Technical
+- Align top-level preset composition integration coverage with the current `BundleData` contract by asserting composition metadata via `result.metadata` and merged rendered output via `result.content`.
+
 ## [0.31.11] - 2026-03-04
 
 ### Changed
