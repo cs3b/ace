@@ -719,10 +719,20 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes review_phase.instructions, "pre_commit_review_block"
         assert_includes release_phase.instructions, "Action:"
         assert_includes release_phase.instructions, "Run /as-release"
+        assert_includes release_phase.instructions, "release all modified packages"
       ensure
         Ace::Assign.reset_config!
       end
     end
+  end
+
+  def test_child_action_instructions_support_release_suffix_variants
+    executor = Ace::Assign::Organisms::AssignmentExecutor.new
+
+    instructions = executor.send(:child_action_instructions, "release-patch-1", "Patch release follow-up")
+
+    assert_includes instructions, "Run /as-release"
+    assert_includes instructions, "release all modified packages"
   end
 
   def test_start_with_sub_phases_compacts_child_context_and_avoids_parent_boilerplate

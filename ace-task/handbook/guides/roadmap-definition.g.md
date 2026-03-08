@@ -417,7 +417,7 @@ The roadmap must be kept synchronized with release lifecycle changes through aut
 
 **2. Release Publication**
 
-- **When**: During step 15 (Update Roadmap) in publish-release workflow
+- **When**: During step 15 (Update Roadmap) in the `release/publish` workflow
 - **Action**: Remove completed release from roadmap table
 - **Trigger**: Execute release removal process defined above
 - **Commit**: Separate roadmap commit with message "docs(roadmap): remove completed v.X.Y.Z-codename from planned releases"
@@ -437,9 +437,9 @@ The roadmap must be kept synchronized with release lifecycle changes through aut
 - Roadmap updates MUST be committed separately from release scaffolding
 - Roadmap commit MUST complete successfully before proceeding to step 8
 
-**Publish-Release → Update-Roadmap**
+**Release/Publish → Update-Roadmap**
 
-- Publish-release workflow MUST update roadmap before final archival
+- The `release/publish` workflow MUST update roadmap before final archival
 - Roadmap cleanup MUST complete before documentation archival commit
 - Failed roadmap updates SHOULD trigger rollback consideration
 
@@ -461,7 +461,7 @@ The roadmap must be kept synchronized with release lifecycle changes through aut
 **Error Handling**
 
 - If roadmap update fails during draft-release: halt process and report error
-- If roadmap cleanup fails during publish-release: consider rollback of archival
+- If roadmap cleanup fails during `release/publish`: consider rollback of archival
 - If format validation fails: require manual correction before proceeding
 - If cross-reference validation fails: require dependency resolution
 
@@ -528,7 +528,7 @@ When roadmap updates fail during release lifecycle management, specific recovery
 
 **Publish-Release Workflow Failures**
 
-- **When**: Roadmap cleanup fails during step 15 of publish-release
+- **When**: Roadmap cleanup fails during step 15 of `release/publish`
 - **Impact**: Completed release remains in roadmap (creates staleness)
 - **Response**:
   1. Consider halting archival process if roadmap consistency is critical
