@@ -27,6 +27,8 @@ module Ace
             content: doc.raw_body
           )
         rescue StandardError => e
+          return nil if e.message.include?("No frontmatter found")
+
           warn "Error loading document #{path}: #{e.message}"
           nil
         end

@@ -51,6 +51,8 @@ ace-docs status [OPTIONS]
 - `--type TYPE` - Filter by document type (guide, api, workflow, etc.)
 - `--needs-update` - Show only documents needing update
 - `--freshness STATUS` - Filter by freshness (current, stale, outdated)
+- `--package PACKAGE` - Scope to one or more package roots (repeatable)
+- `--glob PATTERN` - Scope by project-root glob (repeatable)
 
 **Output:**
 - Table showing document name, type, last updated date, and freshness status
@@ -66,6 +68,13 @@ ace-docs status --type guide --needs-update
 
 # Show stale documents
 ace-docs status --freshness stale
+
+# Scope to one package
+ace-docs status --package ace-assign
+
+# Scope by glob (bare path is normalized)
+ace-docs status --glob ace-assign
+ace-docs status --glob "ace-assign/docs/**/*.md"
 ```
 
 ### discover Command
@@ -215,6 +224,8 @@ ace-docs update FILE [OPTIONS]
 **Options:**
 - `--set key:value` - Fields to update (can be used multiple times)
 - `--preset PRESET` - Update all documents matching preset
+- `--package PACKAGE` - Scope updates to package(s) (repeatable)
+- `--glob PATTERN` - Scope updates by glob(s) (repeatable)
 
 **Supported Fields:**
 - `last-updated` - Update date/datetime (see Timestamp Formats below)
@@ -245,6 +256,12 @@ ace-docs update docs/api.md --set last-updated:now --set version:2.0
 
 # Bulk update by preset with date+time
 ace-docs update --preset standard --set last-checked:now
+
+# Bulk update scoped to one package
+ace-docs update --package ace-assign --set last-checked:today
+
+# Bulk update scoped by glob
+ace-docs update --glob "ace-assign/docs/**/*.md" --set last-updated:today
 ```
 
 ### validate Command
@@ -262,6 +279,8 @@ ace-docs validate [FILE|PATTERN] [OPTIONS]
 - `--syntax` - Run syntax validation using linters (delegates to ace-lint when available)
 - `--semantic` - **NEW in v0.3.0** - Run semantic validation using LLM
 - `--all` - Run all validation types (default)
+- `--package PACKAGE` - Scope validation to package(s) (repeatable)
+- `--glob PATTERN` - Scope validation by glob(s) (repeatable)
 
 **Validation Checks:**
 
@@ -302,6 +321,12 @@ ace-docs validate --semantic
 
 # Validate with both
 ace-docs validate docs/guide.md --all
+
+# Validate only docs in one package
+ace-docs validate --package ace-assign --all
+
+# Validate only a scoped glob
+ace-docs validate --glob "ace-assign/docs/**/*.md" --syntax
 ```
 
 ## Configuration
