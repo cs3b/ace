@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **ace-assign v0.25.0**: Added explicit phrase-intent metadata for compose phase resolution and introduced new `squash-changelog` and `rebase-with-main` catalog phases mapped to existing docs/git skills.
 - **ace-assign v0.26.0**: Added batch scheduling metadata and `--max-parallel` contract guidance for controlled fork fan-out orchestration.
+- **ace-compressor v0.13.0**: Added explicit degraded-success fallback metadata (`FALLBACK|source=...|from=agent|to=exact|...`) for agent-mode provider/validation failures.
 - **ace-demo v0.8.0**: Added `ace-demo retime` for postprocessing GIF/MP4/WebM recordings into faster playback variants with validated playback speeds.
 - **ace-demo v0.8.0**: Added a reusable `assign-drive-showcase` demo tape to demonstrate batch delegation and assignment driving flow.
 - **ace-docs v0.23.0**: Added package/glob scoped document selection via repeatable `--package` and `--glob` options across status/discover/update/validate/analyze-consistency workflows.
@@ -38,6 +39,8 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.26.0**: Updated batch/drive workflow guidance so sequential mode still forks each item and parallel mode documents retry-then-stop handling.
 - **ace-assign v0.26.1**: Clarified `assign/drive` delegation boundaries to forbid re-running `fork-run` for the same already-entered scoped root.
 - **ace-assign v0.26.2**: Clarified batch-parallel scheduling semantics so `max_parallel` is treated as a rolling in-flight concurrency cap with immediate slot refill guidance in assignment drive workflows.
+- **ace-compressor v0.13.0**: Changed agent failure handling to emit exact-mode fallback artifacts with fidelity evidence and zero-exit degraded semantics.
+- **ace-compressor v0.13.0**: Updated cache contract keying and CLI/runtime reporting so degraded agent fallback is both machine-detectable and user-visible.
 - **ace-demo v0.8.0**: Extended `ace-demo record` with playback-speed postprocessing (CLI + config fallback) while preserving original artifacts and attaching retimed outputs for PR demo uploads.
 - **ace-docs v0.23.0**: Applied scoped selection during registry discovery and updated docs/update workflow guidance and CLI usage examples for scoped operations.
 
@@ -46,6 +49,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.26.1**: Added command-level regression tests for leaf fork activation and scoped done-phase status rendering.
 - **ace-assign v0.26.2**: Added/normalized frontmatter tracking on package user/guide docs (`README.md`, `docs/usage.md`, `handbook/guides/fork-context.g.md`) for consistent `ace-docs` management.
 - **ace-bundle v0.31.12**: Updated top-level preset composition integration coverage to assert `BundleData` composition metadata via `metadata` while keeping rendered output assertions content-focused.
+- **ace-compressor v0.13.0**: Expanded organism/runner/command regression coverage for degraded fallback output and exit-code behavior.
 - **ace-demo v0.8.0**: Added parser/retimer test coverage and updated demo docs/workflows for retime setup, usage, and postprocess defaults.
 - **ace-docs v0.23.0**: Added scope normalization and scoped selection regression tests, and reduced expected no-frontmatter loader noise in scoped command output.
 - **ace-review v0.43.8**: Added regression coverage for gem-default preset discovery and temp-dir file-path context extraction.
@@ -56,6 +60,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **ace-handbook v0.10.0**: Added `release/publish` as the coordinated multi-package release workflow, including modified-package auto-detection and shared package/root changelog updates.
 - **ace-assign v0.24.0**: Added `codex` to the default subtree native-review client allow-list so `pre-commit-review` can run native `/review` in Codex runtimes.
+- **ace-compressor v0.12.0**: Added a dedicated single-source agent minification template resource and handbook template path for prompt-composed `--mode agent` execution.
+
+### Changed
+- **ace-compressor v0.12.0**: Hardened agent-mode output contract validation (required record families, numeric fidelity, semantic payload checks, summary-collapse rejection, and size gate vs exact baseline).
+- **ace-compressor v0.12.0**: Added single-source normalization/guardrails for source scopes and rule-heavy semantic backfill so `docs/vision.md`, `docs/architecture.md`, and `docs/decisions.md` succeed under `--mode agent`.
 
 ### Fixed
 - **ace-assign v0.23.1**: Fixed assignment release guidance so `release*` phases publish all modified packages through `/as-release`, including suffixed review-cycle release steps.
@@ -63,17 +72,24 @@ All notable changes to this project will be documented in this file.
 ### Technical
 - **ace-task v0.22.2**: Updated project-management and roadmap docs to use the canonical `release/publish` workflow references.
 - **ace-assign v0.24.0**: Updated assignment-executor regression fixtures to the current `wfi://task/work` assign-source and `ace-task` workflow-path layout.
+- **ace-compressor v0.12.0**: Expanded agent-mode organism regression coverage for command/example retention, numeric token validation, summary/semantic failure paths, rule-heavy success, and size-gate behavior.
 
 ## [0.9.796] - 2026-03-08
 
+### Added
+- **ace-compressor v0.11.0**: Added `agent` mode spike path with protocol-composed prompt assembly (`ace-bundle`), `ace-llm` execution, validator-visible fidelity/refusal markers, and explicit concept-inventory records.
+
 ### Changed
 - **ace-assign v0.23.0**: Consolidated public assignment guidance on `as-assign-create` + `as-assign-drive`, documented workflow-level `--run` handoff behavior, and demoted legacy `as-assign-prepare` / `as-assign-start` skills from public invocability.
+- **ace-compressor v0.11.0**: Extended CLI/runner mode support to include `--mode agent` and mode-aware refusal messaging.
+- **ace-compressor v0.11.0**: Updated usage docs for representative single-source agent validation flow and deferred-scope guidance.
 
 ### Fixed
 - **ace-task v0.22.1**: Removed stale `task.plan.cli_args` provider mapping from `ace-task plan` so plan generation now follows `provider:model@preset` directly after migration.
 
 ### Technical
 - **ace-idea v0.14.1**: Removed obsolete doctor CLI test coverage for deleted `provider_cli_args` behavior and corrected quiet-mode unhealthy test block closure.
+- **ace-compressor v0.11.0**: Added focused organism/runner/command tests for agent-mode pass/fail/provider-unavailable scenarios.
 
 ## [0.9.795] - 2026-03-08
 

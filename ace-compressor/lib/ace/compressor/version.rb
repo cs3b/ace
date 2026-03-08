@@ -2,6 +2,6 @@
 
 module Ace
   module Compressor
-    VERSION = "0.10.3"
+    VERSION = "0.13.0"
   end
 end

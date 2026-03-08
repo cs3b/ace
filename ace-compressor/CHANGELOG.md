@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-08
+
+### Added
+- Added explicit degraded-success fallback metadata (`FALLBACK|source=...|from=agent|to=exact|...`) for `--mode agent` provider/validation failure paths.
+- Added runner/command plumbing for fallback detection and human-readable degraded notices while preserving machine-readable fallback records.
+
+### Changed
+- Changed agent failure handling to degrade to exact-mode output with fidelity failure evidence instead of refusal artifacts.
+- Changed usage contract/docs to describe agent degraded fallback (`FALLBACK|...`) and exit `0` behavior.
+- Changed agent-mode cache manifest contract keying to refresh stale pre-fallback artifacts.
+
+### Technical
+- Expanded organism/runner/command regression coverage for degraded agent fallback behavior and zero-exit verification.
+
+## [0.12.0] - 2026-03-08
+
+### Added
+- Added a dedicated single-source agent minification prompt template (`handbook/templates/agent/minify-single-source.template.md`) for resource-driven prompt composition.
+
+### Changed
+- Hardened `agent` single-source output contract by replacing plan-template prompt composition with a dedicated minification template and stronger success-path fidelity checks.
+- Expanded agent-mode validation to reject summary-only output, enforce numeric fidelity, and require compressed output to be smaller than exact baseline.
+
+### Technical
+- Added agent-mode regression coverage for required command/example retention, numeric token preservation, summary-collapse rejection, and size gate behavior.
+
+## [0.11.0] - 2026-03-08
+
+### Added
+- Added `agent` compression mode with protocol-composed prompt flow (`ace-bundle`), `ace-llm` invocation, and validator-visible concept inventory markers.
+- Added `AgentCompressor` organism and targeted tests for pass/fail/provider-unavailable spike behavior.
+
+### Changed
+- Extended CLI and compression runner mode contracts to support `--mode agent` routing and mode-aware refusal messaging.
+- Updated usage documentation with the single-source agent spike contract, expected output markers, and refusal/fallback guidance.
+
+### Technical
+- Expanded command and runner regression coverage for agent-mode acceptance, refusal handling, and metadata contract stability.
+
 ## [0.10.3] - 2026-03-07
 
 ### Technical

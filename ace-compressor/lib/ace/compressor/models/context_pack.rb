@@ -38,6 +38,22 @@ module Ace
           "GUIDANCE|source=#{escape(source)}|retry_with=#{escape(retry_with)}"
         end
 
+        def self.fallback_line(*args, **kwargs)
+          return legacy_fallback_line(*args) if kwargs.empty?
+
+          source = kwargs.fetch(:source)
+          from = kwargs.fetch(:from)
+          to = kwargs.fetch(:to)
+          reason = kwargs.fetch(:reason)
+          check = kwargs[:check]
+          details = kwargs[:details]
+
+          line = "FALLBACK|source=#{escape(source)}|from=#{escape(from)}|to=#{escape(to)}|reason=#{escape(reason)}"
+          line += "|check=#{escape(check)}" unless check.to_s.strip.empty?
+          line += "|details=#{escape(details)}" unless details.to_s.strip.empty?
+          line
+        end
+
         def self.section_line(title)
           "SEC|#{escape(title)}"
         end
@@ -146,7 +162,7 @@ module Ace
 
         def self.unresolved_line_for_source(_source_id, kind, raw); unresolved_line(kind, raw); end
 
-        def self.fallback_line(_source_id, _kind, raw); "CODE|fallback|#{escape(raw)}"; end
+        def self.legacy_fallback_line(_source_id, _kind, raw); "CODE|fallback|#{escape(raw)}"; end
       end
     end
   end
