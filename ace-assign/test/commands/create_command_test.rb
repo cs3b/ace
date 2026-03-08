@@ -68,7 +68,11 @@ class CreateCommandTest < AceAssignTestCase
 
   def test_create_prints_created_path_relative_to_pwd_when_possible
     with_temp_cache do |tmp_dir|
+      previous_project_root = ENV["PROJECT_ROOT_PATH"]
       begin
+        ENV["PROJECT_ROOT_PATH"] = tmp_dir
+        Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
+
         Dir.chdir(tmp_dir) do
           hidden_jobs_dir = File.join(".ace-local", "assign", "jobs")
           FileUtils.mkdir_p(hidden_jobs_dir)
@@ -86,6 +90,12 @@ class CreateCommandTest < AceAssignTestCase
           assert_includes created_line, ".ace-local/assign/"
         end
       ensure
+        if previous_project_root.nil?
+          ENV.delete("PROJECT_ROOT_PATH")
+        else
+          ENV["PROJECT_ROOT_PATH"] = previous_project_root
+        end
+        Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
         Ace::Assign.reset_config!
       end
     end
