@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.6] - 2026-03-08
+
+### Fixed
+- Rebalanced active phase selection after `add --child` when injecting under the currently active phase so execution moves into the newly created child subtree.
+
+### Technical
+- Added `PhaseWriter#mark_pending` to clear runtime-only phase state when demoting blocked active parents.
+- Added regression coverage for active-phase rebalance behavior in parent/child/grandchild injection flows and for the new pending-state writer helper.
+- Hardened TS-ASSIGN-002 Goal 5 artifacts to require JSON status oracles for scoped and unscoped assertions, reducing false positives from report synthesis drift.
+
 ## [0.22.5] - 2026-03-07
 
 ### Technical

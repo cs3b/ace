@@ -90,6 +90,38 @@ class PhaseWriterTest < AceAssignTestCase
     end
   end
 
+  def test_mark_pending_clears_runtime_state
+    with_temp_cache do |cache_dir|
+      phases_dir = File.join(cache_dir, "phases")
+      FileUtils.mkdir_p(phases_dir)
+
+      writer = Ace::Assign::Molecules::PhaseWriter.new
+      file_path = writer.create(
+        phases_dir: phases_dir,
+        number: "010",
+        name: "init",
+        instructions: "Do it.",
+        status: :pending
+      )
+
+      writer.mark_in_progress(file_path)
+      writer.update_frontmatter(file_path, {
+        "completed_at" => Time.now.utc.iso8601,
+        "error" => "stale error",
+        "stall_reason" => "stale stall"
+      })
+
+      writer.mark_pending(file_path)
+
+      content = File.read(file_path)
+      assert_includes content, "status: pending"
+      refute_includes content, "started_at:"
+      refute_includes content, "completed_at:"
+      refute_includes content, "error:"
+      refute_includes content, "stall_reason:"
+    end
+  end
+
   def test_mark_done_with_report
     with_temp_cache do |cache_dir|
       phases_dir = File.join(cache_dir, "phases")
