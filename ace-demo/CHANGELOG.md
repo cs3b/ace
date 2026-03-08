@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-08
+
+### Added
+- Added `retime` command: `ace-demo retime <file> --playback-speed <1x|2x|4x|8x>` to postprocess GIF/MP4/WebM recordings into faster playback variants.
+- Added playback speed parser and media retime engine (`ffmpeg`-based) with strict speed validation and format-aware processing.
+- Added `assign-drive-showcase` project demo tape under `.ace/demo/tapes/` for delegation/drive walkthrough recording.
+
+### Changed
+- Extended `record` with `--playback-speed` and config fallback (`record.postprocess.playback_speed`) to auto-generate retimed artifacts while preserving originals.
+- Updated `record --pr` behavior to attach the retimed artifact when playback postprocess is active.
+- Updated docs/workflows (`README`, `docs/usage.md`, `docs/setup.md`, `demo/record.wf.md`) to cover retime usage and postprocess configuration.
+
 ## [0.7.2] - 2026-03-05
 
 ### Fixed

@@ -16,6 +16,7 @@ update:
 
 **Key Features:**
 - Run VHS `.tape` scripts to produce deterministic GIF/MP4/WebM recordings
+- Post-process existing recordings into faster playback variants with `retime`
 - Resolve tape files via config cascade (built-in presets, user, project, direct path)
 - Upload recordings to GitHub release assets for stable URLs
 - Post PR comments with inline embedded demo GIFs
@@ -270,18 +271,21 @@ echo "<command>" | ace-demo record <name> [inline options]
 | `--width` | | Terminal width in pixels (inline mode) | `960` |
 | `--height` | | Terminal height in pixels (inline mode) | `480` |
 | `--font-size` | | Font size (inline mode) | `16` |
+| `--playback-speed` | | Postprocess speed: `1x`, `2x`, `4x`, `8x` | (none) |
 
 **Examples:**
 ```bash
 ace-demo record hello                                       # → .ace-local/demo/hello.gif
 ace-demo record hello --format mp4                          # → .ace-local/demo/hello.mp4
 ace-demo record hello --output /tmp/demo.gif                # → /tmp/demo.gif
+ace-demo record hello --playback-speed 4x                   # + hello-4x.gif
 ace-demo record ace-test --pr 123                           # record + attach to PR
 ace-demo record ace-test --pr 123 --dry-run                 # preview only
 ace-demo record my-demo -- "git status" "make deploy"       # inline → session dir
 ace-demo record my-demo --dry-run -- "echo hello"           # preview tape content
 echo "echo hello" | ace-demo record my-demo                 # stdin
 TEST_PATH=ace-bundle ace-demo record test                   # pass env var to tape
+ace-demo retime .ace-local/demo/hello.gif --playback-speed 8x
 ```
 
 **Environment variables:** all env vars in the calling shell are inherited by VHS and its shell session. Use `$VAR` in `Type` directives within `.tape` files to reference them.
@@ -291,6 +295,8 @@ TEST_PATH=ace-bundle ace-demo record test                   # pass env var to ta
 Recorded: .ace-local/demo/<session-id>/<name>.gif
 Tape: .ace-local/demo/<session-id>/<name>.tape
 ```
+
+When playback postprocess is active (via `--playback-speed` or config), `record` keeps the original output and generates an additional `-<speed>` variant (for example `hello-4x.gif`). If `--pr` is used, the retimed file is attached.
 
 **Exit codes:**
 - `0`: Recording (and attachment) succeeded
@@ -410,6 +416,31 @@ echo "git status" | ace-demo create stdin-demo
 
 ---
 
+### `ace-demo retime <file>`
+
+Create a faster playback variant from an existing recording file.
+
+**Syntax:**
+```bash
+ace-demo retime <file> --playback-speed <1x|2x|4x|8x> [--output <path>] [--dry-run]
+```
+
+**Options:**
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--playback-speed` | | Target speed: `1x`, `2x`, `4x`, `8x` | — |
+| `--output` | `-o` | Output file path | `<input>-<speed>.<ext>` |
+| `--dry-run` | `-n` | Preview without writing | `false` |
+
+**Examples:**
+```bash
+ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x
+ace-demo retime /tmp/demo.mp4 --playback-speed 8x --output /tmp/demo-fast.mp4
+```
+
+---
+
 ## Configuration
 
 ### Tape Discovery Cascade
@@ -447,6 +478,18 @@ Sleep 2s
 ### Output Directory
 
 Recordings default to `.ace-local/demo/`. The directory is created automatically if missing.
+
+### Record Postprocess Defaults
+
+Configure automatic retime after `record` in `.ace/demo/config.yml`:
+
+```yaml
+record:
+  postprocess:
+    playback_speed: 4x
+```
+
+CLI `--playback-speed` overrides this value for a single command.
 
 ---
 

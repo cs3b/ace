@@ -1,6 +1,6 @@
 ---
 name: as-assign-create
-description: Create a new assignment from a rendered hidden spec
+description: Public assignment creation workflow (create, optionally handoff to drive with --run)
 # bundle: wfi://assign/create
 # agent: general-purpose
 user-invocable: true
@@ -10,7 +10,7 @@ allowed-tools:
   - Read
   - Write
   - AskUserQuestion
-argument-hint: "[work-on-task --taskref <id>]"
+argument-hint: "[instructions|preset [params] [--run]]"
 last_modified: 2026-02-11
 source: ace-assign
 ---
