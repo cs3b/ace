@@ -145,13 +145,14 @@ When the sandbox is already set up (via Ruby `SetupExecutor`):
 /as-e2e-run <package> <test-id> --sandbox <path> --run-id <id>
 ```
 
-### Running Multiple Tests (Parallel)
+### Running Multiple Tests (Generic Fan-Out)
 
 ```
-/as-e2e-runs <package>
-/as-e2e-runs <package> --sequential
-/as-e2e-runs --all
+/as-assign-run-in-batches "/as-e2e-run ace-lint {{item}}" --items TS-LINT-001,TS-LINT-002 --run
+/as-assign-run-in-batches "/as-e2e-run ace-lint {{item}}" --items TS-LINT-001,TS-LINT-002 --sequential --run
 ```
+
+`--items` is required and explicit by design. Enumerate the test IDs you want to run.
 
 ### Creating a New Test Scenario
 

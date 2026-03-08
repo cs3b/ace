@@ -67,7 +67,7 @@ When this workflow is invoked directly (not via CLI pipeline), the agent perform
 
 ## Subagent Mode
 
-When invoked as a subagent (via Task tool from `/as-e2e-runs` orchestrator):
+When invoked as a subagent (via a batch orchestrator such as `/as-assign-run-in-batches`):
 
 - Each subagent runs in a clean context with no shared state
 - Timestamp IDs ensure unique report paths (no collisions)
