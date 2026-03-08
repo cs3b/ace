@@ -61,6 +61,39 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes result[:stdout], "FILE|vision.md"
   end
 
+  def test_success_on_single_file_agent_mode_with_stubbed_agent_compressor
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
+
+    fake = Class.new do
+      attr_reader :ignored_paths
+
+      def initialize(*)
+        @ignored_paths = []
+      end
+
+      def resolve_sources
+        [File.expand_path("vision.md")]
+      end
+
+      def compress_sources(_sources)
+        [
+          "H|ContextPack/3|agent",
+          "FILE|vision.md",
+          "SUMMARY|Compressed by agent spike",
+          "LIST|validated_concepts|[prompt_composed_flow,structured_input_contract,validator_visible_outcome]"
+        ].join("\n")
+      end
+    end
+
+    Ace::Compressor::Organisms::AgentCompressor.stub(:new, ->(*) { fake.new }) do
+      result = invoke([path, "--mode", "agent", "--format", "stdio"])
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "H|ContextPack/3|agent"
+      assert_includes result[:stdout], "FILE|vision.md"
+    end
+  end
+
   def test_success_on_single_file_compact_mode_emits_aggressive_policy
     path = File.join(@tmp, "vision.md")
     File.write(path, <<~MD)
@@ -153,6 +186,53 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes result[:stdout], "REFUSAL|source=decisions.md|reason=rule-heavy|failed_check=compact_preflight"
     assert_includes result[:stdout], "GUIDANCE|source=decisions.md|retry_with=--mode exact"
     assert_includes result[:stderr], "One or more sources were refused in compact mode"
+  end
+
+  def test_error_on_unsupported_mode_lists_agent
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
+
+    result = invoke([path, "--mode", "invalid"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Unsupported mode 'invalid'"
+    assert_includes result[:stderr], "--mode agent"
+  end
+
+  def test_agent_mode_degraded_fallback_reports_notice_without_non_zero_exit
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
+
+    fake = Class.new do
+      attr_reader :ignored_paths
+
+      def initialize(*)
+        @ignored_paths = []
+      end
+
+      def resolve_sources
+        [File.expand_path("vision.md")]
+      end
+
+      def compress_sources(_sources)
+        [
+          "H|ContextPack/3|exact",
+          "FILE|vision.md",
+          "FIDELITY|source=vision.md|status=fail|check=provider_unavailable|details=Agent provider unavailable",
+          "FALLBACK|source=vision.md|from=agent|to=exact|reason=provider_unavailable|check=provider_unavailable",
+          "RULE|Agents can run CLI commands"
+        ].join("\n")
+      end
+    end
+
+    Ace::Compressor::Organisms::AgentCompressor.stub(:new, ->(*) { fake.new }) do
+      result = invoke([path, "--mode", "agent", "--format", "stdio"])
+
+      assert_nil result[:result]
+      assert_includes result[:stdout], "H|ContextPack/3|exact"
+      assert_includes result[:stdout], "FALLBACK|source=vision.md|from=agent|to=exact|reason=provider_unavailable"
+      assert_includes result[:stderr], "Agent mode degraded to exact output"
+    end
   end
 
   def test_success_on_multiple_files_exact_mode

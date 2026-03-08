@@ -12,6 +12,7 @@ module Ace
         PACK_EXTENSION = ".pack"
         METADATA_EXTENSION = ".json"
         SHORT_KEY_LENGTH = 12
+        AGENT_CACHE_CONTRACT = "agent-fallback-exact-v1"
 
         def initialize(cache_root: nil, project_root: Dir.pwd)
           @cache_root = File.expand_path(cache_root || default_cache_root, project_root)
@@ -34,6 +35,7 @@ module Ace
             "mode" => mode,
             "sources" => source_entries
           }
+          payload["mode_contract"] = AGENT_CACHE_CONTRACT if mode.to_s == "agent"
 
           {
             "key" => Digest::SHA256.hexdigest(JSON.generate(payload)),

@@ -11,6 +11,7 @@ require_relative "compressor/atoms/compact_policy_classifier"
 require_relative "compressor/molecules/cache_store"
 require_relative "compressor/organisms/exact_compressor"
 require_relative "compressor/organisms/compact_compressor"
+require_relative "compressor/organisms/agent_compressor"
 require_relative "compressor/organisms/compression_runner"
 require_relative "compressor/cli"
 

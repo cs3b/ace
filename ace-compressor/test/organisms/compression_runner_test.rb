@@ -68,4 +68,69 @@ class CompressionRunnerTest < AceCompressorTestCase
     assert refreshed["packed_bytes"] < refreshed["original_bytes"]
     assert refreshed["packed_lines"] < refreshed["original_lines"]
   end
+
+  def test_agent_mode_routes_to_agent_compressor_and_preserves_metadata_contract
+    path = File.join(@tmp, "input.md")
+    File.write(path, "# Heading\n\nContent")
+
+    fake = Class.new do
+      attr_reader :ignored_paths
+
+      def initialize(*)
+        @ignored_paths = []
+      end
+
+      def resolve_sources
+        [File.expand_path("input.md")]
+      end
+
+      def compress_sources(_sources)
+        "H|ContextPack/3|agent\nFILE|input.md\nSUMMARY|agent output\n"
+      end
+    end
+
+    Ace::Compressor::Organisms::AgentCompressor.stub(:new, ->(*) { fake.new }) do
+      result = Ace::Compressor::Organisms::CompressionRunner.new([path], mode: "agent", format: "stats").call
+
+      assert_includes result[:console_output], "Mode:     agent"
+      assert_equal 0, result[:exit_code]
+      assert_empty result[:refusal_lines]
+      assert_empty result[:fallback_lines]
+    end
+  end
+
+  def test_agent_mode_degraded_fallback_reports_fallback_lines_and_zero_exit
+    path = File.join(@tmp, "input.md")
+    File.write(path, "# Heading\n\nContent")
+
+    fake = Class.new do
+      attr_reader :ignored_paths
+
+      def initialize(*)
+        @ignored_paths = []
+      end
+
+      def resolve_sources
+        [File.expand_path("input.md")]
+      end
+
+      def compress_sources(_sources)
+        [
+          "H|ContextPack/3|exact",
+          "FILE|input.md",
+          "FALLBACK|source=input.md|from=agent|to=exact|reason=validation_failed|check=agent_validation",
+          "FACT|Content"
+        ].join("\n")
+      end
+    end
+
+    Ace::Compressor::Organisms::AgentCompressor.stub(:new, ->(*) { fake.new }) do
+      result = Ace::Compressor::Organisms::CompressionRunner.new([path], mode: "agent", format: "stdio").call
+
+      assert_equal 0, result[:exit_code]
+      assert_empty result[:refusal_lines]
+      assert_equal 1, result[:fallback_lines].size
+      assert_includes result[:console_output], "FALLBACK|source=input.md|from=agent|to=exact|reason=validation_failed"
+    end
+  end
 end
