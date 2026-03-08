@@ -1,6 +1,6 @@
 ---
 doc-type: how-to-guide
-purpose: Usage guide for ace-compressor CLI tool — exact and compact context compression to ContextPack/3.
+purpose: Usage guide for ace-compressor CLI tool — exact, compact, and agent context compression to ContextPack/3.
 update:
   update_frequency: on-change
   last-updated: '2026-03-07'
@@ -21,6 +21,8 @@ minimal, semantic representation that preserves document structure and meaning w
   converted into compact typed records.
 - **Compact mode**: Policy-driven narrative compaction with runtime metadata:
   `POLICY|class=<...>|action=<...>`.
+- **Agent mode (single-source)**: Prompt-guided minification for one source with validator-visible fidelity gates.
+- **Agent degraded fallback**: Provider/validator failures degrade to exact output with explicit `FALLBACK|...` metadata.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
 - **Provenance**: `FILE|` and `SEC|` records establish scope inline; no separate source table is emitted.
 - **Fidelity markers**: Images emit `U|...`; compact reductions emit explicit `TABLE|...|strategy=...`,
@@ -34,6 +36,9 @@ ace-compressor docs/vision.md --mode exact
 
 # Compact narrative docs with runtime policy metadata
 ace-compressor docs/vision.md --mode compact --format stdio
+
+# Agent mode for one representative source
+ace-compressor docs/architecture.md --mode agent --verbose
 
 # Expected output:
 /absolute/path/to/.ace-local/compressor/exact/docs/vision.<hash>.exact.pack
@@ -52,6 +57,9 @@ ace-compressor <file> --mode exact
 # Single file (compact mode)
 ace-compressor <file> --mode compact
 
+# Single file (agent mode)
+ace-compressor <file> --mode agent
+
 # Multiple files
 ace-compressor file1.md file2.md --mode exact
 
@@ -69,7 +77,7 @@ ace-compressor docs/ --mode exact --verbose
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--mode` | | Compression mode (`exact`, `compact`) | `exact` |
+| `--mode` | | Compression mode (`exact`, `compact`, `agent`) | `exact` |
 | `--output` | `-o` | Save output to file or directory path | canonical cache path |
 | `--format` | `-f` | Console output format: `path`, `stdio`, `stats` | `path` |
 | `--verbose` | `-v` | Show skipped files during directory traversal | `false` |
@@ -119,6 +127,10 @@ Every run emits a stream of pipe-delimited records:
 | `H|` | `H\|ContextPack/3\|exact` | Header — one per run |
 | `FILE|` | `FILE\|docs/vision.md` | Source scope marker |
 | `POLICY|` | `POLICY\|class=narrative-heavy\|action=aggressive_compact` | Compact-mode runtime policy decision |
+| `FIDELITY|` | `FIDELITY\|source=docs/architecture.md\|status=pass\|check=agent_validation` | Fidelity gate status (compact/agent) |
+| `REFUSAL|` | `REFUSAL\|source=docs/architecture.md\|reason=rule-heavy\|failed_check=compact_preflight` | Explicit refusal when compact-mode policy gates fail |
+| `FALLBACK|` | `FALLBACK\|source=docs/architecture.md\|from=agent\|to=exact\|reason=validation_failed\|check=agent_validation` | Explicit degraded-success marker for agent fallback |
+| `GUIDANCE|` | `GUIDANCE\|source=docs/architecture.md\|retry_with=--mode exact` | Retry guidance for refused output |
 | `SEC|` | `SEC\|vision` | Section heading |
 | `SUMMARY|` | `SUMMARY\|A high-level statement` | Overview prose |
 | `FACT|` | `FACT\|A preserved factual statement` | Statement with operational content |
@@ -215,6 +227,29 @@ ace-compressor docs/vision.md --mode exact --output .ace-local/export/
 ```bash
 ace-compressor docs/vision.md --mode exact --format stdio
 ```
+
+### Scenario 7: Agent single-source minification path
+
+**Goal**: Produce compressed `ContextPack/3|agent` output for one source while preserving critical structured records.
+
+```bash
+ace-compressor docs/architecture.md --mode agent --format stdio
+```
+
+**Expected output** (excerpt):
+```
+H|ContextPack/3|agent
+FILE|docs/architecture.md
+...
+LIST|validated_concepts|[prompt_composed_flow,structured_input_contract,validator_visible_outcome]
+LIST|deferred_concepts|[corpus_level_behavior,cross_source_optimization,final_ratio_tuning]
+```
+
+If provider access fails or validation detects missing required records, output degrades to exact and includes:
+- `FIDELITY|...|status=fail`
+- `FALLBACK|...|from=agent|to=exact|...`
+
+Degraded agent fallback exits `0` and prints a human-readable notice on stderr.
 
 ## Error Conditions
 
