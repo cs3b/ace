@@ -64,14 +64,15 @@ module Ace
             dir1 = File.join(@test_dir, "dir1")
             dir2 = File.join(dir1, "dir2")
             dir3 = File.join(dir2, "dir3")
+            config_dir = ".ace-test-only"
 
             FileUtils.mkdir_p(dir3)
-            FileUtils.mkdir_p(File.join(dir1, ".ace"))
-            FileUtils.mkdir_p(File.join(dir2, ".ace"))
-            FileUtils.mkdir_p(File.join(dir3, ".ace"))
+            FileUtils.mkdir_p(File.join(dir1, config_dir))
+            FileUtils.mkdir_p(File.join(dir2, config_dir))
+            FileUtils.mkdir_p(File.join(dir3, config_dir))
 
             Dir.chdir(dir3)
-            traverser = DirectoryTraverser.new
+            traverser = DirectoryTraverser.new(config_dir: config_dir)
 
             # Should traverse all the way up since no project root
             directories = traverser.traverse
