@@ -25,7 +25,10 @@ module Ace
 
         def initialize(options = {})
           @options = options
-          @registry = Organisms::DocumentRegistry.new
+          @registry = Organisms::DocumentRegistry.new(
+            project_root: options[:project_root],
+            scope_globs: options[:scope_globs]
+          )
         end
 
         # Analyze documents for consistency issues
@@ -95,8 +98,10 @@ module Ace
 
           # Filter documents by pattern
           all_docs.select do |doc|
-            File.fnmatch?(pattern, doc.path) ||
-            File.fnmatch?(pattern, File.basename(doc.path))
+            rel = doc.relative_path || doc.path
+            File.fnmatch?(pattern, rel, File::FNM_PATHNAME | File::FNM_EXTGLOB) ||
+              File.fnmatch?(pattern, doc.path, File::FNM_PATHNAME | File::FNM_EXTGLOB) ||
+              File.fnmatch?(pattern, File.basename(doc.path), File::FNM_PATHNAME | File::FNM_EXTGLOB)
           end
         end
 

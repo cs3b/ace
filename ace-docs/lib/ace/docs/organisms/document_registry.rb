@@ -16,9 +16,10 @@ module Ace
         # @param config_path [String, nil] Deprecated, kept for backward compatibility
         # @param project_root [String, nil] Project root directory
         # @param config [Hash, nil] Optional config override (for testing)
-        def initialize(config_path: nil, project_root: nil, config: nil)
+        def initialize(config_path: nil, project_root: nil, config: nil, scope_globs: nil)
           @project_root = project_root || determine_project_root(config_path)
           @config = config || Ace::Docs.config
+          @scope_globs = Array(scope_globs).compact
           @documents = []
           discover_documents
         end
@@ -108,11 +109,18 @@ module Ace
 
         def discover_explicit_documents
           # Search for all markdown files in the project
-          all_md_files = Dir.glob(File.join(@project_root, "**/*.md"))
+          all_md_files = if @scope_globs.empty?
+                           Dir.glob(File.join(@project_root, "**/*.md"))
+                         else
+                           @scope_globs.flat_map do |pattern|
+                             Dir.glob(File.join(@project_root, pattern))
+                           end.uniq
+                         end
 
           # Load those with ace-docs frontmatter
           all_md_files.each do |path|
             next if ignored_path?(path)
+            next unless in_scope?(path)
 
             doc = Molecules::DocumentLoader.load_file(path)
             next unless doc&.managed?
@@ -161,6 +169,7 @@ module Ace
             # Process the final list of files
             all_matching_files.uniq.each do |path|
               next if ignored_path?(path)
+              next unless in_scope?(path)
               next if @documents.any? { |d| d.path == path }
 
               # Load the document
@@ -244,6 +253,15 @@ module Ace
           end
 
           ignored_patterns.any? { |pattern| path.match?(pattern) }
+        end
+
+        def in_scope?(path)
+          return true if @scope_globs.empty?
+
+          rel = path.sub(/^#{Regexp.escape(@project_root)}\/?/, "")
+          @scope_globs.any? do |pattern|
+            File.fnmatch?(pattern, rel, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::FNM_DOTMATCH)
+          end
         end
 
         def glob_to_regex(glob_pattern)

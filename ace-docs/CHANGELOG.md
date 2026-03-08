@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-08
+
+### Added
+- Added repeatable document scope options across core doc-selection commands:
+  - `--package <ace-package>` for package-root scoping
+  - `--glob <pattern>` for explicit glob scoping, including bare-path normalization (for example, `--glob ace-assign` -> `ace-assign/**/*.md`)
+
+### Changed
+- Scoped selection is now applied during registry discovery, reducing out-of-scope traversal for status/discover/update/validate/analyze-consistency command flows.
+- Updated docs/update workflow guidance and user-facing usage examples to include package/glob scoped operations.
+
+### Technical
+- Added command/integration/registry regression coverage for scope normalization and scoped selection behavior.
+- Suppressed expected loader noise for markdown files without frontmatter (`No frontmatter found`) to keep scoped command output readable.
+
 ## [0.22.4] - 2026-03-04
 
 ### Changed

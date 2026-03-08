@@ -4,6 +4,7 @@ require "dry/cli"
 require "ace/core"
 require_relative "../../organisms/document_registry"
 require_relative "../../molecules/frontmatter_manager"
+require_relative "scope_options"
 
 module Ace
   module Docs
@@ -14,6 +15,7 @@ module Ace
         # This command handles updating document frontmatter.
         class Update < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include ScopeOptions
 
           # Exit codes
           EXIT_SUCCESS = 0
@@ -47,13 +49,17 @@ module Ace
             "README.md --set last-updated=today",
             "docs/guide.md --set status=complete --set last-reviewed=2025-01-04",
             "--set last-updated=today --preset handbook",
-            "file.md --set last-updated=2025-01-04"
+            "file.md --set last-updated=2025-01-04",
+            "--package ace-docs --set last-checked=today",
+            "--glob 'ace-docs/docs/**/*.md' --set last-updated=today"
           ]
 
           argument :file, required: false, desc: "File to update (or use --preset)"
 
           option :set, type: :hash, desc: "Fields to update (e.g., --set last-updated=today)"
           option :preset, type: :string, desc: "Update all documents matching preset"
+          option :package, type: :array, desc: "Scope to package(s), e.g. --package ace-docs"
+          option :glob, type: :array, desc: "Scope by glob(s), e.g. --glob 'ace-docs/**/*.md'"
 
           # Standard options
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -91,16 +97,25 @@ module Ace
           end
 
           def select_documents(file, options)
-            registry = Ace::Docs::Organisms::DocumentRegistry.new
+            scope_globs = normalized_scope_globs(options, project_root: options[:project_root])
+            registry = Ace::Docs::Organisms::DocumentRegistry.new(
+              project_root: options[:project_root],
+              scope_globs: scope_globs
+            )
+            scoped_docs = registry.all
 
             if options[:preset]
-              registry.all.select { |d| d.context_preset == options[:preset] }
+              scoped_docs.select { |d| d.context_preset == options[:preset] }
             elsif file
               # Try to find in registry first (existing doc with frontmatter)
               doc = registry.find_by_path(file)
 
               # If not in registry, check if file exists without frontmatter
               if !doc && File.exist?(file)
+                unless path_in_scope?(file, scope_globs, project_root: options[:project_root] || Dir.pwd)
+                  raise FileNotFoundError, "File outside requested scope: #{file}"
+                end
+
                 # Create minimal Document object for file without frontmatter
                 require_relative "../../models/document"
                 doc = Ace::Docs::Models::Document.new(
@@ -112,8 +127,10 @@ module Ace
 
               raise FileNotFoundError, "File not found: #{file}" unless doc
               [doc]
+            elsif scope_options_present?(options)
+              scoped_docs
             else
-              raise MissingArgumentError, "Please specify a file or --preset"
+              raise MissingArgumentError, "Please specify a file, --preset, --package, or --glob"
             end
           end
 

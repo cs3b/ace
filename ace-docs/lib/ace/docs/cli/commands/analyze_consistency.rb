@@ -5,6 +5,7 @@ require "ace/core"
 require "colorize"
 require_relative "../../organisms/cross_document_analyzer"
 require_relative "../../models/consistency_report"
+require_relative "scope_options"
 
 module Ace
   module Docs
@@ -15,6 +16,7 @@ module Ace
         # This command handles cross-document consistency analysis.
         class AnalyzeConsistency < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include ScopeOptions
 
           # Exit codes
           EXIT_SUCCESS = 0
@@ -42,7 +44,9 @@ module Ace
             "--terminology                # Check terminology conflicts only",
             "--duplicates --threshold 80  # Check duplicates with threshold",
             "--save                       # Save report to file",
-            "--model gpt-4               # Use specific LLM model"
+            "--model gpt-4               # Use specific LLM model",
+            "--package ace-docs          # Scope to one package",
+            "--glob 'ace-docs/**/*.md'   # Scope by glob"
           ]
 
           argument :pattern, required: false, desc: "Pattern to analyze"
@@ -57,6 +61,8 @@ module Ace
           option :model, type: :string, desc: "LLM model to use (default: gflash)"
           option :timeout, type: :integer, desc: "LLM timeout in seconds"
           option :strict, type: :boolean, desc: "Exit with code 1 if issues found"
+          option :package, type: :array, desc: "Scope to package(s), e.g. --package ace-docs"
+          option :glob, type: :array, desc: "Scope by glob(s), e.g. --glob 'ace-docs/**/*.md'"
 
           # Standard options
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -152,6 +158,8 @@ module Ace
 
             # Timeout
             normalized[:timeout] = options[:timeout]
+            normalized[:project_root] = options[:project_root]
+            normalized[:scope_globs] = normalized_scope_globs(options, project_root: options[:project_root])
 
             normalized
           end

@@ -4,6 +4,8 @@ require_relative "../../test_helper"
 require "ace/docs/cli/commands/update"
 require "ace/docs/molecules/frontmatter_manager"
 require "ace/docs/organisms/document_registry"
+require "tmpdir"
+require "fileutils"
 
 module Ace
   module Docs
@@ -79,6 +81,37 @@ module Ace
 
               assert_match(/No documents to update/, output)
             end
+          end
+
+          def test_select_documents_with_scope_only
+            temp_dir = Dir.mktmpdir("ace-docs-update-scope")
+
+            FileUtils.mkdir_p(File.join(temp_dir, "docs"))
+            FileUtils.mkdir_p(File.join(temp_dir, "other"))
+
+            File.write(File.join(temp_dir, "docs", "guide.md"), <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: scoped guide
+              ---
+
+              # Guide
+            MARKDOWN
+
+            File.write(File.join(temp_dir, "other", "note.md"), <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: outside scope
+              ---
+
+              # Note
+            MARKDOWN
+
+            docs = @command.send(:select_documents, nil, { glob: ["docs/**/*.md"], project_root: temp_dir })
+            assert_equal 1, docs.size
+            assert_match(%r{/docs/guide\.md$}, docs.first.path)
+          ensure
+            FileUtils.rm_rf(temp_dir) if temp_dir
           end
         end
       end

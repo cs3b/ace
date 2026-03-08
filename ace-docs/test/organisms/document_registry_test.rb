@@ -365,6 +365,38 @@ module Ace
           assert_equal 1, docs.size
         end
 
+        def test_scope_globs_limit_discovery
+          FileUtils.mkdir_p("ace-assign/docs")
+          FileUtils.mkdir_p("ace-git/docs")
+
+          File.write("ace-assign/docs/usage.md", <<~MARKDOWN)
+            ---
+            doc-type: guide
+            purpose: Assign docs
+            ---
+
+            Content
+          MARKDOWN
+
+          File.write("ace-git/docs/usage.md", <<~MARKDOWN)
+            ---
+            doc-type: guide
+            purpose: Git docs
+            ---
+
+            Content
+          MARKDOWN
+
+          registry = DocumentRegistry.new(
+            project_root: @temp_dir,
+            scope_globs: ["ace-assign/**/*.md"]
+          )
+
+          docs = registry.all
+          assert_equal 1, docs.size
+          assert_match(%r{ace-assign/docs/usage\.md$}, docs.first.path)
+        end
+
         private
 
         def create_test_documents
