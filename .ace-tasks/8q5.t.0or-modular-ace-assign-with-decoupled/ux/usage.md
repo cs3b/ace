@@ -1,4 +1,4 @@
-# Modular ace-assign with Decoupled Presets - Draft Usage
+# Skill Registry Migration - Draft Usage
 
 ## API Surface
 - [x] CLI (user-facing commands)
@@ -8,53 +8,43 @@
 
 ## Usage Scenarios
 
-### Scenario 1: Discover Available Phases from All Gems
+### Scenario 1: Discover canonical skills across packages
 
-**Goal**: See what assignable phases are available across the installed gem ecosystem
+**Goal**: See the package-owned skills that drive assign composition and provider views.
 
 ```bash
-ace-assign catalog
+ace-nav skill://*
 
 # Expected output:
-# Available phases:
-#   onboard          (ace-assign)    [setup]
-#   work-on-task     (ace-task)      [implementation, task]
-#   run-review       (ace-review)    [review, quality]
-#   lint             (ace-lint)      [quality, lint]
-#   create-pr        (ace-assign)    [delivery]
-#   verify-e2e       (ace-test-e2e)  [testing]
+# as-task-work
+# as-review-pr
+# as-e2e-run
+# ...
 #
-# 6 phases from 4 sources
+# Results are resolved from package-owned handbook/skills registrations.
 ```
 
-### Scenario 2: Compose Assignment from Cross-Gem Phases
+### Scenario 2: Compose from migrated skill metadata
 
-**Goal**: Build an assignment that uses phases from different gems through the workflow surface
+**Goal**: Build an assignment from skills without relying on phase YAML as the source of truth.
 
 ```bash
-/as-assign-compose "onboard, work-on-task, review-pr, create-pr"
+/as-assign-compose "work on task 123 and create a PR"
 
 # Expected output:
-# Proposed assignment from 4 phases:
-#   010: onboard (ace-assign)
-#   020: work-on-task (ace-task)
-#   030: review-pr (ace-review)
-#   040: create-pr (ace-assign)
-#
-# Ready for hidden job generation / create flow
+# Proposed assignment uses phases sourced from canonical package skills
+# Runtime creation still flows through ace-assign create FILE
 ```
 
-### Scenario 3: Phase from Uninstalled Gem
+### Scenario 3: Inspect one canonical skill path
 
-**Goal**: Clear error when referencing a phase from a gem that isn't installed
+**Goal**: Resolve the authoritative package-owned skill file for a capability.
 
 ```bash
-/as-assign-compose "onboard, vulnerability-scan, create-pr"
+ace-nav skill://as-task-work
 
 # Expected output:
-# Error: Phase 'vulnerability-scan' not found in catalog
-# Available phases: onboard, work-on-task, run-review, lint, create-pr, verify-e2e
-# Hint: This phase may require installing an additional gem
+# /home/mc/ace-meta/ace-task/handbook/skills/as-task-work/SKILL.md
 ```
 
 ## Notes for Implementer
