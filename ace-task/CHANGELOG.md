@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-03-08
+
+### Fixed
+- Removed stale `task.plan.cli_args` provider mapping from `ace-task plan`; model selection now relies on `provider:model@preset` directly.
+
 ## [0.22.0] - 2026-03-08
 
 ### Changed
