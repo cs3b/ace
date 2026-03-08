@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-03-08
+
 ### Fixed
 - Improved split-commit message generation reliability by replacing brittle marker parsing with strict JSON batch parsing, validation, and one repair retry.
 - Removed generic `chore: update <scope>` fallback for missing batch messages; split commits now fall back to per-scope message generation when batch parsing fails.
