@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.22.7)
+    ace-assign (0.23.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-config (~> 0.8)
@@ -108,7 +108,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.13.5)
+    ace-idea (0.14.1)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
@@ -179,7 +179,7 @@ PATH
 PATH
   remote: ace-retro
   specs:
-    ace-retro (0.10.1)
+    ace-retro (0.11.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
@@ -284,7 +284,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.21.0)
+    ace-task (0.22.1)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
@@ -294,7 +294,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.21.2)
+    ace-test-runner-e2e (0.22.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-config (~> 0.8)
