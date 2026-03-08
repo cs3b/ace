@@ -54,7 +54,9 @@ module Ace
             project_root_env = env_project_root
             if project_root_env && !project_root_env.empty?
               project_root = Atoms::PathExpander.expand(project_root_env)
-              return project_root if Dir.exist?(project_root)
+              if Dir.exist?(project_root) && path_within_root?(@start_path, project_root)
+                return project_root
+              end
             end
 
             cache_key = "#{@start_path}:#{@markers.join(',')}"
@@ -151,6 +153,12 @@ module Ace
             end
 
             nil
+          end
+
+          def path_within_root?(candidate_path, root_path)
+            candidate = File.expand_path(candidate_path)
+            root = File.expand_path(root_path)
+            candidate == root || candidate.start_with?("#{root}/")
           end
         end
       end

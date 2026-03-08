@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-03-08
+
+### Fixed
+- Ignore `PROJECT_ROOT_PATH` overrides when the configured root does not contain the active `start_path`, preventing unrelated workspace roots from leaking into traversal boundaries.
+
+### Technical
+- Added regression coverage for environment-root fallback behavior in `ProjectRootFinder`.
+- Stabilized directory traversal molecule tests by isolating no-project-root fixtures from ambient system-level config directories.
+
 ## [0.2.0] - 2026-01-03
 
 ### Changed
