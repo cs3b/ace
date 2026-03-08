@@ -34,7 +34,7 @@ ARGUMENTS: $ARGUMENTS
 
 ## Subagent Return Contract
 
-When invoked as a subagent (via Task tool from `/as-e2e-run-batch`), return a structured summary instead of verbose output:
+When invoked as a subagent (via a batch orchestrator such as `/as-assign-run-in-batches`), return a structured summary instead of verbose output:
 
 ```markdown
 - **Test ID**: {test-id}
