@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.797] - 2026-03-08
+
+### Added
+- **ace-handbook v0.10.0**: Added `release/publish` as the coordinated multi-package release workflow, including modified-package auto-detection and shared package/root changelog updates.
+
+### Fixed
+- **ace-assign v0.23.1**: Fixed assignment release guidance so `release*` phases publish all modified packages through `/as-release`, including suffixed review-cycle release steps.
+
+### Technical
+- **ace-task v0.22.2**: Updated project-management and roadmap docs to use the canonical `release/publish` workflow references.
+
 ## [0.9.796] - 2026-03-08
 
 ### Fixed

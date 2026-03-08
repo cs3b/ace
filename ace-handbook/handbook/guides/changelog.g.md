@@ -319,7 +319,6 @@ For projects without public repositories, use internal tracking systems or omit 
 
 - [Version Control Message Guide](./version-control-system-message.g.md) (Commit message standards)
 - [Project Management Guide](./project-management.g.md) (Release workflow integration)
-- [Publish Release Guide](./release-publish.g.md) (Release process overview)
-- [Publish Release Workflow](../workflow-instructions/publish-release.wf.md) (Step-by-step release actions)
+- [Publish Release Workflow](wfi://release/publish) (Release process overview and step-by-step actions)
 - [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (External reference)
 - [Semantic Versioning](https://semver.org/) (Versioning standards)

@@ -1,5 +1,5 @@
 name: release
-description: Bump package version and update CHANGELOGs following semver
+description: Release modified packages and update CHANGELOGs following semver
 
 prerequisites:
   - name: work-on-task

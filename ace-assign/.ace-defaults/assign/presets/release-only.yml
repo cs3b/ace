@@ -19,8 +19,8 @@ steps:
 
   - name: release
     instructions:
-      - Run /as-release.
-      - "Bump {{version_type}} version and update CHANGELOGs."
+      - Run /as-release to release all modified packages.
+      - "Auto-detect modified packages, apply a {{version_type}} release, and update both package and root CHANGELOGs."
       - Follow semantic versioning conventions.
       - Update both gem version files and CHANGELOGs.
 

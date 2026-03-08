@@ -45,8 +45,8 @@ steps:
   - name: release-minor
     number: "020"
     instructions:
-      - Run /as-release.
-      - Bump version (minor or patch, usually minor) and update CHANGELOGs.
+      - Run /as-release to release all modified packages.
+      - Auto-detect modified packages from the current diff, bump version (minor or patch, usually minor), and update both package and root CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
@@ -77,7 +77,7 @@ steps:
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture valid-cycle fixes."
+      - "Child release: run /as-release to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-fit-1
     number: "070"
@@ -89,7 +89,7 @@ steps:
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture fit-cycle fixes."
+      - "Child release: run /as-release to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-shine-1
     number: "100"
@@ -101,7 +101,7 @@ steps:
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture shine-cycle fixes."
+      - "Child release: run /as-release to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
     number: "130"

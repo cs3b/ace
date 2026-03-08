@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-08
+
+### Added
+- New `release/publish` workflow for coordinated multi-package releases that auto-detect modified packages, update package and root changelogs, and finish with one release commit.
+
+### Changed
+- `/as-release` now loads `wfi://release/publish`, and release documentation now points to the canonical workflow path.
+
 ## [0.9.9] - 2026-03-04
 
 ### Changed

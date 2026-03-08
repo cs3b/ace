@@ -22,4 +22,4 @@ This guide ensures consistency and meaning in release naming across the developm
 
 - [Project Management Overview](../project-management.g.md) - Main project management guide
 - [Strategic Planning Guide](../strategic-planning.g.md) - High-level planning and roadmap guidance
-- [Release Publishing Guide](../release-publish.g.md) - Release deployment and archival processes
+- [Release Publish Workflow](wfi://release/publish) - Coordinated package release, changelog, and archival process

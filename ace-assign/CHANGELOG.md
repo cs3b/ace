@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-03-08
+
+### Fixed
+- Updated assignment release guidance so `release*` child steps consistently route through `/as-release`, including suffixed review-cycle release phases.
+
+### Changed
+- Updated release phase, preset, and fixture instructions to describe coordinated multi-package releases and both package and root changelog updates.
+
 ## [0.23.0] - 2026-03-08
 
 ### Changed
