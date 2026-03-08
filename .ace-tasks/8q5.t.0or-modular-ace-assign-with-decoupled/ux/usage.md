@@ -1,4 +1,4 @@
-# Skill Registry Migration - Draft Usage
+# Typed Canonical Skills - Draft Usage
 
 ## API Surface
 - [x] CLI (user-facing commands)
@@ -8,43 +8,55 @@
 
 ## Usage Scenarios
 
-### Scenario 1: Discover canonical skills across packages
+### Scenario 1: Discover canonical skills across types
 
-**Goal**: See the package-owned skills that drive assign composition and provider views.
+**Goal**: See capability, workflow, and orchestration skills from package-owned canonical sources.
 
 ```bash
 ace-nav skill://*
 
 # Expected output:
-# as-task-work
-# as-review-pr
-# as-e2e-run
+# as-b36ts
+# as-task-plan
+# as-assign-start
 # ...
 #
-# Results are resolved from package-owned handbook/skills registrations.
+# Results are resolved from package-owned handbook/skills sources.
 ```
 
-### Scenario 2: Compose from migrated skill metadata
+### Scenario 2: Inspect a canonical capability skill
 
-**Goal**: Build an assignment from skills without relying on phase YAML as the source of truth.
+**Goal**: Resolve the authoritative package-owned skill file for a non-assign capability.
 
 ```bash
-/as-assign-compose "work on task 123 and create a PR"
+ace-nav skill://as-b36ts
 
 # Expected output:
-# Proposed assignment uses phases sourced from canonical package skills
-# Runtime creation still flows through ace-assign create FILE
+# /home/mc/ace-meta/ace-b36ts/handbook/skills/as-b36ts/SKILL.md
 ```
 
-### Scenario 3: Inspect one canonical skill path
+### Scenario 3: Compose from the assign-capable subset
 
-**Goal**: Resolve the authoritative package-owned skill file for a capability.
+**Goal**: Build an assignment from workflow/orchestration skills while capability skills remain discoverable but excluded.
 
 ```bash
-ace-nav skill://as-task-work
+/as-assign-compose "plan task 123 and then start the assignment"
 
 # Expected output:
-# /home/mc/ace-meta/ace-task/handbook/skills/as-task-work/SKILL.md
+# Proposed assignment uses phases sourced from canonical workflow/orchestration skills
+# Capability skills like as-b36ts are discoverable through skill:// but do not appear as phases
+```
+
+### Scenario 4: Inspect a projected provider skill
+
+**Goal**: Verify provider-facing skills are generated from the canonical source.
+
+```bash
+ls .agent/skills/as-task-plan
+ls .claude/skills/as-task-plan
+
+# Expected output:
+# Generated provider-facing skill paths exist for the canonical skill
 ```
 
 ## Notes for Implementer
