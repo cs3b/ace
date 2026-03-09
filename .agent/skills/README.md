@@ -1,1 +1,0 @@
-../../dev-handbook/.integrations/claude/commands/README.md
