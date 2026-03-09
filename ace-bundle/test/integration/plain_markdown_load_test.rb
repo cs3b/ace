@@ -58,15 +58,14 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_workflow, content)
 
-    # Load the file directly via ace-bundle
     result = Ace::Bundle.load_file(temp_workflow)
 
-    # Should return content with frontmatter preserved
+    # Content should be compressed
     refute_nil result.content, "Expected content to be returned"
-    assert_includes result.content, "# Test Workflow", "Expected workflow heading"
-    assert_includes result.content, "---", "Expected frontmatter markers"
+    assert result.metadata[:compressed], "Expected content to be compressed"
+    assert_includes result.content, "FILE|", "Expected compressed FILE| markers"
 
-    # Should have metadata from frontmatter
+    # Should have metadata from frontmatter (set before compression)
     assert_equal "test-workflow", result.metadata[:name]
     assert_equal "Test workflow for isolated testing", result.metadata[:description]
     assert_equal temp_workflow, result.metadata[:source]
@@ -96,12 +95,12 @@ class PlainMarkdownLoadTest < AceTestCase
 
     result = Ace::Bundle.load_file(temp_file)
 
-    # Should return content
+    # Content should be compressed
     refute_nil result.content
-    assert_includes result.content, "# Test Document"
-    assert_includes result.content, "title: Test Document"
+    assert result.metadata[:compressed], "Expected content to be compressed"
+    assert_includes result.content, "FILE|", "Expected compressed FILE| markers"
 
-    # Should preserve metadata
+    # Should preserve metadata (set before compression)
     assert_equal "Test Document", result.metadata[:title]
     assert_equal "Test Author", result.metadata[:author]
     assert_equal 1.0, result.metadata[:version]
@@ -122,7 +121,8 @@ class PlainMarkdownLoadTest < AceTestCase
     result = Ace::Bundle.load_file(temp_file)
 
     refute_nil result.content, "Expected content for non-frontmatter workflow"
-    assert_includes result.content, "# Self-Improve Workflow"
+    assert result.metadata[:compressed], "Expected content to be compressed"
+    assert_includes result.content, "FILE|", "Expected compressed FILE| markers"
     assert_equal temp_file, result.metadata[:source]
     refute result.metadata[:error], "Expected no loader error"
   end
@@ -182,7 +182,7 @@ class PlainMarkdownLoadTest < AceTestCase
   end
 
   def test_large_plain_markdown_loads_correctly
-    # Large plain markdown files should load completely
+    # Large plain markdown files should load completely and be compressed
     temp_file = File.join(@temp_dir, "test-large-plain-markdown.md")
 
     lines = ["---", "title: Large Document", "---", "", "# Large Document", ""]
@@ -190,11 +190,11 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_file, lines.join("\n"))
 
-    # Load directly (should get content)
     result = Ace::Bundle.load_file(temp_file)
 
     refute_nil result.content
-    assert result.content.lines.count > 500, "Expected > 500 lines in content"
+    assert result.metadata[:compressed], "Expected content to be compressed"
+    assert result.content.lines.count < 500, "Expected compressed output to be smaller than 606-line original"
     assert_equal "Large Document", result.metadata[:title]
   end
 end
