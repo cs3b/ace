@@ -14,6 +14,33 @@ module Ace
         TREE_LINE_RE = /[│├└╰]\-\-/
         FILE_PATH_RE = /\A(?:\.{1,2}\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\z/
         SHELL_LANGS = %w[bash sh shell zsh fish cmd powershell ps1].freeze
+        SHELL_CONTROL_RE = /\A(?:#|if\b|then\b|else\b|elif\b|fi\b|for\b|while\b|until\b|do\b|done\b|case\b|esac\b|function\b|\{|\})/
+        LIST_NARRATIVE_MIN_CHARS = 48
+        LIST_NARRATIVE_MIN_WORDS = 6
+        LIST_STOPWORDS = %w[a an and as at by for from in into is of on or that the this to via with within].freeze
+        LIST_TOKEN_MAP = {
+          "architecture" => "arch",
+          "architectural" => "arch",
+          "configuration" => "config",
+          "documentation" => "docs",
+          "generation" => "gen",
+          "management" => "mgmt",
+          "repository" => "repo",
+          "repositories" => "repos",
+          "development" => "dev",
+          "integration" => "integr",
+          "execution" => "exec",
+          "reporting" => "reports",
+          "organization" => "org",
+          "organizations" => "orgs",
+          "capabilities" => "caps",
+          "capability" => "cap",
+          "foundation" => "base",
+          "tracking" => "track",
+          "powered" => "pwr",
+          "detected" => "detect",
+          "matching" => "match"
+        }.freeze
 
         def initialize(source)
           @source = source
@@ -127,6 +154,8 @@ module Ace
             [Ace::Compressor::Models::ContextPack.files_line(file_label, code_lines)]
           elsif tree_block?(code_lines)
             [Ace::Compressor::Models::ContextPack.tree_line(tree_label, code_lines.join(" "))]
+          elsif shell_script_block?(language, code_lines)
+            [Ace::Compressor::Models::ContextPack.code_line(language.empty? ? "bash" : language, code_lines.join(" "))]
           elsif shell_command_block?(language, code_lines)
             code_lines.map { |line| Ace::Compressor::Models::ContextPack.cmd_line(line) }
           else
@@ -154,10 +183,21 @@ module Ace
         end
 
         def shell_command_block?(language, lines)
+          return false if shell_script_block?(language, lines)
           return true if SHELL_LANGS.include?(language)
           return false unless language.empty?
 
           lines.all? { |line| line.match?(/\A[a-zA-Z0-9_\.\/-]+(?:\s+.+)?\z/) }
+        end
+
+        def shell_script_block?(language, lines)
+          return false if lines.empty?
+
+          shell_language = SHELL_LANGS.include?(language)
+          inferred_shell = language.empty? && lines.all? { |line| shellish_line?(line) }
+          return false unless shell_language || inferred_shell
+
+          lines.size > 3 || lines.any? { |line| shell_script_line?(line) }
         end
 
         def tree_block?(lines)
@@ -215,7 +255,41 @@ module Ace
         end
 
         def list_item_slug(text)
-          heading_slug(text)
+          return heading_slug(text) unless narrative_list_item?(text)
+
+          compact_phrase_slug(text)
+        end
+
+        def narrative_list_item?(text)
+          raw = normalize_inline(text.to_s)
+          raw.length > LIST_NARRATIVE_MIN_CHARS || raw.split(/\s+/).length >= LIST_NARRATIVE_MIN_WORDS
+        end
+
+        def compact_phrase_slug(text)
+          tokens = normalize_heading_text(normalize_inline(text.to_s))
+            .downcase
+            .gsub(/[\"']/, "")
+            .scan(/[a-z0-9]+/)
+            .filter_map do |token|
+              next if LIST_STOPWORDS.include?(token)
+
+              LIST_TOKEN_MAP.fetch(token, token)
+            end
+
+          tokens = tokens.each_with_object([]) do |token, result|
+            result << token unless result.last == token
+          end
+
+          value = tokens.join("_")
+          value.empty? ? heading_slug(text) : value
+        end
+
+        def shellish_line?(line)
+          line.match?(/\A[a-zA-Z0-9_\.\/\-\$\"'`#\[\]\(\)=:;]+(?:\s+.+)?\z/)
+        end
+
+        def shell_script_line?(line)
+          line.match?(SHELL_CONTROL_RE)
         end
 
         def normalize_heading_text(text)
