@@ -1321,4 +1321,95 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  def test_template_with_command_only_sections_gets_compressed
+    with_temp_dir do
+      template = <<~MARKDOWN
+        ---
+        description: Command-only workflow
+        bundle:
+          sections:
+            status:
+              commands:
+                - echo "hello world"
+        ---
+        # Workflow
+
+        Some long instructions that should be compressed.
+        This paragraph has enough content to produce different output.
+      MARKDOWN
+      File.write("cmd_workflow.wf.md", template)
+
+      compressed_loader = Ace::Bundle::Organisms::BundleLoader.new(
+        compressor_source_scope: "per-source",
+        compressor_mode: "exact"
+      )
+      compressed_bundle = compressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
+
+      uncompressed_loader = Ace::Bundle::Organisms::BundleLoader.new(compressor: "off")
+      uncompressed_bundle = uncompressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
+
+      assert compressed_bundle.metadata[:compressed],
+        "Command-only section bundle should be marked as compressed"
+      refute_equal uncompressed_bundle.content, compressed_bundle.content,
+        "Compressed output should differ from uncompressed"
+    end
+  end
+
+  def test_file_section_bundles_not_double_compressed
+    with_temp_dir do
+      File.write("doc.md", "# Document\n\n" + ("Detail line.\n" * 30))
+
+      template = <<~MARKDOWN
+        ---
+        description: File section workflow
+        bundle:
+          params:
+            compressor_source_scope: per-source
+            compressor_mode: exact
+          sections:
+            docs:
+              files:
+                - doc.md
+        ---
+        # File workflow
+      MARKDOWN
+      File.write("file_workflow.wf.md", template)
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        compressor_source_scope: "per-source",
+        compressor_mode: "exact"
+      )
+      bundle = loader.load_file(File.expand_path("file_workflow.wf.md"))
+
+      # sections_have_processed_files? should be true, preventing post-format compression
+      has_files = loader.send(:sections_have_processed_files?, bundle)
+      assert has_files, "Bundle with file sections should report having processed files"
+    end
+  end
+
+  def test_compressor_off_disables_post_format_compression
+    with_temp_dir do
+      template = <<~MARKDOWN
+        ---
+        description: Command workflow
+        bundle:
+          sections:
+            status:
+              commands:
+                - echo "hello"
+        ---
+        # Workflow
+
+        Instructions here.
+      MARKDOWN
+      File.write("cmd_wf.wf.md", template)
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(compressor: "off")
+      bundle = loader.load_file(File.expand_path("cmd_wf.wf.md"))
+
+      refute bundle.metadata[:compressed],
+        "--compressor off should prevent post-format compression"
+    end
+  end
+
 end
