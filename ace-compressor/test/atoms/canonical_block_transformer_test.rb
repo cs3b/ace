@@ -98,6 +98,31 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
     refute_includes lines, "CMD|# prepare"
   end
 
+  def test_nested_contextpack_fenced_markdown_passes_through_records
+    blocks = [
+      { type: :heading, level: 2, text: "Compressed Vision" },
+      {
+        type: :fenced_code,
+        language: "markdown",
+        content: <<~PACK
+          H|ContextPack/3|exact
+          FILE|docs/vision.md
+          SEC|vision
+          SUMMARY|Agents can run CLI commands
+        PACK
+      }
+    ]
+
+    lines = @transformer.call(blocks)
+
+    assert_includes lines, "SEC|compressed_vision"
+    assert_includes lines, "FILE|docs/vision.md"
+    assert_includes lines, "SEC|vision"
+    assert_includes lines, "SUMMARY|Agents can run CLI commands"
+    refute_includes lines, "H|ContextPack/3|exact"
+    refute lines.any? { |line| line.start_with?("CODE|markdown|FILE\\|docs/vision.md") }
+  end
+
   def test_prose_example_line_emits_example_record
     blocks = [
       { type: :heading, level: 2, text: "How It Works" },

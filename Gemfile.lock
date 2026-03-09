@@ -20,7 +20,8 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.31.12)
+    ace-bundle (0.35.1)
+      ace-compressor (~> 0.21)
       ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -31,7 +32,7 @@ PATH
 PATH
   remote: ace-compressor
   specs:
-    ace-compressor (0.17.0)
+    ace-compressor (0.21.0)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
       dry-cli (~> 1.1)

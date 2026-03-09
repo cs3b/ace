@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-03-09
+
+### Added
+- Added `mode: "agent"` support to `Ace::Compressor.compress_text`, routing in-memory text compression through the agent engine while preserving the content-only return contract.
+
+### Changed
+- Changed fenced markdown handling to pass through nested `ContextPack` records directly instead of re-encoding them as opaque `CODE|markdown|...` payloads during recompression.
+
+### Technical
+- Added regression coverage for nested `ContextPack` passthrough and agent-mode `compress_text` behavior.
+
+## [0.20.0] - 2026-03-09
+
+### Added
+- Added optional `labels:` parameter to `CacheStore#manifest` for stable cache keys independent of filesystem paths, enabling cache reuse across tmpdir-based callers.
+
+## [0.19.2] - 2026-03-09
+
+### Added
+- Added `compress_text` convenience method to `ExactCompressor` and top-level `Ace::Compressor` module for in-memory text compression without filesystem access.
+
+## [0.19.1] - 2026-03-09
+
+### Fixed
+- Fixed temporary directory leak in `InputResolver` — each CLI run now cleans up its temp dir via `ensure` block in `CompressionRunner`.
+- Removed unused `@resolved_files` instance variable from `InputResolver`.
+
+## [0.19.0] - 2026-03-09
+
+### Added
+- Added `--source-scope` with `merged|per-source` modes so `ace-compressor compress` can emit one output per resolved source while preserving existing merged behavior by default.
+- Added per-source runner behavior and regression coverage to keep per-source output ordering stable and deterministic.
+
+### Changed
+- Changed input resolution so protocol URLs like `wfi://...` are routed through `ace-bundle` resolution instead of being treated as missing filesystem paths.
+- Updated usage docs with per-source examples, option documentation, and output-path constraints for multi-input per-source runs.
+
+### Technical
+- Expanded command, runner, and resolver tests to cover invalid source-scope errors, per-source path emission ordering, and unresolved protocol URL failures.
+
+## [0.18.0] - 2026-03-09
+
+### Added
+- Added ACE-native source input resolution so `ace-compressor compress` accepts preset names and YAML bundle config files directly.
+- Added an input resolver molecule and focused molecule-level tests for preset/config detection, mixed-source resolution, and failure messaging.
+
+### Changed
+- Changed compression runner flow to normalize inputs before mode dispatch, preserving existing ContextPack output contracts across exact/compact/agent modes.
+- Updated usage documentation with preset/config examples, mixed-source behavior, and explicit resolver failure conditions.
+
+### Fixed
+- Fixed cache stem generation for resolver-produced sources outside the repository root so preset/config flows no longer crash during canonical cache path derivation.
+
+### Technical
+- Expanded command and molecule regression coverage for resolved preset/config paths and external-source cache canonicalization.
+
 ## [0.17.0] - 2026-03-09
 
 ### Added

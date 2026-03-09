@@ -63,6 +63,12 @@ ace-compressor <file> --mode compact
 # Single file (agent mode)
 ace-compressor <file> --mode agent
 
+# Preset name (resolved with ace-bundle)
+ace-compressor project --mode exact
+
+# Bundle config file (resolved with ace-bundle)
+ace-compressor ./custom-context.yml --mode exact
+
 # Multiple files
 ace-compressor file1.md file2.md --mode exact
 
@@ -71,6 +77,12 @@ ace-compressor docs/ --mode exact
 
 # Mixed sources
 ace-compressor README.md docs/ --mode exact
+
+# Mixed preset + file input in one merged run
+ace-compressor project README.md --mode exact
+
+# One output per resolved source (stable source order)
+ace-compressor wfi://task/draft project --mode compact --source-scope per-source
 
 # Verbose (shows skipped files in directory traversal)
 ace-compressor docs/ --mode exact --verbose
@@ -81,6 +93,7 @@ ace-compressor docs/ --mode exact --verbose
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
 | `--mode` | | Compression mode (`exact`, `compact`, `agent`) | `exact` |
+| `--source-scope` | | Source handling mode (`merged`, `per-source`) | `merged` |
 | `--output` | `-o` | Save output to file or directory path | canonical cache path |
 | `--format` | `-f` | Console output format: `path`, `stdio`, `stats` | `path` |
 | `--verbose` | `-v` | Show skipped files during directory traversal | `false` |
@@ -127,6 +140,7 @@ Shared-cache hits are hydrated back into the normal local canonical path, so the
 
 - `--output` controls where the pack file is saved
 - `--format` controls what is printed to stdout
+- `--source-scope` controls whether all resolved sources are compressed together (`merged`) or independently (`per-source`)
 
 ### `--output`
 
@@ -135,6 +149,7 @@ Shared-cache hits are hydrated back into the normal local canonical path, so the
 - Directory path: if the path exists as a directory or ends with `/`, derives a hashed filename inside it
 
 The canonical cache is still used for freshness checks even when `--output` points somewhere else.
+In `--source-scope per-source` with multiple inputs, `--output` must be a directory target.
 
 ### `--format`
 
@@ -302,6 +317,7 @@ SUMMARY|ACE uses ATOM building blocks and protocol-addressable workflows.
 | Error | Cause | Exit Code |
 |-------|-------|-----------|
 | `Input source not found: <path>` | File or directory does not exist | 1 |
+| `Failed to resolve input '<preset>'` | Preset/config resolution via `ace-bundle` failed (for example unknown preset) | 1 |
 | `Input file is empty. Exact mode requires content: <path>` | Source has zero bytes or no post-frontmatter content | 1 |
 | `Binary input is not supported in exact mode: <path>` | File contains null bytes | 1 |
 | `Directory has no supported markdown/text sources: <path>` | Directory has no supported `.md`/`.txt` files | 1 |
