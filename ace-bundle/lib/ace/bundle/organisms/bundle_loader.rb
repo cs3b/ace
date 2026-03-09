@@ -1480,6 +1480,7 @@ module Ace
           bundle.metadata[:warnings] = warnings if warnings.any?
 
           compress_bundle_sections(bundle)
+          compress_rendered_bundle(bundle)
           bundle
         end
 

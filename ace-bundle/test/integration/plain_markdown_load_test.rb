@@ -24,7 +24,7 @@ class PlainMarkdownLoadTest < AceTestCase
     end
 
     # Load via ace-bundle API (load_auto handles protocol resolution)
-    result = Ace::Bundle.load_auto("wfi://commit")
+    result = Ace::Bundle.load_auto("wfi://commit", compressor_source_scope: "per-source", compressor_mode: "exact")
 
     # Should return content, not error
     refute_nil result.content, "Expected content to be returned"
@@ -58,7 +58,7 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_workflow, content)
 
-    result = Ace::Bundle.load_file(temp_workflow)
+    result = Ace::Bundle.load_file(temp_workflow, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     # Content should be compressed
     refute_nil result.content, "Expected content to be returned"
@@ -93,7 +93,7 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_file, content)
 
-    result = Ace::Bundle.load_file(temp_file)
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     # Content should be compressed
     refute_nil result.content
@@ -118,7 +118,7 @@ class PlainMarkdownLoadTest < AceTestCase
     MARKDOWN
     File.write(temp_file, content)
 
-    result = Ace::Bundle.load_file(temp_file)
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     refute_nil result.content, "Expected content for non-frontmatter workflow"
     assert result.metadata[:compressed], "Expected content to be compressed"
@@ -146,7 +146,7 @@ class PlainMarkdownLoadTest < AceTestCase
     File.write(temp_file, content)
 
     # This should trigger template processing, not plain markdown fallback
-    result = Ace::Bundle.load_file(temp_file)
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     # Should have processed files - content should contain sample file content
     refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
@@ -172,7 +172,7 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_file, content)
 
-    result = Ace::Bundle.load_file(temp_file)
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     # Should trigger template processing
     refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
@@ -190,7 +190,7 @@ class PlainMarkdownLoadTest < AceTestCase
 
     File.write(temp_file, lines.join("\n"))
 
-    result = Ace::Bundle.load_file(temp_file)
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
 
     refute_nil result.content
     assert result.metadata[:compressed], "Expected content to be compressed"

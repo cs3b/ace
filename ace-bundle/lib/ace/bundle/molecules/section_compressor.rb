@@ -100,9 +100,9 @@ module Ace
             uncached = []
             files.each do |file_info|
               fragment = write_fragment(tmpdir, file_info[:path], file_info[:content])
-              labels = { fragment => file_info[:path] }
-              manifest = @cache_store.manifest(mode: @compressor_mode, sources: [fragment], labels: labels)
-              canonical = @cache_store.canonical_paths(mode: @compressor_mode, sources: [fragment], manifest_key: manifest["key"])
+              source_entry = cache_source_entry(fragment, file_info[:path], source_kind: "file")
+              manifest = @cache_store.manifest(mode: @compressor_mode, sources: [source_entry])
+              canonical = @cache_store.canonical_paths(mode: @compressor_mode, sources: [source_entry], manifest_key: manifest["key"])
 
               if @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
                 file_info[:content] = @cache_store.read_pack(canonical[:pack_path])
@@ -115,8 +115,8 @@ module Ace
             uncached.each do |entry|
               fi = entry[:file_info]
               compressor = build_compressor([entry[:fragment]])
-              output = compressor.compress_sources([entry[:fragment]])
-              compressed = strip_context_pack_header(fix_source_labels(output, { entry[:fragment] => fi[:path] }))
+              output = compress_with_source_identity(compressor, entry[:fragment] => fi[:path])
+              compressed = strip_context_pack_header(output)
               write_cache_entry(entry[:manifest], entry[:canonical], compressed)
               fi[:content] = compressed
               fi[:compressed] = true
@@ -127,23 +127,22 @@ module Ace
         def compress_merged(files)
           Dir.mktmpdir("ace-bundle-compress") do |tmpdir|
             path_map = {}
-            labels = {}
-            fragments = files.map do |f|
+            source_entries = files.map do |f|
               fragment = write_fragment(tmpdir, f[:path], f[:content])
               path_map[fragment] = f[:path]
-              labels[fragment] = f[:path]
-              fragment
+              cache_source_entry(fragment, f[:path], source_kind: "file")
             end
 
-            manifest = @cache_store.manifest(mode: @compressor_mode, sources: fragments, labels: labels)
-            canonical = @cache_store.canonical_paths(mode: @compressor_mode, sources: fragments, manifest_key: manifest["key"])
+            manifest = @cache_store.manifest(mode: @compressor_mode, sources: source_entries)
+            canonical = @cache_store.canonical_paths(mode: @compressor_mode, sources: source_entries, manifest_key: manifest["key"])
 
             content = if @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
                         @cache_store.read_pack(canonical[:pack_path])
                       else
+                        fragments = source_entries.map { |entry| entry[:content_path] }
                         compressor = build_compressor(fragments)
-                        output = compressor.compress_sources(fragments)
-                        compressed = strip_context_pack_header(fix_source_labels(output, path_map))
+                        output = compress_with_source_identity(compressor, path_map)
+                        compressed = strip_context_pack_header(output)
                         write_cache_entry(manifest, canonical, compressed)
                         compressed
                       end
@@ -162,14 +161,6 @@ module Ace
           FileUtils.mkdir_p(File.dirname(fragment))
           File.write(fragment, content)
           fragment
-        end
-
-        def fix_source_labels(output, path_map)
-          result = output
-          path_map.each do |absolute_path, original_label|
-            result = result.gsub("FILE|#{absolute_path}", "FILE|#{original_label}")
-          end
-          result
         end
 
         def strip_context_pack_header(output)
@@ -223,6 +214,25 @@ module Ace
             bundle_data.content = compressed
           end
           bundle_data.metadata[:compressed] = true
+        end
+
+        def compress_with_source_identity(compressor, path_map)
+          parameters = compressor.method(:compress_sources).parameters
+          supports_source_paths = parameters.any? do |type, name|
+            ([:key, :keyreq].include?(type) && name == :source_paths) || type == :keyrest
+          end
+          fragments = path_map.keys
+          return compressor.compress_sources(fragments, source_paths: path_map) if supports_source_paths
+
+          compressor.compress_sources(fragments)
+        end
+
+        def cache_source_entry(content_path, source_path, source_kind:)
+          {
+            content_path: content_path,
+            source_path: source_path,
+            source_kind: source_kind
+          }
         end
       end
     end

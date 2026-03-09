@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.35.3] - 2026-03-09
+
+### Fixed
+- Fixed `SectionCompressor` compatibility with the updated `ace-compressor` cache manifest API so bundle section compression no longer crashes on the removed `labels:` keyword.
+- Fixed plain-markdown bundle fallback so `load_plain_markdown` also applies rendered-content compression when compression is enabled.
+
+### Technical
+- Updated plain-markdown integration coverage to enable compression explicitly per test instead of depending on ambient repository config state.
+
 ## [0.35.2] - 2026-03-09
 
 ### Fixed
