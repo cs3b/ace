@@ -125,7 +125,7 @@ class ExactCompressorTest < AceCompressorTestCase
 
     output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
 
-    assert_includes output, "TABLE|\\| Name \\| Value \\| \\|\\|ROW\\|\\| \\|---\\|---\\| \\|\\|ROW\\|\\| \\| must \\| 42 \\|"
+    assert_includes output, "TABLE|cols=Name,Value|rows=must>42"
     assert_includes output, "must"
     assert_includes output, "42"
   end

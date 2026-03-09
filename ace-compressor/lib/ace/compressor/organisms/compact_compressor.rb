@@ -314,8 +314,7 @@ module Ace
           table_id = table_record_id(source_label, table_index)
           strategy, retained_data_rows = select_table_strategy(rows, data_rows)
           retained_rows = header_rows + retained_data_rows
-          compact_rows = retained_rows.join(" ||ROW|| ")
-          records = [Ace::Compressor::Models::ContextPack.table_line(compact_rows, table_id: table_id, strategy: strategy)]
+          records = [Ace::Compressor::Models::ContextPack.table_line(retained_rows, table_id: table_id, strategy: strategy)]
 
           if original_data_count > retained_data_rows.size
             records << Ace::Compressor::Models::ContextPack.loss_line(kind: "table", target: table_id, strategy: strategy, original: original_data_count, retained: retained_data_rows.size, unit: "rows", source: source_label, details: "data_rows_only")
@@ -346,7 +345,60 @@ module Ace
         def parse_table_rows(line)
           payload = line.sub(/\ATABLE\|/, "").to_s
           return [] if payload.strip.empty?
+
+          return parse_structured_table_rows(payload) if payload.include?("rows=")
+
           payload.split(TABLE_ROW_SEPARATOR_ESCAPED_RE).map { |row| row.gsub("\\|", "|").strip }
+        end
+
+        def parse_structured_table_rows(payload)
+          fields = payload.split("|").each_with_object({}) do |field, hash|
+            key, value = field.split("=", 2)
+            next if value.nil?
+
+            hash[key] = value
+          end
+
+          columns = fields.fetch("cols", "").split(",").map { |cell| cell.gsub("\\|", "|").strip }.reject(&:empty?)
+          data_rows = decode_structured_table_rows(fields.fetch("rows", ""))
+          rows = []
+          rows << "| #{columns.join(' | ')} |" unless columns.empty?
+          rows << "|#{Array(columns).map { '---' }.join('|')}|" unless columns.empty?
+          rows.concat(data_rows.map { |cells| "| #{cells.join(' | ')} |" })
+          rows
+        end
+
+        def decode_structured_table_rows(value)
+          rows = []
+          current_row = []
+          current_cell = +""
+          escape_next = false
+
+          value.to_s.each_char do |char|
+            if escape_next
+              current_cell << char
+              escape_next = false
+            elsif char == "\\"
+              escape_next = true
+            elsif char == ">"
+              current_row << current_cell.strip
+              current_cell = +""
+            elsif char == ";"
+              current_row << current_cell.strip
+              rows << current_row
+              current_row = []
+              current_cell = +""
+            else
+              current_cell << char
+            end
+          end
+
+          unless current_cell.empty? && current_row.empty?
+            current_row << current_cell.strip
+            rows << current_row
+          end
+
+          rows
         end
 
         def select_key_rows(rows, limit:)

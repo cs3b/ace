@@ -12,7 +12,9 @@ module Ace
         PACK_EXTENSION = ".pack"
         METADATA_EXTENSION = ".json"
         SHORT_KEY_LENGTH = 12
-        AGENT_CACHE_CONTRACT = "agent-payload-rewrite-v5"
+        EXACT_CACHE_CONTRACT = "exact-table-rows-v2"
+        COMPACT_CACHE_CONTRACT = "compact-table-rows-v2"
+        AGENT_CACHE_CONTRACT = "agent-payload-rewrite-v6"
 
         def initialize(cache_root: nil, project_root: Dir.pwd)
           @cache_root = File.expand_path(cache_root || default_cache_root, project_root)
@@ -35,7 +37,7 @@ module Ace
             "mode" => mode,
             "sources" => source_entries
           }
-          payload["mode_contract"] = AGENT_CACHE_CONTRACT if mode.to_s == "agent"
+          payload["mode_contract"] = mode_contract_for(mode)
 
           {
             "key" => Digest::SHA256.hexdigest(JSON.generate(payload)),
@@ -107,6 +109,14 @@ module Ace
 
         def default_cache_root
           Ace::Compressor.config["cache_dir"] || ".ace-local/compressor"
+        end
+
+        def mode_contract_for(mode)
+          case mode.to_s
+          when "exact" then EXACT_CACHE_CONTRACT
+          when "compact" then COMPACT_CACHE_CONTRACT
+          when "agent" then AGENT_CACHE_CONTRACT
+          end
         end
 
         def default_stem_for(sources)
