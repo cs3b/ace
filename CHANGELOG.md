@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.815] - 2026-03-09
+
+### Fixed
+- **ace-bundle v0.35.4**: Fixed `agent`-mode post-format compression for command-only/diff-only section bundles and preserved original file ordering for mixed per-source and merged section compression.
+
 ## [0.9.814] - 2026-03-09
 
 ### Fixed
