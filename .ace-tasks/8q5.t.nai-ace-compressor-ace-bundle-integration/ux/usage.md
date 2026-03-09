@@ -16,8 +16,7 @@
 mise exec -- ace-compressor compress project --mode exact
 
 # Expected output:
-FILE|id=project|type=bundle_preset
-P|id=fact:config_cascade|src=docs/architecture.md#configuration-cascade
+/absolute/path/to/.ace-local/compressor/exact/multi.<hash>.exact.pack
 ```
 
 ### Scenario 2: Compress a workflow protocol per source
@@ -28,8 +27,7 @@ P|id=fact:config_cascade|src=docs/architecture.md#configuration-cascade
 mise exec -- ace-compressor compress wfi://task/draft --mode compact --source-scope per-source
 
 # Expected output:
-FILE|id=wfi://task/draft|type=workflow
-SUMMARY|source=wfi://task/draft|mode=compact
+/absolute/path/to/.ace-local/compressor/compact/<resolved-source>.<hash>.compact.pack
 ```
 
 ### Scenario 3: Fail clearly on unresolved ACE-native input
@@ -46,4 +44,5 @@ Error: could not resolve input source 'unknown-preset'
 ## Notes for Implementer
 - `merged` is the default source scope.
 - ACE-native inputs are handled by `ace-compressor` directly.
+- Existing `ContextPack/3` output remains the runtime compression format; this task only changes source resolution and scope handling.
 - Full usage documentation gets completed during work-on-task using `wfi://docs/update-usage`.

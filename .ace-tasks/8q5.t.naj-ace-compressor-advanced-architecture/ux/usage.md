@@ -16,9 +16,10 @@
 mise exec -- ace-compressor compress docs/vision.md --mode exact --verbose
 
 # Expected output:
-FILE|id=file:docs/vision.md|type=vision
-SECTION|id=sec:core_principles|title=Core Principles
-RULE|id=rule:cli_first|modality=must|action=be developer friendly
+H|ContextPack/3|exact
+FILE|docs/vision.md
+SEC|core_principles
+RULE|...stable_id=rule:cli_first...
 ```
 
 ### Scenario 2: Emit a delta patch for one changed file
@@ -30,9 +31,10 @@ mise exec -- ace-compressor patch prev.contextpack docs/vision.md --mode exact
 
 # Expected output:
 PATCH|base=sha256:abc123
-R|id=rule:cli_first|value=tools must be developer friendly
+REPLACE|id=rule:cli_first|value=tools must be developer friendly
 ```
 
 ## Notes for Implementer
+- This phase extends the current `ContextPack/3` exact path with stable IDs; it does not replace the existing pack format.
 - This phase starts patching with exact-mode single-file updates.
 - Full usage documentation gets completed during work-on-task using `wfi://docs/update-usage`.
