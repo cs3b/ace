@@ -20,7 +20,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.35.2)
+    ace-bundle (0.35.3)
       ace-compressor (~> 0.21)
       ace-git (~> 0.11)
       ace-support-config (~> 0.7)
@@ -166,7 +166,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.17.3)
+    ace-prompt-prep (0.17.4)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -278,7 +278,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.12.3)
+    ace-support-test-helpers (0.12.4)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
