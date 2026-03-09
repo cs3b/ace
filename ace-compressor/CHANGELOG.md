@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-09
+
+### Changed
+- Changed exact-mode workflow encoding to compact long natural-language list items into shorter phrase slugs while preserving stable `LIST|...` structure and item order.
+- Changed exact-mode shell fence handling so script-like bash blocks collapse into single `CODE|bash|...` records instead of many verbose `CMD|...` lines.
+
+### Technical
+- Added regression coverage for compact narrative list slugs and script-style shell block normalization.
+- Bumped cache contracts so exact, compact, and agent workflow reruns refresh artifacts generated with the previous list/shell encoding.
+
 ## [0.15.0] - 2026-03-09
 
 ### Added

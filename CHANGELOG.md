@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.802] - 2026-03-09
+
+### Changed
+- **ace-compressor v0.16.0**: Tightened exact-mode workflow compression by shortening long narrative `LIST|...` items and collapsing script-like shell fences into compact `CODE|bash|...` records.
+
+### Technical
+- **ace-compressor v0.16.0**: Added transformer regression coverage for the new list/shell normalization rules and refreshed cache contracts so exact/compact/agent workflow artifacts are rebuilt.
+
 ## [0.9.801] - 2026-03-09
 
 ### Added
