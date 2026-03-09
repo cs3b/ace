@@ -2,6 +2,6 @@
 
 module Ace
   module PromptPrep
-    VERSION = "0.17.3"
+    VERSION = "0.17.4"
   end
 end
