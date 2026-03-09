@@ -2,12 +2,11 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/compressor"
-require "dry/cli"
 
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Compressor::CLI::Commands::Compress).call(arguments: args)
+  Ace::Compressor::CLI.start(args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

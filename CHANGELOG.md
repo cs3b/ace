@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.803] - 2026-03-09
+
+### Added
+- **ace-compressor v0.17.0**: Added a public `benchmark` command that compares `exact`, `compact`, and `agent` output on live sources with retention coverage against the exact baseline.
+- **ace-compressor v0.17.0**: Added configurable shared per-machine workflow caching so stable handbook workflow files can be reused across worktrees on the same machine.
+
+### Changed
+- **ace-compressor v0.17.0**: Updated CLI/cache behavior so shared workflow cache hits are hydrated into the normal local canonical path while preserving existing `compress` output semantics.
+
+### Technical
+- **ace-compressor v0.17.0**: Added dedicated benchmark/retention-report internals and regression coverage for benchmark output plus cross-project workflow cache reuse.
+
 ## [0.9.802] - 2026-03-09
 
 ### Changed
