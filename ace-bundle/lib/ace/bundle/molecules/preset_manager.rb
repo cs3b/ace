@@ -156,6 +156,8 @@ module Ace
             merged[:description] = preset[:description] if preset[:description]
             # Don't override format from preset - let ContextLoader handle defaults based on embed_document_source
             merged[:output] = preset[:output] if preset[:output]
+            merged[:compressor_mode] = preset[:compressor_mode] if preset[:compressor_mode]
+            merged[:compressor_source_scope] = preset[:compressor_source_scope] if preset[:compressor_source_scope]
             merged[:cache] = preset[:cache] if preset[:cache]
 
             # Merge params at root level (for backward compatibility)

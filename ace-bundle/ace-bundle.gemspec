@@ -46,6 +46,7 @@ Gem::Specification.new do |spec|
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
   spec.add_dependency 'ace-git', '~> 0.11'
   spec.add_dependency 'ace-support-nav', '~> 0.18' # For in-process protocol resolution (wfi://, guide://, etc.)
+  spec.add_dependency 'ace-compressor', '~> 0.21' # For --compress option (section content compression)
 
   # Development dependencies managed in root Gemfile
 end

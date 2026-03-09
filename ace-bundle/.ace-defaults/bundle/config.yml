@@ -19,3 +19,10 @@ bundle:
   #   - Content at or above this threshold: saved to cache file (path printed)
   # Default: 500 lines
   auto_format_threshold: 500
+
+  # Compressor settings
+  # source_scope: off, per-source, merged (default: off)
+  # mode: exact, agent (default: exact)
+  compressor:
+    source_scope: "per-source"
+    mode: "exact"
