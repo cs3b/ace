@@ -278,7 +278,8 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "# Debug test", result, "Should process with debug logging enabled"
+          assert_includes result, "FILE|", "Should return bundled/compressed content"
+          assert_includes result, "debug_test", "Should preserve source identity in bundled content"
           assert debug_messages.any? { |msg| msg.include?("Loading bundle from:") }, "Should log bundle loading debug messages"
         end
       end
@@ -303,7 +304,8 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "# Filtered test", result, "Should process with debug enabled but category filtered"
+          assert_includes result, "FILE|", "Should return bundled/compressed content"
+          assert_includes result, "filtered_test", "Should preserve source identity in bundled content"
           refute debug_messages.any? { |msg| msg.include?("Loading bundle from:") }, "Should filter context loading debug messages"
         end
       end
@@ -328,7 +330,8 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "# No debug test", result, "Should process without debug logging"
+          assert_includes result, "FILE|", "Should return bundled/compressed content"
+          assert_includes result, "no_debug", "Should preserve source identity in bundled content"
           refute debug_messages.any?, "Should not output debug messages when disabled"
         end
       end

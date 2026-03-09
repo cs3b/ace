@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-03-09
+
+### Fixed
+- Updated bundle-enabled prompt-prep test expectations to match the current `ace-bundle` contract, asserting successful compressed bundle output instead of stale raw-markdown responses.
+
 ## [0.17.3] - 2026-03-04
 
 ### Fixed
