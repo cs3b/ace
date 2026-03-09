@@ -1355,6 +1355,40 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  def test_template_with_command_only_sections_gets_compressed_in_agent_mode
+    with_temp_dir do
+      template = <<~MARKDOWN
+        ---
+        description: Command-only workflow
+        bundle:
+          sections:
+            status:
+              commands:
+                - echo "hello world"
+        ---
+        # Workflow
+
+        Some long instructions that should be compressed.
+        This paragraph has enough content to produce different output.
+      MARKDOWN
+      File.write("cmd_workflow.wf.md", template)
+
+      compressed_loader = Ace::Bundle::Organisms::BundleLoader.new(
+        compressor_source_scope: "per-source",
+        compressor_mode: "agent"
+      )
+      compressed_bundle = compressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
+
+      uncompressed_loader = Ace::Bundle::Organisms::BundleLoader.new(compressor: "off")
+      uncompressed_bundle = uncompressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
+
+      assert compressed_bundle.metadata[:compressed],
+        "Command-only section bundle should be marked as compressed in agent mode"
+      refute_equal uncompressed_bundle.content, compressed_bundle.content,
+        "Agent-mode compressed output should differ from uncompressed"
+    end
+  end
+
   def test_file_section_bundles_not_double_compressed
     with_temp_dir do
       File.write("doc.md", "# Document\n\n" + ("Detail line.\n" * 30))

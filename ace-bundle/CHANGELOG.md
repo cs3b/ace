@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.35.4] - 2026-03-09
+
+### Fixed
+- Fixed post-format bundle compression so command-only and diff-only section bundles still compress when `compressor_mode: agent` is enabled.
+- Fixed `SectionCompressor` reordering mixed `_processed_files` arrays so per-source and merged compression preserve the original user-specified file order.
+
 ## [0.35.3] - 2026-03-09
 
 ### Fixed
