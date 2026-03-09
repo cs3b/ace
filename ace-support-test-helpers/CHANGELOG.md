@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-03-09
+
+### Fixed
+- `with_temp_dir` now resets cached `Ace::Bundle` configuration alongside project-root cache state so temp-dir tests remain order-independent under full non-E2E suite execution.
+
 ## [0.12.3] - 2026-03-04
 
 ### Fixed

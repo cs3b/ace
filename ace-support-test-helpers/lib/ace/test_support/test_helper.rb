@@ -25,6 +25,9 @@ module Ace
         if defined?(Ace::Support::Fs::Molecules::ProjectRootFinder)
           Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
         end
+        if defined?(Ace::Bundle) && Ace::Bundle.respond_to?(:reset_config!)
+          Ace::Bundle.reset_config!
+        end
       end
 
       def with_temp_file(content = "")
