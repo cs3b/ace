@@ -11,11 +11,13 @@ module Ace
           include Ace::Core::CLI::DryCli::Base
 
           SUPPORTED_MODES = %w[exact compact agent].freeze
+          SUPPORTED_SOURCE_SCOPES = %w[merged per-source].freeze
 
           desc "Compress markdown/text files into ContextPack/3 records"
 
           argument :sources, required: false, type: :array, desc: "File or directory paths"
           option :mode, type: :string, default: "exact", desc: "Compression mode (exact|compact|agent)"
+          option :source_scope, type: :string, default: "merged", desc: "Source handling mode (merged|per-source)"
           option :output, type: :string, aliases: ["-o"], desc: "Save output to file or directory path"
           option :format, type: :string, aliases: ["-f"], desc: "Console output format: path|stdio|stats"
           option :version, type: :boolean, desc: "Show version information"
@@ -39,10 +41,16 @@ module Ace
             unless SUPPORTED_MODES.include?(mode)
               raise Ace::Core::CLI::Error, "Unsupported mode '#{mode}'. Use --mode exact, --mode compact, or --mode agent"
             end
+            source_scope = (options[:source_scope] || "merged").to_s
+            unless SUPPORTED_SOURCE_SCOPES.include?(source_scope)
+              raise Ace::Core::CLI::Error,
+                    "Unsupported source scope '#{source_scope}'. Use --source-scope merged or --source-scope per-source"
+            end
 
             runner = Ace::Compressor::Organisms::CompressionRunner.new(
               sources,
               mode: mode,
+              source_scope: source_scope,
               output: options[:output],
               format: options[:format],
               verbose: !!options[:verbose]

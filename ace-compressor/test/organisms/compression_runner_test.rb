@@ -165,4 +165,24 @@ class CompressionRunnerTest < AceCompressorTestCase
       end
     end
   end
+
+  def test_per_source_scope_returns_individual_outputs_in_resolved_order
+    second = File.join(@tmp, "zzz.md")
+    first = File.join(@tmp, "aaa.md")
+    File.write(second, "# Second\n\nB")
+    File.write(first, "# First\n\nA")
+
+    result = Ace::Compressor::Organisms::CompressionRunner.new(
+      [second, first],
+      mode: "exact",
+      source_scope: "per-source",
+      format: "path"
+    ).call
+
+    paths = result[:console_output].lines.map(&:strip).reject(&:empty?)
+    assert_equal 2, paths.size
+    assert_equal paths, result[:output_paths]
+    assert_includes File.basename(paths[0]), "zzz."
+    assert_includes File.basename(paths[1]), "aaa."
+  end
 end

@@ -87,6 +87,23 @@ module Ace
           lines.join("\n")
         end
 
+        # Compress a content string directly without filesystem access.
+        # Returns the compressed ContextPack text (without header line).
+        # @param text [String] markdown/text content to compress
+        # @param label [String] display label for the source (e.g. original file path)
+        # @return [String] compressed ContextPack records (no header)
+        def compress_text(text, label:)
+          return text if text.to_s.strip.empty?
+
+          blocks = @parser.call(text)
+          return text if blocks.empty?
+
+          lines = []
+          lines << Ace::Compressor::Models::ContextPack.file_line(label)
+          lines.concat @transformer.new(label).call(blocks)
+          lines.join("\n")
+        end
+
         private
 
         def transformed_lines(source, blocks)

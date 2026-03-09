@@ -15,6 +15,10 @@ module Ace
         FILE_PATH_RE = /\A(?:\.{1,2}\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\z/
         SHELL_LANGS = %w[bash sh shell zsh fish cmd powershell ps1].freeze
         SHELL_CONTROL_RE = /\A(?:#|if\b|then\b|else\b|elif\b|fi\b|for\b|while\b|until\b|do\b|done\b|case\b|esac\b|function\b|\{|\})/
+        CONTEXTPACK_PREFIXES = %w[
+          H FILE POLICY FIDELITY REFUSAL GUIDANCE FALLBACK SEC SUMMARY FACT RULE CONSTRAINT
+          PROBLEMS LIST EXAMPLE CMD FILES TREE CODE TABLE LOSS EXAMPLE_REF U
+        ].freeze
         LIST_NARRATIVE_MIN_CHARS = 48
         LIST_NARRATIVE_MIN_WORDS = 6
         LIST_STOPWORDS = %w[a an and as at by for from in into is of on or that the this to via with within].freeze
@@ -149,6 +153,9 @@ module Ace
           code_lines = Array(block[:content].to_s.lines).map(&:strip).reject(&:empty?)
           return [] if code_lines.empty?
 
+          nested_lines = nested_contextpack_lines(code_lines)
+          return nested_lines if nested_lines
+
           language = block[:language].to_s.strip.downcase
           if file_list_block?(code_lines)
             [Ace::Compressor::Models::ContextPack.files_line(file_label, code_lines)]
@@ -208,6 +215,23 @@ module Ace
           return false if lines.empty?
 
           lines.all? { |line| FILE_PATH_RE.match?(line) }
+        end
+
+        def nested_contextpack_lines(lines)
+          payload = Array(lines).reject { |line| contextpack_header_line?(line) }
+          return nil if payload.empty?
+          return nil unless payload.all? { |line| contextpack_line?(line) }
+
+          payload
+        end
+
+        def contextpack_line?(line)
+          prefix = line.to_s.split("|", 2).first
+          CONTEXTPACK_PREFIXES.include?(prefix)
+        end
+
+        def contextpack_header_line?(line)
+          line.to_s.start_with?("H|ContextPack/")
         end
 
         def tree_label

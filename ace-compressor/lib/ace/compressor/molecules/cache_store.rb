@@ -21,11 +21,11 @@ module Ace
           @project_root = File.expand_path(project_root)
         end
 
-        def manifest(mode:, sources:)
+        def manifest(mode:, sources:, labels: nil)
           source_entries = Array(sources).sort.map do |source|
             content = File.binread(source)
             {
-              "path" => File.expand_path(source),
+              "path" => (labels && labels[source]) || File.expand_path(source),
               "sha256" => Digest::SHA256.hexdigest(content),
               "bytes" => content.bytesize,
               "lines" => line_count(content)
@@ -179,7 +179,7 @@ module Ace
           source = Array(sources).first
           return "multi" unless Array(sources).size == 1 && source
 
-          relative = relative_to_project(source)
+          relative = relative_to_project(source).to_s
           sanitized = relative.sub(/\.[^.]+\z/, "")
           sanitized.empty? ? "multi" : sanitized
         end
@@ -197,13 +197,16 @@ module Ace
         end
 
         def relative_to_project(path)
-          pathname = Pathname.new(File.expand_path(path))
+          expanded = File.expand_path(path)
+          pathname = Pathname.new(expanded)
           project = Pathname.new(@project_root)
           relative = pathname.relative_path_from(project).to_s
-          return relative unless relative.start_with?("..")
+          return File.basename(expanded) if relative.start_with?("..")
+
+          relative
         rescue ArgumentError
-          nil
-        end || File.basename(path)
+          File.basename(path.to_s)
+        end
 
         def directory_target?(raw_output, expanded_output)
           raw_output.end_with?(File::SEPARATOR) || Dir.exist?(expanded_output)

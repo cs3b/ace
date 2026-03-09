@@ -6,10 +6,12 @@ module Ace
       class CompressionRunner
         SUPPORTED_FORMATS = %w[path stdio stats].freeze
         SUPPORTED_MODES = %w[exact compact agent].freeze
+        SUPPORTED_SOURCE_SCOPES = %w[merged per-source].freeze
 
-        def initialize(paths, mode:, output: nil, format: nil, verbose: false)
+        def initialize(paths, mode:, source_scope: "merged", output: nil, format: nil, verbose: false)
           @paths = Array(paths)
           @mode = mode
+          @source_scope = source_scope.to_s
           @output = output
           @format = (format || Ace::Compressor.config["default_format"] || "path").to_s
           @verbose = verbose
@@ -20,8 +22,26 @@ module Ace
           raise Ace::Compressor::Error, "Unsupported format '#{@format}'. Use --format path, stdio, or stats" unless SUPPORTED_FORMATS.include?(@format)
           raise Ace::Compressor::Error,
                 "Unsupported mode '#{@mode}'. Use --mode exact, --mode compact, or --mode agent" unless SUPPORTED_MODES.include?(@mode)
+          unless SUPPORTED_SOURCE_SCOPES.include?(@source_scope)
+            raise Ace::Compressor::Error,
+                  "Unsupported source scope '#{@source_scope}'. Use --source-scope merged or --source-scope per-source"
+          end
 
-          compressor = compressor_for_mode
+          resolver = Ace::Compressor::Molecules::InputResolver.new(@paths)
+          begin
+            resolved_paths = resolver.call
+            return run_per_source(resolved_paths) if @source_scope == "per-source"
+
+            run_for_sources(resolved_paths)
+          ensure
+            resolver.cleanup if resolver.respond_to?(:cleanup)
+          end
+        end
+
+        private
+
+        def run_for_sources(resolved_paths)
+          compressor = compressor_for_mode(resolved_paths)
           sources = compressor.resolve_sources
           manifest = @cache_store.manifest(mode: @mode, sources: sources)
           canonical = @cache_store.canonical_paths(mode: @mode, sources: sources, manifest_key: manifest["key"])
@@ -75,7 +95,40 @@ module Ace
           }
         end
 
-        private
+        def run_per_source(resolved_paths)
+          if resolved_paths.size > 1 && output_file_target?
+            raise Ace::Compressor::Error,
+                  "Per-source mode with multiple inputs requires --output to be a directory path"
+          end
+
+          results = resolved_paths.map { |path| run_for_sources([path]) }
+          {
+            console_output: join_console_outputs(results.map { |result| result[:console_output] }),
+            ignored_paths: results.flat_map { |result| result[:ignored_paths] }.uniq,
+            output_path: results.first&.dig(:output_path),
+            output_paths: results.map { |result| result[:output_path] },
+            cache_hit: results.all? { |result| result[:cache_hit] },
+            metadata: results.map { |result| result[:metadata] },
+            refusal_lines: results.flat_map { |result| result[:refusal_lines] },
+            fallback_lines: results.flat_map { |result| result[:fallback_lines] },
+            exit_code: results.any? { |result| result[:exit_code].to_i.nonzero? } ? 1 : 0
+          }
+        end
+
+        def join_console_outputs(outputs)
+          values = Array(outputs).map(&:to_s).reject(&:empty?)
+          return "" if values.empty?
+
+          separator = @format == "stats" ? "\n\n" : "\n"
+          values.join(separator)
+        end
+
+        def output_file_target?
+          return false if @output.nil? || @output.to_s.strip.empty?
+          return false if @output.end_with?(File::SEPARATOR)
+
+          !Dir.exist?(File.expand_path(@output))
+        end
 
         def build_cache_entry(compressor, sources, manifest, canonical, shared_canonical = nil)
           content = compressor.compress_sources(sources)
@@ -138,11 +191,11 @@ module Ace
           metadata
         end
 
-        def compressor_for_mode
-          return CompactCompressor.new(@paths, verbose: @verbose) if @mode == "compact"
-          return AgentCompressor.new(@paths, verbose: @verbose) if @mode == "agent"
+        def compressor_for_mode(paths)
+          return CompactCompressor.new(paths, verbose: @verbose) if @mode == "compact"
+          return AgentCompressor.new(paths, verbose: @verbose) if @mode == "agent"
 
-          ExactCompressor.new(@paths, verbose: @verbose, mode_label: @mode)
+          ExactCompressor.new(paths, verbose: @verbose, mode_label: @mode)
         end
 
         def refusal_lines(content)
