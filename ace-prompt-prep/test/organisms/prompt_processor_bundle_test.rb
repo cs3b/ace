@@ -31,7 +31,8 @@ class PromptProcessorBundleTest < Minitest::Test
       result = Ace::PromptPrep::Organisms::PromptProcessor.call(bundle: true)
 
       assert result[:success]
-      assert_equal "Just plain content.\n", result[:content]
+      assert_includes result[:content], "FILE|"
+      assert_includes result[:content], "FACT|Just plain content."
     end
   end
 
