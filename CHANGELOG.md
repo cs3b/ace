@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.811] - 2026-03-09
+
+### Added
+- **ace-compressor v0.21.0**: Added `Ace::Compressor.compress_text(..., mode: "agent")` so in-memory text compression can use the agent engine while preserving the content-only API contract.
+
+### Changed
+- **ace-compressor v0.21.0**: Changed nested `ContextPack` fenced markdown handling to pass through structured records directly, improving recompression results for bundle-generated context files.
+- **ace-bundle v0.35.1**: Refined the `project` preset for compressor-focused bundle validation and updated the runtime dependency constraint to `ace-compressor ~> 0.21`.
+
+## [0.9.810] - 2026-03-09
+
+### Added
+- **ace-bundle v0.35.0**: Added content-only bundle compression for plain markdown files loaded via `load_file` and `load_plain_markdown`, using real resolved file paths with native cache support.
+
+## [0.9.809] - 2026-03-09
+
+### Added
+- **ace-bundle v0.34.0**: Added `--compressor on|off` CLI flag and global `compressor:` config section for centralized compressor defaults with CLI > preset > config precedence.
+- **ace-compressor v0.20.0**: Added optional `labels:` parameter to `CacheStore#manifest` for stable cache keys independent of tmpdir filesystem paths.
+- **ace-bundle v0.33.0**: Added native cache integration to `SectionCompressor`, eliminating redundant compression on repeated bundle runs with unchanged content.
+
+## [0.9.807] - 2026-03-09
+
+### Added
+- **ace-bundle v0.32.0**: Added `--compressor-mode` and `--compressor-source-scope` CLI options with preset-level configuration for inline section compression using ace-compressor's exact and agent engines.
+- **ace-compressor v0.19.2**: Added `compress_text` convenience method for in-memory text compression without filesystem access.
+
+### Fixed
+- **ace-bundle v0.32.0**: Fixed `compressor_mode: agent` crash — agent mode now works through the file-based compression path, producing correctly compressed output distinct from exact mode.
+
+## [0.9.806] - 2026-03-09
+
+### Fixed
+- **ace-compressor v0.19.1**: Fixed temporary directory leak in `InputResolver` and removed dead code.
+
+## [0.9.805] - 2026-03-09
+
+### Added
+- **ace-compressor v0.19.0**: Added `--source-scope` (`merged|per-source`) so protocol/preset/file inputs can emit one compressed output per resolved source in stable order.
+
+### Changed
+- **ace-compressor v0.19.0**: Updated input resolution so protocol URLs (`wfi://...`) are routed through `ace-bundle` instead of being treated as missing filesystem paths.
+- **ace-compressor v0.19.0**: Updated usage guidance for per-source mode, including multi-input output-path constraints and invocation examples.
+
+### Technical
+- **ace-compressor v0.19.0**: Expanded command/runner/resolver regression coverage for per-source output ordering, invalid scope errors, and unresolved protocol failures.
+
+## [0.9.804] - 2026-03-09
+
+### Added
+- **ace-compressor v0.18.0**: Added ACE-native input resolution so `ace-compressor compress` accepts preset names and YAML bundle config files directly.
+
+### Changed
+- **ace-compressor v0.18.0**: Normalized preset/config inputs before mode dispatch while preserving existing ContextPack output shape and multi-source merge behavior.
+- **ace-compressor v0.18.0**: Updated usage docs with preset/config invocation examples, mixed input handling, and clearer resolver failure semantics.
+
+### Fixed
+- **ace-compressor v0.18.0**: Fixed cache canonical stem derivation for resolver-generated external sources, preventing runtime crashes in preset/config flows.
+
+### Technical
+- **ace-compressor v0.18.0**: Added molecule/command regression coverage for input auto-detection, error propagation, and external-source cache path handling.
+
 ## [0.9.803] - 2026-03-09
 
 ### Added

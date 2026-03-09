@@ -61,6 +61,40 @@ class CompressCommandTest < AceCompressorTestCase
     assert_includes result[:stdout], "FILE|vision.md"
   end
 
+  def test_preset_input_resolves_and_compresses
+    path = File.join(@tmp, "bundle-output.md")
+    File.write(path, "# Bundled\n\nFrom preset")
+    fake_resolver = Class.new do
+      define_method(:initialize) { |_sources| nil }
+      define_method(:call) { [path] }
+    end
+
+    Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
+      result = invoke(["project", "--mode", "exact", "--format", "stdio"])
+
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "H|ContextPack/3|exact"
+      assert_includes result[:stdout], "FILE|bundle-output.md"
+    end
+  end
+
+  def test_yaml_config_input_resolves_and_compresses
+    path = File.join(@tmp, "config-output.md")
+    File.write(path, "# Config\n\nFrom yaml")
+    fake_resolver = Class.new do
+      define_method(:initialize) { |_sources| nil }
+      define_method(:call) { [path] }
+    end
+
+    Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
+      result = invoke(["./custom-context.yml", "--mode", "exact", "--format", "stdio"])
+
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "H|ContextPack/3|exact"
+      assert_includes result[:stdout], "FILE|config-output.md"
+    end
+  end
+
   def test_success_on_single_file_agent_mode_with_stubbed_agent_compressor
     path = File.join(@tmp, "vision.md")
     File.write(path, "# Vision\n\nAgents can run CLI commands")
@@ -256,6 +290,47 @@ class CompressCommandTest < AceCompressorTestCase
     assert_operator first_line_index, :<, second_file_index
     assert_operator second_file_index, :<, second_line_index
     assert_operator first_line_index, :<, second_line_index
+  end
+
+  def test_per_source_scope_emits_one_output_path_per_source_in_input_order
+    second = File.join(@tmp, "zzz.md")
+    first = File.join(@tmp, "aaa.md")
+    File.write(second, "# Second\n\nB")
+    File.write(first, "# First\n\nA")
+
+    result = invoke([second, first, "--mode", "exact", "--source-scope", "per-source", "--format", "path"])
+
+    assert_equal "", result[:stderr]
+    paths = result[:stdout].lines.map(&:strip).reject(&:empty?)
+    assert_equal 2, paths.size
+    assert File.file?(paths[0]), "Expected first per-source output to exist"
+    assert File.file?(paths[1]), "Expected second per-source output to exist"
+    assert_includes File.basename(paths[0]), "zzz."
+    assert_includes File.basename(paths[1]), "aaa."
+  end
+
+  def test_error_on_invalid_source_scope_lists_allowed_values
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands")
+
+    result = invoke([path, "--mode", "exact", "--source-scope", "invalid"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Unsupported source scope 'invalid'"
+    assert_includes result[:stderr], "--source-scope merged or --source-scope per-source"
+  end
+
+  def test_per_source_mode_requires_directory_output_for_multiple_inputs
+    first = File.join(@tmp, "first.md")
+    second = File.join(@tmp, "second.md")
+    File.write(first, "# First\n\nA")
+    File.write(second, "# Second\n\nB")
+    target = File.join(@tmp, "single-output.pack")
+
+    result = invoke([first, second, "--mode", "exact", "--source-scope", "per-source", "--output", target])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Per-source mode with multiple inputs requires --output to be a directory path"
   end
 
   def test_prose_example_line_emits_example_record
