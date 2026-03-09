@@ -185,4 +185,41 @@ class CompressionRunnerTest < AceCompressorTestCase
     assert_includes File.basename(paths[0]), "zzz."
     assert_includes File.basename(paths[1]), "aaa."
   end
+
+  def test_preset_inputs_use_stable_source_identity_for_cache_and_output
+    first_bundle_dir = Dir.mktmpdir("ace_compressor_bundle_one")
+    second_bundle_dir = Dir.mktmpdir("ace_compressor_bundle_two")
+    first_bundle = File.join(first_bundle_dir, "resolved.md")
+    second_bundle = File.join(second_bundle_dir, "resolved.md")
+    File.write(first_bundle, "# Heading\n\nContent")
+    File.write(second_bundle, "# Heading\n\nContent")
+
+    calls = 0
+    fake_resolver_class = Class.new do
+      define_method(:initialize) { |_sources| nil }
+      define_method(:cleanup) {}
+      define_method(:call) do
+        calls = Thread.current[:ace_compressor_bundle_calls]
+        Thread.current[:ace_compressor_bundle_calls] = calls + 1
+        bundle = calls.zero? ? first_bundle : second_bundle
+        [{ content_path: bundle, source_path: "project", source_kind: "preset" }]
+      end
+    end
+
+    Thread.current[:ace_compressor_bundle_calls] = 0
+
+    Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver_class.new(nil) }) do
+      first = Ace::Compressor::Organisms::CompressionRunner.new(["project"], mode: "exact", format: "stdio").call
+      second = Ace::Compressor::Organisms::CompressionRunner.new(["project"], mode: "exact", format: "stats").call
+
+      assert_includes first[:console_output], "FILE|project"
+      assert_includes second[:console_output], "Cache:    hit"
+      assert_equal first[:output_path], second[:output_path]
+      assert_includes File.basename(first[:output_path]), "project."
+    end
+  ensure
+    Thread.current[:ace_compressor_bundle_calls] = nil
+    FileUtils.rm_rf(first_bundle_dir) if first_bundle_dir
+    FileUtils.rm_rf(second_bundle_dir) if second_bundle_dir
+  end
 end

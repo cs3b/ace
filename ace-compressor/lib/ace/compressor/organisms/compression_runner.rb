@@ -29,10 +29,10 @@ module Ace
 
           resolver = Ace::Compressor::Molecules::InputResolver.new(@paths)
           begin
-            resolved_paths = resolver.call
-            return run_per_source(resolved_paths) if @source_scope == "per-source"
+            resolved_inputs = resolver.call
+            return run_per_source(resolved_inputs) if @source_scope == "per-source"
 
-            run_for_sources(resolved_paths)
+            run_for_sources(resolved_inputs)
           ensure
             resolver.cleanup if resolver.respond_to?(:cleanup)
           end
@@ -40,14 +40,16 @@ module Ace
 
         private
 
-        def run_for_sources(resolved_paths)
+        def run_for_sources(resolved_inputs)
+          resolved_paths = Array(resolved_inputs).map { |entry| entry.fetch(:content_path) }
           compressor = compressor_for_mode(resolved_paths)
           sources = compressor.resolve_sources
-          manifest = @cache_store.manifest(mode: @mode, sources: sources)
-          canonical = @cache_store.canonical_paths(mode: @mode, sources: sources, manifest_key: manifest["key"])
-          shared_manifest = @cache_store.shared_manifest(mode: @mode, sources: sources)
+          source_metadata = build_source_metadata(sources, resolved_inputs)
+          manifest = @cache_store.manifest(mode: @mode, sources: source_metadata)
+          canonical = @cache_store.canonical_paths(mode: @mode, sources: source_metadata, manifest_key: manifest["key"])
+          shared_manifest = @cache_store.shared_manifest(mode: @mode, sources: source_metadata)
           shared_canonical = if shared_manifest
-                               @cache_store.shared_canonical_paths(mode: @mode, sources: sources, manifest_key: shared_manifest["key"])
+                               @cache_store.shared_canonical_paths(mode: @mode, sources: source_metadata, manifest_key: shared_manifest["key"])
                              end
 
           cache_hit = @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
@@ -63,14 +65,14 @@ module Ace
                               elsif shared_cache_hit?(shared_canonical)
                                 hydrate_from_shared_cache(manifest, canonical, shared_canonical)
                               else
-                                build_cache_entry(compressor, sources, manifest, canonical, shared_canonical)
+                                build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical)
                               end
           cache_hit ||= shared_cache_hit?(shared_canonical)
 
           output_path = @cache_store.output_path_for(
             output: @output,
             mode: @mode,
-            sources: sources,
+            sources: source_metadata,
             manifest_key: manifest["key"]
           )
 
@@ -95,13 +97,13 @@ module Ace
           }
         end
 
-        def run_per_source(resolved_paths)
-          if resolved_paths.size > 1 && output_file_target?
+        def run_per_source(resolved_inputs)
+          if resolved_inputs.size > 1 && output_file_target?
             raise Ace::Compressor::Error,
                   "Per-source mode with multiple inputs requires --output to be a directory path"
           end
 
-          results = resolved_paths.map { |path| run_for_sources([path]) }
+          results = resolved_inputs.map { |entry| run_for_sources([entry]) }
           {
             console_output: join_console_outputs(results.map { |result| result[:console_output] }),
             ignored_paths: results.flat_map { |result| result[:ignored_paths] }.uniq,
@@ -130,8 +132,8 @@ module Ace
           !Dir.exist?(File.expand_path(@output))
         end
 
-        def build_cache_entry(compressor, sources, manifest, canonical, shared_canonical = nil)
-          content = compressor.compress_sources(sources)
+        def build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical = nil)
+          content = compress_content(compressor, sources, source_metadata)
           metadata = cache_metadata(manifest, canonical[:short_key], content)
           @cache_store.write_cache(
             pack_path: canonical[:pack_path],
@@ -149,6 +151,45 @@ module Ace
             )
           end
           [content, metadata]
+        end
+
+        def compress_content(compressor, sources, source_metadata)
+          source_paths = source_metadata.each_with_object({}) do |entry, hash|
+            hash[entry.fetch(:content_path)] = entry.fetch(:source_path)
+          end
+
+          parameters = compressor.method(:compress_sources).parameters
+          supports_source_paths = parameters.any? do |type, name|
+            [:key, :keyreq].include?(type) && name == :source_paths || type == :keyrest
+          end
+
+          return compressor.compress_sources(sources, source_paths: source_paths) if supports_source_paths
+
+          compressor.compress_sources(sources)
+        end
+
+        def build_source_metadata(sources, resolved_inputs)
+          identities = Array(resolved_inputs).each_with_object({}) do |entry, hash|
+            hash[File.expand_path(entry.fetch(:content_path))] = entry
+          end
+
+          Array(sources).map do |source|
+            expanded = File.expand_path(source)
+            resolved = identities[expanded]
+            if resolved
+              {
+                content_path: expanded,
+                source_path: resolved.fetch(:source_path),
+                source_kind: resolved.fetch(:source_kind)
+              }
+            else
+              {
+                content_path: expanded,
+                source_path: expanded,
+                source_kind: "file"
+              }
+            end
+          end
         end
 
         def format_console_output(content:, cache_hit:, output_path:, metadata:)

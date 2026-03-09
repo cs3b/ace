@@ -47,13 +47,13 @@ module Ace
           @resolver.ignored_paths
         end
 
-        def compress_sources(sources)
+        def compress_sources(sources, source_paths: nil)
           @refused_sources = []
           @example_registry = {}
           lines = [Ace::Compressor::Models::ContextPack.header(@mode_label)]
 
           Array(sources).each do |source|
-            source_label = source_label(source)
+            source_label = source_label(display_source(source, source_paths))
             lines << Ace::Compressor::Models::ContextPack.file_line(source_label)
             text = File.read(source)
             raise Ace::Compressor::Error, "Input file is empty. #{@mode_label.capitalize} mode requires content: #{source}" if text.strip.empty?
@@ -64,7 +64,7 @@ module Ace
             policy = @classifier.call(source: source_label, blocks: blocks)
             action = policy.fetch("action")
             lines << Ace::Compressor::Models::ContextPack.policy_line(doc_class: policy.fetch("class"), action: action)
-            transformed = @transformer.new(source).call(blocks)
+            transformed = @transformer.new(source_label).call(blocks)
 
             if @mode_label == "agent"
               lines.concat agent_records(transformed, policy: policy, source_label: source_label)
@@ -436,6 +436,12 @@ module Ace
 
         def register_example(tool, source_label)
           @example_registry[tool] ||= { "source" => source_label }
+        end
+
+        def display_source(source, source_paths)
+          return source unless source_paths
+
+          source_paths[File.expand_path(source)] || source_paths[source] || source
         end
 
         def source_label(source)

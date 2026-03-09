@@ -15,7 +15,7 @@ class CacheStoreTest < AceCompressorTestCase
     super
   end
 
-  def test_manifest_labels_override_produces_stable_key
+  def test_manifest_uses_source_path_for_stable_key
     store = Ace::Compressor::Molecules::CacheStore.new(cache_root: @tmp, project_root: Dir.pwd)
     content = "# Hello\n\nWorld.\n"
 
@@ -28,20 +28,19 @@ class CacheStoreTest < AceCompressorTestCase
     File.write(source2, content)
 
     # Without labels: different paths → different keys
-    manifest_a = store.manifest(mode: "exact", sources: [source1])
-    manifest_b = store.manifest(mode: "exact", sources: [source2])
+    manifest_a = store.manifest(mode: "exact", sources: [{ content_path: source1, source_path: source1, source_kind: "file" }])
+    manifest_b = store.manifest(mode: "exact", sources: [{ content_path: source2, source_path: source2, source_kind: "file" }])
     refute_equal manifest_a["key"], manifest_b["key"]
 
-    # With labels: same label → same key regardless of path
-    manifest_labeled_a = store.manifest(mode: "exact", sources: [source1], labels: { source1 => "docs/readme.md" })
-    manifest_labeled_b = store.manifest(mode: "exact", sources: [source2], labels: { source2 => "docs/readme.md" })
-    assert_equal manifest_labeled_a["key"], manifest_labeled_b["key"]
+    manifest_logical_a = store.manifest(mode: "exact", sources: [{ content_path: source1, source_path: "project", source_kind: "preset" }])
+    manifest_logical_b = store.manifest(mode: "exact", sources: [{ content_path: source2, source_path: "project", source_kind: "preset" }])
+    assert_equal manifest_logical_a["key"], manifest_logical_b["key"]
   ensure
     FileUtils.rm_rf(dir1) if dir1
     FileUtils.rm_rf(dir2) if dir2
   end
 
-  def test_manifest_without_labels_uses_expanded_path
+  def test_manifest_without_source_metadata_uses_expanded_path
     store = Ace::Compressor::Molecules::CacheStore.new(cache_root: @tmp, project_root: Dir.pwd)
     source = File.join(@tmp, "file.md")
     File.write(source, "content")
@@ -50,13 +49,13 @@ class CacheStoreTest < AceCompressorTestCase
     assert_equal File.expand_path(source), manifest["sources"].first["path"]
   end
 
-  def test_manifest_with_labels_uses_label_for_path
+  def test_manifest_with_source_metadata_uses_source_path
     store = Ace::Compressor::Molecules::CacheStore.new(cache_root: @tmp, project_root: Dir.pwd)
     source = File.join(@tmp, "file.md")
     File.write(source, "content")
 
-    manifest = store.manifest(mode: "exact", sources: [source], labels: { source => "my/label.md" })
-    assert_equal "my/label.md", manifest["sources"].first["path"]
+    manifest = store.manifest(mode: "exact", sources: [{ content_path: source, source_path: "project", source_kind: "preset" }])
+    assert_equal "project", manifest["sources"].first["path"]
   end
 
   def test_canonical_paths_handles_source_outside_project_root
@@ -71,5 +70,20 @@ class CacheStoreTest < AceCompressorTestCase
     assert_includes paths[:pack_path], ".exact.pack"
   ensure
     FileUtils.rm_rf(File.dirname(external_source)) if external_source
+  end
+
+  def test_canonical_paths_uses_logical_source_for_bundle_inputs
+    store = Ace::Compressor::Molecules::CacheStore.new(cache_root: @tmp, project_root: Dir.pwd)
+    bundled = File.join(@tmp, "resolved.md")
+    File.write(bundled, "# Bundled")
+
+    manifest = store.manifest(mode: "exact", sources: [{ content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow" }])
+    paths = store.canonical_paths(
+      mode: "exact",
+      sources: [{ content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow" }],
+      manifest_key: manifest["key"]
+    )
+
+    assert_includes paths[:pack_path], "wfi/task/draft"
   end
 end

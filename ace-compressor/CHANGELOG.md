@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-03-09
+
+### Fixed
+- Preserved stable logical source identity for ACE-native inputs resolved through `ace-bundle`, so preset/protocol/config runs no longer key cache entries or emit `FILE|...` records from ephemeral temp bundle paths.
+
+### Changed
+- Separated source identity from content file resolution in the runner/cache pipeline so compression still operates on concrete files while cache manifests and output records use stable user-facing source paths.
+
+### Technical
+- Expanded resolver, cache-store, runner, and command regression coverage for repeated ACE-native input runs, stable cache hits, and deterministic emitted source records.
+
 ## [0.21.0] - 2026-03-09
 
 ### Added
