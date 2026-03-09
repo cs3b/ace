@@ -66,7 +66,7 @@ class CompressCommandTest < AceCompressorTestCase
     File.write(path, "# Bundled\n\nFrom preset")
     fake_resolver = Class.new do
       define_method(:initialize) { |_sources| nil }
-      define_method(:call) { [path] }
+      define_method(:call) { [{ content_path: path, source_path: "project", source_kind: "preset" }] }
     end
 
     Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
@@ -74,7 +74,7 @@ class CompressCommandTest < AceCompressorTestCase
 
       assert_equal "", result[:stderr]
       assert_includes result[:stdout], "H|ContextPack/3|exact"
-      assert_includes result[:stdout], "FILE|bundle-output.md"
+      assert_includes result[:stdout], "FILE|project"
     end
   end
 
@@ -83,7 +83,7 @@ class CompressCommandTest < AceCompressorTestCase
     File.write(path, "# Config\n\nFrom yaml")
     fake_resolver = Class.new do
       define_method(:initialize) { |_sources| nil }
-      define_method(:call) { [path] }
+      define_method(:call) { [{ content_path: path, source_path: File.expand_path("./custom-context.yml"), source_kind: "bundle_config" }] }
     end
 
     Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
@@ -91,7 +91,7 @@ class CompressCommandTest < AceCompressorTestCase
 
       assert_equal "", result[:stderr]
       assert_includes result[:stdout], "H|ContextPack/3|exact"
-      assert_includes result[:stdout], "FILE|config-output.md"
+      assert_includes result[:stdout], "FILE|custom-context.yml"
     end
   end
 

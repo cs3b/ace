@@ -63,8 +63,8 @@ module Ace
           @exact.ignored_paths
         end
 
-        def compress_sources(sources)
-          exact_output = @exact.compress_sources(sources)
+        def compress_sources(sources, source_paths: nil)
+          exact_output = @exact.compress_sources(sources, source_paths: source_paths)
           exact_lines = normalize_output_lines(exact_output)
           return exact_output if exact_lines.empty?
 

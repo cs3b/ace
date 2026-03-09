@@ -21,11 +21,13 @@ module Ace
           @project_root = File.expand_path(project_root)
         end
 
-        def manifest(mode:, sources:, labels: nil)
-          source_entries = Array(sources).sort.map do |source|
-            content = File.binread(source)
+        def manifest(mode:, sources:)
+          source_entries = Array(sources).map { |source| normalize_source_entry(source) }
+                                       .sort_by { |entry| entry.fetch("path") }
+                                       .map do |entry|
+            content = File.binread(entry.fetch("content_path"))
             {
-              "path" => (labels && labels[source]) || File.expand_path(source),
+              "path" => entry.fetch("path"),
               "sha256" => Digest::SHA256.hexdigest(content),
               "bytes" => content.bytesize,
               "lines" => line_count(content)
@@ -74,8 +76,8 @@ module Ace
         def shared_manifest(mode:, sources:)
           return nil unless shared_cache_eligible?(sources)
 
-          source = Array(sources).first
-          content = File.binread(source)
+          source = normalize_source_entry(Array(sources).first)
+          content = File.binread(source.fetch("content_path"))
           payload = {
             "schema" => Ace::Compressor::Models::ContextPack::SCHEMA,
             "mode" => mode,
@@ -92,7 +94,7 @@ module Ace
         def shared_canonical_paths(mode:, sources:, manifest_key:)
           return nil unless shared_cache_eligible?(sources)
 
-          source = Array(sources).first
+          source = normalize_source_entry(Array(sources).first)
           stem = shared_stem_for(source)
           short_key = manifest_key[0, SHORT_KEY_LENGTH]
           pack_path = File.join(shared_cache_root, mode, "#{stem}.#{short_key}.#{mode}#{PACK_EXTENSION}")
@@ -176,23 +178,29 @@ module Ace
         end
 
         def default_stem_for(sources)
-          source = Array(sources).first
+          source = normalize_source_entry(Array(sources).first)
           return "multi" unless Array(sources).size == 1 && source
 
-          relative = relative_to_project(source).to_s
+          source_path = source.fetch("path")
+          relative = logical_source?(source_path) ? sanitize_logical_source(source_path) : relative_to_project(source_path).to_s
           sanitized = relative.sub(/\.[^.]+\z/, "")
           sanitized.empty? ? "multi" : sanitized
         end
 
         def shared_stem_for(source)
-          expanded = File.expand_path(source)
+          if source.fetch("source_kind") == "workflow" && source.fetch("path").start_with?("wfi://")
+            workflow_path = source.fetch("path").sub(/\Awfi:\/\//, "")
+            return File.join("workflow", workflow_path)
+          end
+
+          expanded = File.expand_path(source.fetch("content_path"))
           if (match = expanded.match(%r{/(ace-[^/]+)/handbook/workflow-instructions/(.+)\.wf\.md\z}))
             package = match[1]
             remainder = match[2]
             return File.join(package, "workflow-instructions", remainder)
           end
 
-          basename = File.basename(expanded).sub(/\.[^.]+\z/, "")
+          basename = File.basename(source.fetch("path")).sub(/\.[^.]+\z/, "")
           File.join("workflow", basename.empty? ? "source" : basename)
         end
 
@@ -217,6 +225,26 @@ module Ace
           File.join(directory, "#{label}.#{short_key}.#{mode}#{PACK_EXTENSION}")
         end
 
+        def normalize_source_entry(source)
+          if source.is_a?(Hash)
+            content_path = File.expand_path(source.fetch(:content_path) { source.fetch("content_path") })
+            source_path = source.fetch(:source_path) { source.fetch("source_path") }
+            source_kind = source.fetch(:source_kind) { source.fetch("source_kind", "file") }
+            return {
+              "content_path" => content_path,
+              "path" => source_path.to_s,
+              "source_kind" => source_kind.to_s
+            }
+          end
+
+          expanded = File.expand_path(source.to_s)
+          {
+            "content_path" => expanded,
+            "path" => expanded,
+            "source_kind" => "file"
+          }
+        end
+
         def ensure_parent_dir(path)
           directory = File.dirname(path)
           FileUtils.mkdir_p(directory) unless directory == "."
@@ -224,6 +252,18 @@ module Ace
 
         def line_count(content)
           content.lines.count
+        end
+
+        def logical_source?(value)
+          value.to_s.match?(%r{\A[a-z][a-z0-9+\-.]*://}i) || !Pathname.new(value.to_s).absolute?
+        rescue ArgumentError
+          true
+        end
+
+        def sanitize_logical_source(value)
+          value.to_s.sub(%r{\A([a-z][a-z0-9+\-.]*)://}i, "\\1/")
+               .gsub(/[^A-Za-z0-9._\/-]+/, "_")
+               .sub(/\A\/+/, "")
         end
 
         def format_bytes(bytes)
@@ -250,7 +290,10 @@ module Ace
         end
 
         def workflow_source?(source)
-          File.expand_path(source).match?(%r{/handbook/workflow-instructions/.+\.wf\.md\z})
+          entry = normalize_source_entry(source)
+          return true if entry.fetch("source_kind") == "workflow"
+
+          File.expand_path(entry.fetch("content_path")).match?(%r{/handbook/workflow-instructions/.+\.wf\.md\z})
         end
       end
     end

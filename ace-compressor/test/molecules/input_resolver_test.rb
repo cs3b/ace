@@ -39,7 +39,7 @@ class InputResolverTest < AceCompressorTestCase
 
     resolved = resolver.call
 
-    assert_equal [file_path], resolved
+    assert_equal [{ content_path: file_path, source_path: file_path, source_kind: "file" }], resolved
     assert_empty shell_calls
   end
 
@@ -58,7 +58,9 @@ class InputResolverTest < AceCompressorTestCase
     resolved = resolver.call
 
     assert_equal 1, resolved.size
-    assert File.file?(resolved.first)
+    assert File.file?(resolved.first[:content_path])
+    assert_equal "project", resolved.first[:source_path]
+    assert_equal "preset", resolved.first[:source_kind]
     assert_equal "ace-bundle", shell_calls.first.first
     assert_equal "project", shell_calls.first[1]
     assert_includes shell_calls.first, "--output"
@@ -81,7 +83,9 @@ class InputResolverTest < AceCompressorTestCase
     resolved = resolver.call
 
     assert_equal 1, resolved.size
-    assert File.file?(resolved.first)
+    assert File.file?(resolved.first[:content_path])
+    assert_equal config_path, resolved.first[:source_path]
+    assert_equal "bundle_config", resolved.first[:source_kind]
     assert_equal "ace-bundle", shell_calls.first.first
     assert_equal config_path, shell_calls.first[1]
   end
@@ -112,8 +116,10 @@ class InputResolverTest < AceCompressorTestCase
     resolved = resolver.call
 
     assert_equal 2, resolved.size
-    assert File.file?(resolved.first)
-    assert_equal local_file, resolved.last
+    assert File.file?(resolved.first[:content_path])
+    assert_equal "project", resolved.first[:source_path]
+    assert_equal local_file, resolved.last[:content_path]
+    assert_equal local_file, resolved.last[:source_path]
   end
 
   def test_unknown_preset_propagates_input_name

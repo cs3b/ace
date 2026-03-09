@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.813] - 2026-03-09
+
+### Fixed
+- **ace-compressor v0.21.1**: Fixed ACE-native preset/protocol/config input caching and emitted `FILE|...` records so bundle-resolved runs now preserve stable logical source identity instead of using temp bundle paths.
+
 ## [0.9.812] - 2026-03-09
 
 ### Fixed
