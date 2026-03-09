@@ -1023,10 +1023,14 @@ module Ace
               formatter = Ace::Core::Molecules::OutputFormatter.new(format)
               bundle.content = formatter.format(data)
             end
-            bundle
-          else
-            bundle
           end
+
+          # Post-format: compress rendered content for section bundles where
+          # section-level compression was not applicable (sections had commands/diffs
+          # but no files, so _processed_files was empty)
+          compress_rendered_bundle(bundle)
+
+          bundle
         end
 
         def compress_bundle_sections(bundle)
@@ -1055,6 +1059,54 @@ module Ace
           require "ace/compressor"
           compressor = Molecules::SectionCompressor.new(default_mode: source_scope, compressor_mode: compressor_mode)
           compressor.call(bundle)
+        end
+
+        # Compress rendered bundle content in-memory for section bundles where
+        # section-level compression was a no-op (no _processed_files to compress).
+        # This handles template bundles with command-only/diff-only sections.
+        def compress_rendered_bundle(bundle)
+          return unless bundle.has_sections?
+          return if bundle.metadata[:compressed]
+          return if sections_have_processed_files?(bundle)
+
+          # --compressor off: absolute kill switch
+          return if @options[:compressor]&.to_s == "off"
+
+          # Resolve compressor_mode: CLI > preset > config > "exact"
+          compressor_mode = @options[:compressor_mode]&.to_s
+          compressor_mode = bundle.metadata[:compressor_mode]&.to_s if compressor_mode.nil? || compressor_mode.empty?
+          compressor_mode = Ace::Bundle.compressor_mode if compressor_mode.nil? || compressor_mode.empty?
+          compressor_mode = "exact" if compressor_mode.nil? || compressor_mode.empty?
+
+          # Only exact mode supports in-memory compress_text
+          return unless compressor_mode == "exact"
+
+          # Resolve source_scope: CLI > preset > config > "off"
+          source_scope = @options[:compressor_source_scope]&.to_s
+          source_scope = bundle.metadata[:compressor_source_scope]&.to_s if source_scope.nil? || source_scope.empty?
+          source_scope = Ace::Bundle.compressor_source_scope if source_scope.nil? || source_scope.empty?
+
+          # --compressor on: force-enable if scope resolved to "off"
+          if @options[:compressor]&.to_s == "on" && (source_scope.nil? || source_scope.empty? || source_scope == "off")
+            source_scope = "per-source"
+          end
+
+          return if source_scope.nil? || source_scope.empty? || source_scope == "off"
+
+          content = bundle.content.to_s
+          return if content.strip.empty?
+
+          require "ace/compressor"
+          label = bundle.metadata[:source]&.to_s || "bundle.md"
+          compressed = Ace::Compressor.compress_text(content, label: label, mode: compressor_mode)
+          bundle.content = compressed
+          bundle.metadata[:compressed] = true
+        end
+
+        def sections_have_processed_files?(bundle)
+          return false unless bundle.has_sections?
+
+          bundle.sections.any? { |_, data| data[:_processed_files]&.any? }
         end
 
         def load_protocol(protocol_ref)
