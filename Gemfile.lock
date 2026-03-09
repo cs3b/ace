@@ -31,7 +31,7 @@ PATH
 PATH
   remote: ace-compressor
   specs:
-    ace-compressor (0.15.0)
+    ace-compressor (0.16.0)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
       dry-cli (~> 1.1)

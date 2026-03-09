@@ -12,9 +12,9 @@ module Ace
         PACK_EXTENSION = ".pack"
         METADATA_EXTENSION = ".json"
         SHORT_KEY_LENGTH = 12
-        EXACT_CACHE_CONTRACT = "exact-table-rows-v2"
-        COMPACT_CACHE_CONTRACT = "compact-table-rows-v2"
-        AGENT_CACHE_CONTRACT = "agent-payload-rewrite-v6"
+        EXACT_CACHE_CONTRACT = "exact-list-shell-v3"
+        COMPACT_CACHE_CONTRACT = "compact-list-shell-v3"
+        AGENT_CACHE_CONTRACT = "agent-payload-rewrite-v7"
 
         def initialize(cache_root: nil, project_root: Dir.pwd)
           @cache_root = File.expand_path(cache_root || default_cache_root, project_root)

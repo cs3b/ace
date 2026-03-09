@@ -44,6 +44,20 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
     assert_includes lines, "LIST|core_principles|[cli_first,transparent_inspectable]"
   end
 
+  def test_long_narrative_lists_use_compact_phrase_slugs
+    blocks = [
+      { type: :heading, level: 2, text: "Execution Flow" },
+      { type: :list, ordered: false, items: [
+        "Update the task status before implementation and verification steps begin",
+        "Document the final implementation details in the task record"
+      ] }
+    ]
+
+    lines = @transformer.call(blocks)
+
+    assert_includes lines, "LIST|execution_flow|[update_task_status_before_implementation_verification_steps_begin,document_final_implementation_details_task_record]"
+  end
+
   def test_problem_context_text_can_drive_problems_record
     blocks = [
       { type: :heading, level: 2, text: "Why ACE Exists" },
@@ -70,6 +84,18 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
     assert_includes lines, "CMD|ace-git-commit -i \"fix auth bug\""
     assert_includes lines, "FILES|ace-git-commit|[.ace-defaults/git/commit.yml,handbook/prompts/git-commit.system.md,exe/ace-git-commit]"
     assert_includes lines, "CODE|ruby|puts 1 puts 2"
+  end
+
+  def test_shell_script_blocks_collapse_to_single_code_record
+    blocks = [
+      { type: :heading, level: 2, text: "Run Script" },
+      { type: :fenced_code, language: "bash", content: "# prepare\nif test -f tmp.txt; then\n  echo ok\nfi\n" }
+    ]
+
+    lines = @transformer.call(blocks)
+
+    assert_includes lines, "CODE|bash|# prepare if test -f tmp.txt; then echo ok fi"
+    refute_includes lines, "CMD|# prepare"
   end
 
   def test_prose_example_line_emits_example_record
