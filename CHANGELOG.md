@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.814] - 2026-03-09
+
+### Fixed
+- **ace-bundle v0.35.3**: Fixed section compression to use the current compressor cache-manifest API and restored rendered-content compression for plain-markdown bundle fallbacks.
+- **ace-prompt-prep v0.17.4**: Fixed bundle-related test expectations to validate the current compressed-output contract instead of stale raw-markdown behavior.
+- **ace-support-test-helpers v0.12.4**: Fixed temp-dir test isolation by resetting cached `Ace::Bundle` config when test helpers change working directories.
+
 ## [0.9.813] - 2026-03-09
 
 ### Fixed
