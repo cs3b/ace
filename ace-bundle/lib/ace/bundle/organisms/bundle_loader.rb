@@ -1078,9 +1078,6 @@ module Ace
           compressor_mode = Ace::Bundle.compressor_mode if compressor_mode.nil? || compressor_mode.empty?
           compressor_mode = "exact" if compressor_mode.nil? || compressor_mode.empty?
 
-          # Only exact mode supports in-memory compress_text
-          return unless compressor_mode == "exact"
-
           # Resolve source_scope: CLI > preset > config > "off"
           source_scope = @options[:compressor_source_scope]&.to_s
           source_scope = bundle.metadata[:compressor_source_scope]&.to_s if source_scope.nil? || source_scope.empty?

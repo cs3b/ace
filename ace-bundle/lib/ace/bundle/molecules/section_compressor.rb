@@ -82,16 +82,25 @@ module Ace
           files = section_data[:_processed_files]
           return if files.nil? || files.empty?
 
-          compressible, passthrough = files.partition { |f| compressible?(f[:path]) }
+          compressible = files.select { |f| compressible?(f[:path]) }
           return if compressible.empty?
 
           case mode
           when "per-source"
             compress_per_source(compressible)
-            section_data[:_processed_files] = compressible + passthrough
           when "merged"
             merged = compress_merged(compressible)
-            section_data[:_processed_files] = [merged] + passthrough
+            merged_inserted = false
+            section_data[:_processed_files] = files.each_with_object([]) do |file_info, ordered_files|
+              if compressible?(file_info[:path])
+                next if merged_inserted
+
+                ordered_files << merged
+                merged_inserted = true
+              else
+                ordered_files << file_info
+              end
+            end
           end
         end
 

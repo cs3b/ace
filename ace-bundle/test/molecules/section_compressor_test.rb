@@ -64,6 +64,42 @@ class SectionCompressorTest < AceTestCase
     assert md_file[:compressed]
   end
 
+  def test_per_source_preserves_original_file_order_for_mixed_sections
+    bundle = make_bundle_with_files([
+      { path: "a.md", content: "# File A\n\nContent A.\n" },
+      { path: "lib/app.rb", content: "def hello; end" },
+      { path: "c.md", content: "# File C\n\nContent C.\n" }
+    ])
+
+    @compressor.call(bundle)
+
+    files = bundle.sections["docs"][:_processed_files]
+    assert_equal ["a.md", "lib/app.rb", "c.md"], files.map { |file| file[:path] }
+    assert files[0][:compressed]
+    refute files[1][:compressed]
+    assert files[2][:compressed]
+  end
+
+  def test_merged_preserves_passthrough_file_positions
+    compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "merged")
+    bundle = make_bundle_with_files([
+      { path: "lib/pre.rb", content: "PRE = true" },
+      { path: "a.md", content: "# File A\n\nContent A.\n" },
+      { path: "b.md", content: "# File B\n\nContent B.\n" },
+      { path: "lib/post.rb", content: "POST = true" }
+    ])
+
+    compressor.call(bundle)
+
+    files = bundle.sections["docs"][:_processed_files]
+    assert_equal ["lib/pre.rb", "a.md", "lib/post.rb"], files.map { |file| file[:path] }
+    assert_equal "PRE = true", files[0][:content]
+    assert files[1][:compressed]
+    assert_includes files[1][:content], "FILE|a.md"
+    assert_includes files[1][:content], "FILE|b.md"
+    assert_equal "POST = true", files[2][:content]
+  end
+
   def test_section_level_override
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source")
     bundle = make_bundle_with_md_section("# Title\n\nText.\n")
