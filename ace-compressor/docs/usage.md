@@ -3,7 +3,7 @@ doc-type: how-to-guide
 purpose: Usage guide for ace-compressor CLI tool — exact, compact, and agent context compression to ContextPack/3.
 update:
   update_frequency: on-change
-  last-updated: '2026-03-07'
+  last-updated: '2026-03-09'
 ---
 
 # ace-compressor Usage Guide
@@ -22,6 +22,7 @@ minimal, semantic representation that preserves document structure and meaning w
 - **Compact mode**: Policy-driven narrative compaction with runtime metadata:
   `POLICY|class=<...>|action=<...>`.
 - **Agent mode**: Runs exact extraction first, then uses the LLM only to rewrite selected payloads (`SUMMARY|`, `FACT|`, and long `LIST|...` values) while keeping record structure deterministic.
+- **Benchmark mode**: Compares `exact`, `compact`, and `agent` on real files using bytes, lines, and retention coverage against the exact baseline.
 - **Multi-source**: Accepts one or more files and/or directories in a single run.
 - **Provenance**: `FILE|` and `SEC|` records establish scope inline; no separate source table is emitted.
 - **Fidelity markers**: Images emit `U|...`; compact reductions emit explicit `TABLE|...|strategy=...`,
@@ -38,6 +39,9 @@ ace-compressor docs/vision.md --mode compact --format stdio
 
 # Agent mode for one representative source
 ace-compressor docs/architecture.md --mode agent --verbose
+
+# Benchmark all modes on a live file
+ace-compressor benchmark docs/architecture.md --modes exact,compact,agent
 
 # Expected output:
 /absolute/path/to/.ace-local/compressor/exact/docs/vision.<hash>.exact.pack
@@ -100,6 +104,23 @@ agent_template_uri: tmpl://agent/minify-single-source
 
 Agent mode keeps `H|`, `FILE|`, `SEC|`, and protected records deterministic. The LLM is used only to rewrite payload text, not to regenerate full `ContextPack` records.
 
+### Cache Configuration
+
+`ace-compressor` now supports a local project cache plus an optional shared per-machine cache for stable workflow files.
+
+```yaml
+# .ace/compressor/config.yml
+cache_dir: .ace-local/compressor
+shared_cache_dir: ~/.ace/cache/compressor
+shared_cache_scope: workflow_only
+```
+
+- `cache_dir`: local canonical cache written in the current project/worktree
+- `shared_cache_dir`: machine-wide cache store used only for eligible files
+- `shared_cache_scope: workflow_only`: share cache only for files under `handbook/workflow-instructions/**/*.wf.md`
+
+Shared-cache hits are hydrated back into the normal local canonical path, so the user-facing output path stays unchanged.
+
 ## Output Contract
 
 `ace-compressor` separates saved output from console output:
@@ -132,6 +153,23 @@ Original: 3,663 B, 101 lines
 Packed:   3,691 B, 37 lines
 Change:   -6.2% bytes, -63.4% lines
 ```
+
+## Benchmark Command
+
+Use `ace-compressor benchmark` to compare mode behavior on live files.
+
+```bash
+ace-compressor benchmark docs/architecture.md --modes exact,compact,agent
+ace-compressor benchmark docs/ tools/ --format json
+```
+
+Benchmark output reports:
+- byte and line deltas per mode
+- cache hit/miss per mode
+- section coverage vs the exact baseline
+- protected-record coverage vs the exact baseline
+- structured-record coverage vs the exact baseline
+- explicit loss/refusal/fallback marker counts
 
 ## Output Format: ContextPack/3
 
@@ -277,10 +315,11 @@ No project-level configuration is required for basic usage. Defaults are in
 To override defaults project-wide, create `.ace/compressor/config.yml`:
 
 ```yaml
-compressor:
-  default_mode: exact
-  default_format: path
-  cache_dir: .ace-local/compressor
+default_mode: exact
+default_format: path
+cache_dir: .ace-local/compressor
+shared_cache_dir: ~/.ace/cache/compressor
+shared_cache_scope: workflow_only
 ```
 
 ## Troubleshooting

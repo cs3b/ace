@@ -133,4 +133,36 @@ class CompressionRunnerTest < AceCompressorTestCase
       assert_includes result[:console_output], "FACT|Content"
     end
   end
+
+  def test_shared_workflow_cache_reuses_content_across_project_roots
+    shared_root = File.join(@tmp, "shared-cache")
+    repo_one = File.join(@tmp, "repo-one")
+    repo_two = File.join(@tmp, "repo-two")
+    workflow_rel = File.join("ace-task", "handbook", "workflow-instructions", "task", "draft.wf.md")
+    workflow_one = File.join(repo_one, workflow_rel)
+    workflow_two = File.join(repo_two, workflow_rel)
+    FileUtils.mkdir_p(File.dirname(workflow_one))
+    FileUtils.mkdir_p(File.dirname(workflow_two))
+    File.write(workflow_one, "# Draft\n\nWorkflow content")
+    File.write(workflow_two, "# Draft\n\nWorkflow content")
+
+    config = {
+      "cache_dir" => ".ace-local/compressor",
+      "shared_cache_dir" => shared_root,
+      "shared_cache_scope" => "workflow_only",
+      "default_format" => "path"
+    }
+
+    Ace::Compressor.stub(:config, config) do
+      Dir.chdir(repo_one) do
+        Ace::Compressor::Organisms::CompressionRunner.new([workflow_one], mode: "exact", format: "path").call
+      end
+
+      Dir.chdir(repo_two) do
+        result = Ace::Compressor::Organisms::CompressionRunner.new([workflow_two], mode: "exact", format: "stats").call
+        assert_includes result[:console_output], "Cache:    hit"
+        assert File.file?(result[:output_path]), "Expected hydrated local cache file to exist"
+      end
+    end
+  end
 end

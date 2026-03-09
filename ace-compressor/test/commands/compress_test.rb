@@ -22,7 +22,7 @@ class CompressCommandTest < AceCompressorTestCase
   def invoke(args)
     stdout, stderr = capture_io do
       begin
-        @result = Dry::CLI.new(Ace::Compressor::CLI::Commands::Compress).call(arguments: args)
+        @result = Ace::Compressor::CLI.start(args)
       rescue SystemExit => e
         @result = e.status
       rescue Ace::Core::CLI::Error => e
@@ -587,5 +587,19 @@ class CompressCommandTest < AceCompressorTestCase
 
     assert_equal 1, result[:result]
     assert_includes result[:stderr], "Unsupported format 'json'"
+  end
+
+  def test_benchmark_command_prints_comparison_table
+    path = File.join(@tmp, "vision.md")
+    File.write(path, "# Vision\n\nAgents can run CLI commands.\n")
+
+    result = invoke(["benchmark", path, "--modes", "exact,compact", "--format", "table"])
+
+    assert_equal "", result[:stderr]
+    assert_includes result[:stdout], "Source"
+    assert_includes result[:stdout], "Mode"
+    assert_includes result[:stdout], "vision.md"
+    assert_includes result[:stdout], "exact"
+    assert_includes result[:stdout], "compact"
   end
 end

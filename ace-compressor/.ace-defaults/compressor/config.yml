@@ -1,6 +1,8 @@
 default_mode: exact
 default_format: path
 cache_dir: .ace-local/compressor
+shared_cache_dir: ~/.ace/cache/compressor
+shared_cache_scope: workflow_only
 
 # Model alias or provider:model used for agent-mode prompt minification.
 agent_model: glite

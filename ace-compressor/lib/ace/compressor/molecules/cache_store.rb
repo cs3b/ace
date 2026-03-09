@@ -59,6 +59,51 @@ module Ace
           }
         end
 
+        def shared_cache_enabled?
+          !shared_cache_root.to_s.strip.empty?
+        end
+
+        def shared_cache_eligible?(sources)
+          return false unless shared_cache_enabled?
+          return false unless shared_cache_scope == "workflow_only"
+
+          values = Array(sources)
+          values.size == 1 && workflow_source?(values.first)
+        end
+
+        def shared_manifest(mode:, sources:)
+          return nil unless shared_cache_eligible?(sources)
+
+          source = Array(sources).first
+          content = File.binread(source)
+          payload = {
+            "schema" => Ace::Compressor::Models::ContextPack::SCHEMA,
+            "mode" => mode,
+            "mode_contract" => mode_contract_for(mode),
+            "source_kind" => "workflow",
+            "sha256" => Digest::SHA256.hexdigest(content),
+            "bytes" => content.bytesize,
+            "lines" => line_count(content)
+          }
+
+          { "key" => Digest::SHA256.hexdigest(JSON.generate(payload)) }
+        end
+
+        def shared_canonical_paths(mode:, sources:, manifest_key:)
+          return nil unless shared_cache_eligible?(sources)
+
+          source = Array(sources).first
+          stem = shared_stem_for(source)
+          short_key = manifest_key[0, SHORT_KEY_LENGTH]
+          pack_path = File.join(shared_cache_root, mode, "#{stem}.#{short_key}.#{mode}#{PACK_EXTENSION}")
+
+          {
+            pack_path: pack_path,
+            metadata_path: pack_path.sub(/#{Regexp.escape(PACK_EXTENSION)}\z/, METADATA_EXTENSION),
+            short_key: short_key
+          }
+        end
+
         def output_path_for(output:, mode:, sources:, manifest_key:)
           paths = canonical_paths(mode: mode, sources: sources, manifest_key: manifest_key)
           return paths[:pack_path] if output.nil? || output.to_s.strip.empty?
@@ -111,6 +156,17 @@ module Ace
           Ace::Compressor.config["cache_dir"] || ".ace-local/compressor"
         end
 
+        def shared_cache_root
+          value = Ace::Compressor.config["shared_cache_dir"]
+          return "" if value.to_s.strip.empty?
+
+          File.expand_path(value.to_s)
+        end
+
+        def shared_cache_scope
+          (Ace::Compressor.config["shared_cache_scope"] || "workflow_only").to_s
+        end
+
         def mode_contract_for(mode)
           case mode.to_s
           when "exact" then EXACT_CACHE_CONTRACT
@@ -126,6 +182,18 @@ module Ace
           relative = relative_to_project(source)
           sanitized = relative.sub(/\.[^.]+\z/, "")
           sanitized.empty? ? "multi" : sanitized
+        end
+
+        def shared_stem_for(source)
+          expanded = File.expand_path(source)
+          if (match = expanded.match(%r{/(ace-[^/]+)/handbook/workflow-instructions/(.+)\.wf\.md\z}))
+            package = match[1]
+            remainder = match[2]
+            return File.join(package, "workflow-instructions", remainder)
+          end
+
+          basename = File.basename(expanded).sub(/\.[^.]+\z/, "")
+          File.join("workflow", basename.empty? ? "source" : basename)
         end
 
         def relative_to_project(path)
@@ -176,6 +244,10 @@ module Ace
 
           percent = ((packed.to_f - original.to_f) / original.to_f) * 100.0
           format("%+.1f%% %s", percent, label)
+        end
+
+        def workflow_source?(source)
+          File.expand_path(source).match?(%r{/handbook/workflow-instructions/.+\.wf\.md\z})
         end
       end
     end

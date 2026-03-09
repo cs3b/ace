@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-03-09
+
+### Added
+- Added `ace-compressor benchmark` to compare `exact`, `compact`, and `agent` on live files using byte/line deltas plus retention coverage against the exact baseline.
+- Added shared per-machine workflow cache support with configurable `shared_cache_dir` and `shared_cache_scope` so stable `wfi://...` sources can be reused across worktrees on the same machine.
+
+### Changed
+- Changed the CLI entrypoint to route benchmark runs separately while preserving existing `compress` behavior and output paths.
+- Changed cache handling so eligible shared-cache hits hydrate back into the normal local canonical cache path.
+
+### Technical
+- Added retention reporting and benchmark runner internals to keep comparison/reporting logic out of the normal compression path.
+- Expanded command and organism regression coverage for benchmark output and cross-project shared workflow cache reuse.
+
 ## [0.16.0] - 2026-03-09
 
 ### Changed
