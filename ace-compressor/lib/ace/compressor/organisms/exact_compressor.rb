@@ -66,11 +66,11 @@ module Ace
           sorted
         end
 
-        def compress_sources(sources)
+        def compress_sources(sources, source_paths: nil)
           lines = [Ace::Compressor::Models::ContextPack.header("exact")]
 
           sources.each do |source|
-            source_label = source_label(source)
+            source_label = source_label(display_source(source, source_paths))
             lines << Ace::Compressor::Models::ContextPack.file_line(source_label)
             text = File.read(source)
             if text.strip.empty?
@@ -81,7 +81,7 @@ module Ace
               raise Ace::Compressor::Error,
                     "Input file is empty after frontmatter removal. #{mode_title} mode requires content: #{source}"
             end
-            lines.concat transformed_lines(source, blocks)
+            lines.concat transformed_lines(source_label, blocks)
           end
 
           lines.join("\n")
@@ -109,6 +109,12 @@ module Ace
         def transformed_lines(source, blocks)
           transformer = @transformer.new(source)
           transformer.call(blocks)
+        end
+
+        def display_source(source, source_paths)
+          return source unless source_paths
+
+          source_paths[File.expand_path(source)] || source_paths[source] || source
         end
 
         def collect_supported_directory_files(directory)

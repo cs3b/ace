@@ -32,25 +32,33 @@ module Ace
         def resolve_one(raw_input, index)
           expanded = File.expand_path(raw_input)
           if File.file?(expanded)
-            return resolve_with_bundle(raw_input, index) if config_extension?(raw_input)
+            return resolve_with_bundle(raw_input, index, source_path: expanded, source_kind: "bundle_config") if config_extension?(raw_input)
 
-            return raw_input
+            return resolved_input(content_path: expanded, source_path: expanded, source_kind: "file")
           end
-          return raw_input if File.directory?(expanded)
-          return resolve_with_bundle(raw_input, index) if protocol_input?(raw_input)
+          return resolved_input(content_path: expanded, source_path: expanded, source_kind: "directory") if File.directory?(expanded)
+          return resolve_with_bundle(raw_input, index, source_path: raw_input, source_kind: protocol_source_kind(raw_input)) if protocol_input?(raw_input)
           raise Ace::Compressor::Error, "Input source not found: #{raw_input}" if looks_like_path?(raw_input)
 
-          resolve_with_bundle(raw_input, index)
+          resolve_with_bundle(raw_input, index, source_path: raw_input, source_kind: "preset")
         end
 
-        def resolve_with_bundle(raw_input, index)
+        def resolve_with_bundle(raw_input, index, source_path:, source_kind:)
           output_path = File.join(@temp_root, "resolved_#{index + 1}.md")
           stdout, stderr, status = @shell_runner.call(["ace-bundle", raw_input, "--output", output_path])
-          return output_path if status.success?
+          return resolved_input(content_path: output_path, source_path: source_path, source_kind: source_kind) if status.success?
 
           details = stderr.to_s.strip
           details = stdout.to_s.strip if details.empty?
           raise Ace::Compressor::Error, "Failed to resolve input '#{raw_input}': #{details}"
+        end
+
+        def resolved_input(content_path:, source_path:, source_kind:)
+          {
+            content_path: content_path,
+            source_path: source_path,
+            source_kind: source_kind
+          }
         end
 
         def looks_like_path?(value)
@@ -65,6 +73,12 @@ module Ace
 
         def protocol_input?(value)
           value.match?(%r{\A[a-z][a-z0-9+\-.]*://}i)
+        end
+
+        def protocol_source_kind(value)
+          return "workflow" if value.to_s.start_with?("wfi://")
+
+          "protocol"
         end
 
         def default_shell_runner(command)
