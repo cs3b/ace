@@ -68,6 +68,14 @@ module Ace
           option :output, type: :string, aliases: %w[-o], desc: "Output mode: stdio, cache, or file path"
           option :format, type: :string, desc: "Output format (markdown, yaml, xml, markdown-xml, json)"
 
+          # Compression
+          option :compressor, type: :string, default: nil,
+                 desc: "Enable/disable compression: on, off"
+          option :compressor_mode, type: :string, default: nil,
+                 desc: "Compressor engine: exact, agent (default: exact)"
+          option :compressor_source_scope, type: :string, default: nil,
+                 desc: "Source handling: off, per-source, merged (default: off)"
+
           # Resource limits
           option :max_size, type: :integer, desc: "Maximum file size in bytes"
           option :timeout, type: :integer, desc: "Command timeout in seconds"
@@ -117,6 +125,26 @@ module Ace
 
             # Same for file option
             options[:file] = [options[:file]].flatten if options[:file]
+
+            # Normalize --compressor toggle
+            if options.key?(:compressor) && options[:compressor]
+              val = options[:compressor].to_s.downcase
+              options[:compressor] = case val
+                                     when "true", "yes", "on", "1" then "on"
+                                     when "false", "no", "off", "0" then "off"
+                                     else val
+                                     end
+            end
+
+            # Normalize compressor_source_scope option
+            if options.key?(:compressor_source_scope) && options[:compressor_source_scope]
+              val = options[:compressor_source_scope].to_s.downcase
+              options[:compressor_source_scope] = case val
+                                                  when "true", "yes", "on", "" then "per-source"
+                                                  when "false", "no", "off" then "off"
+                                                  else val
+                                                  end
+            end
 
             execute(input, options)
           end

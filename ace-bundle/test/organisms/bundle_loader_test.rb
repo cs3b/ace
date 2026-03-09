@@ -1113,4 +1113,212 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  # --- Compressor resolution chain tests ---
+
+  def test_compressor_off_flag_skips_compression
+    with_temp_dir do
+      File.write("doc.md", "# Long document\n" + ("Content line\n" * 50))
+
+      create_preset("compress-test", <<~MARKDOWN)
+        ---
+        description: Compress test
+        bundle:
+          params:
+            output: stdio
+            compressor_source_scope: per-source
+            compressor_mode: exact
+          embed_document_source: true
+          files:
+            - doc.md
+        ---
+        Compress test
+      MARKDOWN
+
+      # With --compressor off, SectionCompressor should never be instantiated
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        base_dir: Dir.pwd,
+        compressor: "off"
+      )
+
+      called = false
+      original_new = Ace::Bundle::Molecules::SectionCompressor.method(:new)
+      Ace::Bundle::Molecules::SectionCompressor.stub(:new, ->(**_kw) { called = true; original_new.call(**_kw) }) do
+        loader.load_preset("compress-test")
+      end
+
+      refute called, "--compressor off should skip compression entirely"
+    end
+  end
+
+  def test_compressor_on_flag_enables_compression
+    with_temp_dir do
+      File.write("doc.md", "# Doc\nSome content")
+
+      create_preset("no-scope-test", <<~MARKDOWN)
+        ---
+        description: No scope test
+        bundle:
+          params:
+            output: stdio
+          embed_document_source: true
+          files:
+            - doc.md
+        ---
+        No scope
+      MARKDOWN
+
+      # --compressor on with no scope set anywhere should force per-source
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        base_dir: Dir.pwd,
+        compressor: "on"
+      )
+
+      captured_mode = nil
+      original_new = Ace::Bundle::Molecules::SectionCompressor.method(:new)
+      mock_new = ->(**kw) {
+        captured_mode = kw[:default_mode]
+        original_new.call(**kw)
+      }
+
+      Ace::Bundle.stub(:compressor_source_scope, "off") do
+        Ace::Bundle::Molecules::SectionCompressor.stub(:new, mock_new) do
+          loader.load_preset("no-scope-test")
+        end
+      end
+
+      assert_equal "per-source", captured_mode, "--compressor on should force per-source scope"
+    end
+  end
+
+  def test_compressor_config_defaults_used_when_no_cli_or_preset
+    with_temp_dir do
+      File.write("doc.md", "# Doc\nSome content")
+
+      # Preset with NO compressor params
+      create_preset("bare-test", <<~MARKDOWN)
+        ---
+        description: Bare test
+        bundle:
+          params:
+            output: stdio
+          embed_document_source: true
+          files:
+            - doc.md
+        ---
+        Bare
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
+
+      captured_kwargs = nil
+      original_new = Ace::Bundle::Molecules::SectionCompressor.method(:new)
+      mock_new = ->(**kw) {
+        captured_kwargs = kw
+        original_new.call(**kw)
+      }
+
+      # Simulate config returning per-source + agent
+      Ace::Bundle.stub(:compressor_source_scope, "per-source") do
+        Ace::Bundle.stub(:compressor_mode, "agent") do
+          Ace::Bundle::Molecules::SectionCompressor.stub(:new, mock_new) do
+            loader.load_preset("bare-test")
+          end
+        end
+      end
+
+      assert_equal "per-source", captured_kwargs[:default_mode],
+                   "Should use config source_scope when no CLI/preset value"
+      assert_equal "agent", captured_kwargs[:compressor_mode],
+                   "Should use config mode when no CLI/preset value"
+    end
+  end
+
+  def test_compressor_cli_overrides_preset_overrides_config
+    with_temp_dir do
+      File.write("doc.md", "# Doc\nSome content")
+
+      # Preset sets compressor_mode: agent
+      create_preset("override-test", <<~MARKDOWN)
+        ---
+        description: Override test
+        bundle:
+          params:
+            output: stdio
+            compressor_source_scope: merged
+            compressor_mode: agent
+          embed_document_source: true
+          files:
+            - doc.md
+        ---
+        Override
+      MARKDOWN
+
+      # CLI sets compressor_mode: exact (should win over preset's agent)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        base_dir: Dir.pwd,
+        compressor_mode: "exact",
+        compressor_source_scope: "per-source"
+      )
+
+      captured_kwargs = nil
+      original_new = Ace::Bundle::Molecules::SectionCompressor.method(:new)
+      mock_new = ->(**kw) {
+        captured_kwargs = kw
+        original_new.call(**kw)
+      }
+
+      Ace::Bundle::Molecules::SectionCompressor.stub(:new, mock_new) do
+        loader.load_preset("override-test")
+      end
+
+      assert_equal "per-source", captured_kwargs[:default_mode],
+                   "CLI source_scope should override preset"
+      assert_equal "exact", captured_kwargs[:compressor_mode],
+                   "CLI mode should override preset"
+    end
+  end
+
+  def test_load_file_plain_markdown_compresses_when_enabled
+    with_temp_dir do
+      File.write("workflow.md", "# Task Plan\n\nSome workflow instructions.\n")
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        compressor_source_scope: "per-source",
+        compressor_mode: "exact"
+      )
+      bundle = loader.load_file(File.expand_path("workflow.md"))
+
+      assert_includes bundle.content, "FILE|"
+      assert bundle.metadata[:compressed]
+    end
+  end
+
+  def test_load_file_plain_markdown_skips_when_compressor_off
+    with_temp_dir do
+      File.write("workflow.md", "# Task Plan\n\nSome workflow instructions.\n")
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(compressor: "off")
+      bundle = loader.load_file(File.expand_path("workflow.md"))
+
+      assert_includes bundle.content, "# Task Plan"
+      refute bundle.metadata[:compressed]
+    end
+  end
+
+  def test_load_plain_markdown_compresses_when_enabled
+    with_temp_dir do
+      md_content = "---\ndescription: A workflow\n---\n# Workflow\n\nInstructions here.\n"
+      File.write("wf.md", md_content)
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        compressor_source_scope: "per-source",
+        compressor_mode: "exact"
+      )
+      bundle = loader.send(:load_plain_markdown, md_content, { "description" => "A workflow" }, File.expand_path("wf.md"))
+
+      assert_includes bundle.content, "FILE|"
+      assert bundle.metadata[:compressed]
+    end
+  end
+
 end

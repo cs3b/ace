@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-03-09
+
+### Changed
+- Refined the `project` preset output shape for compression testing by keeping the bundle-focused preset content aligned with the current compressor defaults and validation workflow.
+
+### Technical
+- Updated the runtime dependency constraint to `ace-compressor ~> 0.21` for the expanded in-memory agent compression API.
+
+## [0.35.0] - 2026-03-09
+
+### Added
+- Added content-only bundle compression for plain markdown files loaded via `load_file` and `load_plain_markdown`, using the real resolved file path directly (no temp files) with native cache support.
+
+### Changed
+- Changed `SectionCompressor#call` to compress content-only bundles (no sections) when the default mode is not "off", using the source metadata path for stable cache keys.
+- Changed plain markdown integration tests to verify compression behavior under default config instead of bypassing with `compressor: "off"`.
+
+## [0.34.0] - 2026-03-09
+
+### Added
+- Added `--compressor on|off` CLI flag as a simple toggle to enable or disable section compression.
+- Added `compressor:` section to global bundle config (`source_scope`, `mode`) so projects can set compressor defaults centrally instead of per-preset.
+- Added `compressor_config`, `compressor_source_scope`, and `compressor_mode` config helper methods to `Ace::Bundle` module.
+
+### Changed
+- Changed `compress_bundle_sections` resolution chain to CLI > preset params > global config, with `--compressor off` as absolute kill switch and `--compressor on` force-enabling `per-source` scope.
+
+## [0.33.0] - 2026-03-09
+
+### Added
+- Added native cache integration to `SectionCompressor` using compressor's `CacheStore` with stable label-based keys, eliminating redundant compression on repeated bundle runs with unchanged content.
+
+## [0.32.0] - 2026-03-09
+
+### Added
+- Added `--compressor-mode` (`exact`, `agent`) and `--compressor-source-scope` (`off`, `per-source`, `merged`) CLI options for inline section compression.
+- Added `SectionCompressor` molecule that compresses bundle section content using ace-compressor's file-based API, supporting both exact and agent engines.
+- Added preset-level `compressor_mode` and `compressor_source_scope` configuration with CLI override precedence.
+
+### Fixed
+- Fixed `compressor_mode: agent` crashing with `ArgumentError` — agent mode now works through the same file-based compression path as exact mode.
+
 ## [0.31.12] - 2026-03-08
 
 ### Technical

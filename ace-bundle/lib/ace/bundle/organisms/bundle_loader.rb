@@ -13,6 +13,7 @@ require 'ace/git'
 require_relative '../molecules/preset_manager'
 require_relative '../molecules/section_processor'
 require_relative '../molecules/section_formatter'
+require_relative '../molecules/section_compressor'
 require_relative 'pr_bundle_loader'
 require_relative '../models/bundle_data'
 require_relative '../atoms/content_checker'
@@ -70,6 +71,8 @@ module Ace
           end
           bundle.metadata[:preset_name] = preset_name
           bundle.metadata[:output] = preset[:output]  # Store default output mode
+          bundle.metadata[:compressor_mode] = preset[:compressor_mode] if preset[:compressor_mode]
+          bundle.metadata[:compressor_source_scope] = preset[:compressor_source_scope] if preset[:compressor_source_scope]
 
           # Add composition metadata if preset was composed
           if preset[:composed]
@@ -126,6 +129,7 @@ module Ace
               bundle.metadata[:error] = result[:error]
             end
 
+            compress_bundle_sections(bundle)
             bundle
           end
         end
@@ -993,6 +997,9 @@ module Ace
         end
 
         def format_bundle(bundle, format)
+          # Apply compression before formatting (if enabled)
+          compress_bundle_sections(bundle)
+
           case format
           when 'markdown', 'yaml', 'xml', 'markdown-xml', 'json'
             # Use SectionFormatter if bundle has sections, otherwise fallback to OutputFormatter
@@ -1020,6 +1027,34 @@ module Ace
           else
             bundle
           end
+        end
+
+        def compress_bundle_sections(bundle)
+          # --compressor off: absolute kill switch
+          return if @options[:compressor]&.to_s == "off"
+
+          # Resolve mode: CLI > preset > config > "exact"
+          compressor_mode = @options[:compressor_mode]&.to_s
+          compressor_mode = bundle.metadata[:compressor_mode]&.to_s if compressor_mode.nil? || compressor_mode.empty?
+          compressor_mode = Ace::Bundle.compressor_mode if compressor_mode.nil? || compressor_mode.empty?
+          compressor_mode = "exact" if compressor_mode.nil? || compressor_mode.empty?
+
+          # Resolve source_scope: CLI > preset > config > "off"
+          source_scope = @options[:compressor_source_scope]&.to_s
+          source_scope = bundle.metadata[:compressor_source_scope]&.to_s if source_scope.nil? || source_scope.empty?
+          source_scope = Ace::Bundle.compressor_source_scope if source_scope.nil? || source_scope.empty?
+
+          # --compressor on: force-enable if scope resolved to "off"
+          if @options[:compressor]&.to_s == "on" && (source_scope.nil? || source_scope.empty? || source_scope == "off")
+            source_scope = "per-source"
+          end
+
+          return if source_scope.nil? || source_scope.empty? || source_scope == "off"
+          source_scope = "per-source" if %w[true on yes].include?(source_scope)
+
+          require "ace/compressor"
+          compressor = Molecules::SectionCompressor.new(default_mode: source_scope, compressor_mode: compressor_mode)
+          compressor.call(bundle)
         end
 
         def load_protocol(protocol_ref)
@@ -1392,6 +1427,7 @@ module Ace
           warnings = detect_suspicious_keys(frontmatter, path)
           bundle.metadata[:warnings] = warnings if warnings.any?
 
+          compress_bundle_sections(bundle)
           bundle
         end
 

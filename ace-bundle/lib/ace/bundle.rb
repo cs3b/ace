@@ -173,6 +173,24 @@ module Ace
         threshold
       end
 
+      # Compressor configuration section from global/project config
+      # @return [Hash] compressor config (default: {})
+      def compressor_config
+        config["compressor"] || {}
+      end
+
+      # Default compressor source scope from config
+      # @return [String] source scope (default: "off")
+      def compressor_source_scope
+        compressor_config["source_scope"] || "off"
+      end
+
+      # Default compressor mode from config
+      # @return [String] compressor mode (default: "exact")
+      def compressor_mode
+        compressor_config["mode"] || "exact"
+      end
+
       private
 
       # Load configuration using Ace::Support::Config cascade
