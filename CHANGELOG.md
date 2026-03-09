@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.812] - 2026-03-09
+
+### Fixed
+- **ace-bundle v0.35.2**: Fixed template bundles with command-only sections (e.g. `wfi://git/commit`) silently skipping compression by adding post-format in-memory compression when section-level compression is not applicable.
+
 ## [0.9.811] - 2026-03-09
 
 ### Added
