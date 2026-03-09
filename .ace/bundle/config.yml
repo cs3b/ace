@@ -2,3 +2,7 @@
 bundle:
   # Split output at ~80KB (~2100 lines at avg 37 bytes/line)
   max_lines: 2100
+
+  compressor:
+    source_scope: "per-source"
+    mode: "exact"
