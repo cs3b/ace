@@ -125,7 +125,7 @@ class CompactCompressorTest < AceCompressorTestCase
 
     compact = Ace::Compressor::Organisms::CompactCompressor.new([path]).call
 
-    assert_includes compact, "TABLE|id=vision_t1|strategy=summarize_with_loss|rows="
+    assert_includes compact, "TABLE|id=vision_t1|strategy=summarize_with_loss|cols=Tier,QPS|rows=free>10"
     assert_includes compact, "LOSS|kind=table|target=vision_t1|strategy=summarize_with_loss"
     assert_includes compact, "original_rows=7"
     assert_includes compact, "retained_rows=1"

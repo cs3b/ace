@@ -108,14 +108,12 @@ module Ace
         end
 
         def self.table_line(rows, table_id: nil, strategy: nil)
-          if table_id.to_s.strip.empty? && strategy.to_s.strip.empty?
-            return "TABLE|#{escape(rows)}"
-          end
-
           fields = []
+          columns, data_rows = normalize_table_rows(rows)
           fields << "id=#{escape(table_id)}" unless table_id.to_s.strip.empty?
           fields << "strategy=#{escape(strategy)}" unless strategy.to_s.strip.empty?
-          fields << "rows=#{escape(rows)}"
+          fields << "cols=#{escape(columns.join(','))}" unless columns.empty?
+          fields << "rows=#{escape(encode_table_data_rows(data_rows))}"
           "TABLE|#{fields.join('|')}"
         end
 
@@ -163,6 +161,37 @@ module Ace
         def self.unresolved_line_for_source(_source_id, kind, raw); unresolved_line(kind, raw); end
 
         def self.legacy_fallback_line(_source_id, _kind, raw); "CODE|fallback|#{escape(raw)}"; end
+
+        def self.normalize_table_rows(rows)
+          row_values = Array(rows)
+          return [[], []] if row_values.empty?
+
+          return [[], []] if row_values.all? { |row| row.to_s.strip.empty? }
+
+          if row_values.length == 1 && !row_values.first.to_s.include?("|")
+            return [[], [row_values.first.to_s]]
+          end
+
+          header_cells = parse_table_cells(row_values[0])
+          data_rows = row_values[1..].to_a.reject { |row| table_separator_row?(row) }.map { |row| parse_table_cells(row) }
+          [header_cells, data_rows]
+        end
+
+        def self.encode_table_data_rows(rows)
+          Array(rows).map { |cells| Array(cells).map { |cell| escape_table_cell(cell) }.join(">") }.join(";")
+        end
+
+        def self.escape_table_cell(value)
+          value.to_s.gsub("\\", "\\\\").gsub(">", "\\>").gsub(";", "\\;").strip
+        end
+
+        def self.parse_table_cells(row)
+          row.to_s.split("|").map(&:strip).reject(&:empty?)
+        end
+
+        def self.table_separator_row?(row)
+          row.to_s.strip.match?(/\A\|?[\-\s:|]+\|?\z/)
+        end
       end
     end
   end

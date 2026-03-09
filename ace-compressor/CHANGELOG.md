@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-03-09
+
+### Added
+- Added deterministic post-LLM list-item compaction so agent mode shortens verbose list payloads while preserving item identity and ordering.
+
+### Changed
+- Changed exact-mode table encoding to store semantic `cols=` and `rows=` data instead of escaped markdown table syntax, dramatically reducing table-heavy pack size.
+- Changed compact-mode table parsing to understand structured table records while preserving existing strategy and loss metadata behavior.
+
+### Technical
+- Expanded exact/compact/command regression coverage for structured table records and deterministic list-item compaction.
+- Bumped cache contracts so exact, compact, and agent reruns refresh stale artifacts after the table/list encoding changes.
+
 ## [0.14.0] - 2026-03-08
 
 ### Fixed

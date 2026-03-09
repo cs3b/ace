@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.801] - 2026-03-09
+
+### Added
+- **ace-compressor v0.15.0**: Added deterministic list-item compaction so agent mode shrinks long `LIST|...` payloads while preserving one-to-one item identity.
+
+### Changed
+- **ace-compressor v0.15.0**: Replaced escaped-markdown table storage with semantic `cols=` and `rows=` table encoding, cutting table-heavy exact/agent packs such as `docs/tools.md`.
+
+### Technical
+- **ace-compressor v0.15.0**: Updated cache contracts and regression coverage for structured table records and list-item compaction behavior.
+
 ## [0.9.800] - 2026-03-08
 
 ### Fixed
