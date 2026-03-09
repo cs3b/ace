@@ -25,6 +25,10 @@ module Ace
           sources = compressor.resolve_sources
           manifest = @cache_store.manifest(mode: @mode, sources: sources)
           canonical = @cache_store.canonical_paths(mode: @mode, sources: sources, manifest_key: manifest["key"])
+          shared_manifest = @cache_store.shared_manifest(mode: @mode, sources: sources)
+          shared_canonical = if shared_manifest
+                               @cache_store.shared_canonical_paths(mode: @mode, sources: sources, manifest_key: shared_manifest["key"])
+                             end
 
           cache_hit = @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
           content, metadata = if cache_hit
@@ -36,9 +40,12 @@ module Ace
                                   content
                                 )
                                 [content, metadata]
+                              elsif shared_cache_hit?(shared_canonical)
+                                hydrate_from_shared_cache(manifest, canonical, shared_canonical)
                               else
-                                build_cache_entry(compressor, sources, manifest, canonical)
+                                build_cache_entry(compressor, sources, manifest, canonical, shared_canonical)
                               end
+          cache_hit ||= shared_cache_hit?(shared_canonical)
 
           output_path = @cache_store.output_path_for(
             output: @output,
@@ -60,6 +67,8 @@ module Ace
             ),
             ignored_paths: compressor.ignored_paths,
             output_path: output_path,
+            cache_hit: cache_hit,
+            metadata: metadata,
             refusal_lines: refusal_lines,
             fallback_lines: fallback_lines,
             exit_code: refusal_lines.empty? ? 0 : 1
@@ -68,7 +77,7 @@ module Ace
 
         private
 
-        def build_cache_entry(compressor, sources, manifest, canonical)
+        def build_cache_entry(compressor, sources, manifest, canonical, shared_canonical = nil)
           content = compressor.compress_sources(sources)
           metadata = cache_metadata(manifest, canonical[:short_key], content)
           @cache_store.write_cache(
@@ -77,6 +86,15 @@ module Ace
             content: content,
             metadata: metadata
           )
+          if shared_canonical
+            shared_metadata = cache_metadata(manifest, shared_canonical[:short_key], content, metadata.merge("cache_scope" => "shared"))
+            @cache_store.write_cache(
+              pack_path: shared_canonical[:pack_path],
+              metadata_path: shared_canonical[:metadata_path],
+              content: content,
+              metadata: shared_metadata
+            )
+          end
           [content, metadata]
         end
 
@@ -133,6 +151,25 @@ module Ace
 
         def fallback_lines(content)
           content.to_s.lines.map(&:strip).select { |line| line.start_with?("FALLBACK|") }
+        end
+
+        def shared_cache_hit?(shared_canonical)
+          return false unless shared_canonical
+
+          @cache_store.cache_hit?(pack_path: shared_canonical[:pack_path], metadata_path: shared_canonical[:metadata_path])
+        end
+
+        def hydrate_from_shared_cache(manifest, canonical, shared_canonical)
+          content = @cache_store.read_pack(shared_canonical[:pack_path])
+          shared_metadata = @cache_store.read_metadata(shared_canonical[:metadata_path])
+          metadata = cache_metadata(manifest, canonical[:short_key], content, shared_metadata.merge("cache_scope" => "shared"))
+          @cache_store.write_cache(
+            pack_path: canonical[:pack_path],
+            metadata_path: canonical[:metadata_path],
+            content: content,
+            metadata: metadata
+          )
+          [content, metadata]
         end
       end
     end
