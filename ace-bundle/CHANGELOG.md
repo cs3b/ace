@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.35.2] - 2026-03-09
+
+### Fixed
+- Fixed template bundles with command-only sections silently skipping compression by adding post-format in-memory compression via `compress_text` when `SectionCompressor` finds no `_processed_files` to compress.
+
 ## [0.35.1] - 2026-03-09
 
 ### Changed

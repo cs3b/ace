@@ -30,9 +30,9 @@ class PlainMarkdownLoadTest < AceTestCase
     refute_nil result.content, "Expected content to be returned"
     refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
 
-    # Content should include the workflow frontmatter and body
-    assert_includes result.content, "---", "Expected frontmatter markers"
-    assert_includes result.content, "# Commit Workflow", "Expected workflow heading"
+    # Content should be compressed (command-only sections now compress post-format)
+    assert result.metadata[:compressed], "Expected wfi://commit to be compressed"
+    assert_includes result.content, "FILE|", "Expected compressed FILE| markers"
   end
 
   def test_loads_wfi_content_directly
