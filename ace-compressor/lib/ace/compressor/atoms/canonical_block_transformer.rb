@@ -138,7 +138,7 @@ module Ace
           rows = Array(block[:rows])
           return nil if rows.empty?
 
-          Ace::Compressor::Models::ContextPack.table_line(rows.join(" ||ROW|| "))
+          Ace::Compressor::Models::ContextPack.table_line(rows)
         end
 
         def unresolved_line(block)

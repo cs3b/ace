@@ -425,7 +425,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "exact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "TABLE|"
+    assert_includes result[:stdout], "TABLE|cols=Service,Limit|rows=api>100"
     assert_includes result[:stdout], "Service"
     assert_includes result[:stdout], "100"
   end
@@ -450,7 +450,7 @@ class CompressCommandTest < AceCompressorTestCase
     result = invoke([path, "--mode", "compact", "--format", "stdio"])
 
     assert_equal "", result[:stderr]
-    assert_includes result[:stdout], "TABLE|id=vision_t1|strategy=summarize_with_loss|rows="
+    assert_includes result[:stdout], "TABLE|id=vision_t1|strategy=summarize_with_loss|cols=Tier,QPS|rows=free>10"
     assert_includes result[:stdout], "LOSS|kind=table|target=vision_t1|strategy=summarize_with_loss"
     assert_includes result[:stdout], "original_rows=7"
     assert_includes result[:stdout], "retained_rows=1"
