@@ -24,6 +24,16 @@ git:
       type_hint: spec
       description: "Task specifications, retrospectives, session notes, and workflow documentation - NOT code features"
 
+    idea-specs:
+      glob: ".ace-ideas/**"
+      type_hint: spec
+      description: "Idea specifications, categorization, and feature exploration notes"
+
+    retro-specs:
+      glob: ".ace-retros/**"
+      type_hint: spec
+      description: "Retrospectives, synthesis reports, and improvement recommendations"
+
     agent-integrations:
       glob: "{.claude/**,.codex/**,.gemini/**,AGENTS.md,CLAUDE.md}"
       type_hint: docs
@@ -36,8 +46,14 @@ git:
     ace-bundle:
       glob: "ace-bundle/**"
 
+    ace-compressor:
+      glob: "ace-compressor/**"
+
     ace-assign:
       glob: "ace-assign/**"
+
+    ace-demo:
+      glob: "ace-demo/**"
 
     ace-docs:
       glob: "ace-docs/**"
@@ -57,6 +73,9 @@ git:
     ace-handbook:
       glob: "ace-handbook/**"
 
+    ace-idea:
+      glob: "ace-idea/**"
+
     ace-integration-claude:
       glob: "ace-integration-claude/**"
 
@@ -69,14 +88,23 @@ git:
     ace-llm-providers-cli:
       glob: "ace-llm-providers-cli/**"
 
+    ace-overseer:
+      glob: "ace-overseer/**"
+
     ace-prompt-prep:
       glob: "ace-prompt-prep/**"
+
+    ace-retro:
+      glob: "ace-retro/**"
 
     ace-review:
       glob: "ace-review/**"
 
     ace-search:
       glob: "ace-search/**"
+
+    ace-sim:
+      glob: "ace-sim/**"
 
     ace-task:
       glob: "ace-task/**"
