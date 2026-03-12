@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.3] - 2026-03-12
+
+### Fixed
+- Re-exported `Ace::Core::Atoms::CommandExecutor` from `ace/core` so callers using the shared core entrypoint can access the command executor without an extra direct require.
+
 ## [0.25.2] - 2026-03-04
 
 ### Changed
