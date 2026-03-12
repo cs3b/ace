@@ -11,6 +11,7 @@ require "ace/support/fs"
 
 # Ace-specific components
 require_relative "core/atoms/config_summary"
+require_relative "core/atoms/command_executor"
 require_relative "core/organisms/environment_manager"
 require_relative "core/config_discovery"
 

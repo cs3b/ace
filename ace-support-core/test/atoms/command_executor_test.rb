@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../test_helper'
-require 'ace/core/atoms/command_executor'
 require 'timeout'
 
 class CommandExecutorTest < Minitest::Test
