@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-03-12
+
+### Fixed
+- Registered the package WFI source so `wfi://demo/create` and `wfi://demo/record` resolve for the canonical demo skills.
+
+## [0.10.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-demo-create` and `as-demo-record` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+## [0.9.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned demo skills for tape creation and recording workflows.
+
+
 ## [0.8.0] - 2026-03-08
 
 ### Added
