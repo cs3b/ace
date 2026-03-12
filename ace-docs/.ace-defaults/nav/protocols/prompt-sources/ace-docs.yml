@@ -30,5 +30,5 @@ notes: |
 
   Use prompt:// URIs to reference these prompts in your analysis configurations.
   Users can override by creating:
-    - .ace/handbook/prompts/document-analysis.system.md (project)
-    - ~/.ace/handbook/prompts/document-analysis.system.md (user)
+    - .ace-handbook/prompts/document-analysis.system.md (project)
+    - ~/.ace-handbook/prompts/document-analysis.system.md (user)

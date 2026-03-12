@@ -4,10 +4,9 @@ This guide covers the operational aspects of the document synchronization system
 
 ## Overview
 
-> **Note**: This guide documents the synchronization system using the original `dev-handbook/` 
-> directory structure as examples. In the current architecture, handbooks are distributed 
-> across gem-specific directories (e.g., `ace-docs/handbook/`, `ace-review/handbook/`). 
-> The principles and commands remain the same - adjust paths to your specific handbook location.
+> **Note**: This guide uses the current gem-scoped handbook layout.
+> In ACE, handbook content lives under package directories such as `ace-docs/handbook/`
+> and `ace-review/handbook/`. Adjust example paths to the package you are working in.
 
 The document synchronization system keeps embedded documents in workflow instructions synchronized with their corresponding source files. This ensures consistency and enables automated document updates across the development handbook.
 

@@ -229,7 +229,7 @@ ace-docs update docs/api.md --set last-updated=now
 # Generates: 2025-11-15T08:30:45Z
 
 # Keep other documents with date-only
-ace-docs update docs/guides/*.md --set last-updated=today
+ace-docs update ace-*/handbook/guides/*.g.md --set last-updated=today
 # Generates: 2025-11-15
 ```
 
