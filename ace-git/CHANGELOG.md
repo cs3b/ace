@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-03-12
+
+### Changed
+- Updated README and handbook guide examples to load workflows through `ace-bundle` and removed legacy shared-handbook path assumptions.
+
+## [0.14.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-github-pr-create` and `as-github-pr-update` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+## [0.13.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned git and GitHub PR skills for rebase, commit reorganization, and PR create/update workflows.
+
+
+## [0.12.0] - 2026-03-09
+
+### Changed
+- Rebase workflow now treats localized conflicts as continue-first instead of automatically aborting into cherry-pick fallback.
+- Cherry-pick fallback is now documented as an escalation path for repeated, large, or explicitly requested conflict handling.
+
+### Fixed
+- Cherry-pick replay progress now uses session-local applied SHA tracking instead of commit-subject matching, making resumed replay more reliable.
+
 ## [0.11.18] - 2026-03-05
 
 ### Fixed

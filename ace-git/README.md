@@ -35,18 +35,20 @@ gem install ace-git
 
 ### Access Workflows
 
-Workflows are accessible via ace-nav protocol:
+Load workflows directly with `ace-bundle`:
 
 ```bash
 # Rebase with changelog preservation
-ace-nav wfi://git/rebase
+ace-bundle wfi://git/rebase
 
 # Create pull request with template
-ace-nav wfi://github/pr/create
+ace-bundle wfi://github/pr/create
 
 # Squash commits by version
-ace-nav wfi://git/reorganize-commits
+ace-bundle wfi://git/reorganize-commits
 ```
+
+Use `ace-nav` only for discovery or path lookup.
 
 ### Configuration (Optional)
 
@@ -66,7 +68,7 @@ Note: Workflows contain sensible defaults inline. Configuration is only for user
 
 Rebase feature branches while preserving CHANGELOG.md and version files.
 
-**Access**: `ace-nav wfi://git/rebase`
+**Access**: `ace-bundle wfi://git/rebase`
 
 **Use Cases**:
 - Update feature branch with latest main
@@ -82,7 +84,7 @@ Rebase feature branches while preserving CHANGELOG.md and version files.
 
 Create well-documented pull requests using structured templates.
 
-**Access**: `ace-nav wfi://github/pr/create`
+**Access**: `ace-bundle wfi://github/pr/create`
 
 **Use Cases**:
 - Create feature PRs with comprehensive descriptions
@@ -106,7 +108,7 @@ gh pr create \
 
 Reorganize commits into logical groups for clean, maintainable history.
 
-**Access**: `ace-nav wfi://git/reorganize-commits`
+**Access**: `ace-bundle wfi://git/reorganize-commits`
 
 **Use Cases**:
 - Clean up feature branch history before merge
@@ -150,7 +152,7 @@ EOF
 
 ```bash
 # 1. Access workflow
-ace-nav wfi://git/rebase
+ace-bundle wfi://git/rebase
 
 # 2. Follow guided steps
 git fetch origin
@@ -184,7 +186,7 @@ gh pr edit --add-label "enhancement"
 
 ```bash
 # 1. Access workflow
-ace-nav wfi://git/reorganize-commits
+ace-bundle wfi://git/reorganize-commits
 
 # 2. Identify version boundary
 git log --oneline | grep "v0.9.0"
