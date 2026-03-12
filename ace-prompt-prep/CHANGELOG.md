@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-03-12
+
+### Fixed
+- Registered the package WFI source so `wfi://prompt-prep` resolves for the canonical prompt-prep skill.
+
+## [0.19.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-prompt-prep` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.18.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned prompt-prep skill and workflow entrypoint for prompt workspace preparation.
+
+
 ## [0.17.4] - 2026-03-09
 
 ### Fixed
