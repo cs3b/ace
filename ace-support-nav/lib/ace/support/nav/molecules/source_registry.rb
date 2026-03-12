@@ -11,7 +11,10 @@ module Ace
       module Molecules
         # Discovers and manages protocol source registrations
         class SourceRegistry
-          def initialize
+          attr_reader :start_path
+
+          def initialize(start_path: nil)
+            @start_path = start_path
             @sources_cache = {}
           end
 
@@ -59,7 +62,7 @@ module Ace
             sources = []
 
             # Use directory traverser to find all .ace directories up to project root
-            traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: Dir.pwd)
+            traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: start_path || Dir.pwd)
             config_dirs = traverser.find_config_directories
 
             # Check each .ace directory for protocol sources

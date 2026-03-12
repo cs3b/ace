@@ -408,7 +408,7 @@ module Ace
           end
 
           def scan_project_source
-            project_path = File.expand_path("./.ace")
+            project_path = File.expand_path("./.ace-handbook")
             return nil unless Dir.exist?(project_path)
 
             Models::HandbookSource.new(
@@ -421,7 +421,7 @@ module Ace
           end
 
           def scan_user_source
-            user_path = File.expand_path("~/.ace")
+            user_path = File.expand_path("~/.ace-handbook")
             return nil unless Dir.exist?(user_path)
 
             Models::HandbookSource.new(

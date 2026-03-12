@@ -49,15 +49,26 @@ module TestHelper
     sources_dir = File.join(dir, ".ace", "nav/protocols", "#{protocol_name}-sources")
     FileUtils.mkdir_p(sources_dir)
 
+    source_type = config["type"] || "directory"
     source_config = {
       "name" => source_name,
-      "type" => config["type"] || "directory",
-      "path" => config["path"] || File.join(dir, "test-resources", protocol_name),
+      "type" => source_type,
       "description" => config["description"] || "Test source"
     }
 
+    if source_type == "gem"
+      source_config["path"] = config["path"] if config.key?("path")
+    else
+      source_config["path"] = if config.key?("path")
+                                config["path"]
+                              else
+                                File.join(dir, "test-resources", protocol_name)
+                              end
+    end
+
     # Only add priority if explicitly provided
     source_config["priority"] = config["priority"] if config.key?("priority")
+    source_config["config"] = config["config"] if config.key?("config")
 
     File.write(
       File.join(sources_dir, "#{source_name}.yml"),

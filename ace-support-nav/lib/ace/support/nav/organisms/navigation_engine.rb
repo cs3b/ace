@@ -151,8 +151,8 @@ module Ace
             # If explicit target provided, use it
             return @path_normalizer.normalize(target_path) if target_path
 
-            # Otherwise, create in project .ace/handbook
-            project_handbook = File.expand_path("./.ace/handbook")
+            # Otherwise, create in project .ace-handbook
+            project_handbook = File.expand_path("./.ace-handbook")
 
             # Determine subdirectory based on protocol
             subdir = case template.protocol
