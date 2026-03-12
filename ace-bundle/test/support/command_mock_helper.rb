@@ -7,6 +7,7 @@ require 'ostruct'
 module CommandMockHelper
   # Store original method and mock data
   @@original_execute = nil
+  @@original_capture3 = nil
   @@command_mocks = {}
   @@mocking_enabled = false
   @@default_mocks = {}
@@ -24,6 +25,12 @@ module CommandMockHelper
       CommandMockHelper.intercept_command_execution(command, options)
     end
 
+    # Keep command execution deterministic for callers that bypass CommandExecutor.
+    @@original_capture3 = Open3.method(:capture3)
+    Open3.singleton_class.define_singleton_method(:capture3) do |command, *args|
+      CommandMockHelper.intercept_capture3(command, *args)
+    end
+
     # Setup default mocks for common commands
     setup_default_mocks!
   end
@@ -34,6 +41,9 @@ module CommandMockHelper
 
     if @@original_execute
       Ace::Core::Atoms::CommandExecutor.define_singleton_method(:execute, @@original_execute)
+    end
+    if @@original_capture3
+      Open3.singleton_class.define_singleton_method(:capture3, @@original_capture3)
     end
 
     @@mocking_enabled = false
@@ -213,6 +223,20 @@ module CommandMockHelper
       # No mock found - use original method
       @@original_execute.call(command, options)
     end
+  end
+
+  def self.intercept_capture3(command, *args)
+    command_str = if command.is_a?(Array)
+      command.map(&:to_s).join(" ")
+    else
+      command.to_s
+    end
+
+    result = Ace::Core::Atoms::CommandExecutor.execute(command_str)
+    exit_code = result[:exit_code] || result[:status] || 0
+    status = Struct.new(:success?, :exitstatus).new(result[:success], exit_code)
+
+    [result[:stdout].to_s, (result[:stderr] || result[:error] || ""), status]
   end
 
   # Find mock response for a command

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.36.3] - 2026-03-12
+
+### Technical
+- Added exact-mode enforcement in test execution paths so `ace-bundle` tests no longer rely on agent-mode compression by default.
+
 ## [0.36.2] - 2026-03-12
 
 ### Technical
