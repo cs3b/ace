@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.1] - 2026-03-12
+
+### Changed
+- Updated review workflow instructions to reference bundle-first review flows instead of slash-command examples.
+
+## [0.44.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned review skills and the new `wfi://review/package` workflow for package-level review.
+
+
 ## [0.43.8] - 2026-03-08
 
 ### Fixed
