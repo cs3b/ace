@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.5] - 2026-03-12
+
+### Added
+- Added `working_dir:` support to `QueryInterface.query` so CLI-backed provider executions can be anchored to an explicit filesystem root.
+
 ## [0.26.4] - 2026-03-12
 
 ### Changed

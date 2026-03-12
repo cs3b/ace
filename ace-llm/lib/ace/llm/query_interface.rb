@@ -33,6 +33,7 @@ module Ace
                     system_append: nil,
                     preset: nil,
                     sandbox: nil,
+                    working_dir: nil,
                     subprocess_env: nil,
                     last_message_file: nil)
 
@@ -69,6 +70,7 @@ module Ace
         resolved_cli_args = first_non_nil(cli_args, execution_overrides["cli_args"])
         resolved_system_append = first_non_empty(system_append, execution_overrides["system_append"])
         resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
+        resolved_working_dir = first_non_nil(working_dir, execution_overrides["working_dir"])
         resolved_subprocess_env = merge_hash_values(execution_overrides["subprocess_env"], subprocess_env)
 
         generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
@@ -78,6 +80,7 @@ module Ace
         generation_opts[:cli_args] = resolved_cli_args unless blank_value?(resolved_cli_args)
         generation_opts[:system_append] = resolved_system_append unless blank_value?(resolved_system_append)
         generation_opts[:sandbox] = resolved_sandbox if resolved_sandbox
+        generation_opts[:working_dir] = resolved_working_dir unless blank_value?(resolved_working_dir)
         generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
         generation_opts[:last_message_file] = last_message_file if last_message_file
 

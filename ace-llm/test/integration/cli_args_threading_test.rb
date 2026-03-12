@@ -60,6 +60,17 @@ module Ace
         assert_equal "read-only", client.received_options[:sandbox]
       end
 
+      def test_query_interface_threads_working_dir
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          QueryInterface.query("claude:sonnet", "hi", working_dir: "/tmp/e2e-sandbox")
+        end
+
+        assert_equal "/tmp/e2e-sandbox", client.received_options[:working_dir]
+      end
+
       def test_cli_command_threads_cli_args
         client = FakeClient.new
         registry = FakeRegistry.new(client)
