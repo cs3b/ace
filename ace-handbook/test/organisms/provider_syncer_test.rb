@@ -113,6 +113,26 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     refute_includes codex_rendered, "integration:"
   end
 
+  def test_sync_preserves_conditional_sandbox_branch_in_skill_body
+    create_skill("as-e2e-run", <<~BODY)
+      If `$ARGUMENTS` contains `--sandbox`:
+        read and run `ace-bundle wfi://e2e/execute`
+      Otherwise:
+        read and run `ace-bundle wfi://e2e/run`
+    BODY
+
+    syncer.sync(provider: "claude")
+    syncer.sync(provider: "codex")
+
+    claude_rendered = File.read(File.join(@tmpdir, ".claude", "skills", "as-e2e-run", "SKILL.md"))
+    codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-e2e-run", "SKILL.md"))
+
+    assert_includes claude_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
+    assert_includes claude_rendered, "read and run `ace-bundle wfi://e2e/execute`"
+    assert_includes codex_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
+    assert_includes codex_rendered, "read and run `ace-bundle wfi://e2e/execute`"
+  end
+
   private
 
   def syncer

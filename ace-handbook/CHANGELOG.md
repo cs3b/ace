@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-03-12
+
+### Fixed
+- Preserved conditional `--sandbox` workflow routing in provider-synced skill projections so generated Claude and Codex skills keep the canonical E2E execute path.
+
+### Technical
+- Added provider-sync regression coverage for conditional workflow bodies in projected skills.
+
 ## [0.15.1] - 2026-03-12
 
 ### Changed
