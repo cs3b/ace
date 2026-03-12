@@ -1,119 +1,121 @@
 # ACE Handbook Gem
 
-Handbook management workflows for ACE (Agentic Coding Environment). This pure workflow package contains standardized workflows for creating, managing, and maintaining development guides, workflow instructions, and agent definitions.
+Workflow and guide governance for ACE (Agentic Coding Environment). This package owns the handbook-level workflows and guides used to create, review, and maintain handbook content across the monorepo.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'ace-handbook'
+gem "ace-handbook"
 ```
 
-And then execute:
-```bash
-bundle install
-```
+Or install it directly:
 
-Or install it yourself as:
 ```bash
 gem install ace-handbook
 ```
 
 ## Usage
 
-The ace-handbook gem provides workflow instructions accessible via the `wfi://` protocol using ace-nav:
-
-### Workflow Access
-
-All workflows are accessible through ace-nav:
+Use `ace-bundle` to load handbook workflows directly:
 
 ```bash
-# Guide Management
-ace-nav wfi://handbook/manage-guides          # Create and update development guides
-ace-nav wfi://handbook/review-guides          # Review guides for quality and consistency
+# Guide management
+ace-bundle wfi://handbook/manage-guides
+ace-bundle wfi://handbook/review-guides
 
-# Workflow Management
-ace-nav wfi://handbook/manage-workflows  # Create and validate workflow files
-ace-nav wfi://handbook/review-workflows       # Review workflow instructions
+# Workflow management
+ace-bundle wfi://handbook/manage-workflows
+ace-bundle wfi://handbook/review-workflows
 
-# Agent Management
-ace-nav wfi://handbook/manage-agents          # Create and update agent definitions
-
-# Documentation Sync
-ace-nav wfi://handbook/update-docs  # Update handbook README and structure
-# Claude Code integration workflows are now in ace-integration-claude gem
+# Handbook maintenance
+ace-bundle wfi://handbook/update-docs
+ace-bundle wfi://handbook/init-project
 ```
 
-### Workflow Descriptions
+Use `ace-nav` only when you need discovery or path lookup:
 
-1. **manage-guides**: Create, update, and maintain development guides following standardized structure
-2. **review-guides**: Review all development guides for compliance with standards and identify gaps
-3. **manage-workflow-instructions**: Create and update workflow instruction files (.wf.md format)
-4. **review-workflows**: Review workflow instructions for quality and standards compliance
-5. **manage-agents**: Create and update agent definitions (.ag.md format) with standardized contracts
-6. **update-handbook-docs**: Maintain accurate README documentation across handbook structure
+```bash
+ace-nav wfi://handbook/*
+ace-nav wfi://handbook/manage-workflows
+```
 
-Note: Claude Code integration workflows are now available in the **ace-integration-claude** gem.
+## Scope
+
+The `ace-handbook` package is the canonical home for handbook governance material:
+
+- `handbook/workflow-instructions/handbook/` for handbook workflows
+- `handbook/guides/` for development guides and handbook standards
+- `handbook/skills/` for canonical provider-agent skill definitions
+
+General documentation should point readers to `ace-bundle wfi://...` and direct `ace-*` commands. Skill documents are reserved for provider-agent integrations and `ace-assign` skill discovery.
+
+## Key Workflows
+
+| Workflow | Purpose |
+|----------|---------|
+| `handbook/manage-guides` | Create and update development guides |
+| `handbook/review-guides` | Review guides for quality and standards compliance |
+| `handbook/manage-workflows` | Create and update workflow instruction files |
+| `handbook/review-workflows` | Review workflow instruction quality and consistency |
+| `handbook/manage-agents` | Maintain handbook-managed agent definitions |
+| `handbook/update-docs` | Refresh handbook-facing documentation |
+| `handbook/parallel-research` | Run coordinated multi-agent research |
+| `handbook/synthesize-research` | Synthesize parallel research outputs |
+| `handbook/perform-delivery` | Drive delivery coordination guidance |
 
 ## Architecture
 
-This is a **pure workflow package** following the ACE gem patterns:
+This is a handbook-governance package:
 
-- **No CLI interface**: Workflows accessed via `wfi://` protocol through ace-nav
-- **No Ruby dependencies**: Contains only markdown workflow files
-- **Auto-discovery**: ace-nav automatically discovers workflows from installed gems
-- **Worktree compatible**: Fully compatible with git worktree environments through proper project root detection
-- **Template embedding**: All templates embedded per ADR-002 XML format
+- Workflow content is authored as markdown under `handbook/workflow-instructions/`
+- Guides live under `handbook/guides/`
+- Canonical skill metadata lives under `handbook/skills/`
+- Provider packages project those skills into provider-native folders
+
+The normal reader-facing execution model is:
+
+1. Load a workflow with `ace-bundle wfi://...`
+2. Follow the workflow using direct `ace-*` commands
+3. Use provider-agent skill wrappers only in provider integration surfaces or `ace-assign`-driven dispatch
 
 ## File Structure
 
-```
+```text
 ace-handbook/
-├── lib/ace/handbook.rb           # Gem entry point
-├── lib/ace/handbook/version.rb   # Version constant
-├── handbook/workflow-instructions/  # Workflow files
-│   ├── manage-guides.wf.md
-│   ├── review-guides.wf.md
-│   ├── manage-workflow-instructions.wf.md
-│   ├── review-workflows.wf.md
-│   ├── manage-agents.wf.md
-│   └── update-handbook-docs.wf.md
-├── README.md                      # This file
-├── CHANGELOG.md                   # Version history
-├── ace-handbook.gemspec           # Gem specification
-└── Rakefile                       # Gem tasks
+├── handbook/
+│   ├── guides/
+│   ├── skills/
+│   └── workflow-instructions/
+│       └── handbook/
+├── lib/
+├── README.md
+└── CHANGELOG.md
 ```
 
 ## Standards
 
-Workflows follow ACE standards:
-- **ADR-001**: Self-contained workflows with embedded templates
-- **ADR-002**: XML template embedding architecture
-- **Frontmatter**: Standardized metadata and parameters
-- **Path conventions**: Project-root relative paths
+- ADR-001: workflows are self-contained
+- ADR-002: embedded templates use the XML embedding architecture
+- Workflow docs should default to `ace-bundle` loading, not skill chaining
+- Skill references belong in provider-agent and `ace-assign` discovery contexts
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies.
+After checking out the repo, run:
 
-To install this gem onto your local machine, run:
 ```bash
-bundle exec rake install
+bundle install
 ```
 
-## Contributing
+To inspect handbook workflows during development:
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace-meta.
+```bash
+mise exec -- ace-bundle wfi://handbook/manage-workflows
+mise exec -- ace-bundle wfi://handbook/review-workflows
+```
 
 ## License
 
 The gem is available as open source under the terms of the MIT License.
-
-## ACE Integration
-
-This gem is part of the ACE (Agentic Coding Environment) ecosystem. For more information:
-
-- [ACE Documentation](https://github.com/cs3b/ace-meta)
-- [ace-nav Protocol](https://github.com/cs3b/ace-meta)
-- [Development Standards](https://github.com/cs3b/ace-meta/tree/main/docs)

@@ -9,17 +9,15 @@ best practices while maintaining consistency across the handbook.
 ## Prerequisites
 
 * Understanding of guide definition principles and standards
-* Access to docs/guides/ definition files
+* Access to handbook guide standards
 * Knowledge of existing guide patterns and structure
 * Understanding of language modularity principles
 
 ## Project Context Loading
 
-* Read and follow: `workflow-instructions/load-project-context.wf.md`
-* Load guide standards: `docs/guides/guides-definition.g.md`
-* Load markdown standards: `docs/guides/markdown-definition.g.md`
-* Load example guides: `guides/project-management.g.md`
-* Load guide organization: `guides/README.md`
+* Load guide standards: `ace-handbook/handbook/guides/meta/guides-definition.g.md`
+* Load markdown standards: `ace-handbook/handbook/guides/meta/markdown-definition.g.md`
+* Load example guides from `ace-handbook/handbook/guides/`
 
 ## Process Steps
 
@@ -285,4 +283,3 @@ For handbook and documentation standards:
 
 > "Create a guide for API design principles that covers REST standards, documentation requirements, and
 > language-specific implementation patterns for Ruby and TypeScript"
-

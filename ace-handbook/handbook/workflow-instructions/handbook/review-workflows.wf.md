@@ -9,23 +9,22 @@ established patterns and maintain high quality across the entire collection.
 ## Prerequisites
 
 * Understanding of workflow instruction standards and principles
-* Access to docs/guides/ definition files
+* Access to handbook guides and workflow standards
 * Knowledge of existing workflow patterns
 * List of workflow files to review (or intent to review all)
 
 ## Project Context Loading
 
-* Read and follow: `workflow-instructions/load-project-context.wf.md`
-* Load workflow standards: `docs/guides/workflow-instructions-definition.g.md`
-* Load template embedding guide: `docs/guides/template-embedding.g.md`
-* Load example workflow: `workflow-instructions/plan-task.wf.md`
-* Load batch processing example: `workflow-instructions/draft-release.wf.md`
+* Load workflow standards: `ace-handbook/handbook/guides/meta/workflow-instructions-definition.g.md`
+* Load markdown standards as needed from `ace-handbook/handbook/guides/meta/markdown-definition.g.md`
+* Load a current workflow example via `ace-bundle wfi://handbook/manage-workflows`
+* Load a current maintenance example via `ace-bundle wfi://handbook/update-docs`
 
 ## Process Steps
 
 1.  **Define Review Scope:**
     * Determine which workflows to review:
-      * All workflows in `workflow-instructions/`
+      * All workflows in `handbook/workflow-instructions/`
       * Specific subset based on criteria (new, recently modified, specific category)
       * Individual workflows provided by user
     * Identify review objectives:
@@ -289,4 +288,3 @@ Use shell commands to quickly identify common issues:
 
 > "Review all workflow instructions in workflow-instructions/ for compliance with current standards and identify any
 > inconsistencies or improvement opportunities"
-

@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "ace/handbook/cli"
+
+Dry::CLI.new(Ace::Handbook::CLI).call

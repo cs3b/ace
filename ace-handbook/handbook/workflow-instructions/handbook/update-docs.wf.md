@@ -10,7 +10,7 @@ to ensure all components are properly documented and discoverable.
 * Understanding of handbook structure and component relationships
 * Access to ace-* package directories
 * Familiarity with handbook conventions and patterns
-* Knowledge of agents, commands, guides, and workflow systems
+* Knowledge of commands, guides, workflows, and provider-agent integrations
 
 ## Project Context Loading
 
@@ -22,14 +22,14 @@ to ensure all components are properly documented and discoverable.
 ### Review target documentation files
 
 * README.md (main handbook documentation)
-* .meta/README.md (meta documentation)
-* .integrations/README.md (integration documentation)
+* Provider integration READMEs when skills/projections are described
+* Related package READMEs under `ace-*/README.md`
 
 ### Understand handbook standards
 
-* docs/guides/guides-definition.g.md
-* docs/guides/workflow-instructions-definition.g.md
-* docs/guides/agents-definition.g.md
+* ace-handbook/handbook/guides/meta/guides-definition.g.md
+* ace-handbook/handbook/guides/meta/workflow-instructions-definition.g.md
+* ace-handbook/handbook/guides/meta/agents-definition.g.md
 
 ## Process Steps
 
@@ -327,4 +327,3 @@ Following this workflow would:
 5.  Synchronize all cross-references
 6.  Update quick reference tables with new counts
 7.  Validate all changes for accuracy and completeness
-
