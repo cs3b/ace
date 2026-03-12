@@ -214,7 +214,7 @@ module Ace
             puts result[:formatted_output]
 
             # Display summary if requested or if not JSON format
-            if options[:format] != "json"
+            if options[:format] != :json
               display_summary(result, options)
             end
           end

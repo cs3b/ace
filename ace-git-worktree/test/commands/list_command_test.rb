@@ -176,4 +176,37 @@ class ListCommandTest < Minitest::Test
     assert_equal 0, result
     mock_worktree_manager.verify
   end
+
+  def test_json_output_does_not_print_summary_footer
+    mock_worktree_manager = Minitest::Mock.new
+    mock_result = {
+      success: true,
+      worktrees: [{ path: "/tmp/wt" }],
+      formatted_output: "[{\"path\":\"/tmp/wt\"}]",
+      statistics: {
+        total: 1,
+        task_associated: 0,
+        non_task_associated: 1,
+        usable: 1,
+        unusable: 0,
+        bare: 0,
+        detached: 0,
+        branches: ["main"],
+        task_ids: []
+      }
+    }
+    mock_worktree_manager.expect(:list_all, mock_result) do |options|
+      options[:format] == :json
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    stdout, = capture_io do
+      result = @command.run(["--format", "json"])
+      assert_equal 0, result
+    end
+
+    assert_equal "[{\"path\":\"/tmp/wt\"}]\n", stdout
+    mock_worktree_manager.verify
+  end
 end

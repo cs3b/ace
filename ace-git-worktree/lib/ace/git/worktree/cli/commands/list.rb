@@ -31,7 +31,7 @@ module Ace
             option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(**options)
-              display_config_summary("list", options)
+              display_config_summary("list", options) unless options[:format] == "json"
 
               # Keep explicit false values as --no-* flags so legacy parser receives filters.
               args = list_options_to_args(options)
