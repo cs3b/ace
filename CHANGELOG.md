@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.834] - 2026-03-12
+
+### Fixed
+- **ace-support-core v0.25.3**: Re-exported `Ace::Core::Atoms::CommandExecutor` from `ace/core` so shared-core consumers can use the command executor without a separate direct require.
+
 ## [0.9.833] - 2026-03-12
 
 ### Added

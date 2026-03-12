@@ -262,7 +262,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.25.2)
+    ace-support-core (0.25.3)
       ace-support-config (~> 0.7)
       ace-support-fs (~> 0.2)
       dry-cli (~> 1.0)
