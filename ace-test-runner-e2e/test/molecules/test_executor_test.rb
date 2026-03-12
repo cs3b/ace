@@ -63,6 +63,8 @@ class TestExecutorTest < Minitest::Test
       assert File.exist?(File.join(report_dir, "metadata.yml")), "pipeline should write metadata"
       assert_equal "value", calls.first[:kwargs][:subprocess_env]["CUSTOM"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:subprocess_env]["PROJECT_ROOT_PATH"]
+      assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
+      assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
     end
   end
 
@@ -183,6 +185,7 @@ class TestExecutorTest < Minitest::Test
     end
 
     assert_equal env_vars, captured_kwargs[:subprocess_env], "env_vars should be passed as subprocess_env to QueryInterface.query for TC execution"
+    assert_equal "/tmp/sb", captured_kwargs[:working_dir], "sandbox_path should be threaded as working_dir for TC execution"
   end
 
   private

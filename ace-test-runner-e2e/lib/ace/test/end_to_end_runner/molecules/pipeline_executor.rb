@@ -100,6 +100,7 @@ module Ace
           def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:)
             prompt = File.read(prompt_path)
             system = File.read(system_path)
+            working_dir = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
 
             Ace::LLM::QueryInterface.query(
               @provider,
@@ -109,6 +110,7 @@ module Ace
               timeout: @timeout,
               fallback: false,
               output: output_path,
+              working_dir: working_dir,
               subprocess_env: env_vars
             )
           end
