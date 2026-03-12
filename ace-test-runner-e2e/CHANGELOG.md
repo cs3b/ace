@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-03-12
+
+### Fixed
+- Restored the canonical `as-e2e-run` `--sandbox` path to `wfi://e2e/execute` so CLI-provider E2E runs use the pre-populated sandbox execution workflow again.
+- Hardened verifier/result parsing so prose containing paths like `results/tc/{NN}` is no longer misclassified as raw JSON.
+- Convert unstructured verifier responses into deterministic `error` reports and mark error metadata verdicts as `fail` instead of `pass`.
+
+### Technical
+- Added regression coverage for canonical E2E skill routing, brace-fragment parser handling, and unstructured verifier report generation.
+
 ## [0.24.1] - 2026-03-12
 
 ### Changed

@@ -109,14 +109,20 @@ class ResultParserTest < Minitest::Test
     assert_equal '{"key": "value"}', json
   end
 
-  def test_extract_json_from_raw
-    text = 'Some text {"key": "value"} more text'
+  def test_extract_json_from_raw_json_payload
+    text = '{"key": "value"}'
     json = ResultParser.extract_json(text)
     assert_equal '{"key": "value"}', json
   end
 
   def test_extract_json_returns_nil_for_no_json
     assert_nil ResultParser.extract_json("No JSON here")
+  end
+
+  def test_extract_json_ignores_brace_fragments_in_prose
+    text = "Artifacts live under results/tc/{NN}/ and no JSON was returned."
+
+    assert_nil ResultParser.extract_json(text)
   end
 
   # --- Status Downcasing ---
