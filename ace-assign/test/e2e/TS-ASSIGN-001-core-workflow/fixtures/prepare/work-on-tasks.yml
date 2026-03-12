@@ -13,7 +13,7 @@ parameters:
     type: array
     description: Task references (comma-separated, range, or pattern)
 
-steps:
+phases:
   - name: onboard
     number: "000"
     skill: as-onboard
