@@ -8,6 +8,10 @@ and verify output is scoped to that file.
 ## Workspace
 
 Save artifacts to `results/tc/02/`.
+
+Capture:
+- `results/tc/02/command.txt` — exact `ace-test` invocation used
+- `results/tc/02/report-files.txt` — recursive listing of generated report files under `results/tc/02/reports`
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).

@@ -9,7 +9,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. `results/tc/02/` contains command captures.
 2. Exit code is `0`.
-3. Output references the target file and does not imply full-suite execution.
+3. `results/tc/02/command.txt` references `test/atoms/tool_checker_test.rb`.
+4. `results/tc/02/report-files.txt` confirms report material was generated under `results/tc/02/reports`.
 
 ## Verdict
 

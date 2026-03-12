@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.10] - 2026-03-12
+
+### Changed
+- Updated the core `ace-test` E2E runner/verifier instructions to capture explicit command and report-file evidence for single-file and group-scoped executions instead of relying on fragile stdout phrasing.
+
 ## [0.15.9] - 2026-03-04
 
 ### Changed

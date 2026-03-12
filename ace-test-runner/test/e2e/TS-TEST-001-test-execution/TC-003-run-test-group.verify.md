@@ -9,7 +9,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. Artifacts exist in `results/tc/03/`.
 2. Exit code is `0`.
-3. Output reflects atom-layer/group-focused execution.
+3. `results/tc/03/command.txt` references the `atoms` target.
+4. `results/tc/03/report-files.txt` confirms report material was generated under `results/tc/03/reports`.
 
 ## Verdict
 
