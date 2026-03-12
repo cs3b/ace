@@ -2,6 +2,6 @@
 
 module Ace
   module Search
-    VERSION = "0.19.8"
+    VERSION = "0.21.1"
   end
 end

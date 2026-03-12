@@ -319,7 +319,7 @@ ace-search "*.ag.md" --file
 ace-search "name: " --content --glob "**/*.ag.md"
 
 # Step 3: Look in likely directories
-ace-search "agent" --file --include "dev-handbook/.integrations/**/*"
+ace-search "agent" --file --include "ace-*/handbook/**/*"
 
 # Step 4: Find agent usage
 ace-search "expected_params" --content --glob "**/*.ag.md" --max-results 10

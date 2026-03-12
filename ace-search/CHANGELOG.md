@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-03-12
+
+### Changed
+- Updated handbook search-agent examples to use current `ace-*/handbook/**/*` paths instead of legacy shared handbook locations.
+
+## [0.21.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-search-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.20.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned search and research skills for feature research, multi-search analysis, and direct search execution.
+
+
 ## [0.19.8] - 2026-03-05
 
 ### Changed
