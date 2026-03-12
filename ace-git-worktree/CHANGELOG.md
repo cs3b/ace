@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-git-worktree` and `as-git-worktree-manage` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+## [0.14.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned git worktree skill for task-aware worktree management.
+
+
 ## [0.13.22] - 2026-03-05
 
 ### Fixed
