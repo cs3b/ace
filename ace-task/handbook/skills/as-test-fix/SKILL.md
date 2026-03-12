@@ -1,0 +1,26 @@
+---
+name: as-test-fix
+description: Fix failing automated tests systematically
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
+allowed-tools:
+  - Bash(ace-task:*)
+  - Bash(ace-bundle:*)
+  - Bash(ace-test:*)
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+argument-hint: [test-file-pattern]
+last_modified: 2026-02-24
+source: ace-task
+skill:
+  kind: workflow
+  execution:
+    workflow: wfi://test/fix
+
+---
+
+read and run `ace-bundle wfi://test/fix`

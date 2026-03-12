@@ -448,7 +448,7 @@ The fix is ready for code review and merge.
 
 ## Usage Example
 
-> "I ran /as-bug-analyze earlier and have a fix plan. Please apply the fix for the nil preferences bug."
+> "I ran `ace-bundle wfi://bug/analyze` earlier and have a fix plan. Please apply the fix for the nil preferences bug."
 
 **Response Process:**
 

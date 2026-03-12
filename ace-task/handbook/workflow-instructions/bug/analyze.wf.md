@@ -373,7 +373,7 @@ Present the analysis to the user in this format:
 [How to revert if issues arise]
 
 ---
-*Run `/as-bug-fix` to execute this fix plan*
+*Run `ace-bundle wfi://bug/fix` to execute this fix plan*
 ```
 
 ## Usage Example
@@ -436,7 +436,7 @@ This workflow provides systematic bug analysis that ensures proper investigation
 [How to revert if issues arise]
 
 ---
-*Run `/as-bug-fix` to execute this fix plan*
+*Run `ace-bundle wfi://bug/fix` to execute this fix plan*
 </template>
 
 <template id="analysis-yml">
