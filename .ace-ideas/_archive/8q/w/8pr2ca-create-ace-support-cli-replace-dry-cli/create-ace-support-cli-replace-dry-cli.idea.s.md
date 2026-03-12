@@ -1,15 +1,12 @@
 ---
 title: Create ace-support-cli Gem to Replace dry-cli Dependency
 filename_suggestion: create-ace-support-cli-replace-dry-cli
-enhanced_at: 2026-03-05 00:00:00.000000000 +00:00
+enhanced_at: 2026-03-05 00:00:00 +0000
 llm_model: claude-opus-4-6
 id: 8pr2ca
-status: pending
-tags:
-- dependency
-- cli
-- support
-created_at: '2026-02-28 17:37:36'
+status: done
+tags: [dependency, cli, support]
+created_at: "2026-02-28 17:37:36"
 source: user
 ---
 
