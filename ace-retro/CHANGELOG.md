@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned self-improve skill under the retro package.
+
+
 ## [0.11.0] - 2026-03-08
 
 ### Changed
