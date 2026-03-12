@@ -624,10 +624,17 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_resolves_skill_assign_source_and_expands_sub_phases
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
-      FileUtils.mkdir_p(File.join(project_root, ".claude", "skills", "ace_work-on-task"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
 
-      File.write(File.join(project_root, ".claude", "skills", "ace_work-on-task", "SKILL.md"), <<~MD)
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
+        config:
+          relative_path: handbook/skills
+      YAML
+
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work", "SKILL.md"), <<~MD)
         ---
         name: as-task-work
         assign:

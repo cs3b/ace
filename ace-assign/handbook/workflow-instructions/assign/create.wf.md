@@ -83,7 +83,7 @@ If input is an exact preset/recipe-style request (for example `work-on-task --ta
 #### Path C: Explicit Step or Freeform Intent (Default)
 
 For explicit or natural-language requests:
-- Run `wfi://assign/compose` to resolve phases from catalog data
+- Run `wfi://assign/compose` to resolve phases from canonical assign-capable skill data
 - Preserve explicit user-requested steps as primary intent
 - Keep catalog defaults and conditionals advisory unless a hard ordering/prerequisite rule applies
 
@@ -91,6 +91,7 @@ For explicit or natural-language requests:
 
 For explicit-step requests (for example `run tests, reorganize commits, push to remote`):
 - Resolve each phrase to one catalog phase using phase intent hints
+- Canonical phase source excludes capability skills; only assign-capable workflow/orchestration entries are eligible
 - Normalize duplicates (same phase requested multiple times -> one phase, unless repetition is explicit)
 - Preserve user order first
 - Apply only hard ordering/prerequisite corrections and report each correction with the named rule
@@ -190,6 +191,7 @@ Phase 010: ...
 - `ace-assign create FILE` receives the rendered spec path
 - Assignment metadata preserves hidden-spec provenance
 - Explicit step requests map to expected phases with explainable ordering
+- Capability skills remain excluded from assign composition
 - Skill-backed phases still expand through runtime `assign.source` metadata
 - `--run` (when requested) triggers drive handoff as the final workflow step
 
