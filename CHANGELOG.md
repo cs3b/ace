@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.831] - 2026-03-12
+
+### Fixed
+- **ace-handbook v0.15.2**: Preserved the conditional sandbox execution branch when syncing canonical `as-e2e-run` skills into provider-native Claude and Codex trees.
+- **ace-test-runner-e2e v0.24.2**: Restored sandboxed `as-e2e-run` workflow routing, hardened verifier/result parsing against brace fragments in prose responses, and turned unstructured verifier output into deterministic error reports with failing verdict metadata.
+
 ## [0.9.830] - 2026-03-12
 
 ### Technical
