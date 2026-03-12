@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.830] - 2026-03-12
+
+### Technical
+- **ace-bundle v0.36.3**: Forced exact-mode compression in test execution paths so suite runtime no longer invokes the agent compressor path by default.
+
 ## [0.9.829] - 2026-03-12
 
 ### Fixed
