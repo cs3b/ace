@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "open3"
 
 module Ace
   module Sim
@@ -9,12 +8,13 @@ module Ace
       class FinalSynthesisExecutor
         class CommandRunner
           def call(args)
-            stdout, stderr, status = Open3.capture3(*args)
+            command = Ace::Core::Atoms::CommandExecutor.build_command(args[0], *args[1..])
+            result = Ace::Core::Atoms::CommandExecutor.execute(command)
             {
-              success: status.success?,
-              stdout: stdout,
-              stderr: stderr,
-              exit_code: status.exitstatus
+              success: result[:success],
+              stdout: result[:stdout].to_s,
+              stderr: result[:stderr].to_s,
+              exit_code: result[:exit_code]
             }
           end
         end

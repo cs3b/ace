@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-03-12
+
+### Fixed
+- Switched simulation bundle/stage/final synthesis subprocess execution to the shared core command executor so failed external commands do not leak Ruby thread-read exceptions into run output handling.
+
+### Technical
+- Expanded simulation runner coverage to verify failed final synthesis still leaves inspection artifacts such as `synthesis.yml` and final input/source files.
+
 ## [0.8.0] - 2026-03-10
 
 ### Added
