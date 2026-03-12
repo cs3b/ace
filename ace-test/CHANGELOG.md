@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-03-12
+
+### Changed
+- Updated README and workflow guidance to use direct `ace-bundle` workflow loading instead of legacy slash-command references.
+
+## [0.4.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-test-verify-suite` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.3.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned test planning, optimization, suite verification, performance-audit, and test-review skills.
+- Added package workflows for `wfi://test/performance-audit` and `wfi://test/review` to replace inline legacy skill bodies.
+
+
 ## [0.2.2] - 2026-03-04
 
 ### Changed

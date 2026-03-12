@@ -342,29 +342,29 @@ Output a summary:
 1. Review and customize `scenario.yml` and TC files
 2. Add fixtures to the `fixtures/` directory if needed
 3. Review the E2E Decision Record and ensure `unit-coverage-reviewed` is populated
-4. Run the test with: `/as-e2e-run {package} TS-{AREA}-{NNN}`
+4. Run the test with `ace-test-e2e {package} TS-{AREA}-{NNN}`
 5. Update `last-verified` after successful execution
 ```
 
 ## Example Invocations
 
 **Create a test:**
-```
-/as-e2e-create ace-lint LINT
+```bash
+ace-bundle wfi://e2e/create
 ```
 
 Creates: `ace-lint/test/e2e/TS-LINT-003-new-test-scenario/` with `scenario.yml` and TC files.
 
 **Create a contextual test:**
-```
-/as-e2e-create ace-lint LINT --context "Test config file validation"
+```bash
+ace-bundle wfi://e2e/create
 ```
 
 Creates: `ace-lint/test/e2e/TS-LINT-003-config-file-validation/` with `scenario.yml` and TC files for config validation.
 
 **Create test for new area:**
-```
-/as-e2e-create ace-review COMMENT --context "Test PR comment threading"
+```bash
+ace-bundle wfi://e2e/create
 ```
 
 Creates: `ace-review/test/e2e/TS-COMMENT-001-pr-comment-threading/` with `scenario.yml` and TC files.

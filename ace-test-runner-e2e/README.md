@@ -111,13 +111,13 @@ Where:
 
 ### Running a Single E2E Test
 
-```
-/as-e2e-run <package> <test-id>
+```bash
+ace-bundle wfi://e2e/run
 ```
 
 Example:
-```
-/as-e2e-run ace-lint MT-LINT-001
+```bash
+ace-test-e2e ace-lint MT-LINT-001
 ```
 
 ### CLI Usage
@@ -133,26 +133,25 @@ ace-test-e2e-suite --affected             # Test changed packages only
 
 ### Running with Test Case Filtering
 
-```
-/as-e2e-run <package> <test-id> TC-001,TC-003
+```bash
+ace-test-e2e <package> <test-id> TC-001,TC-003
 ```
 
 ### Running with Pre-Populated Sandbox
 
 When the sandbox is already set up (via Ruby `SetupExecutor`):
 
-```
-/as-e2e-run <package> <test-id> --sandbox <path> --run-id <id>
+```bash
+ace-test-e2e <package> <test-id> --sandbox <path> --run-id <id>
 ```
 
 ### Running Multiple Tests (Generic Fan-Out)
 
-```
-/as-assign-run-in-batches "/as-e2e-run ace-lint {{item}}" --items TS-LINT-001,TS-LINT-002 --run
-/as-assign-run-in-batches "/as-e2e-run ace-lint {{item}}" --items TS-LINT-001,TS-LINT-002 --sequential --run
+```bash
+ace-bundle wfi://assign/run-in-batches
 ```
 
-`--items` is required and explicit by design. Enumerate the test IDs you want to run.
+Use the assignment workflow to fan out explicit `ace-test-e2e` commands across a fixed `--items` list.
 
 ### Creating a New Test Scenario
 

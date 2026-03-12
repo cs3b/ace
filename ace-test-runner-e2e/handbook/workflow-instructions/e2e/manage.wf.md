@@ -10,21 +10,21 @@ source: ace-test-runner-e2e
 
 This workflow is a lightweight orchestrator that chains the 3-stage E2E test pipeline. It delegates all logic to the specialized stage workflows.
 
-```
-/as-e2e-manage (orchestrator)
+```text
+ace-bundle wfi://e2e/manage
          │
-         ├─► Stage 1: /as-e2e-review   (explore)
+         ├─► Stage 1: ace-bundle wfi://e2e/review   (explore)
          │        └─► Coverage matrix
          │
-         ├─► Stage 2: /as-e2e-plan-changes    (decide)
+         ├─► Stage 2: ace-bundle wfi://e2e/plan-changes    (decide)
          │        └─► Change plan
          │
          ├─► User confirmation gate
          │
-         ├─► Stage 3: /as-e2e-rewrite   (execute)
+         ├─► Stage 3: ace-bundle wfi://e2e/rewrite   (execute)
          │        └─► Updated test files
          │
-         └─► (optional) /as-assign-run-in-batches     (verify)
+         └─► (optional) `ace-test-e2e` verification     (verify)
 ```
 
 ## Arguments
@@ -46,8 +46,8 @@ This workflow is a lightweight orchestrator that chains the 3-stage E2E test pip
 
 Run the exploration stage to produce a coverage matrix:
 
-```
-/as-e2e-review {PACKAGE}
+```bash
+ace-bundle wfi://e2e/review
 ```
 
 Capture the full review report output including coverage matrix, overlap analysis, gap analysis, and health status.
@@ -58,8 +58,8 @@ If the review finds no E2E tests and no features worth testing, report this and 
 
 Run the decision stage to produce a concrete change plan:
 
-```
-/as-e2e-plan-changes {PACKAGE} --review-report {review-output}
+```bash
+ace-bundle wfi://e2e/plan-changes
 ```
 
 Capture the change plan with its REMOVE / KEEP / MODIFY / CONSOLIDATE / ADD classifications and the proposed scenario structure.
@@ -81,8 +81,8 @@ If the user requests modifications, re-run Stage 2 with their feedback incorpora
 
 After user confirms the plan, execute it:
 
-```
-/as-e2e-rewrite {PACKAGE} --plan {plan-output}
+```bash
+ace-bundle wfi://e2e/rewrite
 ```
 
 Capture the execution summary with files created, modified, and deleted.
@@ -92,7 +92,8 @@ Capture the execution summary with files created, modified, and deleted.
 If `--run-tests` flag is provided, verify the rewritten tests:
 
 ```bash
-/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run
+ace-test-e2e {PACKAGE} {TEST_ID_1}
+ace-test-e2e {PACKAGE} {TEST_ID_2}
 ```
 
 Provide an explicit `--items` list from the scenarios you want to verify.
@@ -127,26 +128,26 @@ Produce a combined summary of the full pipeline run:
 
 ### Next Steps
 
-1. {If tests not run: Run `/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run` to verify}
+1. {If tests not run: run `ace-test-e2e {PACKAGE} {TEST_ID}` to verify}
 2. {If tests failed: Investigate failures}
-3. Commit changes with `/as-git-commit`
+3. Commit changes with `ace-git-commit`
 ```
 
 ## Example Invocations
 
 **Full lifecycle (review → plan → confirm → rewrite):**
-```
-/as-e2e-manage ace-lint
+```bash
+ace-bundle wfi://e2e/manage
 ```
 
 **Dry-run (review → plan → stop):**
-```
-/as-e2e-manage ace-lint --dry-run
+```bash
+ace-bundle wfi://e2e/manage
 ```
 
 **Full lifecycle with test verification:**
-```
-/as-e2e-manage ace-lint --run-tests
+```bash
+ace-bundle wfi://e2e/manage
 ```
 
 ## Error Handling
@@ -157,8 +158,8 @@ If Stage 1 finds no E2E tests:
 ```
 No E2E tests found for {package}.
 
-Use `/as-e2e-create {package} {AREA}` to create the first test,
-or run `/as-e2e-review {package}` to see the unit test coverage.
+Use `ace-bundle wfi://e2e/create` to create the first test,
+or load `ace-bundle wfi://e2e/review` to see the unit test coverage.
 ```
 
 ### User Cancellation

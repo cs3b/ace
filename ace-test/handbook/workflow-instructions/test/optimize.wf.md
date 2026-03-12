@@ -31,7 +31,7 @@ Systematically optimize test performance by:
 ## When to Use
 
 - Test suite exceeds time budget
-- After `/as-test-verify-suite` identifies issues
+- After `ace-bundle wfi://test/verify-suite` identifies issues
 - Before major releases
 - When developer feedback loop feels slow
 

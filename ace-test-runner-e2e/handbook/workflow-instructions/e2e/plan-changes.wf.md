@@ -12,15 +12,15 @@ This workflow takes the review output (coverage matrix) from Stage 1 and produce
 
 **Pipeline position:** Stage 2 of 3 (Decide)
 
-```
-/as-e2e-review  →  /as-e2e-plan-changes  →  /as-e2e-rewrite
-     (explore)               ▶ (decide) ◀               (execute)
+```text
+ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bundle wfi://e2e/rewrite
+     (explore)                           ▶ (decide) ◀                           (execute)
 ```
 
 ## Arguments
 
 - `PACKAGE` (required) - The package to plan changes for (e.g., `ace-lint`)
-- `--review-report <path>` (optional) - Path to review report from Stage 1. If omitted, runs `/as-e2e-review {PACKAGE}` first.
+- `--review-report <path>` (optional) - Path to review report from Stage 1. If omitted, load `ace-bundle wfi://e2e/review` first.
 - `--scope <scenario-id>` (optional) - Limit planning to a single scenario (e.g., `TS-LINT-001`)
 
 ## Workflow Steps
@@ -31,7 +31,7 @@ This workflow takes the review output (coverage matrix) from Stage 1 and produce
 Read the file at the given path. Verify it contains a coverage matrix with the expected structure (features × unit tests × E2E columns).
 
 **If no review report:**
-Invoke `/as-e2e-review {PACKAGE}` and capture the full output including coverage matrix, overlap analysis, gap analysis, and health status.
+Load `ace-bundle wfi://e2e/review` and capture the full output including coverage matrix, overlap analysis, gap analysis, and health status.
 
 If `--scope` is provided, filter the review data to only the specified scenario and its related features.
 
@@ -204,7 +204,7 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 ### Next Steps
 
 - Review and approve this plan
-- Run `/as-e2e-rewrite {PACKAGE} --plan {path}` to execute
+- Run `ace-bundle wfi://e2e/rewrite` to execute
 - Or modify the plan and re-run
 ```
 
@@ -213,29 +213,29 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 ## Example Invocations
 
 **Plan changes with a prior review report:**
-```
-/as-e2e-plan-changes ace-lint --review-report .ace-local/test-e2e/review-ace-lint.md
+```bash
+ace-bundle wfi://e2e/plan-changes
 ```
 
 **Plan changes (runs review automatically):**
-```
-/as-e2e-plan-changes ace-lint
+```bash
+ace-bundle wfi://e2e/plan-changes
 ```
 
 **Plan changes for a single scenario:**
-```
-/as-e2e-plan-changes ace-lint --scope TS-LINT-001
+```bash
+ace-bundle wfi://e2e/plan-changes
 ```
 
 ## Error Handling
 
 ### No Review Data
 
-If no `--review-report` is provided and `/as-e2e-review` finds no tests:
+If no `--review-report` is provided and `ace-bundle wfi://e2e/review` finds no tests:
 ```
 No E2E tests found for {package}. Nothing to plan changes for.
 
-To create the first E2E test: /as-e2e-create {package} {AREA}
+To create the first E2E test: `ace-bundle wfi://e2e/create`
 ```
 
 ### Empty Coverage Matrix
