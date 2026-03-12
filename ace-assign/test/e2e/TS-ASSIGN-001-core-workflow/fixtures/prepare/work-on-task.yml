@@ -10,7 +10,7 @@ parameters:
     required: true
     description: Task reference (e.g., 123 or 256.01)
 
-steps:
+phases:
   - name: onboard
     skill: as-onboard
     instructions:

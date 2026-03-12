@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-03-12
+
+### Changed
+- Updated the prepare-workflow E2E fixtures to use the current top-level `phases:` schema for single-task and batch workflows.
+- Refreshed hierarchy E2E guidance to capture copied auto-completion reports and to use the current fixture layout under `fixtures/*/jobs/`.
+
 ## [0.31.1] - 2026-03-10
 
 ### Fixed
