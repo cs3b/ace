@@ -288,17 +288,26 @@ describe "CodexClient" do
       assert_nil result
     end
 
-    it "falls back to default .claude/skills dir" do
+    it "prefers provider-specific .codex/skills fallback dir" do
       Dir.mktmpdir do |tmpdir|
-        default_skills = File.join(tmpdir, ".claude", "skills")
+        default_skills = File.join(tmpdir, ".codex", "skills")
         FileUtils.mkdir_p(default_skills)
 
         Dir.chdir(tmpdir) do
           client = Ace::LLM::Providers::CLI::CodexClient.new
           result = client.send(:resolve_skills_dir)
-          # resolve_skills_dir returns File.join(Dir.pwd, ".claude", "skills")
-          expected = File.join(Dir.pwd, ".claude", "skills")
+          expected = File.join(Dir.pwd, ".codex", "skills")
           assert_equal expected, result
+        end
+      end
+    end
+
+    it "returns nil when provider-specific dir is missing" do
+      Dir.mktmpdir do |tmpdir|
+        Dir.chdir(tmpdir) do
+          client = Ace::LLM::Providers::CLI::CodexClient.new
+          result = client.send(:resolve_skills_dir)
+          assert_nil result
         end
       end
     end

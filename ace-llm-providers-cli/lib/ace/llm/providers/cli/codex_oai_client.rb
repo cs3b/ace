@@ -239,8 +239,12 @@ module Ace
             configured = @options[:skills_dir] || @generation_config[:skills_dir]
             return configured if configured && Dir.exist?(configured)
 
-            default_dir = File.join(Dir.pwd, ".claude", "skills")
-            default_dir if Dir.exist?(default_dir)
+            candidate_dirs = [
+              File.join(Dir.pwd, ".codex", "skills"),
+              File.join(Dir.pwd, ".agent", "skills"),
+              File.join(Dir.pwd, ".claude", "skills")
+            ]
+            candidate_dirs.find { |dir| Dir.exist?(dir) }
           end
         end
       end

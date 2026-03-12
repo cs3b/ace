@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-12
+
+### Changed
+- Codex now resolves skills from `.codex/skills` only and no longer falls back to `.agent/skills` or `.claude/skills`.
+- Updated the default Codex provider `skills_dir` configuration to `.codex/skills`.
+
+## [0.24.0] - 2026-03-10
+
+### Changed
+- PI now resolves skills from `.pi/skills` as its provider-native directory and no longer falls back to `.agent/skills` or `.claude/skills`.
+- Updated the default PI provider `skills_dir` configuration to `.pi/skills`.
+
+## [0.23.0] - 2026-03-09
+
+### Added
+- Generalized provider skills directory resolution with multi-path fallback for Codex, CodexOAI, ClaudeOAI, and Pi clients
+- Default `skills_dir` configuration for Codex and Pi providers pointing to `.agent/skills`
+
+### Technical
+- Added fallback order tests for `codex_client` and `pi_client` skill directory resolution
+
+## [0.22.2] - 2026-03-09
+
+### Technical
+- Added `SkillNameReader` regression coverage to ensure canonical SKILL frontmatter with nested `skill`/`assign` metadata still yields provider skill names.
+- Added malformed-frontmatter guard test coverage for `SkillNameReader`.
+
 ## [0.22.1] - 2026-03-05
 
 ### Fixed

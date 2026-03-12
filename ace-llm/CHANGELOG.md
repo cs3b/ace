@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.4] - 2026-03-12
+
+### Changed
+- Updated the handbook LLM reference guide to describe canonical package `handbook/skills/` ownership before provider projections.
+
 ### Fixed
 - Restore provider preset defaults under `.ace-defaults/llm/presets/` after the preset refactor dropped `max_tokens: 16000` and rewrote Codex/Gemini sandbox CLI flags; keep the newer 600-second timeout standardization intact.
 
