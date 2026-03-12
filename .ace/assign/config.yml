@@ -13,11 +13,6 @@ subtask_format: "%02d"
 # Maximum sub-phase depth (e.g., 010.01.01 = 3 levels)
 max_subtask_depth: 3
 
-# Skill metadata lookup roots (relative to project root unless absolute)
-skill_source_paths:
-  - ".agents/skills"
-  - ".claude/skills"
-
 # Workflow lookup roots (relative to project root unless absolute)
 workflow_source_paths:
   - "ace-task/handbook/workflow-instructions"

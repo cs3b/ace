@@ -60,7 +60,10 @@ ace-gem/
 ├── test/                          # FLAT: atoms/, molecules/, etc.
 ├── handbook/
 │   ├── agents/*.ag.md
-│   └── workflow-instructions/*.wf.md
+│   ├── skills/*/SKILL.md
+│   ├── guides/*.g.md
+│   ├── templates/**/*.md
+│   └── workflow-instructions/**/*.wf.md
 ├── exe/ace-gem, CHANGELOG.md, README.md
 └── ace-gem.gemspec
 ```
@@ -118,11 +121,19 @@ For LLM prompt generation, use PromptCacheManager. See [prompt-caching.g.md](../
 
 ```
 handbook/
-├── agents/*.ag.md              # Composable, single-purpose
-└── workflow-instructions/*.wf.md  # Complete per ADR-001
+├── agents/*.ag.md                 # Composable, single-purpose
+├── skills/*/SKILL.md             # Canonical provider-agent skill definitions
+├── guides/*.g.md                 # Development guidance
+├── templates/**/*.md             # Reusable content/templates
+└── workflow-instructions/**/*.wf.md  # Complete per ADR-001
 ```
 
-Symlink to `.claude/agents/` for Claude Code integration.
+General documentation should point readers to workflows via `ace-bundle wfi://...` and direct
+`ace-*` commands. Skills are reserved for provider-agent integrations and `ace-assign`
+discovery/dispatch.
+
+Provider packages project canonical skills from `handbook/skills/` into provider-native folders
+such as `.claude/skills/` and `.codex/skills/`.
 
 ## CLI Commands
 

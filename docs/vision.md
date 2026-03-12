@@ -90,9 +90,11 @@ ace-git-commit/
 │   └── git-commit.system.md          # project commit style
 ```
 
-🤖 **Agent integration** - a few lines wrap each CLI tool for an agent:
+🤖 **Agent integration** - canonical skills are authored once, then projected into provider-native folders:
 
-- [`.agent/skills/ace-git-commit/SKILL.md`](../.agent/skills/ace-git-commit/SKILL.md) - only ~10 lines
+- Canonical source lives in package `handbook/skills/`
+- Provider packages generate `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, and `.pi/skills/`
+- Provider-specific frontmatter overrides live inside the canonical skill under `integration.providers.<provider>`
 
 This is the simplest ACE tool. The pattern scales to code review, task management, and documentation workflows.
 

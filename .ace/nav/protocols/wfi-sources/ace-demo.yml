@@ -1,0 +1,10 @@
+---
+name: ace-demo
+type: gem
+description: Demo workflow instructions from ace-demo gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

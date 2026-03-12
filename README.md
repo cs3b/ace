@@ -42,14 +42,14 @@ defaults:
   auto_execute: true
 ```
 
-**Claude Code Integration:**
+**Workflow-first usage:**
 
-```
-# In Claude Code chat:
-/ace-review-pr 123 --preset code-deep
+```bash
+# Load the canonical review workflow instructions
+ace-bundle wfi://review/pr
 ```
 
-The same review runs identically from CLI or as a Claude Code skill.
+Provider-specific skills exist for CLI agents and `ace-assign` discovery, but the default documentation path in ACE is direct `ace-*` commands plus `ace-bundle wfi://...` for multi-step workflows.
 
 > See [ace-review/README.md](ace-review/README.md) for full documentation. Each tool has its own README with detailed usage.
 
