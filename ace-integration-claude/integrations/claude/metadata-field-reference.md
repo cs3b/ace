@@ -45,6 +45,39 @@ This field provides hints about what arguments the command expects. The square b
 
 This field allows commands to request a specific Claude model.
 
+### `skill`
+**Type:** Mapping (ACE canonical extension)  
+**Purpose:** Declares typed skill taxonomy and workflow binding  
+**Example:**
+
+```yaml
+skill:
+  kind: workflow
+  execution:
+    workflow: wfi://task/plan
+```
+
+Canonical rules:
+- `skill.kind` is required for canonical `SKILL.md` and must be one of: `capability`, `workflow`, `orchestration`
+- `skill.execution.workflow` is required and must be a `wfi://...` reference
+- Unknown keys under `skill` or `skill.execution` should be rejected by schema-aware validators
+- Canonical skills are authored in package `handbook/skills` paths and projected directly into provider trees (for example `.claude/skills` and `.codex/skills`)
+
+### `assign`
+**Type:** Mapping (ACE canonical extension, optional)  
+**Purpose:** Assignment-aware metadata for workflow/orchestration skills  
+**Example:**
+
+```yaml
+assign:
+  source: wfi://task/work
+```
+
+Canonical rules:
+- Optional field
+- Valid only when `skill.kind` is `workflow` or `orchestration`
+- `capability` skills must not define `assign`
+
 **Available Models by Family:**
 
 **Opus Models (Complex Analysis):**
