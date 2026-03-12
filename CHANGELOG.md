@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.833] - 2026-03-12
+
+### Added
+- **ace-llm v0.26.5**: Added `working_dir:` threading in `QueryInterface` for CLI-backed provider execution context.
+
+### Fixed
+- **ace-llm-providers-cli v0.25.1**: Fixed CLI provider subprocesses and provider-side path discovery to anchor to the sandbox/root execution directory instead of leaking relative artifact writes into the repo root.
+- **ace-test-runner-e2e v0.24.4**: Fixed deterministic E2E pipeline runner and verifier invocations to pass the sandbox as the explicit working directory.
+
+## [0.9.832] - 2026-03-12
+
+### Added
+- **ace-search v0.21.2**: Added a public `--count` CLI flag so count-oriented ripgrep execution is available through `ace-search`.
+
+### Fixed
+- **ace-git-worktree v0.15.1**: Fixed JSON list output to stay JSON-only by suppressing CLI summary text in `--format json` mode.
+- **ace-sim v0.8.1**: Fixed simulation subprocess execution to use the shared core command executor, avoiding Ruby thread-read exceptions when external commands fail.
+
+### Changed
+- **ace-assign v0.31.2**: Updated assignment E2E fixtures and hierarchy verification guidance to match the current `phases:` schema and copied auto-completion report artifacts.
+- **ace-idea v0.14.2**: Updated idea-lifecycle E2E guidance to capture created idea file content and frontmatter as explicit verification artifacts.
+- **ace-test-runner v0.15.10**: Updated `ace-test` E2E guidance to verify single-file and group-scoped runs from captured commands and report artifacts instead of brittle stdout wording.
+- **ace-test-runner-e2e v0.24.3**: Changed the default suite report-generation model in project E2E config to `codex:spark`.
+
 ## [0.9.831] - 2026-03-12
 
 ### Fixed
