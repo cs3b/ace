@@ -12,12 +12,12 @@ This workflow executes an approved change plan by deleting old scenarios, creati
 
 **Pipeline position:** Stage 3 of 3 (Execute)
 
-```
-/as-e2e-review  →  /as-e2e-plan-changes  →  /as-e2e-rewrite
-     (explore)                  (decide)               ▶ (execute) ◀
+```text
+ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bundle wfi://e2e/rewrite
+     (explore)                           (decide)                           ▶ (execute) ◀
 ```
 
-**Difference from `/as-e2e-create`:** `create-e2e-test` is for standalone creation — "I need a new E2E test for feature X" with no prior analysis. `rewrite-e2e-tests` is plan-driven — it operates from a structured change plan, handles deletions and modifications, and can replace entire suites.
+**Difference from `ace-bundle wfi://e2e/create`:** `create-e2e-test` is for standalone creation — "I need a new E2E test for feature X" with no prior analysis. `rewrite-e2e-tests` is plan-driven — it operates from a structured change plan, handles deletions and modifications, and can replace entire suites.
 
 ## Arguments
 
@@ -50,8 +50,8 @@ Read the file at the given path. Verify it contains the expected sections: REMOV
 
 **If no plan:**
 Run the full pipeline:
-1. Invoke `/as-e2e-review {PACKAGE}` → capture review report
-2. Invoke `/as-e2e-plan-changes {PACKAGE} --review-report {path}` → capture change plan
+1. Load `ace-bundle wfi://e2e/review` → capture review report
+2. Load `ace-bundle wfi://e2e/plan-changes` → capture change plan
 3. Present the plan to the user for confirmation before proceeding
 
 Parse the plan into structured actions:
@@ -231,25 +231,25 @@ Present the execution summary:
 ### Next Steps
 
 1. Review the created/modified TC files
-2. Run `/as-assign-run-in-batches "/as-e2e-run {PACKAGE} {{item}}" --items {TEST_ID_1},{TEST_ID_2} --run` to verify all tests pass
-3. Commit changes with `/as-git-commit`
+2. Run `ace-test-e2e {PACKAGE} {TEST_ID}` for the scenarios you want to verify
+3. Commit changes with `ace-git-commit`
 ```
 
 ## Example Invocations
 
 **Execute a pre-approved plan:**
-```
-/as-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md
+```bash
+ace-bundle wfi://e2e/rewrite
 ```
 
 **Run full pipeline (review → plan → rewrite):**
-```
-/as-e2e-rewrite ace-lint
+```bash
+ace-bundle wfi://e2e/rewrite
 ```
 
 **Dry-run to preview changes:**
-```
-/as-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md --dry-run
+```bash
+ace-bundle wfi://e2e/rewrite
 ```
 
 ## Error Handling
@@ -261,7 +261,7 @@ If the plan file is missing required sections:
 Plan file is missing required sections: {missing sections}
 
 Expected sections: REMOVE, KEEP, MODIFY, CONSOLIDATE, ADD, Proposed Scenario Structure
-Re-run `/as-e2e-plan-changes {PACKAGE}` to generate a valid plan.
+Re-run `ace-bundle wfi://e2e/plan-changes` to generate a valid plan.
 ```
 
 ### File Conflicts

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-03-12
+
+### Changed
+- Updated README and E2E workflow documentation to use `ace-bundle` and `ace-test-e2e` examples instead of slash-command orchestration.
+
+## [0.24.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned E2E lifecycle skills for create, manage, review, planning, rewrite, fix, and sandbox setup.
+
+### Changed
+- Aligned canonical E2E skill tool declarations and metadata with the stricter handbook skill schema.
+
+
+## [0.23.0] - 2026-03-09
+
+### Added
+- Added `skill-sources` gem defaults registration at `.ace-defaults/nav/protocols/skill-sources/ace-test-runner-e2e.yml` so `skill://` can discover canonical `handbook/skills` entries from `ace-test-runner-e2e`.
+
+## [0.22.1] - 2026-03-09
+
+### Changed
+- Updated canonical `as-e2e-run` skill metadata with explicit workflow typing (`skill.kind`, `skill.execution.workflow`) and agent-context comments for schema-aligned projections.
+
 ## [0.22.0] - 2026-03-08
 
 ### Changed

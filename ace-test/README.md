@@ -28,61 +28,50 @@ gem install ace-test
 
 ## Usage
 
-The ace-test gem provides testing resources accessible via protocols using ace-nav:
+The ace-test gem provides testing resources that should be loaded directly with `ace-bundle`:
 
 ### Guide Access
 
 ```bash
 # Quick reference
-ace-nav guide://quick-reference
+ace-bundle guide://quick-reference
 
 # Testing philosophy and pyramid
-ace-nav guide://testing-philosophy
+ace-bundle guide://testing-philosophy
 
 # Test organization patterns
-ace-nav guide://test-organization
+ace-bundle guide://test-organization
 
 # Mocking patterns (Git, HTTP, subprocess, ENV)
-ace-nav guide://mocking-patterns
+ace-bundle guide://mocking-patterns
 
 # Performance targets and optimization
-ace-nav guide://test-performance
+ace-bundle guide://test-performance
 
 # Testable code patterns
-ace-nav guide://testable-code-patterns
+ace-bundle guide://testable-code-patterns
 
 # General testing guidelines
-ace-nav guide://testing
+ace-bundle guide://testing
 
 # TDD implementation cycle
-ace-nav guide://testing-tdd-cycle
+ace-bundle guide://testing-tdd-cycle
 
 # Embedded testing in workflows
-ace-nav guide://embedded-testing-guide
+ace-bundle guide://embedded-testing-guide
 ```
 
 ### Workflow Access
 
 ```bash
 # Create test cases for features
-ace-nav wfi://test/create-cases
+ace-bundle wfi://test/create-cases
 
 # Fix failing tests systematically
-ace-nav wfi://test/fix
+ace-bundle wfi://test/fix
 ```
 
-### Agent Access
-
-```bash
-# Run tests with smart defaults
-ace-nav agent://test
-
-# Generate mock helpers
-ace-nav agent://mock
-
-# Profile slow tests
-ace-nav agent://profile-tests
-```
+Use `ace-nav` only when you need discovery or to resolve an agent path.
 
 ## Guide Descriptions
 
@@ -112,7 +101,7 @@ ace-nav agent://profile-tests
 
 This is a **pure workflow package** following the ACE gem patterns:
 
-- **No CLI interface**: Resources accessed via protocols through ace-nav
+- **No CLI interface**: Resources are consumed through `ace-bundle` protocols; use `ace-nav` for discovery
 - **No Ruby dependencies**: Contains only markdown workflow/guide files
 - **Auto-discovery**: ace-nav automatically discovers resources from installed gems
 - **Consolidated testing knowledge**: Single source of truth for testing patterns

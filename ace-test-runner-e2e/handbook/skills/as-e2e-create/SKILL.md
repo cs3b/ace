@@ -1,0 +1,30 @@
+---
+name: as-e2e-create
+description: Create a new E2E test scenario from template
+# bundle: wfi://e2e/create
+# agent: general-purpose
+user-invocable: true
+allowed-tools:
+  - Bash(ace-bundle:*)
+  - Read
+  - Write
+  - Glob
+  - Grep
+argument-hint: <package> <area> [--context <description>]
+last_modified: 2026-01-19
+source: ace-test-runner-e2e
+integration:
+  targets:
+    - claude
+    - codex
+    - gemini
+    - opencode
+    - pi
+  providers: {}
+skill:
+  kind: workflow
+  execution:
+    workflow: wfi://e2e/create
+---
+
+read and run `ace-bundle wfi://e2e/create`

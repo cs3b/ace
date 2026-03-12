@@ -37,7 +37,7 @@ Setup is owned by scenario configuration and fixtures. Runner TC files must not 
 - When E2E test calls external APIs
 - When test creates resources that need cleanup
 
-**Note:** For CLI pipeline runs (`ace-test-e2e`), `SetupExecutor` handles sandbox creation automatically using the 6-phase deterministic pipeline. This workflow is the reference for what `SetupExecutor` implements and for manual/agent-driven runs via `/as-e2e-run`.
+**Note:** For CLI pipeline runs (`ace-test-e2e`), `SetupExecutor` handles sandbox creation automatically using the 6-phase deterministic pipeline. This workflow is the reference for what `SetupExecutor` implements and for manual runs guided by `ace-bundle wfi://e2e/run`.
 
 ## Prerequisites
 
@@ -338,7 +338,7 @@ setup:
       PROJECT_ROOT_PATH: "."
 ```
 
-### With /as-e2e-run
+### With `ace-bundle wfi://e2e/run`
 
 This workflow is called automatically when running E2E tests.
 
@@ -430,7 +430,7 @@ export PROJECT_ROOT TEST_DIR REPORTS_DIR TIMESTAMP_ID
 ```
 
 **Expected Variables After Setup:**
-- `PROJECT_ROOT` - Original project directory (for accessing binaries like `$PROJECT_ROOT/bin/as-lint`)
+- `PROJECT_ROOT` - Original project directory (for accessing binaries like `$PROJECT_ROOT/bin/ace-lint`)
 - `TEST_DIR` - Sandbox directory (current working directory after setup)
 - `REPORTS_DIR` - Reports directory for test outputs
 - `TIMESTAMP_ID` - Unique identifier for this test run
