@@ -5,6 +5,7 @@ require "open3"
 require "shellwords"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 
 module Ace
   module LLM
@@ -50,7 +51,16 @@ module Ace
 
             cmd = build_claude_command(options)
             subprocess_env = options.delete(:subprocess_env)
-            stdout, stderr, status = execute_claude_command(cmd, prompt, subprocess_env: subprocess_env)
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            stdout, stderr, status = execute_claude_command(
+              cmd,
+              prompt,
+              subprocess_env: subprocess_env,
+              working_dir: working_dir
+            )
 
             parse_claude_response(stdout, stderr, status, prompt, options)
           rescue => e
@@ -155,7 +165,7 @@ module Ace
           end
 
 
-          def execute_claude_command(cmd, prompt, subprocess_env: nil)
+          def execute_claude_command(cmd, prompt, subprocess_env: nil, working_dir: nil)
             timeout_val = @options[:timeout] || 120
             # Clear CLAUDECODE env var so `claude -p` (non-interactive, one-shot mode)
             # can run as a subprocess from within a Claude Code session.
@@ -164,7 +174,14 @@ module Ace
             env = {"CLAUDECODE" => nil}
             env.merge!(subprocess_env) if subprocess_env
             debug_subprocess("spawn timeout=#{timeout_val}s cmd=#{cmd.join(" ")} prompt_bytes=#{prompt.to_s.bytesize}")
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: prompt.to_s, env: env, provider_name: "Claude")
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              stdin_data: prompt.to_s,
+              chdir: working_dir,
+              env: env,
+              provider_name: "Claude"
+            )
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)

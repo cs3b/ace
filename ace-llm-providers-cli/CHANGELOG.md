@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-03-12
+
+### Fixed
+- Resolved CLI-provider subprocess working directory from explicit `working_dir`, then `PROJECT_ROOT_PATH`, before falling back to process cwd, so sandbox-relative E2E artifact writes no longer leak into the repo root.
+- Updated Codex, Claude, Claude OAI, Gemini, OpenCode, and Pi clients to use the resolved execution root for subprocess `chdir` and provider-side skill/worktree/prompt-cache path discovery.
+
 ## [0.25.0] - 2026-03-12
 
 ### Changed

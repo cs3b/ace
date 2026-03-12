@@ -83,12 +83,17 @@ describe "CodexClient" do
 
     it "includes --add-dir when in a git worktree" do
       fake_git_dir = "/home/user/repo/.git"
-      Ace::LLM::Providers::CLI::Atoms::WorktreeDirResolver.stub(:call, fake_git_dir) do
-        cmd = @client.send(:build_codex_command, "Test prompt", {})
+      captured_working_dir = nil
+      Ace::LLM::Providers::CLI::Atoms::WorktreeDirResolver.stub(:call, lambda { |working_dir: Dir.pwd|
+        captured_working_dir = working_dir
+        fake_git_dir
+      }) do
+        cmd = @client.send(:build_codex_command, "Test prompt", {}, working_dir: "/tmp/e2e-sandbox")
         add_dir_idx = cmd.index("--add-dir")
         refute_nil add_dir_idx, "expected --add-dir in command"
         assert_equal fake_git_dir, cmd[add_dir_idx + 1]
       end
+      assert_equal "/tmp/e2e-sandbox", captured_working_dir
     end
 
     it "omits --add-dir when not in a git worktree" do
@@ -220,6 +225,28 @@ describe "CodexClient" do
           end
         end
       end
+    end
+
+    it "passes working_dir to SafeCapture chdir" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          @client.stub(:resolve_skills_dir, nil) do
+            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+              captured_kwargs = kwargs
+              ["codex\nok\n", "", mock_status]
+            }) do
+              @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
+            end
+          end
+        end
+      end
+
+      assert_equal "/tmp/e2e-sandbox", captured_kwargs[:chdir]
     end
   end
 

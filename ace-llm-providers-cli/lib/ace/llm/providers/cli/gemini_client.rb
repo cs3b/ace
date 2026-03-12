@@ -4,6 +4,7 @@ require "fileutils"
 require "json"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 
 module Ace
   module LLM
@@ -201,7 +202,7 @@ module Ace
           def build_command_with_file_references(prompt, system_prompt, options)
             # Use project .ace-local directory so Gemini CLI can access the files
             # (system temp /var/folders is outside Gemini's workspace)
-            cache_dir = create_prompt_cache_dir
+            cache_dir = create_prompt_cache_dir(options[:working_dir], subprocess_env: options[:subprocess_env])
             timestamp = Time.now.strftime("%Y%m%d-%H%M%S-%L")
 
             # Write system prompt to cache file
@@ -242,8 +243,8 @@ module Ace
             cmd
           end
 
-          def create_prompt_cache_dir
-            cache_dir = File.join(find_project_root, ".ace-local", "llm", "prompts")
+          def create_prompt_cache_dir(working_dir = nil, subprocess_env: nil)
+            cache_dir = File.join(find_project_root(working_dir, subprocess_env: subprocess_env), ".ace-local", "llm", "prompts")
             FileUtils.mkdir_p(cache_dir) unless Dir.exist?(cache_dir)
             cache_dir
           end
@@ -255,13 +256,17 @@ module Ace
 
           def execute_gemini_command(cmd, prompt, options)
             timeout_val = options[:timeout] || @options[:timeout] || 120
-            project_root = find_project_root
+            project_root = find_project_root(options[:working_dir], subprocess_env: options[:subprocess_env])
             Molecules::SafeCapture.call(cmd, timeout: timeout_val, chdir: project_root, provider_name: "Gemini")
           end
 
-          def find_project_root
+          def find_project_root(working_dir = nil, subprocess_env: nil)
             require "ace/support/fs"
-            Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+            start_path = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: working_dir,
+              subprocess_env: subprocess_env
+            )
+            Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: start_path) || start_path
           end
 
           def parse_gemini_response(stdout, stderr, status, prompt, options)

@@ -23,8 +23,10 @@ describe "ClaudeCodeClient" do
   describe "execute_claude_command" do
     def run_with_captured_env(&block)
       captured_env = nil
+      captured_chdir = nil
       fake_capture = lambda { |*_args, **kwargs|
         captured_env = kwargs[:env]
+        captured_chdir = kwargs[:chdir]
         mock_status = Object.new
         mock_status.define_singleton_method(:success?) { true }
         mock_status.define_singleton_method(:exitstatus) { 0 }
@@ -34,20 +36,21 @@ describe "ClaudeCodeClient" do
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, fake_capture) do
         block.call
       end
-      captured_env
+      [captured_env, captured_chdir]
     end
 
     it "passes CLAUDECODE nil by default" do
-      env = run_with_captured_env do
+      env, chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello")
       end
 
       assert_includes env.keys, "CLAUDECODE"
       assert_nil env["CLAUDECODE"]
+      assert_nil chdir
     end
 
     it "merges subprocess_env into env" do
-      env = run_with_captured_env do
+      env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello",
                      subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e", "FOO" => "bar"})
       end
@@ -58,11 +61,19 @@ describe "ClaudeCodeClient" do
     end
 
     it "does not modify env when subprocess_env is nil" do
-      env = run_with_captured_env do
+      env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello", subprocess_env: nil)
       end
 
       assert_equal({"CLAUDECODE" => nil}, env)
+    end
+
+    it "passes working_dir as subprocess chdir" do
+      _env, chdir = run_with_captured_env do
+        @client.send(:execute_claude_command, ["claude", "-p"], "hello", working_dir: "/tmp/e2e-sandbox")
+      end
+
+      assert_equal "/tmp/e2e-sandbox", chdir
     end
   end
 
@@ -72,7 +83,7 @@ describe "ClaudeCodeClient" do
       messages = [{ role: "user", content: "hello" }]
 
       @client.stub(:validate_claude_availability!, nil) do
-        @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil|
+        @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil, working_dir: nil|
           captured_subprocess_env = subprocess_env
           mock_status = Object.new
           mock_status.define_singleton_method(:success?) { true }
