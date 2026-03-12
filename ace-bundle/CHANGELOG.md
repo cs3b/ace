@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.36.2] - 2026-03-12
+
+### Technical
+- Added regression coverage to verify the newly registered `wfi://demo/create`, `wfi://demo/record`, `wfi://overseer`, and `wfi://prompt-prep` workflow targets resolve and load through `ace-bundle`.
+
+## [0.36.1] - 2026-03-12
+
+### Changed
+- Updated handbook workflow guidance to use direct `ace-bundle` invocations instead of legacy slash-command examples.
+
+## [0.36.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned bundle and onboarding skills, including the new `wfi://onboard` workflow for package-owned onboarding context.
+
+
+## [0.35.5] - 2026-03-09
+
+### Technical
+- Hardened the invalid `bundle.pr` loader test to stub `Ace::Git::Molecules::PrMetadataFetcher.fetch_diff`, preventing accidental live GitHub CLI/API access during `ace-bundle` test runs.
+- Updated the regression fixture to use a frontmatter template file so `load_file` exercises the PR-processing path and validates graceful error handling explicitly.
+
 ## [0.35.4] - 2026-03-09
 
 ### Fixed

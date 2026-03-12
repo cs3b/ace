@@ -701,19 +701,25 @@ class BundleLoaderTest < AceTestCase
 
   def test_pr_config_handles_errors_gracefully
     with_temp_dir do
-      # Create config file with invalid PR
-      File.write("config.yml", <<~YAML
+      # Create a template file so load_file exercises PR processing
+      File.write("config.md", <<~MARKDOWN)
+        ---
         bundle:
           pr: invalid-pr-format
-      YAML
-      )
+        ---
+      MARKDOWN
 
-      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
-      context = loader.load_file("config.yml")
+      invalid_pr_error = ->(_id, **_opts) { raise ArgumentError, "Invalid PR identifier: invalid-pr-format" }
 
-      # Should handle error gracefully (not crash)
-      # The content should still be generated, just with error noted
-      assert context.content, "Should generate content even with PR error"
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, invalid_pr_error) do
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
+        context = loader.load_file("config.md")
+
+        # Should handle error gracefully without reaching real PR lookup
+        assert context.content, "Should generate content even with PR error"
+        assert_includes context.content, "PR Fetch Errors"
+        assert_includes context.content, "Invalid PR identifier"
+      end
     end
   end
 
