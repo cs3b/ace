@@ -1223,9 +1223,9 @@ class BundleLoaderTest < AceTestCase
         original_new.call(**kw)
       }
 
-      # Simulate config returning per-source + agent
+      # Simulate config returning per-source + exact
       Ace::Bundle.stub(:compressor_source_scope, "per-source") do
-        Ace::Bundle.stub(:compressor_mode, "agent") do
+        Ace::Bundle.stub(:compressor_mode, "exact") do
           Ace::Bundle::Molecules::SectionCompressor.stub(:new, mock_new) do
             loader.load_preset("bare-test")
           end
@@ -1234,7 +1234,7 @@ class BundleLoaderTest < AceTestCase
 
       assert_equal "per-source", captured_kwargs[:default_mode],
                    "Should use config source_scope when no CLI/preset value"
-      assert_equal "agent", captured_kwargs[:compressor_mode],
+      assert_equal "exact", captured_kwargs[:compressor_mode],
                    "Should use config mode when no CLI/preset value"
     end
   end
@@ -1243,7 +1243,7 @@ class BundleLoaderTest < AceTestCase
     with_temp_dir do
       File.write("doc.md", "# Doc\nSome content")
 
-      # Preset sets compressor_mode: agent
+      # Preset sets compressor_mode: exact
       create_preset("override-test", <<~MARKDOWN)
         ---
         description: Override test
@@ -1251,7 +1251,7 @@ class BundleLoaderTest < AceTestCase
           params:
             output: stdio
             compressor_source_scope: merged
-            compressor_mode: agent
+            compressor_mode: exact
           embed_document_source: true
           files:
             - doc.md
@@ -1259,7 +1259,7 @@ class BundleLoaderTest < AceTestCase
         Override
       MARKDOWN
 
-      # CLI sets compressor_mode: exact (should win over preset's agent)
+      # CLI sets compressor_mode: exact (should win over preset exact)
       loader = Ace::Bundle::Organisms::BundleLoader.new(
         base_dir: Dir.pwd,
         compressor_mode: "exact",
@@ -1361,7 +1361,7 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
-  def test_template_with_command_only_sections_gets_compressed_in_agent_mode
+  def test_template_with_command_only_sections_gets_compressed_in_exact_mode
     with_temp_dir do
       template = <<~MARKDOWN
         ---
@@ -1381,7 +1381,7 @@ class BundleLoaderTest < AceTestCase
 
       compressed_loader = Ace::Bundle::Organisms::BundleLoader.new(
         compressor_source_scope: "per-source",
-        compressor_mode: "agent"
+        compressor_mode: "exact"
       )
       compressed_bundle = compressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
 
@@ -1389,9 +1389,9 @@ class BundleLoaderTest < AceTestCase
       uncompressed_bundle = uncompressed_loader.load_file(File.expand_path("cmd_workflow.wf.md"))
 
       assert compressed_bundle.metadata[:compressed],
-        "Command-only section bundle should be marked as compressed in agent mode"
+        "Command-only section bundle should be marked as compressed in exact mode"
       refute_equal uncompressed_bundle.content, compressed_bundle.content,
-        "Agent-mode compressed output should differ from uncompressed"
+        "Exact-mode compressed output should differ from uncompressed"
     end
   end
 

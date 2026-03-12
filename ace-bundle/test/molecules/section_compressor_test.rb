@@ -199,13 +199,13 @@ class SectionCompressorTest < AceTestCase
     refute bundle.metadata[:compressed]
   end
 
-  def test_content_only_bundle_agent_mode_compresses
+  def test_content_only_bundle_exact_mode_compresses
     Dir.mktmpdir("ace_content_compress") do |tmpdir|
       md_path = File.join(tmpdir, "workflow.md")
       File.write(md_path, "# Workflow\n\nSome instructions here.\n")
 
       compressor = Ace::Bundle::Molecules::SectionCompressor.new(
-        default_mode: "per-source", compressor_mode: "agent"
+        default_mode: "per-source", compressor_mode: "exact"
       )
       bundle = Ace::Bundle::Models::BundleData.new(content: File.read(md_path))
       bundle.metadata[:source] = md_path
@@ -239,8 +239,8 @@ class SectionCompressorTest < AceTestCase
     assert file[:compressed]
   end
 
-  def test_compressor_mode_agent_works
-    compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source", compressor_mode: "agent")
+  def test_compressor_mode_exact_works
+    compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source", compressor_mode: "exact")
     bundle = make_bundle_with_md_section("# Title\n\nA summary line.\n")
 
     compressor.call(bundle)
