@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-03-12
+
+### Changed
+- Updated the legacy integration README to clarify replacement-package status and current canonical skill ownership and projection boundaries.
+
+## [0.3.7] - 2026-03-10
+
+### Changed
+- Updated integration metadata documentation to point at direct provider projections from canonical package skills instead of `.agent/skills`.
+
+
+## [0.3.6] - 2026-03-09
+
+### Changed
+- Expanded metadata field reference with canonical ACE `skill` and `assign` frontmatter guidance, including validation constraints for `skill.kind`, `skill.execution.workflow`, and assign eligibility by skill kind.
+
 ## [0.3.5] - 2026-02-22
 
 ### Technical
