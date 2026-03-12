@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-03-12
+
+### Added
+- Added a public `--count` CLI flag and threaded it through search option building so count-oriented ripgrep execution is available through `ace-search`.
+
+### Changed
+- Updated search E2E runner guidance to use deterministic project-root paths for file and count mode coverage.
+
+### Technical
+- Added CLI and option-builder regression coverage for the new count flag.
+
 ## [0.21.1] - 2026-03-12
 
 ### Changed

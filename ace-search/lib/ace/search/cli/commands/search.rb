@@ -84,6 +84,7 @@ module Ace
           # Output options
           option :json, type: :boolean, desc: "Output in JSON format"
           option :yaml, type: :boolean, desc: "Output in YAML format"
+          option :count, type: :boolean, desc: "Show match counts"
           option :files_with_matches, type: :boolean, aliases: %w[-l], desc: "Only print filenames"
           option :max_results, type: :integer, desc: "Limit number of results"
 
