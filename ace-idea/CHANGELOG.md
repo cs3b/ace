@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-03-12
+
+### Changed
+- Updated the idea-lifecycle E2E runner instructions to capture the created idea file path and frontmatter content as first-class artifacts.
+
 ## [0.14.1] - 2026-03-08
 
 ### Technical
