@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-03-10
+
+### Fixed
+- Restored canonical skill resolution to honor nav source priority while preserving package-default fallback discovery for local monorepo workflows and tests.
+
+### Changed
+- Added a runtime dependency on `ace-support-nav` so assignment skill discovery shares the same source registry semantics as `skill://` navigation.
+
+### Technical
+- Replaced invalid shell-tool allowances in canonical assignment skills with repo-approved tooling metadata and expanded resolver regression coverage for override precedence.
+
+## [0.31.0] - 2026-03-09
+
+### Changed
+- Switched `SkillAssignSourceResolver` defaults to canonical `skill-sources` discovery and removed hardcoded provider-tree fallback paths as the primary model.
+- Updated assign defaults and compose workflow guidance to describe compatibility catalog entries as non-authoritative inputs.
+
+### Technical
+- Updated resolver and assignment executor regression fixtures to register canonical skill sources (`handbook/skills`) instead of relying on `.claude/skills` defaults.
+- Clarified vision documentation that canonical skills live in package `handbook/skills` and provider trees are generated projections.
+
+## [0.30.0] - 2026-03-09
+
+### Added
+- Added canonical workflow skills for assignment operations: `as-assign-compose`, `as-assign-create`, `as-assign-drive`, `as-assign-prepare`, and `as-assign-run-in-batches` under `handbook/skills/`.
+
+### Changed
+- Expanded `skill://` canonical discovery coverage for `ace-assign` beyond the initial single-skill seed.
+
+
+## [0.29.0] - 2026-03-09
+
+### Added
+- Canonical skill resolution in `SkillAssignSourceResolver` with assign-capable filtering by `skill.kind` and `assign.source`
+- Phase catalog reordering in `AssignmentExecutor` to prioritize canonical assign-capable skills over compatibility bridge entries
+
+## [0.28.0] - 2026-03-09
+
+### Added
+- Added `skill-sources` gem defaults registration at `.ace-defaults/nav/protocols/skill-sources/ace-assign.yml` so `skill://` can discover canonical `handbook/skills` entries from `ace-assign`.
+
+## [0.27.0] - 2026-03-09
+
+### Added
+- Added canonical orchestration skill example at `handbook/skills/as-assign-start/SKILL.md` for typed skill taxonomy tracing.
+- Restored `assign/start` as a legacy compatibility workflow binding for canonical orchestration skill discovery.
+
+### Changed
+- Added projected provider-facing `.agent/skills/as-assign-start/SKILL.md` entry for representative orchestration skill parity.
+
 ## [0.26.2] - 2026-03-08
 
 ### Changed

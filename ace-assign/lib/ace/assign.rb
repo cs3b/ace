@@ -3,6 +3,7 @@
 require_relative "assign/version"
 require "ace/support/config"
 require "ace/support/fs"
+require "ace/support/nav"
 require "ace/core/cli/error"
 require "pathname"
 

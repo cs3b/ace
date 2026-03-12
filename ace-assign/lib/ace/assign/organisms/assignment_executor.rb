@@ -814,13 +814,38 @@ module Ace
             default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "phases")
 
             default_phases = Atoms::CatalogLoader.load_all(default_catalog)
-            if File.directory?(project_catalog)
-              project_phases = Atoms::CatalogLoader.load_all(project_catalog)
-              merge_phase_catalog(default_phases, project_phases)
+            base_catalog = if File.directory?(project_catalog)
+                             project_phases = Atoms::CatalogLoader.load_all(project_catalog)
+                             merge_phase_catalog(default_phases, project_phases)
+                           else
+                             default_phases
+                           end
+
+            reorder_catalog_by_assign_capable_skills(base_catalog)
+          end
+        end
+
+        # Canonical assign-capable skills are the primary ordering source.
+        # Non-canonical phase catalog entries remain compatibility inputs, not authority.
+        #
+        # @param catalog [Array<Hash>]
+        # @return [Array<Hash>]
+        def reorder_catalog_by_assign_capable_skills(catalog)
+          assign_capable = skill_source_resolver.assign_capable_skill_names
+          return catalog if assign_capable.empty?
+
+          canonical = []
+          bridge = []
+          catalog.each do |phase|
+            skill_name = phase["skill"].to_s.strip
+            if !skill_name.empty? && assign_capable.include?(skill_name)
+              canonical << phase
             else
-              default_phases
+              bridge << phase
             end
           end
+
+          canonical + bridge
         end
 
         # Merge default and project phase catalogs by phase name.

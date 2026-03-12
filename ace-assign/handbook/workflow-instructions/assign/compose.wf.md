@@ -1,10 +1,10 @@
 ---
 name: assign/compose
 allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Compose a tailored assignment from phase catalog and composition rules
+description: Compose a tailored assignment from assign-capable canonical skills and composition rules
 argument-hint: '"description of what you need" [--taskref value] [--taskrefs values]'
 doc-type: workflow
-purpose: LLM-driven composition of assignments using phase catalog metadata, phrase hints, and hard ordering rules
+purpose: LLM-driven composition of assignments using canonical assign-capable skill metadata, phrase hints, and hard ordering rules
 
 update:
   frequency: on-change
@@ -15,11 +15,11 @@ update:
 
 ## Purpose
 
-Compose a tailored assignment by selecting phases from the catalog, applying composition rules, and using recipes as optional starting points.
+Compose a tailored assignment by selecting phases from assign-capable canonical skills, applying composition rules, and using recipes as optional starting points.
 
 Boundary:
-- Compose resolves intent from user input + assign catalog data.
-- Compose is allowed to use phase-level intent metadata (phrase hints) from catalog files.
+- Compose resolves intent from user input + assign-capable canonical phase data.
+- Compose is allowed to use phase-level intent metadata (phrase hints) from canonicalized phase entries.
 - Compose keeps skill-backed phases high-level. Runtime `ace-assign create` performs `assign.source` sub-phase expansion.
 
 ## Input Formats
@@ -44,12 +44,13 @@ Boundary:
 
 ## Process
 
-### 1. Load Catalog
+### 1. Load Canonical Assign-Capable Catalog
 
-Load the phase catalog, composition rules, and recipes:
+Load assign-capable phase entries from canonical skills first, then include compatibility catalog entries when present:
 
 ```
-Glob: ace-assign/.ace-defaults/assign/catalog/phases/*.phase.yml
+Canonical source: skill://* (workflow/orchestration skills with explicit assign metadata)
+Compatibility bridge: ace-assign/.ace-defaults/assign/catalog/phases/*.phase.yml
 Read: ace-assign/.ace-defaults/assign/catalog/composition-rules.yml
 Glob: ace-assign/.ace-defaults/assign/catalog/recipes/*.recipe.yml
 ```
@@ -178,9 +179,9 @@ steps:
 ```
 
 Step mapping source of truth:
-- `name` from phase catalog
-- `skill` from phase catalog
-- `context` from phase catalog (if set)
+- `name` from canonicalized phase catalog entry
+- `skill` from canonicalized phase catalog entry
+- `context` from canonicalized phase catalog entry (if set)
 - `instructions` from catalog description + request-specific context
 
 ### 10. Output Result
@@ -238,7 +239,7 @@ Expected composed phases include high-level `work-on-task` and `create-pr`; runt
 
 ## Success Criteria
 
-- [ ] Catalog phrase hints are used for explicit-step matching
+- [ ] Canonical assign-capable phrase hints are used for explicit-step matching
 - [ ] Common explicit requests resolve to stable phases
 - [ ] Explicit ordering is preserved unless hard rules require changes
 - [ ] Any reorder is explainable by named rule
