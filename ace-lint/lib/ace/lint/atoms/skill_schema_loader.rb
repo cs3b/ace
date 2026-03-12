@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "date"
 
 module Ace
   module Lint
@@ -33,6 +34,10 @@ module Ace
           # @return [Array<String>] List of known Bash command prefixes
           def known_bash_prefixes
             config["known_bash_prefixes"] || []
+          end
+
+          def known_integration_providers
+            config["known_integration_providers"] || []
           end
 
           # Reset configuration cache (useful for testing)

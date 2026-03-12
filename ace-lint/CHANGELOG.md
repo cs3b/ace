@@ -6,6 +6,53 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-03-12
+
+### Changed
+- Updated README examples to reference current handbook skill and workflow paths instead of legacy provider-local example locations.
+
+## [0.20.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-lint-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.19.1] - 2026-03-12
+
+### Technical
+- Expanded canonical skill validation fixtures to cover provider-specific execution overrides such as `context: fork` and provider model hints under `integration.providers.<provider>.frontmatter`.
+
+## [0.19.0] - 2026-03-10
+
+### Added
+- Added validation support for `integration.targets` and `integration.providers.<provider>.frontmatter` in canonical skill files.
+
+### Changed
+- Expanded canonical skill lint validation to recognize additional ACE CLI prefixes and handbook editing tools used by migrated package skills.
+
+
+## [0.18.1] - 2026-03-10
+
+### Fixed
+- Ignored YAML frontmatter when running markdown lint checks so canonical `SKILL.md` metadata no longer triggers false heading/link warnings.
+- Added `ace-idea` to the known Bash prefix allowlist for canonical skill validation.
+
+### Technical
+- Added regression coverage for frontmatter-aware markdown linting and real ACE CLI prefix validation.
+
+## [0.18.0] - 2026-03-09
+
+### Added
+- Canonical SKILL schema validation now requires `skill.kind` and `skill.execution.workflow`.
+- Added nested schema checks for canonical fields and actionable errors for unknown `skill`/`skill.execution` keys.
+
+### Changed
+- Skill name validation now accepts canonical `as-*` names in addition to legacy `ace-*`.
+- `known_bash_prefixes` includes `ace-assign` and `ace-b36ts` for canonical skill validation coverage.
+
+### Fixed
+- Reject `assign` metadata for `capability` skills and detect duplicate `assign.phases[].name` values.
+- `SkillSchemaLoader` now loads fallback defaults reliably by requiring `date` during YAML safe-load.
+
 ## [0.17.1] - 2026-03-04
 
 ### Technical

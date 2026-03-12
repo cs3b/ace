@@ -265,13 +265,13 @@ skill:
 
 ```bash
 # Lint a skill file
-ace-lint.claude/skills/ace-git-commit/SKILL.md
+ace-task/handbook/skills/as-task-work/SKILL.md
 
 # Lint all workflow files
-ace-lint.claude/workflows/*.wf.md
+ace-lint/handbook/workflow-instructions/lint/*.wf.md
 
 # Format a skill file
-ace-lint.claude/skills/ace-review-run/SKILL.md --fix
+ace-review/handbook/skills/as-review-run/SKILL.md --fix
 ```
 
 ### Examples

@@ -12,9 +12,11 @@ known_tools:
   - Bash
   - Read
   - Edit
+  - MultiEdit
   - Write
   - Glob
   - Grep
+  - LS
   - WebFetch
   - WebSearch
   - TodoWrite
@@ -30,16 +32,26 @@ known_tools:
 # Bash pattern prefixes (for Bash(ace-*:*) patterns)
 # When allowed-tools contains "Bash(prefix:*)", the prefix must match one of these
 known_bash_prefixes:
+  - ace-assign
+  - ace-b36ts
   - ace-bundle
+  - ace-demo
   - ace-docs
   - ace-git
   - ace-git-commit
+  - ace-git-secrets
   - ace-git-worktree
+  - ace-handbook
+  - ace-handbook-integration-claude
+  - ace-idea
   - ace-lint
   - ace-nav
+  - ace-overseer
   - ace-prompt-prep
+  - ace-retro
   - ace-review
   - ace-search
+  - ace-sim
   - ace-task
   - ace-test
   - ace-test-suite
@@ -52,6 +64,13 @@ known_bash_prefixes:
   - mise
   - ruby
 
+known_integration_providers:
+  - claude
+  - codex
+  - gemini
+  - opencode
+  - pi
+
 # Schema definitions by file type
 schemas:
   skill:
@@ -61,14 +80,18 @@ schemas:
       - user-invocable
       - allowed-tools
       - source
+      - skill
+    required_nested_fields:
+      - skill.kind
+      - skill.execution.workflow
     required_comments:
       - "# bundle:"
       - "# agent:"
     field_validations:
       name:
         type: string
-        pattern: "^ace-[a-z0-9-]+$"
-        error_message: "name must use lowercase alphanumerics and hyphens, and start with 'ace-'"
+        pattern: "^(as|ace)-[a-z0-9-]+$"
+        error_message: "name must use lowercase alphanumerics and hyphens, and start with 'as-' or 'ace-'"
       user-invocable:
         type: boolean
       allowed-tools:
@@ -76,6 +99,17 @@ schemas:
         validate_tools: true
       source:
         type: string
+      skill.kind:
+        type: string
+        values:
+          - capability
+          - workflow
+          - orchestration
+        error_message: "skill.kind must be one of: capability, workflow, orchestration"
+      skill.execution.workflow:
+        type: string
+        pattern: "^wfi://[a-z0-9][a-z0-9/_-]*$"
+        error_message: "skill.execution.workflow must use a wfi:// workflow reference"
 
   workflow:
     required_fields:
