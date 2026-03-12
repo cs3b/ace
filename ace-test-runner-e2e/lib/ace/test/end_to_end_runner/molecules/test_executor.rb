@@ -199,6 +199,7 @@ module Ace
                 @provider, prompt,
                 system: nil, cli_args: cli_args,
                 timeout: @timeout, fallback: false,
+                working_dir: sandbox_path,
                 subprocess_env: env_vars
               )
 

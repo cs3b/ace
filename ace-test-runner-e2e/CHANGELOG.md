@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.4] - 2026-03-12
+
+### Fixed
+- Threaded the sandbox path into CLI-provider E2E runner and verifier invocations as an explicit working directory so `results/tc/...` stays sandbox-local during deterministic pipeline execution.
+
+## [0.24.3] - 2026-03-12
+
+### Changed
+- Switched the project E2E suite report-generation default model to `codex:spark`.
+
 ## [0.24.2] - 2026-03-12
 
 ### Fixed
