@@ -400,4 +400,44 @@ describe "PiClient" do
       assert_equal "/onboard please", result
     end
   end
+
+  describe "resolve_skills_dir" do
+    it "returns configured dir if it exists" do
+      Dir.mktmpdir do |tmpdir|
+        client = Ace::LLM::Providers::CLI::PiClient.new(skills_dir: tmpdir)
+        result = client.send(:resolve_skills_dir)
+        assert_equal tmpdir, result
+      end
+    end
+
+    it "returns nil for nonexistent configured dir" do
+      client = Ace::LLM::Providers::CLI::PiClient.new(skills_dir: "/nonexistent/path")
+      result = client.send(:resolve_skills_dir)
+      assert_nil result
+    end
+
+    it "prefers provider-specific .pi/skills fallback dir" do
+      Dir.mktmpdir do |tmpdir|
+        default_skills = File.join(tmpdir, ".pi", "skills")
+        FileUtils.mkdir_p(default_skills)
+
+        Dir.chdir(tmpdir) do
+          client = Ace::LLM::Providers::CLI::PiClient.new
+          result = client.send(:resolve_skills_dir)
+          expected = File.join(Dir.pwd, ".pi", "skills")
+          assert_equal expected, result
+        end
+      end
+    end
+
+    it "returns nil when provider-specific dir is missing" do
+      Dir.mktmpdir do |tmpdir|
+        Dir.chdir(tmpdir) do
+          client = Ace::LLM::Providers::CLI::PiClient.new
+          result = client.send(:resolve_skills_dir)
+          assert_nil result
+        end
+      end
+    end
+  end
 end

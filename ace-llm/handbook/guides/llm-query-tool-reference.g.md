@@ -631,7 +631,10 @@ llm-query anthropic:claude-3-opus-20240229 \
 
 ### Handbook Review Command
 
-**File:** `.claude/skills/handbook-review.md`
+**Canonical source:** `ace-handbook/handbook/skills/`
+
+Provider integrations may project these canonical skill definitions into folders such as
+`.claude/skills/`, but the source of truth lives under package `handbook/skills/` directories.
 
 **Usage Pattern:**
 

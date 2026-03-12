@@ -130,9 +130,8 @@ module Ace
             configured = @options[:skills_dir] || @generation_config[:skills_dir]
             return configured if configured && Dir.exist?(configured)
 
-            # Default: .claude/skills relative to working directory
-            default_dir = File.join(Dir.pwd, ".claude", "skills")
-            default_dir if Dir.exist?(default_dir)
+            candidate_dir = File.join(Dir.pwd, ".pi", "skills")
+            candidate_dir if Dir.exist?(candidate_dir)
           end
 
           # Build the pi command array
