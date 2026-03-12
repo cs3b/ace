@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-12
+
+### Fixed
+- Kept `ace-git-worktree list --format json` stdout JSON-only by suppressing CLI config summaries and legacy summary footers in JSON mode.
+
+### Technical
+- Added regression coverage for JSON list output to ensure downstream parsers receive a single valid JSON document.
+
 ## [0.15.0] - 2026-03-12
 
 ### Added
