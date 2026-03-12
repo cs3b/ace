@@ -167,7 +167,7 @@ entropy = 3.5
 
 ## Security Workflow
 
-For a complete guided workflow, see `wfi://git/token-remediation` (use `ace-nav wfi://git/token-remediation`).
+For a complete guided workflow, load `ace-bundle wfi://git/token-remediation`.
 
 ### Recommended Steps
 
