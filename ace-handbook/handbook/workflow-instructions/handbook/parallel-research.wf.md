@@ -172,9 +172,9 @@ Set up and execute parallel research across multiple AI agents, producing consis
    └── synthesis/                  # Ready for next phase
    ```
 
-3. **Invoke Synthesis**
-   - Run `/as-handbook-synthesize-research {research_folder}`
-   - Or follow `wfi://handbook/synthesize-research` manually
+3. **Load Synthesis Workflow**
+   - Run `ace-bundle wfi://handbook/synthesize-research`
+   - Continue with the research folder prepared in this workflow
 
 ## Embedded Templates
 
@@ -298,20 +298,18 @@ Below are reports from peer agents. Review them to:
 ## Usage Examples
 
 ### Basic Usage
-```
-/as-handbook-parallel-research "Test optimization strategies for Ruby monorepo"
+```bash
+ace-bundle wfi://handbook/parallel-research
 ```
 
 ### With Agent Selection
-```
-/as-handbook-parallel-research "Security audit patterns" --agents claude,gemini
+```bash
+ace-bundle wfi://handbook/parallel-research
 ```
 
 ### Full Specification
-```
-/as-handbook-parallel-research "API design patterns for multi-tenant systems" \
-  --agents claude,gemini,codex \
-  --output .ace-taskflow/v.0.9.0/tasks/255/research
+```bash
+ace-bundle wfi://handbook/parallel-research
 ```
 
 ## Related Resources

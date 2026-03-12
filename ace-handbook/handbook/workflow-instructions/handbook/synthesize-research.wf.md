@@ -404,13 +404,13 @@ See `sources.md` for detailed contribution breakdown.
 ## Usage Examples
 
 ### Basic Usage
-```
-/as-handbook-synthesize-research .ace-taskflow/v.0.9.0/tasks/253/research
+```bash
+ace-bundle wfi://handbook/synthesize-research
 ```
 
 ### With Custom Output
-```
-/as-handbook-synthesize-research ./research --output ./synthesis
+```bash
+ace-bundle wfi://handbook/synthesize-research
 ```
 
 ## Related Resources

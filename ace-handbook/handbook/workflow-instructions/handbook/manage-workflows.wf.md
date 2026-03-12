@@ -9,17 +9,16 @@ that leverage embedded templates and comply with project conventions.
 ## Prerequisites
 
 * Understanding of workflow instruction principles and standards
-* Access to docs/guides/ definition files
+* Access to handbook guides and workflow standards
 * Knowledge of existing workflow patterns
 * Access to template embedding system
 
 ## Project Context Loading
 
-* Read and follow: `workflow-instructions/load-project-context.wf.md`
-* Load workflow standards: `docs/guides/workflow-instructions-definition.g.md`
-* Load template embedding guide: `docs/guides/template-embedding.g.md`
-* Load example workflows: `workflow-instructions/plan-task.wf.md`
-* Load batch processing example: `workflow-instructions/draft-release.wf.md`
+* Load workflow standards: `ace-handbook/handbook/guides/meta/workflow-instructions-definition.g.md`
+* Load markdown standards as needed from `ace-handbook/handbook/guides/meta/markdown-definition.g.md`
+* Load a current workflow example via `ace-bundle wfi://handbook/review-workflows`
+* Load a current maintenance example via `ace-bundle wfi://handbook/update-docs`
 
 ## Process Steps
 
@@ -249,8 +248,8 @@ For generating new content:
 
 ## Renaming a Skill or Workflow
 
-When renaming a skill (directory name + `name:` in SKILL.md frontmatter), complete this
-checklist to avoid silent reference drift:
+When renaming a workflow, update workflow references first. When renaming a skill, treat it as a
+provider-agent and `ace-assign` discovery concern rather than a general markdown usage path.
 
 1. **SkillPromptBuilder** — grep for the old name in runner code:
    ```bash
@@ -259,15 +258,11 @@ checklist to avoid silent reference drift:
    Update `build_skill_prompt` and `build_tc_skill_prompt` in
    `ace-test-runner-e2e/lib/ace/test/end_to_end_runner/atoms/skill_prompt_builder.rb`.
 
-2. **Symlink** — verify `.claude/skills/` symlink target still resolves:
+2. **Provider projections** — verify provider integration packages still resolve the renamed skill:
    ```bash
-   ls -la .claude/skills/<skill-dir-name>
+   rg -n "<skill-dir-name>|old-name" ace-handbook ace-handbook-integration-* ace-assign
    ```
-   Recreate if pointing to old target:
-   ```bash
-   rm .claude/skills/<skill-dir-name>
-   ln -s ../../<package>/handbook/skills/<new-dir> .claude/skills/<skill-dir-name>
-   ```
+   Update projection docs and any provider metadata that still reference the old name.
 
 3. **Handbook references** — grep for old name across all workflow instructions:
    ```bash
@@ -286,4 +281,3 @@ checklist to avoid silent reference drift:
 ## Usage Example
 
 > "Create a workflow instruction for automating database migrations in our Ruby on Rails application"
-

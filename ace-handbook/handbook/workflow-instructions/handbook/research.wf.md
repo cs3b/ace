@@ -105,11 +105,10 @@ If single-agent approach selected:
 
 If multi-agent approach selected:
 
-1. **Invoke Parallel Research**
+1. **Load Parallel Research Workflow**
    ```
-   /as-handbook-parallel-research [topic]
+   ace-bundle wfi://handbook/parallel-research
    ```
-   Or follow: `ace-bundle wfi://handbook/parallel-research`
 
 2. **Complete Parallel Research Phases**
    - Setup: Define question, select agents
@@ -118,11 +117,10 @@ If multi-agent approach selected:
    - Cross-Review: Peer review phase
    - Handoff: Prepare for synthesis
 
-3. **Invoke Synthesis**
+3. **Load Synthesis Workflow**
    ```
-   /as-handbook-synthesize-research [research_folder]
+   ace-bundle wfi://handbook/synthesize-research
    ```
-   Or follow: `ace-bundle wfi://handbook/synthesize-research`
 
 4. **Complete Synthesis Phases**
    - Inventory: Catalog all outputs
@@ -222,7 +220,7 @@ Evaluate these factors:
 ### How to Escalate
 
 1. Review: `ace-bundle guide://multi-agent-research`
-2. Invoke: `/as-handbook-parallel-research [topic]`
+2. Invoke: `ace-bundle wfi://handbook/parallel-research`
 3. Follow: Parallel Research → Synthesis workflows
 
 ### Expected Benefits

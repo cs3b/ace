@@ -267,7 +267,7 @@ When updating a workflow to use embedded context:
 
 ## Related Documents
 
-- **PR #120**: Replace ace-nav wfi:// with ace-bundle wfi:// in Claude Code commands
+- **PR #120**: Historical migration that replaced `ace-nav wfi://` execution examples with `ace-bundle wfi://`
 - **Task 152**: ace-bundle auto-format output by line count
 - **documents-embedding.g.md**: Template and guide embedding standards
 - **CLAUDE.md**: Agent guidance for workflow usage

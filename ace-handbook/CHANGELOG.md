@@ -6,6 +6,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-12
+
+### Changed
+- Updated handbook README, workflow docs, and guidance to document bundle-first workflow usage and the current handbook structure.
+
+## [0.15.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-release-bump-version` and `as-release-update-changelog` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+## [0.14.1] - 2026-03-12
+
+### Technical
+- Updated provider sync regression coverage to verify provider-specific `context` and `model` overrides on projected git-commit skills and to keep generated provider output free of canonical `integration` metadata.
+
+## [0.14.0] - 2026-03-12
+
+### Changed
+- Changed canonical handbook skill inventory to load from registered `skill://` sources via `ace-support-nav` instead of scanning monorepo package directories directly.
+
+### Technical
+- Added nav-backed inventory regression coverage and explicit skill-source registration fixtures for handbook sync/status tests.
+
+## [0.13.1] - 2026-03-12
+
+### Technical
+- Added regression coverage for the `.agent/skills` retirement so handbook sync/status changes are exercised against provider-native skill trees only.
+
+## [0.13.0] - 2026-03-12
+
+### Added
+- Added canonical skill inventory counts by `source` to `ace-handbook status` output and JSON responses.
+
+### Changed
+- Expanded provider status reporting to show expected, installed, in-sync, outdated, missing, and extra skill counts, including comparisons through symlinked provider directories.
+
+## [0.12.0] - 2026-03-10
+
+### Added
+- Added a public `ace-handbook` CLI with `sync` and `status` commands for projecting canonical package skills into provider-native folders.
+- Added provider manifest discovery and sync/status coverage for handbook integrations, including replacement of legacy provider skill symlinks with real provider directories.
+
+### Changed
+- Moved handbook integration execution to `ace-handbook` while provider packages now supply thin provider manifests for projection targets.
+
+## [0.11.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned skills for handbook management, release workflows, and research/delivery orchestration.
+
+
 ## [0.10.0] - 2026-03-08
 
 ### Added

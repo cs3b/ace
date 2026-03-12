@@ -1,3 +1,14 @@
+---
+name: perform-delivery
+description: Coordinate complete task delivery across implementation, review, release, and review cycles.
+doc-type: workflow
+purpose: Coordinate complete task delivery across implementation, review, release, and review cycles.
+allowed-tools:
+  - Bash
+  - Read
+  - TodoWrite
+---
+
 # Perform Delivery Workflow
 
 ## Goal
@@ -9,7 +20,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * Task reference (e.g., `215.03`) OR detailed inline instructions
 * Clean git working directory (or staged changes ready for commit)
 * Understanding of the standard delivery workflow steps
-* Access to required skills (`/as-task-work`, `/as-git-commit`, `/as-github-pr-create`, `/as-review-pr`)
+* Access to the relevant ACE CLI tools and workflows
 
 ## Project Context Loading
 
@@ -28,23 +39,23 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 * [ ] Enter plan mode if implementation required
-* [ ] Execute implementation via `/as-task-work` or inline instructions
-* [ ] Commit all changes (`/as-git-commit`)
-* [ ] Release modified packages (`/as-release` if applicable)
+* [ ] Execute implementation via `ace-bundle wfi://task/work` or inline instructions
+* [ ] Commit all changes (`ace-git-commit`)
+* [ ] Release modified packages (`ace-bundle wfi://release/publish` if applicable)
 * [ ] Mark task done and push to remote
 
 ### Phase 2: PR & Initial Review
 
-* [ ] Create or update PR (`/as-github-pr-create`)
-* [ ] Run initial review (`/as-review-pr`)
+* [ ] Create or update PR (`ace-bundle wfi://github/pr/create`)
+* [ ] Run initial review (`ace-bundle wfi://review/pr`)
 * [ ] Implement HIGH/CRITICAL feedback immediately
 
 ### Phase 3: Deep Review Cycle
 
-* [ ] Run deep code review (`/as-review-pr preset: code-deep`)
+* [ ] Run deep code review (`ace-bundle wfi://review/pr`, using the `code-deep` preset)
 * [ ] Implement MEDIUM+ severity feedback
 * [ ] Run test suite (`ace-test-suite`)
-* [ ] Commit fixes (`/as-git-commit`)
+* [ ] Commit fixes (`ace-git-commit`)
 * [ ] Repeat review cycle if needed
 
 ## Process Steps
@@ -64,14 +75,14 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
    **Standard Delivery Steps to Add:**
    ```
-   1. Implement task (via /as-task-work or inline)
-   2. Commit all changes (/as-git-commit)
-   3. Release modified packages (/as-release)
+   1. Implement task (via `ace-bundle wfi://task/work` or inline)
+   2. Commit all changes (`ace-git-commit`)
+   3. Release modified packages (`ace-bundle wfi://release/publish`)
    4. Mark task done and push to remote
-   5. Create/update PR (/as-github-pr-create)
-   6. Initial review (/as-review-pr)
+   5. Create/update PR (`ace-bundle wfi://github/pr/create`)
+   6. Initial review (`ace-bundle wfi://review/pr`)
    7. Implement HIGH/CRITICAL feedback
-   8. Deep review (/as-review-pr preset: code-deep)
+   8. Deep review (`ace-bundle wfi://review/pr` with `code-deep`)
    9. Implement MEDIUM+ feedback
    10. Run test suite and commit fixes
    ```
@@ -83,7 +94,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 1. **Load Task Context (if task reference provided):**
-   * Run `/as-task-work <ref>` to load task context
+   * Load `ace-bundle wfi://task/work`, then follow it with the task reference
    * If inline instructions provided, use those directly
 
 2. **Enter Plan Mode (if implementation required):**
@@ -95,11 +106,11 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Track progress using TodoWrite for sub-tasks
 
 4. **Commit Changes:**
-   * Run `/as-git-commit` to commit all changes
+   * Run `ace-git-commit` to commit all changes
    * Use descriptive commit message
 
 5. **Release Packages (if applicable):**
-   * Run `/as-release` to release modified packages
+   * Load `ace-bundle wfi://release/publish` when a release is required
    * Follow versioning conventions
 
 6. **Complete Task:**
@@ -109,11 +120,11 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 2: PR & Initial Review
 
 1. **Create or Update PR:**
-   * Run `/as-github-pr-create` to create pull request
+   * Load `ace-bundle wfi://github/pr/create` to prepare the pull request flow
    * Include task reference and summary
 
 2. **Run Initial Review:**
-   * Run `/as-review-pr`
+   * Load `ace-bundle wfi://review/pr`
    * Review the feedback output
 
 3. **Implement Critical Feedback:**
@@ -123,7 +134,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 3: Deep Review Cycle
 
 1. **Run Deep Code Review:**
-   * Run `/as-review-pr preset: code-deep`
+   * Load `ace-bundle wfi://review/pr` and use the `code-deep` preset
    * This provides more thorough analysis
 
 2. **Implement Feedback:**
@@ -135,7 +146,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Fix any failing tests
 
 4. **Commit Fixes:**
-   * Run `/as-git-commit` to commit all fixes
+   * Run `ace-git-commit` to commit all fixes
 
 5. **Repeat Review Cycle (if needed):**
    * If significant changes were made, run another review
@@ -171,6 +182,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 **CRITICAL:** This workflow should AUTO-CONTINUE between steps without waiting for user input.
 
 The only times to pause and ask the user:
+
 * Plan mode approval (Phase 1)
 * Step failure requiring user intervention
 * Ambiguous instructions requiring clarification
@@ -182,35 +194,19 @@ For all other transitions, immediately proceed to the next step after checkpoint
 
 ### Full Delivery (default)
 
-All steps from implementation through review cycles.
-
-```
-/as-handbook-perform-delivery 215.03
-```
+All steps from implementation through review cycles. Load `ace-bundle wfi://handbook/perform-delivery`.
 
 ### Implementation Only
 
-Skip PR and review phases (useful for WIP branches).
-
-```
-/as-handbook-perform-delivery 215.03 --scope implementation
-```
+Skip PR and review phases (useful for WIP branches). Load `ace-bundle wfi://handbook/perform-delivery`.
 
 ### Review Only
 
-Skip implementation, start from PR creation.
-
-```
-/as-handbook-perform-delivery 215.03 --scope review
-```
+Skip implementation, start from PR creation. Load `ace-bundle wfi://handbook/perform-delivery`.
 
 ### Custom Instructions
 
-Provide inline instructions instead of task reference.
-
-```
-/as-handbook-perform-delivery "Implement the feature described below, then create PR and review"
-```
+Provide inline instructions instead of task reference. Load `ace-bundle wfi://handbook/perform-delivery`.
 
 ## Success Criteria
 
@@ -225,17 +221,20 @@ Provide inline instructions instead of task reference.
 ## Error Handling
 
 **Step Fails to Complete:**
+
 * Keep todo item as in_progress
 * Log the error with context
 * Ask user for guidance
 * Resume from failed step after resolution
 
 **User Interruption:**
+
 * Save current state (which step is in progress)
 * Allow resume from interruption point
 * Maintain todo list across session
 
 **External Tool Failure:**
+
 * Report which tool failed and the error
 * Suggest manual alternatives if available
 * Wait for user guidance before proceeding
