@@ -34,15 +34,14 @@ module Ace
           def self.extract_json(text)
             return nil if text.nil? || text.to_s.strip.empty?
 
+            stripped = text.to_s.strip
+
             # Try to find JSON in code fences first
-            match = text.match(/```(?:json)?\s*\n(.*?)\n\s*```/m)
+            match = stripped.match(/```(?:json)?\s*\n(.*?)\n\s*```/m)
             return match[1].strip if match
 
-            # Try to find raw JSON object (greedy to capture nested braces in test_cases)
-            # Note: This may over-match if response has multiple JSON objects; the
-            # code-fence path above is the primary extraction method.
-            match = text.match(/(\{.*\})/m)
-            return match[1].strip if match
+            # Treat unfenced content as JSON only when the whole payload is a JSON object.
+            return stripped if stripped.start_with?("{") && stripped.end_with?("}")
 
             nil
           end

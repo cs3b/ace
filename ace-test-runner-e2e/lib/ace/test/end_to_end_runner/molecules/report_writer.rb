@@ -55,7 +55,7 @@ module Ace
               }
             end
             verdict = if result.failed_count.zero?
-              "pass"
+              result.status == "error" ? "fail" : "pass"
             elsif result.passed_count.zero?
               "fail"
             else
@@ -191,7 +191,7 @@ module Ace
               "duration" => "#{result.duration.round(0)}s",
               "status" => result.status,
               "score" => (result.total_count.zero? ? 0.0 : (result.passed_count.to_f / result.total_count).round(3)),
-              "verdict" => (result.failed_count.zero? ? "pass" : (result.passed_count.zero? ? "fail" : "partial")),
+              "verdict" => (result.status == "error" ? "fail" : (result.failed_count.zero? ? "pass" : (result.passed_count.zero? ? "fail" : "partial"))),
               "tcs-passed" => result.passed_count,
               "tcs-failed" => result.failed_count,
               "tcs-total" => result.total_count,

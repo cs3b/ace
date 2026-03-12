@@ -31,6 +31,7 @@ module Ace
               status: parsed[:status],
               test_cases: parsed[:test_cases],
               summary: parsed[:summary],
+              error: parsed[:error],
               started_at: started_at,
               completed_at: completed_at
             )
@@ -88,7 +89,16 @@ module Ace
             {
               status: parsed[:status],
               test_cases: parsed[:test_cases],
-              summary: parsed[:summary]
+              summary: parsed[:summary],
+              error: parsed[:observations]
+            }
+          rescue Atoms::ResultParser::ParseError => e
+            issue = summarize_unstructured_verifier_output(text)
+            {
+              status: "error",
+              test_cases: [],
+              summary: "Verifier returned unstructured output",
+              error: issue || e.message
             }
           end
 
@@ -228,6 +238,13 @@ module Ace
               test_cases: goals,
               summary: "#{passed}/#{total} passed"
             }
+          end
+
+          def summarize_unstructured_verifier_output(text)
+            summary = text.to_s.lines.map(&:strip).reject(&:empty?).first(3).join(" ")
+            return nil if summary.empty?
+
+            summary.length > 240 ? "#{summary[0, 237]}..." : summary
           end
 
           def write_goal_report(path:, scenario:, provider:, result:)

@@ -136,9 +136,39 @@ class PipelineReportGeneratorTest < Minitest::Test
 
       metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
       assert_equal "error", metadata["status"]
+      assert_equal "fail", metadata["verdict"]
 
       summary = File.read(File.join(report_dir, "summary.r.md"))
       assert_includes summary, "RuntimeError: verifier parse failed"
+    end
+  end
+
+  def test_generate_converts_unstructured_verifier_output_into_error_report
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          I understand the verification format, but no sandbox artifacts were provided.
+          Expected paths include results/tc/{NN}/ with stdout, stderr, and exit files.
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "error", result.status
+      assert_equal "Verifier returned unstructured output", result.summary
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+      assert_equal "fail", metadata["verdict"]
+
+      summary = File.read(File.join(report_dir, "summary.r.md"))
+      assert_includes summary, "no sandbox artifacts were provided"
     end
   end
 
