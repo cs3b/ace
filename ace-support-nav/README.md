@@ -61,7 +61,7 @@ ace-nav resolve wfi://@ace-git/setup --content  # From specific source
 
 ```bash
 # Create from template
-ace-nav create wfi://bundle                  # Creates in project .ace/handbook
+ace-nav create wfi://bundle                  # Creates in project .ace-handbook
 ace-nav create tmpl://@ace-test/minitest     # Uses ace-test template
 ```
 
@@ -143,8 +143,8 @@ protocols:
     inferred_extensions: [".sample.md", ".md", ".markdown.md", ""]
 
 # Built-in aliases:
-# @project → ./.ace/handbook
-# @user → ~/.ace/handbook
+# @project → ./.ace-handbook
+# @user → ~/.ace-handbook
 ```
 
 ### Extension Inference
@@ -178,8 +178,8 @@ extension_inference:
 ## Override System
 
 The cascade priority is:
-1. **@project** - Project-specific overrides in `./.ace/handbook`
-2. **@user** - User-level overrides in `~/.ace/handbook`
+1. **@project** - Project-specific overrides in `./.ace-handbook`
+2. **@user** - User-level overrides in `~/.ace-handbook`
 3. **@gem** - Bundled resources in ace-* gems
 
 Use @ prefix to bypass cascade and target specific sources:

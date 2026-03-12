@@ -255,6 +255,85 @@ module Ace
             end
           end
 
+          def test_find_skill_resources_with_wildcard
+            fresh_dir = create_temp_ace_directory
+
+            create_test_protocol(fresh_dir, "skill", {
+              "name" => "Canonical Skills",
+              "extensions" => ["/SKILL.md"],
+              "inferred_extensions" => ["/SKILL.md"]
+            })
+
+            primary_root = File.join(fresh_dir, "primary", "handbook", "skills")
+            secondary_root = File.join(fresh_dir, "secondary", "handbook", "skills")
+            FileUtils.mkdir_p(File.join(primary_root, "as-task-plan"))
+            FileUtils.mkdir_p(File.join(secondary_root, "as-assign-drive"))
+
+            File.write(File.join(primary_root, "as-task-plan", "SKILL.md"), "---\nname: as-task-plan\n")
+            File.write(File.join(secondary_root, "as-assign-drive", "SKILL.md"), "---\nname: as-assign-drive\n")
+
+            create_test_source(fresh_dir, "skill", "primary-source", {
+              "path" => primary_root,
+              "priority" => 10
+            })
+            create_test_source(fresh_dir, "skill", "secondary-source", {
+              "path" => secondary_root,
+              "priority" => 20
+            })
+
+            Dir.chdir(fresh_dir) do
+              scanner = ProtocolScanner.new(config_loader: create_test_config_loader(fresh_dir))
+              resources = scanner.find_resources("skill", "*")
+              paths = resources.map { |r| r[:relative_path] }
+
+              assert_includes paths, "as-task-plan"
+              assert_includes paths, "as-assign-drive"
+            end
+          ensure
+            cleanup_temp_directory(fresh_dir)
+          end
+
+          def test_find_skill_resource_exact_match_prefers_higher_priority_source
+            fresh_dir = create_temp_ace_directory
+
+            create_test_protocol(fresh_dir, "skill", {
+              "name" => "Canonical Skills",
+              "extensions" => ["/SKILL.md"],
+              "inferred_extensions" => ["/SKILL.md"]
+            })
+
+            preferred_root = File.join(fresh_dir, "preferred", "handbook", "skills")
+            fallback_root = File.join(fresh_dir, "fallback", "handbook", "skills")
+            FileUtils.mkdir_p(File.join(preferred_root, "as-task-plan"))
+            FileUtils.mkdir_p(File.join(fallback_root, "as-task-plan"))
+
+            preferred_skill = File.join(preferred_root, "as-task-plan", "SKILL.md")
+            fallback_skill = File.join(fallback_root, "as-task-plan", "SKILL.md")
+            File.write(preferred_skill, "---\nname: as-task-plan\nsource: preferred\n")
+            File.write(fallback_skill, "---\nname: as-task-plan\nsource: fallback\n")
+
+            create_test_source(fresh_dir, "skill", "preferred-source", {
+              "path" => preferred_root,
+              "priority" => 10
+            })
+            create_test_source(fresh_dir, "skill", "fallback-source", {
+              "path" => fallback_root,
+              "priority" => 20
+            })
+
+            Dir.chdir(fresh_dir) do
+              scanner = ProtocolScanner.new(config_loader: create_test_config_loader(fresh_dir))
+              resources = scanner.find_resources("skill", "as-task-plan")
+
+              assert_equal 2, resources.length
+              assert_equal preferred_skill, resources[0][:path]
+              assert_equal "as-task-plan", resources[0][:relative_path]
+              assert_equal "preferred-source", resources[0][:source].name
+            end
+          ensure
+            cleanup_temp_directory(fresh_dir)
+          end
+
           def test_scan_all_sources_legacy_compatibility
             # Create sources for multiple protocols
             create_test_source(@test_dir, "example", "ex_source", {
@@ -276,8 +355,8 @@ module Ace
 
           def test_scan_source_by_alias_project
             Dir.chdir(@test_dir) do
-              # Create project .ace directory
-              FileUtils.mkdir_p(File.join(@test_dir, ".ace"))
+              # Create project handbook override directory
+              FileUtils.mkdir_p(File.join(@test_dir, ".ace-handbook"))
 
               source = @scanner.scan_source_by_alias("@project")
 
@@ -290,8 +369,8 @@ module Ace
           end
 
           def test_scan_source_by_alias_user
-            # Ensure user .ace directory exists
-            user_ace = File.expand_path("~/.ace")
+            # Ensure user handbook override directory exists
+            user_ace = File.expand_path("~/.ace-handbook")
             FileUtils.mkdir_p(user_ace)
 
             source = @scanner.scan_source_by_alias("@user")

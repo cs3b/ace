@@ -142,6 +142,70 @@ module Ace
             Ace::Support::Nav.reset_config!
           end
         end
+
+        def test_cli_resolves_canonical_skill_resource
+          @test_dir = create_temp_ace_directory
+
+          begin
+            create_test_protocol(@test_dir, "skill", {
+              "name" => "Canonical Skills",
+              "extensions" => ["/SKILL.md"],
+              "inferred_extensions" => ["/SKILL.md"]
+            })
+
+            skills_root = File.join(@test_dir, "test-resources", "skill")
+            skill_dir = File.join(skills_root, "as-task-plan")
+            FileUtils.mkdir_p(skill_dir)
+            skill_path = File.join(skill_dir, "SKILL.md")
+            File.write(skill_path, "---\nname: as-task-plan\n")
+
+            create_test_source(@test_dir, "skill", "local", {
+              "path" => skills_root,
+              "priority" => 10
+            })
+
+            Dir.chdir(@test_dir) do
+              Ace::Support::Nav.reset_config!
+              output, = capture_io { @resolve_cmd.call(uri: "skill://as-task-plan") }
+              assert_includes output, skill_path
+            end
+          ensure
+            cleanup_temp_directory(@test_dir)
+            Ace::Support::Nav.reset_config!
+          end
+        end
+
+        def test_cli_raises_error_for_missing_canonical_skill
+          @test_dir = create_temp_ace_directory
+
+          begin
+            create_test_protocol(@test_dir, "skill", {
+              "name" => "Canonical Skills",
+              "extensions" => ["/SKILL.md"],
+              "inferred_extensions" => ["/SKILL.md"]
+            })
+
+            empty_skills_root = File.join(@test_dir, "test-resources", "skill")
+            FileUtils.mkdir_p(empty_skills_root)
+            create_test_source(@test_dir, "skill", "local", {
+              "path" => empty_skills_root,
+              "priority" => 10
+            })
+
+            Dir.chdir(@test_dir) do
+              Ace::Support::Nav.reset_config!
+
+              error = assert_raises(Ace::Core::CLI::Error) do
+                capture_io { @resolve_cmd.call(uri: "skill://missing-skill") }
+              end
+
+              assert_includes error.message, "Resource not found"
+            end
+          ensure
+            cleanup_temp_directory(@test_dir)
+            Ace::Support::Nav.reset_config!
+          end
+        end
       end
     end
   end

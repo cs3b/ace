@@ -6,14 +6,15 @@ module Ace
       module Models
         # Represents a source of handbook resources
         class HandbookSource
-          attr_reader :name, :path, :alias_name, :type, :priority
+          attr_reader :name, :path, :alias_name, :type, :priority, :resource_root
 
-          def initialize(name:, path:, alias_name: nil, type: :gem, priority: 100)
+          def initialize(name:, path:, alias_name: nil, type: :gem, priority: 100, resource_root: nil)
             @name = name
             @path = path
             @alias_name = alias_name || derive_alias(name, type)
             @type = type # :project, :user, :gem, :custom
             @priority = priority
+            @resource_root = resource_root || default_resource_root
           end
 
           def project?
@@ -33,7 +34,7 @@ module Ace
           end
 
           def handbook_path
-            File.join(path, "handbook")
+            resource_root
           end
 
           def exists?
@@ -52,6 +53,10 @@ module Ace
           end
 
           private
+
+          def default_resource_root
+            gem? ? File.join(path, "handbook") : path
+          end
 
           def derive_alias(name, type)
             case type

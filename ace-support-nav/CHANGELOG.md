@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-12
+
+### Added
+- Added explicit `start_path:` support to `SourceRegistry` so protocol source discovery can be rooted at an arbitrary project instead of always using process cwd.
+
+### Technical
+- Added regression coverage for rooted source discovery used by nav-backed handbook skill inventory.
+
+## [0.21.0] - 2026-03-12
+
+### Added
+- Added project and user handbook override root support for dedicated `.ace-handbook` and `~/.ace-handbook` directories, including default `ace-nav create` targets under the new project root.
+
+### Changed
+- Changed project-local workflow registration and user-facing nav docs to point at `.ace-handbook` instead of `.ace/handbook`.
+
+### Technical
+- Added regression coverage for `@project` / `@user` source discovery under the new override roots and for default create-target placement.
+
+## [0.20.0] - 2026-03-09
+
+### Added
+- Added scanner/CLI/regression coverage for canonical `skill://` wildcard and direct lookup behavior, including priority-based duplicate resolution for canonical `SKILL.md` paths.
+
+### Changed
+- Converted default `skill-sources` registration to gem-backed canonical discovery config and aligned it with `handbook/skills` + `*/SKILL.md` matching.
+
+## [0.19.0] - 2026-03-09
+
+### Added
+- Added canonical `skill://` protocol defaults for package-owned skill discovery.
+- Added default `skill-sources` scaffold for `handbook/skills` registration in nav protocol configuration.
+
 ## [0.18.2] - 2026-03-04
 
 ### Fixed

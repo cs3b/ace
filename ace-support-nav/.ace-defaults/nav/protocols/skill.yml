@@ -1,0 +1,22 @@
+# Protocol definition for canonical skills
+protocol: skill
+name: "Canonical Skills"
+description: "Canonical package-owned SKILL.md resources"
+enabled: true
+
+# Canonical skills resolve to handbook/skills/<name>/SKILL.md
+extensions:
+  - /SKILL.md
+
+# Extension inference for shorthand lookups
+inferred_extensions:
+  - /SKILL.md
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: false
+  supports_content: true
+  supports_list: true
+  supports_tree: true

@@ -291,6 +291,55 @@ module Ace
             sources = @registry.sources_for_protocol("nonexistent")
             assert_empty sources
           end
+
+          def test_loads_gem_skill_source_with_config
+            fresh_dir = create_temp_ace_directory
+
+            create_test_source(fresh_dir, "skill", "ace-task", {
+              "type" => "gem",
+              "priority" => 10,
+              "description" => "Canonical skills from ace-task gem",
+              "config" => {
+                "relative_path" => "handbook/skills",
+                "pattern" => "*/SKILL.md",
+                "enabled" => true
+              }
+            })
+
+            Dir.chdir(fresh_dir) do
+              sources = @registry.sources_for_protocol("skill")
+              source = sources.find { |s| s.name == "ace-task" }
+
+              assert source
+              assert_equal "gem", source.type
+              assert_nil source.path
+              assert_equal 10, source.priority
+              assert_equal "handbook/skills", source.config["relative_path"]
+              assert_equal "*/SKILL.md", source.config["pattern"]
+            end
+          ensure
+            cleanup_temp_directory(fresh_dir)
+          end
+
+          def test_uses_explicit_start_path_for_project_source_discovery
+            fresh_dir = create_temp_ace_directory
+            nested_dir = File.join(fresh_dir, "nested", "workspace")
+            FileUtils.mkdir_p(nested_dir)
+
+            create_test_source(fresh_dir, "skill", "root_source", {
+              "path" => "/registered/from/root",
+              "priority" => 10
+            })
+
+            registry = SourceRegistry.new(start_path: nested_dir)
+            sources = registry.sources_for_protocol("skill")
+
+            source = sources.find { |entry| entry.name == "root_source" }
+            assert source
+            assert_equal "/registered/from/root", source.path
+          ensure
+            cleanup_temp_directory(fresh_dir)
+          end
         end
       end
     end
