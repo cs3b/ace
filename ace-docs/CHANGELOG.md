@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-03-12
+
+### Changed
+- Updated documentation guides and README examples to use current gem-scoped handbook paths and bundle-first workflow references.
+
+## [0.25.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-docs-squash-changelog` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.24.1] - 2026-03-12
+
+### Fixed
+- Updated shipped prompt-source override guidance to use `.ace-handbook` and `~/.ace-handbook` instead of the old `.ace/handbook` locations.
+
+## [0.24.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned documentation skills for ADR, API, user-doc, update, and changelog maintenance workflows.
+
+
 ## [0.23.0] - 2026-03-08
 
 ### Added
