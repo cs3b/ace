@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned simulation skill for scenario/provider comparison flows.
+
+
 ## [0.7.2] - 2026-03-04
 
 ### Changed
