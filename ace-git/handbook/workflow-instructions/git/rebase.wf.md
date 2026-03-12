@@ -1,20 +1,20 @@
 ---
 name: git/rebase
 allowed-tools: Bash, Read
-description: Rebase feature branch with state capture, automatic fallback to cherry-pick, and post-rebase verification
+description: Rebase feature branch with state capture, continue-first conflict handling, escalation to cherry-pick, and post-rebase verification
 argument-hint: "[target-branch] [--no-verify]"
 doc-type: workflow
-purpose: Safe rebase workflow with state capture for recovery and verification
+purpose: Safe rebase workflow with state capture, explicit conflict triage, and verification
 update:
   frequency: on-change
-  last-updated: '2026-03-05'
+  last-updated: '2026-03-09'
 ---
 
 # Rebase Workflow
 
 ## Purpose
 
-Rebase feature branches against a target branch with automatic state capture for recovery and verification. The workflow attempts simple rebase first, falling back to cherry-pick for per-commit conflict resolution when needed.
+Rebase feature branches against a target branch with automatic state capture for recovery and verification. The workflow attempts simple rebase first, keeps localized conflicts on the normal rebase path, and escalates to cherry-pick only when per-commit replay is the safer tool.
 
 ## Requirements
 
@@ -26,9 +26,10 @@ Rebase feature branches against a target branch with automatic state capture for
 | Strategy | Trigger | Description |
 |----------|---------|-------------|
 | **simple** (DEFAULT) | No conflicts | Standard `git rebase` - preserves exact commit history |
-| **cherry-pick** (AUTO) | Conflicts detected | Per-commit replay from cached commit list |
+| **continue-first** | Small or localized conflict set | Resolve the conflict and continue the existing rebase |
+| **cherry-pick** (ESCALATION) | Repeated conflicts, large conflict set, or explicit request | Per-commit replay from cached commit list |
 
-> For manual conflict resolution or interactive rebase, see [Appendix: Alternative Strategies](#appendix-alternative-strategies).
+> For interactive history editing, see [Appendix: Alternative Strategies](#appendix-alternative-strategies).
 
 ## Variables & Helpers
 
@@ -92,6 +93,8 @@ recover_session() {
 
 **Session Continuity:** If continuing in a new shell, call `recover_session` before any phase. Variables `cache_dir`, `session_id`, and `target_branch` are exported for subprocess visibility.
 
+**Conflict Policy:** The first conflict stays on the normal rebase path unless the conflict set is clearly large or the operator explicitly wants per-commit replay. Cherry-pick fallback is the escalation path, not the default response to every conflict.
+
 ---
 
 ## Phase 1: State Capture
@@ -129,6 +132,7 @@ EOF
 
 # Commit list (oldest first for cherry-pick replay)
 git log --reverse --oneline "$merge_base"..HEAD > "$cache_dir/commits.txt"
+: > "$cache_dir/applied-shas.txt"
 
 # Diffs for recovery and verification
 git diff "$merge_base"..HEAD > "$cache_dir/pre-rebase.diff"
@@ -173,28 +177,49 @@ echo "Attempting simple rebase onto $target_branch..."
 git rebase "$target_branch"
 ```
 
-### 2.2 Handle Result
+### 2.2 Triage First Conflict
 
 ```bash
-# If conflicts detected, abort and proceed to Phase 3
+# If conflicts detected, inspect them before changing strategies
 if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
-  echo "Conflict detected - switching to cherry-pick fallback..."
-  git rebase --abort || rm -rf .git/rebase-merge .git/rebase-apply
-  git reset --hard HEAD
-  echo "WARNING: About to delete untracked files."
-  read -p "Press Enter to continue with git clean -fd (or Ctrl+C): "
-  git clean -fd
-  # Proceed to Phase 3
+  conflicted_files=($(git diff --name-only --diff-filter=U))
+  conflict_count=${#conflicted_files[@]}
+  current_commit=$(git rev-parse --short REBASE_HEAD 2>/dev/null || echo "unknown")
+
+  echo "Conflict detected in rebase commit: $current_commit"
+  printf '  %s\n' "${conflicted_files[@]}"
+
+  if [ "$conflict_count" -le 2 ]; then
+    echo "Strategy: continue-first"
+    echo "Resolve conflicts, then run: git add <files> && git rebase --continue"
+    echo "Escalate only if the next rebase stop is also conflicted or resolution coordination becomes complex."
+    echo "CHANGELOG.md note: prefer git checkout --theirs CHANGELOG.md, then re-apply your entries on top before git add."
+  else
+    echo "Strategy: cherry-pick fallback (conflict set is large)"
+    echo "Abort the rebase and proceed to Phase 3."
+  fi
 else
   echo "Simple rebase complete - proceed to Phase 4"
 fi
+```
+
+### 2.3 Escalate to Cherry-Pick Only When Needed
+
+```bash
+# Use this only after triage says the conflict set is large, repeated, or explicitly requires per-commit replay
+git rebase --abort || rm -rf .git/rebase-merge .git/rebase-apply
+git reset --hard HEAD
+echo "WARNING: About to delete untracked files."
+read -p "Press Enter to continue with git clean -fd (or Ctrl+C): "
+git clean -fd
+# Proceed to Phase 3
 ```
 
 ---
 
 ## Phase 3: Cherry-Pick Fallback
 
-When simple rebase encounters conflicts, cherry-pick each commit individually.
+Use this path only after the first-conflict triage says normal rebase is no longer the right tool.
 
 ### 3.1 Setup Work Branch
 
@@ -210,10 +235,9 @@ git checkout --no-track -B "${original_branch}-rebase-${session_id}" "$target_br
 
 ```bash
 while IFS=' ' read -r sha msg; do
-  # Skip already-applied commits (use subject — cherry-pick creates new SHAs)
-  subject=$(git log -1 --format=%s "$sha")
-  if git log --format=%s HEAD | grep -qF "$subject"; then
-    echo "Skipping (already applied): $sha - $subject"
+  # Skip commits already recorded in this replay session
+  if grep -qxF "$sha" "$cache_dir/applied-shas.txt"; then
+    echo "Skipping (already applied): $sha"
     continue
   fi
 
@@ -224,12 +248,15 @@ while IFS=' ' read -r sha msg; do
     echo ""
     echo "To resolve:"
     echo "  1. Fix conflicts, then: git add <files> && git cherry-pick --continue"
-    echo "  2. Re-run Phase 3.2 (already-applied commits will be skipped)"
+    echo "  2. Record the replayed SHA after continue: echo $sha >> $cache_dir/applied-shas.txt"
+    echo "  3. Re-run Phase 3.2 (already-applied SHAs will be skipped)"
     echo ""
     echo "To skip: git cherry-pick --skip"
     echo "To abort: git cherry-pick --abort && git checkout ${original_branch}-backup-${session_id}"
     exit 1
   fi
+
+  echo "$sha" >> "$cache_dir/applied-shas.txt"
 done < "$cache_dir/commits.txt"
 ```
 
@@ -345,6 +372,7 @@ find .ace-local/git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
 ```bash
 git rebase "$target_branch"
 # On conflict: resolve files, git add, git rebase --continue
+# Escalate to Phase 3 only if conflicts keep repeating or require per-commit replay
 # CHANGELOG: git checkout --theirs CHANGELOG.md, add your entries on top
 ```
 
@@ -361,7 +389,7 @@ git rebase -i "$target_branch"
 ## Success Criteria
 
 - State captured to `.ace-local/git/{id}-rebase/`
-- Branch rebased on target (simple or cherry-pick)
+- Branch rebased on target (simple, continue-first, or cherry-pick)
 - Stats verified (or --no-verify)
 - Tests pass
 - Pushed with --force-with-lease
@@ -369,8 +397,9 @@ git rebase -i "$target_branch"
 ## Response Template
 
 ```
-Session: {id} | Strategy: simple|cherry-pick
+Session: {id} | Strategy: simple|continue-first|cherry-pick
 Target: {branch} | Commits: {count}
 Verification: {MATCH|MISMATCH} | Tests: {Pass|Fail}
+Reason: {no-conflicts|localized-conflict|repeated-conflicts|large-conflict-set|user-request}
 Status: {Complete|Needs attention}
 ```

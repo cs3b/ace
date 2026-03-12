@@ -336,10 +336,10 @@ git stash drop stash@{0}
 git submodule update --remote
 
 # Update specific submodule
-git submodule update --remote dev-handbook
+git submodule update --remote shared-handbook
 
 # Commit submodule updates
-git add .gitmodules dev-handbook dev-taskflow dev-tools
+git add .gitmodules shared-handbook shared-taskflow shared-tools
 git commit -m "chore(submodules): update to latest versions"
 ```
 
@@ -347,7 +347,7 @@ git commit -m "chore(submodules): update to latest versions"
 
 ```bash
 # Make changes in submodule
-cd dev-handbook
+cd shared-handbook
 git checkout main
 git pull origin main
 # Make changes, commit as usual
@@ -356,8 +356,8 @@ git push origin main
 
 # Return to main repo and update reference
 cd ..
-git add dev-handbook
-git commit -m "chore(submodule): update dev-handbook reference"
+git add shared-handbook
+git commit -m "chore(submodule): update shared-handbook reference"
 ```
 
 ### Multi-Repository Workflows
@@ -369,7 +369,7 @@ git commit -m "chore(submodule): update dev-handbook reference"
 git-status
 
 # Make related changes in multiple repos
-cd dev-handbook
+cd shared-handbook
 # Edit guide files
 git add . && git commit -m "docs: update workflow guide"
 
