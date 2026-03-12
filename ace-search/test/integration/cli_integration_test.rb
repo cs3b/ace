@@ -85,6 +85,18 @@ module Ace
         assert status.success?, "Command should succeed"
       end
 
+      def test_count_output_flag
+        skip_unless_rg_available
+
+        stdout, _stderr, status = Open3.capture3(
+          @exe_path, "test", "--count", "--max-results", "1",
+          chdir: File.expand_path("../../..", __dir__)
+        )
+
+        assert status.success?, "Command should succeed"
+        assert_match(/Found \d+ results/, stdout)
+      end
+
       def test_invalid_option_shows_error
         stdout, stderr, status = Open3.capture3(@exe_path, "--invalid-option", "pattern")
 

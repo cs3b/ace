@@ -50,6 +50,7 @@ module Ace
             include: parse_include_option,
             exclude: parse_exclude_option,
             hidden: @cli_options[:hidden] || @config["hidden"] || false,
+            count: @cli_options[:count] || @config["count"] || false,
             files_with_matches: @cli_options[:files_with_matches] || @config["files_with_matches"] || false,
             after_context: @cli_options[:after_context],
             before_context: @cli_options[:before_context]

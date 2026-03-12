@@ -19,6 +19,7 @@ module Ace
             "include" => [],
             "exclude" => [".git", "node_modules"],
             "hidden" => false,
+            "count" => false,
             "files_with_matches" => false
           }
         end
@@ -137,7 +138,7 @@ module Ace
 
         def test_build_with_boolean_options
           builder = SearchOptionBuilder.new(
-            { case_insensitive: true, whole_word: true, multiline: true, hidden: true },
+            { case_insensitive: true, whole_word: true, multiline: true, hidden: true, count: true },
             config: @default_config
           )
           options = builder.build
@@ -146,6 +147,7 @@ module Ace
           assert_equal true, options[:whole_word]
           assert_equal true, options[:multiline]
           assert_equal true, options[:hidden]
+          assert_equal true, options[:count]
         end
 
         def test_build_cli_options_override_config
