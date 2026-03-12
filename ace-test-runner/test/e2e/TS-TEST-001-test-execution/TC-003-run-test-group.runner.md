@@ -8,6 +8,10 @@ and capture output showing group-scoped test execution behavior.
 ## Workspace
 
 Save artifacts to `results/tc/03/`.
+
+Capture:
+- `results/tc/03/command.txt` — exact `ace-test` invocation used
+- `results/tc/03/report-files.txt` — recursive listing of generated report files under `results/tc/03/reports`
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
