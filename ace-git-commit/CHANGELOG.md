@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-03-12
+
+### Changed
+- Updated README prompt-path guidance to reference the package-local handbook prompt source.
+
+## [0.21.0] - 2026-03-12
+
+### Added
+- Added provider-specific Claude and Codex execution overrides to the canonical `as-git-commit` skill so projected provider skills can request forked execution with provider-specific models.
+
+## [0.20.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned git commit skill for agent-facing commit generation.
+
+
 ## [0.19.2] - 2026-03-08
 
 ### Fixed

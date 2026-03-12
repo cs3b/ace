@@ -2,6 +2,6 @@
 
 module Ace
   module GitCommit
-    VERSION = "0.19.2"
+    VERSION = "0.21.1"
   end
 end

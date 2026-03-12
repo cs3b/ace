@@ -222,7 +222,7 @@ bundle exec ace-git-commit --dry-run
 
 The system prompt for commit message generation is maintained in:
 ```
-dev-handbook/templates/prompts/git-commit.system.md
+ace-git-commit/handbook/prompts/git-commit.system.md
 ```
 
 This centralized location allows for consistent prompt management across the project.
