@@ -1,0 +1,10 @@
+---
+name: ace-prompt-prep
+type: gem
+description: Prompt prep workflow instructions from ace-prompt-prep gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

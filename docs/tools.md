@@ -68,16 +68,20 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 | `ace-test ace-bundle` | Run tests in specific package |
 | `ace-test-suite` | Run all tests across monorepo |
 
-### Testing Skills
+### Workflow-First Guidance
 
-| Skill | Purpose |
-|-------|---------|
-| `/ace-test-plan` | Plan test coverage before coding |
-| `/ace-test-verify-suite` | Audit test suite health (quick/standard/deep) |
-| `/ace-test-optimize` | Profile and fix slow tests |
-| `/ace-test-review` | Review test PR for quality |
-| `/ace-e2e-setup-sandbox` | Set up safe E2E environment |
-| `/ace-test-performance-audit` | Generate test performance audit report |
+For documentation and markdown workflows, prefer direct workflow loading through `ace-bundle`:
+
+| Workflow | Purpose |
+|----------|---------|
+| `ace-bundle wfi://test/plan` | Load test planning workflow instructions |
+| `ace-bundle wfi://test/verify-suite` | Load suite verification workflow instructions |
+| `ace-bundle wfi://test/optimize` | Load test optimization workflow instructions |
+| `ace-bundle wfi://test/review` | Load test review workflow instructions |
+| `ace-bundle wfi://e2e/setup-sandbox` | Load E2E sandbox setup workflow instructions |
+| `ace-bundle wfi://test/performance-audit` | Load test performance audit workflow instructions |
+
+Provider-agent skills are reserved for CLI agent integrations and `ace-assign` discovery, not for general markdown usage.
 
 ## Linting
 
@@ -100,8 +104,8 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 |------|---------|
 | `ace-bundle project` | Load project context |
 | `ace-bundle wfi://namespace/action` | Load workflow via protocol |
-| `ace-nav wfi://namespace/action` | Get path of resource |
-| `ace-nav wfi://*` | List all workflows |
+| `ace-nav wfi://namespace/action` | Resolve workflow path when you need discovery or inspection |
+| `ace-nav wfi://*` | List available workflows |
 | `ace-search "pattern"` | Search content (regex) |
 | `ace-search "*.rb" --files` | Search files (glob) |
 

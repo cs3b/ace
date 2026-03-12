@@ -1,0 +1,10 @@
+---
+name: ace-lint
+type: gem
+description: Canonical skills from ace-lint gem
+priority: 10
+
+config:
+  relative_path: handbook/skills
+  pattern: "*/SKILL.md"
+  enabled: true

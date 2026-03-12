@@ -32,6 +32,11 @@ gem 'ace-support-items', path: 'ace-support-items'
 gem 'ace-idea', path: 'ace-idea'
 gem 'ace-retro', path: 'ace-retro'
 gem 'ace-task', path: 'ace-task'
+gem 'ace-handbook-integration-claude', path: 'ace-handbook-integration-claude'
+gem 'ace-handbook-integration-codex', path: 'ace-handbook-integration-codex'
+gem 'ace-handbook-integration-gemini', path: 'ace-handbook-integration-gemini'
+gem 'ace-handbook-integration-opencode', path: 'ace-handbook-integration-opencode'
+gem 'ace-handbook-integration-pi', path: 'ace-handbook-integration-pi'
 
 # Shared dev/test tools for all gems
 group :development, :test do

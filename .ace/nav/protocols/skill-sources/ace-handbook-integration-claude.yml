@@ -1,0 +1,10 @@
+---
+name: ace-handbook-integration-claude
+type: gem
+description: Canonical skills from ace-handbook-integration-claude gem
+priority: 10
+
+config:
+  relative_path: handbook/skills
+  pattern: "*/SKILL.md"
+  enabled: true

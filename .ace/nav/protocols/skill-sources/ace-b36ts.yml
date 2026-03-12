@@ -1,0 +1,10 @@
+---
+name: ace-b36ts
+type: gem
+description: Canonical skills from ace-b36ts gem
+priority: 10
+
+config:
+  relative_path: handbook/skills
+  pattern: "*/SKILL.md"
+  enabled: true

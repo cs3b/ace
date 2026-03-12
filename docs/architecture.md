@@ -75,7 +75,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-git-worktree**: Worktree management
 * **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
 * **ace-llm**: Multi-provider AI model integration with CLI-based providers
-* **ace-nav**: Resource discovery and navigation with wfi:// protocol
+* **ace-nav**: Resource discovery and navigation for protocol-backed content
 * **ace-prompt-prep**: Prompt workspace with archiving, LLM enhancement, and task integration
 * **ace-review**: Preset-based code review with LLM-powered analysis
 * **ace-search**: Unified file and content search with auto-detected pattern matching
@@ -95,7 +95,8 @@ Self-contained instruction documents for complete processes:
 * **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
 * **Principle**: ADR-001 self-containment - include all context inline
 * **Namespaces**: `task/`, `bug/`, `git/`, `docs/`, `test/`, `e2e/`, `review/`, `handbook/`, `release/`, `assign/`, `lint/`, `search/`, `idea/`, `retro/`, `integration/`
-* **Discovery**: `ace-bundle wfi://namespace/action` or browse with `ace-nav wfi://namespace/*`
+* **Execution**: `ace-bundle wfi://namespace/action`
+* **Discovery**: browse with `ace-nav wfi://namespace/*`
 * **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)
@@ -113,14 +114,17 @@ Development patterns and best practices in `handbook/guides/*.g.md`. Generic gui
 
 ### Handbook Organization
 
-Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `workflow-instructions/`. Agents are for single actions, workflows for multi-step processes. Both use frontmatter.
+Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `workflow-instructions/`. General markdown guidance should point readers to workflows through `ace-bundle`; provider-agent skills are a separate integration layer.
 
 ## AI Integration
 
-* **Skills**: `.agent/skills/` is the canonical provider-neutral location; provider dirs (`.claude/`, `.codex/`, `.gemini/`, `.pi/`) symlink to it
+* **Skills**: package `handbook/skills/` files are canonical source of truth for provider-agent integrations and `ace-assign` skill discovery
+* **Provider projections**: provider packages project canonical skills directly into provider-native folders (`.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, `.pi/skills/`)
+* **Provider overrides**: provider-specific frontmatter in `integration.providers.<provider>.frontmatter` can carry execution hints such as Claude `model: haiku` and Codex `model: gpt-5.3-codex-spark`
+* **Integration runtime**: `ace-handbook` owns shared provider discovery, projection, sync, and status behavior used by provider packages
 * **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
-* **wfi:// Protocol**: Direct workflow access via ace-nav
+* **wfi:// Protocol**: Direct workflow access via `ace-bundle`; `ace-nav` remains the discovery layer
 
 ## Key Architectural Decisions
 
@@ -159,4 +163,3 @@ config = resolver.resolve_namespace("git", filename: "commit")
 prompts, agents, workflows - instantly available via `gem install ace-*`.
 
 *For detailed decisions, see [docs/decisions.md](decisions.md)*
-
