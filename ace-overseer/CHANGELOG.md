@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-12
+
+### Fixed
+- Registered the package WFI source so `wfi://overseer` resolves for the canonical overseer skill.
+
+## [0.5.0] - 2026-03-10
+
+### Added
+- Added the canonical handbook-owned overseer skill and a package workflow for task worktree orchestration.
+
+
 ## [0.4.21] - 2026-03-08
 
 ### Fixed
