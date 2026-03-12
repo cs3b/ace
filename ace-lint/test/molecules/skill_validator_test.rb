@@ -59,7 +59,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     refute result.success?
     error_messages = result.errors.map(&:message)
 
-    assert error_messages.any? { |msg| msg.include?("ace-") }
+    assert error_messages.any? { |msg| msg.include?("as-") || msg.include?("ace-") }
   end
 
   # Workflow validation tests
@@ -107,7 +107,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_validate_content_directly
     content = <<~MARKDOWN
       ---
-      name: ace-direct-test
+      name: as-direct-test
       description: Test direct content validation
       # bundle: no-fork
       # agent: Bash
@@ -115,6 +115,10 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
       allowed-tools:
         - Read
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
       Body
@@ -167,7 +171,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_valid_skill
     content = <<~MARKDOWN
       ---
-      name: ace-pure-test
+      name: as-pure-test
       description: A valid test skill
       # bundle: no-fork
       # agent: Bash
@@ -176,6 +180,10 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
         - Read
         - Edit
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
       Body content.
@@ -185,6 +193,59 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
 
     assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
     assert_empty result.errors
+  end
+
+  def test_valid_skill_with_integration
+    file_path = File.join(@fixtures_dir, "skills", "valid_skill_with_integration.md")
+    result = Ace::Lint::Molecules::SkillValidator.validate(file_path, :skill)
+
+    assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
+  end
+
+  def test_valid_skill_with_provider_execution_overrides
+    content = <<~MARKDOWN
+      ---
+      name: as-provider-model-test
+      description: Valid skill with provider model overrides
+      # bundle: wfi://test/workflow
+      # agent: general-purpose
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      integration:
+        providers:
+          claude:
+            frontmatter:
+              context: fork
+              model: haiku
+          codex:
+            frontmatter:
+              context: fork
+              model: gpt-5.3-codex-spark
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
+      ---
+
+      Body
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
+  end
+
+  def test_invalid_skill_with_integration
+    file_path = File.join(@fixtures_dir, "skills", "invalid_skill_with_integration.md")
+    result = Ace::Lint::Molecules::SkillValidator.validate(file_path, :skill)
+
+    refute result.success?
+    error_messages = result.errors.map(&:message)
+    assert error_messages.any? { |msg| msg.include?("integration.targets") }
+    assert error_messages.any? { |msg| msg.include?("Unknown integration provider") }
+    assert error_messages.any? { |msg| msg.include?("frontmatter") }
   end
 
   def test_pure_missing_required_fields
@@ -210,7 +271,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_invalid_tools
     content = <<~MARKDOWN
       ---
-      name: ace-invalid-tools
+      name: as-invalid-tools
       description: Skill with invalid tools
       # bundle: no-fork
       # agent: general-purpose
@@ -220,6 +281,10 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
         - Bash(unknown-prefix:*)
         - Read
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
       Invalid tool entries.
@@ -232,6 +297,33 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
 
     assert error_messages.any? { |msg| msg.include?("InvalidTool") }
     assert error_messages.any? { |msg| msg.include?("unknown-prefix") }
+  end
+
+  def test_pure_accepts_real_ace_cli_prefixes
+    content = <<~MARKDOWN
+      ---
+      name: as-idea-prioritize
+      description: Uses ace-idea CLI
+      # bundle: wfi://idea/prioritize
+      # agent: general-purpose
+      user-invocable: true
+      allowed-tools:
+        - Bash(ace-idea:*)
+        - Bash(ace-task:*)
+        - Read
+      source: ace-task
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://idea/prioritize
+      ---
+
+      Body content.
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
   end
 
   def test_pure_missing_comments
@@ -260,7 +352,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_invalid_name_pattern
     content = <<~MARKDOWN
       ---
-      name: my-bad-name
+      name: nope
       description: Skill with invalid name pattern
       # bundle: no-fork
       # agent: Bash
@@ -268,9 +360,13 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
       allowed-tools:
         - Read
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
-      Name doesn't start with ace-.
+      Name doesn't start with as- or ace-.
     MARKDOWN
 
     result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
@@ -278,7 +374,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     refute result.success?
     error_messages = result.errors.map(&:message)
 
-    assert error_messages.any? { |msg| msg.include?("ace-") }
+    assert error_messages.any? { |msg| msg.include?("as-") || msg.include?("ace-") }
   end
 
   def test_pure_invalid_regex_pattern_in_schema
@@ -287,7 +383,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     # For now, verify the validate_field method handles it correctly
     content = <<~MARKDOWN
       ---
-      name: ace-test
+      name: as-test
       description: Test
       # bundle: no-fork
       # agent: Bash
@@ -295,6 +391,10 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
       allowed-tools:
         - Read
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
       Content.
@@ -308,7 +408,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_field_line_numbers
     content = <<~MARKDOWN
       ---
-      name: my-bad-name
+      name: nope
       description: Test
       # bundle: no-fork
       # agent: Bash
@@ -316,6 +416,10 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
       allowed-tools:
         - Read
       source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://test/workflow
       ---
 
       Content.
@@ -325,8 +429,114 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
 
     refute result.success?
     # The name field is on line 2 (after ---), so error should reference that line
-    name_error = result.errors.find { |e| e.message.include?("ace-") }
+    name_error = result.errors.find { |e| e.message.include?("as-") || e.message.include?("ace-") }
     assert name_error, "Expected an error about name pattern"
     assert_equal 2, name_error.line, "Expected error to report line 2 for name field"
+  end
+
+  def test_requires_skill_kind_and_workflow
+    content = <<~MARKDOWN
+      ---
+      name: as-missing-skill-fields
+      description: Missing canonical skill metadata
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        execution: {}
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    error_messages = result.errors.map(&:message)
+    assert error_messages.any? { |msg| msg.include?("skill.kind") }
+    assert error_messages.any? { |msg| msg.include?("skill.execution.workflow") }
+  end
+
+  def test_rejects_assign_on_capability_skill
+    content = <<~MARKDOWN
+      ---
+      name: as-capability-with-assign
+      description: Invalid assign usage
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: capability
+        execution:
+          workflow: wfi://b36ts
+      assign:
+        phases:
+          - name: demo
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    assert result.errors.any? { |e| e.message.include?("only allowed for workflow/orchestration") }
+  end
+
+  def test_rejects_duplicate_assign_phase_names
+    content = <<~MARKDOWN
+      ---
+      name: as-dup-assign-phases
+      description: Duplicate assign phase names should fail
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://task/work
+      assign:
+        phases:
+          - name: one
+          - name: one
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    assert result.errors.any? { |e| e.message.include?("Duplicate assign phase name") }
+  end
+
+  def test_rejects_unknown_skill_nested_fields
+    content = <<~MARKDOWN
+      ---
+      name: as-unknown-skill-fields
+      description: Unknown fields under skill should fail
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://task/plan
+          mode: direct
+        flavor: custom
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    assert result.errors.any? { |e| e.message.include?("Unknown field under 'skill': 'flavor'") }
+    assert result.errors.any? { |e| e.message.include?("Unknown field under 'skill.execution': 'mode'") }
   end
 end

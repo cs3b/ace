@@ -114,13 +114,27 @@ module Ace
               )
             end
 
+            # Validate required nested fields
+            required_nested_fields = schema["required_nested_fields"] || []
+            required_nested_fields.each do |field_path|
+              value = dig_value(frontmatter, field_path)
+              next if present_value?(value)
+
+              line = field_lines[field_path.split(".").first] || 2
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Missing required field: '#{field_path}'"
+              )
+            end
+
             # Validate field types and patterns
             field_validations = schema["field_validations"] || {}
             field_validations.each do |field, rules|
-              next unless frontmatter.key?(field)
+              value = field.include?(".") ? dig_value(frontmatter, field) : frontmatter[field]
+              next if value.nil?
 
-              line = field_lines[field] || 2
-              field_errors = validate_field(field, frontmatter[field], rules, line: line)
+              line = field_lines[field.split(".").first] || 2
+              field_errors = validate_field(field, value, rules, line: line)
               errors.concat(field_errors)
             end
 
@@ -141,6 +155,10 @@ module Ace
                   message: "Missing required comment: '#{comment}'"
                 )
               end
+            end
+
+            if type.to_sym == :skill
+              errors.concat(validate_skill_specific_rules(frontmatter, field_lines))
             end
 
             # Check trailing newline
@@ -261,6 +279,181 @@ module Ace
                 message: "Invalid allowed-tools entry: #{error[:message]}"
               )
             end
+          end
+
+          def dig_value(data, field_path)
+            keys = field_path.split(".")
+            current = data
+            keys.each do |key|
+              return nil unless current.is_a?(Hash) && current.key?(key)
+
+              current = current[key]
+            end
+            current
+          end
+
+          def present_value?(value)
+            !value.nil? && !(value.respond_to?(:empty?) && value.empty?)
+          end
+
+          def validate_skill_specific_rules(frontmatter, field_lines)
+            errors = []
+            line = field_lines["skill"] || 2
+
+            skill_data = frontmatter["skill"]
+            unless skill_data.is_a?(Hash)
+              return errors
+            end
+
+            unknown_skill_keys = skill_data.keys - %w[kind execution]
+            unknown_skill_keys.each do |key|
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Unknown field under 'skill': '#{key}'"
+              )
+            end
+
+            execution_data = skill_data["execution"]
+            if execution_data && !execution_data.is_a?(Hash)
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Field 'skill.execution' must be a mapping/object"
+              )
+            elsif execution_data.is_a?(Hash)
+              unknown_execution_keys = execution_data.keys - ["workflow"]
+              unknown_execution_keys.each do |key|
+                errors << Models::ValidationError.new(
+                  line: line,
+                  message: "Unknown field under 'skill.execution': '#{key}'"
+                )
+              end
+            end
+
+            assign_data = frontmatter["assign"]
+            if assign_data
+              assign_line = field_lines["assign"] || 2
+              kind = skill_data["kind"]
+              if kind == "capability"
+                errors << Models::ValidationError.new(
+                  line: assign_line,
+                  message: "Field 'assign' is only allowed for workflow/orchestration skills"
+                )
+              end
+
+              unless assign_data.is_a?(Hash)
+                errors << Models::ValidationError.new(
+                  line: assign_line,
+                  message: "Field 'assign' must be a mapping/object"
+                )
+                return errors
+              end
+
+              unknown_assign_keys = assign_data.keys - %w[source phases]
+              unknown_assign_keys.each do |key|
+                errors << Models::ValidationError.new(
+                  line: assign_line,
+                  message: "Unknown field under 'assign': '#{key}'"
+                )
+              end
+
+              phase_names = Array(assign_data["phases"]).filter_map do |phase|
+                phase.is_a?(Hash) ? phase["name"] : nil
+              end
+              phase_names.group_by(&:itself).each do |name, grouped|
+                next unless grouped.length > 1
+
+                errors << Models::ValidationError.new(
+                  line: assign_line,
+                  message: "Duplicate assign phase name: '#{name}'"
+                )
+              end
+            end
+
+            errors.concat(validate_integration_rules(frontmatter, field_lines))
+            errors
+          end
+
+          def validate_integration_rules(frontmatter, field_lines)
+            integration = frontmatter["integration"]
+            return [] unless integration
+
+            line = field_lines["integration"] || 2
+            known = Atoms::SkillSchemaLoader.known_integration_providers
+
+            unless integration.is_a?(Hash)
+              return [Models::ValidationError.new(line: line, message: "Field 'integration' must be a mapping/object")]
+            end
+
+            errors = []
+            unknown_keys = integration.keys - %w[targets providers]
+            unknown_keys.each do |key|
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Unknown field under 'integration': '#{key}'"
+              )
+            end
+
+            targets = integration["targets"]
+            if targets && !targets.is_a?(Array)
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Field 'integration.targets' must be an array"
+              )
+            end
+
+            Array(targets).each do |provider|
+              next if known.include?(provider.to_s)
+
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Unknown integration provider '#{provider}'"
+              )
+            end
+
+            providers = integration["providers"]
+            if providers && !providers.is_a?(Hash)
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Field 'integration.providers' must be a mapping/object"
+              )
+              return errors
+            end
+
+            (providers || {}).each do |provider, provider_config|
+              unless known.include?(provider.to_s)
+                errors << Models::ValidationError.new(
+                  line: line,
+                  message: "Unknown integration provider '#{provider}'"
+                )
+                next
+              end
+
+              unless provider_config.is_a?(Hash)
+                errors << Models::ValidationError.new(
+                  line: line,
+                  message: "Field 'integration.providers.#{provider}' must be a mapping/object"
+                )
+                next
+              end
+
+              unknown_provider_keys = provider_config.keys - ["frontmatter"]
+              unknown_provider_keys.each do |key|
+                errors << Models::ValidationError.new(
+                  line: line,
+                  message: "Unknown field under 'integration.providers.#{provider}': '#{key}'"
+                )
+              end
+
+              frontmatter_overrides = provider_config["frontmatter"]
+              next if frontmatter_overrides.nil? || frontmatter_overrides.is_a?(Hash)
+
+              errors << Models::ValidationError.new(
+                line: line,
+                message: "Field 'integration.providers.#{provider}.frontmatter' must be a mapping/object"
+              )
+            end
+
+            errors
           end
         end
       end

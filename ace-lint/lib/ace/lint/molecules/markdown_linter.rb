@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/kramdown_parser"
+require_relative "../atoms/frontmatter_extractor"
 require_relative "../models/lint_result"
 require_relative "../models/validation_error"
 
@@ -52,7 +53,8 @@ module Ace
         # @param options [Hash] Kramdown options
         # @return [Models::LintResult] Validation result
         def self.lint_content(file_path, content, options: {})
-          result = Atoms::KramdownParser.parse(content, options: options)
+          markdown_content = strip_frontmatter(content)
+          result = Atoms::KramdownParser.parse(markdown_content, options: options)
 
           errors = result[:errors].map do |msg|
             Models::ValidationError.new(message: msg, severity: :error)
@@ -63,12 +65,12 @@ module Ace
           end
 
           # Add style checks
-          style_warnings = check_markdown_style(content)
+          style_warnings = check_markdown_style(markdown_content)
           warnings.concat(style_warnings)
 
           # Add typography checks
           config = Ace::Lint.markdown_config
-          typography_issues = check_typography(content, config)
+          typography_issues = check_typography(markdown_content, config)
           typography_issues.each do |issue|
             if issue.severity == :error
               errors << issue
@@ -152,6 +154,14 @@ module Ace
           end
 
           warnings
+        end
+
+        def self.strip_frontmatter(content)
+          extraction = Atoms::FrontmatterExtractor.extract(content)
+          return content unless extraction[:has_frontmatter]
+
+          frontmatter_lines = extraction[:frontmatter].to_s.lines.count + 2
+          ("\n" * frontmatter_lines) + extraction[:body].to_s
         end
 
         # Check typography issues (em-dashes, smart quotes)

@@ -9,6 +9,10 @@ allowed-tools:
   - Read
   - Edit
 source: ace-test
+skill:
+  kind: workflow
+  execution:
+    workflow: wfi://test/workflow
 ---
 
 This is the skill body content.
