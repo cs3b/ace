@@ -240,6 +240,31 @@ describe "GeminiClient" do
       assert_equal 60, timeout_value
     end
 
+    it "uses working_dir when creating prompt cache dir" do
+      Dir.mktmpdir do |tmpdir|
+        cache_dir = @client.send(:create_prompt_cache_dir, tmpdir)
+        assert_equal File.join(tmpdir, ".ace-local", "llm", "prompts"), cache_dir
+      end
+    end
+
+    it "passes resolved project root as subprocess chdir" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:gemini_available?, true) do
+        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+          captured_kwargs = kwargs
+          ['{"response":"ok"}', "", mock_status]
+        }) do
+          @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
+        end
+      end
+
+      assert_equal "/tmp/e2e-sandbox", captured_kwargs[:chdir]
+    end
+
     it "builds command with pre-existing files when system_file and prompt_file provided" do
       # Test the code path used by ace-review to avoid double-writing files
       cmd = @client.send(:build_gemini_command, "ignored prompt", {

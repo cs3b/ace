@@ -97,6 +97,26 @@ describe "PiClient" do
 
       refute_includes cmd, "--system-prompt"
     end
+
+    it "passes working_dir to SafeCapture chdir" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:pi_available?, true) do
+        @client.stub(:resolve_skills_dir, nil) do
+          Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+            captured_kwargs = kwargs
+            ["ok", "", mock_status]
+          }) do
+            @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
+          end
+        end
+      end
+
+      assert_equal "/tmp/e2e-sandbox", captured_kwargs[:chdir]
+    end
   end
 
   describe "split_provider_model" do

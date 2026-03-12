@@ -5,6 +5,7 @@ require "open3"
 require "shellwords"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 
 module Ace
   module LLM
@@ -52,7 +53,7 @@ module Ace
             full_prompt = build_full_prompt(prompt, options)
 
             cmd = build_opencode_command_with_prompt(full_prompt, options)
-            stdout, stderr, status = execute_opencode_command(cmd)
+            stdout, stderr, status = execute_opencode_command(cmd, options: options)
 
             parse_opencode_response(stdout, stderr, status, full_prompt, options)
           rescue => e
@@ -194,10 +195,19 @@ module Ace
           end
 
 
-          def execute_opencode_command(cmd, timeout: nil)
+          def execute_opencode_command(cmd, timeout: nil, options: {})
             timeout_val = timeout || @options[:timeout] || 120
-            # Provide empty stdin to prevent hanging on interactive prompts
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: "", provider_name: "OpenCode")
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env]
+            )
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              stdin_data: "",
+              chdir: working_dir,
+              provider_name: "OpenCode"
+            )
           end
 
           def parse_opencode_response(stdout, stderr, status, prompt, options)

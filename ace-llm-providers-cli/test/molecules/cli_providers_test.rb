@@ -43,7 +43,7 @@ describe "CLI Providers" do
       captured_cmd = nil
 
       @client.stub :validate_claude_availability!, true do
-        @client.stub :execute_claude_command, lambda { |cmd, prompt, subprocess_env: nil|
+        @client.stub :execute_claude_command, lambda { |cmd, prompt, subprocess_env: nil, working_dir: nil|
           captured_cmd = cmd
           ['{"result":"ok","usage":{}}', "", status]
         } do

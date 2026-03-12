@@ -5,6 +5,7 @@ require "open3"
 require "shellwords"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 require_relative "atoms/command_rewriter"
 require_relative "atoms/command_formatters"
 require_relative "atoms/worktree_dir_resolver"
@@ -52,9 +53,14 @@ module Ace
 
             # Convert messages to prompt format
             prompt = format_messages_as_prompt(messages)
-            prompt = rewrite_skill_commands(prompt)
+            subprocess_env = options[:subprocess_env]
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
 
-            cmd = build_codex_command(prompt, options)
+            cmd = build_codex_command(prompt, options, working_dir: working_dir)
             stdout, stderr, status = execute_codex_command(cmd, prompt, options)
 
             parse_codex_response(stdout, stderr, status, prompt, options)
@@ -140,7 +146,11 @@ module Ace
             end
           end
 
-          def build_codex_command(prompt, options)
+          def build_codex_command(prompt, options, working_dir: nil)
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env]
+            )
             # Use codex exec for non-interactive execution
             cmd = ["codex", "exec"]
 
@@ -158,7 +168,7 @@ module Ace
             # These would need to be incorporated into the prompt itself
 
             # Add writable dir for git worktree metadata
-            if (git_dir = Atoms::WorktreeDirResolver.call)
+            if (git_dir = Atoms::WorktreeDirResolver.call(working_dir: working_dir))
               cmd << "--add-dir" << git_dir
             end
 
@@ -189,7 +199,17 @@ module Ace
             end
 
             timeout_val = @options[:timeout] || 120
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: input, provider_name: "Codex")
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env]
+            )
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              stdin_data: input,
+              chdir: working_dir,
+              provider_name: "Codex"
+            )
           end
 
           def parse_codex_response(stdout, stderr, status, prompt, options)
@@ -248,8 +268,8 @@ module Ace
             raise error
           end
 
-          def rewrite_skill_commands(prompt)
-            skills_dir = resolve_skills_dir
+          def rewrite_skill_commands(prompt, working_dir: nil)
+            skills_dir = resolve_skills_dir(working_dir: working_dir)
             return prompt unless skills_dir
 
             skill_names = @skill_name_reader.call(skills_dir)
@@ -258,11 +278,12 @@ module Ace
             Atoms::CommandRewriter.call(prompt, skill_names: skill_names, formatter: Atoms::CommandFormatters::CODEX_FORMATTER)
           end
 
-          def resolve_skills_dir
+          def resolve_skills_dir(working_dir: nil)
             configured = @options[:skills_dir] || @generation_config[:skills_dir]
             return configured if configured && Dir.exist?(configured)
 
-            candidate_dir = File.join(Dir.pwd, ".codex", "skills")
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir
+            candidate_dir = File.join(working_dir, ".codex", "skills")
             candidate_dir if Dir.exist?(candidate_dir)
           end
         end

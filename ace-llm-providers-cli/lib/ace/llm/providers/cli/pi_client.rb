@@ -5,6 +5,7 @@ require "open3"
 require "shellwords"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 require_relative "atoms/command_rewriter"
 require_relative "atoms/command_formatters"
 require_relative "molecules/skill_name_reader"
@@ -48,10 +49,15 @@ module Ace
 
             prompt = format_messages_as_prompt(messages)
             full_prompt, system_prompt = build_full_prompt(prompt, options)
-            full_prompt = rewrite_skill_commands(full_prompt)
+            subprocess_env = options[:subprocess_env]
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            full_prompt = rewrite_skill_commands(full_prompt, working_dir: working_dir)
 
             cmd = build_pi_command(full_prompt, options, system_prompt: system_prompt)
-            stdout, stderr, status = execute_pi_command(cmd)
+            stdout, stderr, status = execute_pi_command(cmd, working_dir: working_dir)
 
             parse_pi_response(stdout, stderr, status, full_prompt, options)
           rescue => e
@@ -116,8 +122,8 @@ module Ace
           end
 
           # Rewrite /name → /skill:name in the prompt for known skills
-          def rewrite_skill_commands(prompt)
-            skills_dir = resolve_skills_dir
+          def rewrite_skill_commands(prompt, working_dir: nil)
+            skills_dir = resolve_skills_dir(working_dir: working_dir)
             return prompt unless skills_dir
 
             skill_names = @skill_name_reader.call(skills_dir)
@@ -126,11 +132,12 @@ module Ace
             Atoms::CommandRewriter.call(prompt, skill_names: skill_names, formatter: Atoms::CommandFormatters::PI_FORMATTER)
           end
 
-          def resolve_skills_dir
+          def resolve_skills_dir(working_dir: nil)
             configured = @options[:skills_dir] || @generation_config[:skills_dir]
             return configured if configured && Dir.exist?(configured)
 
-            candidate_dir = File.join(Dir.pwd, ".pi", "skills")
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir
+            candidate_dir = File.join(working_dir, ".pi", "skills")
             candidate_dir if Dir.exist?(candidate_dir)
           end
 
@@ -193,9 +200,15 @@ module Ace
             [parts[0], parts[1]]
           end
 
-          def execute_pi_command(cmd, timeout: nil)
+          def execute_pi_command(cmd, timeout: nil, working_dir: nil)
             timeout_val = timeout || @options[:timeout] || 120
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: "", provider_name: "Pi")
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              stdin_data: "",
+              chdir: working_dir,
+              provider_name: "Pi"
+            )
           end
 
           def parse_pi_response(stdout, stderr, status, prompt, options)

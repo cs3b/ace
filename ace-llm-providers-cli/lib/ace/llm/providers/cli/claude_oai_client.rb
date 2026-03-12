@@ -5,6 +5,7 @@ require "open3"
 require "shellwords"
 
 require_relative "cli_args_support"
+require_relative "atoms/execution_context"
 require_relative "atoms/command_rewriter"
 require_relative "atoms/command_formatters"
 require_relative "molecules/skill_name_reader"
@@ -48,11 +49,20 @@ module Ace
             validate_claude_availability!
 
             prompt = format_messages_as_prompt(messages)
-            prompt = rewrite_skill_commands(prompt)
+            subprocess_env = options.delete(:subprocess_env)
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
 
             cmd = build_claude_command(options)
-            subprocess_env = options.delete(:subprocess_env)
-            stdout, stderr, status = execute_claude_command(cmd, prompt, subprocess_env: subprocess_env)
+            stdout, stderr, status = execute_claude_command(
+              cmd,
+              prompt,
+              subprocess_env: subprocess_env,
+              working_dir: working_dir
+            )
 
             parse_claude_response(stdout, stderr, status, prompt, options)
           rescue => e
@@ -150,7 +160,7 @@ module Ace
             cmd
           end
 
-          def execute_claude_command(cmd, prompt, subprocess_env: nil)
+          def execute_claude_command(cmd, prompt, subprocess_env: nil, working_dir: nil)
             timeout_val = @options[:timeout] || 120
 
             # Build env with backend-specific vars for Anthropic-compatible routing
@@ -159,7 +169,14 @@ module Ace
             env.merge!(subprocess_env) if subprocess_env
 
             debug_subprocess("spawn timeout=#{timeout_val}s cmd=#{cmd.join(" ")} prompt_bytes=#{prompt.to_s.bytesize}")
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: prompt.to_s, env: env, provider_name: "Claude OAI")
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              stdin_data: prompt.to_s,
+              chdir: working_dir,
+              env: env,
+              provider_name: "Claude OAI"
+            )
           end
 
           # Build env vars hash for the current backend
@@ -277,8 +294,8 @@ module Ace
             raise error
           end
 
-          def rewrite_skill_commands(prompt)
-            skills_dir = resolve_skills_dir
+          def rewrite_skill_commands(prompt, working_dir: nil)
+            skills_dir = resolve_skills_dir(working_dir: working_dir)
             return prompt unless skills_dir
 
             skill_names = @skill_name_reader.call(skills_dir)
@@ -287,13 +304,14 @@ module Ace
             Atoms::CommandRewriter.call(prompt, skill_names: skill_names, formatter: Atoms::CommandFormatters::CODEX_FORMATTER)
           end
 
-          def resolve_skills_dir
+          def resolve_skills_dir(working_dir: nil)
             configured = @options[:skills_dir] || @generation_config[:skills_dir]
             return configured if configured && Dir.exist?(configured)
 
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir
             candidate_dirs = [
-              File.join(Dir.pwd, ".claude", "skills"),
-              File.join(Dir.pwd, ".agent", "skills")
+              File.join(working_dir, ".claude", "skills"),
+              File.join(working_dir, ".agent", "skills")
             ]
             candidate_dirs.find { |dir| Dir.exist?(dir) }
           end

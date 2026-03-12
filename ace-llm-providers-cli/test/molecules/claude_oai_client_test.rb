@@ -167,8 +167,10 @@ describe "ClaudeOaiClient" do
   describe "execute_claude_command env injection" do
     def run_with_captured_env(&block)
       captured_env = nil
+      captured_chdir = nil
       fake_capture = lambda { |*_args, **kwargs|
         captured_env = kwargs[:env]
+        captured_chdir = kwargs[:chdir]
         mock_status = Object.new
         mock_status.define_singleton_method(:success?) { true }
         mock_status.define_singleton_method(:exitstatus) { 0 }
@@ -178,14 +180,14 @@ describe "ClaudeOaiClient" do
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, fake_capture) do
         block.call
       end
-      captured_env
+      [captured_env, captured_chdir]
     end
 
     it "injects backend env vars into subprocess" do
       old_val = ENV["ZAI_API_KEY"]
       ENV["ZAI_API_KEY"] = "injected-key"
 
-      env = run_with_captured_env do
+      env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello")
       end
 
@@ -198,13 +200,21 @@ describe "ClaudeOaiClient" do
     end
 
     it "merges subprocess_env on top of backend env" do
-      env = run_with_captured_env do
+      env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello",
                      subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"})
       end
 
       assert_equal "TS-TEST-001-e2e", env["ACE_TMUX_SESSION"]
       assert_equal "https://api.z.ai/api/anthropic", env["ANTHROPIC_BASE_URL"]
+    end
+
+    it "passes working_dir as subprocess chdir" do
+      _env, chdir = run_with_captured_env do
+        @client.send(:execute_claude_command, ["claude", "-p"], "hello", working_dir: "/tmp/e2e-sandbox")
+      end
+
+      assert_equal "/tmp/e2e-sandbox", chdir
     end
   end
 
