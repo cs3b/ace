@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-03-12
+
+### Fixed
+- Restored the Codex model override on the canonical `as-task-work` skill so the generated Codex projection uses `gpt-5.3-codex-spark` consistently with the other fork-context skills.
+
+## [0.28.1] - 2026-03-12
+
+### Changed
+- Updated task and bug workflow guidance to reference bundle-first follow-up workflows and current canonical handbook path examples.
+
+## [0.28.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-release-navigator` and `as-task-finder` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+## [0.27.1] - 2026-03-12
+
+### Fixed
+- Removed the mistaken provider-specific model override from the canonical `as-task-work` skill so task work projections keep their intended shared metadata.
+
+## [0.27.0] - 2026-03-10
+
+### Added
+- Added canonical handbook-owned release navigator and task finder skills with package workflows for release/task discovery.
+
+
+## [0.26.1] - 2026-03-10
+
+### Fixed
+- Added missing canonical `# bundle:` and `# agent:` metadata to migrated task workflow skills so they pass the strict `SKILL.md` schema introduced with typed canonical skills.
+
+## [0.26.0] - 2026-03-09
+
+### Added
+- Added canonical workflow skills for migrated task-domain capabilities under `handbook/skills/`, including bug/docs/idea/retro/task/test flows (`as-bug-*`, `as-docs-update-*`, `as-idea-*`, `as-retro-*`, `as-task-*`, `as-test-*`).
+
+### Changed
+- Expanded `skill://` canonical discovery coverage for `ace-task` from a single seed skill to a broader typed workflow set.
+
+
+## [0.25.0] - 2026-03-09
+
+### Added
+- Marked `as-task-plan` skill as assign-capable with `assign.source` metadata
+
+## [0.24.0] - 2026-03-09
+
+### Added
+- Added `skill-sources` gem defaults registration at `.ace-defaults/nav/protocols/skill-sources/ace-task.yml` so `skill://` can discover canonical `handbook/skills` entries from `ace-task`.
+
+## [0.23.0] - 2026-03-09
+
+### Added
+- Added canonical workflow skill example at `handbook/skills/as-task-plan/SKILL.md` with execution binding to `wfi://task/plan`.
+
 ## [0.22.2] - 2026-03-08
 
 ### Technical
