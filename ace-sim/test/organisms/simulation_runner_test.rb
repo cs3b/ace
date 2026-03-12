@@ -189,6 +189,10 @@ class SimulationRunnerTest < AceSimTestCase
       assert_equal "failed", result[:status]
       assert_equal "Final synthesis failed", result[:error]
       assert_equal "failed", result[:final_stage]["status"]
+      run_dir = File.join(dir, "simulations", session.run_id)
+      assert File.exist?(File.join(run_dir, "synthesis.yml"))
+      assert File.exist?(File.join(run_dir, "final", "source.original.md"))
+      assert File.exist?(File.join(run_dir, "final", "input.md"))
     end
   end
 
