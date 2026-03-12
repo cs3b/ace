@@ -31,7 +31,7 @@ Work through verified (pending) feedback items one by one, implementing fixes an
 ## Prerequisites
 
 Before running this workflow:
-1. Run a code review: `/as-review-run` or `/as-review-pr`
+1. Run a code review: `ace-bundle wfi://review/run` or `ace-bundle wfi://review/pr`
 2. Verify feedback items: `ace-review-feedback verify <id> --valid` for confirmed issues
 
 ## Instructions

@@ -101,7 +101,7 @@ ace-review-feedback list --session .ace-local/review/sessions/review-8p2pk3
 **For thorough verification**, use the dedicated verification workflow:
 
 ```
-/as-review-verify-feedback
+ace-bundle wfi://review/verify-feedback
 ```
 
 This workflow guides you through multi-dimensional claim analysis:

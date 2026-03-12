@@ -39,7 +39,7 @@ This workflow ensures each claim dimension is verified.
 ## Prerequisites
 
 Before running this workflow, you need feedback items from a code review:
-1. Run a code review: `/as-review-run` or `/as-review-pr`
+1. Run a code review: `ace-bundle wfi://review/run` or `ace-bundle wfi://review/pr`
 2. Feedback items will be in `draft` status
 
 ## Instructions
