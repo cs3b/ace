@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-12
+
+### Added
+- Added Codex-specific delegated execution metadata to the canonical `as-b36ts` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+## [0.9.1] - 2026-03-10
+
+### Fixed
+- Added the missing canonical `# bundle:` metadata to the `as-b36ts` skill so it validates under the strict typed skill schema.
+
+## [0.9.0] - 2026-03-09
+
+### Added
+- Added `skill-sources` gem defaults registration at `.ace-defaults/nav/protocols/skill-sources/ace-b36ts.yml` so `skill://` can discover canonical `handbook/skills` entries from `ace-b36ts`.
+
+## [0.8.0] - 2026-03-09
+
+### Added
+- Added canonical capability skill example at `handbook/skills/as-b36ts/SKILL.md` with workflow binding to `wfi://b36ts`.
+
 ## [0.7.5] - 2026-02-28
 
 ### Fixed
