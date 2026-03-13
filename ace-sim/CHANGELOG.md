@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-03-13
+
+### Changed
+- Updated the full-chain synthesis E2E scenario to verify complete chain aggregation and recorded final-stage outcomes, including cleanly captured external synthesis failures.
+
 ## [0.8.1] - 2026-03-12
 
 ### Fixed
