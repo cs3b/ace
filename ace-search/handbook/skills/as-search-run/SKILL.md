@@ -2,7 +2,6 @@
 name: as-search-run
 description: SEARCH code patterns and files - intelligent discovery
 # bundle: wfi://search/run
-# context: fork for codex
 # agent: Explore
 user-invocable: true
 allowed-tools:
@@ -20,14 +19,29 @@ integration:
     - opencode
     - pi
   providers:
-    codex:
+    claude:
       frontmatter:
         context: fork
-        model: gpt-5.3-codex-spark
+        model: haiku
 skill:
   kind: workflow
   execution:
     workflow: wfi://search/run
 ---
 
-read and run `ace-bundle wfi://search/run`
+## Arguments
+
+Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+## Variables
+
+None
+
+## Execution
+
+- You are working in the current project.
+- Run `mise exec -- ace-bundle wfi://search/run` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this project.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- When the workflow requires edits, tests, or commits, perform them in this project.
