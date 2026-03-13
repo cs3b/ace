@@ -2,7 +2,6 @@
 name: as-test-verify-suite
 description: Verify test suite health and enforce performance budgets
 # bundle: wfi://test/verify-suite
-# context: fork for codex
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -24,11 +23,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
