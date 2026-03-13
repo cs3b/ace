@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r.1
-status: draft
+status: pending
 priority: high
 created_at: "2026-03-12 17:25:43"
 estimate: Medium

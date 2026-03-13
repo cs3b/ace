@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r
-status: draft
+status: pending
 priority: high
 created_at: "2026-03-12 17:24:10"
 estimate: TBD
@@ -21,12 +21,18 @@ worktree:
 
 # Create ace-support-cli gem to replace dry-cli
 
+## Review Questions (Resolved)
+
+- [x] **ADR-024 compliance**: Follow ADR-024 strictly — no shims, no deprecation warnings, no require path aliases. Subtask 3 updated to delete old `dry_cli/` directory entirely. Subtask 4 updates all consumers in same branch.
+- [x] **Downstream gem count**: Corrected from ~19 to ~26 throughout subtask 4 (27 gems with dry-cli minus ace-support-core).
+- [x] **convert_types() non-option usage**: Removed claim. Research confirmed zero non-option uses. Method deleted entirely in subtask 3.
+
 ## Behavioral Specification
 
 ### User Experience
 - **Input**: CLI command authors define commands using `Ace::Support::Cli::Command` with `desc`, `option`, `argument`, `example`, and `register` — the same DSL shape as dry-cli.
 - **Process**: Options declared with `type: :integer`, `:float`, or `:boolean` are automatically coerced by the parser before reaching `call()`. Array options accumulate from repeated flags natively. No monkey-patches, no `convert_types()`, no `ArgvCoalescer`.
-- **Output**: All ~103 CLI commands across ~27 gems work identically to today but with correct types, and dry-cli is removed from the dependency tree.
+- **Output**: All 103 CLI commands across 27 gems work identically to today but with correct types, and dry-cli is removed from the dependency tree.
 
 ### Expected Behavior
 
@@ -133,7 +139,7 @@ Ace::Support::Cli::Runner.new(Ace::MyTool::CLI::Registry).call
 - [ ] **Array accumulation works**: repeated `--flag val` accumulates into arrays natively.
 - [ ] **DSL compatible**: `desc`, `option`, `argument`, `example`, `register` work identically to dry-cli.
 - [ ] **Help output identical**: `--help` and `-h` produce the same formatted output as current monkey-patched dry-cli.
-- [ ] **All commands migrated**: ~103 CLI command classes across ~27 gems use ace-support-cli.
+- [ ] **All commands migrated**: 103 CLI command classes across 27 gems use ace-support-cli.
 - [ ] **dry-cli removed**: no gem in the monorepo depends on dry-cli.
 - [ ] **convert_types eliminated**: no command uses `convert_types()` or manual `.to_i`/`.to_f` for option values.
 - [ ] **ArgvCoalescer eliminated**: no command needs ARGV preprocessing for array options.
@@ -150,7 +156,7 @@ Ace::Support::Cli::Runner.new(Ace::MyTool::CLI::Registry).call
 - **Slice Type**: Orchestrator
 - **Slice Outcome**: dry-cli is replaced across the entire monorepo with a purpose-built ace-support-cli gem that solves type coercion, array accumulation, and help formatting natively.
 - **Advisory Size**: large
-- **Context Dependencies**: dry-cli DSL surface, 27 dependent gems, 103 command classes, 13 monkey-patch/wrapper files in ace-support-core
+- **Context Dependencies**: dry-cli DSL surface, 27 dependent gems, 103 command classes, 33 executables, 13 monkey-patch/wrapper files in ace-support-core
 
 ### Verification Plan
 
@@ -201,8 +207,8 @@ Replace dry-cli with a purpose-built ace-support-cli gem that provides automatic
 ### Consumer Packages
 
 - **ace-support-core**: primary consumer, adapts Base module to new gem
-- **All ~27 gems with CLI commands**: swap base class and requires
-- **32 executables**: update entry points
+- **All 26 downstream gems with CLI commands**: swap base class and requires
+- **33 executables**: update entry points
 
 ### Concept Inventory (Orchestrator Only)
 
@@ -234,7 +240,7 @@ Replace dry-cli with a purpose-built ace-support-cli gem that provides automatic
 - ❌ Adding new CLI features beyond what dry-cli provided (except type coercion fix)
 - ❌ Changing help output format (must match current output)
 - ❌ Replacing non-CLI uses of dry-cli patterns (if any exist)
-- ❌ Redesigning the `Ace::Core::CLI::DryCli::Base` module interface (only swap underlying dependency)
+- ❌ Redesigning the `Ace::Core::CLI::Base` module helper interface (helpers preserved, only base class and require path change)
 
 ## References
 
