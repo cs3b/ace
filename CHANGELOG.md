@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.835] - 2026-03-13
+
+### Changed
+- **ace-review v0.44.2**: Updated the dry-run error-handling E2E scenario so invalid-model captures are treated as prepared-session output rather than validation failures.
+- **ace-sim v0.8.2**: Updated the full-chain synthesis E2E scenario to verify aggregated step inputs and recorded final-stage outcomes, including cleanly captured external synthesis failures.
+- **ace-test-runner-e2e v0.24.5**: Updated the project E2E suite report-generation default model override to `claude:sonnet@ro`.
+
 ## [0.9.834] - 2026-03-12
 
 ### Fixed
