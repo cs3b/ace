@@ -53,7 +53,7 @@ Work through the plan checklist, step by step:
 - If a test failure is undiagnosable after one attempt: stop and report
 
 **Task lifecycle:**
-- `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation
+- `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress — the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification
 - Never modify task frontmatter directly — use `ace-task update <ref> --set key=value`
 
