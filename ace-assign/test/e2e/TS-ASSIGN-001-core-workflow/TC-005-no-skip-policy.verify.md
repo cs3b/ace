@@ -16,7 +16,8 @@ Validation order (impact-first):
 3. **Skip Assessment removed** — `skip-assessment.stdout` confirms no "Skip Assessment" section exists (empty or no match).
 4. **Attempt-first section** — `attempt-first.stdout` contains the External Action Rule (Attempt-First) section header.
 5. **Evidence requirements** — `evidence-rules.stdout` contains requirements for "command attempted" and "exact error output".
-6. **Skill stays thin** — `skill-thin.stdout` confirms the skill file does NOT contain duplicated policy text.
+6. **Setup preflight** — `preflight.stdout` shows prerequisite verification passed and `preflight.exit` is `0`.
+7. **Skill stays thin** — `skill-thin.stdout` confirms the skill file does NOT contain duplicated policy text.
 
 ## Verdict
 
