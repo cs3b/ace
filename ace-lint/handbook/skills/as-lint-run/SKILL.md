@@ -24,4 +24,4 @@ skill:
     workflow: wfi://lint/run
 ---
 
-read and run `ace-bundle wfi://lint/run`
+Load and run `mise exec -- ace-bundle wfi://lint/run` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

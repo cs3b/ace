@@ -21,4 +21,4 @@ skill:
     workflow: wfi://bug/fix
 ---
 
-read and run `ace-bundle wfi://bug/fix`
+Load and run `mise exec -- ace-bundle wfi://bug/fix` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

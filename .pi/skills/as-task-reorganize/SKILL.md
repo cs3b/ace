@@ -15,4 +15,4 @@ skill:
     workflow: wfi://task/reorganize
 ---
 
-read and run `ace-bundle wfi://task/reorganize`
+Load and run `mise exec -- ace-bundle wfi://task/reorganize` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

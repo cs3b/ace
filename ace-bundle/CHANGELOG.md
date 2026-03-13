@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.36.5] - 2026-03-13
+
+### Changed
+- Updated the canonical bundle and onboarding skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
 ## [0.36.4] - 2026-03-13
 
 ### Fixed

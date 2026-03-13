@@ -27,4 +27,4 @@ skill:
     workflow: wfi://docs/squash-changelog
 ---
 
-read and run `ace-bundle wfi://docs/squash-changelog`
+Load and run `mise exec -- ace-bundle wfi://docs/squash-changelog` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

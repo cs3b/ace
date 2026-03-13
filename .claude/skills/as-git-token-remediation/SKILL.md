@@ -15,4 +15,4 @@ skill:
     workflow: wfi://git/token-remediation
 ---
 
-read and run `ace-bundle wfi://git/token-remediation`
+Load and run `mise exec -- ace-bundle wfi://git/token-remediation` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

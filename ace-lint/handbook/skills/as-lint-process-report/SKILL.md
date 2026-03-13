@@ -26,4 +26,4 @@ skill:
     workflow: wfi://lint/process-report
 ---
 
-read and run `ace-bundle wfi://lint/process-report`
+Load and run `mise exec -- ace-bundle wfi://lint/process-report` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

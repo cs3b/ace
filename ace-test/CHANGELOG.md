@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-03-13
+
+### Changed
+- Updated canonical test-planning and suite-health skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
 ## [0.4.2] - 2026-03-13
 
 ### Changed

@@ -21,4 +21,4 @@ skill:
     workflow: wfi://handbook/manage-workflows
 ---
 
-read and run `ace-bundle wfi://handbook/manage-workflows`
+Load and run `mise exec -- ace-bundle wfi://handbook/manage-workflows` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

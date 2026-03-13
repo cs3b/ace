@@ -10,7 +10,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     create_provider_manifest("codex", ".codex/skills")
     create_skill_source_registration("ace-demo", "ace-demo/handbook/skills")
     create_skill("as-test-sync", <<~BODY)
-      read and run `ace-bundle wfi://test/sync`
+      Load and run `mise exec -- ace-bundle wfi://test/sync` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
   end
 
@@ -50,7 +50,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     }
 
     create_skill("as-test-override", <<~BODY, frontmatter: frontmatter)
-      read and run `ace-bundle wfi://test/override`
+      Load and run `mise exec -- ace-bundle wfi://test/override` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
 
     syncer.sync(provider: "pi")
@@ -244,9 +244,9 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
   def test_sync_preserves_conditional_sandbox_branch_in_skill_body
     create_skill("as-e2e-run", <<~BODY)
       If `$ARGUMENTS` contains `--sandbox`:
-        read and run `ace-bundle wfi://e2e/execute`
+        Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
       Otherwise:
-        read and run `ace-bundle wfi://e2e/run`
+        Load and run `mise exec -- ace-bundle wfi://e2e/run` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
 
     syncer.sync(provider: "claude")
@@ -256,9 +256,9 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-e2e-run", "SKILL.md"))
 
     assert_includes claude_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
-    assert_includes claude_rendered, "read and run `ace-bundle wfi://e2e/execute`"
+    assert_includes claude_rendered, "Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project"
     assert_includes codex_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
-    assert_includes codex_rendered, "read and run `ace-bundle wfi://e2e/execute`"
+    assert_includes codex_rendered, "Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project"
   end
 
   private

@@ -33,4 +33,4 @@ skill:
     workflow: wfi://docs/update-tools
 ---
 
-read and run `ace-bundle wfi://docs/update-tools`
+Load and run `mise exec -- ace-bundle wfi://docs/update-tools` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

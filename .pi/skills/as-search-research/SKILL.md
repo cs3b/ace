@@ -15,4 +15,4 @@ skill:
     workflow: wfi://search/research
 ---
 
-read and run `ace-bundle wfi://search/research`
+Load and run `mise exec -- ace-bundle wfi://search/research` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

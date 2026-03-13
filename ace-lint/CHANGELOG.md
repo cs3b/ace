@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-03-13
+
+### Changed
+- Updated canonical lint skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+### Technical
+- Updated markdown-linter fixture coverage for the new compact canonical skill execution template.
+
 ## [0.20.2] - 2026-03-13
 
 ### Changed

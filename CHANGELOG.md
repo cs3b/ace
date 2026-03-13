@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.844] - 2026-03-13
+
+### Changed
+- **ace-assign v0.31.4**: Updated canonical assign skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-b36ts v0.10.2**: Updated the canonical `as-b36ts` skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-bundle v0.36.5**: Updated the canonical bundle and onboarding skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-demo v0.10.3**: Updated canonical demo skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-docs v0.25.3**: Updated canonical docs skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-git v0.14.3**: Updated canonical git workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-git-secrets v0.9.2**: Updated canonical git security skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-git-worktree v0.15.3**: Updated canonical worktree skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-handbook v0.15.6**: Updated handbook-owned canonical skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-handbook-integration-claude v0.3.1**: Updated the canonical Claude integration sync skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-idea v0.14.3**: Updated the canonical idea review skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-lint v0.20.3**: Updated canonical lint skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-overseer v0.5.2**: Updated the canonical overseer skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-prompt-prep v0.19.3**: Updated the canonical prompt-prep skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-retro v0.12.1**: Updated the canonical handbook self-improvement skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-review v0.44.3**: Updated canonical review skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-search v0.21.4**: Updated canonical search research skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-sim v0.8.5**: Updated the canonical simulation skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+- **ace-task v0.28.4**: Updated canonical task, bug, docs, retro, idea, and test skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-test v0.4.3**: Updated canonical test-planning and suite-health skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+- **ace-test-runner-e2e v0.24.10**: Updated canonical E2E workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+### Technical
+- **ace-handbook v0.15.6**: Refreshed provider sync and status collector regression coverage for the new compact canonical skill execution template.
+- **ace-lint v0.20.3**: Updated markdown-linter fixture coverage for the new compact canonical skill execution template.
+
 ## [0.9.843] - 2026-03-13
 
 ### Changed

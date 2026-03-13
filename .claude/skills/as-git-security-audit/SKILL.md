@@ -15,4 +15,4 @@ skill:
     workflow: wfi://git/security-audit
 ---
 
-read and run `ace-bundle wfi://git/security-audit`
+Load and run `mise exec -- ace-bundle wfi://git/security-audit` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
