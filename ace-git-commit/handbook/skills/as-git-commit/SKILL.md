@@ -25,11 +25,11 @@ integration:
         context: fork
         model: haiku
     codex:
-      runtime:
-        ace-llm: codex:spark@yolo
-        prompt_context:
-          intent: prepare describe intent of recent changes
-          changed_files: list of files that have been changed in this session
+      context: ace-llm
+      ace-llm: codex:spark@yolo
+      prompt_context:
+        intention: describe intent of recent changes
+        changed_files: list files changed in this session
 skill:
   kind: workflow
   execution:
