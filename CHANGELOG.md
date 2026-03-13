@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.847] - 2026-03-13
+
+### Fixed
+- **ace-assign v0.32.1**: Corrected generated assignment phase rendering so `verify-test-suite` and `verify-e2e` persist assignment-safe phase bodies and child overlays no longer serialize malformed nested context blocks.
+
+### Technical
+- Coordinated release of `ace-assign` with phase-template rendering support and merged canonical/local assignment phase metadata preservation.
+
 ## [0.9.846] - 2026-03-13
 
 ### Changed
