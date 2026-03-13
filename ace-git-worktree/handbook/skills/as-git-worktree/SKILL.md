@@ -2,7 +2,6 @@
 name: as-git-worktree
 description: Manage git worktrees with task-aware automation
 # bundle: wfi://git/worktree
-# context: fork for codex
 # agent: Bash
 user-invocable: true
 allowed-tools:
@@ -19,11 +18,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
