@@ -24,6 +24,7 @@ module Ace
 
         attr_reader :number, :name, :status, :instructions, :report, :error,
                     :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
+                    :workflow,
                     :batch_parent, :parallel, :max_parallel, :fork_retry_limit,
                     :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
                     :stall_reason
@@ -52,7 +53,7 @@ module Ace
         # @param stall_reason [String, nil] Last agent message captured when fork stalled
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
                        started_at: nil, completed_at: nil, added_by: nil, parent: nil,
-                       file_path: nil, skill: nil, context: nil,
+                       file_path: nil, skill: nil, workflow: nil, context: nil,
                        batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
                        fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
                        fork_pid_file: nil, stall_reason: nil)
@@ -75,6 +76,7 @@ module Ace
           @parent = parent&.freeze
           @file_path = file_path&.freeze
           @skill = skill&.freeze
+          @workflow = workflow&.freeze
           @context = context&.freeze
           @batch_parent = batch_parent.nil? ? nil : !!batch_parent
           @parallel = parallel.nil? ? nil : !!parallel
@@ -126,6 +128,7 @@ module Ace
             "name" => name,
             "status" => status.to_s,
             "skill" => skill,
+            "workflow" => workflow,
             "context" => context,
             "batch_parent" => batch_parent,
             "parallel" => parallel,

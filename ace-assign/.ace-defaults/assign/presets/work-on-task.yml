@@ -11,18 +11,18 @@ parameters:
 
 steps:
   - name: onboard
-    skill: as-onboard
+    workflow: wfi://onboard
+    taskref: "{{taskref}}"
     instructions:
-      - Onboard yourself to the codebase.
-      - Load context and understand the project structure.
+      - "Load project context for task {{taskref}}."
 
   - name: work-on-task
     context: fork
-    skill: as-task-work
+    workflow: wfi://task/work
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - "Work on task {{taskref}}."
-      - Implement the required changes following project conventions.
+      - "Implement task {{taskref}} in the forked execution context."
+      - "Keep task status aligned with implementation progress and finish by marking the task done."
+      - "Preserve any public contract, docs, test, and release follow-ups required by the resulting diff."
 
   - name: mark-task-done
     instructions:
@@ -30,83 +30,78 @@ steps:
       - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
 
   - name: verify-test-suite
-    skill: as-test-verify-suite
+    workflow: wfi://test/verify-suite
+    taskref: "{{taskref}}"
     instructions:
-      - "Identify packages modified in this task."
-      - "For each modified package, run: cd <package> && ace-test --profile 6"
-      - "Check profile output against performance budgets: atoms <50ms, molecules <100ms, integration <1s, full package suite <30s."
-      - "If any test exceeds thresholds, investigate and fix (stub I/O, mock network calls)."
-      - "Then run ace-test-suite to verify no cross-package regressions."
-      - "Skip if changes are documentation-only (no .rb files modified)."
+      - "Verify test coverage and performance for task {{taskref}} changes."
+      - "Focus on packages modified by this task before any broader regression checks required by the workflow."
+      - "If changes are documentation-only or otherwise do not affect runnable code, mark this phase skipped with a clear reason."
 
   - name: verify-e2e
-    skill: as-e2e-review
+    workflow: wfi://e2e/review
+    taskref: "{{taskref}}"
     instructions:
-      - "For each package heavily modified in this task, run /as-e2e-review <package>."
-      - "Review the coverage matrix — identify gaps and stale TCs."
-      - "If TCs need updating, update them before running."
-      - "Run ace-test-e2e-suite <package> for each heavily modified package (not full suite)."
-      - "Skip if no public CLI API was changed (internal refactoring only)."
+      - "Review E2E coverage for task {{taskref}} changes when public CLI behavior moved."
+      - "Limit review and any follow-up execution to packages whose public CLI/API behavior changed."
+      - "If the review shows stale or missing scenarios, update them before running targeted E2E verification."
+      - "Skip when the task only changed internal behavior with no public CLI/API impact."
 
   - name: release-minor
     instructions:
-      - Run /as-release to release all modified packages.
+      - Release all modified packages touched by this task.
       - Auto-detect modified packages from the current diff, bump version (minor or patch, usually minor), and update both package and root CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: update-docs
-    skill: as-docs-update
+    workflow: wfi://docs/update
     instructions:
-      - "Identify packages where CLI commands, flags, or public contracts changed."
-      - "Run /as-docs-update-usage for each affected package."
-      - "Verify updated docs with ace-docs validate."
-      - "Skip if no public API/CLI changes (internal-only work)."
+      - "Update usage/docs for public contract changes introduced by task {{taskref}}."
+      - "Limit updates to packages whose CLI commands, flags, outputs, or public APIs changed."
+      - "Validate updated docs before completing the phase."
+      - "Skip if the task introduced no public-facing contract change."
 
   - name: create-pr
-    skill: as-github-pr-create
+    workflow: wfi://github/pr/create
     instructions:
-      - Create a pull request for the changes.
-      - Capture the PR number for subsequent review steps.
+      - "Create a pull request for the task {{taskref}} changes."
+      - "Capture the PR number for the downstream review and PR-update phases."
 
   - name: review-valid-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the valid review cycle via child phases.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-fit-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the fit review cycle via child phases.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-shine-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the shine review cycle via child phases.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
-    skill: as-git-reorganize-commits
+    workflow: wfi://git/reorganize-commits
     instructions:
-      - Reorganize commits into logical groups.
-      - Group by concern (structure, implementation, tests, release).
+      - "Reorganize commits for task {{taskref}} into logical groups."
+      - "Group commits by concern where possible, such as structure, implementation, tests, docs, and release updates."
 
   - name: push-to-remote
     instructions:
@@ -115,8 +110,8 @@ steps:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    skill: as-github-pr-update
+    workflow: wfi://github/pr/update
     instructions:
-      - Update PR description with final implementation summary.
-      - Include released version numbers and key components.
-      - Ensure PR is ready for human review.
+      - "Update the PR description with the final summary for task {{taskref}}."
+      - "Include final release/version information and the key completed components when applicable."
+      - "Make sure the PR description reflects the post-review final state."

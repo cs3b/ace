@@ -42,11 +42,12 @@ module Ace
 
           raise Error, "No phases defined in config" if phases_config.empty?
 
-          # Enrich phases using skill-declared assign.source metadata.
-          phases_config = enrich_skill_declared_sub_phases(phases_config)
+          # Enrich phases using declared workflow/skill assign metadata.
+          phases_config = enrich_declared_sub_phases(phases_config)
 
           # Expand sub-phase declarations into batch parent + child phases
           phases_config = expand_sub_phases(phases_config)
+          phases_config = materialize_skill_backed_phases(phases_config)
 
           # Create assignment
           assignment = assignment_manager.create(
@@ -411,25 +412,22 @@ module Ace
 
         private
 
-        # Enrich phases by resolving skill-level assign source metadata.
+        # Enrich phases by resolving workflow-level or legacy skill-level assign source metadata.
         #
-        # If a phase has `skill: ...` and no explicit sub_phases, this looks up
-        # SKILL.md frontmatter `assign.source`, resolves the workflow, then applies
+        # If a phase has `workflow: ...` or `skill: ...` and no explicit sub_phases,
+        # this resolves the workflow and applies
         # workflow `assign.sub-phases` as phase sub_phases for deterministic runtime expansion.
         #
         # @param phases_config [Array<Hash>] Original phases from config
         # @return [Array<Hash>] Enriched phases
-        def enrich_skill_declared_sub_phases(phases_config)
+        def enrich_declared_sub_phases(phases_config)
           phases_config.map do |phase|
             next phase unless phase.is_a?(Hash)
 
             sub_phases = phase["sub_phases"] || phase["sub-phases"]
             next phase if sub_phases.is_a?(Array) && sub_phases.any?
 
-            skill_name = phase["skill"]&.to_s
-            next phase if skill_name.nil? || skill_name.empty?
-
-            assign_config = skill_source_resolver.resolve_assign_config(skill_name)
+            assign_config = resolve_phase_assign_config(phase)
             next phase unless assign_config
 
             resolved_sub_phases = assign_config[:sub_phases]
@@ -540,6 +538,7 @@ module Ace
           parent_phase.delete("sub_phases")
           parent_phase.delete("sub-phases")
           parent_phase.delete("skill")
+          parent_phase.delete("workflow")
           parent_phase["source_skill"] = source_skill if source_skill
           parent_phase["split_phase_type"] = definition["name"] || "split-subtree-root"
           parent_phase
@@ -583,7 +582,7 @@ module Ace
           lines = [
             "Subtree root orchestrator phase.",
             "This phase is orchestration-only.",
-            "Do not execute {{source_skill}} directly in this parent phase.",
+            "Do not execute the parent workflow directly in this phase.",
             "Child phases: {{sub_phases}}."
           ]
 
@@ -592,11 +591,11 @@ module Ace
               [
                 "Delegate this subtree into forked context:",
                 "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}",
-                "Inside the forked agent, run /as-assign-drive for this subtree scope."
+                "Inside the forked agent, continue execution within this subtree scope only."
               ]
             )
           else
-            lines << "Run /as-assign-drive and execute only child phases under this node."
+            lines << "Execute only child phases under this node."
           end
 
           lines
@@ -631,16 +630,22 @@ module Ace
         def build_child_sub_phase(sub_name:, child_number:, parent_number:, parent_phase:, parent_instructions:, parent_context:)
           phase_def = find_phase_definition(sub_name)
           parent_task_ref = extract_parent_taskref(parent_phase, parent_instructions)
+          instructions = if phase_def&.dig("skill")
+                           build_skill_backed_child_notes(sub_name, parent_instructions, task_ref: parent_task_ref)
+                         else
+                           build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: parent_task_ref)
+                         end
           child = {
             "number" => child_number,
             "name" => sub_name,
-            "instructions" => build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: parent_task_ref),
+            "instructions" => instructions,
             "parent" => parent_number
           }
           child["taskref"] = parent_task_ref if parent_task_ref
 
           if phase_def
-            child["skill"] = phase_def["skill"] if phase_def["skill"]
+            child["workflow"] = phase_def["workflow"] if phase_def["workflow"]
+            child["skill"] = phase_def["skill"] if phase_def["skill"] && !phase_def["workflow"]
 
             context_default = phase_def.dig("context", "default")
             child["context"] = context_default if context_default && parent_context != "fork"
@@ -662,13 +667,22 @@ module Ace
           focus = focus.gsub("<taskref>", task_ref) if task_ref && !task_ref.empty?
           context = compact_task_context(parent_text, task_ref: task_ref)
           action = child_action_instructions(sub_name, parent_text, task_ref: task_ref)
-          verification = verification_checklist(parent_text)
 
           sections = []
           sections << "Task context:\n#{context}" unless context.empty?
           sections << "Sub-phase focus:\n#{focus}"
           sections << "Action:\n#{action}"
-          sections << "Verification checklist (from parent phase goals):\n#{verification}" unless verification.empty?
+          sections.join("\n\n")
+        end
+
+        def build_skill_backed_child_notes(sub_name, parent_instructions, task_ref: nil)
+          parent_text = normalize_instructions(parent_instructions).strip
+          context = compact_task_context(parent_text, task_ref: task_ref)
+          notes = child_specific_notes(sub_name, parent_text)
+
+          sections = []
+          sections << "Task context:\n#{context}" unless context.empty?
+          sections << "Assignment-specific context:\n#{notes}" unless notes.empty?
           sections.join("\n\n")
         end
 
@@ -710,7 +724,7 @@ module Ace
 
           case sub_name
           when "onboard"
-            "- Run /as-onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
+            "- Load project context#{task_hint} using the phase workflow instructions.\n- Confirm required files and workflow context are available."
           when "plan-task"
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
@@ -720,21 +734,127 @@ module Ace
           when "verify-test"
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
           when /\Arelease(?:-.+)?\z/
-            "- Run /as-release to release all modified packages and update both package and root changelogs."
+            "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this phase."
           else
             "- Execute the #{sub_name} step."
           end
         end
 
-        # Render parent instructions as a verification checklist.
-        #
-        # @param parent_text [String]
-        # @return [String]
-        def verification_checklist(parent_text)
+        def child_specific_notes(sub_name, parent_text)
           return "" if parent_text.nil? || parent_text.empty?
 
           lines = parent_text.lines.map(&:strip).reject(&:empty?)
-          lines.map { |line| "- #{line}" }.join("\n")
+          relevant = lines.filter_map do |line|
+            if line.match?(/\AChild #{Regexp.escape(sub_name)}:/i)
+              "- #{line.sub(/\AChild #{Regexp.escape(sub_name)}:\s*/i, "")}"
+            elsif line.start_with?("Focus:")
+              "- #{line}"
+            end
+          end
+
+          relevant.join("\n")
+        end
+
+        def materialize_skill_backed_phases(phases_config)
+          phases_config.map do |phase|
+            materialize_skill_backed_phase(phase)
+          end
+        end
+
+        def materialize_skill_backed_phase(phase)
+          return phase unless phase.is_a?(Hash)
+          return phase if phase["split_phase_type"]
+
+          rendering = resolve_phase_rendering(phase)
+          return phase unless rendering
+
+          rendered_instructions = render_skill_backed_phase_instructions(
+            phase: phase,
+            rendering: rendering
+          )
+
+          materialized = phase.merge(
+            "instructions" => rendered_instructions,
+            "workflow" => rendering["workflow"]
+          )
+          materialized["source_skill"] = rendering["source_skill"] || rendering["skill"] if rendering["source_skill"] || rendering["skill"]
+          materialized["source_workflow"] = rendering["workflow"] if rendering["workflow"] && !rendering["workflow"].empty?
+          materialized.delete("skill")
+          materialized
+        end
+
+        def resolve_phase_rendering(phase)
+          explicit_workflow = phase["workflow"]&.to_s&.strip
+          if explicit_workflow && !explicit_workflow.empty?
+            canonical_phase = skill_source_resolver.assign_phase_catalog.find { |entry| entry["name"] == phase["name"]&.to_s }
+            source_skill = phase["source_skill"]&.to_s&.strip
+            source_skill = canonical_phase&.dig("source_skill") if source_skill.nil? || source_skill.empty?
+            rendering = skill_source_resolver.resolve_workflow_rendering(
+              explicit_workflow,
+              phase_name: phase["name"]&.to_s,
+              source_skill: source_skill
+            )
+            return canonical_phase ? canonical_phase.merge(rendering || {}) : rendering if rendering
+          end
+
+          explicit_skill = phase["skill"]&.to_s&.strip
+          if explicit_skill && !explicit_skill.empty?
+            return skill_source_resolver.resolve_skill_rendering(explicit_skill)
+          end
+
+          skill_source_resolver.resolve_phase_rendering(phase["name"]&.to_s)
+        end
+
+        def render_skill_backed_phase_instructions(phase:, rendering:)
+          sections = []
+
+          task_ref = extract_parent_taskref(phase, phase["instructions"])
+          sections << "Task context:\nTask reference: #{task_ref}" if task_ref && !task_ref.empty?
+
+          body = rendering["body"].to_s.strip
+          sections << body unless body.empty?
+
+          assignment_notes = assignment_specific_notes(
+            phase_name: phase["name"]&.to_s,
+            instructions: phase["instructions"]
+          )
+          sections << "Assignment-specific context:\n#{assignment_notes}" unless assignment_notes.empty?
+
+          sections.join("\n\n")
+        end
+
+        def assignment_specific_notes(phase_name:, instructions:)
+          text = normalize_instructions(instructions).strip
+          return "" if text.empty?
+
+          lines = text.lines.map(&:strip).reject(&:empty?)
+          filtered = lines.reject do |line|
+            line.start_with?("Task reference:")
+          end
+
+          if phase_name == "work-on-task"
+            filtered = filtered.reject do |line|
+              line.start_with?("Implement task ") || line.start_with?("When complete, mark the task as done:")
+            end
+          end
+
+          filtered.map { |line| "- #{line}" }.join("\n")
+        end
+
+        def resolve_phase_assign_config(phase)
+          explicit_workflow = phase["workflow"]&.to_s&.strip
+          if explicit_workflow && !explicit_workflow.empty?
+            return skill_source_resolver.resolve_workflow_assign_config(
+              explicit_workflow,
+              phase_name: phase["name"]&.to_s,
+              source_skill: phase["source_skill"]&.to_s
+            )
+          end
+
+          skill_name = phase["skill"]&.to_s
+          return nil if skill_name.nil? || skill_name.empty?
+
+          skill_source_resolver.resolve_assign_config(skill_name)
         end
 
         def pre_commit_review_action_instructions(task_hint:)

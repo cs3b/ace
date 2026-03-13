@@ -5,19 +5,19 @@ instructions:
   common:
     - "Subtree root orchestrator phase."
     - "This phase is orchestration-only."
-    - "Do not execute {{source_skill}} directly in this parent phase."
+    - "Do not execute the parent workflow directly in this parent phase."
     - "Child phases: {{sub_phases}}."
     - "If subtree execution fails: use adaptive minimal-safe replay (do not replay whole subtree by default)."
     - "Inject only required recovery phases before retrying failed or affected phases."
   fork:
     - "Delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
-    - "Inside the forked agent, run /as-assign-drive for this subtree scope."
+    - "Inside the forked agent, continue execution within this subtree scope only."
     - "Note: fork-run may take 10-30 minutes. If your environment has bash timeout limits, run in background and poll scoped status with stepped backoff (5m -> 3m -> 1m -> every 60s)."
     - "After fork-run completes: read all subtree report files before continuing. The driver is the guard — review reports to verify quality before advancing."
     - "For failed subtrees: recovery typically includes context refresh (onboard + report review) and verify-test-suite before retry."
   inline:
-    - "Run /as-assign-drive and execute only child phases under this node."
+    - "Execute only child phases under this node."
 
 goal_header: "Goal to satisfy through child phases:"
 

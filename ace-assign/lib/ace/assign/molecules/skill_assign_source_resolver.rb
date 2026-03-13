@@ -97,6 +97,8 @@ module Ace
 
           each_assign_capable_skill do |skill_name, frontmatter|
             phases = frontmatter.dig("assign", "phases")
+            workflow_source = frontmatter.dig("assign", "source")&.to_s&.strip
+            workflow_source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip if workflow_source.nil? || workflow_source.empty?
             next unless phases.is_a?(Array)
 
             phases.each do |phase|
@@ -109,12 +111,91 @@ module Ace
               entry = phase.dup
               entry["name"] = phase_name
               entry["skill"] = skill_name
+              entry["source_skill"] = skill_name
+              entry["workflow"] = workflow_source if workflow_source && !workflow_source.empty?
               entry["description"] ||= frontmatter["description"]
               catalog[phase_name] = entry
             end
           end
 
           catalog.values
+        end
+
+        # Resolve canonical skill rendering details for a skill-backed phase.
+        #
+        # @param skill_name [String]
+        # @return [Hash, nil]
+        def resolve_skill_rendering(skill_name)
+          skill_path = skill_index[skill_name] || find_skill_by_convention(skill_name)
+          return nil unless skill_path
+
+          frontmatter, skill_body = parse_frontmatter_and_body(File.read(skill_path))
+          workflow_source = frontmatter.dig("assign", "source")&.to_s&.strip
+          if workflow_source.nil? || workflow_source.empty?
+            workflow_source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip
+          end
+
+          workflow_path = resolve_workflow_path(workflow_source, skill_name)
+          workflow_body = workflow_path ? parse_frontmatter_and_body(File.read(workflow_path)).last.to_s.strip : ""
+
+          {
+            "name" => frontmatter["name"] || skill_name,
+            "description" => frontmatter["description"],
+            "skill" => skill_name,
+            "workflow" => workflow_source,
+            "workflow_path" => workflow_path,
+            "body" => workflow_body.empty? ? skill_body.to_s.strip : workflow_body
+          }
+        end
+
+        def resolve_workflow_rendering(workflow_source, phase_name: nil, source_skill: nil)
+          workflow_ref = workflow_source&.to_s&.strip
+          return nil if workflow_ref.nil? || workflow_ref.empty?
+
+          workflow_path = resolve_workflow_path(workflow_ref, phase_name || source_skill || workflow_ref)
+          return nil unless workflow_path
+
+          frontmatter, body = parse_frontmatter_and_body(File.read(workflow_path))
+          {
+            "name" => phase_name || frontmatter["name"],
+            "description" => frontmatter["description"],
+            "workflow" => workflow_ref,
+            "workflow_path" => workflow_path,
+            "source_skill" => source_skill,
+            "body" => body.to_s.strip
+          }
+        end
+
+        def resolve_workflow_assign_config(workflow_source, phase_name: nil, source_skill: nil)
+          rendering = resolve_workflow_rendering(workflow_source, phase_name: phase_name, source_skill: source_skill)
+          return nil unless rendering && rendering["workflow_path"]
+
+          workflow_frontmatter = parse_frontmatter(File.read(rendering["workflow_path"]))
+          parsed = Atoms::AssignFrontmatterParser.parse(workflow_frontmatter)
+          return nil unless parsed[:valid]
+
+          parsed[:config]
+        end
+
+        # Resolve canonical rendering details for a public phase name.
+        #
+        # @param phase_name [String]
+        # @return [Hash, nil]
+        def resolve_phase_rendering(phase_name)
+          entry = assign_phase_catalog.find { |phase| phase["name"] == phase_name }
+          return nil unless entry
+
+          workflow_rendering = resolve_workflow_rendering(
+            entry["workflow"],
+            phase_name: entry["name"],
+            source_skill: entry["source_skill"] || entry["skill"]
+          )
+          return entry.merge(workflow_rendering) if workflow_rendering
+
+          rendering = resolve_skill_rendering(entry["skill"])
+          return nil unless rendering
+
+          entry.merge(rendering)
         end
 
         private
@@ -158,14 +239,20 @@ module Ace
         end
 
         def parse_frontmatter(content)
+          parse_frontmatter_and_body(content).first
+        end
+
+        def parse_frontmatter_and_body(content)
           lines = content.lines
-          return {} unless lines.first&.strip == "---"
+          return [{}, content.to_s] unless lines.first&.strip == "---"
 
           closing_index = lines[1..]&.index { |line| line.strip == "---" }
-          return {} unless closing_index
+          return [{}, content.to_s] unless closing_index
 
           frontmatter_yaml = lines[1, closing_index].join
-          YAML.safe_load(frontmatter_yaml, permitted_classes: [Date, Time]) || {}
+          frontmatter = YAML.safe_load(frontmatter_yaml, permitted_classes: [Date, Time]) || {}
+          body_lines = lines[(closing_index + 2)..] || []
+          [frontmatter, body_lines.join]
         end
 
         def assign_capable_skill_frontmatter?(frontmatter)
@@ -178,6 +265,13 @@ module Ace
           if source.nil? || source.empty?
             raise Error, "Missing assign.source for assign-capable skill '#{skill_name}'"
           end
+        end
+
+        def resolve_workflow_path(workflow_source, reference_name)
+          return nil if workflow_source.nil? || workflow_source.empty?
+          return nil unless workflow_source.start_with?("wfi://")
+
+          resolve_source_uri(workflow_source, reference_name)
         end
 
         def each_assign_capable_skill
