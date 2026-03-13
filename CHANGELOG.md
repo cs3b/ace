@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.838] - 2026-03-13
+
+### Changed
+- **ace-sim v0.8.4**: Updated the `TS-SIM-001` default preset E2E scenario to verify preset contract and chain handoff behavior while allowing either successful synthesis or a cleanly recorded final-stage failure.
+- **ace-test-runner-e2e v0.24.7**: Increased the default E2E suite parallelism setting in project config from `6` to `8`.
+
 ## [0.9.837] - 2026-03-13
 
 ### Changed
