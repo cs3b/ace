@@ -2,7 +2,6 @@
 name: as-task-finder
 description: FIND tasks - list, filter, and discover tasks
 # bundle: wfi://task/finder
-# context: fork for codex
 # agent: Explore
 user-invocable: true
 allowed-tools:
@@ -19,11 +18,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
