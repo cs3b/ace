@@ -20,6 +20,18 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://git/reorganize-commits
+  phases:
+    - name: reorganize-commits
+      description: Reorganize commits into logical groups for clean history
+      intent:
+        phrases:
+          - "reorganize commits"
+          - "clean up commits"
+          - "rewrite commit history"
+          - "tidy commit history"
+      tags: [git, history, cleanup]
 skill:
   kind: workflow
   execution:

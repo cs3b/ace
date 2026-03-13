@@ -1014,4 +1014,107 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_includes error.message, "multiple phases are in progress"
     end
   end
+
+  def test_start_with_work_on_task_preset_emits_canonical_skill_backed_phases
+    with_temp_cache do |cache_dir|
+      project_root = File.expand_path("../../..", __dir__)
+      steps = materialize_preset_steps(project_root, "work-on-task", "taskref" => "148")
+      config_path = create_test_config(cache_dir, steps: steps, name: "work-on-task-148")
+
+      with_real_config do
+        Dir.chdir(project_root) do
+          original_project_root = ENV["PROJECT_ROOT_PATH"]
+          original_home = ENV["HOME"]
+          Dir.mktmpdir("ace-assign-home") do |temp_home|
+            ENV["PROJECT_ROOT_PATH"] = project_root
+            ENV["HOME"] = temp_home
+            Ace::Assign.reset_config!
+
+            executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+            result = executor.start(config_path)
+            state = result[:state]
+
+            assert_equal "as-onboard", state.find_by_number("010").skill
+            assert_equal "as-task-work", state.find_by_number("020.04").skill
+            assert_equal "as-test-verify-suite", state.find_by_number("040").skill
+            assert_equal "as-e2e-review", state.find_by_number("050").skill
+            assert_equal "as-docs-update", state.find_by_number("070").skill
+            assert_equal "as-github-pr-create", state.find_by_number("080").skill
+            assert_equal "as-git-reorganize-commits", state.find_by_number("120").skill
+            assert_equal "as-github-pr-update", state.find_by_number("140").skill
+          end
+        ensure
+          ENV["PROJECT_ROOT_PATH"] = original_project_root
+          ENV["HOME"] = original_home
+          Ace::Assign.reset_config!
+        end
+      end
+    end
+  end
+
+  def test_start_with_work_on_tasks_preset_emits_canonical_skill_backed_batch_phases
+    with_temp_cache do |cache_dir|
+      project_root = File.expand_path("../../..", __dir__)
+      steps = materialize_preset_steps(project_root, "work-on-tasks", "taskrefs" => %w[148 149])
+      config_path = create_test_config(cache_dir, steps: steps, name: "work-on-tasks-148-149")
+
+      with_real_config do
+        Dir.chdir(project_root) do
+          original_project_root = ENV["PROJECT_ROOT_PATH"]
+          original_home = ENV["HOME"]
+          Dir.mktmpdir("ace-assign-home") do |temp_home|
+            ENV["PROJECT_ROOT_PATH"] = project_root
+            ENV["HOME"] = temp_home
+            Ace::Assign.reset_config!
+
+            executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+            result = executor.start(config_path)
+            state = result[:state]
+
+            assert_equal "as-onboard", state.find_by_number("000").skill
+            assert_equal "as-task-work", state.find_by_number("010.01.04").skill
+            assert_equal "as-task-work", state.find_by_number("010.02.04").skill
+            assert_equal "as-test-verify-suite", state.find_by_number("012").skill
+            assert_equal "as-e2e-review", state.find_by_number("015").skill
+            assert_equal "as-docs-update", state.find_by_number("025").skill
+            assert_equal "as-github-pr-create", state.find_by_number("030").skill
+            assert_equal "as-git-reorganize-commits", state.find_by_number("130").skill
+            assert_equal "as-github-pr-update", state.find_by_number("150").skill
+          end
+        ensure
+          ENV["PROJECT_ROOT_PATH"] = original_project_root
+          ENV["HOME"] = original_home
+          Ace::Assign.reset_config!
+        end
+      end
+    end
+  end
+
+  private
+
+  def materialize_preset_steps(project_root, preset_name, params)
+    preset_path = File.join(project_root, "ace-assign", ".ace-defaults", "assign", "presets", "#{preset_name}.yml")
+    preset = YAML.safe_load_file(preset_path, permitted_classes: [Date, Time]) || {}
+
+    if Ace::Assign::Atoms::PresetExpander.has_expansion?(preset)
+      Ace::Assign::Atoms::PresetExpander.expand(preset, params)
+    else
+      deep_replace_placeholders(preset.fetch("steps"), params)
+    end
+  end
+
+  def deep_replace_placeholders(value, params)
+    case value
+    when Array
+      value.map { |entry| deep_replace_placeholders(entry, params) }
+    when Hash
+      value.transform_values { |entry| deep_replace_placeholders(entry, params) }
+    when String
+      params.reduce(value) do |text, (key, replacement)|
+        text.gsub("{{#{key}}}", Array(replacement).join(", "))
+      end
+    else
+      value
+    end
+  end
 end

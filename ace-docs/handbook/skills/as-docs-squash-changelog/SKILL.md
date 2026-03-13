@@ -21,6 +21,18 @@ integration:
     - gemini
     - opencode
     - pi
+assign:
+  source: wfi://docs/squash-changelog
+  phases:
+    - name: squash-changelog
+      description: Squash multiple changelog entries into one before merge
+      intent:
+        phrases:
+          - "squash changelog"
+          - "squash changelog entries"
+          - "consolidate changelog"
+          - "merge changelog entries"
+      tags: [docs, changelog, release]
 skill:
   kind: workflow
   execution:

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.11] - 2026-03-13
+
+### Technical
+- Updated canonical E2E workflow skills for workspace-based execution flow.
+
 ## [0.24.10] - 2026-03-13
 
 ### Changed

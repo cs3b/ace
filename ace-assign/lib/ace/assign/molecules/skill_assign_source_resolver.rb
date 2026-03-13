@@ -15,22 +15,22 @@ module Ace
       # 3) Resolve workflow file from URI
       # 4) Parse workflow assign frontmatter (sub-phases/context)
       class SkillAssignSourceResolver
-        DEFAULT_WORKFLOW_SOURCE_PATHS = [
-          "ace-taskflow/handbook/workflow-instructions",
-          "ace-assign/handbook/workflow-instructions"
-        ].freeze
         ASSIGN_CAPABLE_KINDS = %w[workflow orchestration].freeze
 
         def initialize(project_root: nil, skill_paths: nil, workflow_paths: nil)
           @project_root = project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           configured_skill_paths = skill_paths || Ace::Assign.config["skill_source_paths"]
           configured_workflow_paths = workflow_paths || Ace::Assign.config["workflow_source_paths"]
-          configured_workflow_paths = DEFAULT_WORKFLOW_SOURCE_PATHS if configured_workflow_paths.nil? || configured_workflow_paths.empty?
 
           canonical_paths = discover_canonical_skill_source_paths
+          canonical_workflow_paths = discover_canonical_workflow_source_paths
           override_paths = normalize_paths(configured_skill_paths || [])
+          if canonical_workflow_paths.empty? && (configured_workflow_paths.nil? || configured_workflow_paths.empty?)
+            configured_workflow_paths = discover_workspace_workflow_paths
+          end
+          configured_workflow_paths = canonical_workflow_paths if configured_workflow_paths.nil? || configured_workflow_paths.empty?
           @skill_paths = (canonical_paths + override_paths).uniq
-          @workflow_paths = normalize_paths(configured_workflow_paths)
+          @workflow_paths = (canonical_workflow_paths + normalize_paths(configured_workflow_paths || [])).uniq
           @skill_index = nil
         end
 
@@ -83,6 +83,38 @@ module Ace
             validate_assign_source!(frontmatter["assign"], skill_name)
             true
           end
+        end
+
+        # Build assignment phase entries from canonical skills.
+        #
+        # Only phases declared under `assign.phases` are emitted here. This keeps
+        # canonical skills authoritative for public skill-backed assignment phases,
+        # while internal helper phases can continue to use catalog templates.
+        #
+        # @return [Array<Hash>] Phase definitions keyed by canonical precedence
+        def assign_phase_catalog
+          catalog = {}
+
+          each_assign_capable_skill do |skill_name, frontmatter|
+            phases = frontmatter.dig("assign", "phases")
+            next unless phases.is_a?(Array)
+
+            phases.each do |phase|
+              next unless phase.is_a?(Hash)
+
+              phase_name = phase["name"]&.to_s&.strip
+              next if phase_name.nil? || phase_name.empty?
+              next if catalog.key?(phase_name)
+
+              entry = phase.dup
+              entry["name"] = phase_name
+              entry["skill"] = skill_name
+              entry["description"] ||= frontmatter["description"]
+              catalog[phase_name] = entry
+            end
+          end
+
+          catalog.values
         end
 
         private
@@ -148,10 +180,35 @@ module Ace
           end
         end
 
+        def each_assign_capable_skill
+          skill_index.each do |skill_name, skill_path|
+            frontmatter = parse_frontmatter(File.read(skill_path))
+            next unless assign_capable_skill_frontmatter?(frontmatter)
+            next unless frontmatter["assign"].is_a?(Hash)
+
+            validate_assign_source!(frontmatter["assign"], skill_name)
+            yield skill_name, frontmatter
+          end
+        end
+
         def discover_canonical_skill_source_paths
+          discover_protocol_source_paths(
+            protocol: "skill",
+            package_glob: File.join(project_root, "*", ".ace-defaults", "nav", "protocols", "skill-sources", "*.yml")
+          )
+        end
+
+        def discover_canonical_workflow_source_paths
+          discover_protocol_source_paths(
+            protocol: "wfi",
+            package_glob: File.join(project_root, "*", ".ace-defaults", "nav", "protocols", "wfi-sources", "*.yml")
+          )
+        end
+
+        def discover_protocol_source_paths(protocol:, package_glob:)
           registry_paths = Dir.chdir(project_root) do
             registry = Ace::Support::Nav::Molecules::SourceRegistry.new
-            registry.sources_for_protocol("skill").filter_map do |source|
+            registry.sources_for_protocol(protocol).filter_map do |source|
               next if source.config.is_a?(Hash) && source.config["enabled"] == false
 
               candidate = resolve_source_directory(source)
@@ -161,7 +218,7 @@ module Ace
             end
           end
 
-          (registry_paths + discover_package_default_skill_source_paths).uniq
+          (registry_paths + discover_package_default_source_paths(package_glob)).uniq
         end
 
         def resolve_source_directory(source)
@@ -178,8 +235,8 @@ module Ace
           File.directory?(fallback) ? fallback : nil
         end
 
-        def discover_package_default_skill_source_paths
-          source_files = Dir.glob(File.join(project_root, "*", ".ace-defaults", "nav", "protocols", "skill-sources", "*.yml")).sort
+        def discover_package_default_source_paths(source_glob)
+          source_files = Dir.glob(source_glob).sort
           source_files.filter_map do |source_file|
             source_data = YAML.safe_load_file(source_file, permitted_classes: [Date, Time]) || {}
             relative_path = source_data.dig("config", "relative_path")&.to_s&.strip
@@ -191,6 +248,10 @@ module Ace
           rescue StandardError
             nil
           end
+        end
+
+        def discover_workspace_workflow_paths
+          Dir.glob(File.join(project_root, "*", "handbook", "workflow-instructions")).sort
         end
 
         def resolve_source_uri(uri, skill_name)

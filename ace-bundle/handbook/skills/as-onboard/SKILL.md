@@ -18,6 +18,12 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://onboard
+  phases:
+    - name: onboard
+      description: Load project context and understand the codebase
+      tags: [setup, context-loading]
 skill:
   kind: workflow
   execution:

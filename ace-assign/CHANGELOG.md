@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.5] - 2026-03-13
+
+### Technical
+- Completed canonical assign skill catalog composition and workflow-backed phase metadata wiring for public assignments.
+
 ## [0.31.4] - 2026-03-13
 
 ### Changed

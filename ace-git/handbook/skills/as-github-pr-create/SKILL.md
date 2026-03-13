@@ -24,6 +24,18 @@ integration:
       frontmatter:
         context: fork
         model: haiku
+assign:
+  source: wfi://github/pr/create
+  phases:
+    - name: create-pr
+      description: Create a pull request for the implemented changes
+      intent:
+        phrases:
+          - "create pr"
+          - "create a pr"
+          - "open pr"
+          - "open pull request"
+      tags: [git, pr, publishing]
 skill:
   kind: workflow
   execution:

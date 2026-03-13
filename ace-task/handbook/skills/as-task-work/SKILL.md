@@ -18,6 +18,18 @@ last_modified: 2026-02-17
 source: ace-task
 assign:
   source: wfi://task/work
+  phases:
+    - name: work-on-task
+      description: Implement task changes following project conventions
+      intent:
+        phrases:
+          - "work on task"
+          - "implement task"
+          - "task work"
+          - "build feature"
+      tags: [implementation, core-workflow]
+      context:
+        default: fork
 skill:
   kind: workflow
   execution:

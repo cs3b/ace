@@ -22,6 +22,18 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://git/rebase
+  phases:
+    - name: rebase-with-main
+      description: Rebase current branch onto origin/main while preserving changelog intent
+      intent:
+        phrases:
+          - "rebase with main"
+          - "rebase with origin main"
+          - "rebase onto main"
+          - "sync with main"
+      tags: [git, history, rebase]
 skill:
   kind: workflow
   execution:

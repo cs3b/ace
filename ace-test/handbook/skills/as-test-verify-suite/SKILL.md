@@ -23,6 +23,19 @@ integration:
     - gemini
     - opencode
     - pi
+assign:
+  source: wfi://test/verify-suite
+  phases:
+    - name: verify-test-suite
+      description: Run package test suites with profiling to verify correctness and performance
+      intent:
+        phrases:
+          - "run tests"
+          - "run test suite"
+          - "verify tests"
+          - "test changes"
+          - "check tests"
+      tags: [testing, verification, performance]
 skill:
   kind: workflow
   execution:

@@ -21,6 +21,12 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://docs/update
+  phases:
+    - name: update-docs
+      description: Update public-facing documentation when CLI contracts or public APIs change
+      tags: [documentation, quality]
 skill:
   kind: workflow
   execution:

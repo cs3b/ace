@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.5] - 2026-03-13
+
+### Technical
+- Updated canonical task skills to support unified skill + workflow execution patterns.
+
 ## [0.28.4] - 2026-03-13
 
 ### Changed

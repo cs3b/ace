@@ -20,6 +20,14 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://search/research
+  phases:
+    - name: research
+      description: Research a topic, codebase pattern, or external documentation
+      tags: [analysis, exploration]
+      context:
+        default: fork
 skill:
   kind: workflow
   execution:

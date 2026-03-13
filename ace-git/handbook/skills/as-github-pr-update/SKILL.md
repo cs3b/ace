@@ -20,6 +20,18 @@ integration:
     - gemini
     - opencode
     - pi
+assign:
+  source: wfi://github/pr/update
+  phases:
+    - name: update-pr-desc
+      description: Update PR description with implementation summary and final state
+      intent:
+        phrases:
+          - "update pr description"
+          - "update pull request description"
+          - "refresh pr description"
+          - "sync pr description"
+      tags: [git, pr, documentation]
 skill:
   kind: workflow
   execution:

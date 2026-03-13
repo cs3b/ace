@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.4] - 2026-03-13
+
+### Technical
+- Harmonized canonical git-commit skill structure with the unified execution contract.
+
 ## [0.21.3] - 2026-03-13
 
 ### Changed

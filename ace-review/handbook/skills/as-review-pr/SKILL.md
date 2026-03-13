@@ -21,6 +21,14 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://review/pr
+  phases:
+    - name: review-pr
+      description: Review code changes for correctness, style, and best practices
+      tags: [review, quality]
+      context:
+        default: fork
 skill:
   kind: workflow
   execution:
