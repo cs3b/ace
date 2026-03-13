@@ -2,7 +2,6 @@
 name: as-release
 description: Release modified ACE packages with coordinated package and root changelog updates
 # bundle: wfi://release/publish
-# context: fork for claude/codex
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -28,9 +27,11 @@ integration:
         context: fork
         model: haiku
     codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
+      runtime:
+        ace-llm: codex:spark@yolo
+        prompt_context:
+          intent: prepare describe intent of recent changes
+          changed_files: list of files that have been changed in this session
 skill:
   kind: workflow
   execution:

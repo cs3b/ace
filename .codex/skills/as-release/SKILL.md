@@ -17,8 +17,17 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://release/publish
-context: fork
-model: gpt-5.3-codex-spark
 ---
 
-read and run `ace-bundle wfi://release/publish`
+Prepare:
+- `$INTENT`: prepare describe intent of recent changes
+- `$CHANGED_FILES`: list of files that have been changed in this session
+
+Run commandline:
+```bash
+ace-llm codex:spark@yolo "$INTENT
+
+$CHANGED_FILES
+
+read and run \`ace-bundle wfi://release/publish\`"
+```

@@ -86,9 +86,12 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
             }
           },
           "codex" => {
-            "frontmatter" => {
-              "context" => "fork",
-              "model" => "gpt-5.3-codex-spark"
+            "runtime" => {
+              "ace-llm" => "codex:spark@yolo",
+              "prompt_context" => {
+                "intent" => "prepare describe intent of recent changes",
+                "changed_files" => "list of files that have been changed in this session"
+              }
             }
           }
         }
@@ -107,8 +110,14 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     assert_includes claude_rendered, "context: fork"
     assert_includes claude_rendered, "model: haiku"
-    assert_includes codex_rendered, "context: fork"
-    assert_includes codex_rendered, "model: gpt-5.3-codex-spark"
+    assert_includes codex_rendered, "Prepare:"
+    assert_includes codex_rendered, "- `$INTENT`: prepare describe intent of recent changes"
+    assert_includes codex_rendered, "- `$CHANGED_FILES`: list of files that have been changed in this session"
+    assert_includes codex_rendered, "ace-llm codex:spark@yolo"
+    assert_includes codex_rendered, "read and run \\`ace-bundle wfi://git/commit\\`"
+    refute_includes codex_rendered, "context: fork"
+    refute_includes codex_rendered, "model: haiku"
+    refute_includes codex_rendered, "prompt_context:"
     refute_includes claude_rendered, "integration:"
     refute_includes codex_rendered, "integration:"
   end

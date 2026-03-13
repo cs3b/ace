@@ -22,6 +22,7 @@ skill:
 <!-- --sandbox absent  → full workflow (locate, setup, execute) -->
 
 If `$ARGUMENTS` contains `--sandbox`:
+  read and run `ace-bundle wfi://e2e/execute`
 
 
 Otherwise:
