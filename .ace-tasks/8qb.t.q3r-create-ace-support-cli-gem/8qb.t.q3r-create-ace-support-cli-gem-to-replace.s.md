@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r
-status: draft
+status: in-progress
 priority: high
 created_at: "2026-03-12 17:24:10"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-support-core/lib/ace/core/cli/dry_cli/base.rb, ace-support-core/lib/ace/core/cli/dry_cli/help_formatter.rb, ace-support-core/lib/ace/core/cli/dry_cli/usage_formatter.rb, ace-support-core/lib/ace/core/cli/dry_cli/help_concise.rb, ace-support-core/lib/ace/core/cli/dry_cli/argv_coalescer.rb, ace-support-core/lib/ace/core/cli/dry_cli/version_command.rb, ace-support-core/lib/ace/core/cli/dry_cli/help_command.rb, ace-support-core/lib/ace/core/cli/error.rb, docs/decisions/ADR-023-dry-cli-framework.md, docs/ace-gems.g.md, ace-handbook/handbook/guides/cli-dry-cli.g.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/0-spike-validate-optionparser-based-cli/8qb.t.q3r.0-spike-validate-optionparser-based-cli-framework.s.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/1-build-ace-support-cli-gem/8qb.t.q3r.1-build-ace-support-cli-gem-core.s.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/2-build-ace-support-cli-help/8qb.t.q3r.2-build-ace-support-cli-help-system.s.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/3-migrate-ace-support-core-cli/8qb.t.q3r.3-migrate-ace-support-core-cli-infrastructure.s.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/4-migrate-downstream-gems-and-remove/8qb.t.q3r.4-migrate-downstream-gems-and-remove-dry-cli.s.md, .ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/ux/usage.md]
   commands: []
 needs_review: false
+worktree:
+  branch: q3r-create-ace-support-cli-gem-to-replace-dry-cli
+  path: ../ace-task.q3r
+  created_at: "2026-03-13 13:54:35"
+  updated_at: "2026-03-13 13:54:35"
+  target_branch: 0or-build-a-typed-canonical-skill-platform-for-ace
 ---
 
 # Create ace-support-cli gem to replace dry-cli
