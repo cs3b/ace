@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.842] - 2026-03-13
+
+### Changed
+- **ace-b36ts v0.10.1**: Removed Codex-specific delegated execution metadata from the canonical `as-b36ts` skill so provider projections inherit the canonical body unchanged.
+- **ace-demo v0.10.2**: Removed Codex-specific delegated execution metadata from the canonical `as-demo-create` and `as-demo-record` skills so provider projections inherit the canonical body unchanged.
+- **ace-docs v0.25.2**: Removed Codex-specific delegated execution metadata from the canonical `as-docs-squash-changelog` skill so provider projections inherit the canonical body unchanged.
+- **ace-git-commit v0.21.3**: Replaced provider-specific Codex execution metadata on `as-git-commit` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
+- **ace-git-worktree v0.15.2**: Removed Codex-specific delegated execution metadata from the canonical worktree skills so provider projections inherit the canonical body unchanged.
+- **ace-git v0.14.2**: Replaced provider-specific Codex execution metadata on `as-github-pr-create`, removed it from `as-github-pr-update`, and limited provider-specific forking to Claude frontmatter.
+- **ace-handbook v0.15.5**: Removed provider-specific skill body rendering and simplified handbook projection coverage around frontmatter overrides plus canonical body preservation.
+- **ace-lint v0.20.2**: Removed Codex-specific delegated execution metadata from the canonical `as-lint-run` skill so provider projections inherit the canonical body unchanged.
+- **ace-prompt-prep v0.19.2**: Removed Codex-specific delegated execution metadata from the canonical `as-prompt-prep` skill so provider projections inherit the canonical body unchanged.
+- **ace-search v0.21.3**: Replaced provider-specific Codex execution metadata on `as-search-run` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
+- **ace-task v0.28.3**: Removed Codex-specific delegated execution metadata from the canonical `as-task-finder` and `as-task-work` skills so provider projections inherit the canonical body unchanged.
+- **ace-test v0.4.2**: Removed Codex-specific delegated execution metadata from the canonical `as-test-verify-suite` skill so provider projections inherit the canonical body unchanged.
+- **ace-test-runner-e2e v0.24.8**: Removed the stale fork-context comment from `as-e2e-run` so only the selected Claude-fork skills retain provider-specific fork metadata.
+
 ## [0.9.841] - 2026-03-13
 
 ### Changed
