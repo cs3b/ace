@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.843] - 2026-03-13
+
+### Changed
+- **ace-assign v0.31.3**: Added pre-flight fixture checks for `TC-005-no-skip-policy` and sandbox setup artifacts in `TS-ASSIGN-001`.
+- **ace-test-runner-e2e v0.24.9**: Updated `e2e/fix` workflow guidance for explicit scenario-level reruns and fixed experience report status mapping for pass/error outcomes.
+
 ## [0.9.842] - 2026-03-13
 
 ### Changed
