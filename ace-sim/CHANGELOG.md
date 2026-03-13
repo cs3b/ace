@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku` so default end-to-end simulations use the stable shipped synthesis path again.
 
+## [0.8.4] - 2026-03-13
+
+### Changed
+- Updated the `TS-SIM-001` default preset E2E scenario to verify the shipped preset contract and chained handoff behavior while accepting either successful synthesis or a cleanly recorded final-stage failure.
+
 ## [0.8.2] - 2026-03-13
 
 ### Changed
