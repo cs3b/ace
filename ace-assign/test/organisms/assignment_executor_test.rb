@@ -804,9 +804,9 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes File.read(work_phase.file_path), "source_skill: as-task-work"
             assert_includes File.read(plan_phase.file_path), "source_workflow: wfi://task/plan"
             assert_includes File.read(work_phase.file_path), "source_workflow: wfi://task/work"
-            assert_includes work_phase.instructions, "Assignment-specific context:"
             assert_includes work_phase.instructions, "Task request: Do work"
             assert_includes work_phase.instructions, "# Work on Task"
+            refute_includes work_phase.instructions, "Assignment-specific context:\n- Task context:"
             assert_includes verify_phase.instructions, "Action:"
             assert_includes verify_phase.instructions, "Identify modified packages"
             assert_includes verify_phase.instructions, "ace-test --profile 6"
@@ -841,6 +841,98 @@ class AssignmentExecutorTest < AceAssignTestCase
 
     refute_includes instructions, "/as-release"
     assert_includes instructions, "Release all modified packages"
+  end
+
+  def test_assignment_specific_notes_strips_structural_headers_and_nested_bullets
+    executor = Ace::Assign::Organisms::AssignmentExecutor.new
+
+    notes = executor.send(
+      :assignment_specific_notes,
+      phase_name: "review-pr",
+      instructions: <<~TEXT
+        Task context:
+        Task request: Execute the valid review cycle via child phases.
+
+        Assignment-specific context:
+        - use preset code-valid.
+        - Focus: correctness, behavioral regressions, and contract validation.
+      TEXT
+    )
+
+    refute_includes notes, "Task context:"
+    refute_includes notes, "Assignment-specific context:"
+    refute_includes notes, "- -"
+    refute_includes notes, "Task request:"
+    assert_includes notes, "- use preset code-valid."
+    assert_includes notes, "- Focus: correctness, behavioral regressions, and contract validation."
+  end
+
+  def test_render_skill_backed_phase_instructions_uses_phase_template_for_verify_test_suite
+    executor = Ace::Assign::Organisms::AssignmentExecutor.new
+
+    instructions = executor.send(
+      :render_skill_backed_phase_instructions,
+      phase: {
+        "name" => "verify-test-suite",
+        "taskref" => "8q5.1",
+        "instructions" => "Verify only the modified packages.\nSkip if the change is docs-only."
+      },
+      rendering: {
+        "name" => "verify-test-suite",
+        "workflow" => "wfi://test/verify-suite",
+        "render" => "phase_template",
+        "description" => "Run package test suites with profiling to verify correctness and performance",
+        "steps" => [
+          { "description" => "Run ace-test --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep." },
+          { "description" => "Run ace-test-suite to verify no cross-package regressions" }
+        ],
+        "when_to_skip" => [
+          "No code changes that could affect tests (documentation-only)"
+        ]
+      }
+    )
+
+    assert_includes instructions, "Phase focus:"
+    assert_includes instructions, "Run ace-test --profile 6 for each modified package"
+    assert_includes instructions, "Skip when:"
+    assert_includes instructions, "Assignment-specific context:"
+    refute_includes instructions, "Monthly full audit"
+    refute_includes instructions, "flakiness"
+    refute_includes instructions, "create follow-up tasks"
+  end
+
+  def test_render_skill_backed_phase_instructions_uses_phase_template_for_verify_e2e
+    executor = Ace::Assign::Organisms::AssignmentExecutor.new
+
+    instructions = executor.send(
+      :render_skill_backed_phase_instructions,
+      phase: {
+        "name" => "verify-e2e",
+        "taskref" => "8q5.1",
+        "instructions" => "Run only for heavily modified packages with public CLI changes."
+      },
+      rendering: {
+        "name" => "verify-e2e",
+        "workflow" => "wfi://e2e/review",
+        "render" => "phase_template",
+        "description" => "Review E2E coverage for modified packages and run targeted scenarios",
+        "steps" => [
+          { "description" => "Review coverage for heavily modified packages" },
+          { "description" => "If coverage matrix shows gaps or stale TCs, update or create E2E tests", "conditional" => "coverage gaps were found" },
+          { "description" => "Run targeted E2E scenarios for heavily modified packages" }
+        ],
+        "when_to_skip" => [
+          "No public CLI API changes (internal-only refactoring)"
+        ]
+      }
+    )
+
+    assert_includes instructions, "Review coverage for heavily modified packages"
+    assert_includes instructions, "If coverage gaps were found."
+    assert_includes instructions, "Run targeted E2E scenarios for heavily modified packages"
+    refute_includes instructions, "Stage 1 of 3 (Explore)"
+    refute_includes instructions, "wfi://e2e/plan-changes"
+    refute_includes instructions, "wfi://e2e/rewrite"
   end
 
   def test_start_with_sub_phases_compacts_child_context_and_avoids_parent_boilerplate

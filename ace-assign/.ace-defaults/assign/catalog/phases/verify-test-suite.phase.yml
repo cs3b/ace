@@ -1,5 +1,6 @@
 name: verify-test-suite
 skill: as-test-verify-suite
+render: phase_template
 description: Run package test suites with profiling to verify correctness and performance
 intent:
   phrases:

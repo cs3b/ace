@@ -702,8 +702,13 @@ module Ace
           task_refs = parent_text.scan(/\b\d+\.\d+\b/).uniq
           return "Task reference: #{task_refs.join(', ')}" if task_refs.any?
 
-          first_line = parent_text.lines.map(&:strip).find { |line| !line.empty? }
+          relevant_lines = parent_text.lines.map(&:strip).reject(&:empty?).reject do |line|
+            line == "Task context:" || line == "Assignment-specific context:"
+          end
+          first_line = relevant_lines.first
           return "" unless first_line
+
+          return first_line if first_line.start_with?("Task request:", "Task reference:")
 
           "Task request: #{first_line}"
         end
@@ -786,7 +791,7 @@ module Ace
         def resolve_phase_rendering(phase)
           explicit_workflow = phase["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
-            canonical_phase = skill_source_resolver.assign_phase_catalog.find { |entry| entry["name"] == phase["name"]&.to_s }
+            canonical_phase = find_phase_definition(phase["name"]&.to_s)
             source_skill = phase["source_skill"]&.to_s&.strip
             source_skill = canonical_phase&.dig("source_skill") if source_skill.nil? || source_skill.empty?
             rendering = skill_source_resolver.resolve_workflow_rendering(
@@ -806,10 +811,15 @@ module Ace
         end
 
         def render_skill_backed_phase_instructions(phase:, rendering:)
+          if phase_render_mode(rendering) == "phase_template"
+            return render_phase_template_instructions(phase: phase, rendering: rendering)
+          end
+
           sections = []
 
           task_ref = extract_parent_taskref(phase, phase["instructions"])
-          sections << "Task context:\nTask reference: #{task_ref}" if task_ref && !task_ref.empty?
+          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(phase["instructions"]), task_ref: task_ref)
+          sections << "Task context:\n#{task_context}" unless task_context.empty?
 
           body = rendering["body"].to_s.strip
           sections << body unless body.empty?
@@ -823,13 +833,73 @@ module Ace
           sections.join("\n\n")
         end
 
+        def render_phase_template_instructions(phase:, rendering:)
+          sections = []
+
+          task_ref = extract_parent_taskref(phase, phase["instructions"])
+          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(phase["instructions"]), task_ref: task_ref)
+          sections << "Task context:\n#{task_context}" unless task_context.empty?
+
+          description = rendering["description"].to_s.strip
+          sections << "Phase focus:\n#{description}" unless description.empty?
+
+          steps = render_phase_template_steps(rendering["steps"])
+          sections << "Steps:\n#{steps}" unless steps.empty?
+
+          skip_guidance = render_phase_template_skip_guidance(rendering["when_to_skip"])
+          sections << "Skip when:\n#{skip_guidance}" unless skip_guidance.empty?
+
+          assignment_notes = assignment_specific_notes(
+            phase_name: phase["name"]&.to_s,
+            instructions: phase["instructions"]
+          )
+          sections << "Assignment-specific context:\n#{assignment_notes}" unless assignment_notes.empty?
+
+          sections.join("\n\n")
+        end
+
+        def render_phase_template_steps(steps)
+          Array(steps).filter_map do |step|
+            next unless step.is_a?(Hash)
+
+            description = step["description"]&.to_s&.strip
+            next if description.nil? || description.empty?
+
+            line = "- #{description}"
+            conditional = step["conditional"]&.to_s&.strip
+            note = step["note"]&.to_s&.strip
+            line += " If #{conditional}." unless conditional.nil? || conditional.empty?
+            line += " #{note}" unless note.nil? || note.empty?
+            line
+          end.join("\n")
+        end
+
+        def render_phase_template_skip_guidance(conditions)
+          Array(conditions).filter_map do |condition|
+            text = condition&.to_s&.strip
+            next if text.nil? || text.empty?
+
+            "- #{text}"
+          end.join("\n")
+        end
+
+        def phase_render_mode(rendering)
+          mode = rendering["render"]&.to_s&.strip
+          return "workflow_body" if mode.nil? || mode.empty?
+
+          mode
+        end
+
         def assignment_specific_notes(phase_name:, instructions:)
           text = normalize_instructions(instructions).strip
           return "" if text.empty?
 
-          lines = text.lines.map(&:strip).reject(&:empty?)
-          filtered = lines.reject do |line|
-            line.start_with?("Task reference:")
+          filtered = text.lines.filter_map do |line|
+            normalized = normalize_assignment_overlay_line(line)
+            next if normalized.nil? || normalized.empty?
+            next if normalized.start_with?("Task reference:", "Task request:")
+
+            normalized
           end
 
           if phase_name == "work-on-task"
@@ -838,7 +908,18 @@ module Ace
             end
           end
 
+          filtered = filtered.uniq
           filtered.map { |line| "- #{line}" }.join("\n")
+        end
+
+        def normalize_assignment_overlay_line(line)
+          stripped = line.to_s.strip
+          return nil if stripped.empty?
+          return nil if stripped == "Task context:" || stripped == "Assignment-specific context:"
+
+          stripped = stripped.sub(/\A-\s*/, "")
+          stripped = stripped.sub(/\A-\s*/, "")
+          stripped.strip
         end
 
         def resolve_phase_assign_config(phase)
@@ -969,10 +1050,26 @@ module Ace
             next if name.nil? || name.empty?
 
             order << name unless index.key?(name)
-            index[name] = phase
+            index[name] = deep_merge_phase_definition(index[name], phase)
           end
 
           order.map { |name| index[name] }.compact
+        end
+
+        def deep_merge_phase_definition(base, override)
+          return override unless base.is_a?(Hash)
+          return base unless override.is_a?(Hash)
+
+          merged = base.dup
+          override.each do |key, value|
+            merged[key] =
+              if merged[key].is_a?(Hash) && value.is_a?(Hash)
+                deep_merge_phase_definition(merged[key], value)
+              else
+                value
+              end
+          end
+          merged
         end
 
         # Archive source config into the task's jobs/ directory.
