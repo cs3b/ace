@@ -110,6 +110,12 @@ module Ace
             task = @task_manager.show(ref.to_s)
             raise Error, "Task not found: #{ref}" unless task
 
+            if task.status == "draft"
+              raise Error, "Task #{ref} has status 'draft' and has not been reviewed. " \
+                           "Review the spec first with /as-task-review #{ref} " \
+                           "(or ace-bundle wfi://task/review), then retry."
+            end
+
             { ref: ref.to_s, task: task, is_subtask: is_subtask }
           end
         end
