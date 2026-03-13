@@ -2,7 +2,6 @@
 name: as-prompt-prep
 description: Run ace-prompt-prep and follow the printed instructions
 # bundle: wfi://prompt-prep
-# context: fork for codex
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -18,11 +17,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
