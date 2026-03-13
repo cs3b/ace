@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-03-13
+
+### Changed
+- Replaced provider-specific Codex execution metadata on the canonical `as-github-pr-create` skill with a unified canonical skill body that declares arguments, variables, and explicit workflow-execution guidance.
+- Removed the Codex-specific delegated execution metadata from the canonical `as-github-pr-update` skill so provider projections now inherit the canonical skill body unchanged.
+- Limited provider-specific forking for `as-github-pr-create` to Claude frontmatter only.
+
 ## [0.14.1] - 2026-03-12
 
 ### Changed
