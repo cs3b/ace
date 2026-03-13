@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.841] - 2026-03-13
+
+### Changed
+- **ace-handbook v0.15.4**: Strengthened projected workflow skill instructions for Codex delegated execution and forked provider contexts so generated provider skills explicitly load and execute workflows in the current project instead of only reading or summarizing them.
+
 ## [0.9.840] - 2026-03-13
 
 ### Changed
