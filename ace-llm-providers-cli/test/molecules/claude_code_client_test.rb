@@ -20,6 +20,13 @@ describe "ClaudeCodeClient" do
     assert_equal "claude", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
   end
 
+  describe "build_claude_command" do
+    it "does not pass unsupported temperature flag" do
+      cmd = @client.send(:build_claude_command, temperature: 0.2)
+      refute_includes cmd, "--temperature"
+    end
+  end
+
   describe "execute_claude_command" do
     def run_with_captured_env(&block)
       captured_env = nil
