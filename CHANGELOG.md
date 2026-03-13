@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.816] - 2026-03-13
+
+### Fixed
+- **ace-overseer v0.5.3**: Reject tasks with `draft` status at assignment creation time with actionable review guidance, preventing unattended forks from stalling on interactive confirmation.
+
+### Changed
+- **ace-task v0.28.6**: Clarified draft task handling in `task/work` workflow for unattended/fork contexts.
+
 ## [0.9.815] - 2026-03-09
 
 ### Fixed
