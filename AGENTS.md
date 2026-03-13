@@ -80,4 +80,3 @@ This prevents accidental commits and keeps the repository clean.
 ## Test Execution Policy
 
 - `mise exec -- ace-test` and `mise exec -- ace-test-suite` are allowed by default when applicable.
-- Do **not** run `ace-test-e2e`, `ace-test-e2e-suite`, or other E2E runners unless the user explicitly asks.
