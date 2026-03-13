@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.6] - 2026-03-13
+
+### Changed
+- Updated the `e2e/fix` workflow and canonical `as-e2e-fix` skill to require rerunning the selected failing scope after each fix and a final `ace-test-e2e-suite --only-failures` checkpoint before concluding a fix session.
+
 ## [0.24.5] - 2026-03-13
 
 ### Changed
