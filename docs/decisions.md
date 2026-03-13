@@ -140,6 +140,36 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: When building prompt stacks, use `tmpl://`, `prompt://`, `wfi://` (or file paths) and bundle configuration so users can override behavior through resources/config, not Ruby code edits.
 **Details**: [ADR-026](decisions/ADR-026-protocol-driven-prompt-composition-for-ace-llm-via-ace-bundle.md)
 
+### Canonical Skill Platform and Projection Model
+**Decision**: Package-owned canonical `handbook/skills/` entries are the source of truth; provider-native skill trees are generated projections with provider-specific frontmatter only.
+**Impact**: Put skill contracts, workflow bindings, and schema-valid metadata in canonical package skills. Treat `.claude/skills`, `.codex/skills`, `.gemini/skills`, `.opencode/skills`, and `.pi/skills` as sync outputs, not authored content.
+**Details**: [ADR-027](decisions/ADR-027-canonical-skill-platform-and-projection-model.md)
+
+### Assignment Fork Execution and Recovery
+**Decision**: Assignment execution is explicitly scopeable (`--assignment <id>@<phase>`) and subtree-first fork delegation, stall handling, and recovery behavior are part of the workflow contract.
+**Impact**: Fork-enabled assignment drivers must operate on the targeted subtree, record stall/recovery state, and require completion evidence before reporting success.
+**Details**: [ADR-028](decisions/ADR-028-assignment-fork-execution-and-recovery.md)
+
+### Local Artifact Layout Standardization
+**Decision**: Runtime artifacts standardize on `.ace-local/<short-name>/...` with short-name paths preferred over package-name paths.
+**Impact**: New defaults and docs should use short-name `.ace-local` locations; legacy `.cache/ace-*` and `.ace-local/ace-*` paths are compatibility reads only where already shipped.
+**Details**: [ADR-029](decisions/ADR-029-local-artifact-layout-standardization.md)
+
+### Cross-Cutting Compact ID Contract
+**Decision**: New artifact/task identifiers use 6-character Base36 compact IDs in the current release line, with explicit compatibility for legacy formats.
+**Impact**: New human-facing IDs should be compact and sortable; readers may continue to accept older timestamp or legacy identifiers where persistence already exists.
+**Details**: [ADR-030](decisions/ADR-030-cross-cutting-compact-id-contract.md)
+
+### CLI Argument and Execution Contract
+**Decision**: Tool/provider delegation normalizes execution to deterministic argv arrays, preserves strict string/array semantics, propagates `working_dir` explicitly, and avoids shell interpolation.
+**Impact**: Commands that spawn subprocesses must pass structured arguments and execution context explicitly instead of joining shell strings or inheriting cwd implicitly.
+**Details**: [ADR-031](decisions/ADR-031-cli-argument-and-execution-contract.md)
+
+### E2E Rerun and Checkpoint Contract
+**Decision**: E2E fix flows require reruns after each fix iteration, scenario-level rerun checkpoints, and a final failure-surface verification gate.
+**Impact**: E2E work is not complete when code changes land; completion requires rerun evidence and a final `--only-failures` verification pass on the remaining failure surface.
+**Details**: [ADR-032](decisions/ADR-032-e2e-rerun-and-checkpoint-contract.md)
+
 ### Git Secrets Security Model
 **Decision**: ace-git-secrets uses gitleaks as primary detection with Ruby fallback, multiple defense layers, and documented threat model.
 **Impact**: When working with secret detection:
