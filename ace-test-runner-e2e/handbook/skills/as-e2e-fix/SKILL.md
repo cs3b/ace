@@ -1,6 +1,6 @@
 ---
 name: as-e2e-fix
-description: Diagnose and fix failing E2E tests systematically
+description: Diagnose, fix, and rerun failing E2E tests systematically
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
@@ -16,7 +16,7 @@ allowed-tools:
   - Grep
   - Glob
 argument-hint: '[package] [test-id]'
-last_modified: 2026-02-24
+last_modified: 2026-03-13
 source: ace-test-runner-e2e
 integration:
   targets:
@@ -31,6 +31,5 @@ skill:
   execution:
     workflow: wfi://e2e/fix
 ---
-
 
 read and run `ace-bundle wfi://e2e/fix`

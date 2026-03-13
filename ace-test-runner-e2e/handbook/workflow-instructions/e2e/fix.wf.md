@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: fix-e2e-tests workflow instruction
 update:
   frequency: on-change
-  last-updated: '2026-02-24'
+  last-updated: '2026-03-13'
 ---
 
 # Fix E2E Tests Workflow
@@ -84,7 +84,9 @@ Apply fixes in this order:
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
 - Keep implementation unchanged unless analysis is revised
 
-3. Verify using analysis-selected rerun scope
+3. Rerun the selected failing scope after each fix
+
+After every implemented fix, rerun the analysis-selected failing scope before moving to the next item or recommending release.
 
 ```bash
 # scenario scope (default)
@@ -100,6 +102,12 @@ ace-test-e2e {package}
 ace-test-e2e-suite --only-failures
 ```
 
+Rules:
+- Scenario rerun is the default after each fix iteration.
+- Use package rerun only when analysis explicitly selected package scope.
+- Use suite rerun during iteration only when analysis explicitly selected suite scope.
+- Record the rerun command and result in the execution summary for every fix item.
+
 4. Re-check classification when evidence conflicts
 - If outcome contradicts analysis, return to `e2e/analyze-failures`
 - Update analysis report and re-select a new autonomous chosen fix decision before continuing
@@ -107,6 +115,17 @@ ace-test-e2e-suite --only-failures
 5. Iterate until all targeted failures are resolved
 - Keep one active scenario/TC at a time
 - Preserve cost-conscious rerun discipline
+
+6. Run a final failing-suite checkpoint before concluding the fix session
+
+After the currently targeted failures are addressed, require one final:
+
+```bash
+# user executes locally
+ace-test-e2e-suite --only-failures
+```
+
+Use this final checkpoint to confirm no previously failing scenario remains in the active failing set before ending the fix session or recommending release.
 
 ## Cost-Conscious Rules
 
@@ -124,6 +143,11 @@ ace-test-e2e-suite --only-failures
 | ... | ... | ... | ... | pass/fail |
 ```
 
+Include one final row for the batch checkpoint:
+- Verification Command: `ace-test-e2e-suite --only-failures`
+- Result: `pass` or remaining failing scenarios
+- If failures remain, continue the fix loop instead of treating the session as complete
+
 If unresolved:
 
 ```markdown
@@ -137,7 +161,8 @@ If unresolved:
 ## Success Criteria
 
 - Fixes are traceable to analyzed failures
-- Verification scope matches analysis recommendation
+- Verification scope matches analysis recommendation, including mandatory reruns after each fix
 - Cost-conscious rerun strategy was followed
+- Final `ace-test-e2e-suite --only-failures` checkpoint was completed before concluding the fix session
 - No user clarification was required for fix targeting/scope in normal flow
 - Targeted failures pass, or blockers are explicitly documented
