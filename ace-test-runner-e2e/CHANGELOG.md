@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.7] - 2026-03-13
+
+### Changed
+- Increased the default E2E suite parallelism setting in project config from `6` to `8`.
+
 ## [0.24.6] - 2026-03-13
 
 ### Changed
