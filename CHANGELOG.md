@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.846] - 2026-03-13
+
+### Changed
+- **ace-assign v0.32.0**: Switched generated public assignment phases to workflow-backed execution references and restored essential preset orchestration overlays for `work-on-task` and `work-on-tasks`.
+
+### Technical
+- Coordinated release of `ace-assign` with workflow-first phase materialization, parser/runtime `workflow` support, and updated assignment regression coverage.
+
 ## [0.9.845] - 2026-03-13
 
 ### Changed
