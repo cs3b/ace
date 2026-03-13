@@ -26,13 +26,25 @@ integration:
       frontmatter:
         context: fork
         model: haiku
-    codex:
-      context: ace-llm
-      ace-llm: codex:spark@yolo
 skill:
   kind: workflow
   execution:
     workflow: wfi://release/publish
 ---
 
-read and run `ace-bundle wfi://release/publish`
+## Arguments
+
+Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+## Variables
+
+None
+
+## Execution
+
+- You are working in the current project.
+- Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this project.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- When the workflow requires edits, tests, or commits, perform them in this project.

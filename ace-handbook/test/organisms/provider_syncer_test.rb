@@ -71,7 +71,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_equal 1, result[:removed_entries]
   end
 
-  def test_sync_projects_provider_execution_overrides_for_git_commit
+  def test_sync_projects_claude_overrides_and_preserves_canonical_git_commit_body
     frontmatter = {
       "name" => "as-git-commit",
       "description" => "Generate intelligent git commit message",
@@ -85,21 +85,31 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
               "context" => "fork",
               "model" => "haiku"
             }
-          },
-          "codex" => {
-            "context" => "ace-llm",
-            "ace-llm" => "codex:spark@yolo",
-            "prompt_context" => {
-              "intention" => "describe intent of recent changes",
-              "changed_files" => "list files changed in this session"
-            }
           }
         }
       }
     }
 
     create_skill("as-git-commit", <<~BODY, frontmatter: frontmatter)
-      read and run `ace-bundle wfi://git/commit`
+      ## Arguments
+
+      Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+      ## Variables
+
+      - INTENTION
+      - CHANGED_FILES
+
+      ## Execution
+
+      - You are working in the current project.
+      - Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions.
+      - Read the loaded workflow and execute it end-to-end in this project.
+      - Follow the workflow as the source of truth.
+      - If `INTENTION` is provided explicitly, use it. Otherwise derive it from recent changes.
+      - If `CHANGED_FILES` are provided explicitly, use them. Otherwise derive them from changed files in this session.
+      - Do the work described by the workflow instead of only summarizing it.
+      - When the workflow requires edits, tests, or commits, perform them in this project.
     BODY
 
     syncer.sync(provider: "claude")
@@ -114,24 +124,15 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes codex_rendered, "## Variables"
     assert_includes codex_rendered, "- INTENTION"
     assert_includes codex_rendered, "- CHANGED_FILES"
-    assert_includes codex_rendered, "## Instructions"
-    assert_includes codex_rendered, "If INTENTION was provided explicitly, use it. Otherwise, describe intent of recent changes."
-    assert_includes codex_rendered, "If CHANGED_FILES was provided explicitly, use it. Otherwise, list files changed in this session."
-    assert_includes codex_rendered, "You are working in the current project."
+    assert_includes codex_rendered, "## Execution"
     assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions."
-    assert_includes codex_rendered, "Read the loaded workflow and execute it end-to-end in this project."
-    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
-    assert_includes codex_rendered, "ace-llm codex:spark@yolo"
-    assert_includes codex_rendered, "mise exec -- ace-bundle wfi://git/commit"
     refute_includes codex_rendered, "context: fork"
     refute_includes codex_rendered, "model: haiku"
-    refute_includes codex_rendered, "prompt_context:"
-    refute_includes codex_rendered, "$INTENTION"
     refute_includes claude_rendered, "integration:"
     refute_includes codex_rendered, "integration:"
   end
 
-  def test_sync_projects_simple_codex_ace_llm_run_for_release
+  def test_sync_projects_claude_overrides_and_preserves_canonical_release_body
     frontmatter = {
       "name" => "as-release",
       "description" => "Release modified ACE packages",
@@ -145,17 +146,28 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
               "context" => "fork",
               "model" => "haiku"
             }
-          },
-          "codex" => {
-            "context" => "ace-llm",
-            "ace-llm" => "codex:spark@yolo"
           }
         }
       }
     }
 
     create_skill("as-release", <<~BODY, frontmatter: frontmatter)
-      read and run `ace-bundle wfi://release/publish`
+      ## Arguments
+
+      Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+      ## Variables
+
+      None
+
+      ## Execution
+
+      - You are working in the current project.
+      - Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+      - Read the loaded workflow and execute it end-to-end in this project.
+      - Follow the workflow as the source of truth.
+      - Do the work described by the workflow instead of only summarizing it.
+      - When the workflow requires edits, tests, or commits, perform them in this project.
     BODY
 
     syncer.sync(provider: "claude")
@@ -167,18 +179,15 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes claude_rendered, "context: fork"
     assert_includes claude_rendered, "model: haiku"
     assert_includes codex_rendered, "argument-hint: package-name... bump-level"
-    assert_includes codex_rendered, "## Instructions"
-    assert_includes codex_rendered, "Run:"
-    assert_includes codex_rendered, "ace-llm codex:spark@yolo"
-    assert_includes codex_rendered, "You are working in the current project."
+    assert_includes codex_rendered, "## Variables"
+    assert_includes codex_rendered, "None"
+    assert_includes codex_rendered, "## Execution"
     assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions."
-    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
-    refute_includes codex_rendered, "## Variables"
     refute_includes claude_rendered, "integration:"
     refute_includes codex_rendered, "integration:"
   end
 
-  def test_sync_projects_fork_context_workflow_instructions_for_github_pr_create
+  def test_sync_projects_claude_overrides_and_preserves_canonical_github_pr_body
     frontmatter = {
       "name" => "as-github-pr-create",
       "description" => "Create GitHub pull request",
@@ -187,10 +196,10 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://github/pr/create"}},
       "integration" => {
         "providers" => {
-          "codex" => {
+          "claude" => {
             "frontmatter" => {
               "context" => "fork",
-              "model" => "gpt-5.3-codex-spark"
+              "model" => "haiku"
             }
           }
         }
@@ -198,22 +207,37 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     }
 
     create_skill("as-github-pr-create", <<~BODY, frontmatter: frontmatter)
-      read and run `ace-bundle wfi://github/pr/create`
+      ## Arguments
+
+      Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+      ## Variables
+
+      None
+
+      ## Execution
+
+      - You are working in the current project.
+      - Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+      - Read the loaded workflow and execute it end-to-end in this project.
+      - Follow the workflow as the source of truth.
+      - Do the work described by the workflow instead of only summarizing it.
+      - When the workflow requires edits, tests, or commits, perform them in this project.
     BODY
 
+    syncer.sync(provider: "claude")
     syncer.sync(provider: "codex")
 
+    claude_rendered = File.read(File.join(@tmpdir, ".claude", "skills", "as-github-pr-create", "SKILL.md"))
     codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-github-pr-create", "SKILL.md"))
 
-    assert_includes codex_rendered, "context: fork"
-    assert_includes codex_rendered, "model: gpt-5.3-codex-spark"
-    assert_includes codex_rendered, "## Instructions"
-    assert_includes codex_rendered, "You are working in a forked execution context for the current project."
-    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
-    assert_includes codex_rendered, "Read the loaded workflow and execute it end-to-end in this forked context."
-    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
-    assert_includes codex_rendered, "Return results from the executed workflow, not a summary of the workflow text."
-    refute_includes codex_rendered, "ace-llm"
+    assert_includes claude_rendered, "context: fork"
+    assert_includes claude_rendered, "model: haiku"
+    assert_includes claude_rendered, "## Execution"
+    assert_includes claude_rendered, "Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
+    refute_includes codex_rendered, "context: fork"
+    refute_includes codex_rendered, "model: haiku"
+    assert_includes codex_rendered, "## Execution"
     refute_includes codex_rendered, "integration:"
   end
 

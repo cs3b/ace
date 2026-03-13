@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-03-13
+
+### Changed
+- Removed provider-specific skill body rendering so projected provider skills once again apply frontmatter overrides while preserving the canonical skill body unchanged.
+- Updated the canonical `as-release` skill to use the unified arguments / variables / execution structure with explicit workflow-execution guidance.
+- Limited provider-specific forking for `as-release` to Claude frontmatter only.
+
+### Technical
+- Simplified handbook projection coverage to validate frontmatter override projection and canonical body preservation instead of provider-specific body rendering.
+
 ## [0.15.4] - 2026-03-13
 
 ### Changed

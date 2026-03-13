@@ -37,8 +37,7 @@ module Ace
             next unless Molecules::SkillProjection.projection_targets(skill.frontmatter, registry: registry).include?(provider)
 
             frontmatter = Molecules::SkillProjection.projected_frontmatter(skill.frontmatter, provider: provider)
-            body = Molecules::SkillProjection.projected_body(skill.frontmatter, skill.body, provider: provider)
-            rendered = Molecules::SkillProjection.render(frontmatter, body)
+            rendered = Molecules::SkillProjection.render(frontmatter, skill.body)
             output_path = File.join(output_dir, skill.name, "SKILL.md")
             expected[skill.name] = output_path
 
