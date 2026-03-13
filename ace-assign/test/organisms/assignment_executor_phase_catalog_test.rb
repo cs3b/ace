@@ -3,41 +3,55 @@
 require_relative "../test_helper"
 
 class AssignmentExecutorPhaseCatalogTest < AceAssignTestCase
-  def test_reorder_catalog_by_assign_capable_skills_places_canonical_first
+  def test_phase_catalog_prefers_canonical_skill_phase_metadata_over_yaml
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
 
     resolver = Minitest::Mock.new
-    resolver.expect(:assign_capable_skill_names, ["as-task-plan"])
+    resolver.expect(:assign_phase_catalog, [
+                      {
+                        "name" => "plan-task",
+                        "skill" => "as-task-plan",
+                        "description" => "Canonical description",
+                        "context" => { "default" => "fork" }
+                      }
+                    ])
     executor.instance_variable_set(:@skill_source_resolver, resolver)
+    executor.instance_variable_set(:@phase_catalog, nil)
 
-    input = [
-      { "name" => "work-on-task", "skill" => "as-task-work" },
-      { "name" => "plan-task", "skill" => "as-task-plan" },
-      { "name" => "verify-test", "skill" => "as-test-verify-suite" }
-    ]
+    executor.stub(:merge_phase_catalog, [
+                    {
+                      "name" => "plan-task",
+                      "skill" => "as-task-plan",
+                      "description" => "Canonical description",
+                      "context" => { "default" => "fork" }
+                    }
+                  ]) do
+      catalog = executor.send(:phase_catalog)
+      definition = catalog.first
 
-    reordered = executor.send(:reorder_catalog_by_assign_capable_skills, input)
+      assert_equal "Canonical description", definition["description"]
+      assert_equal({ "default" => "fork" }, definition["context"])
+    end
 
-    assert_equal "plan-task", reordered[0]["name"]
-    assert_equal %w[plan-task work-on-task verify-test], reordered.map { |phase| phase["name"] }
     resolver.verify
   end
 
-  def test_reorder_catalog_by_assign_capable_skills_keeps_original_order_when_empty
+  def test_merge_phase_catalog_overrides_existing_entries_and_keeps_internal_helpers
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
 
-    resolver = Minitest::Mock.new
-    resolver.expect(:assign_capable_skill_names, [])
-    executor.instance_variable_set(:@skill_source_resolver, resolver)
-
-    input = [
-      { "name" => "work-on-task", "skill" => "as-task-work" },
-      { "name" => "verify-test", "skill" => "as-test-verify-suite" }
+    base_catalog = [
+      { "name" => "plan-task", "skill" => "as-task-plan", "description" => "Legacy YAML" },
+      { "name" => "task-load", "description" => "Internal helper" }
+    ]
+    canonical_catalog = [
+      { "name" => "plan-task", "skill" => "as-task-plan", "description" => "Canonical skill" },
+      { "name" => "verify-test-suite", "skill" => "as-test-verify-suite", "description" => "Canonical suite" }
     ]
 
-    reordered = executor.send(:reorder_catalog_by_assign_capable_skills, input)
+    merged = executor.send(:merge_phase_catalog, base_catalog, canonical_catalog)
 
-    assert_equal input, reordered
-    resolver.verify
+    assert_equal %w[plan-task task-load verify-test-suite], merged.map { |phase| phase["name"] }
+    assert_equal "Canonical skill", merged.find { |phase| phase["name"] == "plan-task" }["description"]
+    assert_equal "Internal helper", merged.find { |phase| phase["name"] == "task-load" }["description"]
   end
 end

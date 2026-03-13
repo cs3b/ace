@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.845] - 2026-03-13
+
+### Changed
+- **ace-assign v0.31.5**: Completed canonical assign skill catalog composition and workflow-backed phase metadata wiring for public assignments.
+- **ace-bundle v0.36.6**: Updated canonical onboarding skill metadata for in-project workflow execution flow.
+- **ace-docs v0.25.4**: Updated canonical docs skills to align with shared workflow execution standards.
+- **ace-git-commit v0.21.4**: Harmonized canonical git-commit skill structure with unified execution contract.
+- **ace-git v0.14.4**: Updated canonical Git workflow skills for workflow-first execution compatibility.
+- **ace-review v0.44.4**: Updated canonical review skills to rely on workspace workflow execution flow.
+- **ace-search v0.21.5**: Updated canonical search workflow skill metadata for bundled workflow execution.
+- **ace-task v0.28.5**: Updated canonical task skills to support unified skill + workflow execution patterns.
+- **ace-test-runner-e2e v0.24.11**: Updated canonical E2E workflow skills for workspace-based execution flow.
+- **ace-test v0.4.4**: Updated canonical test planning skills for direct workflow execution in this project.
+
+### Technical
+- Coordinated release of all modified ACE packages.
+
 ## [0.9.844] - 2026-03-13
 
 ### Changed

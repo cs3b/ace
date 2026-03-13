@@ -20,6 +20,12 @@ integration:
     - opencode
     - pi
   providers: {}
+assign:
+  source: wfi://e2e/review
+  phases:
+    - name: verify-e2e
+      description: Review E2E coverage for modified packages and run targeted scenarios
+      tags: [testing, e2e, verification]
 skill:
   kind: workflow
   execution:

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.36.6] - 2026-03-13
+
+### Technical
+- Updated canonical onboarding skill metadata for in-project workflow execution flow.
+
 ## [0.36.5] - 2026-03-13
 
 ### Changed

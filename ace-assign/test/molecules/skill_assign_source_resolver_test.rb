@@ -119,6 +119,45 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     end
   end
 
+  def test_assign_phase_catalog_uses_canonical_phase_metadata_from_skills
+    with_temp_cache do |cache_dir|
+      project_root = File.join(cache_dir, "project")
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
+
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
+        config:
+          relative_path: handbook/skills
+      YAML
+
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan", "SKILL.md"), <<~MD)
+        ---
+        name: as-task-plan
+        description: Plan the task
+        skill:
+          kind: workflow
+        assign:
+          source: wfi://task/plan
+          phases:
+            - name: plan-task
+              description: Canonical phase description
+              context:
+                default: fork
+        ---
+      MD
+
+      resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project_root)
+      phases = resolver.assign_phase_catalog
+
+      assert_equal 1, phases.length
+      assert_equal "plan-task", phases.first["name"]
+      assert_equal "as-task-plan", phases.first["skill"]
+      assert_equal "Canonical phase description", phases.first["description"]
+      assert_equal({ "default" => "fork" }, phases.first["context"])
+    end
+  end
+
   def test_assign_capable_skill_names_excludes_assign_capable_skill_without_assign_source
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")

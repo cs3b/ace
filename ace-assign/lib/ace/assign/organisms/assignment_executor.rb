@@ -821,35 +821,13 @@ module Ace
                              default_phases
                            end
 
-            reorder_catalog_by_assign_capable_skills(base_catalog)
+            canonical_phases = skill_source_resolver.assign_phase_catalog
+            merge_phase_catalog(base_catalog, canonical_phases)
           end
-        end
-
-        # Canonical assign-capable skills are the primary ordering source.
-        # Non-canonical phase catalog entries remain compatibility inputs, not authority.
-        #
-        # @param catalog [Array<Hash>]
-        # @return [Array<Hash>]
-        def reorder_catalog_by_assign_capable_skills(catalog)
-          assign_capable = skill_source_resolver.assign_capable_skill_names
-          return catalog if assign_capable.empty?
-
-          canonical = []
-          bridge = []
-          catalog.each do |phase|
-            skill_name = phase["skill"].to_s.strip
-            if !skill_name.empty? && assign_capable.include?(skill_name)
-              canonical << phase
-            else
-              bridge << phase
-            end
-          end
-
-          canonical + bridge
         end
 
         # Merge default and project phase catalogs by phase name.
-        # Project definitions override defaults with matching names.
+        # Later definitions override earlier ones with matching names.
         #
         # @param default_phases [Array<Hash>]
         # @param project_phases [Array<Hash>]

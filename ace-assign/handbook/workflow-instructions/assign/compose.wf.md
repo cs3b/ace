@@ -46,14 +46,17 @@ Boundary:
 
 ### 1. Load Canonical Assign-Capable Catalog
 
-Load assign-capable phase entries from canonical skills first, then include compatibility catalog entries when present:
+Load public skill-backed phase entries from canonical skills:
 
 ```
 Canonical source: skill://* (workflow/orchestration skills with explicit assign metadata)
-Compatibility bridge: ace-assign/.ace-defaults/assign/catalog/phases/*.phase.yml
 Read: ace-assign/.ace-defaults/assign/catalog/composition-rules.yml
 Glob: ace-assign/.ace-defaults/assign/catalog/recipes/*.recipe.yml
 ```
+
+Internal helper phase templates under `ace-assign/.ace-defaults/assign/catalog/phases/*.phase.yml`
+remain runtime support data for non-skill phases such as subtree orchestration helpers. They are not the
+authoritative source for public skill-backed phase composition.
 
 For each phase, read:
 - `name`, `skill`, `description`

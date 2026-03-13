@@ -24,6 +24,12 @@ integration:
       frontmatter:
         context: fork
         model: haiku
+assign:
+  source: wfi://git/commit
+  phases:
+    - name: commit
+      description: Generate and create a commit with a descriptive message
+      tags: [git, versioning]
 skill:
   kind: workflow
   execution:

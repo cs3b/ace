@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4] - 2026-03-13
+
+### Technical
+- Updated canonical docs skills to align with shared workflow execution standards.
+
 ## [0.25.3] - 2026-03-13
 
 ### Changed

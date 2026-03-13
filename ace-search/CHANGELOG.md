@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.5] - 2026-03-13
+
+### Technical
+- Updated canonical search workflow skill metadata for bundled workflow execution.
+
 ## [0.21.4] - 2026-03-13
 
 ### Changed
