@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-03-13
+
+### Changed
+- Updated the canonical `as-git-commit` Codex metadata to use `context: ace-llm` with frontmatter-driven variable and instruction rendering for projected Codex skills.
+
 ## [0.21.1] - 2026-03-12
 
 ### Changed
