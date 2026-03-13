@@ -66,7 +66,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.21.1)
+    ace-git-commit (0.21.2)
       ace-git (~> 0.11)
       ace-llm (~> 0.23)
       ace-support-config (~> 0.7)
@@ -135,7 +135,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.15.2)
+    ace-handbook (0.15.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-nav (~> 0.21)
