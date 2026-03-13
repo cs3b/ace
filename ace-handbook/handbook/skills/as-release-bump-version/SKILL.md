@@ -2,7 +2,6 @@
 name: as-release-bump-version
 description: Increment gem version following semver with CHANGELOG updates
 # bundle: wfi://release/bump-version
-# context: fork for codex
 # agent: Bash
 user-invocable: true
 allowed-tools:
@@ -20,11 +19,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:

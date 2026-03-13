@@ -2,7 +2,6 @@
 name: as-release-update-changelog
 description: Update CHANGELOG.md with recent changes following Keep a Changelog format
 # bundle: wfi://release/update-changelog
-# context: fork for codex
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -20,11 +19,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
