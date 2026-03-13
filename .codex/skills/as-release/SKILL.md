@@ -19,15 +19,7 @@ skill:
     workflow: wfi://release/publish
 ---
 
-Prepare:
-- `$INTENT`: prepare describe intent of recent changes
-- `$CHANGED_FILES`: list of files that have been changed in this session
-
-Run commandline:
+Run:
 ```bash
-ace-llm codex:spark@yolo "$INTENT
-
-$CHANGED_FILES
-
-read and run \`ace-bundle wfi://release/publish\`"
+ace-llm codex:spark@yolo "read and run \`ace-bundle wfi://release/publish\`"
 ```

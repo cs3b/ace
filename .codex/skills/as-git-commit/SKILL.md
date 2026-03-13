@@ -17,15 +17,21 @@ skill:
     workflow: wfi://git/commit
 ---
 
-Prepare:
-- `$INTENT`: prepare describe intent of recent changes
-- `$CHANGED_FILES`: list of files that have been changed in this session
+## Variables
 
-Run commandline:
+- INTENTION
+- CHANGED_FILES
+
+## Instructions
+
+- If INTENTION was provided explicitly, use it. Otherwise, describe intent of recent changes.
+- If CHANGED_FILES was provided explicitly, use it. Otherwise, list files changed in this session.
+
+Run:
 ```bash
-ace-llm codex:spark@yolo "$INTENT
+ace-llm codex:spark@yolo "INTENTION
 
-$CHANGED_FILES
+CHANGED_FILES
 
 read and run \`ace-bundle wfi://git/commit\`"
 ```
