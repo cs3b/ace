@@ -103,11 +103,11 @@ class RunCommandTest < AceSimTestCase
 
     assert_equal ["google:flash-preview"], idea_preset["provider"]
     assert_equal "wfi://idea/review", idea_preset["synthesis_workflow"]
-    assert_equal "google:pro-preview", idea_preset["synthesis_provider"]
+    assert_equal "claude:haiku", idea_preset["synthesis_provider"]
 
     assert_equal ["google:flash-preview"], task_preset["provider"]
     assert_equal "wfi://task/review", task_preset["synthesis_workflow"]
-    assert_equal "google:pro-preview", task_preset["synthesis_provider"]
+    assert_equal "claude:haiku", task_preset["synthesis_provider"]
   end
 
   def test_rejects_unknown_preset

@@ -6,4 +6,4 @@ provider:
   - google:flash-preview
 repeat: 1
 synthesis_workflow: wfi://task/review
-synthesis_provider: google:pro-preview
+synthesis_provider: claude:haiku
