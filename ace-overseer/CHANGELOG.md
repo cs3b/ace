@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-03-13
+
+### Fixed
+- Reject tasks with `draft` status at assignment creation time with actionable review guidance, preventing unattended forks from stalling on interactive confirmation.
+
 ## [0.5.2] - 2026-03-13
 
 ### Changed

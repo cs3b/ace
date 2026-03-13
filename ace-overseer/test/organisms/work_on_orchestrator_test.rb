@@ -361,6 +361,35 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     end
   end
 
+  def test_rejects_draft_task_before_side_effects
+    Dir.mktmpdir("task.draft") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        { worktree_path: worktree, branch: "draft-feature", created: true }
+      )
+      tmux = FakeWindowOpener.new
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("400" => { metadata: {}, status: "draft" }),
+        worktree_provisioner: worktree_provisioner,
+        tmux_window_opener: tmux,
+        assignment_launcher: launcher,
+        config: { "default_assign_preset" => "work-on-task" },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "400")
+      end
+
+      assert_includes error.message, "status 'draft'"
+      assert_includes error.message, "/as-task-review 400"
+      assert_empty worktree_provisioner.calls
+      assert_empty tmux.calls
+      assert_empty launcher.calls
+    end
+  end
+
   def test_raises_error_when_no_valid_task_refs_provided
     Dir.mktmpdir("task.empty") do |worktree|
       worktree_provisioner = FakeWorktreeProvisioner.new(
