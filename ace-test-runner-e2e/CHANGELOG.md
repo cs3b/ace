@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.5] - 2026-03-13
+
+### Changed
+- Updated the project E2E suite report-generation default model override to `claude:sonnet@ro`.
+
 ## [0.24.4] - 2026-03-12
 
 ### Fixed
