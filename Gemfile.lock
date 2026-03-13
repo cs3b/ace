@@ -135,7 +135,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.15.3)
+    ace-handbook (0.15.4)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-nav (~> 0.21)
