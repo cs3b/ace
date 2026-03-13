@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.6] - 2026-03-13
+
+### Changed
+- Clarified draft task handling in `task/work` workflow for unattended/fork contexts — the assignment creation layer is now responsible for blocking draft tasks before they reach the workflow.
+
 ## [0.28.5] - 2026-03-13
 
 ### Technical
