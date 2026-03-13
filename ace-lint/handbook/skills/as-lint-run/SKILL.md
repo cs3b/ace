@@ -2,7 +2,6 @@
 name: as-lint-run
 description: Run ace-lint on project files with optional autofix and report
 # bundle: wfi://lint/run
-# context: fork for codex
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -19,11 +18,6 @@ integration:
     - gemini
     - opencode
     - pi
-  providers:
-    codex:
-      frontmatter:
-        context: fork
-        model: gpt-5.3-codex-spark
 skill:
   kind: workflow
   execution:
