@@ -50,6 +50,7 @@ module Ace
             name: fm["name"],
             status: (fm["status"] || "pending").to_sym,
             skill: fm["skill"],
+            workflow: fm["workflow"],
             context: context, # "fork" triggers Task tool execution
             batch_parent: parse_boolean(fm["batch_parent"]),
             parallel: parse_boolean(fm["parallel"]),

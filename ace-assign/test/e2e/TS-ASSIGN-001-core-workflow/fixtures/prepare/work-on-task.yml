@@ -12,18 +12,18 @@ parameters:
 
 phases:
   - name: onboard
-    skill: as-onboard
+    workflow: wfi://onboard
+    taskref: "{{taskref}}"
     instructions:
-      - Onboard yourself to the codebase.
-      - Load context and understand the project structure.
+      - "Load project context for task {{taskref}}."
 
   - name: work-on-task
     context: fork
-    skill: as-task-work
+    workflow: wfi://task/work
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - "Work on task {{taskref}}."
-      - Implement the required changes following project conventions.
+      - "Implement task {{taskref}} in the forked execution context."
+      - "Keep task status aligned with implementation progress and finish by marking the task done."
+      - "Preserve any public contract, docs, test, and release follow-ups required by the resulting diff."
 
   - name: mark-task-done
     instructions:
@@ -32,55 +32,52 @@ phases:
 
   - name: release-minor
     instructions:
-      - Run /as-release to release all modified packages.
+      - Release all modified packages touched by this task.
       - Auto-detect modified packages from the current diff, bump version (minor or patch, usually minor), and update both package and root CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: create-pr
-    skill: as-github-pr-create
+    workflow: wfi://github/pr/create
     instructions:
-      - Create a pull request for the changes.
-      - Capture the PR number for subsequent review steps.
+      - "Create a pull request for the task {{taskref}} changes."
+      - "Capture the PR number for the downstream review and PR-update phases."
 
   - name: review-valid-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the valid review cycle via child phases.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-fit-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the fit review cycle via child phases.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-shine-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the shine review cycle via child phases.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
-    skill: as-git-reorganize-commits
+    workflow: wfi://git/reorganize-commits
     instructions:
-      - Reorganize commits into logical groups.
-      - Group by concern (structure, implementation, tests, release).
+      - "Reorganize commits for task {{taskref}} into logical groups."
+      - "Group commits by concern where possible, such as structure, implementation, tests, docs, and release updates."
 
   - name: push-to-remote
     instructions:
@@ -89,8 +86,8 @@ phases:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    skill: as-github-pr-update
+    workflow: wfi://github/pr/update
     instructions:
-      - Update PR description with final implementation summary.
-      - Include released version numbers and key components.
-      - Ensure PR is ready for human review.
+      - "Update the PR description with the final summary for task {{taskref}}."
+      - "Include final release/version information and the key completed components when applicable."
+      - "Make sure the PR description reflects the post-review final state."

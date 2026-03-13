@@ -624,24 +624,73 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_resolves_skill_assign_source_and_expands_sub_phases
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", ".ace-defaults", "nav", "protocols", "skill-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
 
+      File.write(File.join(project_root, "ace-bundle", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-bundle.yml"), <<~YAML)
+        name: ace-bundle
+        config:
+          relative_path: handbook/skills
+      YAML
       File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
         name: ace-task
         config:
           relative_path: handbook/skills
       YAML
 
-      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work", "SKILL.md"), <<~MD)
+      File.write(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard", "SKILL.md"), <<~MD)
         ---
-        name: as-task-work
-        assign:
-          source: wfi://task/work
+        name: as-onboard
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://onboard
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://onboard`
+      MD
+      File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
+        ---
         ---
       MD
 
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan", "SKILL.md"), <<~MD)
+        ---
+        name: as-task-plan
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://task/plan
+        assign:
+          source: wfi://task/plan
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://task/plan`
+      MD
+
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work", "SKILL.md"), <<~MD)
+        ---
+        name: as-task-work
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://task/work
+        assign:
+          source: wfi://task/work
+        ---
+
+        read and run `ace-bundle wfi://task/work`
+      MD
+
+      File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "plan.wf.md"), <<~MD)
+        ---
+        ---
+      MD
       File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
@@ -655,6 +704,10 @@ class AssignmentExecutorTest < AceAssignTestCase
             - release-minor
           context: fork
         ---
+
+        # Work on Task
+
+        Follow the workflow body directly.
       MD
 
       phases = [
@@ -662,7 +715,8 @@ class AssignmentExecutorTest < AceAssignTestCase
         { "name" => "review", "instructions" => "Review changes" }
       ]
       workflow_paths = [
-        File.join(project_root, "ace-task", "handbook", "workflow-instructions")
+        File.join(project_root, "ace-task", "handbook", "workflow-instructions"),
+        File.join(project_root, "ace-bundle", "handbook", "workflow-instructions")
       ]
       project_assign_config = File.join(project_root, ".ace", "assign", "config.yml")
       FileUtils.mkdir_p(File.dirname(project_assign_config))
@@ -727,10 +781,10 @@ class AssignmentExecutorTest < AceAssignTestCase
             # First actionable child is activated (parent container is skipped)
             assert_equal "010.01", result[:current].number
 
-            # Child phases materialize from phase catalog metadata
-            assert_equal "as-onboard", onboard_phase.skill
-            assert_equal "as-task-plan", plan_phase.skill
-            assert_equal "as-task-work", work_phase.skill
+            # Skill-backed phases materialize from canonical skill bodies with provenance metadata.
+            assert_nil onboard_phase.skill
+            assert_nil plan_phase.skill
+            assert_nil work_phase.skill
             assert_nil review_phase.skill
             assert_nil verify_phase.skill
             assert_nil release_phase.skill
@@ -745,8 +799,14 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_nil release_phase.context
 
             # Child instructions include parent task context for parameter extraction
-            assert_includes work_phase.instructions, "Task context:"
-            assert_includes work_phase.instructions, "Do work"
+            assert_includes File.read(onboard_phase.file_path), "source_skill: as-onboard"
+            assert_includes File.read(plan_phase.file_path), "source_skill: as-task-plan"
+            assert_includes File.read(work_phase.file_path), "source_skill: as-task-work"
+            assert_includes File.read(plan_phase.file_path), "source_workflow: wfi://task/plan"
+            assert_includes File.read(work_phase.file_path), "source_workflow: wfi://task/work"
+            assert_includes work_phase.instructions, "Assignment-specific context:"
+            assert_includes work_phase.instructions, "Task request: Do work"
+            assert_includes work_phase.instructions, "# Work on Task"
             assert_includes verify_phase.instructions, "Action:"
             assert_includes verify_phase.instructions, "Identify modified packages"
             assert_includes verify_phase.instructions, "ace-test --profile 6"
@@ -754,8 +814,8 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes review_phase.instructions, "Allowed native review clients: claude, codex."
             assert_includes review_phase.instructions, "pre_commit_review_block"
             assert_includes release_phase.instructions, "Action:"
-            assert_includes release_phase.instructions, "Run /as-release"
-            assert_includes release_phase.instructions, "release all modified packages"
+            refute_includes release_phase.instructions, "/as-release"
+            assert_includes release_phase.instructions, "Release all modified packages"
           end
         ensure
           if original_home.nil?
@@ -779,8 +839,8 @@ class AssignmentExecutorTest < AceAssignTestCase
 
     instructions = executor.send(:child_action_instructions, "release-patch-1", "Patch release follow-up")
 
-    assert_includes instructions, "Run /as-release"
-    assert_includes instructions, "release all modified packages"
+    refute_includes instructions, "/as-release"
+    assert_includes instructions, "Release all modified packages"
   end
 
   def test_start_with_sub_phases_compacts_child_context_and_avoids_parent_boilerplate
@@ -788,18 +848,73 @@ class AssignmentExecutorTest < AceAssignTestCase
       cache_dir = File.join(project_root, ".cache", "ace-assign")
       FileUtils.mkdir_p(cache_dir)
 
+      FileUtils.mkdir_p(File.join(project_root, ".ace", "nav", "protocols", "skill-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions"))
+      File.write(File.join(project_root, ".ace", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
+        config:
+          relative_path: ace-task/handbook/skills
+      YAML
+      File.write(File.join(project_root, ".ace", "nav", "protocols", "skill-sources", "ace-bundle.yml"), <<~YAML)
+        name: ace-bundle
+        config:
+          relative_path: handbook/skills
+      YAML
+      File.write(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard", "SKILL.md"), <<~MD)
+        ---
+        name: as-onboard
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://onboard
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://onboard`
+      MD
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan", "SKILL.md"), <<~MD)
+        ---
+        name: as-task-plan
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://task/plan
+        assign:
+          source: wfi://task/plan
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://task/plan`
+      MD
+      File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
+        ---
+        ---
+      MD
+      File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "plan.wf.md"), <<~MD)
+        ---
+        ---
+      MD
+
       skill_dir = File.join(project_root, ".agents", "skills", "ace_work-on-task")
       FileUtils.mkdir_p(skill_dir)
       File.write(File.join(skill_dir, "SKILL.md"), <<~MD)
         ---
         name: as-task-work
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://task/work
         assign:
+          source: wfi://task/work
           sub-phases:
             - onboard
             - plan-task
             - work-on-task
           context: fork
         ---
+
+        read and run `ace-bundle wfi://task/work`
       MD
 
       phases = [
@@ -830,13 +945,10 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes work_phase.instructions, "Task reference: 235.01"
         assert_includes File.read(plan_phase.file_path), "taskref: '235.01'"
         assert_includes File.read(work_phase.file_path), "taskref: '235.01'"
-        assert_includes plan_phase.instructions, "Action:"
-        assert_includes plan_phase.instructions, "Analyze requirements for task 235.01."
-        assert_includes work_phase.instructions, "Action:"
-        assert_includes work_phase.instructions, "Implement the required changes for task 235.01."
-        assert_includes plan_phase.instructions, "Verification checklist (from parent phase goals):"
-        assert_includes plan_phase.instructions, "- First: onboard yourself using /as-onboard skill to load project context."
-        assert_includes work_phase.instructions, "- When complete, mark the task as done: run `ace-taskflow task done 235.01`"
+        assert_equal "as-task-plan", plan_phase.skill
+        assert_equal "as-task-work", work_phase.skill
+        refute_includes plan_phase.instructions, "Verification checklist (from parent phase goals):"
+        refute_includes work_phase.instructions, "Verification checklist (from parent phase goals):"
       ensure
         if original_project_root.nil?
           ENV.delete("PROJECT_ROOT_PATH")
@@ -852,6 +964,30 @@ class AssignmentExecutorTest < AceAssignTestCase
     with_temp_dir do |project_root|
       cache_dir = File.join(project_root, ".cache", "ace-assign")
       FileUtils.mkdir_p(cache_dir)
+
+      FileUtils.mkdir_p(File.join(project_root, ".ace", "nav", "protocols", "skill-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions"))
+      File.write(File.join(project_root, ".ace", "nav", "protocols", "skill-sources", "ace-bundle.yml"), <<~YAML)
+        name: ace-bundle
+        config:
+          relative_path: handbook/skills
+      YAML
+      File.write(File.join(project_root, "ace-bundle", "handbook", "skills", "as-onboard", "SKILL.md"), <<~MD)
+        ---
+        name: as-onboard
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://onboard
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://onboard`
+      MD
+      File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
+        ---
+        ---
+      MD
 
       project_catalog_dir = File.join(project_root, ".ace", "assign", "catalog", "phases")
       FileUtils.mkdir_p(project_catalog_dir)
@@ -892,7 +1028,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes parent_phase.instructions, "CUSTOM FORK 010"
         assert_includes parent_phase.instructions, "Custom goal header:"
 
-        # Project override should not replace entire catalog; default child phase metadata must still resolve.
+        # Project override should not replace entire catalog; child metadata still resolves from default catalog.
         assert_equal "as-onboard", child_phase.skill
       ensure
         if original_project_root.nil?
@@ -1034,14 +1170,19 @@ class AssignmentExecutorTest < AceAssignTestCase
             result = executor.start(config_path)
             state = result[:state]
 
-            assert_equal "as-onboard", state.find_by_number("010").skill
-            assert_equal "as-task-work", state.find_by_number("020.04").skill
-            assert_equal "as-test-verify-suite", state.find_by_number("040").skill
-            assert_equal "as-e2e-review", state.find_by_number("050").skill
-            assert_equal "as-docs-update", state.find_by_number("070").skill
-            assert_equal "as-github-pr-create", state.find_by_number("080").skill
-            assert_equal "as-git-reorganize-commits", state.find_by_number("120").skill
-            assert_equal "as-github-pr-update", state.find_by_number("140").skill
+            assert_nil state.find_by_number("010").skill
+            assert_nil state.find_by_number("020.04").skill
+            assert_nil state.find_by_number("040").skill
+            assert_nil state.find_by_number("050").skill
+            assert_nil state.find_by_number("070").skill
+            assert_nil state.find_by_number("080").skill
+            assert_nil state.find_by_number("120").skill
+            assert_nil state.find_by_number("140").skill
+            assert_includes File.read(state.find_by_number("010").file_path), "source_skill: as-onboard"
+            assert_includes File.read(state.find_by_number("020.04").file_path), "source_skill: as-task-work"
+            assert_includes state.find_by_number("020.04").instructions, "# Work on Task"
+            assert_includes File.read(state.find_by_number("040").file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(state.find_by_number("080").file_path), "source_skill: as-github-pr-create"
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_project_root
@@ -1071,15 +1212,21 @@ class AssignmentExecutorTest < AceAssignTestCase
             result = executor.start(config_path)
             state = result[:state]
 
-            assert_equal "as-onboard", state.find_by_number("000").skill
-            assert_equal "as-task-work", state.find_by_number("010.01.04").skill
-            assert_equal "as-task-work", state.find_by_number("010.02.04").skill
-            assert_equal "as-test-verify-suite", state.find_by_number("012").skill
-            assert_equal "as-e2e-review", state.find_by_number("015").skill
-            assert_equal "as-docs-update", state.find_by_number("025").skill
-            assert_equal "as-github-pr-create", state.find_by_number("030").skill
-            assert_equal "as-git-reorganize-commits", state.find_by_number("130").skill
-            assert_equal "as-github-pr-update", state.find_by_number("150").skill
+            assert_nil state.find_by_number("000").skill
+            assert_nil state.find_by_number("010.01.04").skill
+            assert_nil state.find_by_number("010.02.04").skill
+            assert_nil state.find_by_number("012").skill
+            assert_nil state.find_by_number("015").skill
+            assert_nil state.find_by_number("025").skill
+            assert_nil state.find_by_number("030").skill
+            assert_nil state.find_by_number("130").skill
+            assert_nil state.find_by_number("150").skill
+            assert_includes File.read(state.find_by_number("000").file_path), "source_skill: as-onboard"
+            assert_includes File.read(state.find_by_number("010.01.04").file_path), "source_skill: as-task-work"
+            assert_includes File.read(state.find_by_number("010.02.04").file_path), "source_skill: as-task-work"
+            assert_includes state.find_by_number("010.01.04").instructions, "# Work on Task"
+            assert_includes File.read(state.find_by_number("012").file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(state.find_by_number("030").file_path), "source_skill: as-github-pr-create"
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_project_root

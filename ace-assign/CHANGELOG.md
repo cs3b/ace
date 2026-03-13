@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-03-13
+
+### Changed
+- Switched generated assignment artifacts for public phases to use workflow-backed execution references instead of generated `skill:` phase contracts.
+- Restored assignment-specific orchestration overlays for `work-on-task` and `work-on-tasks` while keeping canonical workflow bodies as the reusable execution source.
+
+### Technical
+- Promoted `workflow` to a first-class parsed/runtime phase field across assignment status, queue scanning, and phase persistence.
+- Updated assign resolver, executor, presets, and regression fixtures to materialize public phases from canonical workflow bodies with provenance metadata.
+
 ## [0.31.5] - 2026-03-13
 
 ### Technical

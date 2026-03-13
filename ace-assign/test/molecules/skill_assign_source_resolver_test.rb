@@ -158,6 +158,48 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     end
   end
 
+  def test_resolve_skill_rendering_returns_body_and_workflow_metadata
+    with_temp_cache do |cache_dir|
+      project_root = File.join(cache_dir, "project")
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
+
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
+        config:
+          relative_path: handbook/skills
+      YAML
+
+      File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan", "SKILL.md"), <<~MD)
+        ---
+        name: as-task-plan
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://task/plan
+        assign:
+          source: wfi://task/plan
+        ---
+
+        Load and run `mise exec -- ace-bundle wfi://task/plan`
+      MD
+
+      File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "plan.wf.md"), <<~MD)
+        ---
+        ---
+      MD
+
+      resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project_root)
+      rendering = resolver.resolve_skill_rendering("as-task-plan")
+
+      assert_equal "as-task-plan", rendering["skill"]
+      assert_equal "wfi://task/plan", rendering["workflow"]
+      assert_includes rendering["body"], "ace-bundle wfi://task/plan"
+      assert_match(%r{task/plan\.wf\.md\z}, rendering["workflow_path"])
+    end
+  end
+
   def test_assign_capable_skill_names_excludes_assign_capable_skill_without_assign_source
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")

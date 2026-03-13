@@ -82,6 +82,7 @@ module Ace
             added_by: fields[:added_by],
             parent: fields[:parent],
             skill: fields[:skill],
+            workflow: fields[:workflow],
             context: fields[:context],
             batch_parent: fields[:batch_parent],
             parallel: fields[:parallel],

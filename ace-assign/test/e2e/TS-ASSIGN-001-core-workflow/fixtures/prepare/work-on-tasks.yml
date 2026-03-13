@@ -16,69 +16,64 @@ parameters:
 phases:
   - name: onboard
     number: "000"
-    skill: as-onboard
+    workflow: wfi://onboard
     instructions:
-      - Load project context.
-      - Review task queue and priorities.
+      - "Load project context for the task batch: {{taskrefs}}."
 
   - name: release-minor
     number: "020"
     instructions:
-      - Run /as-release to release all modified packages.
+      - Release all modified packages touched by this batch.
       - Auto-detect modified packages from the current diff, bump version (minor or patch, usually minor), and update both package and root CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: create-pr
     number: "030"
-    skill: as-github-pr-create
+    workflow: wfi://github/pr/create
     instructions:
-      - Create a pull request for the changes.
-      - Include summary of all implemented tasks.
-      - Capture the PR number for subsequent review steps.
+      - "Create a pull request summarizing batch tasks: {{taskrefs}}."
+      - "Capture the PR number for the downstream review and PR-update phases."
 
   - name: review-valid-1
     number: "040"
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the valid review cycle via child phases.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-fit-1
     number: "070"
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the fit review cycle via child phases.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-shine-1
     number: "100"
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the shine review cycle via child phases.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: run /as-release to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
     number: "130"
-    skill: as-git-reorganize-commits
+    workflow: wfi://git/reorganize-commits
     instructions:
-      - Reorganize commits into logical groups.
-      - Group by concern (structure, implementation, tests, release).
+      - "Reorganize commits for the batch work on: {{taskrefs}}."
+      - "Group commits by concern where possible, such as structure, implementation, tests, docs, and release updates."
 
   - name: push-to-remote
     number: "140"
@@ -89,11 +84,11 @@ phases:
 
   - name: update-pr-desc
     number: "150"
-    skill: as-github-pr-update
+    workflow: wfi://github/pr/update
     instructions:
-      - Update PR description with final implementation summary.
-      - Include released version numbers and key components.
-      - Ensure PR is ready for human review.
+      - "Update the PR description with the final batch summary for: {{taskrefs}}."
+      - "Include final release/version information and the key completed components when applicable."
+      - "Make sure the PR description reflects the post-review final state."
 
 expansion:
   batch-parent:
@@ -110,9 +105,9 @@ expansion:
     name: "work-on-{{item}}"
     parent: "010"
     context: fork
-    skill: as-task-work
+    workflow: wfi://task/work
     taskref: "{{item}}"
     instructions: |
-      First: onboard yourself using /as-onboard skill to load project context.
+      Use existing base and task context loaded by the batch workflow.
       Implement task {{item}}.
       When complete, mark the task as done: run `ace-taskflow task done {{item}}`

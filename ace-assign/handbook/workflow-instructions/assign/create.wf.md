@@ -127,10 +127,12 @@ session:
 
 steps:
   - name: <phase-name>
-    skill: <skill-if-present>
+    workflow: <workflow-ref-if-public-phase>
     instructions:
       - <instruction line>
 ```
+
+`instructions` are assignment overlay only. The reusable execution body comes from the referenced workflow during `ace-assign create`.
 
 Rules:
 - Each invocation writes a new file (no in-place mutation of prior hidden specs).

@@ -91,7 +91,9 @@ module Ace
                   puts "Stall Reason: #{lines.first&.chomp}"
                   lines[1..].each { |l| puts "             #{l.chomp}" } if lines.length > 1
                 end
-                if current_for_display.skill
+                if current_for_display.workflow
+                  puts "Workflow: #{current_for_display.workflow}"
+                elsif current_for_display.skill
                   puts "Skill: #{current_for_display.skill}"
                 end
                 if current_for_display.context
@@ -149,6 +151,7 @@ module Ace
               name: phase.name,
               status: phase.status.to_s,
               skill: phase.skill,
+              workflow: phase.workflow,
               context: phase.context,
               batch_parent: phase.batch_parent,
               parallel: phase.parallel,
