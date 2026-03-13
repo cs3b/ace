@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku` so default end-to-end simulations use the stable shipped synthesis path again.
+
 ## [0.8.2] - 2026-03-13
 
 ### Changed
