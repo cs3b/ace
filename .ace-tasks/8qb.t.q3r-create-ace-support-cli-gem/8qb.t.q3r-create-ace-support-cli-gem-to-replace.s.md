@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-03-12 17:24:10"
 estimate: TBD
@@ -14,8 +14,8 @@ needs_review: false
 worktree:
   branch: q3r-create-ace-support-cli-gem-to-replace-dry-cli
   path: ../ace-task.q3r
-  created_at: "2026-03-13 17:23:51"
-  updated_at: "2026-03-13 17:23:51"
+  created_at: "2026-03-13 18:00:32"
+  updated_at: "2026-03-13 18:00:32"
   target_branch: main
 ---
 
