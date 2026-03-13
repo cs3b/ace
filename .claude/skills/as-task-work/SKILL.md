@@ -1,7 +1,6 @@
 ---
 name: as-task-work
 description: Execute task implementation with context loading and change commits
-context: fork
 user-invocable: true
 allowed-tools:
 - Bash(ace-task:*)

@@ -1,7 +1,6 @@
 ---
 name: as-task-work
 description: Execute task implementation with context loading and change commits
-context: fork
 user-invocable: true
 allowed-tools:
 - Bash(ace-task:*)
@@ -22,7 +21,6 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://task/work
-model: gpt-5.3-codex-spark
 ---
 
 ## Instructions
