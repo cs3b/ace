@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.836] - 2026-03-13
+
+### Fixed
+- **ace-llm-providers-cli v0.25.2**: Removed unsupported `--temperature` flag forwarding from Claude CLI adapters so generation defaults are no longer passed as CLI options.
+- **ace-sim v0.8.3**: Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku`.
+
 ## [0.9.835] - 2026-03-13
 
 ### Changed
