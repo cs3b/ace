@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-03-13
+
+### Changed
+- Replaced provider-specific Codex execution metadata on the canonical `as-git-commit` skill with a unified canonical skill body that declares arguments, variables, and explicit workflow-execution guidance.
+- Limited provider-specific forking for `as-git-commit` to Claude frontmatter only.
+
 ## [0.21.2] - 2026-03-13
 
 ### Changed
