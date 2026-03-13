@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.839] - 2026-03-13
+
+### Fixed
+- **ace-compressor v0.21.2**: Preserved markdown frontmatter-only files in exact-mode compression so section compression and fixture-driven E2E runs no longer abort when a source contains only frontmatter.
+- **ace-bundle v0.36.4**: Handled frontmatter-only files in bundle section compression without dropping related sections by preserving source content and continuing the compression flow.
+- **ace-test-runner v0.15.11**: Fixed suite/config bootstrap and failure propagation so `ace-test` exits non-zero on test failures and `ace-test-suite` reports missing suite configuration cleanly.
+
 ## [0.9.838] - 2026-03-13
 
 ### Changed

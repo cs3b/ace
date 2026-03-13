@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.11] - 2026-03-13
+
+### Fixed
+- Updated `ace-test` to propagate test failures via the process exit code and made `ace-test-suite` emit a clear configuration error when suite YAML is missing or malformed.
+- Ensured `ace-test-suite` E2E sandbox setup includes the suite configuration so full-suite aggregation scenarios run with actual package orchestration.
+
 ## [0.15.10] - 2026-03-12
 
 ### Changed

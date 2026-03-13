@@ -217,6 +217,22 @@ class SectionCompressorTest < AceTestCase
     end
   end
 
+  def test_compressing_frontmatter_only_files_with_other_files
+    bundle = make_bundle_with_files([
+      { path: "test-context.md", content: "---\ntitle: Frontmatter Only\n---\n" },
+      { path: "docs/readme.md", content: "# Title\n\nA summary line.\n" }
+    ])
+
+    @compressor.call(bundle)
+
+    files = bundle.sections["docs"][:_processed_files]
+    frontmatter_file = files.find { |f| f[:path] == "test-context.md" }
+    readme_file = files.find { |f| f[:path] == "docs/readme.md" }
+
+    assert_includes frontmatter_file[:content], "title: Frontmatter Only"
+    assert_includes readme_file[:content], "FILE|docs/readme.md"
+  end
+
   def test_compressor_mode_defaults_to_exact
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source")
     bundle = make_bundle_with_md_section("# Title\n\nA summary line.\n")

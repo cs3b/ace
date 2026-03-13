@@ -80,7 +80,7 @@ end
 # Load the config using namespace method
 config = Ace::Core.get("test", file: "suite")
 
-unless config
+unless config.is_a?(Hash) && config["test_suite"].is_a?(Hash)
   puts "Error: Configuration file not found: .ace/test/suite.yml"
   puts
   puts "Create a test suite configuration at .ace/test/suite.yml in your project root"

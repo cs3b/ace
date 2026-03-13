@@ -27,3 +27,4 @@ requires:
 setup:
   - git-init
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "mkdir -p .ace/test && cp $PROJECT_ROOT_PATH/.ace/test/suite.yml .ace/test/suite.yml"

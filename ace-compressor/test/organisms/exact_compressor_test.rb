@@ -38,6 +38,17 @@ class ExactCompressorTest < AceCompressorTestCase
     assert_includes error.message, "Exact mode requires content"
   end
 
+  def test_frontmatter_only_input_is_preserved
+    path = File.join(@tmp, "frontmatter-only.md")
+    File.write(path, "---\ntitle: Metadata Only\n---\n")
+
+    output = Ace::Compressor::Organisms::ExactCompressor.new([path]).call
+
+    assert_includes output, "FILE|#{path}"
+    assert_includes output, "---"
+    assert_includes output, "title: Metadata Only"
+  end
+
   def test_merges_multiple_files_with_deterministic_order
     later = File.join(@tmp, "z.md")
     earlier = File.join(@tmp, "a.md")

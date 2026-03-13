@@ -14,10 +14,10 @@ require_relative "../lib/ace/test_runner"
 # re-run all tests on normal exit. Using exit! bypasses this.
 # See guide://testable-code-patterns for details on this pattern.
 begin
-  Dry::CLI.new(Ace::TestRunner::CLI::Commands::Test).call(arguments: ARGV)
+  exit_code = Dry::CLI.new(Ace::TestRunner::CLI::Commands::Test).call(arguments: ARGV)
   $stdout.flush
   $stderr.flush
-  exit!(0)
+  exit!(exit_code.respond_to?(:to_i) ? exit_code.to_i : 0)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   $stdout.flush
