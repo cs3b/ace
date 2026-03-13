@@ -16,4 +16,4 @@ skill:
     workflow: wfi://handbook/synthesize-research
 ---
 
-read and run `ace-bundle wfi://handbook/synthesize-research`
+Load and run `mise exec -- ace-bundle wfi://handbook/synthesize-research` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

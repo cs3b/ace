@@ -21,4 +21,4 @@ skill:
     workflow: wfi://docs/maintain-adrs
 ---
 
-read and run `ace-bundle wfi://docs/maintain-adrs`
+Load and run `mise exec -- ace-bundle wfi://docs/maintain-adrs` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

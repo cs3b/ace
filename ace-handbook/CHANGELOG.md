@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-03-13
+
+### Changed
+- Updated handbook-owned canonical skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+### Technical
+- Refreshed provider sync and status collector regression coverage for the new compact canonical skill execution template.
+
 ## [0.15.5] - 2026-03-13
 
 ### Changed

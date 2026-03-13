@@ -21,4 +21,4 @@ skill:
     workflow: wfi://test/plan
 ---
 
-read and run `ace-bundle wfi://test/plan`
+Load and run `mise exec -- ace-bundle wfi://test/plan` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

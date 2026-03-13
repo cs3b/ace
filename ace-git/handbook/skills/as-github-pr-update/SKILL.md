@@ -26,4 +26,4 @@ skill:
     workflow: wfi://github/pr/update
 ---
 
-read and run `ace-bundle wfi://github/pr/update`
+Load and run `mise exec -- ace-bundle wfi://github/pr/update` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

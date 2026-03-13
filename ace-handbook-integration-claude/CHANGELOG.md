@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-03-13
+
+### Changed
+- Updated the canonical Claude integration sync skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
 ## [0.3.0] - 2026-03-12
 
 ### Changed

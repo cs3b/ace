@@ -14,4 +14,4 @@ skill:
     workflow: wfi://prompt-prep
 ---
 
-read and run `ace-bundle wfi://prompt-prep`
+Load and run `mise exec -- ace-bundle wfi://prompt-prep` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

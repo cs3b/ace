@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.4] - 2026-03-13
+
+### Changed
+- Updated canonical assign skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
 ## [0.31.3] - 2026-03-13
 
 ### Added

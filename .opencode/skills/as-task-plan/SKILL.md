@@ -19,4 +19,4 @@ assign:
   source: wfi://task/plan
 ---
 
-read and run `ace-bundle wfi://task/plan`
+Load and run `mise exec -- ace-bundle wfi://task/plan` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

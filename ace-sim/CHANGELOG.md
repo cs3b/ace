@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-03-13
+
+### Changed
+- Updated the canonical simulation skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
 ### Fixed
 - Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku` so default end-to-end simulations use the stable shipped synthesis path again.
 

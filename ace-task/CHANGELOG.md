@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.4] - 2026-03-13
+
+### Changed
+- Updated canonical task, bug, docs, retro, idea, and test skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
 ## [0.28.3] - 2026-03-13
 
 ### Changed

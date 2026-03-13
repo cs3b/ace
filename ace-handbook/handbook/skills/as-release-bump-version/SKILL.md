@@ -25,4 +25,4 @@ skill:
     workflow: wfi://release/bump-version
 ---
 
-read and run `ace-bundle wfi://release/bump-version`
+Load and run `mise exec -- ace-bundle wfi://release/bump-version` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-03-13
+
+### Changed
+- Updated the canonical idea review skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
 ## [0.14.2] - 2026-03-12
 
 ### Changed

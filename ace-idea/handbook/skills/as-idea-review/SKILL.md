@@ -23,4 +23,4 @@ skill:
     workflow: wfi://idea/review
 ---
 
-read and run `ace-bundle wfi://idea/review`
+Load and run `mise exec -- ace-bundle wfi://idea/review` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
