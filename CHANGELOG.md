@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.840] - 2026-03-13
+
+### Changed
+- **ace-git-commit v0.21.2**: Updated the canonical `as-git-commit` Codex metadata to use `context: ace-llm` with frontmatter-driven variable and instruction rendering in projected Codex skills.
+- **ace-handbook v0.15.3**: Rendered Codex `ace-llm` skills from canonical frontmatter by deriving variables from `argument-hint` and generating `## Variables` / `## Instructions` sections in projected Codex skills.
+
 ## [0.9.839] - 2026-03-13
 
 ### Fixed
