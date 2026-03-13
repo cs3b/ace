@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.9] - 2026-03-13
+
+### Fixed
+- Corrected experience report status output so only pass results are marked `complete`; partial or error states now consistently remain `incomplete`.
+
+### Changed
+- Updated `e2e/fix` workflow guidance to remove suite-level `--only-failures` checkpoints and require explicit scenario-level reruns for fix iteration.
+
+### Technical
+- Added regression coverage for experience report status behavior for pass, partial, and error results.
+
 ## [0.24.8] - 2026-03-13
 
 ### Changed

@@ -51,7 +51,7 @@ Use the output section from `e2e/analyze-failures`:
 ## Execution Environment Guardrail
 
 - Do **not** run E2E commands autonomously in constrained/sandboxed agent environments.
-- Treat `ace-test-e2e` and `ace-test-e2e-suite` as **user-executed verification** by default.
+- Treat `ace-test-e2e` as **user-executed verification** by default.
 - Provide exact rerun commands for the user instead of executing them when environment fidelity is uncertain (missing `mise`, restricted HOME/state dirs, missing provider credentials, restricted tmux/socket access).
 - Run E2E commands directly only when the user explicitly requests execution in the current environment and confirms it is properly configured.
 
@@ -88,7 +88,7 @@ Apply fixes in this order:
 
 After every implemented fix, rerun the analysis-selected failing scope before moving to the next item or recommending release.
 
-```bash
+```text
 # scenario scope (default)
 # user executes locally
 ace-test-e2e {package} {test-id}
@@ -96,16 +96,17 @@ ace-test-e2e {package} {test-id}
 # package scope (only if analysis recommended)
 # user executes locally
 ace-test-e2e {package}
-
-# suite scope (only if analysis recommended)
-# user executes locally
-ace-test-e2e-suite --only-failures
 ```
 
 Rules:
 - Scenario rerun is the default after each fix iteration.
 - Use package rerun only when analysis explicitly selected package scope.
-- Use suite rerun during iteration only when analysis explicitly selected suite scope.
+- For multiple failing scenarios, rerun each scenario explicitly.
+```text
+ace-test-e2e ace-assign TS-ASSIGN-001
+ace-test-e2e ace-assign TS-ASSIGN-002
+ace-test-e2e ace-bundle TS-BUNDLE-001
+```
 - Record the rerun command and result in the execution summary for every fix item.
 
 4. Re-check classification when evidence conflicts
@@ -116,22 +117,22 @@ Rules:
 - Keep one active scenario/TC at a time
 - Preserve cost-conscious rerun discipline
 
-6. Run a final failing-suite checkpoint before concluding the fix session
+6. Run a final explicit failing-scenario checkpoint before concluding the fix session
 
 After the currently targeted failures are addressed, require one final:
 
 ```bash
 # user executes locally
-ace-test-e2e-suite --only-failures
+ace-test-e2e {package} {test-id}
 ```
 
-Use this final checkpoint to confirm no previously failing scenario remains in the active failing set before ending the fix session or recommending release.
+Use one explicit command per previously failing scenario to confirm no targeted failure remains in the active set before ending the fix session or recommending release.
 
 ## Cost-Conscious Rules
 
-- Do not run suite-level tests by default
+- Do not run suite reruns by default
 - Prefer scenario reruns while iterating
-- Use package/suite reruns only when analysis explicitly recommends broader scope
+- Use package reruns only when analysis explicitly recommends broader scope
 
 ## Required Output
 
@@ -144,7 +145,7 @@ Use this final checkpoint to confirm no previously failing scenario remains in t
 ```
 
 Include one final row for the batch checkpoint:
-- Verification Command: `ace-test-e2e-suite --only-failures`
+- Verification Command: one explicit rerun command per remaining failed scenario (`ace-test-e2e {package} {test-id}`)
 - Result: `pass` or remaining failing scenarios
 - If failures remain, continue the fix loop instead of treating the session as complete
 
@@ -163,6 +164,6 @@ If unresolved:
 - Fixes are traceable to analyzed failures
 - Verification scope matches analysis recommendation, including mandatory reruns after each fix
 - Cost-conscious rerun strategy was followed
-- Final `ace-test-e2e-suite --only-failures` checkpoint was completed before concluding the fix session
+- Final explicit per-scenario rerun checkpoint for all targeted failures was completed before concluding the fix session
 - No user clarification was required for fix targeting/scope in normal flow
 - Targeted failures pass, or blockers are explicitly documented
