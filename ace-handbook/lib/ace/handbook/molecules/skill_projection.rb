@@ -27,16 +27,24 @@ module Ace
           def projected_body(frontmatter, body, provider:)
             integration = frontmatter.fetch("integration", {})
             provider_meta = integration.fetch("providers", {}).fetch(provider.to_s, {})
+            workflow_uri = frontmatter.dig("skill", "execution", "workflow")
+            provider_frontmatter = provider_meta["frontmatter"] || {}
+
+            return render_fork_workflow_body(workflow_uri: workflow_uri) if provider_frontmatter["context"] == "fork" && workflow_uri
 
             return body unless provider.to_s == "codex"
             return body unless provider_meta["context"] == "ace-llm"
-            return body unless provider_meta["ace-llm"] && provider_meta["prompt_context"].is_a?(Hash)
+            return body unless provider_meta["ace-llm"]
+            return body unless workflow_uri
+
+            prompt_context = provider_meta["prompt_context"]
+            return render_codex_ace_llm_run_body(model: provider_meta["ace-llm"], workflow_uri: workflow_uri) unless prompt_context.is_a?(Hash) && prompt_context.any?
 
             render_codex_ace_llm_body(
               argument_hint: frontmatter["argument-hint"],
               model: provider_meta["ace-llm"],
-              prompt_context: provider_meta["prompt_context"],
-              body: body
+              prompt_context: prompt_context,
+              workflow_uri: workflow_uri
             )
           end
 
@@ -64,7 +72,7 @@ module Ace
             end
           end
 
-          def render_codex_ace_llm_body(argument_hint:, model:, prompt_context:, body:)
+          def render_codex_ace_llm_body(argument_hint:, model:, prompt_context:, workflow_uri:)
             variables = build_variables(argument_hint: argument_hint, prompt_context: prompt_context)
             variable_lines = variables.map { |variable| "- #{variable.fetch(:name)}" }.join("\n")
             instruction_lines = variables.map do |variable|
@@ -72,9 +80,11 @@ module Ace
               "- If #{variable.fetch(:name)} was provided explicitly, use it. Otherwise, #{description}."
             end.join("\n")
 
-            prompt_placeholders = variables.map { |variable| variable.fetch(:name) }.join("\n\n")
-
-            escaped_body = shell_double_quote_escape(body.to_s.strip)
+            execution_lines = codex_workflow_execution_lines(workflow_uri)
+            escaped_prompt = shell_double_quote_escape([
+              variables.map { |variable| variable.fetch(:name) }.join("\n\n"),
+              execution_lines.join("\n")
+            ].join("\n\n"))
 
             <<~BODY
               ## Variables
@@ -84,14 +94,61 @@ module Ace
               ## Instructions
 
               #{instruction_lines}
+              #{execution_lines.map { |line| "- #{line}" }.join("\n")}
 
               Run:
               ```bash
-              ace-llm #{model} "#{prompt_placeholders}
-
-              #{escaped_body}"
+              ace-llm #{model} "#{escaped_prompt}"
               ```
             BODY
+          end
+
+          def render_codex_ace_llm_run_body(model:, workflow_uri:)
+            execution_lines = codex_workflow_execution_lines(workflow_uri)
+            escaped_prompt = shell_double_quote_escape(execution_lines.join("\n"))
+
+            <<~BODY
+              ## Instructions
+
+              #{execution_lines.map { |line| "- #{line}" }.join("\n")}
+
+              Run:
+              ```bash
+              ace-llm #{model} "#{escaped_prompt}"
+              ```
+            BODY
+          end
+
+          def render_fork_workflow_body(workflow_uri:)
+            instruction_lines = fork_workflow_execution_lines(workflow_uri)
+
+            <<~BODY
+              ## Instructions
+
+              #{instruction_lines.map { |line| "- #{line}" }.join("\n")}
+            BODY
+          end
+
+          def codex_workflow_execution_lines(workflow_uri)
+            [
+              "You are working in the current project.",
+              "Run `mise exec -- ace-bundle #{workflow_uri}` in the current project to load the workflow instructions.",
+              "Read the loaded workflow and execute it end-to-end in this project.",
+              "Follow the workflow as the source of truth.",
+              "Do the work described by the workflow instead of only summarizing it.",
+              "When the workflow requires edits, tests, or commits, perform them in this project."
+            ]
+          end
+
+          def fork_workflow_execution_lines(workflow_uri)
+            [
+              "You are working in a forked execution context for the current project.",
+              "Run `mise exec -- ace-bundle #{workflow_uri}` in the current project to load the workflow instructions.",
+              "Read the loaded workflow and execute it end-to-end in this forked context.",
+              "Follow the workflow as the source of truth.",
+              "Do the work described by the workflow instead of only summarizing it.",
+              "Return results from the executed workflow, not a summary of the workflow text."
+            ]
           end
 
           def build_variables(argument_hint:, prompt_context:)
