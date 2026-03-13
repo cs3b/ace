@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.2] - 2026-03-13
+
+### Changed
+- Updated the review E2E error-handling scenario to distinguish real dry-run validation failures from invalid-model dry-run preparation behavior.
+
 ## [0.44.1] - 2026-03-12
 
 ### Changed
