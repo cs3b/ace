@@ -31,7 +31,7 @@ cleanup:
 # Reporting defaults (suite final report LLM synthesis)
 reporting:
   # LLM model alias for suite report generation
-  model: "claude:sonnet"
+  model: "claude:sonnet@ro"
   # Timeout in seconds for report generation
   timeout: 60
 
