@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.837] - 2026-03-13
+
+### Changed
+- **ace-test-runner-e2e v0.24.6**: Updated the `e2e/fix` workflow and canonical `as-e2e-fix` skill to require reruns after each fix iteration and a final `ace-test-e2e-suite --only-failures` checkpoint before closing a fix session.
+
 ## [0.9.836] - 2026-03-13
 
 ### Fixed
