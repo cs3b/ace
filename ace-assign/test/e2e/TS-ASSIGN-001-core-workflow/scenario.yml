@@ -28,5 +28,22 @@ setup:
   - git-init
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
+  - run: |
+      ROOT_PATH="${PROJECT_ROOT_PATH:-$(pwd)}"
+      mkdir -p ace-assign/handbook/workflow-instructions/assign .claude/skills/as-assign-drive
+      if [ ! -f "$ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" ]; then
+        echo "Source workflow file not found: $ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" >&2
+        exit 1
+      fi
+      cp "$ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" ace-assign/handbook/workflow-instructions/assign/drive.wf.md
+
+      if [ -f "$ROOT_PATH/.claude/skills/as-assign-drive/SKILL.md" ]; then
+        cp "$ROOT_PATH/.claude/skills/as-assign-drive/SKILL.md" .claude/skills/as-assign-drive/SKILL.md
+      elif [ -f "$ROOT_PATH/ace-assign/handbook/skills/as-assign-drive/SKILL.md" ]; then
+        cp "$ROOT_PATH/ace-assign/handbook/skills/as-assign-drive/SKILL.md" .claude/skills/as-assign-drive/SKILL.md
+      else
+        echo "Required source skill not found" >&2
+        exit 1
+      fi
   - agent-env:
       PROJECT_ROOT_PATH: .

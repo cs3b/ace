@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.3] - 2026-03-13
+
+### Added
+- Added pre-flight prerequisite validation to `TC-005-no-skip-policy` fixture setup so scenario runs verify required workflow and skill files exist before policy checks execute.
+
+### Technical
+- Hardened `TS-ASSIGN-001` fixture setup and verification flow by capturing pre-flight exit status and output artifacts.
+
 ## [0.31.2] - 2026-03-12
 
 ### Changed
