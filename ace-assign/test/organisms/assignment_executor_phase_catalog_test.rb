@@ -36,22 +36,36 @@ class AssignmentExecutorPhaseCatalogTest < AceAssignTestCase
     resolver.verify
   end
 
-  def test_merge_phase_catalog_overrides_existing_entries_and_keeps_internal_helpers
+  def test_merge_phase_catalog_overrides_existing_entries_and_keeps_local_render_metadata
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
 
     base_catalog = [
-      { "name" => "plan-task", "skill" => "as-task-plan", "description" => "Legacy YAML" },
+      {
+        "name" => "plan-task",
+        "skill" => "as-task-plan",
+        "description" => "Legacy YAML",
+        "steps" => [{ "description" => "Local step" }]
+      },
       { "name" => "task-load", "description" => "Internal helper" }
     ]
     canonical_catalog = [
-      { "name" => "plan-task", "skill" => "as-task-plan", "description" => "Canonical skill" },
+      {
+        "name" => "plan-task",
+        "skill" => "as-task-plan",
+        "description" => "Canonical skill",
+        "context" => { "default" => "fork" }
+      },
       { "name" => "verify-test-suite", "skill" => "as-test-verify-suite", "description" => "Canonical suite" }
     ]
 
     merged = executor.send(:merge_phase_catalog, base_catalog, canonical_catalog)
 
     assert_equal %w[plan-task task-load verify-test-suite], merged.map { |phase| phase["name"] }
-    assert_equal "Canonical skill", merged.find { |phase| phase["name"] == "plan-task" }["description"]
+    plan_task = merged.find { |phase| phase["name"] == "plan-task" }
+
+    assert_equal "Canonical skill", plan_task["description"]
+    assert_equal({ "default" => "fork" }, plan_task["context"])
+    assert_equal [{ "description" => "Local step" }], plan_task["steps"]
     assert_equal "Internal helper", merged.find { |phase| phase["name"] == "task-load" }["description"]
   end
 end

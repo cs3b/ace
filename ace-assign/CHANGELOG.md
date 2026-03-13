@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-03-13
+
+### Fixed
+- Rendered `verify-test-suite` and `verify-e2e` assignment phases now use assignment-safe phase templates instead of persisting the full broad audit workflow bodies.
+- Cleaned assignment overlay serialization so generated child phases no longer leak nested `Assignment-specific context` / `Task context` headers or malformed double bullets.
+
+### Technical
+- Preserved local assignment render metadata when canonical phase catalog entries merge with workflow-backed skill metadata.
+- Added regression coverage for phase-template rendering and structural assignment-overlay cleanup.
+
 ## [0.32.0] - 2026-03-13
 
 ### Changed

@@ -1,5 +1,6 @@
 name: verify-e2e
 skill: as-e2e-review
+render: phase_template
 description: Review E2E coverage for modified packages and run targeted scenarios
 
 prerequisites:
