@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-03-13
+
+### Changed
+- Strengthened projected workflow skill instructions for Codex delegated execution and forked provider contexts so generated provider skills explicitly load and execute workflows in the current project instead of only reading or summarizing them.
+
+### Technical
+- Added projection regression coverage for strong workflow-execution rendering in both Codex `context: ace-llm` mode and provider `context: fork` mode.
+
 ## [0.15.3] - 2026-03-13
 
 ### Changed

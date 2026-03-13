@@ -77,7 +77,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       "description" => "Generate intelligent git commit message",
       "source" => "ace-demo",
       "argument-hint" => ["intention"],
-      "skill" => {"kind" => "workflow"},
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://git/commit"}},
       "integration" => {
         "providers" => {
           "claude" => {
@@ -117,13 +117,103 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes codex_rendered, "## Instructions"
     assert_includes codex_rendered, "If INTENTION was provided explicitly, use it. Otherwise, describe intent of recent changes."
     assert_includes codex_rendered, "If CHANGED_FILES was provided explicitly, use it. Otherwise, list files changed in this session."
+    assert_includes codex_rendered, "You are working in the current project."
+    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Read the loaded workflow and execute it end-to-end in this project."
+    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
     assert_includes codex_rendered, "ace-llm codex:spark@yolo"
-    assert_includes codex_rendered, "read and run \\`ace-bundle wfi://git/commit\\`"
+    assert_includes codex_rendered, "mise exec -- ace-bundle wfi://git/commit"
     refute_includes codex_rendered, "context: fork"
     refute_includes codex_rendered, "model: haiku"
     refute_includes codex_rendered, "prompt_context:"
     refute_includes codex_rendered, "$INTENTION"
     refute_includes claude_rendered, "integration:"
+    refute_includes codex_rendered, "integration:"
+  end
+
+  def test_sync_projects_simple_codex_ace_llm_run_for_release
+    frontmatter = {
+      "name" => "as-release",
+      "description" => "Release modified ACE packages",
+      "source" => "ace-demo",
+      "argument-hint" => "package-name... bump-level",
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://release/publish"}},
+      "integration" => {
+        "providers" => {
+          "claude" => {
+            "frontmatter" => {
+              "context" => "fork",
+              "model" => "haiku"
+            }
+          },
+          "codex" => {
+            "context" => "ace-llm",
+            "ace-llm" => "codex:spark@yolo"
+          }
+        }
+      }
+    }
+
+    create_skill("as-release", <<~BODY, frontmatter: frontmatter)
+      read and run `ace-bundle wfi://release/publish`
+    BODY
+
+    syncer.sync(provider: "claude")
+    syncer.sync(provider: "codex")
+
+    claude_rendered = File.read(File.join(@tmpdir, ".claude", "skills", "as-release", "SKILL.md"))
+    codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-release", "SKILL.md"))
+
+    assert_includes claude_rendered, "context: fork"
+    assert_includes claude_rendered, "model: haiku"
+    assert_includes codex_rendered, "argument-hint: package-name... bump-level"
+    assert_includes codex_rendered, "## Instructions"
+    assert_includes codex_rendered, "Run:"
+    assert_includes codex_rendered, "ace-llm codex:spark@yolo"
+    assert_includes codex_rendered, "You are working in the current project."
+    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
+    refute_includes codex_rendered, "## Variables"
+    refute_includes claude_rendered, "integration:"
+    refute_includes codex_rendered, "integration:"
+  end
+
+  def test_sync_projects_fork_context_workflow_instructions_for_github_pr_create
+    frontmatter = {
+      "name" => "as-github-pr-create",
+      "description" => "Create GitHub pull request",
+      "source" => "ace-demo",
+      "argument-hint" => "pr-type",
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://github/pr/create"}},
+      "integration" => {
+        "providers" => {
+          "codex" => {
+            "frontmatter" => {
+              "context" => "fork",
+              "model" => "gpt-5.3-codex-spark"
+            }
+          }
+        }
+      }
+    }
+
+    create_skill("as-github-pr-create", <<~BODY, frontmatter: frontmatter)
+      read and run `ace-bundle wfi://github/pr/create`
+    BODY
+
+    syncer.sync(provider: "codex")
+
+    codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-github-pr-create", "SKILL.md"))
+
+    assert_includes codex_rendered, "context: fork"
+    assert_includes codex_rendered, "model: gpt-5.3-codex-spark"
+    assert_includes codex_rendered, "## Instructions"
+    assert_includes codex_rendered, "You are working in a forked execution context for the current project."
+    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Read the loaded workflow and execute it end-to-end in this forked context."
+    assert_includes codex_rendered, "Do the work described by the workflow instead of only summarizing it."
+    assert_includes codex_rendered, "Return results from the executed workflow, not a summary of the workflow text."
+    refute_includes codex_rendered, "ace-llm"
     refute_includes codex_rendered, "integration:"
   end
 
