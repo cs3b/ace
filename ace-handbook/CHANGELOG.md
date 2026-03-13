@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-03-13
+
+### Changed
+- Render Codex `ace-llm` skills from canonical frontmatter by deriving uppercase variables from `argument-hint` and generating `## Variables` / `## Instructions` sections for projected Codex skills.
+
+### Technical
+- Added projection regression coverage for `context: ace-llm` rendering and argument-hint-derived Codex variable generation.
+
 ## [0.15.2] - 2026-03-12
 
 ### Fixed
