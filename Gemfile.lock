@@ -170,7 +170,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.25.1)
+    ace-llm-providers-cli (0.25.2)
       ace-llm (~> 0.26)
 
 PATH
@@ -247,7 +247,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.8.2)
+    ace-sim (0.8.3)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
