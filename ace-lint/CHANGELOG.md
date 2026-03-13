@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-03-13
+
+### Changed
+- Removed the Codex-specific delegated execution metadata from the canonical `as-lint-run` skill so provider projections now inherit the canonical skill body unchanged.
+
 ## [0.20.1] - 2026-03-12
 
 ### Changed
