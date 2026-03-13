@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.8] - 2026-03-13
+
+### Changed
+- Removed the stale fork-context comment from the canonical `as-e2e-run` skill so only the selected Claude-fork skills retain provider-specific fork metadata.
+
 ## [0.24.7] - 2026-03-13
 
 ### Changed
