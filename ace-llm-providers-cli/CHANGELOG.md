@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Removed unsupported CLI temperature forwarding for Claude Code CLI adapters so `--temperature` is no longer passed to subprocesses.
+
 ## [0.25.1] - 2026-03-12
 
 ### Fixed

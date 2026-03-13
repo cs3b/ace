@@ -102,6 +102,11 @@ describe "ClaudeOaiClient" do
       assert_equal "opus", cmd[m_index + 1]
     end
 
+    it "does not pass unsupported temperature flag" do
+      cmd = @client.send(:build_claude_command, temperature: 0.2)
+      refute_includes cmd, "--temperature"
+    end
+
     it "resolves haiku tier for glm-4.7" do
       client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-4.7", backends: @backends)
       cmd = client.send(:build_claude_command, {})
