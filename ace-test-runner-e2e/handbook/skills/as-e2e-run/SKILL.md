@@ -2,7 +2,6 @@
 name: as-e2e-run
 description: Execute an E2E test scenario
 # bundle: wfi://e2e/run
-# context: fork
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
