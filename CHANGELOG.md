@@ -4,313 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.847] - 2026-03-13
-
-### Fixed
-- **ace-assign v0.32.1**: Corrected generated assignment phase rendering so `verify-test-suite` and `verify-e2e` persist assignment-safe phase bodies and child overlays no longer serialize malformed nested context blocks.
-
-### Technical
-- Coordinated release of `ace-assign` with phase-template rendering support and merged canonical/local assignment phase metadata preservation.
-
-## [0.9.846] - 2026-03-13
-
-### Changed
-- **ace-assign v0.32.0**: Switched generated public assignment phases to workflow-backed execution references and restored essential preset orchestration overlays for `work-on-task` and `work-on-tasks`.
-
-### Technical
-- Coordinated release of `ace-assign` with workflow-first phase materialization, parser/runtime `workflow` support, and updated assignment regression coverage.
-
-## [0.9.845] - 2026-03-13
-
-### Changed
-- **ace-assign v0.31.5**: Completed canonical assign skill catalog composition and workflow-backed phase metadata wiring for public assignments.
-- **ace-bundle v0.36.6**: Updated canonical onboarding skill metadata for in-project workflow execution flow.
-- **ace-docs v0.25.4**: Updated canonical docs skills to align with shared workflow execution standards.
-- **ace-git-commit v0.21.4**: Harmonized canonical git-commit skill structure with unified execution contract.
-- **ace-git v0.14.4**: Updated canonical Git workflow skills for workflow-first execution compatibility.
-- **ace-review v0.44.4**: Updated canonical review skills to rely on workspace workflow execution flow.
-- **ace-search v0.21.5**: Updated canonical search workflow skill metadata for bundled workflow execution.
-- **ace-task v0.28.5**: Updated canonical task skills to support unified skill + workflow execution patterns.
-- **ace-test-runner-e2e v0.24.11**: Updated canonical E2E workflow skills for workspace-based execution flow.
-- **ace-test v0.4.4**: Updated canonical test planning skills for direct workflow execution in this project.
-
-### Technical
-- Coordinated release of all modified ACE packages.
-
-## [0.9.844] - 2026-03-13
-
-### Changed
-- **ace-assign v0.31.4**: Updated canonical assign skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-b36ts v0.10.2**: Updated the canonical `as-b36ts` skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-bundle v0.36.5**: Updated the canonical bundle and onboarding skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-demo v0.10.3**: Updated canonical demo skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-docs v0.25.3**: Updated canonical docs skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-git v0.14.3**: Updated canonical git workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-git-secrets v0.9.2**: Updated canonical git security skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-git-worktree v0.15.3**: Updated canonical worktree skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-handbook v0.15.6**: Updated handbook-owned canonical skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-handbook-integration-claude v0.3.1**: Updated the canonical Claude integration sync skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-idea v0.14.3**: Updated the canonical idea review skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-lint v0.20.3**: Updated canonical lint skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-overseer v0.5.2**: Updated the canonical overseer skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-prompt-prep v0.19.3**: Updated the canonical prompt-prep skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-retro v0.12.1**: Updated the canonical handbook self-improvement skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-review v0.44.3**: Updated canonical review skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-search v0.21.4**: Updated canonical search research skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-sim v0.8.5**: Updated the canonical simulation skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
-- **ace-task v0.28.4**: Updated canonical task, bug, docs, retro, idea, and test skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-test v0.4.3**: Updated canonical test-planning and suite-health skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-- **ace-test-runner-e2e v0.24.10**: Updated canonical E2E workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
-
-### Technical
-- **ace-handbook v0.15.6**: Refreshed provider sync and status collector regression coverage for the new compact canonical skill execution template.
-- **ace-lint v0.20.3**: Updated markdown-linter fixture coverage for the new compact canonical skill execution template.
-
-## [0.9.843] - 2026-03-13
-
-### Changed
-- **ace-assign v0.31.3**: Added pre-flight fixture checks for `TC-005-no-skip-policy` and sandbox setup artifacts in `TS-ASSIGN-001`.
-- **ace-test-runner-e2e v0.24.9**: Updated `e2e/fix` workflow guidance for explicit scenario-level reruns and fixed experience report status mapping for pass/error outcomes.
-
-## [0.9.842] - 2026-03-13
-
-### Changed
-- **ace-b36ts v0.10.1**: Removed Codex-specific delegated execution metadata from the canonical `as-b36ts` skill so provider projections inherit the canonical body unchanged.
-- **ace-demo v0.10.2**: Removed Codex-specific delegated execution metadata from the canonical `as-demo-create` and `as-demo-record` skills so provider projections inherit the canonical body unchanged.
-- **ace-docs v0.25.2**: Removed Codex-specific delegated execution metadata from the canonical `as-docs-squash-changelog` skill so provider projections inherit the canonical body unchanged.
-- **ace-git-commit v0.21.3**: Replaced provider-specific Codex execution metadata on `as-git-commit` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
-- **ace-git-worktree v0.15.2**: Removed Codex-specific delegated execution metadata from the canonical worktree skills so provider projections inherit the canonical body unchanged.
-- **ace-git v0.14.2**: Replaced provider-specific Codex execution metadata on `as-github-pr-create`, removed it from `as-github-pr-update`, and limited provider-specific forking to Claude frontmatter.
-- **ace-handbook v0.15.5**: Removed provider-specific skill body rendering and simplified handbook projection coverage around frontmatter overrides plus canonical body preservation.
-- **ace-lint v0.20.2**: Removed Codex-specific delegated execution metadata from the canonical `as-lint-run` skill so provider projections inherit the canonical body unchanged.
-- **ace-prompt-prep v0.19.2**: Removed Codex-specific delegated execution metadata from the canonical `as-prompt-prep` skill so provider projections inherit the canonical body unchanged.
-- **ace-search v0.21.3**: Replaced provider-specific Codex execution metadata on `as-search-run` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
-- **ace-task v0.28.3**: Removed Codex-specific delegated execution metadata from the canonical `as-task-finder` and `as-task-work` skills so provider projections inherit the canonical body unchanged.
-- **ace-test v0.4.2**: Removed Codex-specific delegated execution metadata from the canonical `as-test-verify-suite` skill so provider projections inherit the canonical body unchanged.
-- **ace-test-runner-e2e v0.24.8**: Removed the stale fork-context comment from `as-e2e-run` so only the selected Claude-fork skills retain provider-specific fork metadata.
-
-## [0.9.841] - 2026-03-13
-
-### Changed
-- **ace-handbook v0.15.4**: Strengthened projected workflow skill instructions for Codex delegated execution and forked provider contexts so generated provider skills explicitly load and execute workflows in the current project instead of only reading or summarizing them.
-
-## [0.9.840] - 2026-03-13
-
-### Changed
-- **ace-git-commit v0.21.2**: Updated the canonical `as-git-commit` Codex metadata to use `context: ace-llm` with frontmatter-driven variable and instruction rendering in projected Codex skills.
-- **ace-handbook v0.15.3**: Rendered Codex `ace-llm` skills from canonical frontmatter by deriving variables from `argument-hint` and generating `## Variables` / `## Instructions` sections in projected Codex skills.
-
-## [0.9.839] - 2026-03-13
-
-### Fixed
-- **ace-compressor v0.21.2**: Preserved markdown frontmatter-only files in exact-mode compression so section compression and fixture-driven E2E runs no longer abort when a source contains only frontmatter.
-- **ace-bundle v0.36.4**: Handled frontmatter-only files in bundle section compression without dropping related sections by preserving source content and continuing the compression flow.
-- **ace-test-runner v0.15.11**: Fixed suite/config bootstrap and failure propagation so `ace-test` exits non-zero on test failures and `ace-test-suite` reports missing suite configuration cleanly.
-
-## [0.9.838] - 2026-03-13
-
-### Changed
-- **ace-sim v0.8.4**: Updated the `TS-SIM-001` default preset E2E scenario to verify preset contract and chain handoff behavior while allowing either successful synthesis or a cleanly recorded final-stage failure.
-- **ace-test-runner-e2e v0.24.7**: Increased the default E2E suite parallelism setting in project config from `6` to `8`.
-
-## [0.9.837] - 2026-03-13
-
-### Changed
-- **ace-test-runner-e2e v0.24.6**: Updated the `e2e/fix` workflow and canonical `as-e2e-fix` skill to require reruns after each fix iteration and a final `ace-test-e2e-suite --only-failures` checkpoint before closing a fix session.
-
-## [0.9.836] - 2026-03-13
-
-### Fixed
-- **ace-llm-providers-cli v0.25.2**: Removed unsupported `--temperature` flag forwarding from Claude CLI adapters so generation defaults are no longer passed as CLI options.
-- **ace-sim v0.8.3**: Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku`.
-
-## [0.9.835] - 2026-03-13
-
-### Changed
-- **ace-review v0.44.2**: Updated the dry-run error-handling E2E scenario so invalid-model captures are treated as prepared-session output rather than validation failures.
-- **ace-sim v0.8.2**: Updated the full-chain synthesis E2E scenario to verify aggregated step inputs and recorded final-stage outcomes, including cleanly captured external synthesis failures.
-- **ace-test-runner-e2e v0.24.5**: Updated the project E2E suite report-generation default model override to `claude:sonnet@ro`.
-
-## [0.9.834] - 2026-03-12
-
-### Fixed
-- **ace-support-core v0.25.3**: Re-exported `Ace::Core::Atoms::CommandExecutor` from `ace/core` so shared-core consumers can use the command executor without a separate direct require.
-
-## [0.9.833] - 2026-03-12
-
-### Added
-- **ace-llm v0.26.5**: Added `working_dir:` threading in `QueryInterface` for CLI-backed provider execution context.
-
-### Fixed
-- **ace-llm-providers-cli v0.25.1**: Fixed CLI provider subprocesses and provider-side path discovery to anchor to the sandbox/root execution directory instead of leaking relative artifact writes into the repo root.
-- **ace-test-runner-e2e v0.24.4**: Fixed deterministic E2E pipeline runner and verifier invocations to pass the sandbox as the explicit working directory.
-
-## [0.9.832] - 2026-03-12
-
-### Added
-- **ace-search v0.21.2**: Added a public `--count` CLI flag so count-oriented ripgrep execution is available through `ace-search`.
-
-### Fixed
-- **ace-git-worktree v0.15.1**: Fixed JSON list output to stay JSON-only by suppressing CLI summary text in `--format json` mode.
-- **ace-sim v0.8.1**: Fixed simulation subprocess execution to use the shared core command executor, avoiding Ruby thread-read exceptions when external commands fail.
-
-### Changed
-- **ace-assign v0.31.2**: Updated assignment E2E fixtures and hierarchy verification guidance to match the current `phases:` schema and copied auto-completion report artifacts.
-- **ace-idea v0.14.2**: Updated idea-lifecycle E2E guidance to capture created idea file content and frontmatter as explicit verification artifacts.
-- **ace-test-runner v0.15.10**: Updated `ace-test` E2E guidance to verify single-file and group-scoped runs from captured commands and report artifacts instead of brittle stdout wording.
-- **ace-test-runner-e2e v0.24.3**: Changed the default suite report-generation model in project E2E config to `codex:spark`.
-
-## [0.9.831] - 2026-03-12
-
-### Fixed
-- **ace-handbook v0.15.2**: Preserved the conditional sandbox execution branch when syncing canonical `as-e2e-run` skills into provider-native Claude and Codex trees.
-- **ace-test-runner-e2e v0.24.2**: Restored sandboxed `as-e2e-run` workflow routing, hardened verifier/result parsing against brace fragments in prose responses, and turned unstructured verifier output into deterministic error reports with failing verdict metadata.
-
-## [0.9.830] - 2026-03-12
-
-### Technical
-- **ace-bundle v0.36.3**: Forced exact-mode compression in test execution paths so suite runtime no longer invokes the agent compressor path by default.
-
-## [0.9.829] - 2026-03-12
-
-### Fixed
-- **ace-demo v0.10.1**: Registered the package WFI source so the canonical demo skills can resolve `wfi://demo/create` and `wfi://demo/record`.
-- **ace-overseer v0.5.1**: Registered the package WFI source so the canonical overseer skill can resolve `wfi://overseer`.
-- **ace-prompt-prep v0.19.1**: Registered the package WFI source so the canonical prompt-prep skill can resolve `wfi://prompt-prep`.
-- **ace-task v0.28.2**: Restored the Codex model override on `as-task-work` so the generated Codex projection uses `gpt-5.3-codex-spark`.
-
-### Technical
-- **ace-bundle v0.36.2**: Added regression coverage for the restored demo, overseer, and prompt-prep WFI targets so `ace-bundle` continues to load those workflow-backed skills correctly.
-
-## [0.9.828] - 2026-03-12
-
-### Changed
-- **ace-bundle v0.36.1**: Updated bundle workflow guidance to use direct `ace-bundle` invocations instead of legacy slash-command examples.
-- **ace-docs v0.25.1**: Updated handbook guide and README examples to use current gem-scoped handbook paths and bundle-first workflow references.
-- **ace-git v0.14.1**: Updated README and handbook guide examples to load workflows through `ace-bundle` and removed legacy shared-handbook path assumptions.
-- **ace-git-commit v0.21.1**: Updated README prompt-path guidance to reference the package-local handbook prompt source.
-- **ace-git-secrets v0.9.1**: Updated README remediation guidance to load the token-remediation workflow through `ace-bundle`.
-- **ace-handbook v0.15.1**: Updated handbook README, workflow docs, and guidance to document bundle-first workflow usage and the current handbook structure.
-- **ace-integration-claude v0.3.8**: Updated the legacy integration README to clarify replacement-package status and current canonical skill ownership and projection boundaries.
-- **ace-lint v0.20.1**: Updated README examples to reference current handbook skill and workflow paths instead of legacy provider-local example locations.
-- **ace-llm v0.26.4**: Updated the handbook LLM reference guide to describe canonical package `handbook/skills/` ownership before provider projections.
-- **ace-review v0.44.1**: Updated review workflow instructions to reference bundle-first review flows instead of slash-command examples.
-- **ace-search v0.21.1**: Updated handbook search-agent examples to use current `ace-*/handbook/**/*` paths instead of legacy shared handbook locations.
-- **ace-task v0.28.1**: Updated task and bug workflow guidance to reference bundle-first follow-up workflows and current canonical handbook path examples.
-- **ace-test v0.4.1**: Updated README and workflow guidance to use direct `ace-bundle` workflow loading instead of legacy slash-command references.
-- **ace-test-runner-e2e v0.24.1**: Updated README and E2E workflow documentation to use `ace-bundle` and `ace-test-e2e` examples instead of slash-command orchestration.
-
-## [0.9.827] - 2026-03-12
-
-### Added
-- **ace-b36ts v0.10.0**: Added Codex-specific delegated execution metadata to the canonical `as-b36ts` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-- **ace-demo v0.10.0**: Added Codex-specific delegated execution metadata to the canonical `as-demo-create` and `as-demo-record` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
-- **ace-docs v0.25.0**: Added Codex-specific delegated execution metadata to the canonical `as-docs-squash-changelog` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-- **ace-git v0.14.0**: Added Codex-specific delegated execution metadata to the canonical `as-github-pr-create` and `as-github-pr-update` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
-- **ace-git-worktree v0.15.0**: Added Codex-specific delegated execution metadata to the canonical `as-git-worktree` and `as-git-worktree-manage` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
-- **ace-handbook v0.15.0**: Added Codex-specific delegated execution metadata to the canonical `as-release-bump-version` and `as-release-update-changelog` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
-- **ace-lint v0.20.0**: Added Codex-specific delegated execution metadata to the canonical `as-lint-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-- **ace-prompt-prep v0.19.0**: Added Codex-specific delegated execution metadata to the canonical `as-prompt-prep` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-- **ace-search v0.21.0**: Added Codex-specific delegated execution metadata to the canonical `as-search-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-- **ace-task v0.28.0**: Added Codex-specific delegated execution metadata to the canonical `as-release-navigator` and `as-task-finder` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
-- **ace-test v0.4.0**: Added Codex-specific delegated execution metadata to the canonical `as-test-verify-suite` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
-
-## [0.9.826] - 2026-03-12
-
-### Added
-- **ace-git-commit v0.21.0**: Added provider-specific Claude and Codex execution overrides to the canonical `as-git-commit` skill so projected provider skills can request forked execution with provider-specific models.
-
-### Fixed
-- **ace-task v0.27.1**: Removed the mistaken provider-specific model override from the canonical `as-task-work` skill so task work projections keep their intended shared metadata.
-
-### Technical
-- **ace-handbook v0.14.1**: Updated provider sync regression coverage to verify provider-specific execution overrides on projected git-commit skills and to keep generated provider skills free of canonical `integration` metadata.
-- **ace-lint v0.19.1**: Expanded canonical skill validation fixtures to cover provider-specific execution overrides such as `context: fork` and provider model hints under `integration.providers.<provider>.frontmatter`.
-
-## [0.9.825] - 2026-03-12
-
-### Changed
-- **ace-handbook v0.14.0**: Changed canonical skill inventory and handbook status/sync projection inputs to use registered `skill://` sources through `ace-support-nav` instead of direct monorepo package scans.
-
-### Added
-- **ace-support-nav v0.22.0**: Added explicit rooted source discovery for protocol registries, enabling nav-backed handbook skill inventory outside process-cwd assumptions.
-
-### Technical
-- **Project nav config**: Added the missing `.ace/nav/protocols/skill-sources/*.yml` registrations so this workspace activates the full canonical skill set through `skill://`.
-
-## [0.9.824] - 2026-03-12
-
-### Changed
-- **ace-llm-providers-cli v0.25.0**: Changed Codex skill discovery to use `.codex/skills` as the provider-native directory without legacy `.agent/skills` or `.claude/skills` fallback.
-
-### Technical
-- **ace-handbook v0.13.1**: Added regression coverage for the `.agent/skills` retirement so provider sync/status validation now assumes provider-native skill trees only.
-
-## [0.9.823] - 2026-03-12
-
-### Changed
-- **ace-handbook-integration-claude v0.3.0**, **ace-handbook-integration-codex v0.3.0**, **ace-handbook-integration-gemini v0.3.0**, **ace-handbook-integration-opencode v0.3.0**, and **ace-handbook-integration-pi v0.3.0**: Removed the deprecated shared integration-base dependency and made each provider package a thin plugin on top of `ace-handbook`.
-
-## [0.9.822] - 2026-03-12
-
-### Added
-- **ace-support-nav v0.21.0**: Added dedicated project/user handbook override roots at `.ace-handbook` and `~/.ace-handbook`, including default `ace-nav create` targets under the new project root.
-
-### Fixed
-- **ace-docs v0.24.1**: Fixed shipped prompt-source override guidance to use `.ace-handbook` and `~/.ace-handbook` instead of `.ace/handbook`.
-
-## [0.9.821] - 2026-03-12
-
-### Added
-- **ace-handbook v0.13.0**: Added canonical skill inventory counts by `source` and expanded provider sync-health reporting in `ace-handbook status`, including symlink-aware comparisons.
-
-## [0.9.820] - 2026-03-10
-
-### Added
-- **ace-handbook v0.12.0**: Added a public `ace-handbook` CLI with provider sync/status commands and canonical skill projection services for provider-native folders.
-- **ace-handbook-integration-claude v0.2.0**, **ace-handbook-integration-codex v0.2.0**, **ace-handbook-integration-gemini v0.2.0**, **ace-handbook-integration-opencode v0.2.0**, and **ace-handbook-integration-pi v0.2.0**: Added shipped provider manifests and packaging support so handbook sync can discover and project provider-specific skill directories.
-
-### Changed
-- **ace-llm-providers-cli v0.24.0**: Changed PI skill discovery to use `.pi/skills` as the provider-native directory without `.agent/skills` fallback.
-
-## [0.9.819] - 2026-03-10
-
-### Added
-- **ace-bundle v0.36.0**: Added canonical handbook-owned bundle and onboarding skills, including the new `wfi://onboard` workflow.
-- **ace-demo v0.9.0**: Added canonical handbook-owned demo creation and recording skills.
-- **ace-docs v0.24.0**: Added canonical handbook-owned documentation workflow skills across ADR, API, user-doc, update, and changelog maintenance flows.
-- **ace-git v0.13.0**, **ace-git-commit v0.20.0**, **ace-git-secrets v0.9.0**, and **ace-git-worktree v0.14.0**: Added canonical handbook-owned git workflow skills across commit, rebase, PR, security audit, and worktree management flows.
-- **ace-handbook v0.11.0**: Added canonical handbook-owned skills for handbook management, release workflows, and research/delivery orchestration.
-- **ace-handbook-integration-agent v0.1.1**: Added the shared provider registry and projection merge helpers for provider-specific handbook integrations.
-- **ace-handbook-integration-claude v0.1.1**, **ace-handbook-integration-codex v0.1.1**, **ace-handbook-integration-gemini v0.1.1**, **ace-handbook-integration-opencode v0.1.1**, and **ace-handbook-integration-pi v0.1.1**: Added provider-specific handbook integration packages on top of the shared integration base.
-- **ace-overseer v0.5.0**, **ace-prompt-prep v0.18.0**, **ace-retro v0.12.0**, **ace-review v0.44.0**, **ace-search v0.20.0**, **ace-sim v0.8.0**, **ace-task v0.27.0**, **ace-test v0.3.0**, and **ace-test-runner-e2e v0.24.0**: Added canonical handbook-owned skills and workflow entrypoints for their agent-facing package capabilities.
-
-### Changed
-- **ace-lint v0.19.0**: Added canonical skill validation support for provider-specific integration metadata and expanded the allowlist for migrated handbook skill tools.
-- **ace-integration-claude v0.3.7**: Updated legacy integration metadata documentation to describe direct provider projections from canonical package skills.
-
-
-## [0.9.818] - 2026-03-10
-
-### Fixed
-- **ace-assign v0.31.1**: Fixed canonical assignment skill discovery to honor nav source priority while preserving package-default fallback lookup in local monorepo workflows.
-- **ace-lint v0.18.1**: Fixed markdown linting to ignore YAML frontmatter and validated `ace-idea` as a supported canonical skill Bash prefix.
-- **ace-task v0.26.1**: Fixed migrated canonical task skills to include the required strict-schema bundle/agent metadata.
-- **ace-b36ts v0.9.1**: Fixed the canonical `as-b36ts` skill metadata to include the required bundle declaration.
-
-## [0.9.817] - 2026-03-09
-
-### Technical
-- **ace-bundle v0.35.5**: Hardened the invalid `bundle.pr` regression test to stub PR metadata fetches and validate the real loader error path without live GitHub access.
-
-## [0.9.816] - 2026-03-09
-
-### Changed
-- **ace-git v0.12.0**: Changed the rebase workflow to keep localized conflicts on the normal rebase path and reserve cherry-pick for repeated, large, or user-requested conflict handling.
-
-### Fixed
-- **ace-git v0.12.0**: Fixed resumed cherry-pick replay tracking by recording applied SHAs in the rebase session cache instead of relying on commit-subject matching.
-
 ## [0.9.815] - 2026-03-09
 
 ### Fixed
@@ -364,9 +57,305 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.808] - 2026-03-09
 
+### Fixed
+- **ace-assign v0.31.1**: Fixed canonical assignment skill discovery to honor nav source priority while preserving package-default fallback lookup in local monorepo workflows.
+
+- **ace-assign v0.32.1**: Corrected generated assignment phase rendering so `verify-test-suite` and `verify-e2e` persist assignment-safe phase bodies and child overlays no longer serialize malformed nested context blocks.
+
+- **ace-b36ts v0.9.1**: Fixed the canonical `as-b36ts` skill metadata to include the required bundle declaration.
+
+- **ace-bundle v0.36.4**: Handled frontmatter-only files in bundle section compression without dropping related sections by preserving source content and continuing the compression flow.
+
+- **ace-compressor v0.21.2**: Preserved markdown frontmatter-only files in exact-mode compression so section compression and fixture-driven E2E runs no longer abort when a source contains only frontmatter.
+
+- **ace-demo v0.10.1**: Registered the package WFI source so the canonical demo skills can resolve `wfi://demo/create` and `wfi://demo/record`.
+
+- **ace-docs v0.24.1**: Fixed shipped prompt-source override guidance to use `.ace-handbook` and `~/.ace-handbook` instead of `.ace/handbook`.
+
+- **ace-git v0.12.0**: Fixed resumed cherry-pick replay tracking by recording applied SHAs in the rebase session cache instead of relying on commit-subject matching.
+
+- **ace-git-worktree v0.15.1**: Fixed JSON list output to stay JSON-only by suppressing CLI summary text in `--format json` mode.
+
+- **ace-handbook v0.15.2**: Preserved the conditional sandbox execution branch when syncing canonical `as-e2e-run` skills into provider-native Claude and Codex trees.
+
+- **ace-lint v0.18.1**: Fixed markdown linting to ignore YAML frontmatter and validated `ace-idea` as a supported canonical skill Bash prefix.
+
+- **ace-llm-providers-cli v0.25.1**: Fixed CLI provider subprocesses and provider-side path discovery to anchor to the sandbox/root execution directory instead of leaking relative artifact writes into the repo root.
+
+- **ace-llm-providers-cli v0.25.2**: Removed unsupported `--temperature` flag forwarding from Claude CLI adapters so generation defaults are no longer passed as CLI options.
+
+- **ace-overseer v0.5.1**: Registered the package WFI source so the canonical overseer skill can resolve `wfi://overseer`.
+
+- **ace-prompt-prep v0.19.1**: Registered the package WFI source so the canonical prompt-prep skill can resolve `wfi://prompt-prep`.
+
+- **ace-sim v0.8.1**: Fixed simulation subprocess execution to use the shared core command executor, avoiding Ruby thread-read exceptions when external commands fail.
+
+- **ace-sim v0.8.3**: Restored the built-in `validate-idea` and `validate-task` synthesis preset defaults to `claude:haiku`.
+
+- **ace-support-core v0.25.3**: Re-exported `Ace::Core::Atoms::CommandExecutor` from `ace/core` so shared-core consumers can use the command executor without a separate direct require.
+
+- **ace-task v0.26.1**: Fixed migrated canonical task skills to include the required strict-schema bundle/agent metadata.
+
+- **ace-task v0.27.1**: Removed the mistaken provider-specific model override from the canonical `as-task-work` skill so task work projections keep their intended shared metadata.
+
+- **ace-task v0.28.2**: Restored the Codex model override on `as-task-work` so the generated Codex projection uses `gpt-5.3-codex-spark`.
+
+- **ace-test-runner v0.15.11**: Fixed suite/config bootstrap and failure propagation so `ace-test` exits non-zero on test failures and `ace-test-suite` reports missing suite configuration cleanly.
+
+- **ace-test-runner-e2e v0.24.2**: Restored sandboxed `as-e2e-run` workflow routing, hardened verifier/result parsing against brace fragments in prose responses, and turned unstructured verifier output into deterministic error reports with failing verdict metadata.
+
+- **ace-test-runner-e2e v0.24.4**: Fixed deterministic E2E pipeline runner and verifier invocations to pass the sandbox as the explicit working directory.
+
+
 ### Added
 - **ace-assign v0.29.0**: Canonical skill resolution and assign-capable phase catalog reordering
+
+- **ace-b36ts v0.10.0**: Added Codex-specific delegated execution metadata to the canonical `as-b36ts` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-bundle v0.36.0**: Added canonical handbook-owned bundle and onboarding skills, including the new `wfi://onboard` workflow.
+
+- **ace-demo v0.9.0**: Added canonical handbook-owned demo creation and recording skills.
+
+- **ace-demo v0.10.0**: Added Codex-specific delegated execution metadata to the canonical `as-demo-create` and `as-demo-record` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-docs v0.24.0**: Added canonical handbook-owned documentation workflow skills across ADR, API, user-doc, update, and changelog maintenance flows.
+
+- **ace-docs v0.25.0**: Added Codex-specific delegated execution metadata to the canonical `as-docs-squash-changelog` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-git v0.14.0**: Added Codex-specific delegated execution metadata to the canonical `as-github-pr-create` and `as-github-pr-update` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-git-commit v0.21.0**: Added provider-specific Claude and Codex execution overrides to the canonical `as-git-commit` skill so projected provider skills can request forked execution with provider-specific models.
+
+- **ace-git-worktree v0.15.0**: Added Codex-specific delegated execution metadata to the canonical `as-git-worktree` and `as-git-worktree-manage` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-handbook v0.11.0**: Added canonical handbook-owned skills for handbook management, release workflows, and research/delivery orchestration.
+
+- **ace-handbook v0.12.0**: Added a public `ace-handbook` CLI with provider sync/status commands and canonical skill projection services for provider-native folders.
+
+- **ace-handbook v0.13.0**: Added canonical skill inventory counts by `source` and expanded provider sync-health reporting in `ace-handbook status`, including symlink-aware comparisons.
+
+- **ace-handbook v0.15.0**: Added Codex-specific delegated execution metadata to the canonical `as-release-bump-version` and `as-release-update-changelog` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-handbook-integration-agent v0.1.1**: Added the shared provider registry and projection merge helpers for provider-specific handbook integrations.
+
+- **ace-lint v0.20.0**: Added Codex-specific delegated execution metadata to the canonical `as-lint-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-llm v0.26.5**: Added `working_dir:` threading in `QueryInterface` for CLI-backed provider execution context.
+
+- **ace-prompt-prep v0.19.0**: Added Codex-specific delegated execution metadata to the canonical `as-prompt-prep` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-search v0.21.0**: Added Codex-specific delegated execution metadata to the canonical `as-search-run` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-search v0.21.2**: Added a public `--count` CLI flag so count-oriented ripgrep execution is available through `ace-search`.
+
+- **ace-support-nav v0.21.0**: Added dedicated project/user handbook override roots at `.ace-handbook` and `~/.ace-handbook`, including default `ace-nav create` targets under the new project root.
+
+- **ace-support-nav v0.22.0**: Added explicit rooted source discovery for protocol registries, enabling nav-backed handbook skill inventory outside process-cwd assumptions.
+
 - **ace-task v0.25.0**: Mark as-task-plan as assign-capable skill
+
+- **ace-task v0.28.0**: Added Codex-specific delegated execution metadata to the canonical `as-release-navigator` and `as-task-finder` skills so the generated Codex skills run in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-test v0.4.0**: Added Codex-specific delegated execution metadata to the canonical `as-test-verify-suite` skill so the generated Codex skill runs in fork context on `gpt-5.3-codex-spark`.
+
+- **ace-git v0.13.0**, **ace-git-commit v0.20.0**, **ace-git-secrets v0.9.0**, and **ace-git-worktree v0.14.0**: Added canonical handbook-owned git workflow skills across commit, rebase, PR, security audit, and worktree management flows.
+
+- **ace-handbook-integration-claude v0.1.1**, **ace-handbook-integration-codex v0.1.1**, **ace-handbook-integration-gemini v0.1.1**, **ace-handbook-integration-opencode v0.1.1**, and **ace-handbook-integration-pi v0.1.1**: Added provider-specific handbook integration packages on top of the shared integration base.
+
+- **ace-handbook-integration-claude v0.2.0**, **ace-handbook-integration-codex v0.2.0**, **ace-handbook-integration-gemini v0.2.0**, **ace-handbook-integration-opencode v0.2.0**, and **ace-handbook-integration-pi v0.2.0**: Added shipped provider manifests and packaging support so handbook sync can discover and project provider-specific skill directories.
+
+- **ace-overseer v0.5.0**, **ace-prompt-prep v0.18.0**, **ace-retro v0.12.0**, **ace-review v0.44.0**, **ace-search v0.20.0**, **ace-sim v0.8.0**, **ace-task v0.27.0**, **ace-test v0.3.0**, and **ace-test-runner-e2e v0.24.0**: Added canonical handbook-owned skills and workflow entrypoints for their agent-facing package capabilities.
+
+
+### Changed
+- **ace-assign v0.31.2**: Updated assignment E2E fixtures and hierarchy verification guidance to match the current `phases:` schema and copied auto-completion report artifacts.
+
+- **ace-assign v0.31.3**: Added pre-flight fixture checks for `TC-005-no-skip-policy` and sandbox setup artifacts in `TS-ASSIGN-001`.
+
+- **ace-assign v0.31.4**: Updated canonical assign skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-assign v0.31.5**: Completed canonical assign skill catalog composition and workflow-backed phase metadata wiring for public assignments.
+
+- **ace-assign v0.32.0**: Switched generated public assignment phases to workflow-backed execution references and restored essential preset orchestration overlays for `work-on-task` and `work-on-tasks`.
+
+- **ace-b36ts v0.10.1**: Removed Codex-specific delegated execution metadata from the canonical `as-b36ts` skill so provider projections inherit the canonical body unchanged.
+
+- **ace-b36ts v0.10.2**: Updated the canonical `as-b36ts` skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-bundle v0.36.1**: Updated bundle workflow guidance to use direct `ace-bundle` invocations instead of legacy slash-command examples.
+
+- **ace-bundle v0.36.5**: Updated the canonical bundle and onboarding skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-bundle v0.36.6**: Updated canonical onboarding skill metadata for in-project workflow execution flow.
+
+- **ace-demo v0.10.2**: Removed Codex-specific delegated execution metadata from the canonical `as-demo-create` and `as-demo-record` skills so provider projections inherit the canonical body unchanged.
+
+- **ace-demo v0.10.3**: Updated canonical demo skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-docs v0.25.1**: Updated handbook guide and README examples to use current gem-scoped handbook paths and bundle-first workflow references.
+
+- **ace-docs v0.25.2**: Removed Codex-specific delegated execution metadata from the canonical `as-docs-squash-changelog` skill so provider projections inherit the canonical body unchanged.
+
+- **ace-docs v0.25.3**: Updated canonical docs skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-docs v0.25.4**: Updated canonical docs skills to align with shared workflow execution standards.
+
+- **ace-git v0.12.0**: Changed the rebase workflow to keep localized conflicts on the normal rebase path and reserve cherry-pick for repeated, large, or user-requested conflict handling.
+
+- **ace-git v0.14.1**: Updated README and handbook guide examples to load workflows through `ace-bundle` and removed legacy shared-handbook path assumptions.
+
+- **ace-git v0.14.2**: Replaced provider-specific Codex execution metadata on `as-github-pr-create`, removed it from `as-github-pr-update`, and limited provider-specific forking to Claude frontmatter.
+
+- **ace-git v0.14.3**: Updated canonical git workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-git v0.14.4**: Updated canonical Git workflow skills for workflow-first execution compatibility.
+
+- **ace-git-commit v0.21.1**: Updated README prompt-path guidance to reference the package-local handbook prompt source.
+
+- **ace-git-commit v0.21.2**: Updated the canonical `as-git-commit` Codex metadata to use `context: ace-llm` with frontmatter-driven variable and instruction rendering in projected Codex skills.
+
+- **ace-git-commit v0.21.3**: Replaced provider-specific Codex execution metadata on `as-git-commit` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
+
+- **ace-git-commit v0.21.4**: Harmonized canonical git-commit skill structure with unified execution contract.
+
+- **ace-git-secrets v0.9.1**: Updated README remediation guidance to load the token-remediation workflow through `ace-bundle`.
+
+- **ace-git-secrets v0.9.2**: Updated canonical git security skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-git-worktree v0.15.2**: Removed Codex-specific delegated execution metadata from the canonical worktree skills so provider projections inherit the canonical body unchanged.
+
+- **ace-git-worktree v0.15.3**: Updated canonical worktree skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-handbook v0.14.0**: Changed canonical skill inventory and handbook status/sync projection inputs to use registered `skill://` sources through `ace-support-nav` instead of direct monorepo package scans.
+
+- **ace-handbook v0.15.1**: Updated handbook README, workflow docs, and guidance to document bundle-first workflow usage and the current handbook structure.
+
+- **ace-handbook v0.15.3**: Rendered Codex `ace-llm` skills from canonical frontmatter by deriving variables from `argument-hint` and generating `## Variables` / `## Instructions` sections in projected Codex skills.
+
+- **ace-handbook v0.15.4**: Strengthened projected workflow skill instructions for Codex delegated execution and forked provider contexts so generated provider skills explicitly load and execute workflows in the current project instead of only reading or summarizing them.
+
+- **ace-handbook v0.15.5**: Removed provider-specific skill body rendering and simplified handbook projection coverage around frontmatter overrides plus canonical body preservation.
+
+- **ace-handbook v0.15.6**: Updated handbook-owned canonical skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-handbook-integration-claude v0.3.1**: Updated the canonical Claude integration sync skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-idea v0.14.2**: Updated idea-lifecycle E2E guidance to capture created idea file content and frontmatter as explicit verification artifacts.
+
+- **ace-idea v0.14.3**: Updated the canonical idea review skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-integration-claude v0.3.7**: Updated legacy integration metadata documentation to describe direct provider projections from canonical package skills.
+
+- **ace-integration-claude v0.3.8**: Updated the legacy integration README to clarify replacement-package status and current canonical skill ownership and projection boundaries.
+
+- **ace-lint v0.19.0**: Added canonical skill validation support for provider-specific integration metadata and expanded the allowlist for migrated handbook skill tools.
+
+- **ace-lint v0.20.1**: Updated README examples to reference current handbook skill and workflow paths instead of legacy provider-local example locations.
+
+- **ace-lint v0.20.2**: Removed Codex-specific delegated execution metadata from the canonical `as-lint-run` skill so provider projections inherit the canonical body unchanged.
+
+- **ace-lint v0.20.3**: Updated canonical lint skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-llm v0.26.4**: Updated the handbook LLM reference guide to describe canonical package `handbook/skills/` ownership before provider projections.
+
+- **ace-llm-providers-cli v0.24.0**: Changed PI skill discovery to use `.pi/skills` as the provider-native directory without `.agent/skills` fallback.
+
+- **ace-llm-providers-cli v0.25.0**: Changed Codex skill discovery to use `.codex/skills` as the provider-native directory without legacy `.agent/skills` or `.claude/skills` fallback.
+
+- **ace-overseer v0.5.2**: Updated the canonical overseer skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-prompt-prep v0.19.2**: Removed Codex-specific delegated execution metadata from the canonical `as-prompt-prep` skill so provider projections inherit the canonical body unchanged.
+
+- **ace-prompt-prep v0.19.3**: Updated the canonical prompt-prep skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-retro v0.12.1**: Updated the canonical handbook self-improvement skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-review v0.44.1**: Updated review workflow instructions to reference bundle-first review flows instead of slash-command examples.
+
+- **ace-review v0.44.2**: Updated the dry-run error-handling E2E scenario so invalid-model captures are treated as prepared-session output rather than validation failures.
+
+- **ace-review v0.44.3**: Updated canonical review skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-review v0.44.4**: Updated canonical review skills to rely on workspace workflow execution flow.
+
+- **ace-search v0.21.1**: Updated handbook search-agent examples to use current `ace-*/handbook/**/*` paths instead of legacy shared handbook locations.
+
+- **ace-search v0.21.3**: Replaced provider-specific Codex execution metadata on `as-search-run` with a unified canonical skill body and limited provider-specific forking to Claude frontmatter.
+
+- **ace-search v0.21.4**: Updated canonical search research skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-search v0.21.5**: Updated canonical search workflow skill metadata for bundled workflow execution.
+
+- **ace-sim v0.8.2**: Updated the full-chain synthesis E2E scenario to verify aggregated step inputs and recorded final-stage outcomes, including cleanly captured external synthesis failures.
+
+- **ace-sim v0.8.4**: Updated the `TS-SIM-001` default preset E2E scenario to verify preset contract and chain handoff behavior while allowing either successful synthesis or a cleanly recorded final-stage failure.
+
+- **ace-sim v0.8.5**: Updated the canonical simulation skill to explicitly run its bundled workflow in the current project and execute it end-to-end.
+
+- **ace-task v0.28.1**: Updated task and bug workflow guidance to reference bundle-first follow-up workflows and current canonical handbook path examples.
+
+- **ace-task v0.28.3**: Removed Codex-specific delegated execution metadata from the canonical `as-task-finder` and `as-task-work` skills so provider projections inherit the canonical body unchanged.
+
+- **ace-task v0.28.4**: Updated canonical task, bug, docs, retro, idea, and test skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-task v0.28.5**: Updated canonical task skills to support unified skill + workflow execution patterns.
+
+- **ace-test v0.4.1**: Updated README and workflow guidance to use direct `ace-bundle` workflow loading instead of legacy slash-command references.
+
+- **ace-test v0.4.2**: Removed Codex-specific delegated execution metadata from the canonical `as-test-verify-suite` skill so provider projections inherit the canonical body unchanged.
+
+- **ace-test v0.4.3**: Updated canonical test-planning and suite-health skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-test v0.4.4**: Updated canonical test planning skills for direct workflow execution in this project.
+
+- **ace-test-runner v0.15.10**: Updated `ace-test` E2E guidance to verify single-file and group-scoped runs from captured commands and report artifacts instead of brittle stdout wording.
+
+- **ace-test-runner-e2e v0.24.1**: Updated README and E2E workflow documentation to use `ace-bundle` and `ace-test-e2e` examples instead of slash-command orchestration.
+
+- **ace-test-runner-e2e v0.24.3**: Changed the default suite report-generation model in project E2E config to `codex:spark`.
+
+- **ace-test-runner-e2e v0.24.5**: Updated the project E2E suite report-generation default model override to `claude:sonnet@ro`.
+
+- **ace-test-runner-e2e v0.24.6**: Updated the `e2e/fix` workflow and canonical `as-e2e-fix` skill to require reruns after each fix iteration and a final `ace-test-e2e-suite --only-failures` checkpoint before closing a fix session.
+
+- **ace-test-runner-e2e v0.24.7**: Increased the default E2E suite parallelism setting in project config from `6` to `8`.
+
+- **ace-test-runner-e2e v0.24.8**: Removed the stale fork-context comment from `as-e2e-run` so only the selected Claude-fork skills retain provider-specific fork metadata.
+
+- **ace-test-runner-e2e v0.24.9**: Updated `e2e/fix` workflow guidance for explicit scenario-level reruns and fixed experience report status mapping for pass/error outcomes.
+
+- **ace-test-runner-e2e v0.24.10**: Updated canonical E2E workflow skills to explicitly run bundled workflows in the current project and execute them end-to-end.
+
+- **ace-test-runner-e2e v0.24.11**: Updated canonical E2E workflow skills for workspace-based execution flow.
+
+- **ace-handbook-integration-claude v0.3.0**, **ace-handbook-integration-codex v0.3.0**, **ace-handbook-integration-gemini v0.3.0**, **ace-handbook-integration-opencode v0.3.0**, and **ace-handbook-integration-pi v0.3.0**: Removed the deprecated shared integration-base dependency and made each provider package a thin plugin on top of `ace-handbook`.
+
+
+### Technical
+- **ace-bundle v0.35.5**: Hardened the invalid `bundle.pr` regression test to stub PR metadata fetches and validate the real loader error path without live GitHub access.
+
+- **ace-bundle v0.36.2**: Added regression coverage for the restored demo, overseer, and prompt-prep WFI targets so `ace-bundle` continues to load those workflow-backed skills correctly.
+
+- **ace-bundle v0.36.3**: Forced exact-mode compression in test execution paths so suite runtime no longer invokes the agent compressor path by default.
+
+- **ace-handbook v0.13.1**: Added regression coverage for the `.agent/skills` retirement so provider sync/status validation now assumes provider-native skill trees only.
+
+- **ace-handbook v0.14.1**: Updated provider sync regression coverage to verify provider-specific execution overrides on projected git-commit skills and to keep generated provider skills free of canonical `integration` metadata.
+
+- **ace-handbook v0.15.6**: Refreshed provider sync and status collector regression coverage for the new compact canonical skill execution template.
+
+- **ace-lint v0.19.1**: Expanded canonical skill validation fixtures to cover provider-specific execution overrides such as `context: fork` and provider model hints under `integration.providers.<provider>.frontmatter`.
+
+- **ace-lint v0.20.3**: Updated markdown-linter fixture coverage for the new compact canonical skill execution template.
+
+- **Project nav config**: Added the missing `.ace/nav/protocols/skill-sources/*.yml` registrations so this workspace activates the full canonical skill set through `skill://`.
+
+- Coordinated release of `ace-assign` with phase-template rendering support and merged canonical/local assignment phase metadata preservation.
+
+- Coordinated release of `ace-assign` with workflow-first phase materialization, parser/runtime `workflow` support, and updated assignment regression coverage.
+
+- Coordinated release of all modified ACE packages.
+
 
 ## [0.9.807] - 2026-03-09
 
