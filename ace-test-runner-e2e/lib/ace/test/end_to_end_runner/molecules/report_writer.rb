@@ -142,7 +142,7 @@ module Ace
               "package: #{scenario.package}",
               "agent: ace-test-e2e",
               "executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}",
-              "status: #{result.status == 'error' ? 'incomplete' : 'complete'}"
+              "status: #{result.status == 'pass' ? 'complete' : 'incomplete'}"
             ])
 
             content = <<~REPORT

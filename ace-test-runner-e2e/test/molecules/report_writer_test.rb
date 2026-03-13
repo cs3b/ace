@@ -39,6 +39,45 @@ class ReportWriterTest < Minitest::Test
     end
   end
 
+  def test_experience_report_status_is_complete_when_pass
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(status: "pass")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      content = File.read(paths[:experience])
+
+      assert_match(/^status: complete$/, content.lines.find { |line| line.start_with?("status:") }.to_s.rstrip)
+    end
+  end
+
+  def test_experience_report_status_is_incomplete_when_not_pass
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(status: "partial")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      content = File.read(paths[:experience])
+
+      assert_match(/^status: incomplete$/, content.lines.find { |line| line.start_with?("status:") }.to_s.rstrip)
+    end
+  end
+
+  def test_experience_report_status_is_incomplete_when_error
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(status: "error", error: "provider failure")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      content = File.read(paths[:experience])
+
+      assert_match(/^status: incomplete$/, content.lines.find { |line| line.start_with?("status:") }.to_s.rstrip)
+    end
+  end
+
   def test_summary_report_contains_test_cases
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")
