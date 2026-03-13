@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.36.4] - 2026-03-13
+
+### Fixed
+- Avoided section compression failures when a frontmatter-only source appears in a fixture by preserving that file content and continuing to compress neighboring files.
+
 ## [0.36.3] - 2026-03-12
 
 ### Technical

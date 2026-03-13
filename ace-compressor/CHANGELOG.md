@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-03-13
+
+### Fixed
+- Preserved markdown frontmatter-only files during exact compression by falling back to raw content emission when no parseable blocks remain.
+
 ## [0.21.1] - 2026-03-09
 
 ### Fixed

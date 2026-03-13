@@ -78,8 +78,8 @@ module Ace
             end
             blocks = @parser.call(text)
             if blocks.empty?
-              raise Ace::Compressor::Error,
-                    "Input file is empty after frontmatter removal. #{mode_title} mode requires content: #{source}"
+              lines << text
+              next
             end
             lines.concat transformed_lines(source_label, blocks)
           end
