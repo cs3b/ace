@@ -26,6 +26,12 @@ skill:
 
 - If INTENTION was provided explicitly, use it. Otherwise, describe intent of recent changes.
 - If CHANGED_FILES was provided explicitly, use it. Otherwise, list files changed in this session.
+- You are working in the current project.
+- Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this project.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- When the workflow requires edits, tests, or commits, perform them in this project.
 
 Run:
 ```bash
@@ -33,5 +39,10 @@ ace-llm codex:spark@yolo "INTENTION
 
 CHANGED_FILES
 
-read and run \`ace-bundle wfi://git/commit\`"
+You are working in the current project.
+Run \`mise exec -- ace-bundle wfi://git/commit\` in the current project to load the workflow instructions.
+Read the loaded workflow and execute it end-to-end in this project.
+Follow the workflow as the source of truth.
+Do the work described by the workflow instead of only summarizing it.
+When the workflow requires edits, tests, or commits, perform them in this project."
 ```

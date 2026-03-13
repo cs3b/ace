@@ -19,7 +19,21 @@ skill:
     workflow: wfi://release/publish
 ---
 
+## Instructions
+
+- You are working in the current project.
+- Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this project.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- When the workflow requires edits, tests, or commits, perform them in this project.
+
 Run:
 ```bash
-ace-llm codex:spark@yolo "read and run \`ace-bundle wfi://release/publish\`"
+ace-llm codex:spark@yolo "You are working in the current project.
+Run \`mise exec -- ace-bundle wfi://release/publish\` in the current project to load the workflow instructions.
+Read the loaded workflow and execute it end-to-end in this project.
+Follow the workflow as the source of truth.
+Do the work described by the workflow instead of only summarizing it.
+When the workflow requires edits, tests, or commits, perform them in this project."
 ```

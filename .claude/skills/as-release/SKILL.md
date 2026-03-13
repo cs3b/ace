@@ -21,4 +21,11 @@ context: fork
 model: haiku
 ---
 
-read and run `ace-bundle wfi://release/publish`
+## Instructions
+
+- You are working in a forked execution context for the current project.
+- Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this forked context.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- Return results from the executed workflow, not a summary of the workflow text.
