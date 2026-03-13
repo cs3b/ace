@@ -20,14 +20,29 @@ integration:
     - opencode
     - pi
   providers:
-    codex:
+    claude:
       frontmatter:
         context: fork
-        model: gpt-5.3-codex-spark
+        model: haiku
 skill:
   kind: workflow
   execution:
     workflow: wfi://github/pr/create
 ---
 
-read and run `ace-bundle wfi://github/pr/create`
+## Arguments
+
+Use the skill `argument-hint` values as the explicit inputs for this skill.
+
+## Variables
+
+None
+
+## Execution
+
+- You are working in the current project.
+- Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+- Read the loaded workflow and execute it end-to-end in this project.
+- Follow the workflow as the source of truth.
+- Do the work described by the workflow instead of only summarizing it.
+- When the workflow requires edits, tests, or commits, perform them in this project.
