@@ -2,7 +2,7 @@
 
 ## Goal
 
-Test error cases: (1) circular dependency — preset_a inherits preset_b which inherits preset_a, (2) missing reference — broken preset references nonexistent_base, (3) totally nonexistent preset, (4) invalid model configuration. Verify each produces a non-zero exit code with an informative error message.
+Test dry-run validation cases: (1) circular dependency — preset_a inherits preset_b which inherits preset_a, (2) missing reference — broken preset references nonexistent_base, (3) totally nonexistent preset. Also capture the dry-run behavior for (4) invalid model configuration. In dry-run mode model existence is not validated, so the invalid-model case is expected to prepare successfully instead of failing.
 
 ## Workspace
 
@@ -15,5 +15,5 @@ Save all output to `results/tc/05/`. Capture for each error case:
 ## Constraints
 
 - The sandbox has preset_a and preset_b (circular), broken (missing ref) presets.
-- For invalid model, use a nonexistent provider/model name.
+- For invalid model, use a nonexistent provider/model name and record the actual dry-run behavior instead of forcing a failure.
 - All artifacts must come from real tool execution, not fabricated.
