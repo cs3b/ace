@@ -46,11 +46,11 @@ module Ace
               args.concat(format_arg(options))
               args << "--show-tasks" if options[:show_tasks]
 
-              if options.key?(:task_associated)
+              unless options[:task_associated].nil?
                 args << (options[:task_associated] ? "--task-associated" : "--no-task-associated")
               end
 
-              if options.key?(:usable)
+              unless options[:usable].nil?
                 args << (options[:usable] ? "--usable" : "--no-usable")
               end
 

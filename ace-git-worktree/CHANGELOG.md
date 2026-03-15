@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-03-15
+
+### Fixed
+- Fixed `list` command returning "No worktrees found" after ace-support-cli migration by guarding nil option values from being treated as explicit `--no-*` filters
+
 ## [0.15.4] - 2026-03-15
 
 ### Changed
