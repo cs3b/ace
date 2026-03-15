@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "ace/support/fs"
 require "fileutils"
@@ -17,11 +17,11 @@ require_relative "organisms/prompt_initializer"
 
 module Ace
   module PromptPrep
-    # dry-cli based CLI registry for ace-prompt-prep
+    # ace-support-cli based CLI registry for ace-prompt-prep
     #
     # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-prompt-prep"
 
