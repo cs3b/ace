@@ -15,7 +15,7 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  # Custom banner matching dry-cli ALL-CAPS style
+  # Custom banner matching ace-support-cli ALL-CAPS style
   opts.banner = <<~BANNER.chomp
     NAME
       ace-test-suite - Run all tests across the monorepo
