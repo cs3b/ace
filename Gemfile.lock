@@ -87,7 +87,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.15.5)
+    ace-git-worktree (0.15.6)
       ace-git (~> 0.11)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
@@ -188,7 +188,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.5.5)
+    ace-overseer (0.5.6)
       ace-assign (~> 0.16)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
