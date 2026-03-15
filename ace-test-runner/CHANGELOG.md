@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.13] - 2026-03-15
+
+### Fixed
+- Made E2E report-files.txt capture instructions explicit with `find`/`ls -R` for reliable artifact listing
+- Updated suite E2E sandbox to preserve real monorepo root path so `ace-test-suite` can discover packages
+
 ## [0.15.12] - 2026-03-15
 
 ### Changed
