@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "dry/cli"
+require "ace/support/cli"
 require "open3"
 
 class CliTest < Minitest::Test
@@ -272,7 +272,7 @@ class CliTest < Minitest::Test
 
   def run_cli(args)
     capture_io do
-      Dry::CLI.new(Ace::Git::Worktree::CLI).call(arguments: args)
+      Ace::Support::Cli::Runner.new(Ace::Git::Worktree::CLI).call(args: args)
     rescue SystemExit
       nil
     end

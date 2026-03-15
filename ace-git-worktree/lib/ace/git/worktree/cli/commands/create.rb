@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "shared_helpers"
 require_relative "../../commands/create_command"
 
@@ -9,7 +9,7 @@ module Ace
     module Worktree
       module CLI
         module Commands
-          class Create < Dry::CLI::Command
+          class Create < Ace::Support::Cli::Command
             include SharedHelpers
 
             desc <<~DESC.strip
@@ -66,7 +66,7 @@ module Ace
                 options[:source] = options.delete(:from)
               end
 
-              # Convert dry-cli options hash to args array format
+              # Convert ace-support-cli options hash to args array format
               args = options_to_args(options)
               args << branch if branch
 

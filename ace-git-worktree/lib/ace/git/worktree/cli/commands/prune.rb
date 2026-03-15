@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "shared_helpers"
 require_relative "../../commands/prune_command"
 
@@ -9,7 +9,7 @@ module Ace
     module Worktree
       module CLI
         module Commands
-          class Prune < Dry::CLI::Command
+          class Prune < Ace::Support::Cli::Command
             include SharedHelpers
 
             desc "Clean up deleted worktrees from git metadata"
@@ -30,7 +30,7 @@ module Ace
             def call(**options)
               display_config_summary("prune", options)
 
-              # Convert dry-cli options to args array format
+              # Convert ace-support-cli options to args array format
               args = options_to_args(options)
 
               Ace::Git::Worktree::Commands::PruneCommand.new.run(args)

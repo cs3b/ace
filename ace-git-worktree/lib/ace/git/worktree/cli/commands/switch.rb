@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "shared_helpers"
 require_relative "../../commands/switch_command"
 
@@ -9,7 +9,7 @@ module Ace
     module Worktree
       module CLI
         module Commands
-          class Switch < Dry::CLI::Command
+          class Switch < Ace::Support::Cli::Command
             include SharedHelpers
 
             desc "Switch to a worktree by returning its path"
@@ -30,7 +30,7 @@ module Ace
             def call(identifier: nil, **options)
               display_config_summary("switch", options)
 
-              # Convert dry-cli options to args array format
+              # Convert ace-support-cli options to args array format
               args = options_to_args(options)
               args << identifier if identifier
 
