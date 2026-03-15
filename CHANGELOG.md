@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.824] - 2026-03-15
+
+### Fixed
+- **ace-git-worktree v0.15.5**: Fixed `list` command returning empty results after ace-support-cli migration due to nil options being treated as explicit `--no-*` filters
+- **ace-overseer v0.5.5**: Removed dead `DryCli::ArgvCoalescer` call that caused NameError after migration
+- **ace-search v0.21.7**: Updated E2E content-search test to use unambiguous search pattern
+- **ace-sim v0.8.7**: Made E2E handoff-check comparison step explicit for reliable artifact production
+- **ace-test-runner v0.15.13**: Fixed E2E report capture instructions and suite sandbox package discovery
+
 ## [0.9.823] - 2026-03-15
 
 ### Technical
