@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
   module Demo
     module CLI
       module Commands
-        class Show < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Show < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Show metadata and contents for a demo tape"
 
