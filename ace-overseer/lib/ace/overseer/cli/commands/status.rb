@@ -6,8 +6,8 @@ module Ace
   module Overseer
     module CLI
       module Commands
-        class Status < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Status < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Show status of active task worktrees"
 

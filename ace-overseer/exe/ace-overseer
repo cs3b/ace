@@ -2,13 +2,13 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/overseer"
-require "dry/cli"
+require "ace/support/cli"
 
 args = ARGV.empty? ? ["--help"] : ARGV
 args = Ace::Core::CLI::DryCli::ArgvCoalescer.call(args, flags: { "--task" => ["-t"] })
 
 begin
-  Dry::CLI.new(Ace::Overseer::CLI).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Overseer::CLI).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

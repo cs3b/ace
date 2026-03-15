@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/work_on"
 require_relative "cli/commands/status"
@@ -9,7 +9,7 @@ require_relative "cli/commands/prune"
 module Ace
   module Overseer
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-overseer"
 

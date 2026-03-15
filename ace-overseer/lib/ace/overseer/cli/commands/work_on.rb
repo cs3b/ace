@@ -4,8 +4,8 @@ module Ace
   module Overseer
     module CLI
       module Commands
-        class WorkOn < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class WorkOn < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Create worktree, open tmux window, and prepare assignment"
 
