@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../lint"
 
@@ -8,7 +8,7 @@ module Ace
   module Lint
     # CLI namespace for ace-lint single-command entrypoint.
     #
-    # ace-lint uses a single-command dry-cli entrypoint that calls
+    # ace-lint uses a single-command ace-support-cli entrypoint that calls
     # CLI::Commands::Lint directly from the executable.
     module CLI
       # Entry point for CLI invocation (used by tests via cli_helpers)
@@ -18,7 +18,7 @@ module Ace
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
         args = ["--help"] if args.empty?
-        Dry::CLI.new(Commands::Lint).call(arguments: args)
+        Ace::Support::Cli::Runner.new(Commands::Lint).call(args: args)
       end
     end
   end

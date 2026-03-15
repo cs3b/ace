@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.8"
   spec.add_dependency "ace-support-core", "~> 0.25"
   spec.add_dependency "ace-b36ts", "~> 0.7"
-  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-cli", "~> 0.3"
   spec.add_dependency "kramdown", "~> 2.4"
   spec.add_dependency "kramdown-parser-gfm", "~> 1.1"
   spec.add_dependency "colorize", "~> 1.1"
