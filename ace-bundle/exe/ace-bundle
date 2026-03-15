@@ -2,12 +2,12 @@
 # frozen_string_literal: true
 
 require "ace/bundle"
-require "dry/cli"
+require "ace/support/cli"
 
-# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
   args = ARGV.empty? ? ["--help"] : ARGV
-  Dry::CLI.new(Ace::Bundle::CLI::Commands::Load).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Bundle::CLI::Commands::Load).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

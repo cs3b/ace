@@ -9,11 +9,11 @@ module Ace
   module Bundle
     module CLI
       module Commands
-        # dry-cli Command class for the load command
+        # ace-support-cli Command class for the load command
         #
         # Loads context from preset, file, or protocol URL
-        class Load < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Load < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Load context from preset, file, or protocol URL
@@ -80,7 +80,7 @@ module Ace
           option :max_size, type: :integer, desc: "Maximum file size in bytes"
           option :timeout, type: :integer, desc: "Command timeout in seconds"
 
-          # Standard options (inherited from Base but need explicit definition for dry-cli)
+          # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :version, type: :boolean, desc: "Show version information"
           option :list_presets, type: :boolean, desc: "List available context presets"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -90,7 +90,7 @@ module Ace
           def call(input: nil, **options)
             # Handle --help/-h passed as input argument
             if input == "--help" || input == "-h"
-              # dry-cli will handle this
+              # ace-support-cli will handle this
               return
             end
 
@@ -106,9 +106,9 @@ module Ace
             end
 
             # Type-convert numeric options using Base helper for proper validation
-            # convert_types uses Integer() which raises ArgumentError on invalid input
+            # coerce_types uses Integer() which raises ArgumentError on invalid input
             # (unlike .to_i which silently returns 0)
-            convert_types(options, max_size: :integer, timeout: :integer)
+            coerce_types(options, max_size: :integer, timeout: :integer)
 
             # Handle repeatable options (type: :array returns array, single values need wrapping)
             # --preset returns array when used multiple times, nil otherwise
