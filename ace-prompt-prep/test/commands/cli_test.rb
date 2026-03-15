@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "dry/cli"
+require "ace/support/cli"
 
 class CLITest < Minitest::Test
   def setup
@@ -15,12 +15,12 @@ class CLITest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  # Helper method to invoke CLI using Dry::CLI pattern
-  # Note: dry-cli calls exit(0) for --help, so we catch SystemExit
+  # Helper method to invoke CLI using CLI runner pattern
+  # Note: ace-support-cli calls exit(0) for --help, so we catch SystemExit
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
+        @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e
@@ -40,7 +40,7 @@ class CLITest < Minitest::Test
     result = invoke_prompt_cli(["version"])
 
     assert_match(/^ace-prompt-prep \d+\.\d+\.\d+/, result[:stdout].strip)
-    # Note: dry-cli v1.3.0 returns a Set, not the exit code
+    # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
     # We verify success by checking the output is correct
   end
 
@@ -48,7 +48,7 @@ class CLITest < Minitest::Test
     result = invoke_prompt_cli(["--version"])
 
     assert_match(/^ace-prompt-prep \d+\.\d+\.\d+/, result[:stdout].strip)
-    # Note: dry-cli v1.3.0 returns a Set, not the exit code
+    # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
   end
 
   def test_shows_help_when_no_args
@@ -66,7 +66,7 @@ class CLITest < Minitest::Test
 
   def test_cli_has_process_command
     # Verify the process command exists in the registry
-    # Note: dry-cli doesn't expose commands the same way Thor did
+    # Note: ace-support-cli doesn't expose commands the same way Thor did
     # We test it by invoking the command
     result = invoke_prompt_cli(["process", "--help"])
     # Should show help for process command
@@ -98,7 +98,7 @@ class CLITest < Minitest::Test
     result = invoke_prompt_cli(["process", "--context"])
 
     # Should not crash (will fail due to no actual prompt file, but that's ok)
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 
@@ -106,7 +106,7 @@ class CLITest < Minitest::Test
     # Test that --no-context flag is accepted
     result = invoke_prompt_cli(["process", "--no-context"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -114,7 +114,7 @@ class CLITest < Minitest::Test
     # Test that -c flag is accepted
     result = invoke_prompt_cli(["process", "-c"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 
@@ -123,7 +123,7 @@ class CLITest < Minitest::Test
     # Test that --enhance flag is accepted
     result = invoke_prompt_cli(["process", "--enhance"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -131,7 +131,7 @@ class CLITest < Minitest::Test
     # Test that --no-enhance flag is accepted
     result = invoke_prompt_cli(["process", "--no-enhance"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -139,7 +139,7 @@ class CLITest < Minitest::Test
     # Test that --model flag is accepted
     result = invoke_prompt_cli(["process", "--model", "gpt-4"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -155,7 +155,7 @@ class CLITest < Minitest::Test
     # Test that --force flag is accepted
     result = invoke_prompt_cli(["setup", "--force"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 
@@ -163,7 +163,7 @@ class CLITest < Minitest::Test
     # Test that --no-archive flag is accepted
     result = invoke_prompt_cli(["setup", "--no-archive"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 
@@ -171,7 +171,7 @@ class CLITest < Minitest::Test
     # Test that --template flag is accepted
     result = invoke_prompt_cli(["setup", "--template", "bug"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 
@@ -180,7 +180,7 @@ class CLITest < Minitest::Test
     # Test that --output flag is accepted
     result = invoke_prompt_cli(["process", "--output", "/tmp/test.md"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -188,7 +188,7 @@ class CLITest < Minitest::Test
     # Test that -o flag is accepted
     result = invoke_prompt_cli(["process", "-o", "/tmp/test.md"])
 
-    # Note: dry-cli returns a Set, not the exit code
+    # Note: ace-support-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 end

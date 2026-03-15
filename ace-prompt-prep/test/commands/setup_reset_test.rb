@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "dry/cli"
+require "ace/support/cli"
 
 class SetupResetCommandsTest < Minitest::Test
   def setup
@@ -12,11 +12,11 @@ class SetupResetCommandsTest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  # Helper method to invoke CLI using Dry::CLI pattern
+  # Helper method to invoke CLI using CLI runner pattern
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
+        @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e
@@ -39,7 +39,7 @@ class SetupResetCommandsTest < Minitest::Test
       { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
     }) do
       result = invoke_prompt_cli(["setup"])
-      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
       # We verify success by checking the output
       assert_match(/Prompt initialized/, result[:stdout])
       assert_match(/Path:/, result[:stdout])
@@ -52,7 +52,7 @@ class SetupResetCommandsTest < Minitest::Test
       { success: true, path: "/tmp/the-prompt.md", archive_path: "/tmp/archive/the-prompt-20250101.md" }
     }) do
       result = invoke_prompt_cli(["setup"])
-      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
       assert_match(/Prompt initialized/, result[:stdout])
       assert_match(/Path:/, result[:stdout])
       assert_match(/Archive:/, result[:stdout])
@@ -113,7 +113,7 @@ class SetupResetCommandsTest < Minitest::Test
       { success: false, path: nil, skipped: false, error: "Setup failed" }
     }) do
       result = invoke_prompt_cli(["setup"])
-      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
       # We verify failure by checking stderr for the error message
       assert_match(/Setup failed/, result[:stderr])
     end
@@ -123,7 +123,7 @@ class SetupResetCommandsTest < Minitest::Test
     # Stub to raise exception
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, ->(**_opts) { raise "Unexpected error" }) do
       result = invoke_prompt_cli(["setup"])
-      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
       # We verify failure by checking stderr for the error message
       assert_match(/Unexpected error/, result[:stderr])
     end
@@ -163,7 +163,7 @@ class SetupResetCommandsTest < Minitest::Test
     # Test that --task option is accepted
     result = invoke_prompt_cli(["setup", "--task", "121"])
     # Should not crash (will likely fail due to task not existing, but that's ok)
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: ace-support-cli returns a Set, not the command's exit code
     refute_nil result[:result]
   end
 end
