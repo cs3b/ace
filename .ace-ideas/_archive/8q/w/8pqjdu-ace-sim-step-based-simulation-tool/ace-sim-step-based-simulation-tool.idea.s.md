@@ -1,15 +1,12 @@
 ---
 title: "ace-sim: General-Purpose Step-Based Simulation Tool"
 filename_suggestion: ace-sim-step-based-simulation-tool
-enhanced_at: 2026-03-05 00:00:00.000000000 +00:00
+enhanced_at: 2026-03-05 00:00:00 +0000
 llm_model: claude-opus-4-6
 id: 8pqjdu
-status: pending
-tags:
-- simulation
-- llm
-- new-gem
-created_at: '2026-02-28 17:37:36'
+status: done
+tags: [simulation, llm, new-gem]
+created_at: "2026-02-28 17:37:36"
 source: user
 ---
 
