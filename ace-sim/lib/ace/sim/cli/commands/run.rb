@@ -4,8 +4,8 @@ module Ace
   module Sim
     module CLI
       module Commands
-        class Run < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Run < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Run preset simulation"
 
