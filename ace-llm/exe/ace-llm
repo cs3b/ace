@@ -16,9 +16,9 @@ Ace::LLM::Atoms::EnvReader.load_env_cascade
 # No args → show help
 args = ARGV.empty? ? ["--help"] : ARGV
 
-# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
-  Dry::CLI.new(Ace::LLM::CLI::Commands::Query).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::LLM::CLI::Commands::Query).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

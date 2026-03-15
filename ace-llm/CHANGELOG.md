@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.6] - 2026-03-15
+
+### Changed
+- Migrated CLI framework from dry-cli to ace-support-cli
+
 ## [0.26.5] - 2026-03-12
 
 ### Added
