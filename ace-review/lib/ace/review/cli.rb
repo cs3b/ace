@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../review"
 # Commands
@@ -10,16 +10,16 @@ module Ace
   module Review
     # CLI namespace for ace-review command loading.
     #
-    # ace-review uses a single-command dry-cli entrypoint that calls
+    # ace-review uses a single-command ace-support-cli entrypoint that calls
     # CLI::Commands::Review directly from the executable.
     module CLI
       # Separator for array options that won't conflict with internal commas
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
 
-      # Pre-process array options to work around dry-cli limitation
+      # Pre-process array options to work around ace-support-cli limitation
       #
-      # dry-cli's type: :array only captures the last occurrence of a flag.
+      # ace-support-cli's type: :array only captures the last occurrence of a flag.
       # This method merges multiple occurrences using ARRAY_SEPARATOR
       # (not comma) to preserve internal commas in subject values
       # like "files:a.rb,b.rb".
@@ -96,7 +96,7 @@ module Ace
       #
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
-        Dry::CLI.new(Commands::Review).call(arguments: args)
+        Ace::Support::Cli::Runner.new(Commands::Review).call(args: args)
       end
     end
   end

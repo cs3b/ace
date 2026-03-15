@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "session_discovery"
 
@@ -9,11 +9,11 @@ module Ace
     module CLI
       module Commands
         module FeedbackSubcommands
-          # dry-cli Command class for feedback verify
+          # ace-support-cli Command class for feedback verify
           #
           # Verifies a draft feedback item by marking it as valid or invalid.
-          class Verify < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Verify < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
             include SessionDiscovery
 
             desc <<~DESC.strip

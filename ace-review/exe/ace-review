@@ -11,16 +11,16 @@ lib_path = File.expand_path("../lib", __dir__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "ace/review"
-require "dry/cli"
+require "ace/support/cli"
 
-# Pre-process array options before passing to dry-cli
-# (dry-cli only captures the last occurrence of --subject/--model flags)
+# Pre-process array options before passing to ace-support-cli
+# (ace-support-cli only captures the last occurrence of --subject/--model flags)
 args = Ace::Review::CLI.preprocess_array_options(ARGV)
 args = ["--help"] if args.empty?
 
-# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
-  Dry::CLI.new(Ace::Review::CLI::Commands::Review).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Review::CLI::Commands::Review).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

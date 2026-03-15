@@ -8,9 +8,9 @@ require_relative "../lib/ace/review/cli/feedback_cli"
 args = ARGV.dup
 args = ["--help"] if args.empty?
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli with exception-based exit code handling (per ADR-023)
 begin
-  Dry::CLI.new(Ace::Review::FeedbackCLI).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Review::FeedbackCLI).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

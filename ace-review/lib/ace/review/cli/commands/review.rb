@@ -6,11 +6,11 @@ module Ace
   module Review
     module CLI
       module Commands
-      # dry-cli Command class for the review command
+      # ace-support-cli Command class for the review command
       #
       # Executes code review using presets or custom configuration.
-      class Review < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      class Review < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc <<~DESC.strip
           Execute code review using presets or custom configuration
@@ -74,7 +74,7 @@ module Ace
         attr_reader :options
 
         def call(**cli_options)
-          # Remove dry-cli specific keys (args is leftover arguments)
+          # Remove ace-support-cli specific keys (args is leftover arguments)
           cli_options = cli_options.reject { |k, _| k == :args }
 
           if cli_options[:version]
@@ -92,7 +92,7 @@ module Ace
             return
           end
 
-          # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
+          # Type-convert numeric options (ace-support-cli returns strings, Thor converted to integers)
           cli_options[:gh_timeout] = cli_options[:gh_timeout]&.to_i if cli_options[:gh_timeout]
 
           # Build and store options for testing compatibility
@@ -159,7 +159,7 @@ module Ace
         def process_models(options)
           return unless options[:model]
 
-          # dry-cli's array option gives us an array
+          # ace-support-cli's array option gives us an array
           models = Array(options[:model]).compact.map(&:strip).reject(&:empty?)
 
           if models.any?
