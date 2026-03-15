@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../search"
 # Commands
@@ -26,7 +26,7 @@ module Ace
   module Search
     # CLI namespace for ace-search command loading.
     #
-    # ace-search now uses a single-command dry-cli entrypoint that calls
+    # ace-search now uses a single-command ace-support-cli entrypoint that calls
     # CLI::Commands::Search directly from the executable.
     module CLI
     end

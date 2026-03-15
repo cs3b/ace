@@ -13,7 +13,7 @@ module Ace
       #   options = builder.build
       #   # => { type: :content, format: :text, ... }
       class SearchOptionBuilder
-        # @param cli_options [Hash] Options from CLI (dry-cli)
+        # @param cli_options [Hash] Options from CLI (ace-support-cli)
         # @param config [Hash] Configuration from Ace::Search.config (optional)
         def initialize(cli_options, config: nil)
           @cli_options = cli_options

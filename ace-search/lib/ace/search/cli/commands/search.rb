@@ -11,7 +11,7 @@ module Ace
   module Search
     module CLI
       module Commands
-        # dry-cli Command class for the search command
+        # ace-support-cli Command class for the search command
         #
         # This command handles all search functionality including file and content
         # search across the codebase with intelligent pattern matching.
@@ -20,8 +20,8 @@ module Ace
         # are intentionally in this class as they handle CLI-specific concerns
         # (config display, error messages, interactive selection). Business logic
         # is properly delegated to ATOM layers (UnifiedSearcher, SearchPathResolver).
-        class Search < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Search < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Search across the codebase with intelligent pattern matching
@@ -94,7 +94,7 @@ module Ace
           # Preset options
           option :preset, type: :string, aliases: %w[-p], desc: "Use search preset"
 
-          # Standard options (inherited from Base but need explicit definition for dry-cli)
+          # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :version, type: :boolean, desc: "Show version information"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -105,7 +105,7 @@ module Ace
             @pattern = options[:pattern]
             @search_path = options[:search_path]
 
-            # Remove dry-cli specific keys (args is leftover arguments)
+            # Remove ace-support-cli specific keys (args is leftover arguments)
             clean_options = options.reject { |k, _| k == :args }
             if clean_options[:version]
               puts "ace-search #{Ace::Search::VERSION}"
@@ -113,9 +113,9 @@ module Ace
             end
 
             # Type-convert numeric options using Base helper for proper validation
-            # convert_types uses Integer() which raises ArgumentError on invalid input
+            # coerce_types uses Integer() which raises ArgumentError on invalid input
             # (unlike .to_i which silently returns 0)
-            convert_types(clean_options,
+            coerce_types(clean_options,
                           max_results: :integer,
                           context: :integer,
                           after_context: :integer,
