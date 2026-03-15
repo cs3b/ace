@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/run"
 
 module Ace
   module Sim
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-sim"
 
@@ -22,7 +22,7 @@ module Ace
       ].freeze
 
       def self.start(args)
-        Dry::CLI.new(self).call(arguments: args)
+        Ace::Support::Cli::Runner.new(self).call(args: args)
       end
 
       register "run", Commands::Run
