@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-03-15
+
+### Changed
+- Migrated CLI framework from dry-cli to ace-support-cli
+
 ## [0.20.3] - 2026-03-13
 
 ### Changed

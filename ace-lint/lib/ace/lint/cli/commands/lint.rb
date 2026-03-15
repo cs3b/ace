@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core/cli/dry_cli/base"
 require_relative "../../atoms/validator_registry"
 require_relative "../../organisms/lint_orchestrator"
@@ -12,12 +12,12 @@ module Ace
   module Lint
     module CLI
       module Commands
-        # dry-cli Command class for the lint command
+        # ace-support-cli Command class for the lint command
         #
         # This command provides linting functionality for markdown, YAML, and
         # frontmatter files, with built-in doctor diagnostics via --doctor flag.
-        class Lint < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Lint < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Lint markdown, YAML, Ruby, and frontmatter files
@@ -62,7 +62,7 @@ module Ace
           option :validators, type: :string, desc: "Comma-separated list of validators (e.g., standardrb,rubocop)"
           option :no_report, type: :boolean, desc: "Disable JSON report generation"
 
-          # Standard options (inherited from Base but need explicit definition for dry-cli)
+          # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -87,13 +87,13 @@ module Ace
             # This handles cases where tools are installed/removed during long-lived sessions
             Ace::Lint::Atoms::ValidatorRegistry.reset_all_caches!
 
-            # Extract files array from options (dry-cli passes it as :files key)
+            # Extract files array from options (ace-support-cli passes it as :files key)
             files = options[:files] || []
 
-            # Remove dry-cli specific keys (args is leftover arguments)
+            # Remove ace-support-cli specific keys (args is leftover arguments)
             clean_options = options.reject { |k, _| k == :files || k == :args }
 
-            # Type-convert numeric options (dry-cli returns strings for integers in some cases)
+            # Type-convert numeric options (ace-support-cli returns strings for integers in some cases)
             # This maintains parity with the Thor implementation
             clean_options[:line_width] = clean_options[:line_width].to_i if clean_options[:line_width]
 
