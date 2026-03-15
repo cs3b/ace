@@ -32,11 +32,11 @@ This parent task coordinates:
 
 ### Success Criteria
 
-- [ ] All 19 existing E2E test suites reviewed with coverage matrices produced
-- [ ] Improvements from reviews applied and verified
-- [ ] 8 new E2E test suites created for packages with CLIs but no coverage
-- [ ] All E2E tests pass across the monorepo
-- [ ] Consistent test patterns and quality standards applied
+- [ ] All 19 existing E2E suites complete the `review -> plan-changes -> rewrite` lifecycle with coverage matrices, classified decisions, and rewrite summaries
+- [ ] All rewrite decisions for existing suites are documented and applied
+- [ ] 8 packages without E2E coverage receive initial value-gated smoke scenarios, or an explicit unit-backed decision that no E2E scenario should be added for a candidate behavior
+- [ ] Each subtask records its package-scoped verification outcome
+- [ ] Consistent E2E decision records, scenario structure, and quality standards are applied across all subtasks
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -62,8 +62,8 @@ Systematically bring ACE package E2E coverage under the canonical workflow model
 
 ## Scope of Work
 
-- **Phase 1**: Review and improve existing E2E tests across 19 packages
-- **Phase 2**: Create new E2E tests for 8 packages with CLIs but no E2E coverage
+- **Phase 1**: Run the canonical E2E management lifecycle across 19 packages with existing E2E suites
+- **Phase 2**: Create initial value-gated smoke scenarios for 8 packages with CLIs but no E2E coverage
 
 ### Subtask Summary
 

@@ -30,11 +30,11 @@ bundle:
 
 ### Success Criteria
 
-- [ ] Coverage matrix produced from `/as-e2e-review` after the rewrite.
-- [ ] Gaps identified and documented
-- [ ] Improvements applied to E2E test files
-- [ ] All E2E tests pass after changes
-- [ ] No regressions in existing test coverage
+- [ ] Coverage matrix produced for `ace-docs`
+- [ ] Change plan documents KEEP / MODIFY / REMOVE / CONSOLIDATE / ADD decisions
+- [ ] Rewrite summary reflects the approved E2E changes
+- [ ] Package-scoped verification is recorded after the rewrite
+- [ ] No regressions in retained E2E coverage
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -72,4 +72,5 @@ Run the canonical E2E lifecycle for `ace-docs`, ensuring review findings, rewrit
 ## References
 
 - Parent: 8qe.t.h5e — Review and expand E2E test coverage across ACE packages
-- `/as-e2e-manage` workflow\n- `/as-e2e-review`, `/as-e2e-plan-changes`, and `/as-e2e-rewrite` workflows
+- `/as-e2e-manage` workflow
+- `/as-e2e-review`, `/as-e2e-plan-changes`, and `/as-e2e-rewrite` workflows

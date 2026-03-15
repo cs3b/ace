@@ -30,7 +30,12 @@ bundle:
 
 ### Success Criteria
 
-- [ ] E2E test directory structure created in `ace-handbook/test/e2e/`\n- [ ] 1-2 value-gated smoke scenarios are created with 2-5 TCs each\n- [ ] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence\n- [ ] Tests use proper sandbox isolation\n- [ ] Package-scoped verification is recorded\n- [ ] Test patterns are consistent with existing E2E tests in other packages
+- [ ] E2E test directory structure created in `ace-handbook/test/e2e/`
+- [ ] 1-2 value-gated smoke scenarios are created with 2-5 TCs each
+- [ ] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence
+- [ ] Tests use proper sandbox isolation
+- [ ] Package-scoped verification is recorded
+- [ ] Test patterns are consistent with existing E2E tests in other packages
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -68,4 +73,5 @@ Create initial E2E smoke coverage for `ace-handbook`, adding only scenarios whos
 ## References
 
 - Parent: 8qe.t.h5e — Review and expand E2E test coverage across ACE packages
-- `/as-e2e-create` workflow\n- E2E Value Gate and Decision Record requirements from the canonical create workflow
+- `/as-e2e-create` workflow
+- E2E Value Gate and Decision Record requirements from the canonical create workflow
