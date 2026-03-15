@@ -2,7 +2,8 @@
 
 ## Goal
 
-Run `ace-test-suite --group foundation` (or a small available group) and
+Read `.monorepo-root` to get the actual monorepo path, cd to that directory,
+then run `ace-test-suite --group foundation` (or a small available group) and
 capture output showing aggregate multi-package execution.
 
 ## Workspace

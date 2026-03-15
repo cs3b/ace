@@ -11,7 +11,7 @@ Save artifacts to `results/tc/03/`.
 
 Capture:
 - `results/tc/03/command.txt` — exact `ace-test` invocation used
-- `results/tc/03/report-files.txt` — recursive listing of generated report files under `results/tc/03/reports`
+- After the test run completes, list all files under `results/tc/03/reports` using `find results/tc/03/reports -type f` (or `ls -R results/tc/03/reports`) and save the output to `results/tc/03/report-files.txt`
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
