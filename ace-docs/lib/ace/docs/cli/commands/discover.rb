@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../../organisms/document_registry"
 require_relative "scope_options"
@@ -9,11 +9,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the discover command
+        # ace-support-cli Command class for the discover command
         #
-        # This wraps the discover logic in a dry-cli compatible interface.
-        class Discover < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # This wraps the discover logic in a ace-support-cli compatible interface.
+        class Discover < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include ScopeOptions
 
           # Exit codes

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "terminal-table"
 require "colorize"
@@ -11,11 +11,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the status command
+        # ace-support-cli Command class for the status command
         #
         # This command shows document freshness and update status.
-        class Status < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Status < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include ScopeOptions
 
           desc <<~DESC.strip

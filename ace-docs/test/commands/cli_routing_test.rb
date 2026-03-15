@@ -2,14 +2,14 @@
 
 require_relative "../test_helper"
 require "ace/docs/cli"
-require "dry/cli"
+require "ace/support/cli"
 
 class DocsCliRoutingTest < Minitest::Test
-  # Helper to invoke CLI using the Dry::CLI pattern
+  # Helper to invoke CLI using the CLI runner pattern
   def invoke_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Dry::CLI.new(Ace::Docs::CLI).call(arguments: args)
+        @_cli_result = Ace::Support::Cli::Runner.new(Ace::Docs::CLI).call(args: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e
@@ -62,7 +62,7 @@ class DocsCliRoutingTest < Minitest::Test
   def test_cli_empty_args_shows_help
     # Empty args should show help (not route to default command)
     # Note: The exe handles empty args by defaulting to ["--help"]
-    # When calling CLI directly with [], dry-cli shows its default help
+    # When calling CLI directly with [], ace-support-cli shows its default help
     result = invoke_cli(["--help"])
     output = result[:stdout] + result[:stderr]
 
