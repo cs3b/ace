@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-03-15
+
+### Fixed
+- Made E2E handoff-check comparison step explicit so the runner produces non-empty verification artifacts
+
 ## [0.8.6] - 2026-03-15
 
 ### Changed
