@@ -21,8 +21,8 @@ module Ace
         # @example Inject child phase
         #   ace-assign add verify --after 010 --child -i "Verify"
         #   # Creates 010.01-verify.ph.md
-        class Add < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Add < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include AssignmentTarget
 
           desc "Add a new phase to the queue dynamically"
