@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
   module Compressor
     module CLI
       module Commands
-        class Compress < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Compress < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           SUPPORTED_MODES = %w[exact compact agent].freeze
           SUPPORTED_SOURCE_SCOPES = %w[merged per-source].freeze
