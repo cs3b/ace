@@ -5,14 +5,14 @@ module Ace
     module Secrets
       module CLI
         module Commands
-          # dry-cli command for rewriting Git history to remove tokens
+          # ace-support-cli command for rewriting Git history to remove tokens
           #
           # Exit codes:
           # - 0: Success
           # - 1: Failure
           # - 2: Error occurred
-          class Rewrite < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Rewrite < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Remove detected tokens from Git history"
 

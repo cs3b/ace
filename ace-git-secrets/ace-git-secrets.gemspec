@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.8"
   spec.add_dependency "ace-b36ts", "~> 0.7"
   spec.add_dependency "ace-support-core", "~> 0.25"
-  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-cli", "~> 0.3"
   spec.add_dependency "faraday", "~> 2.7", ">= 2.7.4"
   spec.add_dependency "faraday-retry", "~> 2.2"
 
