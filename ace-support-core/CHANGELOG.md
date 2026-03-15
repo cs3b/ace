@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-03-15
+
+### Changed
+- Migrated CLI support modules from `Ace::Core::CLI::DryCli::*` to `Ace::Core::CLI::*` with new files under `lib/ace/core/cli/`.
+- Replaced `dry-cli` runtime dependency with `ace-support-cli`.
+- Updated `lib/ace/core.rb` requires to load new CLI module paths.
+- Added backward-compatible `DryCli` constant shims and `dry_cli/` require stubs for downstream consumers pending migration.
+
+### Removed
+- Deleted original `lib/ace/core/cli/dry_cli/` implementation (formatter monkey-patches, `ArgvCoalescer`).
+
+## [0.25.4] - 2026-03-13
+
+### Added
+- Added `dev/spikes/option_parser_cli_spike.rb` and `dev/spikes/run_option_parser_cli_spike.rb` to validate OptionParser end-to-end coercion, positional parsing, and error behavior for the upcoming `ace-support-cli` migration.
+
 ## [0.25.3] - 2026-03-12
 
 ### Fixed

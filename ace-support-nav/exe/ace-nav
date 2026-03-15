@@ -3,7 +3,7 @@
 
 require "bundler/setup"
 require "ace/support/nav"
-require "dry/cli"
+require "ace/support/cli"
 
 def translate_legacy_args(args)
   return ["--help"] if args.empty?
@@ -40,7 +40,7 @@ end
 # Start CLI with exception-based exit code handling (per ADR-023)
 begin
   argv = translate_legacy_args(ARGV.dup)
-  Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: argv)
+  Ace::Support::Cli::Runner.new(Ace::Support::Nav::CLI).call(args: argv)
 rescue SystemExit => e
   exit(e.status)
 rescue Ace::Core::CLI::Error => e

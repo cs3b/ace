@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Cache
             # Show changes since last sync
-            class Diff < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Diff < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Show changes since last sync"
 

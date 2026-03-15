@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../nav"
 # Commands (Hanami pattern: CLI::Commands::)
@@ -12,9 +12,9 @@ require_relative "cli/commands/sources"
 module Ace
   module Support
     module Nav
-      # dry-cli based CLI registry for ace-nav
+      # ace-support-cli based CLI registry for ace-nav
       module CLI
-        extend Dry::CLI::Registry
+        extend Ace::Core::CLI::RegistryDsl
 
         PROGRAM_NAME = "ace-nav"
 

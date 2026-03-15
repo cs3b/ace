@@ -9,8 +9,8 @@ module Ace
         module Commands
           module ModelsSubcommands
             # Show model information
-            class Info < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Info < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Show model information (brief by default)"
 

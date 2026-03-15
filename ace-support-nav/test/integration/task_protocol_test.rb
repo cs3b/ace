@@ -2,12 +2,12 @@
 
 require "test_helper"
 require "ace/support/nav/cli"
-require "dry/cli"
+require "ace/support/cli"
 require "tempfile"
 
 class TaskProtocolIntegrationTest < Minitest::Test
   private def run_cli(args)
-    Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: args)
+    Ace::Support::Cli::Runner.new(Ace::Support::Nav::CLI).call(args: args)
   end
 
   def setup
@@ -171,7 +171,7 @@ class TaskProtocolIntegrationTest < Minitest::Test
       run_cli(["--help"])
     end
 
-    # Help should display dry-cli-standard format
+    # Help should display ace-support-cli-standard format
     assert_match(/COMMANDS|Commands:|Usage:/, stdout_output[0])
   end
 end

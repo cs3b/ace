@@ -9,7 +9,7 @@ module Ace
   module Core
     # Framework CLI for ace-framework binary.
     # Uses a separate class name to avoid collision with Ace::Core::CLI module
-    # (which provides shared dry-cli infrastructure).
+    # (which provides shared CLI infrastructure).
     class FrameworkCLI
       def self.start(argv)
         new.run(argv)

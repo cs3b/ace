@@ -10,8 +10,8 @@ module Ace
           # Note: Using Models_ prefix to avoid conflict with outer Models module
           module ModelsSubcommands
             # Search for models
-            class Search < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Search < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Search for models (query optional with filters)"
 

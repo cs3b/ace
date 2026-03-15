@@ -9,8 +9,8 @@ module Ace
         module Commands
           module ModelsSubcommands
             # Show pricing for a model
-            class Cost < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Cost < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Show pricing for a model"
 

@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Providers
             # Sync provider YAML configs with models.dev
-            class Sync < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Sync < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Sync provider YAML configs with models.dev"
 

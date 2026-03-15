@@ -8,8 +8,8 @@ module Ace
       module CLI
         module Commands
           # Top-level shortcut for models search
-          class SearchShortcut < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class SearchShortcut < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Search models (shortcut for: models search)"
 

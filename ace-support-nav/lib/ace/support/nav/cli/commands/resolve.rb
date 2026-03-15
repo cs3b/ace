@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../../molecules/config_loader"
 require_relative "../../organisms/navigation_engine"
@@ -11,9 +11,9 @@ module Ace
     module Nav
       module CLI
         module Commands
-          # dry-cli Command class for the resolve command
-          class Resolve < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          # ace-support-cli Command class for the resolve command
+          class Resolve < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc <<~DESC.strip
               Resolve resource path or content

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "json"
 require "ace/core"
 
@@ -16,12 +16,12 @@ require_relative "cli/commands/models/cost"
 module Ace
   module Support
     module Models
-      # CLI for ace-models using dry-cli.
+      # CLI for ace-models using ace-support-cli.
       #
       # After the split, ace-models handles cache and model operations.
       # Provider management moved to ace-llm-providers.
       module CLI
-        extend Dry::CLI::Registry
+        extend Ace::Core::CLI::RegistryDsl
 
         PROGRAM_NAME = "ace-models"
 
@@ -76,7 +76,7 @@ module Ace
         # @param args [Array<String>] Command-line arguments
         # @return [Integer] Exit code (0 for success, non-zero for errors)
         def self.start(args)
-          Dry::CLI.new(self).call(arguments: args)
+          Ace::Support::Cli::Runner.new(self).call(args: args)
         end
       end
     end
