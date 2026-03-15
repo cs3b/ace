@@ -146,6 +146,8 @@ Use `decision_notes` from phase metadata (if present) as additional guidance for
   - If the **second** cycle (fit) failed after valid succeeded: skip shine. Valid already captured correctness issues.
   - **Never retry a provider-failed review cycle more than once.** If the re-fork also fails on providers, mark the cycle done-with-skip and move on.
 
+- **Transient network failure retry**: When a fork subtree fails due to a transient network error (connection reset, DNS timeout, socket hangup) — as opposed to provider unavailability or auth failure — wait 30 seconds and re-fork once. If the re-fork also fails on a network error, treat it as a hard failure and apply the circuit breaker rules above. Auth errors (401/403) and not-found errors (404) are never transient — fail immediately on those.
+
 ### 1. Check Status
 
 ```bash
@@ -220,6 +222,7 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 - For each child with `FORK: yes`, run:
   - `ace-assign fork-run --assignment <id>@<child>`
 - Re-check status after each child.
+- Do not pause for user input between children — treat the batch loop as a single unit (see Batch Continuation Rule below).
 
 **Parallel mode (`parallel: true`)**
 
@@ -236,6 +239,15 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 3. Wait for any in-flight child to finish, then record done/failed state.
 4. If child succeeded, immediately launch the next pending child; if no pending remains, continue draining in-flight children.
 5. Stop only when both pending and in-flight are empty.
+
+**Batch Continuation Rule**
+
+The driver MUST NOT pause for user input between child fork-runs within a batch container. After each child completes:
+
+1. Verify the child's reports (see Subtree Guard below).
+2. If reports indicate successful completion, immediately launch the next pending child.
+3. Treat the entire batch loop as a single unit of execution — only pause on quality concerns flagged during report review.
+4. For timeout-constrained environments: launch `fork-run` in background, poll for completion, then loop to the next child without pausing.
 
 **Failure policy (retry-then-stop)**
 

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.3] - 2026-03-15
+
+### Fixed
+- Release phase catalog entry now references `wfi://release/publish` workflow
+- Review cycle release instructions in work-on-task and work-on-tasks presets now point to `ace-bundle wfi://release/publish`
+
+### Changed
+- Drive workflow batch continuation rule prevents driver from pausing between child fork-runs
+- Drive workflow adds transient network failure retry guidance (wait 30s, re-fork once)
+
 ## [0.32.2] - 2026-03-15
 
 ### Changed

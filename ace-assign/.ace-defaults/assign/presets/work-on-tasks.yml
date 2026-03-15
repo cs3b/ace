@@ -69,7 +69,7 @@ steps:
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-fit-1
     number: "070"
@@ -80,7 +80,7 @@ steps:
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
 
   - name: review-shine-1
     number: "100"
@@ -91,7 +91,7 @@ steps:
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
+      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
     number: "130"
