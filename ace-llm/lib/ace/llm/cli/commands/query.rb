@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core/cli/dry_cli/base"
 
 module Ace
@@ -8,8 +8,8 @@ module Ace
     module CLI
       module Commands
       # Query command for ace-llm
-      class Query < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      class Query < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc "Query an LLM provider"
 
