@@ -15,9 +15,10 @@ models:
   - gpt-5.2-pro
   - gpt-5.3-codex
   - gpt-5.3-codex-spark
+  - gpt-5.4
 aliases:
   model:
-    gpt: gpt-5.2
+    gpt: gpt-5.4
     max: gpt-5.1-codex-max
     codex: gpt-5.3-codex
     spark: gpt-5.3-codex-spark
