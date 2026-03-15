@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "stringio"
 require "ace/core/cli/dry_cli/base"
 
@@ -13,8 +13,8 @@ module Ace
           #
           # Discovers all E2E tests in the monorepo and executes them
           # with optional parallel execution and affected package filtering.
-          class RunSuite < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class RunSuite < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc <<~DESC.strip
               Run E2E test suite across all packages
@@ -66,7 +66,7 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(packages: nil, **options)
-              options = convert_types(options, parallel: :integer, timeout: :integer)
+              options = coerce_types(options, parallel: :integer, timeout: :integer)
 
               parallel = options[:parallel]
               affected = options[:affected]

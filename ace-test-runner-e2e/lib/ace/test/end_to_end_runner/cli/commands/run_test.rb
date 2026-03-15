@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "stringio"
 require "ace/core/cli/dry_cli/base"
 
@@ -14,8 +14,8 @@ module Ace
           # Supports running a single test by ID or all tests in a package.
           # Tests are executed via LLM and results are written to standard
           # report locations.
-          class RunTest < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class RunTest < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc <<~DESC.strip
               Run E2E tests via LLM execution
@@ -65,7 +65,7 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(package:, test_id: nil, **options)
-              options = convert_types(options, timeout: :integer, parallel: :integer)
+              options = coerce_types(options, timeout: :integer, parallel: :integer)
               output = quiet?(options) ? StringIO.new : $stdout
 
               # Handle dry-run mode

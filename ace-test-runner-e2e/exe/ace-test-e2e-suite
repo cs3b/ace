@@ -2,11 +2,11 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/test/end_to_end_runner"
-require "dry/cli"
+require "ace/support/cli"
 
-# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
-  Dry::CLI.new(Ace::Test::EndToEndRunner::CLI::Commands::RunSuite).call(arguments: ARGV)
+  Ace::Support::Cli::Runner.new(Ace::Test::EndToEndRunner::CLI::Commands::RunSuite).call(args: ARGV)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

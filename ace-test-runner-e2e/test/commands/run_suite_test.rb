@@ -21,7 +21,7 @@ class RunSuiteTest < Minitest::Test
   def test_run_suite_is_dry_cli_command
     command = RunSuite.new
 
-    assert_kind_of Dry::CLI::Command, command
+    assert_kind_of Ace::Support::Cli::Command, command
   end
 
   def test_run_suite_has_call_method
@@ -30,20 +30,20 @@ class RunSuiteTest < Minitest::Test
     assert_respond_to command, :call
   end
 
-  def test_convert_types_converts_string_to_integer
+  def test_coerce_types_converts_string_to_integer
     command = RunSuite.new
 
-    # Use the protected convert_types method via the Base module
-    result = command.send(:convert_types, { parallel: "4", timeout: "120" }, parallel: :integer, timeout: :integer)
+    # Use the protected coerce_types method via the Base module
+    result = command.send(:coerce_types, { parallel: "4", timeout: "120" }, parallel: :integer, timeout: :integer)
 
     assert_equal 4, result[:parallel]
     assert_equal 120, result[:timeout]
   end
 
-  def test_convert_types_leaves_non_converted_options_alone
+  def test_coerce_types_leaves_non_converted_options_alone
     command = RunSuite.new
 
-    result = command.send(:convert_types, { parallel: "4", other: "string" }, parallel: :integer)
+    result = command.send(:coerce_types, { parallel: "4", other: "string" }, parallel: :integer)
 
     assert_equal 4, result[:parallel]
     assert_equal "string", result[:other]
