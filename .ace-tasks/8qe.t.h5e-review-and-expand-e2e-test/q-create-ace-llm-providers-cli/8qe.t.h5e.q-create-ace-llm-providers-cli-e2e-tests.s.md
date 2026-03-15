@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.q
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:37"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-llm-providers-cli]
+needs_review: false
 ---
 
 # Create ace-llm-providers-cli E2E tests

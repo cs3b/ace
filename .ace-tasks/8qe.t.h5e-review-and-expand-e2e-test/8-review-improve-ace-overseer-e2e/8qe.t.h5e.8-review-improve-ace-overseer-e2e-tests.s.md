@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.8
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:14"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-overseer/test/e2e]
+needs_review: false
 ---
 
 # Review & improve ace-overseer E2E tests

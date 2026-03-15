@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.k
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:32"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-retro]
+needs_review: false
 ---
 
 # Create ace-retro E2E tests

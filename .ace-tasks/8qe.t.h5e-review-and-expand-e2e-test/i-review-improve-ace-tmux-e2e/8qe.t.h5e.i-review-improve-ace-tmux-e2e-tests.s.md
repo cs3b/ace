@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.i
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:26"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-tmux/test/e2e]
+needs_review: false
 ---
 
 # Review & improve ace-tmux E2E tests
