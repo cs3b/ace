@@ -12,7 +12,7 @@ module Ace
           # Include this module in CLI command classes to avoid code duplication
           # of common patterns like config summary display and options conversion.
           module SharedHelpers
-            include Ace::Core::CLI::DryCli::Base
+            include Ace::Core::CLI::Base
 
             private
 
@@ -31,7 +31,7 @@ module Ace
               )
             end
 
-            # Convert dry-cli options hash to args array format for legacy commands
+            # Convert ace-support-cli options hash to args array format for legacy commands
             #
             # @param options [Hash] CLI options hash
             # @return [Array<String>] Arguments array

@@ -6,11 +6,11 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 # Load the ace-git-worktree gem
 require "ace/git/worktree"
-require "dry/cli"
+require "ace/support/cli"
 
 args = ARGV.empty? ? ["--help"] : ARGV
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli with exception-based exit code handling (per ADR-023)
 begin
   exit(Ace::Git::Worktree::CLI.start(args))
 rescue SystemExit => e
@@ -18,4 +18,7 @@ rescue SystemExit => e
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
+rescue Ace::Support::Cli::CommandNotFoundError => e
+  warn "unknown command: #{e.message}"
+  exit(1)
 end

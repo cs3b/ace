@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "shared_helpers"
 require_relative "../../commands/list_command"
 
@@ -9,7 +9,7 @@ module Ace
     module Worktree
       module CLI
         module Commands
-          class List < Dry::CLI::Command
+          class List < Ace::Support::Cli::Command
             include SharedHelpers
 
             desc "List all worktrees with optional filtering"

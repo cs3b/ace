@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "shared_helpers"
 require_relative "../../commands/config_command"
 
@@ -9,7 +9,7 @@ module Ace
     module Worktree
       module CLI
         module Commands
-          class Config < Dry::CLI::Command
+          class Config < Ace::Support::Cli::Command
             include SharedHelpers
 
             desc "Show and manage worktree configuration"
@@ -35,7 +35,7 @@ module Ace
             def call(subcommand: nil, **options)
               display_config_summary("config", options)
 
-              # Convert dry-cli options to args array format
+              # Convert ace-support-cli options to args array format
               args = options_to_args(options)
               # Add subcommand as positional argument if provided
               args << subcommand if subcommand
