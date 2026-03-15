@@ -1,4 +1,4 @@
-# ADR-023: dry-cli CLI Framework
+# ADR-023: ace-support-cli CLI Framework
 
 ## Status
 
@@ -9,7 +9,7 @@ Supersedes: ADR-018 (Thor CLI Commands Pattern)
 
 ### Implementation Notes
 
-- All 25+ ace-* CLI gems migrated to dry-cli with exception-based exit code pattern
+- All 25+ ace-* CLI gems migrated to ace-support-cli with exception-based exit code pattern
 - `Ace::Core::CLI::Error` in ace-support-core v0.22.0+
 - Task 229 completed migration
 - Error messages automatically prefixed with "Error: " via `Error#to_s`
@@ -48,18 +48,18 @@ These bugs directly impacted users - commands appeared to ignore their arguments
 
 ## Decision
 
-All ace-* gems with CLI interfaces **must** use dry-cli with standardized `cli/` directory structure:
+All ace-* gems with CLI interfaces **must** use ace-support-cli with standardized `cli/` directory structure:
 
 ```
 lib/ace/gem/
-├── cli/                    # dry-cli command classes
+├── cli/                    # ace-support-cli command classes
 │   ├── shared_helpers.rb   # Common helpers (display_config_summary, options_to_args)
 │   ├── process.rb          # ProcessCommand class
 │   └── status.rb           # StatusCommand class
 ├── commands/               # Business logic (unchanged from ADR-018)
 │   ├── process_command.rb
 │   └── status_command.rb
-├── cli.rb                  # dry-cli Registry entry point
+├── cli.rb                  # ace-support-cli Registry entry point
 └── version.rb
 ```
 
@@ -81,7 +81,7 @@ require_relative "cli/commands/status"
 module Ace
   module Gem
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Support::Cli::Registry
 
       PROGRAM_NAME = 'ace-gem'
 
@@ -130,7 +130,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -147,8 +147,8 @@ module Ace
   module Search
     module CLI
       module Commands
-        class Search < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Search < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Search files and content"
           argument :pattern, required: false
@@ -172,7 +172,7 @@ require "ace/search"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Search::CLI::Commands::Search).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Search::CLI::Commands::Search).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -190,7 +190,7 @@ require_relative "../commands/process_command"
 module Ace
   module Gem
     module CLI
-      class Process < Dry::CLI::Command
+      class Process < Ace::Support::Cli::Command
         include SharedHelpers
 
         desc "Process a file"
@@ -230,7 +230,7 @@ module Ace
   module Gem
     module CLI
       module SharedHelpers
-        include Ace::Core::CLI::DryCli::Base
+        include Ace::Core::CLI::Base
 
         private
 
@@ -271,11 +271,11 @@ end
 
 ### Exit Code Handling
 
-#### Understanding dry-cli's Behavior
+#### Understanding ace-support-cli's Behavior
 
-**Critical fact**: `Dry::CLI.new(registry).call(arguments: args)` returns `nil`, **NOT** the command's return value. This is by design - dry-cli maintainers consider exit codes and return values to be separate concerns ([GitHub Issue #47](https://github.com/dry-rb/dry-cli/issues/47)).
+**Critical fact**: `Ace::Support::Cli.new(registry).call(arguments: args)` returns `nil`, **NOT** the command's return value. This is by design - ace-support-cli maintainers consider exit codes and return values to be separate concerns ([GitHub Issue #47](https://github.com/dry-rb/ace-support-cli/issues/47)).
 
-The dry-cli maintainers' official recommendation is to call `exit()` directly in commands. However, this breaks testability. Hanami (dry-cli's creator) uses an exception-based pattern instead.
+The ace-support-cli maintainers' official recommendation is to call `exit()` directly in commands. However, this breaks testability. Hanami (ace-support-cli's creator) uses an exception-based pattern instead.
 
 #### ACE Pattern: Exception-Based Exit Codes (Recommended)
 
@@ -327,7 +327,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -341,7 +341,7 @@ The exception pattern enables clean testing:
 ```ruby
 def test_missing_file_raises_error
   error = assert_raises(Ace::Core::CLI::Error) do
-    capture_io { Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process"]) }
+    capture_io { Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: ["process"]) }
   end
   assert_equal "file required", error.message
   assert_equal 1, error.exit_code
@@ -350,7 +350,7 @@ end
 def test_successful_processing
   # No exception = success (exit 0)
   output, = capture_io do
-    Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process", "test.txt"])
+    Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: ["process", "test.txt"])
   end
   assert_includes output, "Processed"
 end
@@ -379,7 +379,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -411,7 +411,7 @@ When implementing CLI commands, document exit codes in the command's help text o
 
 **❌ Returning integers from commands:**
 ```ruby
-# WRONG - dry-cli ignores return values
+# WRONG - ace-support-cli ignores return values
 def call(**)
   return 1 if error?  # This does NOTHING
   0                    # Also ignored
@@ -455,9 +455,9 @@ end
 ### Requirements
 
 **DO:**
-- Use dry-cli Registry pattern in `cli.rb` (multi-command) or direct command class (single-command)
+- Use ace-support-cli Registry pattern in `cli.rb` (multi-command) or direct command class (single-command)
 - Create `cli/commands/` directory for command classes
-- Include `Ace::Core::CLI::DryCli::Base` in command classes
+- Include `Ace::Core::CLI::Base` in command classes
 - Use `HelpCommand.build()` for multi-command CLIs
 - Use `VersionCommand.build()` for version commands
 - Test in `test/commands/`
@@ -470,7 +470,7 @@ end
 - Use Thor (deprecated)
 - Use DWIM default routing (removed in Task 278)
 - Put all options in cli.rb (let commands define their own)
-- Return integers from commands expecting them to become exit codes (dry-cli ignores returns)
+- Return integers from commands expecting them to become exit codes (ace-support-cli ignores returns)
 - Use `exit()` directly in command classes (breaks testability)
 - Use thread-local storage for exit codes (unnecessary complexity)
 - Create `KNOWN_COMMANDS`, `DEFAULT_COMMAND`, `BUILTIN_COMMANDS` constants (removed)
@@ -481,29 +481,29 @@ end
 
 - **No option consumption bugs**: Commands receive all options as intended
 - **Standard help behavior**: No-args shows help (aligns with clig.dev conventions)
-- **Better testability**: `Dry::CLI.new().call()` can be tested directly
+- **Better testability**: `Ace::Support::Cli.new().call()` can be tested directly
 - **Less boilerplate**: Automatic help generation via `HelpCommand.build()`
 - **Consistent patterns**: Two patterns (multi-command vs single-command) cover all cases
 
 ### Negative
 
 - **Migration effort**: 13+ gems needed CLI rewrites
-- **Learning curve**: Developers must learn dry-cli patterns
-- **String option values**: dry-cli returns all option values as strings (requires explicit type conversion)
-- **Exit code pattern**: dry-cli doesn't propagate return values as exit codes; requires exception-based pattern for testable exit code handling
+- **Learning curve**: Developers must learn ace-support-cli patterns
+- **String option values**: ace-support-cli returns all option values as strings (requires explicit type conversion)
+- **Exit code pattern**: ace-support-cli doesn't propagate return values as exit codes; requires exception-based pattern for testable exit code handling
 
 ### Neutral
 
-- **Two-layer structure**: `cli/` (dry-cli) + `commands/` (business logic)
+- **Two-layer structure**: `cli/` (ace-support-cli) + `commands/` (business logic)
 - **Separate files**: Each command is its own file in `cli/`
 
 ## Migration from Thor (ADR-018)
 
 Key differences when migrating:
 
-| Aspect | Thor (ADR-018) | dry-cli (ADR-023) |
+| Aspect | Thor (ADR-018) | ace-support-cli (ADR-023) |
 |--------|----------------|-------------------|
-| Entry point | `class CLI < Thor` | `module CLI; extend Dry::CLI::Registry` |
+| Entry point | `class CLI < Thor` | `module CLI; extend Ace::Support::Cli::Registry` |
 | Commands | Methods on CLI class | Separate classes in `cli/commands/` |
 | Options | `class_option` on CLI | `option` on each command |
 | No-args behavior | `default_task :name` | Shows help (`["--help"]`) |
@@ -523,7 +523,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -540,7 +540,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Gem::CLI::Commands::Process).call(arguments: args)
+  Ace::Support::Cli.new(Ace::Gem::CLI::Commands::Process).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -549,14 +549,14 @@ end
 
 ## Testing Pattern
 
-For multi-command CLIs, test via `Dry::CLI.new(Registry).call()`:
+For multi-command CLIs, test via `Ace::Support::Cli.new(Registry).call()`:
 
 ```ruby
 # test/commands/cli_test.rb
 class CliTest < AceTestCase
   def test_process_command_success
     output, = capture_io do
-      Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process", "file.txt"])
+      Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: ["process", "file.txt"])
     end
     assert_includes output, "Processed"
     # No exception = exit code 0
@@ -564,7 +564,7 @@ class CliTest < AceTestCase
 
   def test_process_command_failure
     error = assert_raises(Ace::Core::CLI::Error) do
-      capture_io { Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process"]) }
+      capture_io { Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: ["process"]) }
     end
     assert_equal 1, error.exit_code
     assert_includes error.message, "file required"
@@ -572,7 +572,7 @@ class CliTest < AceTestCase
 
   def test_no_args_shows_help
     output, = capture_io do
-      Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["--help"])
+      Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: ["--help"])
     end
     assert_includes output, "Commands:"
     assert_includes output, "process"
@@ -586,7 +586,7 @@ For single-command CLIs:
 class SingleCommandCliTest < AceTestCase
   def test_search_success
     output, = capture_io do
-      Dry::CLI.new(Ace::Search::CLI::Commands::Search).call(arguments: ["pattern"])
+      Ace::Support::Cli.new(Ace::Search::CLI::Commands::Search).call(arguments: ["pattern"])
     end
     assert_includes output, "Results"
   end
@@ -605,7 +605,7 @@ ace-bundle/
 │   │       └── list.rb
 │   ├── cli.rb                  # Registry with HelpCommand.build()
 │   └── version.rb
-├── exe/ace-bundle              # Dry::CLI.new(CLI).call()
+├── exe/ace-bundle              # Ace::Support::Cli.new(CLI).call()
 └── ...
 ```
 
@@ -616,7 +616,7 @@ ace-git-commit/
 │   ├── cli/
 │   │   └── commit.rb           # Single command class
 │   └── version.rb
-├── exe/ace-git-commit          # Dry::CLI.new(Commands::Commit).call()
+├── exe/ace-git-commit          # Ace::Support::Cli.new(Commands::Commit).call()
 └── ...
 ```
 
@@ -646,16 +646,16 @@ ace-git-worktree/
 
 ## References
 
-- **dry-cli docs**: https://dry-rb.org/gems/dry-cli/1.1/
-- **dry-cli exit code issue**: https://github.com/dry-rb/dry-cli/issues/47 (explains why returns aren't exit codes)
-- **dry-cli exit code PR**: https://github.com/dry-rb/dry-cli/pull/48 (maintainers' position on exit codes)
+- **ace-support-cli docs**: https://dry-rb.org/gems/ace-support-cli/1.1/
+- **ace-support-cli exit code issue**: https://github.com/dry-rb/ace-support-cli/issues/47 (explains why returns aren't exit codes)
+- **ace-support-cli exit code PR**: https://github.com/dry-rb/ace-support-cli/pull/48 (maintainers' position on exit codes)
 - **Hanami CLI exe**: https://github.com/hanami/cli/blob/main/exe/hanami (exception-based pattern)
 - **Thor issue #489**: https://github.com/rails/thor/issues/489 (nested subcommands)
 - **Task 179**: Migration orchestrator with full rationale
-- **ace-support-core**: Base infrastructure for dry-cli
+- **ace-support-core**: Base infrastructure for ace-support-cli
 
 ---
 
-This ADR establishes dry-cli as the standard CLI framework for all ACE gems, replacing Thor (ADR-018) due to fundamental design limitations discovered in production.
+This ADR establishes ace-support-cli as the standard CLI framework for all ACE gems, replacing Thor (ADR-018) due to fundamental design limitations discovered in production.
 
-**January 2026 Update**: Added exception-based exit code pattern after discovering that dry-cli's `call()` method returns `nil`, not command return values. The pattern follows Hanami's approach for testable exit code handling.
+**January 2026 Update**: Added exception-based exit code pattern after discovering that ace-support-cli's `call()` method returns `nil`, not command return values. The pattern follows Hanami's approach for testable exit code handling.

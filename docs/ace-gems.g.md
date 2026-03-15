@@ -17,20 +17,20 @@ Quick reference for ace-* gem development patterns covering CLI framework, confi
 
 ## Scope
 
-This guide covers patterns for developing ace-* gems: CLI setup with dry-cli, configuration cascade (ADR-022), ATOM architecture, handbook integration, and testing conventions.
+This guide covers patterns for developing ace-* gems: CLI setup with ace-support-cli, configuration cascade (ADR-022), ATOM architecture, handbook integration, and testing conventions.
 
 ## CLI Framework
 
-All CLI gems use dry-cli ([ADR-023](decisions/ADR-023-dry-cli-framework.md)):
+All CLI gems use ace-support-cli ([ADR-023](decisions/ADR-023-ace-support-cli-framework.md)):
 
-- **CLI Base Module**: `Ace::Core::CLI::DryCli::Base` provides helper methods
+- **CLI Base Module**: `Ace::Core::CLI::Base` provides helper methods
 - **Two Patterns**: Multi-command (Registry) or single-command (direct class)
 - **Help Command**: Use `Ace::Core::CLI::DryCli::HelpCommand.build()` for multi-command CLIs
 - **Exit Codes**: Commands raise `Ace::Core::CLI::Error`, exe/ handles exit
 - **Reserved Flags**: `-v`=verbose, `-q`=quiet, `-d`=debug, `-h`=help, `-o`=output
 - **Version Command**: Use `Ace::Core::CLI::DryCli::VersionCommand.build()`
 
-See [cli-dry-cli.g.md](../ace-handbook/handbook/guides/cli-dry-cli.g.md) for complete patterns.
+See [cli-support-cli.g.md](../ace-handbook/handbook/guides/cli-support-cli.g.md) for complete patterns.
 
 ## Gem Naming Conventions
 
@@ -55,7 +55,7 @@ ace-gem/
 ├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
-│   ├── cli/commands/              # dry-cli command classes
+│   ├── cli/commands/              # ace-support-cli command classes
 │   └── cli.rb, version.rb
 ├── test/                          # FLAT: atoms/, molecules/, etc.
 ├── handbook/
@@ -141,8 +141,8 @@ Use `CLI::Commands::` namespace (Hanami pattern):
 
 ```ruby
 module Ace::Gem::CLI::Commands
-  class Process < Dry::CLI::Command
-    include Ace::Core::CLI::DryCli::Base
+  class Process < Ace::Support::Cli::Command
+    include Ace::Core::CLI::Base
     desc "Process file"
     argument :file, required: false
     option :quiet, type: :boolean, aliases: %w[-q]
@@ -154,7 +154,7 @@ module Ace::Gem::CLI::Commands
 end
 ```
 
-**Standard options** (via `Ace::Core::CLI::DryCli::Base`):
+**Standard options** (via `Ace::Core::CLI::Base`):
 - `--quiet/-q`: Suppress output
 - `--verbose/-v`: Verbose output
 - `--debug/-d`: Debug output
@@ -163,7 +163,7 @@ end
 
 **Exit codes**: Commands raise `Ace::Core::CLI::Error` for non-zero exit. Never call `exit` in commands.
 
-See [cli-dry-cli.g.md](../ace-handbook/handbook/guides/cli-dry-cli.g.md) for multi-command and single-command CLI patterns.
+See [cli-support-cli.g.md](../ace-handbook/handbook/guides/cli-support-cli.g.md) for multi-command and single-command CLI patterns.
 
 ## Mono-Repo Development
 
@@ -270,7 +270,7 @@ spec.files = Dir.glob(%w[
 # Dependencies for CLI gems
 spec.add_dependency "ace-support-core", "~> 0.10"
 spec.add_dependency "ace-support-config", "~> 0.4"
-spec.add_dependency "dry-cli", "~> 1.0"
+spec.add_dependency "ace-support-cli", "~> 1.0"
 ```
 
 ## Examples

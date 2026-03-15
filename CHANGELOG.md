@@ -4,10 +4,56 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.817] - 2026-03-15
+## [0.9.821] - 2026-03-15
 
-### Fixed
-- **ace-git-commit v0.21.5**: Fixed commit workflow to show individual untracked files (`-uall`) and added explicit guidance that untracked files are committable, preventing agents from reporting "nothing to commit" on untracked-only changes.
+### Changed
+- **ace-support-cli v0.4.0**: Added runner improvements, registry DSL support, and parse error re-raising; removed runtime dependency on ace-support-core.
+- **ace-assign v0.32.2**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-b36ts v0.10.3**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-bundle v0.36.7**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-compressor v0.21.3**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-demo v0.10.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-docs v0.25.5**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-git v0.14.5**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-git-commit v0.21.5**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-git-secrets v0.9.3**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-git-worktree v0.15.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-handbook v0.15.7**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-idea v0.14.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-lint v0.20.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-llm v0.26.6**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-overseer v0.5.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-prompt-prep v0.19.4**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-retro v0.12.2**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-review v0.44.5**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-search v0.21.6**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-sim v0.8.6**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-support-models v0.6.3**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-support-nav v0.22.1**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-task v0.28.7**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-test-runner v0.15.12**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-test-runner-e2e v0.24.12**: Migrated CLI framework from dry-cli to ace-support-cli.
+- **ace-tmux v0.6.2**: Migrated CLI framework from dry-cli to ace-support-cli.
+
+## [0.9.820] - 2026-03-15
+
+### Changed
+- **ace-support-core v0.26.0**: Migrated CLI infrastructure from `dry-cli` wrappers to `ace-support-cli` primitives with backward-compatible shims for downstream consumers.
+
+## [0.9.819] - 2026-03-14
+
+### Added
+- **ace-support-cli v0.3.0**: Added a native help system with banner/usage/concise renderers, help/version command factories, and two-tier help dispatch plus component tests.
+
+## [0.9.818] - 2026-03-13
+
+### Added
+- **ace-support-cli v0.2.0**: Added the new `ace-support-cli` package with command DSL, typed option parsing, nested registry routing, and runner primitives plus initial component tests.
+
+## [0.9.817] - 2026-03-13
+
+### Added
+- **ace-support-core v0.25.4**: Added OptionParser spike executables under `dev/spikes/` to validate typed parsing behavior (integer/float coercion, repeated array flags, positionals, and parse-error handling) ahead of `ace-support-cli` implementation.
 
 ## [0.9.816] - 2026-03-13
 
