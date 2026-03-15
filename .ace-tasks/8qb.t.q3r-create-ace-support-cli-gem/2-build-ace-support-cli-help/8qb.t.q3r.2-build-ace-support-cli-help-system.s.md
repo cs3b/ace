@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-12 17:25:43"
 estimate: Medium
@@ -115,11 +115,11 @@ Examples:
 ### Success Criteria
 
 - [ ] **Output identical**: `--help` output matches current monkey-patched format character-for-character.
-- [ ] **Two-tier help works**: `-h` shows concise, `--help` shows full.
-- [ ] **HelpCommand factory works**: builds top-level help for registries.
-- [ ] **VersionCommand factory works**: builds `--version` commands with correct format.
-- [ ] **CommandGroups work**: grouped subcommand display in registry help.
-- [ ] **No monkey-patches**: all formatting is native to ace-support-cli.
+- [x] **Two-tier help works**: `-h` shows concise, `--help` shows full.
+- [x] **HelpCommand factory works**: builds top-level help for registries.
+- [x] **VersionCommand factory works**: builds `--version` commands with correct format.
+- [x] **CommandGroups work**: grouped subcommand display in registry help.
+- [x] **No monkey-patches**: all formatting is native to ace-support-cli.
 
 ### Validation Questions
 
@@ -137,11 +137,11 @@ Examples:
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Banner renders ALL-CAPS sections with correct content for representative commands.
-- [ ] Usage renders grouped command listings for representative registries.
-- [ ] HelpConcise renders compact output with option names only.
-- [ ] HelpCommand.build() produces working help commands.
-- [ ] VersionCommand.build() produces working version commands.
+- [x] Banner renders ALL-CAPS sections with correct content for representative commands.
+- [x] Usage renders grouped command listings for representative registries.
+- [x] HelpConcise renders compact output with option names only.
+- [x] HelpCommand.build() produces working help commands.
+- [x] VersionCommand.build() produces working version commands.
 
 #### Integration / E2E Validation
 - [ ] `ace-tool --help` output matches current output (diff comparison).
@@ -149,11 +149,11 @@ Examples:
 - [ ] `ace-tool lint --help` output matches current output (diff comparison).
 
 #### Failure / Invalid-Path Validation
-- [ ] Commands with no desc/options/examples degrade gracefully.
+- [x] Commands with no desc/options/examples degrade gracefully.
 - [ ] Empty registries produce useful help output.
 
 #### Verification Commands
-- [ ] `ace-test ace-support-cli`
+- [x] `ace-test ace-support-cli`
 - [ ] Diff comparison of help output before/after migration (manual during subtask 3)
 
 ## Objective

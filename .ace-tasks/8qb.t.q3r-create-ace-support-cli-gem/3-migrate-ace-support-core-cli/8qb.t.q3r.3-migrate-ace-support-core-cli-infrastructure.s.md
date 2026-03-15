@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r.3
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-12 17:25:44"
 estimate: Medium
@@ -83,17 +83,17 @@ end
 
 ### Success Criteria
 
-- [ ] **dry-cli removed from ace-support-core**: gemspec depends on ace-support-cli, not dry-cli.
-- [ ] **New Base module created**: `Ace::Core::CLI::Base` at `lib/ace/core/cli/base.rb`, inherits from `Ace::Support::Cli::Command`, all helpers preserved.
+- [x] **dry-cli removed from ace-support-core**: gemspec depends on ace-support-cli, not dry-cli.
+- [x] **New Base module created**: `Ace::Core::CLI::Base` at `lib/ace/core/cli/base.rb`, inherits from `Ace::Support::Cli::Command`, all helpers preserved.
 - [ ] **Old dry_cli/ directory deleted**: entire `lib/ace/core/cli/dry_cli/` removed — no shims, no aliases (ADR-024).
-- [ ] **ArgvCoalescer deleted**: file removed entirely.
-- [ ] **convert_types() deleted**: method removed entirely.
-- [ ] **ace-support-core tests updated and pass**: tests reference new paths and module names.
+- [x] **ArgvCoalescer deleted**: file removed entirely.
+- [x] **convert_types() deleted**: method removed entirely.
+- [x] **ace-support-core tests updated and pass**: tests reference new paths and module names.
 - [ ] **Help output unchanged**: verified via diff comparison.
 
 ### Validation Questions
 
-- [x] **Should old require paths break?** -> Yes. Per ADR-024, no require path shims for pre-1.0.0 gems. Old paths break immediately; subtask 4 updates all consumers.
+- [ ] **Should old require paths break?** -> Yes. Per ADR-024, no require path shims for pre-1.0.0 gems. Old paths break immediately; subtask 4 updates all consumers.
 - [x] **Should convert_types be removed or deprecated?** -> Removed entirely. Research confirmed all 6 callers use it only for option values (no non-option uses exist). ADR-024 prohibits deprecation warnings.
 - [x] **Should Base module be renamed?** -> Yes. New module `Ace::Core::CLI::Base` at `lib/ace/core/cli/base.rb`. Old `Ace::Core::CLI::DryCli::Base` is deleted with no alias.
 

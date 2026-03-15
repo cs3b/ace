@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r.4
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-12 17:25:45"
 estimate: Large
@@ -88,13 +88,13 @@ rg -n "dry.cli|Dry::CLI|convert_types|ArgvCoalescer" --type ruby
 
 ### Success Criteria
 
-- [ ] **All ~26 downstream gems migrated**: base class, requires, exe entry points updated.
-- [ ] **All tests pass**: `ace-test-suite` green.
-- [ ] **dry-cli fully removed**: zero references to `dry-cli`, `Dry::CLI`, `convert_types` (for options), or `ArgvCoalescer` in any Ruby file.
-- [ ] **ADR-023 updated**: documents migration rationale and new architecture.
-- [ ] **Handbook guide updated**: reflects ace-support-cli instead of dry-cli.
-- [ ] **ace-gems.g.md updated**: lists ace-support-cli.
-- [ ] **No behavioral regressions**: all CLI commands work identically.
+- [x] **All ~26 downstream gems migrated**: base class, requires, exe entry points updated.
+- [x] **All tests pass**: `ace-test-suite` green.
+- [x] **dry-cli fully removed**: zero references to `dry-cli`, `Dry::CLI`, `convert_types` (for options), or `ArgvCoalescer` in any Ruby file.
+- [x] **ADR-023 updated**: documents migration rationale and new architecture.
+- [x] **Handbook guide updated**: reflects ace-support-cli instead of dry-cli.
+- [x] **ace-gems.g.md updated**: lists ace-support-cli.
+- [x] **No behavioral regressions**: all CLI commands work identically.
 
 ### Validation Questions
 
@@ -112,24 +112,24 @@ rg -n "dry.cli|Dry::CLI|convert_types|ArgvCoalescer" --type ruby
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Each migrated gem's tests pass individually: `ace-test <gem>`.
-- [ ] No gem retains `Dry::CLI` references in source files.
+- [x] Each migrated gem's tests pass individually: `ace-test <gem>`.
+- [x] No gem retains `Dry::CLI` references in source files.
 
 #### Integration / E2E Validation
-- [ ] `ace-test-suite` passes with all gems migrated.
-- [ ] Representative CLI commands produce correct output end-to-end.
-- [ ] Help output from representative commands matches pre-migration output.
+- [x] `ace-test-suite` passes with all gems migrated.
+- [x] Representative CLI commands produce correct output end-to-end.
+- [x] Help output from representative commands matches pre-migration output.
 
 #### Failure / Invalid-Path Validation
-- [ ] `rg -n "dry.cli|Dry::CLI" --type ruby` returns zero matches.
-- [ ] `rg -n "convert_types" --type ruby` returns zero matches.
-- [ ] `rg -n "ArgvCoalescer" --type ruby` returns zero matches.
+- [x] `rg -n "dry.cli|Dry::CLI" --type ruby` returns zero matches.
+- [x] `rg -n "convert_types" --type ruby` returns zero matches.
+- [x] `rg -n "ArgvCoalescer" --type ruby` returns zero matches.
 
 #### Verification Commands
-- [ ] `ace-test-suite`
-- [ ] `rg -n "dry.cli|Dry::CLI|convert_types|ArgvCoalescer" --type ruby`
-- [ ] `ace-test ace-support-cli`
-- [ ] `ace-test ace-support-core`
+- [x] `ace-test-suite`
+- [x] `rg -n "dry.cli|Dry::CLI|convert_types|ArgvCoalescer" --type ruby`
+- [x] `ace-test ace-support-cli`
+- [x] `ace-test ace-support-core`
 
 ## Objective
 

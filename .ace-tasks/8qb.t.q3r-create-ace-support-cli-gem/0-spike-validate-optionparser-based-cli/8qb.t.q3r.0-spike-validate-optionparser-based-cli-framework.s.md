@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r.0
-status: pending
+status: done
 priority: high
 created_at: "2026-03-12 17:25:42"
 estimate: Small
@@ -82,15 +82,15 @@ spike input.txt --timeout abc  # => ParseError
 
 ### Success Criteria
 
-- [ ] **Integer coercion proven**: `--timeout 30` yields `Integer` value `30`.
-- [ ] **Float coercion proven**: `--rate 1.5` yields `Float` value `1.5`.
-- [ ] **Boolean toggle proven**: `--verbose` / `--no-verbose` yields `true` / `false`.
-- [ ] **Array accumulation proven**: repeated `--tag` flags accumulate into a single array.
-- [ ] **Positional parsing proven**: positional args parse in declared order with required/optional distinction.
-- [ ] **End-of-options proven**: `--` stops option parsing.
-- [ ] **Mixed args+options proven**: interleaved positional args and options parse correctly.
-- [ ] **Parse errors are clear**: invalid types produce user-friendly messages.
-- [ ] **Kill criteria evaluated**: document whether OptionParser handles all cases or if a pivot is needed.
+- [x] **Integer coercion proven**: `--timeout 30` yields `Integer` value `30`.
+- [x] **Float coercion proven**: `--rate 1.5` yields `Float` value `1.5`.
+- [x] **Boolean toggle proven**: `--verbose` / `--no-verbose` yields `true` / `false`.
+- [x] **Array accumulation proven**: repeated `--tag` flags accumulate into a single array.
+- [x] **Positional parsing proven**: positional args parse in declared order with required/optional distinction.
+- [x] **End-of-options proven**: `--` stops option parsing.
+- [x] **Mixed args+options proven**: interleaved positional args and options parse correctly.
+- [x] **Parse errors are clear**: invalid types produce user-friendly messages.
+- [x] **Kill criteria evaluated**: document whether OptionParser handles all cases or if a pivot is needed.
 
 ### Validation Questions
 
@@ -108,18 +108,25 @@ spike input.txt --timeout abc  # => ParseError
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Proof-of-concept command exercises all 6 option types (string, integer, float, boolean, array, hash).
-- [ ] Proof-of-concept command exercises required and optional positional arguments.
+- [x] Proof-of-concept command exercises all 6 option types (string, integer, float, boolean, array, hash).
+- [x] Proof-of-concept command exercises required and optional positional arguments.
 
 #### Integration / E2E Validation
-- [ ] End-to-end invocation from ARGV through parsing to typed `call()` arguments.
+- [x] End-to-end invocation from ARGV through parsing to typed `call()` arguments.
 
 #### Failure / Invalid-Path Validation
-- [ ] Invalid integer, float values produce clear parse errors.
-- [ ] Missing required arguments produce clear parse errors.
+- [x] Invalid integer, float values produce clear parse errors.
+- [x] Missing required arguments produce clear parse errors.
 
 #### Verification Commands
-- [ ] Run the proof-of-concept with representative invocations and verify types.
+- [x] Run the proof-of-concept with representative invocations and verify types.
+
+### Implementation Notes
+
+- Spike command implementation: `ace-support-core/dev/spikes/option_parser_cli_spike.rb`
+- Runner used for command validation: `ace-support-core/dev/spikes/run_option_parser_cli_spike.rb`
+- Validation transcript: `.ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/0-spike-validate-optionparser-based-cli/artifacts/8qb.t.q3r.0-validation-log.md`
+- Concept inventory + kill criteria decision: `.ace-tasks/8qb.t.q3r-create-ace-support-cli-gem/0-spike-validate-optionparser-based-cli/artifacts/8qb.t.q3r.0-optionparser-concept-inventory.md`
 
 ## Objective
 
