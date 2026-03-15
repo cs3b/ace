@@ -5,8 +5,8 @@ module Ace
     module CLI
       module Commands
         # Complete in-progress phase with report content
-        class Finish < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Finish < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include AssignmentTarget
 
           desc "Complete in-progress phase with report content"

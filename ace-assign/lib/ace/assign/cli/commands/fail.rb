@@ -5,8 +5,8 @@ module Ace
     module CLI
       module Commands
         # Mark current phase as failed
-        class Fail < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Fail < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include AssignmentTarget
 
           desc "Mark current phase as failed"

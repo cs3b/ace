@@ -5,8 +5,8 @@ module Ace
     module CLI
       module Commands
         # Create a new workflow assignment from config file
-        class Create < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Create < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Create a new workflow assignment from YAML config"
 

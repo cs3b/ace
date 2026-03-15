@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../assign"
 
@@ -48,9 +48,9 @@ require_relative "cli/commands/fork_run"
 
 module Ace
   module Assign
-    # dry-cli based CLI registry for ace-assign
+    # ace-support-cli based CLI registry for ace-assign
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-assign"
 
@@ -86,7 +86,7 @@ module Ace
       # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
         @captured_exit_code = nil
-        Dry::CLI.new(self).call(arguments: args)
+        Ace::Support::Cli::Runner.new(self).call(args: args)
         @captured_exit_code || 0
       end
 
@@ -95,7 +95,7 @@ module Ace
       # @param command_class [Class] The command class to wrap
       # @return [Class] Wrapped command class
       def self.wrap_command(command_class)
-        wrapped = Class.new(Dry::CLI::Command) do
+        wrapped = Class.new(Ace::Support::Cli::Command) do
           define_method(:call) do |**kwargs|
             result = command_class.new.call(**kwargs)
             Ace::Assign::CLI.instance_variable_set(:@captured_exit_code, result) if result.is_a?(Integer)

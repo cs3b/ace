@@ -19,8 +19,8 @@ module Ace
         #
         # @example JSON output
         #   ace-assign list --format json
-        class List < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class List < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           # Column widths for table display
           COL_ID = 10

@@ -8,8 +8,8 @@ module Ace
     module CLI
       module Commands
         # Prepare and validate a subtree-scoped fork execution session.
-        class ForkRun < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class ForkRun < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include AssignmentTarget
 
           STALL_REASON_MAX = 2000

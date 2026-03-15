@@ -5,8 +5,8 @@ module Ace
     module CLI
       module Commands
         # Retry a failed phase (creates new phase linked to original)
-        class RetryCmd < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class RetryCmd < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include AssignmentTarget
 
           desc "Retry a phase by creating a new linked phase"
