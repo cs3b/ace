@@ -7,8 +7,8 @@ module Ace
     module CLI
       module Commands
           # Decode a compact ID to a timestamp
-          class Decode < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Decode < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Decode a compact ID (2-8 characters) to a timestamp"
 
@@ -36,7 +36,7 @@ module Ace
 
             def call(compact_id:, **options)
               # Convert numeric options from strings to integers
-              convert_types(options, year_zero: :integer)
+              coerce_types(options, year_zero: :integer)
 
               Ace::B36ts::Commands::DecodeCommand.execute(compact_id, options)
             end

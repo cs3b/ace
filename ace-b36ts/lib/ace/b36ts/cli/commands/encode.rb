@@ -7,8 +7,8 @@ module Ace
     module CLI
       module Commands
           # Encode a timestamp to a 6-character compact ID
-          class Encode < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Encode < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Encode a timestamp to a compact ID (2-8 characters)"
 
@@ -41,7 +41,7 @@ module Ace
 
             def call(timestamp: nil, **options)
               # Convert numeric options from strings to integers
-              convert_types(options, year_zero: :integer, count: :integer)
+              coerce_types(options, year_zero: :integer, count: :integer)
 
               Ace::B36ts::Commands::EncodeCommand.execute(timestamp, options)
             end
