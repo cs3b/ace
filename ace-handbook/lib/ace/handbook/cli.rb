@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 require_relative "../handbook"
@@ -11,7 +11,7 @@ require_relative "cli/commands/status"
 module Ace
   module Handbook
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-handbook"
 

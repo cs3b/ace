@@ -4,8 +4,8 @@ module Ace
   module Handbook
     module CLI
       module Commands
-        class Sync < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Sync < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Project canonical handbook skills into provider-native folders"
 

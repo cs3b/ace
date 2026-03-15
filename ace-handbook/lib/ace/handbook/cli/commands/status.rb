@@ -4,8 +4,8 @@ module Ace
   module Handbook
     module CLI
       module Commands
-        class Status < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Status < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Show handbook provider integration status"
 

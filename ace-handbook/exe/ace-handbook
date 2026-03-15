@@ -3,4 +3,4 @@
 
 require "ace/handbook/cli"
 
-Dry::CLI.new(Ace::Handbook::CLI).call
+Ace::Support::Cli::Runner.new(Ace::Handbook::CLI).call
