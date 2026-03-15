@@ -5,14 +5,14 @@ module Ace
     module Secrets
       module CLI
         module Commands
-          # dry-cli command for pre-release security check
+          # ace-support-cli command for pre-release security check
           #
           # Exit codes:
           # - 0: Passed (no tokens detected)
           # - 1: Failed (tokens detected)
           # - 2: Error occurred
-          class CheckRelease < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class CheckRelease < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Pre-release security validation check"
 

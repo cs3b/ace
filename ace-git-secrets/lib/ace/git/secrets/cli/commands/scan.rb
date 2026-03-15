@@ -5,7 +5,7 @@ module Ace
     module Secrets
       module CLI
         module Commands
-          # dry-cli command for scanning repository for tokens
+          # ace-support-cli command for scanning repository for tokens
           #
           # Requires gitleaks to be installed (brew install gitleaks)
           #
@@ -13,8 +13,8 @@ module Ace
           # - 0: Clean (no tokens found)
           # - 1: Tokens detected
           # - 2: Error occurred
-          class Scan < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Scan < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Scan Git history for authentication tokens"
 

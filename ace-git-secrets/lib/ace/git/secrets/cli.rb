@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../secrets"
 # Business logic command objects
@@ -8,7 +8,7 @@ require_relative "commands/scan_command"
 require_relative "commands/rewrite_command"
 require_relative "commands/revoke_command"
 require_relative "commands/check_release_command"
-# dry-cli command wrappers (Hanami pattern: CLI::Commands::)
+# ace-support-cli command wrappers (Hanami pattern: CLI::Commands::)
 require_relative "cli/commands/scan"
 require_relative "cli/commands/rewrite"
 require_relative "cli/commands/revoke"
@@ -18,12 +18,12 @@ require_relative "version"
 module Ace
   module Git
     module Secrets
-      # dry-cli based CLI registry for ace-git-secrets
+      # ace-support-cli based CLI registry for ace-git-secrets
       #
-      # This replaces the Thor-based CLI with dry-cli while maintaining
+      # This replaces the Thor-based CLI with ace-support-cli while maintaining
       # complete command parity and user-facing behavior.
       module CLI
-        extend Dry::CLI::Registry
+        extend Ace::Core::CLI::RegistryDsl
 
         PROGRAM_NAME = "ace-git-secrets"
 

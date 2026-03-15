@@ -4,7 +4,7 @@ require_relative "../test_helper"
 
 class CLITest < GitSecretsTestCase
   def dispatch_cli(args)
-    Dry::CLI.new(Ace::Git::Secrets::CLI).call(arguments: args)
+    Ace::Support::Cli::Runner.new(Ace::Git::Secrets::CLI).call(args: args)
   end
 
   def setup
@@ -19,7 +19,7 @@ class CLITest < GitSecretsTestCase
     @mock_repo&.cleanup
   end
 
-  # Note: dry-cli returns command metadata, not process exit codes.
+  # Note: ace-support-cli returns command metadata, not process exit codes.
   # Exit code behavior is verified at integration level via executable tests.
 
   def test_cli_completes_scan_successfully_when_clean
@@ -31,7 +31,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -57,7 +57,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         rescue Ace::Core::CLI::Error
           # CLI raises Error with exit_code when tokens found
         end
@@ -73,7 +73,7 @@ class CLITest < GitSecretsTestCase
       begin
         dispatch_cli(["version"])
       rescue SystemExit
-        # dry-cli may call exit for some commands
+        # ace-support-cli may call exit for some commands
       end
     end
 
@@ -85,7 +85,7 @@ class CLITest < GitSecretsTestCase
       begin
         dispatch_cli(["--version"])
       rescue SystemExit
-        # dry-cli may call exit for some commands
+        # ace-support-cli may call exit for some commands
       end
     end
 
@@ -100,7 +100,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan", "--report-format", "json"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -128,7 +128,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan", "--verbose"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -146,7 +146,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan", "--confidence", "high"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -163,7 +163,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["check-release"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -189,7 +189,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["check-release"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         rescue Ace::Core::CLI::Error
           # CLI raises Error with exit_code when tokens found
         end
@@ -210,7 +210,7 @@ class CLITest < GitSecretsTestCase
         begin
           dispatch_cli(["scan", "--verbose"])
         rescue SystemExit
-          # dry-cli may call exit
+          # ace-support-cli may call exit
         end
       end
 
@@ -224,11 +224,11 @@ class CLITest < GitSecretsTestCase
       begin
         dispatch_cli(["help"])
       rescue SystemExit
-        # dry-cli calls exit(0) for help
+        # ace-support-cli calls exit(0) for help
       end
     end
 
-    # dry-cli help goes to stderr
+    # ace-support-cli help goes to stderr
     combined = output + stderr
     assert_match(/COMMANDS|Commands:/, combined)
   end
@@ -238,11 +238,11 @@ class CLITest < GitSecretsTestCase
       begin
         dispatch_cli(["help", "scan"])
       rescue SystemExit
-        # dry-cli calls exit(0) for help
+        # ace-support-cli calls exit(0) for help
       end
     end
 
-    # dry-cli help goes to stderr
+    # ace-support-cli help goes to stderr
     combined = output + stderr
     assert_match(/scan/, combined)
   end
