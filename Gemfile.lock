@@ -87,7 +87,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.15.4)
+    ace-git-worktree (0.15.5)
       ace-git (~> 0.11)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
@@ -188,7 +188,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.5.4)
+    ace-overseer (0.5.5)
       ace-assign (~> 0.16)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
@@ -238,7 +238,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.21.6)
+    ace-search (0.21.7)
       ace-git (~> 0.10)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -247,7 +247,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.8.6)
+    ace-sim (0.8.7)
       ace-b36ts (~> 0.6)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -345,7 +345,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.15.12)
+    ace-test-runner (0.15.13)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
