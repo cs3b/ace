@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "set"
 require "ace/core"
 require_relative "../version"
@@ -20,7 +20,7 @@ module Ace
     # Replaces the nested `ace-review feedback <subcommand>` pattern with
     # flat `ace-review-feedback <command>` invocations.
     module FeedbackCLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-review-feedback"
 

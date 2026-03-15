@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
@@ -13,9 +13,9 @@ module Ace
         # - No arguments: Show help with available subcommands
         #
         # All subcommands (list, show, verify, skip, resolve) are handled
-        # by nested dry-cli commands in CLI::Commands::FeedbackSubcommands:: namespace.
-        class Feedback < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # by nested ace-support-cli commands in CLI::Commands::FeedbackSubcommands:: namespace.
+        class Feedback < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Manage feedback items from code reviews

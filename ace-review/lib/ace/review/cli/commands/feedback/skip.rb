@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "session_discovery"
 
@@ -9,11 +9,11 @@ module Ace
     module CLI
       module Commands
         module FeedbackSubcommands
-          # dry-cli Command class for feedback skip
+          # ace-support-cli Command class for feedback skip
           #
           # Skips a feedback item (marks as not applicable).
-          class Skip < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Skip < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
             include SessionDiscovery
 
             desc <<~DESC.strip
