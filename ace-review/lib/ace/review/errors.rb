@@ -69,6 +69,19 @@ module Ace
         end
       end
 
+      # Raised when PR diff exceeds GitHub's API size limit (300 files)
+      class DiffTooLargeError < Error
+        attr_reader :pr_identifier
+
+        def initialize(pr_identifier, details = nil)
+          @pr_identifier = pr_identifier
+          message = "Pull request '#{pr_identifier}' diff exceeds GitHub API size limit."
+          message += "\n#{details}" if details
+
+          super(message)
+        end
+      end
+
       # Raised when attempting to post to a closed/merged PR
       class PrStateError < Error
         attr_reader :pr_number, :state

@@ -39,6 +39,9 @@ module Ace
           else
             handle_fetch_error(result, pr_identifier)
           end
+        rescue Ace::Review::Errors::DiffTooLargeError
+          # Fall back to local git diff when GitHub API rejects large diffs
+          fetch_local_diff_fallback(pr_identifier, options)
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           # Re-raise authentication and installation errors
           raise
@@ -124,6 +127,12 @@ module Ace
         # @return [Hash] Error response
         def self.handle_fetch_error(result, pr_identifier)
           error_msg = result[:stderr].to_s
+          exit_code = result[:exit_code]
+
+          # Check for diff too large (HTTP 406 / file limit exceeded)
+          if exit_code == 1 && (error_msg.include?("406") || error_msg.include?("exceeded the maximum"))
+            raise Ace::Review::Errors::DiffTooLargeError.new(pr_identifier, error_msg)
+          end
 
           # Check for specific error types
           if error_msg.include?("not found") || error_msg.include?("Could not resolve")
@@ -139,7 +148,73 @@ module Ace
           }
         end
 
-        private_class_method :handle_fetch_error
+        # Fetch local git diff as fallback when GitHub API rejects large diffs
+        #
+        # @param pr_identifier [String] PR identifier (used to fetch base branch)
+        # @param options [Hash] Fetch options
+        # @return [Hash] Result with :success, :diff, :fallback
+        def self.fetch_local_diff_fallback(pr_identifier, options = {})
+          # Fetch PR metadata to get base branch
+          metadata_result = fetch_metadata(pr_identifier, options)
+          unless metadata_result[:success]
+            return {
+              success: false,
+              error: "Cannot fall back to local diff: failed to fetch PR metadata — #{metadata_result[:error]}"
+            }
+          end
+
+          base_ref = metadata_result[:metadata]["baseRefName"]
+
+          # Find merge base
+          merge_base_result = run_local_command("git", "merge-base", "origin/#{base_ref}", "HEAD")
+          unless merge_base_result[:success]
+            return {
+              success: false,
+              error: "Cannot fall back to local diff: git merge-base failed — #{merge_base_result[:stderr]}"
+            }
+          end
+
+          merge_base = merge_base_result[:stdout].strip
+
+          # Generate diff from merge base
+          diff_result = run_local_command("git", "diff", merge_base)
+          unless diff_result[:success]
+            return {
+              success: false,
+              error: "Cannot fall back to local diff: git diff failed — #{diff_result[:stderr]}"
+            }
+          end
+
+          {
+            success: true,
+            diff: diff_result[:stdout],
+            identifier: metadata_result[:identifier],
+            parsed: metadata_result[:parsed],
+            fallback: :local_git_diff
+          }
+        end
+
+        # Execute a local command and return structured result
+        #
+        # @param args [Array<String>] Command and arguments
+        # @return [Hash] Result with :success, :stdout, :stderr
+        def self.run_local_command(*args)
+          require "open3"
+          stdout, stderr, status = Open3.capture3(*args)
+          {
+            success: status.success?,
+            stdout: stdout,
+            stderr: stderr
+          }
+        rescue StandardError => e
+          {
+            success: false,
+            stdout: "",
+            stderr: e.message
+          }
+        end
+
+        private_class_method :handle_fetch_error, :fetch_local_diff_fallback, :run_local_command
       end
     end
   end

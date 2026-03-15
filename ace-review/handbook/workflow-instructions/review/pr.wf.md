@@ -28,6 +28,8 @@ If `$ARGUMENTS` contains a PR number, use it. Otherwise, detect the current PR:
 gh pr view --json number -q '.number'
 ```
 
+**Connection error retry**: If PR number detection fails due to a transient connection error (socket hangup, DNS timeout, connection reset), wait 30 seconds and retry up to 2 times. Only treat authentication errors (401/403) and not-found errors (404) as immediate failures.
+
 ### Step 2: Run PR Review
 
 **Always use `--pr` flag.** Append any additional parameters from `$ARGUMENTS`:
