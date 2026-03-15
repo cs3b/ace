@@ -14,7 +14,7 @@ end
 # No args → show help
 args = ARGV.empty? ? ["--help"] : ARGV
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli with exception-based exit code handling (per ADR-023)
 begin
   Ace::Support::Models::CLI.start(args)
 rescue Ace::Core::CLI::Error => e

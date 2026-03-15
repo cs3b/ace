@@ -8,8 +8,8 @@ module Ace
       module CLI
         module Commands
           # Top-level shortcut for cache sync
-          class SyncShortcut < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class SyncShortcut < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Sync from models.dev (shortcut for: cache sync)"
 

@@ -8,8 +8,8 @@ module Ace
       module CLI
         module Commands
           # Top-level shortcut for models info
-          class InfoShortcut < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class InfoShortcut < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Show model info (shortcut for: models info)"
 

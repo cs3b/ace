@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Providers
             # List all providers with model counts
-            class List < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class List < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "List all providers with model counts"
 

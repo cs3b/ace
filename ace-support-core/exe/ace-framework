@@ -4,7 +4,7 @@
 require "ace/core"
 require "ace/core/cli"
 
-# Start FrameworkCLI (separate from Ace::Core::CLI module which is dry-cli infrastructure)
+# Start FrameworkCLI (separate from Ace::Core::CLI module which is ace-support-cli infrastructure)
 begin
   Ace::Core::FrameworkCLI.start(ARGV)
 rescue Ace::Core::CLI::Error => e

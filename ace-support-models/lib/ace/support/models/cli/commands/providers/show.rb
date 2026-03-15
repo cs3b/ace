@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Providers
             # Show provider details and models
-            class Show < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Show < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Show provider details and models"
 

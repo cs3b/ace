@@ -32,7 +32,7 @@ module Ace
       #     exit(e.exit_code)
       #   end
       #
-      # @see ADR-023 dry-cli CLI Framework
+          # @see ADR-023 CLI framework conventions
       class Error < StandardError
         # Exit code to return when this exception is caught
         # @return [Integer]

@@ -15,17 +15,38 @@ require_relative "core/atoms/command_executor"
 require_relative "core/organisms/environment_manager"
 require_relative "core/config_discovery"
 
-# CLI infrastructure for dry-cli based commands
+# CLI infrastructure based on ace-support-cli
 require_relative "core/cli/error"
-require_relative "core/cli/dry_cli/base"
-require_relative "core/cli/dry_cli/config_summary_mixin"
-require_relative "core/cli/dry_cli/help_command"
-require_relative "core/cli/dry_cli/default_routing"
-require_relative "core/cli/dry_cli/help_router"
-require_relative "core/cli/dry_cli/version_command"
+require_relative "core/cli/base"
+require_relative "core/cli/standard_options"
+require_relative "core/cli/registry_dsl"
+require_relative "core/cli/command_groups"
+require_relative "core/cli/config_summary_mixin"
+require_relative "core/cli/help_command"
+require_relative "core/cli/default_routing"
+require_relative "core/cli/help_router"
+require_relative "core/cli/version_command"
+require_relative "core/cli/help_concise"
 
 module Ace
   module Core
+    # Temporary constant compatibility for packages that still reference
+    # Ace::Core::CLI::DryCli::* while migrating to Ace::Core::CLI::*.
+    # Old require paths under ace/core/cli/dry_cli/* remain removed.
+    module CLI
+      module DryCli
+        Base = ::Ace::Core::CLI::Base
+        ConfigSummaryMixin = ::Ace::Core::CLI::ConfigSummaryMixin
+        HelpCommand = ::Ace::Core::CLI::HelpCommand
+        DefaultRouting = ::Ace::Core::CLI::DefaultRouting
+        HelpRouter = ::Ace::Core::CLI::HelpRouter
+        VersionCommand = ::Ace::Core::CLI::VersionCommand
+        HelpConcise = ::Ace::Core::CLI::HelpConcise
+        CommandGroups = ::Ace::Core::CLI::CommandGroups
+        StandardOptions = ::Ace::Core::CLI::StandardOptions
+      end
+    end
+
     # Re-export ace-config and ace-support-fs classes for backward compatibility
     # This allows existing code using Ace::Core::* to continue working
     #

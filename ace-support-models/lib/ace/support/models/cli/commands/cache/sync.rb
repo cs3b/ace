@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Cache
             # Fetch models from models.dev API
-            class Sync < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Sync < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Fetch models from models.dev API"
 

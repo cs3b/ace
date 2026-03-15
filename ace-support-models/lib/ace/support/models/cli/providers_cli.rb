@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../version"
 
@@ -17,7 +17,7 @@ module Ace
       # Replaces the nested `ace-models providers <subcommand>` pattern with
       # flat `ace-llm-providers <command>` invocations.
       module ProvidersCLI
-        extend Dry::CLI::Registry
+        extend Ace::Core::CLI::RegistryDsl
 
         PROGRAM_NAME = "ace-llm-providers"
 
@@ -64,7 +64,7 @@ module Ace
         # @param args [Array<String>] Command-line arguments
         # @return [Integer] Exit code (0 for success, non-zero for errors)
         def self.start(args)
-          Dry::CLI.new(self).call(arguments: args)
+          Ace::Support::Cli::Runner.new(self).call(args: args)
         end
       end
     end

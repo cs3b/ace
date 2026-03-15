@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Cache
             # Show cache info (freshness, age, counts)
-            class Status < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Status < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Show cache info (freshness, age, counts)"
 

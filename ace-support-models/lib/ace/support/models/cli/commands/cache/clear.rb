@@ -9,8 +9,8 @@ module Ace
         module Commands
           module Cache
             # Clear local cache
-            class Clear < Dry::CLI::Command
-              include Ace::Core::CLI::DryCli::Base
+            class Clear < Ace::Support::Cli::Command
+              include Ace::Core::CLI::Base
 
               desc "Clear local cache"
 

@@ -2,10 +2,10 @@
 
 module Ace
   module TestSupport
-    # CLI test helpers for dry-cli based CLIs
+    # CLI test helpers for ace-support-cli based CLIs
     #
     # This module provides reusable patterns for testing CLI commands
-    # during the Thor to dry-cli migration (Task 179).
+    # during the Thor to ace-support-cli migration (Task 179).
     #
     # @example Usage in test file
     #   require 'ace/test_support'
@@ -19,7 +19,7 @@ module Ace
     #     end
     #   end
     module CliHelpers
-      # Invoke a dry-cli CLI and capture output
+      # Invoke a ace-support-cli CLI and capture output
       #
       # This helper provides a consistent pattern for testing CLI routing
       # and command execution. It wraps CLI.start with capture_io to
@@ -37,7 +37,7 @@ module Ace
       #   result = invoke_cli(Ace::Search::CLI, ["search", "TODO", "--max-results", "10"])
       #   assert_equal 0, result[:result]
       #
-      # @note dry-cli calls exit(0) for --help, so we catch SystemExit.
+      # @note ace-support-cli calls exit(0) for --help, so we catch SystemExit.
       #   Commands raise Ace::Core::CLI::Error for controlled failures
       #   (exception-based exit code pattern per ADR-023).
       def invoke_cli(cli_class, args)
