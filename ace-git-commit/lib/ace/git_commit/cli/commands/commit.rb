@@ -4,13 +4,13 @@ module Ace
   module GitCommit
     module CLI
       module Commands
-        # dry-cli Command class for the commit command
+        # ace-support-cli Command class for the commit command
         #
         # This command generates and executes git commits with LLM-generated
         # or user-provided messages, maintaining complete parity with the
         # Thor implementation.
-        class Commit < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Commit < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Generate and execute git commit
@@ -49,17 +49,17 @@ module Ace
           option :force, type: :boolean, aliases: %w[-f], desc: "Force operation (for future use)"
           option :no_split, type: :boolean, desc: "Force a single commit even when multiple config scopes are detected"
 
-          # Standard options (inherited from Base but need explicit definition for dry-cli)
+          # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :version, type: :boolean, desc: "Show version information"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
-            # Extract files array from options (dry-cli passes args as :files)
+            # Extract files array from options (ace-support-cli passes args as :files)
             @files = Array(options[:files] || [])
 
-            # Remove dry-cli specific keys (args is leftover arguments)
+            # Remove ace-support-cli specific keys (args is leftover arguments)
             @options = options.reject { |k, _| k == :files || k == :args }
             if @options[:version]
               puts "ace-git-commit #{Ace::GitCommit::VERSION}"
