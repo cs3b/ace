@@ -121,6 +121,8 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
 ✅ `ace-bundle project` → output is already concise; read referenced files as needed
 ✅ `ace-bundle wfi://namespace/action` → returns workflow content (may include embedded context)
+   The structured output (SEC/FACT/LIST/CMD/CODE records) IS the loaded content.
+   Do NOT re-read the source file path shown in `FILE|...` — that line is provenance metadata, not a read instruction.
 ✅ `ace-task list` → consume native output directly (no shell filtering)
 
 If this rule is violated, rerun the same `ace-*` command in compliant form immediately and treat that rerun as source of truth.
