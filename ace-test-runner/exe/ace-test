@@ -6,7 +6,7 @@ ENV["MT_NO_AUTORUN"] = "1"
 
 require_relative "../lib/ace/test_runner"
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli with exception-based exit code handling (per ADR-023)
 # IMPORTANT: Use exit! (not exit) to skip Ruby's at_exit handlers.
 # This prevents Minitest from auto-running again via its at_exit hook.
 # When ace-test uses in-process (direct) execution, test files are loaded
@@ -14,7 +14,7 @@ require_relative "../lib/ace/test_runner"
 # re-run all tests on normal exit. Using exit! bypasses this.
 # See guide://testable-code-patterns for details on this pattern.
 begin
-  exit_code = Dry::CLI.new(Ace::TestRunner::CLI::Commands::Test).call(arguments: ARGV)
+  exit_code = Ace::Support::Cli::Runner.new(Ace::TestRunner::CLI::Commands::Test).call(args: ARGV)
   $stdout.flush
   $stderr.flush
   exit!(exit_code.respond_to?(:to_i) ? exit_code.to_i : 0)

@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "../../version"
 
 module Ace
   module TestRunner
     module CLI
       module Commands
-        # dry-cli Command class for the test command
+        # ace-support-cli Command class for the test command
       #
       # This command runs tests with flexible package, target, and file selection.
       # All business logic is inline in this single command class.
-      class Test < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      class Test < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc <<~DESC.strip
           Run tests with flexible package, target, and file selection
@@ -83,7 +83,7 @@ module Ace
         option :color, type: :boolean, desc: "Enable/disable colored output (default: enabled)"
         option :config_path, type: :string, aliases: %w[-c], desc: "Configuration file path (default: .ace/test-runner.yml)"
 
-        # Type conversion options (dry-cli returns strings, need to convert to integers)
+        # Type conversion options (ace-support-cli returns strings, need to convert to integers)
         option :timeout, type: :string, desc: "Timeout for test execution in seconds"
         option :max_display, type: :string, desc: "Maximum failures to display (default: 7)"
         option :profile, type: :string, desc: "Show N slowest tests (default: 10)"
@@ -106,7 +106,7 @@ module Ace
         option :cleanup_keep, type: :string, desc: "Number of reports to keep when cleaning (default: 10)"
         option :cleanup_age, type: :string, desc: "Delete reports older than DAYS (default: 30)"
 
-        # Standard options (inherited from Base but need explicit definition for dry-cli)
+        # Standard options (inherited from Base but need explicit definition for ace-support-cli)
         option :version, type: :boolean, desc: "Show version information"
         option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
         option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -118,7 +118,7 @@ module Ace
             return 0
           end
 
-          # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
+          # Type-convert numeric options (ace-support-cli returns strings, Thor converted to integers)
           # This maintains parity with the Thor implementation
           numeric_options = %i[timeout max_display profile cleanup_keep cleanup_age]
           numeric_options.each do |key|

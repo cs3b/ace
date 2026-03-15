@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "version"
 # Commands
