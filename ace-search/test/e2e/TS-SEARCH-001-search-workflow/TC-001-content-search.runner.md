@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-search "test"` against sandbox files and capture matched-line output
+Run `ace-search "ruby"` against sandbox files and capture matched-line output
 proving content-search mode behavior.
 
 ## Workspace

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.7] - 2026-03-15
+
+### Fixed
+- Updated E2E content-search test to use unambiguous search pattern avoiding false substring match failures
+
 ## [0.21.6] - 2026-03-15
 
 ### Changed
