@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:00"
 estimate: TBD
@@ -8,6 +8,7 @@ dependencies: []
 tags: [e2e, testing, coverage]
 bundle:
   presets: [project]
+needs_review: false
 ---
 
 # Review and expand E2E test coverage across ACE packages

@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.o
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:35"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-test-runner-e2e]
+needs_review: false
 ---
 
 # Create ace-test-runner-e2e E2E tests

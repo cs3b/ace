@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.g
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:24"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-prompt-prep/test/e2e]
+needs_review: false
 ---
 
 # Review & improve ace-prompt-prep E2E tests

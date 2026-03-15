@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.n
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:34"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-compressor]
+needs_review: false
 ---
 
 # Create ace-compressor E2E tests

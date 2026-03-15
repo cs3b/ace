@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.6
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:13"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-git-commit/test/e2e]
+needs_review: false
 ---
 
 # Review & improve ace-git-commit E2E tests

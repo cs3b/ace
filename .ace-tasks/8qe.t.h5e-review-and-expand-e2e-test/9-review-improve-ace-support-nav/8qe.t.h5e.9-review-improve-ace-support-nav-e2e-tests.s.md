@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.9
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-15 11:26:15"
 estimate: TBD
@@ -10,6 +10,7 @@ parent: 8qe.t.h5e
 bundle:
   presets: [project]
   files: [ace-support-nav/test/e2e]
+needs_review: false
 ---
 
 # Review & improve ace-support-nav E2E tests
