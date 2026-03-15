@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-03-15
+
+### Added
+- `DiffTooLargeError` for detecting GitHub API 406 responses on large PR diffs
+- Local git diff fallback in `GhPrFetcher` when GitHub API rejects diffs exceeding 300-file limit
+- Connection error retry guidance in PR review workflow (wait 30s, retry up to 2x)
+
+### Technical
+- New `GhPrFetcherTest` covering 406 detection, fallback success, and fallback error paths
+
 ## [0.44.5] - 2026-03-15
 
 ### Changed
