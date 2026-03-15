@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "dry/cli"
+require "ace/support/cli"
 
 class CliTest < AceB36tsTestCase
-  # Helper to invoke CLI using the Dry::CLI pattern
+  # Helper to invoke CLI using the CLI runner pattern
   def invoke_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Dry::CLI.new(Ace::B36ts::CLI).call(arguments: args)
+        @_cli_result = Ace::Support::Cli::Runner.new(Ace::B36ts::CLI).call(args: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e

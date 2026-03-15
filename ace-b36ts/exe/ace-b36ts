@@ -2,12 +2,12 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/b36ts"
-require "dry/cli"
+require "ace/support/cli"
 
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::B36ts::CLI).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::B36ts::CLI).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/encode"
 require_relative "cli/commands/decode"
@@ -9,7 +9,7 @@ require_relative "version"
 
 module Ace
   module B36ts
-    # CLI interface for ace-b36ts using dry-cli
+    # CLI interface for ace-b36ts using ace-support-cli
     #
     # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
     #
@@ -27,7 +27,7 @@ module Ace
     #   alphabet: 0123456789abcdefghijklmnopqrstuvwxyz
     #
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-b36ts"
 

@@ -7,8 +7,8 @@ module Ace
     module CLI
       module Commands
           # Show current configuration
-          class Config < Dry::CLI::Command
-            include Ace::Core::CLI::DryCli::Base
+          class Config < Ace::Support::Cli::Command
+            include Ace::Core::CLI::Base
 
             desc "Show current configuration"
 
