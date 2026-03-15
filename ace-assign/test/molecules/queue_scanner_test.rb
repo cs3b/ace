@@ -4,6 +4,7 @@ require_relative "../test_helper"
 
 class QueueScannerTest < AceAssignTestCase
   def setup
+    super
     @assignment = Ace::Assign::Models::Assignment.new(
       id: "abc123",
       name: "test",

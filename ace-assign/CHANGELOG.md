@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.4] - 2026-03-15
+
+### Technical
+- Optimized test suite I/O: reuse one tmpdir per test class instead of creating/destroying per test method (~176 → ~16 tmpdir cycles)
+- Removed 2 unnecessary `sleep(0.1)` calls in assignment manager tests (200ms saved)
+- Converted bare `Dir.mktmpdir` calls to shared class-level tmpdir in fork session launcher tests
+
 ## [0.32.3] - 2026-03-15
 
 ### Fixed

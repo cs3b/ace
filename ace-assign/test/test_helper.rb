@@ -9,10 +9,32 @@ require "fileutils"
 require "tmpdir"
 
 class AceAssignTestCase < AceTestCase
-  # Create a temporary directory for test assignments
+  def setup
+    super
+    # Clean class-level tmpdir contents before each test (skip if not yet created)
+    tmp = self.class.instance_variable_get(:@class_temp_dir)
+    if tmp && Dir.exist?(tmp)
+      Dir.children(tmp).each do |child|
+        FileUtils.rm_rf(File.join(tmp, child))
+      end
+    end
+  end
+
+  # Reuse a single tmpdir per test class instead of creating/destroying per test
   def with_temp_cache
-    Dir.mktmpdir("ace-assign-test") do |dir|
-      yield dir
+    yield self.class.class_temp_dir
+  end
+
+  class << self
+    def class_temp_dir
+      @class_temp_dir ||= Dir.mktmpdir("ace-assign-test")
+    end
+  end
+
+  Minitest.after_run do
+    AceAssignTestCase.subclasses.each do |klass|
+      next unless klass.instance_variable_get(:@class_temp_dir)
+      FileUtils.rm_rf(klass.instance_variable_get(:@class_temp_dir))
     end
   end
 
