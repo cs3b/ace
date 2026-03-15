@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../tmux"
 require_relative "cli/commands/start"
@@ -9,9 +9,9 @@ require_relative "cli/commands/list"
 
 module Ace
   module Tmux
-    # dry-cli based CLI registry for ace-tmux
+    # ace-support-cli based CLI registry for ace-tmux
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-tmux"
 
@@ -33,7 +33,7 @@ module Ace
       # @param args [Array<String>] Command-line arguments
       # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
-        Dry::CLI.new(self).call(arguments: args)
+        Ace::Support::Cli::Runner.new(self).call(args: args)
       end
 
       # Register commands

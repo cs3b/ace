@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
@@ -8,8 +8,8 @@ module Ace
     module CLI
       module Commands
         # Add a window to an existing session from a preset
-        class Window < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Window < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Add a window to an existing tmux session from a preset

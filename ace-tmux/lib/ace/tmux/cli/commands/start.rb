@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
@@ -8,8 +8,8 @@ module Ace
     module CLI
       module Commands
         # Start a tmux session from a preset
-        class Start < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Start < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Start a tmux session from a YAML preset
