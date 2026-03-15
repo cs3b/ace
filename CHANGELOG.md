@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.822] - 2026-03-15
+
+### Added
+- **ace-review v0.45.0**: Local git diff fallback when GitHub API rejects large PR diffs (HTTP 406 / 300-file limit)
+
+### Fixed
+- **ace-assign v0.32.3**: Release phase and review cycle presets now reference `wfi://release/publish` workflow
+
+### Changed
+- **ace-assign v0.32.3**: Drive workflow batch continuation rule and transient network failure retry guidance
+- **ace-review v0.45.0**: Connection error retry guidance in PR review workflow
+
 ## [0.9.821] - 2026-03-15
 
 ### Changed
