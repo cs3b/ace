@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-03-15
+
+### Changed
+- Migrated CLI framework from dry-cli to ace-support-cli
+
 ## [0.21.2] - 2026-03-13
 
 ### Fixed

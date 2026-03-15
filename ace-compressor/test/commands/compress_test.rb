@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "tmpdir"
 require "fileutils"
 require_relative "../test_helper"
