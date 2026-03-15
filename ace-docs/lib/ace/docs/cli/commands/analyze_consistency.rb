@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "colorize"
 require_relative "../../organisms/cross_document_analyzer"
@@ -11,11 +11,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the analyze-consistency command
+        # ace-support-cli Command class for the analyze-consistency command
         #
         # This command handles cross-document consistency analysis.
-        class AnalyzeConsistency < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class AnalyzeConsistency < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include ScopeOptions
 
           # Exit codes
@@ -72,11 +72,11 @@ module Ace
           def call(pattern: nil, **options)
             # Handle --help/-h passed as pattern argument
             if pattern == "--help" || pattern == "-h"
-              # dry-cli will handle help automatically, so we just ignore
+              # ace-support-cli will handle help automatically, so we just ignore
               return EXIT_SUCCESS
             end
 
-            # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
+            # Type-convert numeric options (ace-support-cli returns strings, Thor converted to integers)
             numeric_options = %i[threshold timeout]
             numeric_options.each do |key|
               options[key] = options[key].to_i if options[key]

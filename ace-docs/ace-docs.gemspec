@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-b36ts", "~> 0.7"
   spec.add_dependency "ace-llm", "~> 0.26"
   spec.add_dependency "ace-support-markdown", "~> 0.2"
-  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-cli", "~> 0.3"
   spec.add_dependency "yaml", "~> 0.3"
   spec.add_dependency "colorize", "~> 1.1"
   spec.add_dependency "terminal-table", "~> 3.0"

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../../organisms/document_registry"
 require_relative "../../molecules/frontmatter_manager"
@@ -10,11 +10,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the update command
+        # ace-support-cli Command class for the update command
         #
         # This command handles updating document frontmatter.
-        class Update < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Update < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include ScopeOptions
 
           # Exit codes
@@ -69,7 +69,7 @@ module Ace
           def call(file: nil, **options)
             # Handle --help/-h passed as file argument
             if file == "--help" || file == "-h"
-              # dry-cli will handle help automatically, so we just ignore
+              # ace-support-cli will handle help automatically, so we just ignore
               return EXIT_SUCCESS
             end
 

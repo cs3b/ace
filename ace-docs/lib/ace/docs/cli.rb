@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
   module Docs
-    # dry-cli based CLI registry for ace-docs
+    # ace-support-cli based CLI registry for ace-docs
     #
-    # This replaces the Thor-based CLI with dry-cli while maintaining
+    # This replaces the Thor-based CLI with ace-support-cli while maintaining
     # complete command parity and user-facing behavior.
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-docs"
 

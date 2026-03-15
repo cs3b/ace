@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "colorize"
 require "open3"
@@ -12,11 +12,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the validate command
+        # ace-support-cli Command class for the validate command
         #
         # This command handles document validation.
-        class Validate < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Validate < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
           include ScopeOptions
 
           # Exit codes
@@ -66,7 +66,7 @@ module Ace
           def call(pattern: nil, **options)
             # Handle --help/-h passed as pattern argument
             if pattern == "--help" || pattern == "-h"
-              # dry-cli will handle help automatically, so we just ignore
+              # ace-support-cli will handle help automatically, so we just ignore
               return EXIT_SUCCESS
             end
 

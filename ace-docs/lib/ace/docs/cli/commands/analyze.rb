@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "fileutils"
 require "ace/core"
 require "colorize"
@@ -20,11 +20,11 @@ module Ace
   module Docs
     module CLI
       module Commands
-        # dry-cli Command class for the analyze command
+        # ace-support-cli Command class for the analyze command
         #
         # This command handles document analysis with LLM integration.
-        class Analyze < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Analyze < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           # Exit codes
           EXIT_SUCCESS = 0
@@ -68,7 +68,7 @@ module Ace
           def call(file:, **options)
             # Handle --help/-h passed as file argument
             if file == "--help" || file == "-h"
-              # dry-cli will handle help automatically, so we just ignore
+              # ace-support-cli will handle help automatically, so we just ignore
               return EXIT_SUCCESS
             end
 
@@ -78,7 +78,7 @@ module Ace
           private
 
           def execute_analyze(file, options)
-            # Load document (file argument is enforced as required by dry-cli)
+            # Load document (file argument is enforced as required by ace-support-cli)
             registry = Ace::Docs::Organisms::DocumentRegistry.new
             document = registry.find_by_path(file)
 

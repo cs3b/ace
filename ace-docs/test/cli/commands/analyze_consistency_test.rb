@@ -80,7 +80,7 @@ module Ace
           end
 
           def test_numeric_option_conversion
-            # Simulate dry-cli passing strings for numeric options
+            # Simulate ace-support-cli passing strings for numeric options
             options = { threshold: "80", timeout: "300" }
 
             # Use stub helpers to prevent expensive file system scanning
