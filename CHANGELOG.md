@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.825] - 2026-03-15
+
+### Fixed
+- **ace-git-worktree v0.15.6**: Fixed `--delete-branch` flag raising "missing argument" error by replacing multi-char `-db` alias with `-D`
+- **ace-overseer v0.5.6**: Restructured TC-005 prune E2E runner with strict step sequencing to prevent premature prune execution
+
 ## [0.9.824] - 2026-03-15
 
 ### Fixed
