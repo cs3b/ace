@@ -11,7 +11,7 @@ bundle:
   sections:
     current_repository_status:
       commands:
-        - git status -sb 
+        - git status -sb -uall
         - git diff --stat
 
 update:
@@ -47,6 +47,10 @@ ace-git-commit automatically:
    - Is this the right scope for a single commit?
 
    No need to run git commands - the context is already provided.
+
+   **Important**: Untracked files (`??` in status) ARE committable changes — `ace-git-commit` stages them by default.
+   If status shows ANY modifications or untracked files, proceed to step 2.
+   Only report "nothing to commit" if status is truly empty (no lines beyond the branch header).
 
 2. **Execute commit** based on scope:
    - All changes: `ace-git-commit`
