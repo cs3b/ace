@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "ace/llm"
 require_relative "../../organisms/retro_doctor"
@@ -12,11 +12,11 @@ module Ace
   module Retro
     module CLI
       module Commands
-        # dry-cli Command class for ace-retro doctor
+        # ace-support-cli Command class for ace-retro doctor
         #
         # Runs health checks on retros and optionally auto-fixes issues.
-        class Doctor < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Doctor < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Run health checks on retros
