@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 
 module Ace
   module Task
     module CLI
       module Commands
-        # dry-cli Command class for ace-task create
-        class Create < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # ace-support-cli Command class for ace-task create
+        class Create < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Create a new task

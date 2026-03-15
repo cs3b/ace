@@ -10,7 +10,7 @@ args = ARGV.empty? ? ["--help"] : ARGV
 # Handle SIGINT with exit code 130
 trap("INT") { exit 130 }
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start ace-support-cli with exception-based exit code handling (per ADR-023)
 begin
   Ace::Task::TaskCLI.start(args)
 rescue Ace::Core::CLI::Error => e

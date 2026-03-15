@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require_relative "../../molecules/task_plan_cache"
 require_relative "../../molecules/task_plan_generator"
 require_relative "../../molecules/task_config_loader"
@@ -10,9 +10,9 @@ module Ace
   module Task
     module CLI
       module Commands
-        # dry-cli Command class for ace-task plan
-        class Plan < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # ace-support-cli Command class for ace-task plan
+        class Plan < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Resolve or generate a task implementation plan
