@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed commit workflow embedded status using `git status -sb -uall` to show individual untracked files instead of collapsed directory entries.
 - Added explicit guidance that untracked files (`??`) are committable changes, preventing agents from incorrectly reporting "nothing to commit" on untracked-only changes.
 
+### Changed
+- Migrated CLI framework from dry-cli to ace-support-cli
+
 ## [0.21.4] - 2026-03-13
 
 ### Technical
