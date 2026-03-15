@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'ace-support-config', '~> 0.7'
   spec.add_dependency 'ace-support-core', '~> 0.24'
-  spec.add_dependency 'dry-cli', '~> 1.0'
+  spec.add_dependency 'ace-support-cli', '~> 0.3'
 
   # Development dependencies
   spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'

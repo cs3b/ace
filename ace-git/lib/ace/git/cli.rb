@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../git"
 require_relative "cli/commands/diff"
@@ -10,9 +10,9 @@ require_relative "cli/commands/pr"
 
 module Ace
   module Git
-    # dry-cli command registry for ace-git.
+    # ace-support-cli command registry for ace-git.
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       # Entry point for CLI invocation (used by tests via cli_helpers)
       #
@@ -21,7 +21,7 @@ module Ace
       #
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
-        Dry::CLI.new(self).call(arguments: normalized_args(args))
+        Ace::Support::Cli::Runner.new(self).call(args: normalized_args(args))
       end
 
       # Normalize arguments to handle empty args and git range patterns.

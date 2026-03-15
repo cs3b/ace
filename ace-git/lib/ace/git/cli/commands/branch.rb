@@ -7,9 +7,9 @@ module Ace
   module Git
     module CLI
       module Commands
-      # dry-cli command for showing branch information
-      class Branch < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      # ace-support-cli command for showing branch information
+      class Branch < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc "Show current branch information"
 

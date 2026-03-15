@@ -9,10 +9,10 @@ module Ace
   module Git
     module CLI
       module Commands
-      # dry-cli command for generating diffs
+      # ace-support-cli command for generating diffs
       # Migrated from ace-git-diff
-      class Diff < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      class Diff < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc "Generate git diff with filtering (default command)"
 
