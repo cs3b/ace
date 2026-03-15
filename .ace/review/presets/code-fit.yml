@@ -60,5 +60,6 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus@ro
-  - codex:max@ro
+  - claude:opus:high@ro
+  - codex:gpt:high@ro
+  - gemini:pro-latest@ro
