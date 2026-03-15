@@ -7,9 +7,9 @@ module Ace
   module Git
     module CLI
       module Commands
-      # dry-cli command for showing PR information
-      class Pr < Dry::CLI::Command
-        include Ace::Core::CLI::DryCli::Base
+      # ace-support-cli command for showing PR information
+      class Pr < Ace::Support::Cli::Command
+        include Ace::Core::CLI::Base
 
         desc "Show PR information"
 
