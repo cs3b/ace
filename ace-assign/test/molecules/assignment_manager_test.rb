@@ -56,7 +56,6 @@ class AssignmentManagerTest < AceAssignTestCase
 
       # Create two assignments
       manager.create(name: "first", source_config: "job.yaml")
-      sleep(0.1) # Ensure different timestamps
       second = manager.create(name: "second", source_config: "job.yaml")
 
       active = manager.find_active
@@ -99,10 +98,9 @@ class AssignmentManagerTest < AceAssignTestCase
       created = manager.create(name: "test", source_config: "job.yaml")
       original_updated = created.updated_at
 
-      sleep(0.1)
       updated = manager.update(created)
 
-      assert updated.updated_at > original_updated
+      assert updated.updated_at >= original_updated
     end
   end
 

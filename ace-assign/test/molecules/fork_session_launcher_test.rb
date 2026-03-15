@@ -78,7 +78,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.01", cache_dir: tmp_dir)
 
       call = fake.calls.last
@@ -98,7 +98,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_text)
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.02", cache_dir: tmp_dir)
 
       last_msg_file = File.join(tmp_dir, "sessions", "010.02-last-message.md")
@@ -118,7 +118,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     config = { "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 }, "providers" => {} }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_text)
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       sessions_dir = File.join(tmp_dir, "sessions")
       FileUtils.mkdir_p(sessions_dir)
       last_msg_file = File.join(sessions_dir, "010-last-message.md")
@@ -140,7 +140,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_metadata)
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.02", cache_dir: tmp_dir)
 
       session_file = File.join(tmp_dir, "sessions", "010.02-session.yml")
@@ -163,7 +163,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     config = { "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 }, "providers" => {} }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_no_session)
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
 
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
@@ -189,7 +189,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       { session_id: "detected-pi-sess-001", session_path: "/fake/path" }
     end
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
 
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
@@ -217,7 +217,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       { session_id: "should-not-use", session_path: "/fake" }
     end
 
-    Dir.mktmpdir do |tmp_dir|
+    with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
 
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
