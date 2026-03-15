@@ -36,6 +36,11 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - **Load Task Content:**
      - Read the task file from the identified path
      - Verify the task has `status: draft`
+     - Detect whether the task is an orchestrator with subtasks
+     - If the task is an orchestrator:
+       - Enumerate child subtasks and their current statuses before any promotion
+       - Treat every child subtask still in `draft` as an additional review target
+       - Review draft subtasks first and defer any parent promotion decision until child review outcomes are known
      - Parse the behavioral specification sections:
        - User Experience (input, process, output)
        - Expected Behavior
@@ -99,6 +104,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Validation Questions Addressed**: All validation questions either answered or documented as blocking
    - [ ] **Vertical Slice Quality (Task/Subtask)**: Scope is decomposed into end-to-end capability slices (standalone task or orchestrator+subtasks), not horizontal layer-only work
    - [ ] **Subtask Slice Clarity**: Each subtask has a distinct observable outcome and does not duplicate sibling scope
+   - [ ] **Child Readiness Complete** (orchestrators only): Every draft child subtask has been reviewed and either promoted to `pending` or blocked with documented questions
    - [ ] **Tracer-First for Uncertain Architecture**: For uncertain/novel execution paths, first subtask is a tracer slice validating viability
    - [ ] **Slice Size Signal Present**: Each slice includes advisory size (`small|medium|large`) for planning visibility
    - [ ] **Decision-Complete Spec**: Implementer can execute without inventing missing behavioral decisions
@@ -133,6 +139,15 @@ Validate draft behavioral specifications and promote to pending when ready. This
 5. **Promote or Block:**
 
    **If Ready (all readiness criteria met):**
+   - **Orchestrator rule:** If the task is an orchestrator, only promote the parent after all draft child subtasks have been reviewed and promoted successfully.
+   - **Recursive promotion for orchestrators:**
+     - Review each draft child subtask using the same checklist
+     - Promote each child subtask that passes:
+       ```bash
+       ace-task update <child-ref> --set status=pending
+       ace-task update <child-ref> --set needs_review=false
+       ```
+     - For any child subtask that fails, keep it in `draft`, set `needs_review=true`, and do not promote the parent
    - Promote the task status and clear any existing `needs_review` flag:
      ```bash
      ace-task update <ref> --set status=pending
@@ -144,6 +159,10 @@ Validate draft behavioral specifications and promote to pending when ready. This
      Readiness: All behavioral specs validated, no blocking questions.
      Ready for implementation via ace-assign.
      ```
+   - **Orchestrator summary requirement:**
+     - Report how many child subtasks were reviewed
+     - Report how many child subtasks were promoted
+     - Report whether parent promotion was deferred due to any blocked child
 
    **If Not Ready (blocking questions or gaps remain):**
    - Add `needs_review: true` to task metadata (`ace-task update <ref> --set needs_review=true`)
@@ -205,6 +224,11 @@ Validate draft behavioral specifications and promote to pending when ready. This
      **Decision:** Promoted to pending / Remains draft (needs_review: true)
      **Recommended Next Steps:** Based on current state...
      ```
+   - **Orchestrator runs should also include:**
+     - `Subtasks Reviewed: X`
+     - `Subtasks Promoted: Y`
+     - `Subtasks Blocked: Z`
+     - `Parent Decision: promoted / deferred`
 
 ## Secondary Support: Non-Draft Statuses
 
@@ -242,6 +266,7 @@ For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus
 - Verification Plan quality validated against success criteria
 - Bundle frontmatter (`presets`, `files`, `commands`) validated for completeness
 - Task promoted to pending if ready, or blocked with `needs_review: true`
+- Orchestrator parents are promoted only after draft child subtasks have also passed review
 - Structure and formatting preserved
 - No loss of existing information
 - Clear improvement in task clarity or completeness
