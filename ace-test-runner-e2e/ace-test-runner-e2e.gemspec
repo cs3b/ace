@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
-  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-cli", "~> 0.3"
   spec.add_dependency "ace-support-core", "~> 0.25"
   spec.add_dependency "ace-support-config", "~> 0.8"
   spec.add_dependency "ace-llm", "~> 0.26"

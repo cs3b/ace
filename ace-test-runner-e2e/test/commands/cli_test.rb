@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "dry/cli"
+require "ace/support/cli"
 require "stringio"
 
 class CLITest < Minitest::Test
@@ -15,9 +15,9 @@ class CLITest < Minitest::Test
     $stdout = out
     $stderr = err
     begin
-      Dry::CLI.new(RunTest).call(arguments: args)
+      Ace::Support::Cli::Runner.new(RunTest).call(args: args)
     rescue SystemExit
-      # dry-cli single-command --help calls exit(0)
+      # ace-support-cli single-command --help calls exit(0)
     ensure
       $stdout = old_stdout
       $stderr = old_stderr
