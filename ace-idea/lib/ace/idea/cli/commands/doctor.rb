@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require "ace/llm"
 require_relative "../../organisms/idea_doctor"
@@ -12,11 +12,11 @@ module Ace
   module Idea
     module CLI
       module Commands
-        # dry-cli Command class for ace-idea doctor
+        # ace-support-cli Command class for ace-idea doctor
         #
         # Runs health checks on ideas and optionally auto-fixes issues.
-        class Doctor < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Doctor < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Run health checks on ideas

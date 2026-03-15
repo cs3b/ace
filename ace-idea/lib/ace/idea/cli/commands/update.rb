@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/support/items"
 
 module Ace
   module Idea
     module CLI
       module Commands
-        # dry-cli Command class for ace-idea update
-        class Update < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # ace-support-cli Command class for ace-idea update
+        class Update < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Update idea metadata and/or move to a folder

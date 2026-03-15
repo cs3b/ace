@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 
 module Ace
   module Idea
     module CLI
       module Commands
-        # dry-cli Command class for ace-idea list
-        class List < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        # ace-support-cli Command class for ace-idea list
+        class List < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           C = Ace::Support::Items::Atoms::AnsiColors
           desc "List ideas\n\n" \
