@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.817] - 2026-03-15
+
+### Fixed
+- **ace-git-commit v0.21.5**: Fixed commit workflow to show individual untracked files (`-uall`) and added explicit guidance that untracked files are committable, preventing agents from reporting "nothing to commit" on untracked-only changes.
+
 ## [0.9.816] - 2026-03-13
 
 ### Fixed
