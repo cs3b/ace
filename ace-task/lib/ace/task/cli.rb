@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "version"
 require_relative "cli/commands/create"
@@ -15,7 +15,7 @@ module Ace
   module Task
     # Flat CLI registry for ace-task (task management).
     module TaskCLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-task"
 
@@ -76,7 +76,7 @@ module Ace
       # Entry point for CLI invocation
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
-        Dry::CLI.new(self).call(arguments: args)
+        Ace::Support::Cli::Runner.new(self).call(args: args)
       end
     end
   end

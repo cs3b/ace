@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "../../organisms/task_doctor"
 require_relative "../../molecules/task_doctor_fixer"
@@ -11,11 +11,11 @@ module Ace
   module Task
     module CLI
       module Commands
-        # dry-cli Command class for ace-task doctor
+        # ace-support-cli Command class for ace-task doctor
         #
         # Runs health checks on tasks and optionally auto-fixes issues.
-        class Doctor < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Doctor < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc <<~DESC.strip
             Run health checks on tasks
