@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "dry/cli"
+require "ace/support/cli"
 
 class CliTest < AceDemoTestCase
   def invoke(args)
     stdout, stderr = capture_io do
       begin
-        @result = Dry::CLI.new(Ace::Demo::CLI).call(arguments: args)
+        @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
       rescue SystemExit => e
         @result = e.status
       rescue Ace::Core::CLI::Error => e

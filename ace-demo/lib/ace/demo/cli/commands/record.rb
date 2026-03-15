@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 
 module Ace
   module Demo
     module CLI
       module Commands
-        class Record < Dry::CLI::Command
-          include Ace::Core::CLI::DryCli::Base
+        class Record < Ace::Support::Cli::Command
+          include Ace::Core::CLI::Base
 
           desc "Record terminal demo from VHS tape"
 
@@ -31,6 +31,8 @@ module Ace
             unless Organisms::DemoRecorder::SUPPORTED_FORMATS.include?(format)
               raise Ace::Core::CLI::Error, "Unsupported format: #{format}. Use gif, mp4, or webm."
             end
+            options = options.dup
+            options.delete(:format)
 
             commands = collect_commands(args)
 

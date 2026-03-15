@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/record"
 require_relative "cli/commands/attach"
@@ -13,7 +13,7 @@ require_relative "version"
 module Ace
   module Demo
     module CLI
-      extend Dry::CLI::Registry
+      extend Ace::Core::CLI::RegistryDsl
 
       PROGRAM_NAME = "ace-demo"
 
