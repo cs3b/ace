@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.823] - 2026-03-15
+
+### Technical
+- **ace-assign v0.32.4**: Optimized test suite I/O with class-level tmpdir reuse and sleep elimination
+
 ## [0.9.822] - 2026-03-15
 
 ### Added
