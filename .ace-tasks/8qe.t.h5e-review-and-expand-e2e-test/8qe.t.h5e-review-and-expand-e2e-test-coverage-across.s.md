@@ -15,16 +15,16 @@ bundle:
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: An orchestrator coordinating 27 subtasks across two phases: reviewing existing E2E tests (19 packages) and creating new E2E tests (8 packages).
-- **Process**: Phase 1 reviews and improves existing E2E test suites using `/as-e2e-review`, then applies improvements. Phase 2 creates new E2E tests for packages that have CLIs but no E2E coverage using `/as-e2e-create`.
-- **Output**: All 27 packages have comprehensive, verified E2E test coverage with consistent quality standards.
+- **Input**: An orchestrator coordinating 27 subtasks across two phases: managing existing E2E suites through the canonical review pipeline (19 packages) and creating initial value-gated E2E coverage (8 packages).
+- **Process**: Phase 1 runs the canonical `review -> plan-changes -> rewrite` lifecycle for packages with existing E2E tests, preferably via `/as-e2e-manage`. Phase 2 uses `/as-e2e-create` to add 1-2 value-gated smoke scenarios per package where real CLI/filesystem/subprocess behavior justifies E2E coverage.
+- **Output**: All 27 packages have E2E coverage decisions and package-scoped verification aligned with ACE E2E workflow standards.
 
 ### Expected Behavior
 
 E2E tests across the monorepo have grown organically with inconsistent patterns, coverage gaps, and varying quality. This orchestrator systematically:
 
-1. **Phase 1 (Review)**: Run `/as-e2e-review` on each of 19 packages with existing E2E tests, producing coverage matrices. Apply recommended improvements. Verify tests pass.
-2. **Phase 2 (Create)**: Run `/as-e2e-create` on each of 8 packages with CLIs but no E2E tests. Create supplementary happy-path scenarios. Verify tests pass.
+1. **Phase 1 (Manage existing suites)**: Run the canonical E2E lifecycle for each of 19 packages with existing E2E tests: produce a coverage matrix, classify KEEP/MODIFY/REMOVE/CONSOLIDATE/ADD decisions, then rewrite the suite to match the approved plan.
+2. **Phase 2 (Create initial suites)**: Run `/as-e2e-create` on each of 8 packages with CLIs but no E2E tests. Create only value-gated smoke scenarios that require real CLI/filesystem/subprocess coverage, and document the unit-test evidence reviewed for each scenario.
 
 This parent task coordinates:
 - `h5e.0` through `h5e.i` — Phase 1: Review and improve existing E2E tests (19 subtasks)
@@ -43,21 +43,22 @@ This parent task coordinates:
 - **Slice Type**: Orchestrator
 - **Slice Outcome**: Comprehensive, consistent E2E test coverage across all ACE packages with CLIs
 - **Advisory Size**: large
-- **Context Dependencies**: 19 existing E2E test suites, 8 packages needing new E2E coverage, `/as-e2e-review` and `/as-e2e-create` workflows
+- **Context Dependencies**: 19 existing E2E suites, 8 packages needing initial E2E coverage, and the `/as-e2e-manage`, `/as-e2e/plan-changes`, `/as-e2e-rewrite`, and `/as-e2e-create` workflows
 
 ### Verification Plan
 
 #### Integration / E2E Validation
-- [ ] All Phase 1 subtasks complete with coverage matrices and applied improvements
-- [ ] All Phase 2 subtasks complete with new E2E test scenarios
-- [ ] `ace-test-suite` passes with all E2E improvements in place
+- [ ] All Phase 1 subtasks complete with review outputs, change plans, and rewrite summaries
+- [ ] All Phase 2 subtasks complete with value-gated smoke scenarios and E2E decision records
+- [ ] Each subtask records its package-scoped verification outcome
 
 #### Verification Commands
-- [ ] `ace-test-suite`
+- [ ] Package-scoped verification commands are completed and recorded in each subtask
+- [ ] Optional follow-up: `ace-test-suite`
 
 ## Objective
 
-Systematically review and expand E2E test coverage across all ACE packages, ensuring consistent quality, comprehensive coverage, and passing test suites.
+Systematically bring ACE package E2E coverage under the canonical workflow model, ensuring existing suites are reviewed and rewritten consistently while new suites are added only where E2E value is justified.
 
 ## Scope of Work
 
@@ -110,10 +111,13 @@ Systematically review and expand E2E test coverage across all ACE packages, ensu
 ## Out of Scope
 
 - ❌ Changing CLI command behavior (E2E tests verify existing behavior)
-- ❌ Implementation — this task drafts specs only, execution is per-subtask
+- ❌ Blanket per-command happy-path coverage when unit tests already cover the behavior sufficiently
 - ❌ Unit test or molecule test improvements (E2E scope only)
 
 ## References
 
+- `/as-e2e-manage` — Canonical E2E lifecycle orchestrator for existing suites
 - `/as-e2e-review` — Deep E2E test review workflow
+- `/as-e2e-plan-changes` — E2E change planning workflow
+- `/as-e2e-rewrite` — E2E rewrite workflow
 - `/as-e2e-create` — New E2E test creation workflow

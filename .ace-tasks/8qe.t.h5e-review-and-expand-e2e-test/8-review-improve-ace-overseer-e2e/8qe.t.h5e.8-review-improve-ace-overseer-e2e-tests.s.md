@@ -18,19 +18,19 @@ bundle:
 
 ### User Experience
 - **Input**: Existing E2E test suite for `ace-overseer` (1 scenario, 5 test cases).
-- **Process**: Run `/as-e2e-review` on the package to produce a coverage matrix. Analyze gaps and improvements. Apply changes. Verify tests pass.
+- **Process**: Run the canonical E2E lifecycle for the package, preferably via `/as-e2e-manage`: produce a coverage matrix, generate a concrete change plan, apply the approved rewrite, then record package-scoped verification.
 - **Output**: Improved E2E test suite with better coverage, consistent patterns, and all tests passing.
 
 ### Expected Behavior
 
-1. Run `/as-e2e-review` on `ace-overseer` to produce a coverage matrix mapping CLI functionality to existing E2E test coverage.
-2. Analyze the coverage matrix for: missing happy-path scenarios, missing error-path scenarios, inconsistent test patterns, flaky test indicators, and sandbox isolation gaps.
-3. Apply improvements: add missing scenarios, fix inconsistencies, improve assertions, ensure proper sandbox setup/teardown.
-4. Verify all E2E tests pass with `ace-test ace-overseer`.
+1. Run `/as-e2e-manage` on `ace-overseer` to run `review -> plan-changes -> rewrite`, producing a coverage matrix plus classified KEEP/MODIFY/REMOVE/CONSOLIDATE/ADD decisions.
+2. Review the change plan for overlap, gaps, outdated assertions, consolidation opportunities, and any missing E2E decision evidence.
+3. Execute the approved rewrite: update, remove, consolidate, or add TCs/scenarios as required by the plan, and keep scenario structure aligned with the canonical E2E authoring contract.
+4. Record package-scoped verification for `ace-test ace-overseer`.
 
 ### Success Criteria
 
-- [ ] Coverage matrix produced from `/as-e2e-review`
+- [ ] Coverage matrix produced from `/as-e2e-review` after the rewrite.
 - [ ] Gaps identified and documented
 - [ ] Improvements applied to E2E test files
 - [ ] All E2E tests pass after changes
@@ -39,26 +39,26 @@ bundle:
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
 - **Slice Type**: Subtask (review)
-- **Slice Outcome**: `ace-overseer` E2E tests reviewed, improved, and verified
+- **Slice Outcome**: `ace-overseer` E2E tests managed through review, plan, rewrite, and package-scoped verification
 - **Advisory Size**: small
 - **Context Dependencies**: Existing E2E test files in `ace-overseer/test/e2e/`
 
 ### Verification Plan
 
 #### Integration / E2E Validation
-- [ ] All E2E tests pass: `ace-test ace-overseer`
-- [ ] Coverage matrix shows no critical gaps remaining
+- [ ] Package-scoped verification passes after rewrite: `ace-test ace-overseer`
+- [ ] Coverage matrix and change plan are attached or summarized in the task output
 
 #### Verification Commands
 - [ ] `ace-test ace-overseer`
 
 ## Objective
 
-Review and improve the E2E test suite for `ace-overseer`, ensuring comprehensive coverage with consistent patterns.
+Run the canonical E2E lifecycle for `ace-overseer`, ensuring review findings, rewrite decisions, and package-scoped verification are all captured consistently.
 
 ## Scope of Work
 
-- Review existing 1 scenario and 5 test cases
+- Run the canonical lifecycle against existing 1 scenario and 5 test cases
 - Produce coverage matrix via `/as-e2e-review`
 - Apply improvements from the review
 - Verify all tests pass
@@ -72,4 +72,4 @@ Review and improve the E2E test suite for `ace-overseer`, ensuring comprehensive
 ## References
 
 - Parent: 8qe.t.h5e — Review and expand E2E test coverage across ACE packages
-- `/as-e2e-review` workflow
+- `/as-e2e-manage` workflow\n- `/as-e2e-review`, `/as-e2e-plan-changes`, and `/as-e2e-rewrite` workflows
