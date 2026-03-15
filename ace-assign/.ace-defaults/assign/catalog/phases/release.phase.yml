@@ -17,5 +17,7 @@ when_to_skip:
   - "No version-worthy changes since last release"
   - "Release is handled externally"
 
+workflow: wfi://release/publish
+
 effort: light
 tags: [git, versioning, release]
