@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-03-15
+
+### Fixed
+- Fixed `--delete-branch` flag raising "missing argument" error after ace-support-cli migration by replacing multi-char `-db` alias with single-char `-D` to avoid OptionParser misparse
+
 ## [0.15.5] - 2026-03-15
 
 ### Fixed

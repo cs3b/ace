@@ -25,7 +25,7 @@ module Ace
             option :task, desc: "Remove worktree for specific task", aliases: []
             option :force, desc: "Force removal even with uncommitted changes", type: :boolean, aliases: []
             option :keep_directory, desc: "Keep the worktree directory", type: :boolean, aliases: ["--keep-directory"]
-            option :delete_branch, desc: "Also delete the associated branch", type: :boolean, aliases: ["-db"]
+            option :delete_branch, desc: "Also delete the associated branch", type: :boolean, aliases: ["-D"]
             option :dry_run, desc: "Show what would be removed", type: :boolean, aliases: ["--dry-run"]
             option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
