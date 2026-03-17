@@ -3,7 +3,7 @@ last_synced: 2026-02-06
 class: Ace::LLM::Providers::CLI::CodexClient
 gem: ace-llm-providers-cli
 models_dev_id: openai
-context_limit: 128000
+context_limit: 1050000
 models:
   - gpt-5.1
   - gpt-5.1-chat-latest
