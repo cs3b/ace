@@ -42,6 +42,8 @@ module Ace
           original_input = input.strip
           provider_target, preset_name, preset_error = split_preset_suffix(original_input)
           return create_error_result(original_input, preset_error) if preset_error
+
+          provider_target = @alias_resolver.resolve(provider_target).to_s.strip
           return create_error_result(original_input, "Invalid target: provider/model portion cannot be empty") if provider_target.empty?
 
           parts = provider_target.split(":", 2)

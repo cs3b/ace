@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Resolve global alias inputs (for example `glite`) before provider/model validation so single-token alias-only provider inputs are accepted.
+
 ## [0.26.8] - 2026-03-17
 
 ### Fixed
