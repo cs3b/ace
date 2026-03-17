@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.11] - 2026-03-17
+
+### Fixed
+- Updated default provider context limits: Anthropic from 200K to 1M tokens, OpenAI from 128K to 1.05M tokens to reflect modern model capabilities.
+
 ## [0.26.10] - 2026-03-17
 
 ### Fixed
