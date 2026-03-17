@@ -16,14 +16,14 @@ For CLIs with subcommands, use the Registry pattern with `HelpCommand.build()`:
 
 ```ruby
 # lib/ace/gem/cli.rb
-require "dry/cli"
+require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/process"
 require_relative "cli/commands/status"
 
 module Ace::Gem
   module CLI
-    extend Ace::Support::Cli::Registry
+    extend Ace::Core::CLI::RegistryDsl
 
     PROGRAM_NAME = 'ace-gem'
 
@@ -38,8 +38,8 @@ module Ace::Gem
       'ace-gem status --verbose'
     ].freeze
 
-    register 'process', Commands::Process.new
-    register 'status', Commands::Status.new
+    register 'process', Commands::Process
+    register 'status', Commands::Status
 
     # Version command
     version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
@@ -71,7 +71,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Gem::CLI).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -111,7 +111,7 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Ace::Support::Cli.new(Ace::Gem::CLI::Commands::Search).call(arguments: args)
+  Ace::Support::Cli::Runner.new(Ace::Gem::CLI::Commands::Search).call(args: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -156,7 +156,7 @@ For hierarchical commands (ace-taskflow, ace-git-worktree):
 # lib/ace/taskflow/cli.rb
 module Ace::Taskflow
   module CLI
-    extend Ace::Support::Cli::Registry
+    extend Ace::Core::CLI::RegistryDsl
 
     # Hierarchical registration with space-separated names
     register "task show", Commands::Task::Show
@@ -179,14 +179,14 @@ end
 
 ## Type Conversion
 
-ace-support-cli returns strings for all options. Use the `convert_types` helper:
+Use the `coerce_types` helper from `Ace::Core::CLI::Base` when you need to coerce values manually:
 
 ```ruby
 # Single option
-opts = convert_types(options, timeout: :integer)
+opts = coerce_types(options, timeout: :integer)
 
 # Multiple options
-opts = convert_types(options, limit: :integer, ratio: :float)
+opts = coerce_types(options, limit: :integer, ratio: :float)
 ```
 
 ## Help Documentation
@@ -207,7 +207,7 @@ example ['pattern --flag', '"*.rb" -f']
 
 ## Exit Code Handling
 
-**IMPORTANT**: ace-support-cli's `call()` method returns `nil`, NOT command return values. Use exception-based exit codes:
+**IMPORTANT**: `Ace::Support::Cli::Runner#call()` returns the command result, but normalizes `nil` to exit code `0`. Use exception-based exit codes for failures:
 
 ```ruby
 # In command - raise exception for non-zero exit
@@ -230,7 +230,8 @@ require "ace/gem"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Ace::Support::Cli.new(Ace::Gem::CLI).call(arguments: args)
+  exit_code = Ace::Support::Cli::Runner.new(Ace::Gem::CLI).call(args: args)
+  exit(exit_code) if exit_code.is_a?(Integer) && exit_code != 0
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

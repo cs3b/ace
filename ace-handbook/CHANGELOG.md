@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.8] - 2026-03-17
+
+### Changed
+- Updated `cli-support-cli.g.md` examples to the current `ace-support-cli` API (`RegistryDsl`, `Runner`, and `coerce_types`).
+- Updated review workflow docs to reflect 15-minute timeout guidance for long PR review runs.
+
 ## [0.15.7] - 2026-03-15
 
 ### Changed
