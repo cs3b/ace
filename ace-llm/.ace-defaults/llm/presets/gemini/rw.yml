@@ -1,5 +1,4 @@
 timeout: 600
 cli_args:
   - --approval-mode
-  - auto
-  - --sandbox
+  - auto_edit

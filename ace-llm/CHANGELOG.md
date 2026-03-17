@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.7] - 2026-03-17
+
+### Fixed
+- Removed `--sandbox` from Gemini `ro` and `rw` presets; sandbox requires Docker/Podman and is orthogonal to `--approval-mode`.
+- Changed Gemini `rw` preset `--approval-mode` from invalid `auto` to `auto_edit` (valid choices: `default`, `auto_edit`, `yolo`, `plan`).
+
 ## [0.26.6] - 2026-03-15
 
 ### Changed
