@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.830] - 2026-03-17
+
+### Fixed
+- **ace-llm v0.26.8**: Fixed model parsing so thinking suffixes are extracted before alias resolution, allowing `codex:gpt:high@ro` and similar identifiers to resolve correctly.
+- **ace-review v0.45.1**: Removed hardcoded sandbox override from review execution and aligned the review presets to `codex:gpt@ro` model identifiers.
+
 ## [0.9.829] - 2026-03-17
 
 ### Added
