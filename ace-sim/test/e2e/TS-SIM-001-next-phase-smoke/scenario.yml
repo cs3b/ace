@@ -23,6 +23,7 @@ requires:
   tools: [ace-sim, ace-llm, ace-bundle]
 
 setup:
+  - copy-fixtures
   - git-init
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - agent-env:
