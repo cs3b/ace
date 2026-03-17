@@ -135,7 +135,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.15.7)
+    ace-handbook (0.15.8)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -170,7 +170,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.25.3)
+    ace-llm-providers-cli (0.25.4)
       ace-llm (~> 0.26)
 
 PATH
@@ -224,7 +224,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.45.2)
+    ace-review (0.45.3)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)

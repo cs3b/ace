@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.836] - 2026-03-17
+
+### Fixed
+- **ace-handbook v0.15.8**: Updated `cli-support-cli.g.md` examples and review timeout guidance to current APIs and behavior.
+- **ace-llm-providers-cli v0.25.4**: Raised `ProviderError` with structured payload details when Claude CLI exits successfully with empty output text.
+- **ace-review v0.45.3**: Fixed PR diff fallback, timeout forwarding, and raised default model timeout to 900 seconds.
+
+### Technical
+- Added regression coverage for timeout forwarding in `ace-review` and Claude empty/`is_error` response parsing in `ace-llm-providers-cli`.
+
 ## [0.9.835] - 2026-03-17
 
 ### Fixed
