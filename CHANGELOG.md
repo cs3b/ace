@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.828] - 2026-03-17
+
+### Changed
+- **ace-sim v0.8.8**: Raised `TS-SIM-001-next-phase-smoke` test timeout to 15 minutes (`900` seconds).
+- **ace-test-runner-e2e v0.25.0**: Added optional per-scenario `timeout` support in E2E scenarios, with scenario timeout taking precedence over suite/global timeout.
+
 ## [0.9.827] - 2026-03-17
 
 ### Fixed
