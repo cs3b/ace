@@ -2,6 +2,7 @@ test-id: TS-SIM-001
 title: "ace-sim validate-idea smoke"
 area: sim
 package: ace-sim
+timeout: 900
 priority: high
 tags: [smoke, happy-path, "use-case:simulation"]
 cost-tier: smoke

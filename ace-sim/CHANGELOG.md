@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.8] - 2026-03-17
+
+### Changed
+- Raised `TS-SIM-001-next-phase-smoke` E2E timeout from default to 15 minutes (`900` seconds).
+
 ## [0.8.7] - 2026-03-15
 
 ### Fixed
