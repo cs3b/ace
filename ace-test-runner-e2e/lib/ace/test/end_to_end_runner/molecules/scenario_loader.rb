@@ -37,6 +37,7 @@ module Ace
               package: frontmatter["package"] || infer_package(scenario_dir),
               priority: frontmatter["priority"] || "medium",
               duration: frontmatter["duration"] || "~5min",
+              timeout: parse_timeout(frontmatter["timeout"], yml_path),
               requires: frontmatter["requires"] || {},
               file_path: File.expand_path(yml_path),
               content: File.read(yml_path),
@@ -51,6 +52,34 @@ module Ace
           end
 
           private
+
+          # Parse an optional per-scenario timeout in seconds.
+          #
+          # @param raw_timeout [Object] Raw YAML timeout value
+          # @param source_path [String] Source file path for errors
+          # @return [Integer, nil] Timeout in seconds
+          # @raise [ArgumentError] If timeout is present and invalid
+          def parse_timeout(raw_timeout, source_path)
+            return nil if raw_timeout.nil?
+
+            value =
+              case raw_timeout
+              when Integer
+                raw_timeout
+              when Numeric
+                raw_timeout.to_i
+              when String
+                stripped = raw_timeout.strip
+                return nil if stripped.empty?
+                raise ArgumentError, "Invalid timeout in #{source_path}: #{raw_timeout.inspect}" unless stripped.match?(/\\A\\d+\\z/)
+                stripped.to_i
+              else
+                raise ArgumentError, "Invalid timeout in #{source_path}: #{raw_timeout.inspect}"
+              end
+
+            raise ArgumentError, "Invalid timeout in #{source_path}: must be greater than 0" if value <= 0
+            value
+          end
 
           # Parse scenario.yml with safe YAML loading
           #

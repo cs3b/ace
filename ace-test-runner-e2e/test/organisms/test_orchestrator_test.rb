@@ -514,6 +514,39 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_execute_scenario_passes_per_scenario_timeout_to_executor
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001], timeout: 900)
+
+      captured_timeout = nil
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil, timeout: nil|
+        captured_timeout = timeout
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "google:gemini-2.5-flash",
+        executor: executor
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal 900, captured_timeout
+    end
+  end
+
   def test_api_provider_does_not_pass_run_id_to_executor
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
@@ -1040,17 +1073,19 @@ class TestOrchestratorTest < Minitest::Test
     )
   end
 
-  def create_ts_test_package(tmpdir, package, scenario_id, tc_ids)
+  def create_ts_test_package(tmpdir, package, scenario_id, tc_ids, timeout: nil)
     ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
     FileUtils.mkdir_p(ts_dir)
 
-    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+    scenario_yaml = <<~YAML
       test-id: #{scenario_id}
       title: Test #{scenario_id}
       area: test
       package: #{package}
       priority: medium
     YAML
+    scenario_yaml << "timeout: #{timeout}\n" if timeout
+    File.write(File.join(ts_dir, "scenario.yml"), scenario_yaml)
 
     runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.runner.md" }.join("\n")
     verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")

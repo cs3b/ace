@@ -238,6 +238,37 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_with_timeout_override
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-TIMEOUT-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-TIMEOUT-001
+          title: Timeout Scenario
+          area: test
+          timeout: 900
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal 900, scenario.timeout
+    end
+  end
+
+  def test_load_rejects_invalid_timeout
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-TIMEOUT-002",
+        scenario_yml: <<~YAML)
+          test-id: TS-TIMEOUT-002
+          title: Bad Timeout Scenario
+          area: test
+          timeout: sixty
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid timeout/, error.message)
+    end
+  end
+
   def test_load_standalone_requires_runner_and_verifier_configs
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-PAIR-001",

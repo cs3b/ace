@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-17
+
+### Added
+- Added optional per-scenario `timeout` support (in seconds) in `scenario.yml`, with scenario timeout taking precedence over suite/global timeout.
+
 ## [0.24.13] - 2026-03-17
 
 ### Fixed
