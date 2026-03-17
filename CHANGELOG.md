@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.831] - 2026-03-17
+
+### Fixed
+- **ace-llm v0.26.9**: Resolve global aliases before provider validation so alias-only provider inputs (such as `glite`) are treated as valid.
+
 ## [0.9.830] - 2026-03-17
 
 ### Fixed

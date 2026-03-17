@@ -9,7 +9,8 @@ module Ace
       class ProviderModelParserTest < AceLlmTestCase
         StubAliasResolver = Struct.new(:resolved) do
           def resolve(input)
-            resolved || input
+            return input if resolved.nil?
+            resolved.fetch(input, input)
           end
         end
 
@@ -53,6 +54,44 @@ module Ace
 
             refute result.valid?
             assert_equal "Unknown provider: nonexistent. Supported providers: google", result.error
+          end
+        end
+
+        def test_parse_resolves_global_alias_token_to_provider_and_model
+          registry = StubRegistry.new(["google"], {"google" => ["gemini-2.5-flash", "gemini-flash-lite-latest"]})
+          resolver = StubAliasResolver.new(
+            "glite" => "google:lite",
+            "google:lite" => "google:gemini-flash-lite-latest"
+          )
+          parser = ProviderModelParser.new(alias_resolver: resolver, registry: registry)
+          configuration = StubConfiguration.new([], ["google"])
+
+          Ace::LLM.stub(:configuration, configuration) do
+            result = parser.parse("glite")
+
+            assert result.valid?
+            assert_equal "google", result.provider
+            assert_equal "gemini-flash-lite-latest", result.model
+            assert_nil result.preset
+          end
+        end
+
+        def test_parse_resolves_global_alias_with_preset_suffix
+          registry = StubRegistry.new(["google"], {"google" => ["gemini-2.5-flash", "gemini-flash-lite-latest"]})
+          resolver = StubAliasResolver.new(
+            "glite" => "google:lite",
+            "google:lite" => "google:gemini-flash-lite-latest"
+          )
+          parser = ProviderModelParser.new(alias_resolver: resolver, registry: registry)
+          configuration = StubConfiguration.new([], ["google"])
+
+          Ace::LLM.stub(:configuration, configuration) do
+            result = parser.parse("glite@ro")
+
+            assert result.valid?
+            assert_equal "google", result.provider
+            assert_equal "gemini-flash-lite-latest", result.model
+            assert_equal "ro", result.preset
           end
         end
       end
