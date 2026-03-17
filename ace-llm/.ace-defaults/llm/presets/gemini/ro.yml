@@ -2,4 +2,3 @@ timeout: 600
 cli_args:
   - --approval-mode
   - plan
-  - --sandbox
