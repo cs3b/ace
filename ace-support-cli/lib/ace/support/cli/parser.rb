@@ -7,18 +7,24 @@ module Ace
   module Support
     module Cli
       class Parser
-        def initialize(command_class)
+        def initialize(command_class, command_name: nil)
           @command_class = command_class
+          @command_name = command_name
         end
 
         def parse(args)
           options = build_defaults
+          remaining = args.dup
+
+          if help_requested?(remaining) && rich_help?
+            render_help(remaining)
+          end
+
           parser = OptionParser.new
           parser.banner = "Usage: #{File.basename($0)} #{command_label} [options]"
 
           configure_options(parser, options)
 
-          remaining = args.dup
           parser.parse!(remaining)
           remaining = remaining.reject { |token| token == "--" }
 
@@ -35,6 +41,31 @@ module Ace
         private
 
         attr_reader :command_class
+
+        def help_requested?(args)
+          args.include?("--help") || args.include?("-h")
+        end
+
+        def rich_help?
+          has_desc = command_class.respond_to?(:description) && !command_class.description.nil?
+          has_examples = command_class.respond_to?(:examples) && !command_class.examples.empty?
+          has_desc || has_examples
+        end
+
+        def render_help(args)
+          name = resolved_command_name
+          output = Ace::Support::Cli::Help::TwoTierHelp.render(command_class, name, args: args)
+          puts output
+          exit(0)
+        end
+
+        def resolved_command_name
+          return @command_name if @command_name && !@command_name.empty?
+
+          program = File.basename($PROGRAM_NAME)
+          label = command_label
+          label == "command" ? program : "#{program} #{label}"
+        end
 
         def build_defaults
           command_class.options.each_with_object({}) do |option, hash|
