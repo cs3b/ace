@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.833] - 2026-03-17
+
+### Fixed
+- **ace-llm v0.26.10**: Fix `StubAliasResolver` test construction and release unreleased alias resolution fix for global alias inputs.
+
 ## [0.9.832] - 2026-03-17
 
 ### Fixed
