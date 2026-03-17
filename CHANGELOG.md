@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.827] - 2026-03-17
+
+### Fixed
+- **ace-test-runner-e2e v0.24.13**: Ensure CLI E2E scenarios keep package-root references inside sandbox by provisioning package contents during pipeline setup, preventing path-not-found failures for package-bound paths.
+
 ## [0.9.826] - 2026-03-17
 
 ### Fixed

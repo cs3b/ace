@@ -335,7 +335,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.24.12)
+    ace-test-runner-e2e (0.24.13)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-cli (~> 0.3)
