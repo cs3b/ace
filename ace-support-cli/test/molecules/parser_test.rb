@@ -9,7 +9,7 @@ class ParserTest < AceSupportCliTestCase
     option :verbose, type: :boolean, default: false
     option :tags, type: :array, default: []
     option :headers, type: :hash, default: {}
-    option :name, type: :string
+    option :name, type: :string, repeat: true
     argument :target, type: :string, required: true
     argument :level, type: :integer, required: false
   end
@@ -25,8 +25,9 @@ class ParserTest < AceSupportCliTestCase
       "--verbose",
       "--tags", "a,b",
       "--tags", "c",
-      "--headers", "x:1",
+      "--headers", "x=1",
       "--name", "demo",
+      "--name", "other",
       "dest",
       "9"
     ])
@@ -36,7 +37,7 @@ class ParserTest < AceSupportCliTestCase
     assert_equal true, parsed[:verbose]
     assert_equal ["a", "b", "c"], parsed[:tags]
     assert_equal({ "x" => "1" }, parsed[:headers])
-    assert_equal "demo", parsed[:name]
+    assert_equal ["demo", "other"], parsed[:name]
     assert_equal "dest", parsed[:target]
     assert_equal 9, parsed[:level]
   end
@@ -90,7 +91,8 @@ class ParserTest < AceSupportCliTestCase
 
   def test_help_flag_on_rich_command_renders_banner
     parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
-    output = capture_io { assert_raises(SystemExit) { parser.parse(["--help"]) } }.first
+    error = assert_raises(Ace::Support::Cli::HelpRendered) { parser.parse(["--help"]) }
+    output = error.output
 
     assert_includes output, "NAME"
     assert_includes output, "USAGE"
@@ -100,7 +102,8 @@ class ParserTest < AceSupportCliTestCase
 
   def test_h_flag_on_rich_command_renders_concise
     parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
-    output = capture_io { assert_raises(SystemExit) { parser.parse(["-h"]) } }.first
+    error = assert_raises(Ace::Support::Cli::HelpRendered) { parser.parse(["-h"]) }
+    output = error.output
 
     assert_includes output, "ace-task show"
     assert_includes output, "Run 'ace-task show --help' for full details."
@@ -116,9 +119,16 @@ class ParserTest < AceSupportCliTestCase
 
   def test_help_flag_mixed_with_other_flags_still_triggers
     parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
-    output = capture_io { assert_raises(SystemExit) { parser.parse(["--format", "json", "--help"]) } }.first
+    error = assert_raises(Ace::Support::Cli::HelpRendered) { parser.parse(["--format", "json", "--help"]) }
+    output = error.output
 
     assert_includes output, "NAME"
     assert_includes output, "ace-task show"
+  end
+
+  def test_help_flag_after_separator_is_treated_as_positional
+    parsed = @parser.parse(["--count", "1", "--", "--help"])
+
+    assert_equal "--help", parsed[:target]
   end
 end

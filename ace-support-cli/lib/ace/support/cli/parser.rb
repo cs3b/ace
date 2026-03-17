@@ -26,7 +26,6 @@ module Ace
           configure_options(parser, options)
 
           parser.parse!(remaining)
-          remaining = remaining.reject { |token| token == "--" }
 
           apply_positionals(options, remaining)
           validate_required_options!(options)
@@ -43,7 +42,8 @@ module Ace
         attr_reader :command_class
 
         def help_requested?(args)
-          args.include?("--help") || args.include?("-h")
+          tokens = tokens_before_separator(args)
+          tokens.include?("--help") || tokens.include?("-h")
         end
 
         def rich_help?
@@ -55,8 +55,12 @@ module Ace
         def render_help(args)
           name = resolved_command_name
           output = Ace::Support::Cli::Help::TwoTierHelp.render(command_class, name, args: args)
-          puts output
-          exit(0)
+          raise HelpRendered.new(output)
+        end
+
+        def tokens_before_separator(args)
+          separator = args.index("--")
+          separator ? args.first(separator) : args
         end
 
         def resolved_command_name
@@ -92,10 +96,10 @@ module Ace
               end
             when :integer
               switches = value_switches(option, "N")
-              parser.on(*switches, Integer, desc) { |value| options[option.name] = value }
+              parser.on(*switches, Integer, desc) { |value| assign_option_value(options, option, value) }
             when :float
               switches = value_switches(option, "N")
-              parser.on(*switches, Float, desc) { |value| options[option.name] = value }
+              parser.on(*switches, Float, desc) { |value| assign_option_value(options, option, value) }
             when :array
               switches = value_switches(option, "A,B")
               parser.on(*switches, Array, desc) do |value|
@@ -104,7 +108,7 @@ module Ace
                 options[option.name] = current + parsed_values
               end
             when :hash
-              switches = value_switches(option, "KEY:VALUE")
+              switches = value_switches(option, "KEY=VALUE")
               parser.on(*switches, String, desc) do |value|
                 key, parsed_value = parse_hash_pair(value, option)
                 current = options[option.name] || {}
@@ -112,8 +116,17 @@ module Ace
               end
             else
               switches = value_switches(option, "VALUE")
-              parser.on(*switches, String, desc) { |value| options[option.name] = value }
+              parser.on(*switches, String, desc) { |value| assign_option_value(options, option, value) }
             end
+          end
+        end
+
+        def assign_option_value(options, option, value)
+          if option.repeat
+            current = Array(options[option.name])
+            options[option.name] = current + [value]
+          else
+            options[option.name] = value
           end
         end
 
@@ -124,8 +137,8 @@ module Ace
         end
 
         def parse_hash_pair(value, option)
-          parts = value.split(":", 2)
-          raise ArgumentError, "Invalid value for #{option.long_switch}: expected key:value" if parts.length < 2
+          parts = value.split(/[=:]/, 2)
+          raise ArgumentError, "Invalid value for #{option.long_switch}: expected key=value" if parts.length < 2
 
           parts
         end
@@ -165,7 +178,9 @@ module Ace
         end
 
         def accepts_args_keyword?
-          command_class.instance_method(:call).parameters.any? { |kind, name| kind == :key && name == :args }
+          command_class.instance_method(:call).parameters.any? do |kind, name|
+            %i[key keyreq].include?(kind) && name == :args
+          end
         rescue NameError
           false
         end

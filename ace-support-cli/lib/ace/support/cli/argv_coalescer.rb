@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Cli
-      module ArgvCollector
+      module ArgvCoalescer
         def self.call(argv, flags:, separator: ",")
           normalized = normalize_flags(flags)
           accum = normalized.values.to_h { |canonical| [canonical, []] }
@@ -59,6 +59,8 @@ module Ace
         end
         private_class_method :next_index
       end
+
+      ArgvCollector = ArgvCoalescer
     end
   end
 end

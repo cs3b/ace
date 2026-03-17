@@ -12,6 +12,11 @@ module Ace
         end
 
         def call(args: ARGV)
+          if root_help_request?(args)
+            puts Ace::Support::Cli::Help::Usage.new(@registry, program_name: resolve_program_name).render
+            return 0
+          end
+
           command_target, remaining, command_name = resolve_target(args)
           command_class = command_target.is_a?(Class) ? command_target : command_target.class
           parsed = @parser_class.new(command_class, command_name: command_name).parse(remaining)
@@ -21,7 +26,15 @@ module Ace
             command_target.call(**parsed)
           end
           result.nil? ? 0 : result
+        rescue Ace::Support::Cli::HelpRendered => e
+          puts e.output
+          e.status
         rescue Ace::Support::Cli::ParseError => e
+          if defined?(Ace::Core::CLI::Error)
+            raise Ace::Core::CLI::Error.new(e.message)
+          end
+          raise
+        rescue Ace::Support::Cli::CommandNotFoundError => e
           if defined?(Ace::Core::CLI::Error)
             raise Ace::Core::CLI::Error.new(e.message)
           end
@@ -29,6 +42,10 @@ module Ace
         end
 
         private
+
+        def root_help_request?(args)
+          @registry.respond_to?(:resolve) && (%w[--help -h].include?(args.first) || args.empty?)
+        end
 
         def resolve_target(args)
           program = resolve_program_name

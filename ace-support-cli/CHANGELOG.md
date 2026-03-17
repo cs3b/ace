@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-17
+
+### Fixed
+- Restored compatibility for repeated scalar options, `key=value` hash options, and `--` passthrough handling so migrated ACE CLIs preserve existing argument semantics.
+- Normalized help and command resolution behavior: top-level help now renders without raw command lookup failures, rich help no longer exits the process directly, and usage rendering supports real ACE registry metadata shapes.
+- Fixed the public `ArgvCoalescer` contract by loading it from the top-level entrypoint and aligning the canonical constant name with the file path while keeping the legacy alias available.
+
 ## [0.5.0] - 2026-03-17
 
 ### Added

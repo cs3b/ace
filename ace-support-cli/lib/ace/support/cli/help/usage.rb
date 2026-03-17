@@ -39,23 +39,38 @@ module Ace
             all_commands.reject { |_name, value| value[:hidden] }
           end
 
-          def all_commands
+        def all_commands
+          commands =
             if registry.respond_to?(:commands)
               convert_commands_hash(registry.commands)
             elsif registry.is_a?(Hash)
               convert_commands_hash(registry)
             elsif registry.respond_to?(:to_h)
               convert_commands_hash(registry.to_h)
+            elsif registry.respond_to?(:const_defined?) && registry.const_defined?(:REGISTERED_COMMANDS)
+              convert_registered_commands(registry.const_get(:REGISTERED_COMMANDS))
             else
               []
-            end.sort_by { |name, _| name }
-          end
+            end
 
-          def convert_commands_hash(hash)
-            hash.map do |name, command|
+          commands.sort_by { |name, _| name }
+        end
+
+        def convert_commands_hash(hash)
+          hash.map do |name, command|
               [name.to_s, { description: first_line(description(command)), hidden: hidden?(command) }]
+          end
+        end
+
+        def convert_registered_commands(commands)
+          Array(commands).map do |entry|
+            if entry.is_a?(Array)
+              [entry[0].to_s, { description: first_line(entry[1]), hidden: false }]
+            else
+              [entry.to_s, { description: nil, hidden: false }]
             end
           end
+        end
 
           def format_flat(commands, header:)
             lines = commands.map do |name, meta|
@@ -124,10 +139,17 @@ module Ace
             registry.const_get(:HELP_EXAMPLES)
           end
 
-          def format_examples(examples)
-            lines = examples.map { |desc, cmd| "  $ #{cmd}  # #{desc}" }
-            "EXAMPLES\n#{lines.join("\n")}"
+        def format_examples(examples)
+          lines = examples.map do |entry|
+            if entry.is_a?(Array)
+              desc, cmd = entry
+              "  $ #{cmd}  # #{desc}"
+            else
+              "  #{entry}"
+            end
           end
+          "EXAMPLES\n#{lines.join("\n")}"
+        end
 
           def resolved_program_name
             return program_name unless program_name.nil? || program_name.empty?
