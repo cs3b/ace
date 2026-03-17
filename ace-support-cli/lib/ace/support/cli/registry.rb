@@ -24,6 +24,7 @@ module Ace
 
         def resolve(args)
           raise CommandNotFoundError, "No commands registered" if @root.children.empty?
+          raise CommandNotFoundError, "No command provided" if args.empty?
 
           tokens = args.dup
           node = @root
@@ -43,6 +44,12 @@ module Ace
           end
 
           [node.command, tokens.drop(consumed)]
+        end
+
+        def commands
+          @root.children.each_with_object({}) do |(name, node), hash|
+            hash[name] = node.command || NestedRegistry.new(node)
+          end
         end
 
         private

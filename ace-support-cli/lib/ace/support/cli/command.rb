@@ -22,7 +22,7 @@ module Ace
             @description = text
           end
 
-          def option(name, type: :string, default: nil, desc: "", aliases: [], values: nil, required: false, **_extra)
+          def option(name, type: :string, default: nil, desc: "", aliases: [], values: nil, required: false, repeat: false, **_extra)
             @options ||= []
             @options << Models::Option.new(
               name: name,
@@ -31,7 +31,8 @@ module Ace
               desc: desc,
               aliases: aliases,
               values: values,
-              required: required
+              required: required,
+              repeat: repeat
             )
           end
 

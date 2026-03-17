@@ -24,6 +24,18 @@ class HelpUsageTest < AceSupportCliTestCase
     end
   end
 
+  module RegisteredCommandRegistry
+    PROGRAM_NAME = "ace-review-feedback"
+    REGISTERED_COMMANDS = [
+      ["list", "List feedback items"],
+      ["show", "Show feedback item"]
+    ].freeze
+    HELP_EXAMPLES = [
+      "ace-review-feedback list",
+      "ace-review-feedback show 123"
+    ].freeze
+  end
+
   def test_renders_grouped_usage_with_examples
     output = Ace::Support::Cli::Usage.new(GroupedRegistry).render
 
@@ -42,5 +54,14 @@ class HelpUsageTest < AceSupportCliTestCase
 
     assert_includes output, "Commands:"
     assert_includes output, "Run 'ace-tool --help' for more info."
+  end
+
+  def test_renders_registered_commands_and_string_examples
+    output = Ace::Support::Cli::Usage.new(RegisteredCommandRegistry).render
+
+    assert_includes output, "list"
+    assert_includes output, "show"
+    assert_includes output, "EXAMPLES"
+    assert_includes output, "ace-review-feedback list"
   end
 end

@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class CommandTest < AceSupportCliTestCase
   class ExampleCommand < Ace::Support::Cli::Command
     desc "Demo"
-    option :verbose, type: :boolean, default: false, aliases: ["-v"]
+    option :verbose, type: :boolean, default: false, aliases: ["-v"], repeat: true
     argument :name, required: true
     example ["demo --verbose bob"]
 
@@ -23,6 +23,7 @@ class CommandTest < AceSupportCliTestCase
     assert_equal 1, ExampleCommand.options.length
     assert_equal 1, ExampleCommand.arguments.length
     assert_equal ["demo --verbose bob"], ExampleCommand.examples
+    assert_equal true, ExampleCommand.options.first.repeat
   end
 
   def test_inherited_metadata_is_copied

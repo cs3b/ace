@@ -35,11 +35,23 @@ class RunnerTest < AceSupportCliTestCase
 
     runner = Ace::Support::Cli::Runner.new(registry)
     output = capture_io do
-      assert_raises(SystemExit) { runner.call(args: %w[show --help]) }
+      assert_equal 0, runner.call(args: %w[show --help])
     end.first
 
     assert_includes output, "NAME"
     assert_includes output, "show"
     assert_includes output, "Show task details"
+  end
+
+  def test_root_help_renders_usage_without_crashing
+    registry = Ace::Support::Cli::Registry.new
+    registry.register("show", ShowCommand)
+
+    output = capture_io do
+      assert_equal 0, Ace::Support::Cli::Runner.new(registry).call(args: ["--help"])
+    end.first
+
+    assert_includes output, "COMMANDS"
+    assert_includes output, "show"
   end
 end
