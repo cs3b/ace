@@ -247,7 +247,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.8.7)
+    ace-sim (0.8.8)
       ace-b36ts (~> 0.6)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -335,7 +335,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.24.13)
+    ace-test-runner-e2e (0.25.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-cli (~> 0.3)
