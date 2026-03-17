@@ -216,6 +216,38 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "test-arg", cmd[cli_args_idx + 1]
   end
 
+  def test_build_test_command_prefers_scenario_timeout
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-timeout")
+      FileUtils.mkdir_p(scenario_dir)
+      File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
+        test-id: TS-LINT-001
+        title: Timeout Scenario
+        area: test
+        package: ace-lint
+        timeout: 900
+      YAML
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(
+        discoverer: discoverer,
+        output: @output,
+        base_dir: tmpdir
+      )
+
+      cmd = orchestrator.send(:build_test_command,
+        "ace-lint",
+        File.join(scenario_dir, "scenario.yml"),
+        { provider: "claude:sonnet", timeout: 120 },
+        run_id: "abc123"
+      )
+
+      timeout_idx = cmd.index("--timeout")
+      refute_nil timeout_idx
+      assert_equal "900", cmd[timeout_idx + 1]
+    end
+  end
+
   def test_build_test_command_sets_parallel_to_one
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(

@@ -47,6 +47,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 | `tool-under-test` | string | — | Primary command/tool validated |
 | `sandbox-layout` | object | `{}` | Declared artifact paths and expected outputs |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
+| `timeout` | integer | — | Optional per-scenario execution timeout in seconds |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
 | `tags` | array | `[]` | Scenario tags for filtering with `--tags`/`--exclude-tags` (OR semantics) |
 | `cost-tier` | string | `smoke` | Run profile: `smoke`, `happy-path`, `deep` |

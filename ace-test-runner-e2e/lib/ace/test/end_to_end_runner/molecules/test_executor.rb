@@ -35,7 +35,8 @@ module Ace
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult] Test execution result
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                      env_vars: nil, report_dir: nil, verify: false)
+                      env_vars: nil, report_dir: nil, timeout: nil, verify: false)
+            resolved_timeout = timeout || @timeout
             if Atoms::CliProviderAdapter.cli_provider?(@provider)
               execute_via_pipeline(
                 scenario,
@@ -44,10 +45,11 @@ module Ace
                 test_cases: test_cases,
                 sandbox_path: sandbox_path,
                 env_vars: env_vars,
-                report_dir: report_dir
+                report_dir: report_dir,
+                timeout: resolved_timeout
               )
             else
-              execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
+              execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases, timeout: resolved_timeout)
             end
           end
 
@@ -72,7 +74,7 @@ module Ace
 
           # Execute standalone scenarios with the deterministic pipeline.
           def execute_via_pipeline(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                                   env_vars: nil, report_dir: nil)
+                                   env_vars: nil, report_dir: nil, timeout: nil)
             started_at = Time.now
             resolved_report_dir = report_dir || default_report_dir_for(scenario, run_id)
             resolved_sandbox_path = sandbox_path || resolve_sandbox_path(nil, resolved_report_dir)
@@ -88,7 +90,7 @@ module Ace
               )
             end
 
-            pipeline_executor.execute(
+            pipeline_executor(timeout: timeout).execute(
               scenario: scenario,
               cli_args: cli_args,
               sandbox_path: resolved_sandbox_path,
@@ -117,7 +119,7 @@ module Ace
           # @param cli_args [String, nil] Extra args
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Models::TestResult]
-          def execute_via_prompt(scenario, cli_args: nil, test_cases: nil)
+          def execute_via_prompt(scenario, cli_args: nil, test_cases: nil, timeout: nil)
             started_at = Time.now
 
             prompt = @prompt_builder.build(scenario, test_cases: test_cases)
@@ -127,7 +129,7 @@ module Ace
               prompt,
               system: Atoms::PromptBuilder::SYSTEM_PROMPT,
               cli_args: cli_args,
-              timeout: @timeout,
+              timeout: timeout || @timeout,
               fallback: false
             )
 
@@ -315,10 +317,12 @@ module Ace
             text.to_s.strip.split(/\s+/).first(30).join(" ")
           end
 
-          def pipeline_executor
-            @pipeline_executor ||= Molecules::PipelineExecutor.new(
+          def pipeline_executor(timeout: nil)
+            timeout ||= @timeout
+            @pipeline_executors ||= {}
+            @pipeline_executors[timeout] ||= Molecules::PipelineExecutor.new(
               provider: @provider,
-              timeout: @timeout
+              timeout: timeout
             )
           end
         end

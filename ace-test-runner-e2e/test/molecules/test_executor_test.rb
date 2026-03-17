@@ -17,6 +17,49 @@ class TestExecutorTest < Minitest::Test
     assert_equal "Execution pipeline requires run_id/report_dir", result.summary
   end
 
+  def test_execute_pipeline_uses_timeout_override
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_pipeline_files(tmpdir)
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_pipeline_scenario(scenario_dir)
+      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+
+      captured_timeouts = []
+      responses = [
+        { text: "Runner completed." },
+        { text: <<~OUT }
+          ### Goal 1 - First
+          - **Verdict**: PASS
+          - **Evidence**: ok
+
+          ### Goal 2 - Second
+          - **Verdict**: PASS
+          - **Evidence**: ok
+
+          **Results: 2/2 passed**
+        OUT
+      ]
+
+      Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **kwargs|
+        captured_timeouts << kwargs[:timeout]
+        responses.shift
+      }) do
+        result = executor.execute(
+          scenario,
+          timeout: 900,
+          sandbox_path: sandbox_path,
+          report_dir: report_dir
+        )
+        assert_equal "pass", result.status
+        assert_equal report_dir, result.report_dir
+      end
+
+      assert_equal 2, captured_timeouts.size
+      assert_equal [900, 900], captured_timeouts
+    end
+  end
+
   def test_execute_pipeline_uses_runner_and_verifier_passes_env
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_pipeline_files(tmpdir)
@@ -66,6 +109,27 @@ class TestExecutorTest < Minitest::Test
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
       assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
     end
+  end
+
+  def test_execute_via_prompt_uses_timeout_override
+    executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
+    scenario = create_scenario
+
+    valid_response = {
+      text: '{"test_id":"TS-LINT-001","status":"pass","test_cases":[],"summary":"Scenario passed"}'
+    }
+    captured_timeouts = []
+    Ace::LLM::QueryInterface.stub(:query, lambda do |_provider, _prompt, **kwargs|
+      captured_timeouts << kwargs[:timeout]
+      valid_response
+    end) do
+      result = executor.execute(scenario, timeout: 900)
+
+      assert_equal "pass", result.status
+      assert_equal "TS-LINT-001", result.test_id
+    end
+
+    assert_equal [900], captured_timeouts
   end
 
   def test_execute_pipeline_writes_error_report_when_verifier_output_is_unparseable

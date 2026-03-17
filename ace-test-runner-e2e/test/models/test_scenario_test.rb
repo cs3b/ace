@@ -27,6 +27,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal "medium", scenario.priority
     assert_equal "~5min", scenario.duration
     assert_equal({}, scenario.requires)
+    assert_nil scenario.timeout
   end
 
   def test_short_package
@@ -89,6 +90,7 @@ class TestScenarioTest < Minitest::Test
     )
     scenario = create_scenario(
       setup_steps: ["git-init", "copy-fixtures"],
+      timeout: 900,
       dir_path: "/tmp/scenario",
       fixture_path: "/tmp/scenario/fixtures",
       test_cases: [tc],
@@ -96,6 +98,7 @@ class TestScenarioTest < Minitest::Test
       tool_under_test: "ace-lint",
       sandbox_layout: { "output/" => "Report output" }
     )
+    assert_equal 900, scenario.timeout
     assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
     assert_equal "/tmp/scenario", scenario.dir_path
     assert_equal "/tmp/scenario/fixtures", scenario.fixture_path

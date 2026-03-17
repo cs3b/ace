@@ -345,6 +345,7 @@ module Ace
             test_id = extract_test_id(test_file)
 
             cmd_parts = [e2e_executable_path, package, test_id]
+            scenario = nil
 
             # Add provider if specified
             if options[:provider]
@@ -353,7 +354,9 @@ module Ace
 
             # Add timeout if specified
             if options[:timeout]
-              cmd_parts.concat(["--timeout", options[:timeout].to_s])
+              scenario ||= parse_scenario(package, test_file)
+              effective_timeout = scenario.timeout || options[:timeout]
+              cmd_parts.concat(["--timeout", effective_timeout.to_s]) if effective_timeout
             end
 
             # Add CLI args if specified - passed as a single string argument
@@ -366,7 +369,7 @@ module Ace
               cmd_parts.concat(["--run-id", run_id])
 
               # Pass explicit report directory so the agent doesn't compute it independently
-              scenario = parse_scenario(package, test_file)
+              scenario ||= parse_scenario(package, test_file)
               report_dir = File.join(@base_dir, ".ace-local", "test-e2e", "#{scenario.dir_name(run_id)}-reports")
               cmd_parts.concat(["--report-dir", report_dir])
             end

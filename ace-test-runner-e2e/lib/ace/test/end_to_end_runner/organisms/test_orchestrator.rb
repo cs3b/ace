@@ -425,9 +425,13 @@ module Ace
               report_dir: report_dir
             }
 
+            supports_timeout = @executor.method(:execute).parameters.any? do |type, name|
+              type == :keyrest || (%i[key keyreq].include?(type) && name == :timeout)
+            end
             supports_verify = @executor.method(:execute).parameters.any? do |type, name|
               type == :keyrest || (%i[key keyreq].include?(type) && name == :verify)
             end
+            kwargs[:timeout] = (scenario.timeout || @timeout) if supports_timeout
             kwargs[:verify] = verify if supports_verify
 
             @executor.execute(scenario, **kwargs)

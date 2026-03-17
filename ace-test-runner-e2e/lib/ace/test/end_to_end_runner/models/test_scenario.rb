@@ -10,7 +10,7 @@ module Ace
         # scenario.yml metadata, test cases, and setup steps.
         class TestScenario
           attr_reader :test_id, :title, :area, :package, :priority, :duration,
-                      :requires, :file_path, :content,
+                      :requires, :file_path, :content, :timeout,
                       :setup_steps, :dir_path, :fixture_path, :test_cases,
                       :tags, :tool_under_test, :sandbox_layout
 
@@ -23,6 +23,7 @@ module Ace
           # @param requires [Hash] Required tools and versions
           # @param file_path [String] Absolute path to the scenario directory
           # @param content [String] Full markdown content of the scenario
+          # @param timeout [Integer, nil] Optional per-scenario timeout in seconds
           # @param setup_steps [Array] Declarative setup steps from scenario.yml
           # @param dir_path [String, nil] Path to the scenario directory
           # @param fixture_path [String, nil] Path to the fixtures/ directory
@@ -33,7 +34,8 @@ module Ace
           def initialize(test_id:, title:, area:, package:, file_path:, content:,
                          priority: "medium", duration: "~5min", requires: {},
                          setup_steps: [], dir_path: nil, fixture_path: nil, test_cases: [],
-                         tags: [], tool_under_test: nil, sandbox_layout: {})
+                         timeout: nil, tags: [], tool_under_test: nil,
+                         sandbox_layout: {})
             @test_id = test_id
             @title = title
             @area = area
@@ -43,6 +45,7 @@ module Ace
             @requires = requires
             @file_path = file_path
             @content = content
+            @timeout = timeout
             @setup_steps = setup_steps
             @dir_path = dir_path
             @fixture_path = fixture_path
