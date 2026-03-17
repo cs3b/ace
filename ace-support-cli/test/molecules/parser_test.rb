@@ -70,4 +70,55 @@ class ParserTest < AceSupportCliTestCase
 
     assert_includes error.message, "Did you mean"
   end
+
+  # --- Rich help interception ---
+
+  class RichHelpCommand < Ace::Support::Cli::Command
+    desc "Show task details"
+    option :format, type: :string, default: "text", desc: "Output format"
+    argument :id, type: :integer, required: true, desc: "Task ID"
+    example ["42", "42 --format json"]
+
+    def call(**_params) = nil
+  end
+
+  class BareCommand < Ace::Support::Cli::Command
+    option :verbose, type: :boolean, default: false
+
+    def call(**_params) = nil
+  end
+
+  def test_help_flag_on_rich_command_renders_banner
+    parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
+    output = capture_io { assert_raises(SystemExit) { parser.parse(["--help"]) } }.first
+
+    assert_includes output, "NAME"
+    assert_includes output, "USAGE"
+    assert_includes output, "EXAMPLES"
+    assert_includes output, "ace-task show"
+  end
+
+  def test_h_flag_on_rich_command_renders_concise
+    parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
+    output = capture_io { assert_raises(SystemExit) { parser.parse(["-h"]) } }.first
+
+    assert_includes output, "ace-task show"
+    assert_includes output, "Run 'ace-task show --help' for full details."
+  end
+
+  def test_help_flag_on_bare_command_falls_through
+    parser = Ace::Support::Cli::Parser.new(BareCommand)
+
+    # Bare command has no desc/examples, so OptionParser handles --help
+    # OptionParser's default --help also exits
+    assert_raises(SystemExit) { parser.parse(["--help"]) }
+  end
+
+  def test_help_flag_mixed_with_other_flags_still_triggers
+    parser = Ace::Support::Cli::Parser.new(RichHelpCommand, command_name: "ace-task show")
+    output = capture_io { assert_raises(SystemExit) { parser.parse(["--format", "json", "--help"]) } }.first
+
+    assert_includes output, "NAME"
+    assert_includes output, "ace-task show"
+  end
 end
