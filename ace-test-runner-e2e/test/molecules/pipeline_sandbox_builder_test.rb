@@ -11,7 +11,9 @@ class PipelineSandboxBuilderTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       project_root = File.join(tmpdir, "repo")
       sandbox_path = File.join(tmpdir, "sandbox")
+      package_name = "ace-test"
       FileUtils.mkdir_p(File.join(project_root, ".ace", "llm", "providers"))
+      create_fake_package(project_root, package_name)
       FileUtils.mkdir_p(File.join(project_root, "bin"))
 
       write_fake_tool(File.join(project_root, "bin"), "fake-tool")
@@ -20,7 +22,7 @@ class PipelineSandboxBuilderTest < Minitest::Test
 
       builder = SandboxBuilder.new(config_root: project_root)
       env = builder.build(
-        scenario: build_scenario(tmpdir),
+        scenario: build_scenario(tmpdir, package_name: package_name),
         sandbox_path: sandbox_path
       )
 
@@ -29,6 +31,58 @@ class PipelineSandboxBuilderTest < Minitest::Test
       assert Dir.exist?(File.join(sandbox_path, "results", "tc", "01")), "result dir 01 should exist"
       assert Dir.exist?(File.join(sandbox_path, "results", "tc", "02")), "result dir 02 should exist"
       assert_equal File.expand_path(sandbox_path), env["PROJECT_ROOT_PATH"]
+      assert_equal "copied by sandbox builder", File.read(File.join(sandbox_path, package_name, "copied.txt"))
+    ensure
+      ENV["PATH"] = original_path
+    end
+  end
+
+  def test_build_copies_package_into_sandbox
+    Dir.mktmpdir do |tmpdir|
+      project_root = File.join(tmpdir, "repo")
+      sandbox_path = File.join(tmpdir, "sandbox")
+      package_name = "ace-search"
+      create_fake_package(project_root, package_name)
+      FileUtils.mkdir_p(File.join(project_root, "bin"))
+      write_fake_tool(File.join(project_root, "bin"), "fake-tool")
+      original_path = ENV["PATH"]
+      ENV["PATH"] = "#{File.join(project_root, "bin")}:#{original_path}"
+
+      builder = SandboxBuilder.new(config_root: project_root)
+      builder.build(
+        scenario: build_scenario(tmpdir, package_name: package_name),
+        sandbox_path: sandbox_path
+      )
+
+      assert Dir.exist?(File.join(sandbox_path, package_name))
+      assert_equal "copied by sandbox builder", File.read(File.join(sandbox_path, package_name, "copied.txt"))
+    ensure
+      ENV["PATH"] = original_path
+    end
+  end
+
+  def test_build_does_not_override_existing_package_in_sandbox
+    Dir.mktmpdir do |tmpdir|
+      project_root = File.join(tmpdir, "repo")
+      sandbox_path = File.join(tmpdir, "sandbox")
+      package_name = "ace-bundled"
+      FileUtils.mkdir_p(File.join(project_root, package_name))
+      write_fake_package_file(project_root, package_name, "source.txt", "from_project")
+      FileUtils.mkdir_p(File.join(sandbox_path, package_name))
+      write_fake_package_file(sandbox_path, package_name, "preloaded.txt", "preloaded value")
+      FileUtils.mkdir_p(File.join(project_root, "bin"))
+      write_fake_tool(File.join(project_root, "bin"), "fake-tool")
+      original_path = ENV["PATH"]
+      ENV["PATH"] = "#{File.join(project_root, "bin")}:#{original_path}"
+
+      builder = SandboxBuilder.new(config_root: project_root)
+      builder.build(
+        scenario: build_scenario(tmpdir, package_name: package_name),
+        sandbox_path: sandbox_path
+      )
+
+      assert_equal "preloaded value", File.read(File.join(sandbox_path, package_name, "preloaded.txt"))
+      refute File.exist?(File.join(sandbox_path, package_name, "source.txt"))
     ensure
       ENV["PATH"] = original_path
     end
@@ -36,12 +90,12 @@ class PipelineSandboxBuilderTest < Minitest::Test
 
   private
 
-  def build_scenario(tmpdir)
+  def build_scenario(tmpdir, package_name: "ace-test")
     TestScenario.new(
       test_id: "TS-TEST-001",
       title: "Goal",
       area: "test",
-      package: "ace-test",
+      package: package_name,
       file_path: File.join(tmpdir, "scenario.yml"),
       content: "",
       tool_under_test: "fake-tool",
@@ -67,5 +121,15 @@ class PipelineSandboxBuilderTest < Minitest::Test
       exit 1
     SH
     FileUtils.chmod(0o755, path)
+  end
+
+  def create_fake_package(project_root, package_name)
+    package_dir = File.join(project_root, package_name)
+    FileUtils.mkdir_p(package_dir)
+    write_fake_package_file(project_root, package_name, "copied.txt", "copied by sandbox builder")
+  end
+
+  def write_fake_package_file(root, package_name, name, value)
+    File.write(File.join(root, package_name, name), value)
   end
 end

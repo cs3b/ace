@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.13] - 2026-03-17
+
+### Fixed
+- Ensure CLI E2E scenarios keep package-root references inside sandbox by provisioning package contents during pipeline setup, preventing `$PROJECT_ROOT_PATH/<package>` path failures.
+
 ## [0.24.12] - 2026-03-15
 
 ### Changed
