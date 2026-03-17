@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4] - 2026-03-17
+
+### Fixed
+- Raised `ProviderError` with structured payload details when Claude CLI exits successfully but returns empty response text.
+
+### Technical
+- Added regression coverage for parsed empty-response and `is_error` payload paths in `parse_claude_response`.
+
 ## [0.25.3] - 2026-03-17
 
 ### Fixed

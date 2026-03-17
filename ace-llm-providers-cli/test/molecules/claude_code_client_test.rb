@@ -104,4 +104,50 @@ describe "ClaudeCodeClient" do
       assert_equal({"ACE_TMUX_SESSION" => "test-session"}, captured_subprocess_env)
     end
   end
+
+  describe "parse_claude_response" do
+    def success_status
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      status.define_singleton_method(:exitstatus) { 0 }
+      status
+    end
+
+    it "includes structured details when response text is empty" do
+      stdout = {
+        "type" => "result",
+        "subtype" => "success",
+        "stop_reason" => "end_turn",
+        "session_id" => "sess-123",
+        "duration_ms" => 1234
+      }.to_json
+
+      error = assert_raises(Ace::LLM::ProviderError) do
+        @client.send(:parse_claude_response, stdout, "", success_status, "prompt", {})
+      end
+
+      assert_includes error.message, "empty response"
+      assert_includes error.message, "type=result"
+      assert_includes error.message, "session_id=sess-123"
+    end
+
+    it "surfaces provider error payload details when response is marked as error" do
+      stdout = {
+        "type" => "result",
+        "subtype" => "success",
+        "is_error" => true,
+        "result" => "Model overloaded",
+        "stop_reason" => "stop_sequence",
+        "session_id" => "sess-456"
+      }.to_json
+
+      error = assert_raises(Ace::LLM::ProviderError) do
+        @client.send(:parse_claude_response, stdout, "", success_status, "prompt", {})
+      end
+
+      assert_includes error.message, "error payload"
+      assert_includes error.message, "Model overloaded"
+      assert_includes error.message, "is_error=true"
+    end
+  end
 end

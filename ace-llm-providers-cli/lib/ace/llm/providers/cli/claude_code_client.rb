@@ -192,12 +192,15 @@ module Ace
               raise Ace::LLM::ProviderError, "Failed to parse Claude response: #{e.message}"
             end
 
+            if response["is_error"]
+              raise Ace::LLM::ProviderError, build_response_error(response)
+            end
+
             # Extract the text result
             text = response["result"] || response["response"] || ""
 
             if text.strip.empty?
-              raise Ace::LLM::ProviderError,
-                "Claude CLI returned empty response (exit 0 but no output text)"
+              raise Ace::LLM::ProviderError, build_response_error(response)
             end
 
             # Build metadata
@@ -253,6 +256,31 @@ module Ace
           def handle_claude_error(error)
             # Re-raise the error for proper handling by the base client error flow
             raise error
+          end
+
+          def build_response_error(response)
+            summary = {
+              "type" => response["type"],
+              "subtype" => response["subtype"],
+              "stop_reason" => response["stop_reason"],
+              "is_error" => response["is_error"],
+              "session_id" => response["session_id"],
+              "duration_ms" => response["duration_ms"]
+            }.compact
+
+            result_preview = response["result"].to_s.strip
+            if response["is_error"] || !result_preview.empty?
+              details = summary.map { |key, value| "#{key}=#{value}" }.join(", ")
+              message = result_preview.empty? ? "no result text provided" : result_preview
+              return "Claude CLI returned an error payload without review text: #{message} (#{details})"
+            end
+
+            details = summary.map { |key, value| "#{key}=#{value}" }.join(", ")
+            if details.empty?
+              "Claude CLI returned empty response (exit 0 but no output text)"
+            else
+              "Claude CLI returned empty response (exit 0, no output text; #{details})"
+            end
           end
 
           def debug_subprocess(message)
