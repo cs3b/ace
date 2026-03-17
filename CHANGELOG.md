@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.835] - 2026-03-17
+
+### Fixed
+- **ace-llm v0.26.11**: Updated default provider context limits to match modern LLM capabilities (Anthropic 1M, OpenAI 1.05M).
+- **ace-review v0.45.2**: Updated context limit resolver with Claude 1M, GPT-5.x/o4 patterns, and raised warning threshold from 160K to 800K tokens.
+
 ## [0.9.834] - 2026-03-17
 
 ### Fixed
