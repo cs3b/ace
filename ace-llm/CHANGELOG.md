@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.8] - 2026-03-17
+
+### Fixed
+- Parse explicit `:high`/`:low`/`:medium`/`:xhigh` thinking suffixes before alias resolution so model aliases with thinking modifiers (for example `codex:gpt:high@ro`) resolve correctly.
+
 ## [0.26.7] - 2026-03-17
 
 ### Fixed
