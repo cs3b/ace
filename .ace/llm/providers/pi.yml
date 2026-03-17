@@ -6,6 +6,8 @@ models:
   - zai/glm-4.7
   - zai/glm-4.6
   - zai/glm-4.5
+  - zai/glm-5
+  - zai/glm-5-turbo 
   # Anthropic
   - anthropic/claude-opus-4-6
   - anthropic/claude-opus-4-5
@@ -27,6 +29,7 @@ aliases:
     pi: pi:zai/glm-4.7
   model:
     glm: zai/glm-5
+    glmturbo: zai/glm-5-turbo
     glm47: zai/glm-4.7
     opus: anthropic/claude-opus-4-6
     sonnet: anthropic/claude-sonnet-4-5
