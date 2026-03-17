@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.10] - 2026-03-17
+
 ### Fixed
 - Resolve global alias inputs (for example `glite`) before provider/model validation so single-token alias-only provider inputs are accepted.
+
+### Technical
+- Fix `StubAliasResolver` test construction to pass hash as positional argument instead of keyword arguments.
 
 ## [0.26.8] - 2026-03-17
 

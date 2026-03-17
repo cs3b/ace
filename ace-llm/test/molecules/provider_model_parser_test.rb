@@ -59,10 +59,10 @@ module Ace
 
         def test_parse_resolves_global_alias_token_to_provider_and_model
           registry = StubRegistry.new(["google"], {"google" => ["gemini-2.5-flash", "gemini-flash-lite-latest"]})
-          resolver = StubAliasResolver.new(
+          resolver = StubAliasResolver.new({
             "glite" => "google:lite",
             "google:lite" => "google:gemini-flash-lite-latest"
-          )
+          })
           parser = ProviderModelParser.new(alias_resolver: resolver, registry: registry)
           configuration = StubConfiguration.new([], ["google"])
 
@@ -78,10 +78,10 @@ module Ace
 
         def test_parse_resolves_global_alias_with_preset_suffix
           registry = StubRegistry.new(["google"], {"google" => ["gemini-2.5-flash", "gemini-flash-lite-latest"]})
-          resolver = StubAliasResolver.new(
+          resolver = StubAliasResolver.new({
             "glite" => "google:lite",
             "google:lite" => "google:gemini-flash-lite-latest"
-          )
+          })
           parser = ProviderModelParser.new(alias_resolver: resolver, registry: registry)
           configuration = StubConfiguration.new([], ["google"])
 
