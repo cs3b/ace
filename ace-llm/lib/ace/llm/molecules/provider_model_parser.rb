@@ -44,8 +44,7 @@ module Ace
           return create_error_result(original_input, preset_error) if preset_error
           return create_error_result(original_input, "Invalid target: provider/model portion cannot be empty") if provider_target.empty?
 
-          resolved_input = @alias_resolver.resolve(provider_target)
-          parts = resolved_input.split(":", 2)
+          parts = provider_target.split(":", 2)
 
           if parts.length == 1
             provider = normalize_provider(parts[0])
@@ -58,16 +57,29 @@ module Ace
           end
 
           provider = normalize_provider(parts[0])
-          model_with_suffix = parts[1].strip
+          model_with_suffix = parts[1].to_s.strip
           unless supported_providers.include?(provider)
             return create_error_result(original_input, provider_validation_error(provider, supported_providers))
           end
 
-          model, thinking_level, thinking_error = split_thinking_suffix(model_with_suffix)
+          model_alias, thinking_level, thinking_error = split_thinking_suffix(model_with_suffix)
           return create_error_result(original_input, thinking_error) if thinking_error
-          return create_error_result(original_input, "Invalid target: model cannot be empty") if model.to_s.strip.empty?
+          return create_error_result(original_input, "Invalid target: model cannot be empty") if model_alias.to_s.strip.empty?
 
-          ParseResult.new(provider, model, preset_name, thinking_level, true, nil, original_input)
+          resolved_model_input = @alias_resolver.resolve("#{parts[0]}:#{model_alias}")
+          resolved_parts = resolved_model_input.split(":", 2)
+
+          return create_error_result(original_input, "Invalid target: provider/model resolution produced invalid model format: #{resolved_model_input}") if resolved_parts.length != 2
+
+          resolved_provider = normalize_provider(resolved_parts[0])
+          model = resolved_parts[1].to_s
+
+          unless model && !model.empty?
+            return create_error_result(original_input, "Invalid target: resolved model cannot be empty")
+          end
+
+          return ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
+
         end
 
         def supported_providers
