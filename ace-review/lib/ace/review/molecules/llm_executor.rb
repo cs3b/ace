@@ -21,7 +21,7 @@ module Ace
         # @param session_dir [String] the session directory for output
         # @param output_file [String, nil] optional custom output file path
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil)
+        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil, timeout: nil)
           model ||= @default_model
 
           # Warn if prompt is large
@@ -37,7 +37,14 @@ module Ace
           end
 
           # Use Ruby API directly for v0.13.0 architecture
-          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, output_file)
+          execute_with_ruby_api(
+            system_prompt,
+            user_prompt,
+            model,
+            session_dir,
+            output_file,
+            timeout
+          )
         rescue StandardError => e
           {
             success: false,
@@ -72,7 +79,7 @@ module Ace
         end
 
         # Execute using Ruby API with system/user prompts
-        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil)
+        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil, timeout = nil)
           # Use custom output file if provided, otherwise generate default
           output_file = if custom_output_file
                          custom_output_file
@@ -96,7 +103,7 @@ module Ace
             prompt_file: File.exist?(prompt_file) ? prompt_file : nil,
             output: output_file,
             format: "text",
-            timeout: 600,
+            timeout: timeout || Ace::Review.get("defaults", "llm_timeout") || 300,
             force: true,
             fallback: false  # Disable ace-llm fallback - ace-review handles retries
           )

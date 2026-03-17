@@ -61,9 +61,15 @@ module Ace
             end
           end
 
+          commands = []
           mock_local = lambda do |*args|
-            if args.include?("merge-base")
+            commands << args
+            if args.include?("fetch")
+              { success: true, stdout: "", stderr: "" }
+            elsif args.include?("merge-base")
               { success: true, stdout: "abc123\n", stderr: "" }
+            elsif args.include?("update-ref")
+              { success: true, stdout: "", stderr: "" }
             else
               { success: true, stdout: "diff --git a/f b/f\n+hello", stderr: "" }
             end
@@ -77,6 +83,7 @@ module Ace
                 assert result[:success]
                 assert_equal :local_git_diff, result[:fallback]
                 assert_match(/\+hello/, result[:diff])
+                refute commands.any? { |args| args.include?("HEAD") }
               end
             end
           end
@@ -111,7 +118,11 @@ module Ace
           end
 
           mock_local = lambda do |*args|
-            { success: false, stdout: "", stderr: "fatal: not a git repo" }
+            if args.include?("fetch") || args.include?("update-ref")
+              { success: true, stdout: "", stderr: "" }
+            else
+              { success: false, stdout: "", stderr: "fatal: not a git repo" }
+            end
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
@@ -133,11 +144,15 @@ module Ace
             { success: true, stdout: '{"baseRefName":"main","number":42}' }
           end
 
-          call_count = 0
+          commands = []
           mock_local = lambda do |*args|
-            call_count += 1
-            if call_count == 1
+            commands << args
+            if args.include?("fetch")
+              { success: true, stdout: "", stderr: "" }
+            elsif args.include?("merge-base")
               { success: true, stdout: "deadbeef\n", stderr: "" }
+            elsif args.include?("update-ref")
+              { success: true, stdout: "", stderr: "" }
             else
               { success: true, stdout: "diff --git a/lib/foo.rb b/lib/foo.rb\n+new line", stderr: "" }
             end
@@ -151,6 +166,19 @@ module Ace
                 assert result[:success]
                 assert_equal :local_git_diff, result[:fallback]
                 assert_match(/\+new line/, result[:diff])
+                fetch_args = commands.find { |args| args[1] == "fetch" }
+                merge_base_args = commands.find { |args| args[1] == "merge-base" }
+                diff_args = commands.find { |args| args[1] == "diff" }
+                cleanup_args = commands.find { |args| args[1] == "update-ref" }
+
+                assert_equal ["git", "fetch", "--no-tags", "origin"], fetch_args.first(4)
+                assert_match(%r{\+refs/pull/42/head:refs/ace/review/pr-42-\d+}, fetch_args[4])
+                assert_equal "origin/main", merge_base_args[2]
+                assert_match(%r{refs/ace/review/pr-42-\d+}, merge_base_args[3])
+                assert_equal "deadbeef", diff_args[2]
+                assert_equal merge_base_args[3], diff_args[3]
+                assert_equal ["git", "update-ref", "-d"], cleanup_args.first(3)
+                assert_equal merge_base_args[3], cleanup_args[3]
               end
             end
           end

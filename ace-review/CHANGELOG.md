@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.3] - 2026-03-17
+
+### Fixed
+- Fixed local PR diff fallback to fetch and compare against the PR head ref instead of caller `HEAD`.
+- Unified review model timeout handling and raised the default to 900 seconds.
+
+### Technical
+- Exposed structured Claude CLI response metadata when successful subprocess output is empty.
+- Added regression coverage for timeout forwarding and PR diff fallback behavior.
+
 ## [0.45.2] - 2026-03-17
 
 ### Fixed

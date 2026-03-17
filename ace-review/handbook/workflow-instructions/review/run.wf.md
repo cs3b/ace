@@ -48,14 +48,14 @@ ace-review --preset spec --subject "files:.ace-taskflow/**/*.md" --auto-execute
 ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute
 ```
 
-**Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
+**Important for Claude Code**: Run with 15-minute timeout (900000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
 #### Execution Guard (Mandatory)
 
 - Completion is defined by **process exit** (success or failure), not by partial output.
 - Do **not** treat temporary silence/no new output as completion.
 - Do **not** run any Step 2+ commands until Step 1 process exit is confirmed.
-- If 10-minute timeout (600000ms) is reached, report timeout and last observed output, then stop dependent steps.
+- If 15-minute timeout (900000ms) is reached, report timeout and last observed output, then stop dependent steps.
 
 Wait for the review process to exit. Note the session directory path from the output.
 

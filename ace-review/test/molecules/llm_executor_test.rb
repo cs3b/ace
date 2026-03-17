@@ -81,6 +81,28 @@ class LlmExecutorTest < AceReviewTest
     assert_match(/900,000/, warning_output)
   end
 
+  def test_execute_forwards_timeout_to_query_interface
+    captured_kwargs = nil
+    query_stub = lambda do |_model, _prompt, **kwargs|
+      captured_kwargs = kwargs
+      { text: "ok", metadata: {}, usage: {} }
+    end
+
+    Ace::LLM::QueryInterface.stub(:query, query_stub) do
+      result = @executor.execute(
+        system_prompt: "system",
+        user_prompt: "user",
+        model: "claude:opus@ro",
+        session_dir: @test_dir,
+        timeout: 900
+      )
+
+      assert result[:success]
+    end
+
+    assert_equal 900, captured_kwargs[:timeout]
+  end
+
   private
 
   def capture_stderr
