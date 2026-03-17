@@ -98,8 +98,7 @@ module Ace
             format: "text",
             timeout: 600,
             force: true,
-            fallback: false,  # Disable ace-llm fallback - ace-review handles retries
-            sandbox: "read-only"
+            fallback: false  # Disable ace-llm fallback - ace-review handles retries
           )
 
           # Return structured result with rich metadata

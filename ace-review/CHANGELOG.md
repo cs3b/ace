@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.1] - 2026-03-17
+
+### Changed
+- Removed hardcoded `sandbox` injection from review CLI execution so review model presets control CLI flags consistently.
+- Standardized `code-valid`, `code-fit`, and `code-shine` presets to use `codex:gpt@ro` and moved thinking/behavior configuration into preset configuration.
+
 ## [0.45.0] - 2026-03-15
 
 ### Added

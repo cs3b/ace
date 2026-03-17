@@ -61,4 +61,4 @@ bundle: "project"
 
 models:
   - claude:opus@ro
-  - codex:max@ro
+  - codex:gpt@ro
