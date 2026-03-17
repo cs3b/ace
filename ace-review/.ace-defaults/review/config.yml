@@ -78,7 +78,7 @@ feedback:
   enabled: true                           # Enable feedback extraction (default: true)
   synthesis_model: codex:codex@ro        # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
-    - claude:glm
+    - claude:sonnet
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

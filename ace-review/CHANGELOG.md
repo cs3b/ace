@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.2] - 2026-03-17
+
+### Fixed
+- Updated Claude context limits from 200K to 1M tokens in hardcoded fallback table.
+- Added GPT-5.x (1.05M) and o4 (1.05M) model patterns to context limit resolver.
+- Raised prompt size warning threshold from 160K to 800K tokens to eliminate spurious warnings with modern LLMs.
+- Updated default context limit for unknown models from 128K to 200K tokens.
+
 ## [0.45.1] - 2026-03-17
 
 ### Changed

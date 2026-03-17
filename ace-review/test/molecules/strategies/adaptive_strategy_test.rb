@@ -191,10 +191,10 @@ class AdaptiveStrategyTest < AceReviewTest
     assert_equal :full, result[0][:metadata][:strategy]
   end
 
-  def test_claude_200k_uses_chunked_for_large_prs
-    # Claude has 200k context, 170k available
-    # PRs > 170k tokens should chunk
-    subject = "a" * 800_000  # ~200,000 tokens
+  def test_claude_1m_uses_chunked_for_large_prs
+    # Claude has 1M context, ~850k available
+    # PRs > 850k tokens should chunk
+    subject = "a" * 4_000_000  # ~1,000,000 tokens
     context = { model: "anthropic:claude-3-sonnet" }
 
     result = @strategy.prepare(subject, context)
@@ -202,7 +202,7 @@ class AdaptiveStrategyTest < AceReviewTest
     assert_equal :chunked, result[0][:metadata][:strategy]
   end
 
-  def test_claude_200k_uses_full_for_small_prs
+  def test_claude_1m_uses_full_for_small_prs
     # Small PRs should use full even with Claude
     subject = "a" * 10_000  # ~2,500 tokens
     context = { model: "anthropic:claude-3-sonnet" }

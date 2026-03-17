@@ -52,14 +52,14 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     assert_equal 1, result.length
   end
 
-  def test_claude_200k_model_uses_chunked_for_huge_diffs
+  def test_claude_1m_model_uses_chunked_for_huge_diffs
     strategy = @factory.for(:adaptive)
 
-    # Claude has 200k context window
-    # 170k tokens available (85% of 200k)
-    # Need > 170k tokens = > 680k chars
+    # Claude has 1M context window
+    # 850k tokens available (85% of 1M)
+    # Need > 850k tokens = > 3.4M chars
     # Use larger file content to exceed the limit
-    huge_diff = build_realistic_diff(200, 15_000)  # 200 files, ~15k chars each = ~3M chars
+    huge_diff = build_realistic_diff(500, 15_000)  # 500 files, ~15k chars each = ~7.5M chars
     context = { model: "anthropic:claude-3-sonnet" }
 
     result = strategy.prepare(huge_diff, context)

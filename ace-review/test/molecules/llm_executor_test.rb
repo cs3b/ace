@@ -13,9 +13,9 @@ class LlmExecutorTest < AceReviewTest
   # ============================================================================
 
   def test_warns_when_prompt_exceeds_threshold
-    # Create prompts that exceed 160K tokens (~640K chars at 4 chars/token)
-    large_system = "x" * 400_000
-    large_user = "y" * 300_000
+    # Create prompts that exceed 800K tokens (~3.2M chars at 4 chars/token)
+    large_system = "x" * 2_000_000
+    large_user = "y" * 1_400_000
 
     warning_output = capture_stderr do
       @executor.send(:warn_if_prompt_large, large_system, large_user, "claude:opus")
@@ -38,8 +38,8 @@ class LlmExecutorTest < AceReviewTest
   end
 
   def test_no_warning_at_exactly_threshold
-    # 160K tokens * 4 chars = 640K chars
-    threshold_chars = 160_000 * 4
+    # 800K tokens * 4 chars = 3.2M chars
+    threshold_chars = 800_000 * 4
     exact_threshold_prompt = "x" * threshold_chars
 
     warning_output = capture_stderr do
@@ -50,8 +50,8 @@ class LlmExecutorTest < AceReviewTest
   end
 
   def test_warns_just_above_threshold
-    # 160K tokens * 4 chars + 4 = just over threshold
-    threshold_chars = (160_000 * 4) + 4
+    # 800K tokens * 4 chars + 4 = just over threshold
+    threshold_chars = (800_000 * 4) + 4
     over_threshold_prompt = "x" * threshold_chars
 
     warning_output = capture_stderr do
@@ -70,15 +70,15 @@ class LlmExecutorTest < AceReviewTest
   end
 
   def test_warning_includes_formatted_token_count
-    # Create prompt that estimates to ~200K tokens
-    large_prompt = "x" * 800_000  # 800K chars / 4 = 200K tokens
+    # Create prompt that estimates to ~900K tokens
+    large_prompt = "x" * 3_600_000  # 3.6M chars / 4 = 900K tokens
 
     warning_output = capture_stderr do
       @executor.send(:warn_if_prompt_large, large_prompt, "", "test-model")
     end
 
-    # Should include comma-formatted number (e.g., "200,000")
-    assert_match(/200,000/, warning_output)
+    # Should include comma-formatted number (e.g., "900,000")
+    assert_match(/900,000/, warning_output)
   end
 
   private

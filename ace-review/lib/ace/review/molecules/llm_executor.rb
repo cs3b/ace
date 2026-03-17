@@ -7,8 +7,8 @@ module Ace
     module Molecules
       # Executes LLM queries for code reviews using Ruby API
       class LlmExecutor
-        # Warning threshold: 80% of typical 200K context window
-        PROMPT_SIZE_WARNING_THRESHOLD = 160_000
+        # Warning threshold: 80% of typical 1M context window
+        PROMPT_SIZE_WARNING_THRESHOLD = 800_000
 
         def initialize
           @default_model = Ace::Review.get("defaults", "model") || "google:gemini-2.5-flash"
