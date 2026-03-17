@@ -2,6 +2,6 @@
 
 module Ace
   module Tmux
-    VERSION = "0.6.2"
-  end
+    VERSION = "0.6.3"
+end
 end

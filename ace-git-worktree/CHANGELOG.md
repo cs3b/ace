@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.7] - 2026-03-17
+
+### Fixed
+- Updated CLI help-output tests to accept the shared `ace-support-cli` help header format after framework migration.
+
 ## [0.15.6] - 2026-03-15
 
 ### Fixed

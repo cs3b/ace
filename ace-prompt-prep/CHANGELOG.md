@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-03-17
+
+### Fixed
+- Updated CLI routing tests to accept `COMMANDS`/`USAGE` header rendering introduced by shared help formatting.
+
 ## [0.19.4] - 2026-03-15
 
 ### Changed
