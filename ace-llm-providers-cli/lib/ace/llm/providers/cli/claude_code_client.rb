@@ -195,6 +195,11 @@ module Ace
             # Extract the text result
             text = response["result"] || response["response"] || ""
 
+            if text.strip.empty?
+              raise Ace::LLM::ProviderError,
+                "Claude CLI returned empty response (exit 0 but no output text)"
+            end
+
             # Build metadata
             metadata = build_metadata(response, prompt, options)
 

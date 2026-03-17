@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.3] - 2026-03-17
+
+### Fixed
+- Rescue `Errno::EPIPE` in `SafeCapture` stdin write so broken-pipe crashes (e.g., Codex instant exit) capture stderr for the real error instead of raising an unhandled exception.
+- Detect Claude CLI empty responses (exit 0 but 0-byte output) and raise `ProviderError` instead of silently writing empty files.
+- Removed deprecated `--allowed-tools read_file` from Gemini CLI command builder; `--approval-mode` alone controls tool access.
+
+### Technical
+- Updated Gemini client tests to assert `--allowed-tools` is no longer present in built commands.
+
+## [0.25.2] - 2026-03-15
+
 ### Fixed
 - Removed unsupported CLI temperature forwarding for Claude Code CLI adapters so `--temperature` is no longer passed to subprocesses.
 
