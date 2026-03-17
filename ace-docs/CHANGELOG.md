@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.6] - 2026-03-17
+
+### Fixed
+- Updated CLI routing tests to match current `ace-support-cli` help rendering and avoid false regressions.
+
 ## [0.25.5] - 2026-03-15
 
 ### Changed

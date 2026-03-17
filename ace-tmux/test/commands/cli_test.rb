@@ -30,7 +30,7 @@ class CliTest < Minitest::Test
     assert_match(/start/, output)
     assert_match(/window/, output)
     assert_match(/list/, output)
-    assert_match(/Examples:/, output)
+    assert_match(/EXAMPLES|Examples:/, output)
   end
 
   def test_h_flag_shows_help

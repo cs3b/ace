@@ -20,25 +20,25 @@ class CliRoutingTest < AceGitTestCase
   def test_cli_routes_help_command
     result = invoke_cli(Ace::Git::CLI, ["help"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
     result = invoke_cli(Ace::Git::CLI, ["--help"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_routes_help_with_short_flag
     result = invoke_cli(Ace::Git::CLI, ["-h"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_shows_help_when_no_args
     result = invoke_cli(Ace::Git::CLI, [])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_routes_explicit_diff_range

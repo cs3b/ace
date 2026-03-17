@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.14] - 2026-03-17
+
+### Fixed
+- Updated CLI routing help tests for direct command invocation to align with current help and exit behavior.
+
 ## [0.15.13] - 2026-03-15
 
 ### Fixed

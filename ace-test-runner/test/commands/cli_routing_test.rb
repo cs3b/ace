@@ -15,11 +15,12 @@ class CliRoutingTest < Minitest::Test
   end
 
   def test_cli_help_is_available_from_single_command_entrypoint
+    returned_code = nil
     output = capture_io do
-      assert_raises(SystemExit) do
-        Ace::Support::Cli::Runner.new(Ace::TestRunner::CLI::Commands::Test).call(args: ["--help"])
-      end
+      returned_code = Ace::Support::Cli::Runner.new(Ace::TestRunner::CLI::Commands::Test).call(args: ["--help"])
     end
+
+    assert_equal 0, returned_code
     assert_match(/USAGE|Usage:/i, output.first)
   end
 

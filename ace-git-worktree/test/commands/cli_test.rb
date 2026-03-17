@@ -17,7 +17,7 @@ class CliTest < Minitest::Test
   def test_run_without_arguments_shows_help
     stdout, stderr, status = run_exe
     assert status.success?
-    assert_match(/Commands:|USAGE:/i, stdout + stderr)
+    assert_match(/COMMANDS|Commands:|USAGE/i, stdout + stderr)
   end
 
   def test_run_with_help_flag

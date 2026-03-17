@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.834] - 2026-03-17
+
+### Fixed
+- **ace-docs v0.25.6**: Updated CLI routing tests to match shared `ace-support-cli` help rendering.
+- **ace-git v0.14.6**: Updated CLI routing tests for shared help header format and short-help behavior.
+- **ace-git-worktree v0.15.7**: Updated CLI routing tests to accept `COMMANDS`/`USAGE` outputs from shared help rendering.
+- **ace-prompt-prep v0.19.5**: Updated CLI routing tests for new shared help header casing and stability.
+- **ace-test-runner v0.15.14**: Updated CLI help test expectations for single-command entrypoint behavior.
+- **ace-tmux v0.6.3**: Updated CLI help-output assertions to match `ace-support-cli` `COMMANDS`/`EXAMPLES` headers.
+
 ## [0.9.833] - 2026-03-17
 
 ### Fixed

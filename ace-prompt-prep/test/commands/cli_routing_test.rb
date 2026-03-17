@@ -100,7 +100,7 @@ class PromptCliRoutingTest < Minitest::Test
     output = result[:stdout] + result[:stderr]
 
     # Should show our custom help format with Commands: header
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_known_command_routes_directly
