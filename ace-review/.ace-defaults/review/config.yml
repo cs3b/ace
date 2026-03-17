@@ -11,7 +11,7 @@
 # auto_execute    - Auto-execute LLM query without confirmation (default: false)
 # gh_timeout      - Timeout for GitHub CLI operations in seconds (default: 30)
 # gh_simple_timeout - Timeout for simple gh commands like --version, auth status (default: 10)
-# llm_timeout     - Timeout for LLM queries in seconds (default: 300)
+# llm_timeout     - Timeout for LLM queries in seconds (default: 900)
 #
 # Environment Variables:
 # ---------------------
@@ -44,7 +44,7 @@ defaults:
   auto_save_release_fallback: true  # Save to release dir when no task detected
   gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
   gh_simple_timeout: 10  # Timeout for simple gh commands (--version, auth status)
-  llm_timeout: 300  # Timeout for LLM queries in seconds (5 minutes)
+  llm_timeout: 900  # Timeout for LLM queries in seconds (15 minutes)
 
 # Subject strategy configuration
 # Controls how large diffs are handled when they exceed model context limits

@@ -47,14 +47,14 @@ ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
 - `ace-bundle wfi://review/pr` with `--preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
 - `ace-bundle wfi://review/pr` with `123 --preset security` → `ace-review --pr 123 --preset security`
 
-**Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
+**Important for Claude Code**: Run with 15-minute timeout (900000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
 #### Execution Guard (Mandatory)
 
 - Completion is defined by **process exit** (success or failure), not by partial output.
 - Do **not** treat temporary silence/no new output as completion.
 - Do **not** run any Step 3+ commands until Step 2 process exit is confirmed.
-- If 10-minute timeout (600000ms) is reached, report timeout and last observed output, then stop dependent steps.
+- If 15-minute timeout (900000ms) is reached, report timeout and last observed output, then stop dependent steps.
 
 Wait for the review process to exit. Note the session directory path from the output.
 

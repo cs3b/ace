@@ -244,7 +244,7 @@ defaults:
   preset: code                       # Default preset (basic code review)
   auto_execute: false                # Prompt for confirmation before LLM queries
   max_concurrent_models: 3           # Parallel model limit
-  llm_timeout: 300                   # Per-model timeout (seconds)
+  llm_timeout: 900                   # Per-model timeout (seconds)
 ```
 
 **Note**: The gem ships with conservative defaults (`code` preset, confirmation prompts). Override these in your project's `.ace/review/config.yml` for different behavior.

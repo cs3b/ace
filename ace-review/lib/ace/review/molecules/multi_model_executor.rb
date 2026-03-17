@@ -154,7 +154,8 @@ module Ace
                 user_prompt: user_prompt,
                 model: model,
                 session_dir: session_dir,
-                output_file: model_output_file
+                output_file: model_output_file,
+                timeout: @llm_timeout
               )
             end
 

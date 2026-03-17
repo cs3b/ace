@@ -154,7 +154,9 @@ module Ace
         # @param options [Hash] Fetch options
         # @return [Hash] Result with :success, :diff, :fallback
         def self.fetch_local_diff_fallback(pr_identifier, options = {})
-          # Fetch PR metadata to get base branch
+          temp_ref = nil
+
+          # Fetch PR metadata to get base branch and PR number
           metadata_result = fetch_metadata(pr_identifier, options)
           unless metadata_result[:success]
             return {
@@ -164,9 +166,20 @@ module Ace
           end
 
           base_ref = metadata_result[:metadata]["baseRefName"]
+          pull_number = metadata_result[:metadata]["number"] || metadata_result.dig(:parsed, "number")
+          temp_ref = "refs/ace/review/pr-#{pull_number}-#{Process.pid}"
+
+          fetch_result = run_local_command("git", "fetch", "--no-tags", "origin",
+                                           "+refs/pull/#{pull_number}/head:#{temp_ref}")
+          unless fetch_result[:success]
+            return {
+              success: false,
+              error: "Cannot fall back to local diff: git fetch PR head failed — #{fetch_result[:stderr]}"
+            }
+          end
 
           # Find merge base
-          merge_base_result = run_local_command("git", "merge-base", "origin/#{base_ref}", "HEAD")
+          merge_base_result = run_local_command("git", "merge-base", "origin/#{base_ref}", temp_ref)
           unless merge_base_result[:success]
             return {
               success: false,
@@ -176,8 +189,8 @@ module Ace
 
           merge_base = merge_base_result[:stdout].strip
 
-          # Generate diff from merge base
-          diff_result = run_local_command("git", "diff", merge_base)
+          # Diff against the fetched PR head rather than the caller's checkout state.
+          diff_result = run_local_command("git", "diff", merge_base, temp_ref)
           unless diff_result[:success]
             return {
               success: false,
@@ -192,6 +205,8 @@ module Ace
             parsed: metadata_result[:parsed],
             fallback: :local_git_diff
           }
+        ensure
+          delete_temp_ref(temp_ref) if temp_ref
         end
 
         # Execute a local command and return structured result
@@ -214,7 +229,11 @@ module Ace
           }
         end
 
-        private_class_method :handle_fetch_error, :fetch_local_diff_fallback, :run_local_command
+        def self.delete_temp_ref(temp_ref)
+          run_local_command("git", "update-ref", "-d", temp_ref)
+        end
+
+        private_class_method :handle_fetch_error, :fetch_local_diff_fallback, :run_local_command, :delete_temp_ref
       end
     end
   end
