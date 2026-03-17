@@ -40,5 +40,5 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus:high@ro
-  - codex:gpt:high@ro
+  - claude:opus@ro
+  - codex:gpt@ro
