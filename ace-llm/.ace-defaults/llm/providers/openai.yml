@@ -2,7 +2,7 @@ name: openai
 last_synced: 2025-12-05
 class: Ace::LLM::Organisms::OpenAIClient
 gem: ace-llm
-context_limit: 128000  # GPT-4o has 128K context window
+context_limit: 1050000  # GPT-5.x has 1.05M context window
 models:
   - gpt-5.1
   - gpt-5.1-chat-latest
