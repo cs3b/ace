@@ -25,6 +25,7 @@ module Ace
             FileUtils.mkdir_p(File.join(sandbox_path, "reports"))
 
             initialize_git_repo(sandbox_path)
+            ensure_package_available(scenario.package, sandbox_path)
             link_provider_configs(sandbox_path)
             create_result_directories(scenario, sandbox_path, test_cases: test_cases)
             verify_tool_access(scenario, sandbox_path)
@@ -35,6 +36,22 @@ module Ace
           end
 
           private
+
+          def ensure_package_available(package_name, sandbox_path)
+            package_name = package_name.to_s.strip
+            return if package_name.empty?
+
+            package_source = File.join(@config_root, package_name)
+            package_target = File.join(sandbox_path, package_name)
+
+            return if File.exist?(package_target)
+
+            unless File.directory?(package_source)
+              raise "Scenario package not found: #{package_name} (expected #{package_source})"
+            end
+
+            FileUtils.cp_r(package_source, package_target)
+          end
 
           def initialize_git_repo(sandbox_path)
             return if Dir.exist?(File.join(sandbox_path, ".git"))
