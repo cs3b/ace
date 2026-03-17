@@ -256,7 +256,7 @@ PATH
 PATH
   remote: ace-support-cli
   specs:
-    ace-support-cli (0.5.0)
+    ace-support-cli (0.5.1)
 
 PATH
   remote: ace-support-config

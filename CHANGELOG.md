@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.832] - 2026-03-17
+
+### Fixed
+- **ace-support-cli v0.5.1**: Restored CLI compatibility for repeated scalar options, `key=value` hash parsing, `--` passthrough, top-level help/command lookup, usage rendering against real ACE registries, and the public `ArgvCoalescer` contract.
+
 ## [0.9.831] - 2026-03-17
 
 ### Fixed
