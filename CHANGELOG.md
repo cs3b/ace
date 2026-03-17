@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.829] - 2026-03-17
+
+### Added
+- **ace-support-cli v0.5.0**: Rich `--help` interception in Parser/Runner — commands with `desc` or `examples` metadata now render structured help via Banner/Concise/TwoTierHelp formatters instead of OptionParser's bare-bones output
+
 ## [0.9.828] - 2026-03-17
 
 ### Changed
