@@ -8,6 +8,7 @@ defaults:
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 5  # Max parallel LLM queries for multi-model execution
+  llm_timeout: 540  # Timeout for LLM queries in seconds (9 minutes)
   auto_execute: true  # Automatically execute LLM query without confirmation
   gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
   # NOTE: Auto-save is enabled for this project's contributors.
