@@ -9,6 +9,11 @@ test_suite:
       group: foundation
       priority: 2
 
+    - name: ace-support-cli
+      path: ace-support-cli
+      group: foundation
+      priority: 2
+
     - name: ace-support-config
       path: ace-support-config
       group: foundation
