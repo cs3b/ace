@@ -3,7 +3,7 @@ last_synced: 2026-02-06
 class: Ace::LLM::Providers::CLI::ClaudeCodeClient
 gem: ace-llm-providers-cli
 models_dev_id: anthropic
-context_limit: 200000
+context_limit: 1000000
 models:
   - claude-haiku-4-5
   - claude-opus-4-6
