@@ -47,41 +47,41 @@ class ContextLimitResolverTest < AceReviewTest
   end
 
   # Claude models
-  def test_claude_opus_has_200k_context
+  def test_claude_opus_has_1m_context
     result = @resolver.resolve("claude-3-opus")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
-  def test_claude_sonnet_has_200k_context
+  def test_claude_sonnet_has_1m_context
     result = @resolver.resolve("claude-3-sonnet")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
-  def test_claude_haiku_has_200k_context
+  def test_claude_haiku_has_1m_context
     result = @resolver.resolve("claude-3-haiku")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
-  def test_claude_opus_4_has_200k_context
+  def test_claude_opus_4_has_1m_context
     result = @resolver.resolve("claude-4-opus")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
-  def test_claude_sonnet_4_has_200k_context
+  def test_claude_sonnet_4_has_1m_context
     result = @resolver.resolve("claude-sonnet-4")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
-  def test_claude_fallback_has_200k_context
-    # Unknown claude variant should still get 200k
+  def test_claude_fallback_has_1m_context
+    # Unknown claude variant should still get 1M
     result = @resolver.resolve("claude-5-ultra")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
   # OpenAI models
@@ -157,6 +157,32 @@ class ContextLimitResolverTest < AceReviewTest
     assert_equal 200_000, result
   end
 
+  # GPT-5.x models
+  def test_gpt_5_1_has_1050k_context
+    result = @resolver.resolve("gpt-5.1")
+
+    assert_equal 1_050_000, result
+  end
+
+  def test_gpt_5_4_has_1050k_context
+    result = @resolver.resolve("gpt-5.4")
+
+    assert_equal 1_050_000, result
+  end
+
+  def test_gpt_5_1_codex_has_1050k_context
+    result = @resolver.resolve("gpt-5.1-codex")
+
+    assert_equal 1_050_000, result
+  end
+
+  # o4 models
+  def test_o4_mini_has_1050k_context
+    result = @resolver.resolve("o4-mini")
+
+    assert_equal 1_050_000, result
+  end
+
   # Provider prefix handling
   def test_google_prefix_stripped
     result = @resolver.resolve("google:gemini-2.5-pro")
@@ -167,13 +193,13 @@ class ContextLimitResolverTest < AceReviewTest
   def test_anthropic_prefix_stripped
     result = @resolver.resolve("anthropic:claude-3-sonnet")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
   def test_openai_prefix_stripped
     result = @resolver.resolve("openai:gpt-4o")
 
-    assert_equal 128_000, result
+    assert_equal 1_050_000, result
   end
 
   def test_codex_prefix_stripped
@@ -185,7 +211,7 @@ class ContextLimitResolverTest < AceReviewTest
   def test_cli_prefix_stripped
     result = @resolver.resolve("cli:claude-3-opus")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
   # Case insensitivity
@@ -195,7 +221,7 @@ class ContextLimitResolverTest < AceReviewTest
     result3 = @resolver.resolve("GPT-4O")
 
     assert_equal 1_000_000, result1
-    assert_equal 200_000, result2
+    assert_equal 1_000_000, result2
     assert_equal 128_000, result3
   end
 
@@ -203,30 +229,30 @@ class ContextLimitResolverTest < AceReviewTest
   def test_unknown_model_returns_default
     result = @resolver.resolve("unknown-model-xyz")
 
-    assert_equal 128_000, result
+    assert_equal 200_000, result
   end
 
   def test_nil_returns_default
     result = @resolver.resolve(nil)
 
-    assert_equal 128_000, result
+    assert_equal 200_000, result
   end
 
   def test_empty_string_returns_default
     result = @resolver.resolve("")
 
-    assert_equal 128_000, result
+    assert_equal 200_000, result
   end
 
   def test_default_limit_method
     result = @resolver.default_limit
 
-    assert_equal 128_000, result
+    assert_equal 200_000, result
   end
 
   # Constant accessibility
   def test_default_limit_constant
-    assert_equal 128_000, Ace::Review::Atoms::ContextLimitResolver::DEFAULT_LIMIT
+    assert_equal 200_000, Ace::Review::Atoms::ContextLimitResolver::DEFAULT_LIMIT
   end
 
   # Edge cases
@@ -256,19 +282,19 @@ class ContextLimitResolverTest < AceReviewTest
   end
 
   def test_anthropic_provider_uses_config_limit
-    # anthropic:claude-3-sonnet should use ace-llm's provider config (200K)
+    # anthropic:claude-3-sonnet should use ace-llm's provider config (1M)
     # which matches the hardcoded fallback
     result = @resolver.resolve("anthropic:claude-3-sonnet")
 
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
   def test_openai_provider_uses_config_limit
-    # openai:gpt-4o should use ace-llm's provider config (128K)
+    # openai:gpt-4o should use ace-llm's provider config (1.05M)
     # which matches the hardcoded fallback
     result = @resolver.resolve("openai:gpt-4o")
 
-    assert_equal 128_000, result
+    assert_equal 1_050_000, result
   end
 
   def test_unknown_provider_falls_back_to_pattern
@@ -276,7 +302,7 @@ class ContextLimitResolverTest < AceReviewTest
     result = @resolver.resolve("unknown:claude-3-sonnet")
 
     # Should match claude pattern in fallback
-    assert_equal 200_000, result
+    assert_equal 1_000_000, result
   end
 
   def test_model_without_provider_uses_pattern_matching

@@ -14,8 +14,8 @@ module Ace
         # Default timeout for LLM queries (5 minutes)
         DEFAULT_LLM_TIMEOUT = 300
 
-        # Warning threshold: 80% of typical 200K context window
-        PROMPT_SIZE_WARNING_THRESHOLD = 160_000
+        # Warning threshold: 80% of typical 1M context window
+        PROMPT_SIZE_WARNING_THRESHOLD = 800_000
 
         def initialize(max_concurrent: nil, llm_timeout: nil)
           # Read from config, fallback to default of 3, clamp to minimum 1

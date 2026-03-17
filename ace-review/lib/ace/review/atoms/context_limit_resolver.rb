@@ -22,7 +22,7 @@ module Ace
       #   #=> 200_000
       module ContextLimitResolver
         # Conservative default for unknown models
-        DEFAULT_LIMIT = 128_000
+        DEFAULT_LIMIT = 200_000
 
         # Model patterns and their context limits (fallback when ace-llm config unavailable)
         # Order matters - first match wins
@@ -38,13 +38,15 @@ module Ace
           { pattern: /gemini/i, limit: 1_000_000 },
 
           # Claude models (all variants: opus, sonnet, haiku)
-          { pattern: /claude.*opus/i, limit: 200_000 },
-          { pattern: /claude.*sonnet/i, limit: 200_000 },
-          { pattern: /claude.*haiku/i, limit: 200_000 },
+          { pattern: /claude.*opus/i, limit: 1_000_000 },
+          { pattern: /claude.*sonnet/i, limit: 1_000_000 },
+          { pattern: /claude.*haiku/i, limit: 1_000_000 },
           # Fallback for any other claude model
-          { pattern: /claude/i, limit: 200_000 },
+          { pattern: /claude/i, limit: 1_000_000 },
 
           # OpenAI models
+          { pattern: /gpt-5\.\d/i, limit: 1_050_000 },
+          { pattern: /o4-/i, limit: 1_050_000 },
           { pattern: /gpt-4o/i, limit: 128_000 },
           { pattern: /gpt-4-turbo/i, limit: 128_000 },
           { pattern: /gpt-4-32k/i, limit: 32_768 },
