@@ -225,8 +225,7 @@ describe "GeminiClient" do
           refute_includes cmd, "-y"              # No yolo mode
           assert_includes cmd, "--output-format"
           assert_includes cmd, "json"
-          assert_includes cmd, "--allowed-tools"
-          assert_includes cmd, "read_file"
+          refute_includes cmd, "--allowed-tools"
           # Prompt should contain file reading instructions
           assert cmd.any? { |arg| arg.include?("Read") && arg.include?("instruction") }
         end
@@ -275,8 +274,7 @@ describe "GeminiClient" do
       assert_includes cmd, "gemini"
       assert_includes cmd, "--output-format"
       assert_includes cmd, "json"
-      assert_includes cmd, "--allowed-tools"
-      assert_includes cmd, "read_file"
+      refute_includes cmd, "--allowed-tools"
       # Should contain file reading instructions
       assert cmd.any? { |arg| arg.include?("Read the system instructions") && arg.include?("/path/to/system.md") }
       assert cmd.any? { |arg| arg.include?("Read the user context") && arg.include?("/path/to/user.md") }

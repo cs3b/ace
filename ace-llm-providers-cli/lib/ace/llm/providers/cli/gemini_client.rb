@@ -158,7 +158,7 @@ module Ace
 
             # Build gemini CLI command with file reading enabled
             cmd = ["gemini"]
-            cmd << "--output-format" << "json" << "--allowed-tools" << "read_file"
+            cmd << "--output-format" << "json"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -228,7 +228,7 @@ module Ace
             # Note: prompt is passed as positional argument (not -i which conflicts with stdin)
             # Enable read_file tool without confirmation for headless execution
             cmd = ["gemini"]
-            cmd << "--output-format" << "json" << "--allowed-tools" << "read_file"
+            cmd << "--output-format" << "json"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL

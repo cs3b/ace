@@ -40,8 +40,10 @@ module Ace
                 pgid = safe_getpgid(pid)
                 debug_log(provider_name, "spawn pid=#{pid} pgid=#{pgid || "n/a"}")
 
-                if stdin_data
-                  stdin.write(stdin_data)
+                begin
+                  stdin.write(stdin_data) if stdin_data
+                rescue Errno::EPIPE
+                  # Subprocess exited before consuming stdin — continue to capture stderr for the real error
                 end
                 stdin.close
 
