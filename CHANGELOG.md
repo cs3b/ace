@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.826] - 2026-03-17
+
+### Fixed
+- **ace-llm-providers-cli v0.25.3**: Rescue `Errno::EPIPE` in SafeCapture stdin write to capture real errors from instant-exit subprocesses (e.g., Codex broken pipe); detect Claude CLI empty responses (exit 0, 0-byte output) and raise ProviderError; remove deprecated `--allowed-tools` flag from Gemini CLI command builder
+- **ace-llm v0.26.7**: Remove `--sandbox` from Gemini `ro`/`rw` presets (requires Docker, orthogonal to approval mode); fix `rw` preset invalid `--approval-mode auto` → `auto_edit`
+
 ## [0.9.825] - 2026-03-15
 
 ### Fixed
