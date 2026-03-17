@@ -1,0 +1,9 @@
+name: validate-task
+steps:
+  - plan
+  - work
+provider:
+  - glite
+repeat: 1
+synthesis_workflow: wfi://task/review
+synthesis_provider: claude:haiku
