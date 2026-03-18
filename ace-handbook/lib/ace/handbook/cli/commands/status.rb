@@ -5,7 +5,7 @@ module Ace
     module CLI
       module Commands
         class Status < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Show handbook provider integration status"
 
@@ -27,7 +27,7 @@ module Ace
 
             puts @collector.to_table(snapshot)
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
         end
       end

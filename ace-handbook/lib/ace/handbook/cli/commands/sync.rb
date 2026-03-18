@@ -5,7 +5,7 @@ module Ace
     module CLI
       module Commands
         class Sync < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Project canonical handbook skills into provider-native folders"
 
@@ -27,7 +27,7 @@ module Ace
                    "#{result[:removed_entries]} removed)"
             end
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
         end
       end
