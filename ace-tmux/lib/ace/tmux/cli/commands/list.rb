@@ -9,7 +9,7 @@ module Ace
       module Commands
         # List available tmux presets
         class List < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             List available tmux presets
@@ -63,7 +63,7 @@ module Ace
 
           def validate_type!(type)
             unless Molecules::PresetLoader::PRESET_TYPES.include?(type)
-              raise Ace::Core::CLI::Error.new(
+              raise Ace::Support::Cli::Error.new(
                 "Unknown preset type: #{type}. Valid types: #{Molecules::PresetLoader::PRESET_TYPES.join(", ")}"
               )
             end

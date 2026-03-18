@@ -11,7 +11,7 @@ args = ARGV.empty? ? ["--help"] : ARGV
 begin
   exit_code = Ace::Tmux::CLI.start(args)
   exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 end
