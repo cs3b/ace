@@ -4,7 +4,7 @@
 # Run tests from workspace root with proper Gemfile context
 require "pathname"
 
-# Find the ace-meta root directory
+# Find the ace root directory
 ace_meta_root = Pathname.new(__FILE__).dirname.parent.parent.realpath
 ace_search_root = Pathname.new(__FILE__).dirname.parent.realpath
 
