@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.844] - 2026-03-18
+
+### Fixed
+- **ace-test-runner v0.15.16**: Fixed explicit `--report-dir` handling in package execution so report artifacts no longer get forced into package-local `ace-*/results` directories.
+
+### Technical
+- **ace-test-runner v0.15.16**: Documented cleanup of temporary failure-injection fixtures used by `TS-TEST-002` E2E scenarios.
+
 ## [0.9.843] - 2026-03-18
 
 ### Changed
