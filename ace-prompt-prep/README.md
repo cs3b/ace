@@ -27,7 +27,7 @@ The Base36 format has approximately **1.85 seconds of precision**:
 - The system appends a counter (e.g., `i50jj3-1.md`, `i50jj3-2.md`) to handle collisions
 - This precision is intentional for compactness
 
-For more details on the encoding scheme, see the [ace-b36ts README](https://github.com/cs3b/ace-meta/tree/main/ace-b36ts).
+For more details on the encoding scheme, see the [ace-b36ts README](https://github.com/cs3b/ace/tree/main/ace-b36ts).
 
 ## Quick Start
 
