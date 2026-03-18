@@ -13,7 +13,7 @@ module Ace
         #
         # This wraps the discover logic in a ace-support-cli compatible interface.
         class Discover < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include ScopeOptions
 
           # Exit codes

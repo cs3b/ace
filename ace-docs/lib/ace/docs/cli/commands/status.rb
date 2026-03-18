@@ -15,7 +15,7 @@ module Ace
         #
         # This command shows document freshness and update status.
         class Status < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include ScopeOptions
 
           desc <<~DESC.strip
@@ -75,7 +75,7 @@ module Ace
           rescue StandardError => e
             $stderr.puts "Error showing status: #{e.message}"
             $stderr.puts e.backtrace.join("\n") if debug?(options)
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           def create_registry(options)

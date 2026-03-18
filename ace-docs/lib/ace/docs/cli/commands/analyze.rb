@@ -24,7 +24,7 @@ module Ace
         #
         # This command handles document analysis with LLM integration.
         class Analyze < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           # Exit codes
           EXIT_SUCCESS = 0

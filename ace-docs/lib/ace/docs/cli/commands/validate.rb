@@ -16,7 +16,7 @@ module Ace
         #
         # This command handles document validation.
         class Validate < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include ScopeOptions
 
           # Exit codes
