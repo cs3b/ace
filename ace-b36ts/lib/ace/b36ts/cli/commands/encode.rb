@@ -8,7 +8,7 @@ module Ace
       module Commands
           # Encode a timestamp to a 6-character compact ID
           class Encode < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Encode a timestamp to a compact ID (2-8 characters)"
 
