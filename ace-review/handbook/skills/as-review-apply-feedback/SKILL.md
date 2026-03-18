@@ -26,7 +26,7 @@ integration:
   providers: {}
 assign:
   source: wfi://review/apply-feedback
-  phases:
+  steps:
     - name: apply-feedback
       description: Apply review feedback and commit improvements
       tags: [implementation, review-response]

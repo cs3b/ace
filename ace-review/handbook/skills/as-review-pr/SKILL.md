@@ -23,7 +23,7 @@ integration:
   providers: {}
 assign:
   source: wfi://review/pr
-  phases:
+  steps:
     - name: review-pr
       description: Review code changes for correctness, style, and best practices
       tags: [review, quality]
