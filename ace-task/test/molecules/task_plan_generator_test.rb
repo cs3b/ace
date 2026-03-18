@@ -52,7 +52,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
 
   def test_generate_raises_when_backend_returns_empty
     @client.next_response = { text: "  " }
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       @generator.generate(task: @task, context_files: [])
     end
 

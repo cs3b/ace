@@ -127,7 +127,7 @@ class TaskPlanCommandTest < AceTaskTestCase
       end
 
       def generate(task:, context_files:, cache_dir: nil)
-        raise Ace::Core::CLI::Error.new("Plan generation backend unavailable")
+        raise Ace::Support::Cli::Error.new("Plan generation backend unavailable")
       end
     end
     Ace::Task::CLI::Commands::Plan.generator_class = failing_class
@@ -149,7 +149,7 @@ class TaskPlanCommandTest < AceTaskTestCase
 
     begin
       Ace::Task::TaskCLI.start(args)
-    rescue Ace::Core::CLI::Error => e
+    rescue Ace::Support::Cli::Error => e
       $stderr.puts e.message
       exit_code = e.exit_code
     rescue SystemExit => e

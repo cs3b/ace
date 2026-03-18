@@ -118,7 +118,7 @@ class UpdateCommandTest < AceTaskTestCase
   end
 
   def test_update_no_operations_raises_error
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       capture_io do
         Ace::Task::TaskCLI.start(["update", "q7w"])
       end
@@ -126,7 +126,7 @@ class UpdateCommandTest < AceTaskTestCase
   end
 
   def test_update_not_found_raises_error
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       capture_io do
         Ace::Task::TaskCLI.start(["update", "xxx", "--set", "status=done"])
       end

@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-task show
         class Show < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Show task details
@@ -40,7 +40,7 @@ module Ace
             task = manager.show(ref)
 
             unless task
-              raise Ace::Core::CLI::Error.new("Task '#{ref}' not found")
+              raise Ace::Support::Cli::Error.new("Task '#{ref}' not found")
             end
 
             if options[:path]

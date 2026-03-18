@@ -132,7 +132,7 @@ class CreateCommandTest < AceTaskTestCase
   end
 
   def test_create_with_invalid_status_raises_error
-    err = assert_raises(Ace::Core::CLI::Error) do
+    err = assert_raises(Ace::Support::Cli::Error) do
       capture_io do
         Ace::Task::TaskCLI.start(["create", "Bad status", "--status", "bogus"])
       end

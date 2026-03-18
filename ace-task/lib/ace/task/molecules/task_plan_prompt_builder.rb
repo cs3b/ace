@@ -80,10 +80,10 @@ module Ace
             "ace-bundle", input, "--format", "markdown-xml", "--output", output_path
           )
           unless status.success?
-            raise Ace::Core::CLI::Error.new("ace-bundle failed for: #{input}")
+            raise Ace::Support::Cli::Error.new("ace-bundle failed for: #{input}")
           end
         rescue Errno::ENOENT
-          raise Ace::Core::CLI::Error.new("ace-bundle not found (required for prompt building)")
+          raise Ace::Support::Cli::Error.new("ace-bundle not found (required for prompt building)")
         end
       end
     end

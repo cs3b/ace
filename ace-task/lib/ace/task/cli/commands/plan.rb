@@ -12,7 +12,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-task plan
         class Plan < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Resolve or generate a task implementation plan
@@ -82,7 +82,7 @@ module Ace
             task = manager.show(ref)
             return task if task
 
-            raise Ace::Core::CLI::Error.new("Task '#{ref}' not found. Run `ace-task list` to discover valid refs.")
+            raise Ace::Support::Cli::Error.new("Task '#{ref}' not found. Run `ace-task list` to discover valid refs.")
           end
 
           def capture_context_files(task)

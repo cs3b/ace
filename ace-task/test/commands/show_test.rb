@@ -86,7 +86,7 @@ class ShowCommandTest < AceTaskTestCase
   end
 
   def test_show_not_found_raises_error
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       capture_io do
         Ace::Task::TaskCLI.start(["show", "xxx"])
       end
