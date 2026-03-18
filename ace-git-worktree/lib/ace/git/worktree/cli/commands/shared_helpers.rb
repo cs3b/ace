@@ -12,7 +12,7 @@ module Ace
           # Include this module in CLI command classes to avoid code duplication
           # of common patterns like config summary display and options conversion.
           module SharedHelpers
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             private
 

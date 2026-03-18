@@ -10,7 +10,7 @@ require_relative "cli/commands/remove"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/config"
 require "ace/core"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Git
@@ -19,7 +19,7 @@ module Ace
       #
       # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
       module CLI
-        extend Ace::Core::CLI::RegistryDsl
+        extend Ace::Support::Cli::RegistryDsl
 
         PROGRAM_NAME = "ace-git-worktree"
 
@@ -81,14 +81,14 @@ module Ace
         register "config", wrap_command(CLI::Commands::Config), aliases: []
 
         # Version command
-        version_cmd = Ace::Core::CLI::VersionCommand.build(
+        version_cmd = Ace::Support::Cli::VersionCommand.build(
           gem_name: "ace-git-worktree",
           version: Ace::Git::Worktree::VERSION
         )
         register "version", version_cmd
         register "--version", version_cmd
 
-        help_cmd = Ace::Core::CLI::HelpCommand.build(
+        help_cmd = Ace::Support::Cli::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: Ace::Git::Worktree::VERSION,
           commands: REGISTERED_COMMANDS,
