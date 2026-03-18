@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Claude provider integration for ACE handbook skills"
   spec.description = "Claude-specific projection templates and workflows for ACE handbook skills."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 

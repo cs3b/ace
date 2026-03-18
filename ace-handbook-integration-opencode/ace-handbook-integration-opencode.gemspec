@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
   spec.summary = "OpenCode provider integration for ACE handbook skills"
   spec.description = "OpenCode-specific provider integration package that extends ace-handbook with provider manifests."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["homepage_uri"] = spec.homepage
