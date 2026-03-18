@@ -4,7 +4,7 @@
 ace:
   # Project-specific settings
   project:
-    name: "ace-meta"
+    name: "ace"
     type: "monorepo"
 
   # Override default config cascade
