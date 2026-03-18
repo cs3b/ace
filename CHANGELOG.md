@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.840] - 2026-03-18
+
+### Added
+- **ace-llm v0.26.13**: Added Claude `@prompt` preset for strict prompt-only execution when a verified no-tools mode is available.
+
+### Changed
+- **ace-llm v0.26.13**: Updated Claude `@ro` to allow `Bash` and `Read` for richer read-only reviews, and documented that `@prompt` is currently provider-specific.
+
+### Technical
+- **ace-llm-providers-cli v0.25.7**: Added Claude command coverage for explicit tool allowlists supporting the `@ro` versus `@prompt` preset split.
+
 ## [0.9.839] - 2026-03-18
 
 ### Changed
