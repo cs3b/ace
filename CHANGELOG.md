@@ -8359,7 +8359,7 @@ Fixed PR diff generation to use actual PR content instead of origin...HEAD when 
   - Updated task 089 with verified working examples and implementation notes
 
 ### Integration
-- Added ace-git-worktree to ace-meta Gemfile for development
+- Added ace-git-worktree to ace Gemfile for development
 - Updated tools.md to include ace-git-worktree command reference
 - Added comprehensive documentation with examples and integration patterns
 - Created agent definition for worktree operations
