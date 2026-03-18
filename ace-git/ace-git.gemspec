@@ -13,15 +13,15 @@ Gem::Specification.new do |spec|
                      'branch/PR information, repository context loading, and workflow instructions. ' \
                      'Consolidates ace-git-diff functionality with new context/PR/branch commands. ' \
                      'Requires Git >= 2.23.0.'
-  spec.homepage = 'https://github.com/cs3b/ace-meta/tree/main/ace-git'
+  spec.homepage = 'https://github.com/cs3b/ace/tree/main/ace-git'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://github.com/cs3b/ace-meta'
-  spec.metadata['changelog_uri'] = 'https://github.com/cs3b/ace-meta/blob/main/ace-git/CHANGELOG.md'
+  spec.metadata['source_code_uri'] = 'https://github.com/cs3b/ace'
+  spec.metadata['changelog_uri'] = 'https://github.com/cs3b/ace/blob/main/ace-git/CHANGELOG.md'
 
   # Specify which files should be added to the gem when it is released.
   # Include lib, exe, handbook (workflows and templates), and config examples
