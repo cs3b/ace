@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Assignment-based work queue management for AI-assisted workflows"
   spec.description = "ACE Assign manages workflow assignments using a file-based work queue model where phases have states (done, in_progress, pending, failed) and history is preserved"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
