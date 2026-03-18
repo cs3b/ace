@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = 'Automated code review tool for the ACE framework'
   spec.description = 'ace-review enables automated code review and quality analysis using LLM-powered ' \
                      'insights, supporting preset-based workflows and release integration with ace-taskflow'
-  spec.homepage = 'https://github.com/cs3b/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 
