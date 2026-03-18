@@ -29,14 +29,14 @@ module Ace
             generate_with_inline_prompt(task, context_files)
           end
         rescue LoadError => e
-          raise Ace::Core::CLI::Error.new(
+          raise Ace::Support::Cli::Error.new(
             "Plan generation backend unavailable: #{e.message}. " \
             "Ensure ace-llm is installed/configured, or provide --model."
           )
-        rescue Ace::Core::CLI::Error
+        rescue Ace::Support::Cli::Error
           raise
         rescue RuntimeError, IOError, Errno::ENOENT, Errno::ECONNREFUSED, Timeout::Error => e
-          raise Ace::Core::CLI::Error.new(
+          raise Ace::Support::Cli::Error.new(
             "Plan generation failed: #{e.message}. Retry with --refresh or choose a working --model."
           )
         end
@@ -80,7 +80,7 @@ module Ace
         def extract_text(response)
           text = response[:text].to_s.strip
           if text.empty?
-            raise Ace::Core::CLI::Error.new(
+            raise Ace::Support::Cli::Error.new(
               "Plan generation failed: backend returned empty output. Retry with --refresh or --model."
             )
           end

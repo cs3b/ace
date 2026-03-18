@@ -179,7 +179,7 @@ module Ace
             return path unless File.exist?(path)
           end
 
-          raise Ace::Core::CLI::Error.new(
+          raise Ace::Support::Cli::Error.new(
             "Failed to generate unique plan path after #{MAX_UNIQUE_ATTEMPTS} attempts. " \
             "Clear .ace-local/task/#{@task_id}/ and retry."
           )

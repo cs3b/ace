@@ -9,7 +9,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-task update
         class Update < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Update task metadata and/or move to a folder
@@ -64,11 +64,11 @@ module Ace
               warn "Error: at least one of --set, --add, --remove, --move-to, --move-as-child-of, or --position is required"
               warn ""
               warn "Usage: ace-task update REF [--set K=V]... [--move-to FOLDER] [--position first|last|after:REF|before:REF]"
-              raise Ace::Core::CLI::Error.new("No update operations specified")
+              raise Ace::Support::Cli::Error.new("No update operations specified")
             end
 
             if move_to && move_as_child
-              raise Ace::Core::CLI::Error.new("Cannot use --move-to and --move-as-child-of together")
+              raise Ace::Support::Cli::Error.new("Cannot use --move-to and --move-as-child-of together")
             end
 
             set_hash    = parse_kv_pairs(set_args)
@@ -87,7 +87,7 @@ module Ace
                                   move_to: move_to, move_as_child_of: move_as_child)
 
             unless task
-              raise Ace::Core::CLI::Error.new("Task '#{ref}' not found")
+              raise Ace::Support::Cli::Error.new("Task '#{ref}' not found")
             end
 
             if move_as_child
@@ -130,7 +130,7 @@ module Ace
               pg.last
             when /\Aafter:(.+)\z/
               target = manager.show($1)
-              raise Ace::Core::CLI::Error.new("Task '#{$1}' not found for position reference") unless target
+              raise Ace::Support::Cli::Error.new("Task '#{$1}' not found for position reference") unless target
 
               target_pos = target.metadata&.dig("position")
               if target_pos
@@ -141,7 +141,7 @@ module Ace
               end
             when /\Abefore:(.+)\z/
               target = manager.show($1)
-              raise Ace::Core::CLI::Error.new("Task '#{$1}' not found for position reference") unless target
+              raise Ace::Support::Cli::Error.new("Task '#{$1}' not found for position reference") unless target
 
               target_pos = target.metadata&.dig("position")
               if target_pos
@@ -151,7 +151,7 @@ module Ace
                 pg.first
               end
             else
-              raise Ace::Core::CLI::Error.new("Invalid --position value '#{arg}': expected first, last, after:<ref>, or before:<ref>")
+              raise Ace::Support::Cli::Error.new("Invalid --position value '#{arg}': expected first, last, after:<ref>, or before:<ref>")
             end
           end
 
@@ -160,7 +160,7 @@ module Ace
             result = {}
             args.each do |arg|
               unless arg.include?("=")
-                raise Ace::Core::CLI::Error.new("Invalid format '#{arg}': expected key=value")
+                raise Ace::Support::Cli::Error.new("Invalid format '#{arg}': expected key=value")
               end
 
               parsed = Ace::Support::Items::Atoms::FieldArgumentParser.parse([arg])
@@ -172,7 +172,7 @@ module Ace
                 end
               end
             rescue Ace::Support::Items::Atoms::FieldArgumentParser::ParseError => e
-              raise Ace::Core::CLI::Error.new("Invalid argument '#{arg}': #{e.message}")
+              raise Ace::Support::Cli::Error.new("Invalid argument '#{arg}': #{e.message}")
             end
             result
           end

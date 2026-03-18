@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-task create
         class Create < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Create a new task
@@ -54,7 +54,7 @@ module Ace
             if status
               valid = Ace::Task::Atoms::TaskValidationRules::VALID_STATUSES
               unless valid.include?(status)
-                raise Ace::Core::CLI::Error.new("Invalid status '#{status}'. Valid: #{valid.join(', ')}")
+                raise Ace::Support::Cli::Error.new("Invalid status '#{status}'. Valid: #{valid.join(', ')}")
               end
             end
 
@@ -79,8 +79,8 @@ module Ace
             end
 
             unless task
-              raise Ace::Core::CLI::Error.new("Parent task '#{child_of}' not found") if child_of
-              raise Ace::Core::CLI::Error.new("Failed to create task")
+              raise Ace::Support::Cli::Error.new("Parent task '#{child_of}' not found") if child_of
+              raise Ace::Support::Cli::Error.new("Failed to create task")
             end
 
             # Move to folder if specified
