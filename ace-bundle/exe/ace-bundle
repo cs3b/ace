@@ -8,7 +8,7 @@ require "ace/support/cli"
 begin
   args = ARGV.empty? ? ["--help"] : ARGV
   Ace::Support::Cli::Runner.new(Ace::Bundle::CLI::Commands::Load).call(args: args)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 end
