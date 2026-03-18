@@ -703,7 +703,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal configuration (preferences only, not behavior control)
 - GitHub CLI as primary PR creation method with alternatives documented
 
-[0.1.0]: https://github.com/cs3b/ace-meta/releases/tag/ace-git-v0.1.0
+[0.1.0]: https://github.com/cs3b/ace/releases/tag/ace-git-v0.1.0
 
 
 ## [0.10.16] - 2026-02-22
