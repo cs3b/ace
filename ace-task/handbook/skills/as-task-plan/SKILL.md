@@ -19,7 +19,7 @@ skill:
     workflow: wfi://task/plan
 assign:
   source: wfi://task/plan
-  phases:
+  steps:
     - name: plan-task
       description: Analyze task requirements and create an implementation plan
       tags: [planning, analysis]

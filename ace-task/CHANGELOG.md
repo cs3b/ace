@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-03-18
+
+### Changed
+- Updated workflow frontmatter key from `sub-phases` to `sub-steps` in task/work workflow to align with ace-assign step terminology
+- Updated prose references from "phase" to "step" in workflow instructions
+
 ## [0.29.1] - 2026-03-18
 
 ### Changed

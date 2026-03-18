@@ -17,7 +17,7 @@ Critically evaluate an implementation plan for completeness, specificity, and au
 
 - As Phase 2 (self-critique) in a plan generation step
 - After any implementation plan is produced, before handing off to execution
-- When reviewing plan quality in ace-assign pipeline phases
+- When reviewing plan quality in ace-assign pipeline steps
 
 ## Evaluation Dimensions
 
