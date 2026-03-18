@@ -7,7 +7,7 @@ module Ace
     module CLI
       module Commands
         class Status < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Show status of active task worktrees"
 
@@ -31,7 +31,7 @@ module Ace
               run_once(format)
             end
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           private

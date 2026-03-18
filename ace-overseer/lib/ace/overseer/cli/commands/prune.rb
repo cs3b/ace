@@ -5,7 +5,7 @@ module Ace
     module CLI
       module Commands
         class Prune < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Clean up completed task worktrees"
 
@@ -58,7 +58,7 @@ module Ace
 
             print_apply(result)
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           private
