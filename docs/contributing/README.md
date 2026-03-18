@@ -6,8 +6,8 @@ ACE (Agentic Coding Environment) is a toolkit of CLI tools for AI-assisted devel
 
 ```bash
 # Clone the repository
-git clone https://github.com/cs3b/ace-meta.git
-cd ace-meta
+git clone https://github.com/cs3b/ace.git
+cd ace
 
 # Install dependencies
 bundle install
@@ -35,7 +35,7 @@ ace-test --profile 10
 ACE is organized as a mono-repo where each gem is developed and versioned together:
 
 ```
-ace-meta/
+ace/
 ├── ace-*/                 # Individual gem packages
 ├── .ace/                  # Configuration cascade root
 ├── docs/                  # System documentation

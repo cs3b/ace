@@ -39,7 +39,7 @@ print_error() {
 # Check if we're in the right directory
 check_project_root() {
     if [ ! -f "Gemfile" ] || [ ! -d "ace-support-core" ]; then
-        print_error "This script must be run from the ace-meta project root"
+        print_error "This script must be run from the ace project root"
         print_info "Current directory: $(pwd)"
         exit 1
     fi

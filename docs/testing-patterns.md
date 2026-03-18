@@ -15,4 +15,4 @@
 
 ---
 
-The original testing documentation has been consolidated into the ace-test gem as part of the documentation alignment effort. See the [ace-test README](https://github.com/cs3b/ace-meta/tree/main/ace-test) for complete documentation.
+The original testing documentation has been consolidated into the ace-test gem as part of the documentation alignment effort. See the [ace-test README](https://github.com/cs3b/ace/tree/main/ace-test) for complete documentation.
