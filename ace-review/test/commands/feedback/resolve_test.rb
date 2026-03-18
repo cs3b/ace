@@ -64,7 +64,7 @@ class FeedbackResolveCommandTest < AceReviewTest
   def test_resolve_requires_resolution_text
     create_pending_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("abc111", resolution: nil)
     end
 
@@ -74,7 +74,7 @@ class FeedbackResolveCommandTest < AceReviewTest
   def test_resolve_rejects_empty_resolution
     create_pending_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("abc111", resolution: "   ")
     end
 
@@ -82,7 +82,7 @@ class FeedbackResolveCommandTest < AceReviewTest
   end
 
   def test_resolve_fails_for_nonexistent_item
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("xyz999", resolution: "Fixed")
     end
 
@@ -92,7 +92,7 @@ class FeedbackResolveCommandTest < AceReviewTest
   def test_resolve_fails_from_draft
     create_draft_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("abc111", resolution: "Fixed")
     end
 
@@ -102,7 +102,7 @@ class FeedbackResolveCommandTest < AceReviewTest
   def test_resolve_fails_from_skip
     create_skipped_item("skip01")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("skip01", resolution: "Fixed")
     end
 
@@ -128,7 +128,7 @@ class FeedbackResolveCommandTest < AceReviewTest
     create_pending_item("abc111")
     create_pending_item("abc222")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_resolve_command("abc", resolution: "Fixed")
     end
 

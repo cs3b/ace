@@ -15,7 +15,7 @@ module Ace
           # Uses LLM to synthesize multiple review reports into unique,
           # deduplicated feedback items with reviewer attribution.
           class Create < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
             include SessionDiscovery
 
             desc <<~DESC.strip
@@ -49,7 +49,7 @@ module Ace
               session_dir = resolve_session_dir(options)
 
               unless session_dir
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "No session found. Run a review first or use --session to specify path."
                 )
               end
@@ -57,7 +57,7 @@ module Ace
               puts "Using session: #{session_dir}" unless quiet?(options)
 
               unless Dir.exist?(session_dir)
-                raise Ace::Core::CLI::Error.new("Session directory not found: #{session_dir}")
+                raise Ace::Support::Cli::Error.new("Session directory not found: #{session_dir}")
               end
 
               debug_log("Session directory: #{session_dir}", options)
@@ -66,7 +66,7 @@ module Ace
               report_paths = find_review_reports(session_dir)
 
               if report_paths.empty?
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "No review reports found in #{session_dir}. " \
                   "Expected files like review-report-*.md or review-*.md"
                 )
@@ -87,7 +87,7 @@ module Ace
               if result[:success]
                 display_success(result, session_dir, options)
               else
-                raise Ace::Core::CLI::Error.new(result[:error])
+                raise Ace::Support::Cli::Error.new(result[:error])
               end
             end
 

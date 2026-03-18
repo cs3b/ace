@@ -10,7 +10,7 @@ module Ace
       #
       # Executes code review using presets or custom configuration.
       class Review < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc <<~DESC.strip
           Execute code review using presets or custom configuration
@@ -118,7 +118,7 @@ module Ace
             handle_error(result)
           end
         rescue StandardError => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         end
 
         def build_review_options(cli_options)
@@ -265,7 +265,7 @@ module Ace
         end
 
         def handle_error(result)
-          raise Ace::Core::CLI::Error.new(result[:error])
+          raise Ace::Support::Cli::Error.new(result[:error])
         end
 
         def display_config_summary

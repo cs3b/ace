@@ -13,7 +13,7 @@ module Ace
           #
           # Verifies a draft feedback item by marking it as valid or invalid.
           class Verify < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
             include SessionDiscovery
 
             desc <<~DESC.strip
@@ -65,18 +65,18 @@ module Ace
               mode_count = [options[:valid], options[:invalid], options[:skip]].count { |v| v }
 
               if mode_count > 1
-                raise Ace::Core::CLI::Error.new("Cannot specify multiple modes. Use exactly one of: --valid, --invalid, --skip.")
+                raise Ace::Support::Cli::Error.new("Cannot specify multiple modes. Use exactly one of: --valid, --invalid, --skip.")
               end
 
               unless mode_count == 1
-                raise Ace::Core::CLI::Error.new("Must specify exactly one of: --valid, --invalid, --skip.")
+                raise Ace::Support::Cli::Error.new("Must specify exactly one of: --valid, --invalid, --skip.")
               end
 
               # Resolve feedback path from session context
               base_path = resolve_feedback_path(options)
 
               unless base_path
-                raise Ace::Core::CLI::Error.new("No session found. Run a review first or use --session to specify path.")
+                raise Ace::Support::Cli::Error.new("No session found. Run a review first or use --session to specify path.")
               end
 
               debug_log("Feedback base path: #{base_path}", options)
@@ -85,7 +85,7 @@ module Ace
               resolved_id = resolve_full_id(base_path, id)
 
               unless resolved_id
-                raise Ace::Core::CLI::Error.new("Feedback item not found: #{id}")
+                raise Ace::Support::Cli::Error.new("Feedback item not found: #{id}")
               end
 
               # Verify the item
@@ -109,7 +109,7 @@ module Ace
                 puts "Feedback #{resolved_id} marked as #{status}."
                 puts "Research: #{options[:research]}" if options[:research] && !quiet?(options)
               else
-                raise Ace::Core::CLI::Error.new(result[:error])
+                raise Ace::Support::Cli::Error.new(result[:error])
               end
             end
 
@@ -126,7 +126,7 @@ module Ace
               files = Dir.glob(pattern)
 
               if files.length > 1
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
                   "Please provide more characters."
                 )

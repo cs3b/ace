@@ -179,7 +179,7 @@ class FeedbackListCommandTest < AceReviewTest
   end
 
   def test_list_with_session_flag_errors_on_nonexistent_path
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
       cmd.call(session: "/nonexistent/session/path")
     end

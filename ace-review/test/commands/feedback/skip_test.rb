@@ -165,7 +165,7 @@ class FeedbackSkipCommandTest < AceReviewTest
   # ============================================================================
 
   def test_skip_fails_for_nonexistent_item
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_skip_command("xyz999")
     end
 
@@ -176,7 +176,7 @@ class FeedbackSkipCommandTest < AceReviewTest
     # Done items are in archive, not accessible for skip
     create_done_item("done01")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_skip_command("done01")
     end
 
@@ -199,7 +199,7 @@ class FeedbackSkipCommandTest < AceReviewTest
     create_draft_item("abc111")
     create_draft_item("abc222")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_skip_command("abc")
     end
 

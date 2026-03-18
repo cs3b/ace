@@ -91,7 +91,7 @@ class FeedbackShowCommandTest < AceReviewTest
   def test_show_requires_minimum_3_characters
     create_test_item_with_all_fields
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_show_command("ab")
     end
 
@@ -101,7 +101,7 @@ class FeedbackShowCommandTest < AceReviewTest
   def test_show_errors_on_ambiguous_partial_id
     create_multiple_items_with_similar_ids
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_show_command("abc")
     end
 
@@ -124,7 +124,7 @@ class FeedbackShowCommandTest < AceReviewTest
   # ============================================================================
 
   def test_show_errors_when_item_not_found
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_show_command("xyz999")
     end
 
