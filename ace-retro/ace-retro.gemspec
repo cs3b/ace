@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Manages retrospectives in .ace-retros/ using raw 6-char b36ts IDs, " \
                      "flat directory structure, and 5-command pattern (create, show, list, move, update). " \
                      "Supports retro types and task linking."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
