@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require "ace/core/cli/dry_cli/base"
+require "ace/core/cli/base"
 
 module Ace
   module LLM

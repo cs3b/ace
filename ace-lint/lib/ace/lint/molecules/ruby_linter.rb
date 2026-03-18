@@ -168,51 +168,21 @@ module Ace
           end
         end
 
-        # Run linting with validators (multi-validator support via ValidatorChain)
-        # Falls back to legacy behavior when no validators specified
+        # Run linting with validators via ValidatorChain
         # @param file_paths [Array<String>] Paths to Ruby files
         # @param fix [Boolean] Apply autofix
         # @param validators [Array<Symbol>, nil] Specific validators to use
         # @param fallback_validators [Array<Symbol>, nil] Fallback validators
         # @return [Array<Hash, Symbol|Array>] Result and runner(s) used
         def self.run_validators(file_paths, fix:, validators: nil, fallback_validators: nil)
-          # Use ValidatorChain when validators are explicitly specified
-          if validators && !validators.empty?
-            chain = ValidatorChain.new(validators, fallback_validators: fallback_validators || [])
-            result = chain.run(file_paths, fix: fix)
-            # Return runners as array if multiple, or single symbol for compatibility
-            runners = result[:runners] || []
-            runner = (runners.size == 1) ? runners.first : runners
-            return [result, runner]
-          end
-
-          # Legacy behavior: StandardRB first, RuboCop fallback
-          run_with_fallback(file_paths, fix: fix)
+          validators = [:standardrb] if validators.nil? || validators.empty?
+          chain = ValidatorChain.new(validators, fallback_validators: fallback_validators || [])
+          result = chain.run(file_paths, fix: fix)
+          runners = result[:runners] || []
+          runner = (runners.size == 1) ? runners.first : runners
+          [result, runner]
         end
         private_class_method :run_validators
-
-        # Legacy run with fallback logic (backward compatibility)
-        # Tries StandardRB first, falls back to RuboCop
-        # @param file_paths [Array<String>] Paths to Ruby files
-        # @param fix [Boolean] Apply autofix
-        # @return [Array<Hash, Symbol>] Result from runner and which runner was used
-        def self.run_with_fallback(file_paths, fix:)
-          # Try StandardRB first (preferred, zero-config)
-          if Atoms::StandardrbRunner.available?
-            result = Atoms::StandardrbRunner.run(file_paths, fix: fix)
-            return [result, :standardrb]
-          end
-
-          # Fall back to RuboCop
-          if Atoms::RuboCopRunner.available?
-            result = Atoms::RuboCopRunner.run(file_paths, fix: fix)
-            return [result, :rubocop]
-          end
-
-          # Neither tool available - return RuboCop's error (mentions both tools)
-          [Atoms::RuboCopRunner.unavailable_result, nil]
-        end
-        private_class_method :run_with_fallback
 
         # Build formatted offense message
         # @param offense [Hash] Offense data

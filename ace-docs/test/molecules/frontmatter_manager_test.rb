@@ -35,12 +35,6 @@ module Ace
           assert_equal "2025-11-01", result
         end
 
-        # Test process_value - date+time format (legacy converted to ISO 8601)
-        def test_process_value_datetime_string_converts_to_iso8601
-          result = FrontmatterManager.send(:process_value, "2025-11-01 14:30")
-          assert_match(/^2025-11-01T14:30:00Z$/, result)
-        end
-
         # Test process_value - other values
         def test_process_value_other_string_unchanged
           result = FrontmatterManager.send(:process_value, "some-value")
@@ -82,7 +76,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01 14:30" })
+          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
 
           assert result
           content = File.read(doc_path)
@@ -145,12 +139,12 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01 14:30" })
+          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
 
           assert result
           content = File.read(doc_path)
 
-          # Verify timestamp updated (converted to ISO 8601)
+          # Verify timestamp updated
           assert_match(/last-updated: ['"]?2025-11-01T14:30:00Z['"]?/, content)
 
           # Verify other fields preserved
@@ -187,12 +181,12 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01 14:30" })
+          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
 
           assert result
           content = File.read(doc_path)
 
-          # Verify timestamp updated (in ace-docs namespace, converted to ISO 8601)
+          # Verify timestamp updated (in ace-docs namespace)
           assert_match(/last-updated: ['"]?2025-11-01T14:30:00Z['"]?/, content)
 
           # Verify complex structure preserved
@@ -220,7 +214,7 @@ module Ace
           dir = File.dirname(doc_path)
           files_before = Dir.glob("#{dir}/*")
 
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01 14:30" })
+          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
 
           assert result
 

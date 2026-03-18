@@ -3,7 +3,7 @@
 module Ace
   module Git
     module Secrets
-      VERSION = "0.9.3"
+      VERSION = "0.10.0"
     end
   end
 end

@@ -36,7 +36,6 @@ require_relative "review/molecules/llm_executor"
 require_relative "review/molecules/preset_manager"
 require_relative "review/molecules/prompt_composer"
 require_relative "review/molecules/nav_prompt_resolver"
-require_relative "review/molecules/prompt_resolver"  # Keep for backwards compatibility
 require_relative "review/molecules/subject_extractor"
 require_relative "review/molecules/gh_cli_executor"
 require_relative "review/molecules/gh_pr_fetcher"

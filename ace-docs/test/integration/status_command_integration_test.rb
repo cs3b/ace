@@ -127,9 +127,10 @@ module Ace
               ---
               doc-type: guide
               purpose: Current guide document
+              ace-docs:
+                last-updated: #{Date.today}
               update:
                 frequency: weekly
-                last-updated: #{Date.today}
               ---
 
               # Current Guide
@@ -142,9 +143,10 @@ module Ace
               ---
               doc-type: guide
               purpose: Outdated guide document
+              ace-docs:
+                last-updated: #{Date.today - 30}
               update:
                 frequency: weekly
-                last-updated: #{Date.today - 30}
               ---
 
               # Outdated Guide

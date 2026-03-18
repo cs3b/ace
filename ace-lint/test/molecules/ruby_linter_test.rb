@@ -5,6 +5,8 @@ require "test_helper"
 class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
   def setup
     @file_path = "lib/test.rb"
+    # Reset ValidatorRegistry cache so stubs on runner.available? take effect
+    Ace::Lint::Atoms::ValidatorRegistry.reset_cache!
   end
 
   def stub_standardrb_runner(output: "", stderr: "", exit_status: 0)
@@ -160,7 +162,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
 
       # Stub runner that modifies the file
       Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
-        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix:) {
+        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix: false, config_path: nil) {
           if fix
             # Simulate StandardRB fixing the file
             File.write(paths.first, "# Fixed content\n")
@@ -246,7 +248,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
 
       # Stub with a callable that captures arguments
       Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
-        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
+        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false, config_path: nil) {
           options_passed = {fix: fix}
           {success: true, errors: [], warnings: []}
         }) do
@@ -369,7 +371,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
 
         # Stub runner that only modifies file1
         Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
-          Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix:) {
+          Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix: false, config_path: nil) {
             if fix
               # Only modify the first file
               File.write(paths.first, "# File 1 fixed\n")
@@ -436,82 +438,6 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     end
   end
 
-  # Fallback tests
-  def test_fallback_to_rubocop_when_standardrb_unavailable
-    # Mock StandardRB as unavailable
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
-      # Mock RuboCop as available with successful result
-      rubocop_result = {
-        success: true,
-        errors: [],
-        warnings: []
-      }
-      Ace::Lint::Atoms::RuboCopRunner.stub(:run, rubocop_result) do
-        Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-          result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
-
-          assert result.success?
-          assert_equal :rubocop, result.runner
-        end
-      end
-    end
-  end
-
-  def test_fallback_to_rubocop_with_offenses
-    # Mock StandardRB as unavailable
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
-      # Mock RuboCop with offenses (warnings only)
-      rubocop_result = {
-        success: true,  # With zero errors, success is determined by errors being empty
-        errors: [],
-        warnings: [
-          {
-            file: @file_path,
-            line: 10,
-            column: 80,
-            message: "Metrics/LineLength: Line too long"
-          }
-        ]
-      }
-
-      Ace::Lint::Atoms::RuboCopRunner.stub(:run, rubocop_result) do
-        Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-          result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
-
-          # No errors means success (warnings are ok)
-          assert result.success?
-          assert_equal 1, result.warnings.size
-          assert_equal :rubocop, result.runner
-        end
-      end
-    end
-  end
-
-  def test_error_when_both_tools_unavailable
-    # Mock both StandardRB and RuboCop as unavailable
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
-      Ace::Lint::Atoms::RuboCopRunner.stub(:available?, false) do
-        # Mock RuboCop's unavailable_result
-        unavailable_result = {
-          success: false,
-          errors: [{message: "No Ruby linter available. Install StandardRB (preferred): gem install standardrb - or RuboCop: gem install rubocop"}],
-          warnings: []
-        }
-
-        Ace::Lint::Atoms::RuboCopRunner.stub(:unavailable_result, unavailable_result) do
-          result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
-
-          refute result.success?
-          assert_equal 1, result.errors.size
-          # Error message should mention both tools
-          assert_match(/StandardRB.*preferred/, result.errors.first.message)
-          assert_match(/RuboCop/, result.errors.first.message)
-          assert_nil result.runner
-        end
-      end
-    end
-  end
-
   def test_standardrb_preferred_when_both_available
     # Mock both StandardRB and RuboCop as available
     Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
@@ -533,54 +459,4 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     end
   end
 
-  def test_batch_fallback_to_rubocop_when_standardrb_unavailable
-    file1 = "lib/file1.rb"
-    file2 = "lib/file2.rb"
-
-    # Mock StandardRB as unavailable
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
-      # Mock RuboCop with successful result
-      rubocop_result = {
-        success: true,
-        errors: [],
-        warnings: []
-      }
-
-      Ace::Lint::Atoms::RuboCopRunner.stub(:run, rubocop_result) do
-        Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-          results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2])
-
-          assert_equal 2, results.size
-          results.each do |result|
-            assert result.success?
-          end
-          assert_equal :rubocop, results.first.runner
-        end
-      end
-    end
-  end
-
-  def test_runner_used_is_reset_between_calls
-    # First call with StandardRB
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
-      Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-        standardrb_result = {success: true, errors: [], warnings: []}
-        Ace::Lint::Atoms::StandardrbRunner.stub(:run, standardrb_result) do
-          result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
-          assert_equal :standardrb, result.runner
-        end
-      end
-    end
-
-    # Second call with RuboCop fallback
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
-      Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-        rubocop_result = {success: true, errors: [], warnings: []}
-        Ace::Lint::Atoms::RuboCopRunner.stub(:run, rubocop_result) do
-          result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
-          assert_equal :rubocop, result.runner
-        end
-      end
-    end
-  end
 end

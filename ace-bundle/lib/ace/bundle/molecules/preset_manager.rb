@@ -160,7 +160,7 @@ module Ace
             merged[:compressor_source_scope] = preset[:compressor_source_scope] if preset[:compressor_source_scope]
             merged[:cache] = preset[:cache] if preset[:cache]
 
-            # Merge params at root level (for backward compatibility)
+            # Merge params at root level for direct access
             if preset[:params]
               merged[:params].merge!(preset[:params])
             end
@@ -194,7 +194,7 @@ module Ace
             merged[:bundle]['commands'].uniq!
           end
 
-          # Extract all merged params to root level (maintains backward compatibility)
+          # Extract all merged params to root level
           # This ensures params like output, format, timeout, max_size are accessible at root
           if merged[:bundle]['params']
             merged_params = merged[:bundle]['params']
@@ -295,7 +295,7 @@ module Ace
             preset_data[:metadata][:section_validation_errors] = @section_validator.errors unless @section_validator.errors.empty?
           end
 
-          # Extract all params to root level (for backward compatibility and consistency)
+          # Extract all params to root level for direct access
           params.each do |key, value|
             preset_data[key.to_sym] = value
           end

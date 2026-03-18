@@ -30,15 +30,6 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
-  def test_extracts_from_hash_with_legacy_diff_format
-    config = {
-      "diff" => "origin/main...HEAD"
-    }
-
-    result = @extractor.extract(config)
-    assert_kind_of String, result
-  end
-
   def test_passes_through_any_hash_format_directly
     config = {
       "bundle" => {
@@ -100,8 +91,8 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
-  def test_handles_both_legacy_and_new_formats
-    # Test that SubjectExtractor can handle both legacy and new ace-bundle formats
+  def test_handles_hash_formats
+    # Test that SubjectExtractor can handle multiple supported hash formats
     new_config = {
       "bundle" => {
         "sections" => {
@@ -113,17 +104,18 @@ class SubjectExtractorTest < AceReviewTest
       }
     }
 
-    legacy_config = {
-      "diff" => "origin/main...HEAD",
-      "files" => ["README.md"]
+    nested_config = {
+      "bundle" => {
+        "files" => ["README.md"]
+      }
     }
 
     # Both should work - passed through directly to ace-bundle
     new_result = @extractor.extract(new_config)
-    legacy_result = @extractor.extract(legacy_config)
+    nested_result = @extractor.extract(nested_config)
 
     assert_kind_of String, new_result
-    assert_kind_of String, legacy_result
+    assert_kind_of String, nested_result
   end
 
   def test_returns_empty_string_for_nil
@@ -677,31 +669,6 @@ class SubjectExtractorTest < AceReviewTest
     assert_equal({}, result)
   end
 
-  def test_parse_legacy_to_config_staged
-    result = @extractor.send(:parse_legacy_to_config, "staged")
-    assert_equal({ "diffs" => ["--staged"] }, result)
-  end
-
-  def test_parse_legacy_to_config_working
-    result = @extractor.send(:parse_legacy_to_config, "working")
-    assert_equal({ "diffs" => [""] }, result)
-  end
-
-  def test_parse_legacy_to_config_git_range
-    result = @extractor.send(:parse_legacy_to_config, "HEAD~3..HEAD")
-    assert_equal({ "diffs" => ["HEAD~3..HEAD"] }, result)
-  end
-
-  def test_parse_legacy_to_config_file_pattern
-    result = @extractor.send(:parse_legacy_to_config, "lib/**/*.rb")
-    assert_equal({ "files" => ["lib/**/*.rb"] }, result)
-  end
-
-  def test_parse_legacy_to_config_default_to_diff
-    result = @extractor.send(:parse_legacy_to_config, "main")
-    assert_equal({ "diffs" => ["main"] }, result)
-  end
-
   # merge_typed_subject_configs tests - returns merged config without extraction
   def test_merge_typed_subject_configs_returns_merged_config
     # Should merge multiple typed subjects into single config
@@ -741,17 +708,17 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_merge_typed_subject_configs_handles_mixed_types
-    # Mix of typed and legacy subjects
+    # Mix of typed and keyword subjects
     subjects = ["pr:77", "files:README.md", "staged"]
     config = @extractor.merge_typed_subject_configs(subjects)
 
     assert_kind_of Hash, config
     # pr:77 produces { "bundle" => { "pr" => "77" } }
     # files:README.md produces { "bundle" => { "files" => ["README.md"] } }
-    # staged produces { "diffs" => ["--staged"] } (legacy, no bundle wrapper)
+    # staged produces { "diffs" => ["--staged"] }
     assert config["bundle"]["pr"]
     assert config["bundle"]["files"]
-    assert config["diffs"], "Legacy subject should add top-level diffs"
+    assert config["diffs"], "Keyword subject should add top-level diffs"
   end
 
   def test_merge_typed_subject_configs_returns_nil_for_empty_array

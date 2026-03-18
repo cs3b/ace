@@ -53,14 +53,14 @@ module Ace
         register "check-release", CLI::Commands::CheckRelease.new
 
         # Register version command
-        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        version_cmd = Ace::Core::CLI::VersionCommand.build(
           gem_name: "ace-git-secrets",
           version: Ace::Git::Secrets::VERSION
         )
         register "version", version_cmd
         register "--version", version_cmd
 
-        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        help_cmd = Ace::Core::CLI::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: Ace::Git::Secrets::VERSION,
           commands: REGISTERED_COMMANDS,

@@ -27,9 +27,9 @@ class CLIPresetCompositionTest < AceTestCase
   end
 
   def create_test_presets
-    File.write(
-      File.join(@presets_dir, "base.md"),
-      <<~PRESET
+      File.write(
+        File.join(@presets_dir, "base.md"),
+        <<~PRESET
         ---
         description: Base test preset
         bundle:
@@ -37,14 +37,18 @@ class CLIPresetCompositionTest < AceTestCase
             timeout: 30
           files:
             - test1.md
+          sections:
+            main:
+              files:
+                - test1.md
         ---
         Base preset content
       PRESET
     )
 
-    File.write(
-      File.join(@presets_dir, "extended.md"),
-      <<~PRESET
+      File.write(
+        File.join(@presets_dir, "extended.md"),
+        <<~PRESET
         ---
         description: Extended test preset
         bundle:
@@ -54,6 +58,10 @@ class CLIPresetCompositionTest < AceTestCase
             timeout: 60
           files:
             - test2.md
+          sections:
+            main:
+              files:
+                - test2.md
         ---
         Extended preset content
       PRESET

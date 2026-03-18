@@ -10,12 +10,5 @@ module Ace
 
     # Raised when environment file parsing fails (ace-specific)
     class EnvParseError < Error; end
-
-    # Note: The following errors are now aliases to ace-config errors,
-    # defined in lib/ace/core.rb for backward compatibility:
-    # - ConfigNotFoundError -> Ace::Support::Config::ConfigNotFoundError
-    # - YamlParseError -> Ace::Support::Config::YamlParseError
-    # - PathError -> Ace::Support::Config::PathError
-    # - MergeStrategyError -> Ace::Support::Config::MergeStrategyError
   end
 end

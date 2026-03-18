@@ -48,14 +48,14 @@ module Ace
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
 
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: "ace-idea",
         version: Ace::Idea::VERSION
       )
       register "version",   version_cmd
       register "--version", version_cmd
 
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Idea::VERSION,
         commands: REGISTERED_COMMANDS,

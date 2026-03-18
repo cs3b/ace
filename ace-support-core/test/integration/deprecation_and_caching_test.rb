@@ -25,8 +25,8 @@ class CachingTest < AceTestCase
     config2 = Ace::Core.config
 
     # Both should resolve successfully (cached resolver works)
-    assert_kind_of Ace::Core::Models::Config, config1
-    assert_kind_of Ace::Core::Models::Config, config2
+    assert_kind_of Ace::Support::Config::Models::Config, config1
+    assert_kind_of Ace::Support::Config::Models::Config, config2
   end
 
   def test_reset_config_clears_cache
@@ -50,7 +50,7 @@ class CachingTest < AceTestCase
 
     # After reset, calling config should work (no stale state)
     config = Ace::Core.config
-    assert_kind_of Ace::Core::Models::Config, config
+    assert_kind_of Ace::Support::Config::Models::Config, config
   end
 
   def test_reset_config_clears_env_cache

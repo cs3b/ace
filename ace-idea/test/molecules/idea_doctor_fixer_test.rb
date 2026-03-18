@@ -132,22 +132,6 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
     end
   end
 
-  def test_fix_legacy_cancelled_status
-    with_ideas_dir do |root|
-      dir = File.join(root, "abc123-test")
-      FileUtils.mkdir_p(dir)
-      file = File.join(dir, "abc123-test.idea.s.md")
-      File.write(file, "---\nid: abc123\nstatus: cancelled\ntitle: Test\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n")
-
-      fixer = Fixer.new
-      issue = { type: :error, message: "Legacy status value: 'cancelled' (use 'obsolete')", location: file }
-      fixer.fix_issue(issue)
-
-      content = File.read(file)
-      assert_includes content, "status: obsolete"
-    end
-  end
-
   # --- fix missing created_at ---
 
   def test_fix_missing_created_at
@@ -262,7 +246,6 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
     assert fixer.can_fix?({ type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/x" })
     assert fixer.can_fix?({ type: :warning, message: "Empty directory (safe to delete)", location: "/tmp/x" })
     assert fixer.can_fix?({ type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: "/tmp/x" })
-    assert fixer.can_fix?({ type: :error, message: "Legacy status value: 'cancelled' (use 'obsolete')", location: "/tmp/x" })
   end
 
   def test_can_fix_returns_false_for_unfixable

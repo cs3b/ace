@@ -77,29 +77,19 @@ module Ace
         private
 
         # Scan parent directory for existing subtask folders and extract their chars.
-        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
-        def scan_existing_subtask_chars(parent_dir, parent_id)
+        def scan_existing_subtask_chars(parent_dir, _parent_id)
           chars = []
           return chars unless Dir.exist?(parent_dir)
 
-          prefix = "#{parent_id}."
           Dir.entries(parent_dir).sort.each do |entry|
             next if entry.start_with?(".")
 
             full_path = File.join(parent_dir, entry)
             next unless File.directory?(full_path)
 
-            # New short format: "0-slug" or "a-slug"
+            # Short format: "0-slug" or "a-slug"
             if (short_match = entry.match(/^([a-z0-9])-/))
               chars << short_match[1]
-              next
-            end
-
-            # Legacy format: "8pp.t.q7w.0-slug"
-            if (legacy_match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])/))
-              subtask_full_id = legacy_match[1]
-              next unless subtask_full_id.start_with?(prefix)
-              chars << subtask_full_id[-1]
             end
           end
 

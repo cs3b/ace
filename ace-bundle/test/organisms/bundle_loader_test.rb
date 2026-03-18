@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "yaml"
 
 class BundleLoaderTest < AceTestCase
+  # Normalize legacy top-level fixture style to section-based input so tests reflect
+  # the v0.10.0 bundle loader contract.
   def create_preset(name, content = nil)
     content ||= <<~MARKDOWN
       ---
@@ -23,9 +26,66 @@ class BundleLoaderTest < AceTestCase
       # #{name.capitalize} Preset
     MARKDOWN
 
+    content = normalize_preset_sections(content)
+
     FileUtils.mkdir_p(".ace/bundle/presets")
     File.write(".ace/bundle/presets/#{name}.md", content)
   end
+
+  private
+
+  def normalize_preset_sections(raw_content)
+    return raw_content unless raw_content.is_a?(String)
+
+    match = raw_content.match(%r{\A---\s*\n(.*?)\n---\s*\n(.*)\z}m)
+    return raw_content unless match
+
+    frontmatter = match[1]
+    body = match[2]
+
+    parsed = YAML.safe_load(frontmatter)
+    return raw_content unless parsed.is_a?(Hash)
+
+    bundle = parsed["bundle"] || parsed[:bundle]
+    return raw_content unless bundle.is_a?(Hash)
+
+    # Already section-based: keep unchanged.
+    return raw_content if bundle["sections"] || bundle[:sections]
+
+    moved = {}
+
+    %w[files commands ranges diffs exclude].each do |key|
+      moved[key] = bundle.delete(key) if bundle.key?(key)
+    end
+
+    if bundle.key?("diff")
+      diff_config = bundle.delete("diff")
+      case diff_config
+      when Hash
+        moved_ranges = []
+        if diff_config["ranges"]
+          moved_ranges = diff_config["ranges"]
+        elsif diff_config["since"]
+          moved_ranges = ["#{diff_config['since']}...HEAD"]
+        end
+        moved["ranges"] = moved_ranges if moved_ranges.any?
+      when String, Array
+        moved["ranges"] = diff_config
+      end
+    end
+
+    return raw_content if moved.empty?
+
+    parsed["bundle"] = bundle
+    parsed["bundle"]["sections"] = {
+      "main" => moved
+    }
+
+    normalized_frontmatter = parsed.to_yaml.sub(/\A---\n/, "")
+    "---\n#{normalized_frontmatter}---\n#{body}"
+  end
+
+  public
 
   def test_loads_preset_with_files
     with_temp_dir do
@@ -267,8 +327,8 @@ class BundleLoaderTest < AceTestCase
       puts "DEBUG: Content format: #{context.content[0..200]}" if ENV['DEBUG']
 
       # Check if it's actually YAML formatted
-      assert context.content.include?("format_test"), "Content should include preset name"
-      assert context.content.match?(/files:|Files:/), "Content should include files section"
+      assert_match(/format_test/, context.content, "Content should include preset name")
+      assert_match(/sections:/, context.content, "Content should include sections output")
     end
   end
 
@@ -565,9 +625,11 @@ class BundleLoaderTest < AceTestCase
           presets:
             - base-files
           embed_document_source: true
-          files:
-            - own.md
           sections:
+            my-own:
+              title: Own Files
+              files:
+                - own.md
             my-section:
               title: My Section
               files:

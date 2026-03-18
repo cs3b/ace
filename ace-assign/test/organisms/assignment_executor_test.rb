@@ -23,7 +23,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
 
-      assert_raises(Ace::Assign::ConfigNotFoundError) do
+      assert_raises(Ace::Assign::ConfigErrors::NotFound) do
         executor.start("nonexistent.yaml")
       end
     end
@@ -48,7 +48,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
 
-      assert_raises(Ace::Assign::NoActiveAssignmentError) do
+      assert_raises(Ace::Assign::AssignmentErrors::NoActive) do
         executor.status
       end
     end
@@ -210,7 +210,7 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       # Content should be valid YAML
       data = YAML.safe_load_file(archived)
-      assert_equal "test-session", data["session"]["name"]
+      assert_equal "test-session", data["assignment"]["name"]
     end
   end
 
@@ -1235,7 +1235,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       writer.mark_in_progress(state.find_by_number("020.02").file_path)
 
       report_path = create_report(cache_dir, "Scoped progress")
-      error = assert_raises(Ace::Assign::InvalidPhaseStateError) do
+      error = assert_raises(Ace::Assign::PhaseErrors::InvalidState) do
         executor.advance(report_path, fork_root: "020")
       end
 

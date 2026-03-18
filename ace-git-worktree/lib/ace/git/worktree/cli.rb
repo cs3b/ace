@@ -10,7 +10,7 @@ require_relative "cli/commands/remove"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/config"
 require "ace/core"
-require "ace/core/cli/dry_cli/base"
+require "ace/core/cli/base"
 
 module Ace
   module Git
@@ -81,14 +81,14 @@ module Ace
         register "config", wrap_command(CLI::Commands::Config), aliases: []
 
         # Version command
-        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        version_cmd = Ace::Core::CLI::VersionCommand.build(
           gem_name: "ace-git-worktree",
           version: Ace::Git::Worktree::VERSION
         )
         register "version", version_cmd
         register "--version", version_cmd
 
-        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        help_cmd = Ace::Core::CLI::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: Ace::Git::Worktree::VERSION,
           commands: REGISTERED_COMMANDS,

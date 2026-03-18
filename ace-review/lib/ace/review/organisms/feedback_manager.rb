@@ -48,18 +48,13 @@ module Ace
       class FeedbackManager
         attr_reader :synthesizer, :file_writer, :file_reader, :directory_manager
 
-        # Legacy accessor for backwards compatibility
-        alias extractor synthesizer
-
         def initialize(
           synthesizer: nil,
-          extractor: nil,  # Legacy parameter, maps to synthesizer
           file_writer: nil,
           file_reader: nil,
           directory_manager: nil
         )
-          # Use synthesizer if provided, otherwise extractor (legacy), otherwise create new
-          @synthesizer = synthesizer || extractor || Molecules::FeedbackSynthesizer.new
+          @synthesizer = synthesizer || Molecules::FeedbackSynthesizer.new
           @file_writer = file_writer || Molecules::FeedbackFileWriter.new
           @file_reader = file_reader || Molecules::FeedbackFileReader.new
           @directory_manager = directory_manager || Molecules::FeedbackDirectoryManager.new
@@ -76,7 +71,6 @@ module Ace
         #
         # @param report_paths [Array<String>] Paths to review report files
         # @param base_path [String] Base project path for feedback directory
-        # @param reviewer [String, nil] Reviewer identifier (optional, for legacy single-report)
         # @param model [String, nil] Model for synthesis/extraction (optional)
         # @param session_dir [String, nil] Session directory for LLM output (optional)
         # @return [Hash] Result with :success, :items_count, :paths, :metadata or :error
@@ -97,7 +91,7 @@ module Ace
         #     base_path: "/project"
         #   )
         #   # Produces deduplicated findings with reviewers arrays
-        def extract_and_save(report_paths:, base_path:, reviewer: nil, model: nil, session_dir: nil)
+        def extract_and_save(report_paths:, base_path:, model: nil, session_dir: nil)
           # Step 1: Synthesize feedback items from reports (handles deduplication)
           synthesis_result = @synthesizer.synthesize(
             report_paths: report_paths,

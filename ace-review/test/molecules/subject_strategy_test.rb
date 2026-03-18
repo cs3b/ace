@@ -28,7 +28,7 @@ class SubjectStrategyTest < AceReviewTest
   end
 
   def test_for_raises_on_unknown_type
-    error = assert_raises(Ace::Review::Molecules::SubjectStrategy::UnknownStrategyError) do
+    error = assert_raises(Ace::Review::Errors::UnknownStrategyError) do
       @factory.for(:nonexistent)
     end
 
@@ -38,7 +38,7 @@ class SubjectStrategyTest < AceReviewTest
   end
 
   def test_for_raises_on_empty_type
-    error = assert_raises(Ace::Review::Molecules::SubjectStrategy::UnknownStrategyError) do
+    error = assert_raises(Ace::Review::Errors::UnknownStrategyError) do
       @factory.for(:unknown_type)
     end
 

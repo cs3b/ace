@@ -11,7 +11,7 @@ module Ace
         @processor = Molecules::SectionProcessor.new
       end
 
-      # Test simple diffs format (legacy)
+      # Test simple diffs format
       def test_normalizes_simple_diffs_array
         section = {
           'title' => 'Changes',
@@ -108,7 +108,7 @@ module Ace
         assert_equal ['origin/main...HEAD', 'HEAD~5...HEAD'], normalized[:ranges]
       end
 
-      # Test legacy ranges format (backward compatibility)
+      # Test ranges format
       def test_preserves_ranges_format
         section = {
           'title' => 'Changes',
@@ -134,86 +134,6 @@ module Ace
 
         # Should use diff, not diffs
         assert_equal ['origin/main...HEAD'], normalized[:ranges]
-      end
-
-      # Test legacy content collection with diff format
-      def test_collect_legacy_content_with_diff_hash
-        context = {
-          'diff' => {
-            'ranges' => ['origin/main...HEAD']
-          }
-        }
-
-        legacy = @processor.send(:collect_legacy_content, context)
-
-        assert_equal ['origin/main...HEAD'], legacy[:ranges]
-      end
-
-      # Test legacy content collection with diff string
-      def test_collect_legacy_content_with_diff_string
-        context = {
-          'diff' => 'origin/main...HEAD'
-        }
-
-        legacy = @processor.send(:collect_legacy_content, context)
-
-        assert_equal ['origin/main...HEAD'], legacy[:ranges]
-      end
-
-      # Test legacy content collection with since
-      def test_collect_legacy_content_with_since
-        context = {
-          'diff' => {
-            'since' => 'origin/main'
-          }
-        }
-
-        legacy = @processor.send(:collect_legacy_content, context)
-
-        assert_equal ['origin/main...HEAD'], legacy[:ranges]
-      end
-
-      # Test legacy content collection with diffs (backward compat)
-      def test_collect_legacy_content_with_diffs
-        context = {
-          'diffs' => ['origin/main...HEAD']
-        }
-
-        legacy = @processor.send(:collect_legacy_content, context)
-
-        assert_equal ['origin/main...HEAD'], legacy[:ranges]
-      end
-
-      # Test create legacy sections with diff format
-      def test_create_legacy_sections_with_diff_hash
-        config = {
-          'bundle' => {
-            'diff' => {
-              'ranges' => ['origin/main...HEAD']
-            }
-          }
-        }
-
-        sections = @processor.send(:create_legacy_sections, config)
-
-        assert sections.key?('diffs')
-        assert_equal ['origin/main...HEAD'], sections['diffs'][:ranges]
-      end
-
-      # Test create legacy sections with since
-      def test_create_legacy_sections_with_since
-        config = {
-          'bundle' => {
-            'diff' => {
-              'since' => 'origin/main'
-            }
-          }
-        }
-
-        sections = @processor.send(:create_legacy_sections, config)
-
-        assert sections.key?('diffs')
-        assert_equal ['origin/main...HEAD'], sections['diffs'][:ranges]
       end
 
       # Test that section without diff/diffs doesn't have ranges

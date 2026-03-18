@@ -112,10 +112,10 @@ module Ace
         # Set current assignment via .current symlink
         #
         # @param assignment_id [String] Assignment ID to set as current
-        # @raise [AssignmentNotFoundError] if assignment doesn't exist
+        # @raise [AssignmentErrors::NotFound] if assignment doesn't exist
         def set_current(assignment_id)
           assignment = load(assignment_id)
-          raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
+          raise AssignmentErrors::NotFound, "Assignment '#{assignment_id}' not found" unless assignment
 
           current_symlink = File.join(@cache_base, ".current")
 

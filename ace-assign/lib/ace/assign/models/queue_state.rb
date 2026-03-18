@@ -23,10 +23,6 @@ module Ace
           @children_index = build_children_index(phases)
         end
 
-        # Backward-compatible alias
-        alias_method :steps, :phases
-        alias_method :session, :assignment
-
         # Get current in-progress phase
         # @return [Phase, nil] Current phase or nil
         def current

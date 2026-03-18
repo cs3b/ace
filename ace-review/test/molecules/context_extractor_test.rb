@@ -208,7 +208,7 @@ class ContextExtractorTest < AceReviewTest
   def test_extract_raises_error_on_context_composer_failure
     # Mock ContextComposer to raise an error
     Ace::Review::Molecules::ContextComposer.stub(:create_context_md, ->(*) {
-      raise Ace::Review::Molecules::ContextComposer::ContextComposerError, "Mock error"
+      raise Ace::Review::Errors::ContextComposerError, "Mock error"
     }) do
       config = { "files" => ["test.rb"] }
 

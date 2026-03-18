@@ -125,7 +125,7 @@ class AssignmentManagerTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
 
-      error = assert_raises(Ace::Assign::AssignmentNotFoundError) do
+      error = assert_raises(Ace::Assign::AssignmentErrors::NotFound) do
         manager.set_current("nonexistent")
       end
 

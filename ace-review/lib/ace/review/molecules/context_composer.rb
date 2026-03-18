@@ -48,9 +48,9 @@ module Ace
             result = Ace::Bundle.load_file(context_file_path)
             result.content
           rescue LoadError
-            raise ContextComposerError, "ace-bundle not available - required for context.md pattern"
+            raise Ace::Review::Errors::ContextComposerError, "ace-bundle not available - required for context.md pattern"
           rescue StandardError => e
-            raise ContextComposerError, "ace-bundle loading failed: #{e.message}"
+            raise Ace::Review::Errors::ContextComposerError, "ace-bundle loading failed: #{e.message}"
           end
         end
 
@@ -120,8 +120,6 @@ module Ace
           end
         end
 
-        # Backward-compat alias for centralized error class
-        ContextComposerError = Ace::Review::Errors::ContextComposerError
       end
     end
   end

@@ -13,21 +13,11 @@ module Ace
 
         # ID extractor for task-format folders: "8pp.t.q7w-fix-login"
         TASK_ID_EXTRACTOR = ->(folder_name) {
-          match = folder_name.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3})-?(.*)$/)
+          match = folder_name.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3})-(.+)$/)
           return nil unless match
 
           id = match[1]
-          slug = match[2].empty? ? folder_name : match[2]
-          [id, slug]
-        }
-
-        # Subtask folder extractor: "8pp.t.q7w.a-setup-db"
-        SUBTASK_ID_EXTRACTOR = ->(folder_name) {
-          match = folder_name.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])-?(.*)$/)
-          return nil unless match
-
-          id = match[1]
-          slug = match[2].empty? ? folder_name : match[2]
+          slug = match[2]
           [id, slug]
         }
 
@@ -80,7 +70,6 @@ module Ace
         # @param parent_dir [String] Path to the parent task directory
         # @param parent_id [String] Formatted parent task ID (e.g., "8pp.t.q7w")
         # @return [Array<ScanResult>] Subtask scan results, sorted by ID
-        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def scan_subtasks(parent_dir, parent_id:)
           return [] unless Dir.exist?(parent_dir)
 
@@ -94,14 +83,10 @@ module Ace
             subtask_id = nil
             slug = nil
 
-            # New short format: "0-slug" or "a-slug"
+            # Short format: "0-slug" or "a-slug"
             if (short_match = entry.match(/^([a-z0-9])-(.+)$/))
               subtask_id = "#{parent_id}.#{short_match[1]}"
               slug = short_match[2]
-            # Legacy format: "8pp.t.q7w.0-slug"
-            elsif (id_and_slug = SUBTASK_ID_EXTRACTOR.call(entry))
-              subtask_id, slug = id_and_slug
-              next unless subtask_id.start_with?(parent_id + ".")
             else
               next
             end
@@ -136,7 +121,7 @@ module Ace
 
         # Check if a folder name matches the subtask pattern
         def subtask_folder?(folder_name)
-          !SUBTASK_ID_EXTRACTOR.call(folder_name).nil?
+          folder_name.match?(/\A[a-z0-9]-/)
         end
       end
     end

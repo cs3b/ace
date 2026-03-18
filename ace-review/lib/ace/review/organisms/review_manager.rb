@@ -513,13 +513,15 @@ module Ace
         # Build the complete review data structure
         def build_review_data(options, config, content, prompt_result, cache_dir)
           # v0.13.0 architecture: only supports system/user prompt format
+          effective_models = options.effective_models(config[:models])
+
           review_data = {
             preset: options.preset,
             config: config,
             subject: content[:subject],
             context: content[:context],
-            model: options.effective_model(config[:model]),
-            models: options.effective_models(config[:models]),
+            model: effective_models.first,
+            models: effective_models,
             cache_dir: cache_dir,
             system_prompt: prompt_result[:system_prompt],
             user_prompt: prompt_result[:user_prompt],

@@ -57,7 +57,7 @@ module Ace
             active_in_subtree = state.in_progress_in_subtree(root_phase.number)
             if active_in_subtree.size > 1
               active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
-              raise InvalidPhaseStateError, "Cannot fork-run subtree #{root_phase.number}: multiple phases are already in progress (#{active_refs})."
+              raise PhaseErrors::InvalidState, "Cannot fork-run subtree #{root_phase.number}: multiple phases are already in progress (#{active_refs})."
             end
 
             # Mark the next workable phase as in_progress only when no subtree phase is active.
@@ -166,7 +166,7 @@ module Ace
 
             if root_ref && !root_ref.empty?
               root = state.find_by_number(root_ref)
-              raise PhaseNotFoundError, "Phase #{root_ref} not found in queue" unless root
+              raise PhaseErrors::NotFound, "Phase #{root_ref} not found in queue" unless root
 
               return root
             end

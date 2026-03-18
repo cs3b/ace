@@ -6,7 +6,7 @@ require_relative '../atoms/content_checker'
 module Ace
   module Bundle
     module Molecules
-      # Processes and manages section definitions, composition, and migration
+      # Processes and manages section definitions and composition
       class SectionProcessor
         def initialize
           @validator = Atoms::SectionValidator.new
@@ -22,7 +22,7 @@ module Ace
 
           unless @validator.validate_sections(sections_config)
             errors = @validator.errors
-            raise SectionValidationError, "Section validation failed:\n  #{errors.join("\n  ")}\n\nPlease check your sections configuration and ensure all required fields are properly formatted."
+            raise Ace::Bundle::SectionValidationError, "Section validation failed:\n  #{errors.join("\n  ")}\n\nPlease check your sections configuration and ensure all required fields are properly formatted."
           end
 
           processed_sections = normalize_sections(sections_config)
@@ -31,27 +31,6 @@ module Ace
           if preset_manager
             processed_sections = process_section_presets(processed_sections, preset_manager)
           end
-
-          merge_legacy_content(processed_sections, config)
-        end
-
-        # Migrates legacy configuration to section-based format
-        # @param config [Hash] legacy configuration
-        # @return [Hash] migrated configuration with sections
-        def migrate_legacy_to_sections(config)
-          return config if has_sections?(config)
-
-          migrated = deep_copy(config)
-          sections = create_legacy_sections(migrated)
-
-          if sections.any?
-            # Use 'bundle' key for configuration
-            bundle = migrated['bundle'] || {}
-            migrated['bundle'] = bundle unless migrated['bundle']
-            migrated['bundle']['sections'] = sections
-          end
-
-          migrated
         end
 
         # Checks if configuration already has sections
@@ -87,7 +66,7 @@ module Ace
           # Validate final merged sections
           unless @validator.validate_sections(merged)
             errors = @validator.errors
-            raise SectionValidationError, "Merged sections validation failed after processing:\n  #{errors.join("\n  ")}\n\nThis error occurred after merging preset content. Please check if referenced presets are compatible."
+            raise Ace::Bundle::SectionValidationError, "Merged sections validation failed after processing:\n  #{errors.join("\n  ")}\n\nThis error occurred after merging preset content. Please check if referenced presets are compatible."
           end
 
           merged
@@ -163,7 +142,7 @@ module Ace
           end
 
           if errors.any?
-            raise SectionValidationError, "Section preset loading failed for section '#{section_name}':\n  #{errors.join("\n  ")}\n\nPlease ensure all referenced presets exist and are accessible. Check preset names for typos and verify preset files are in the correct location."
+            raise Ace::Bundle::SectionValidationError, "Section preset loading failed for section '#{section_name}':\n  #{errors.join("\n  ")}\n\nPlease ensure all referenced presets exist and are accessible. Check preset names for typos and verify preset files are in the correct location."
           end
 
           # Extract bundle content from presets
@@ -374,126 +353,6 @@ module Ace
           normalized
         end
 
-        # Merges legacy content into sections
-        def merge_legacy_content(sections, config)
-          # Use 'bundle' key for configuration
-          bundle = config['bundle'] || config[:bundle]
-          return sections unless bundle
-
-          # Create attachments section for legacy content
-          legacy_content = collect_legacy_content(bundle)
-
-          if legacy_content.any?
-            sections['attachments'] = create_attachments_section(legacy_content)
-          end
-
-          sections
-        end
-
-        # Collects legacy content from configuration (top-level files/commands/diffs)
-        # @param config [Hash] configuration hash that may have legacy top-level keys
-        # @return [Hash] legacy content with normalized keys
-        def collect_legacy_content(config)
-          legacy_content = {}
-
-          # Legacy files
-          if config['files'] || config[:files]
-            legacy_content[:files] = config['files'] || config[:files]
-          end
-
-          # Legacy commands
-          if config['commands'] || config[:commands]
-            legacy_content[:commands] = config['commands'] || config[:commands]
-          end
-
-          # Legacy diff/diffs/ranges - normalize to ranges
-          if config['diff'] || config[:diff]
-            diff_config = config['diff'] || config[:diff]
-            if diff_config.is_a?(Hash)
-              # Extract ranges from complex diff config
-              if diff_config['ranges'] || diff_config[:ranges]
-                legacy_content[:ranges] = diff_config['ranges'] || diff_config[:ranges]
-              elsif diff_config['since'] || diff_config[:since]
-                since_ref = diff_config['since'] || diff_config[:since]
-                legacy_content[:ranges] = ["#{since_ref}...HEAD"]
-              end
-            elsif diff_config.is_a?(String)
-              legacy_content[:ranges] = [diff_config]
-            elsif diff_config.is_a?(Array)
-              legacy_content[:ranges] = diff_config
-            end
-          elsif config['diffs'] || config[:diffs]
-            legacy_content[:ranges] = config['diffs'] || config[:diffs]
-          elsif config['ranges'] || config[:ranges]
-            legacy_content[:ranges] = config['ranges'] || config[:ranges]
-          end
-
-          legacy_content
-        end
-
-        # Creates attachments section for legacy content
-        def create_attachments_section(legacy_content)
-          {
-            title: "Attachments",
-            **legacy_content
-          }
-        end
-
-        # Creates legacy sections from legacy configuration
-        def create_legacy_sections(config)
-          # Use 'bundle' key for configuration
-          bundle = config['bundle'] || config[:bundle]
-          return {} unless bundle
-
-          sections = {}
-
-          # Files section
-          if bundle['files'] || bundle[:files]
-            sections['files'] = {
-              title: "Files",
-              files: bundle['files'] || bundle[:files],
-              exclude: bundle['exclude'] || bundle[:exclude]
-            }
-          end
-
-          # Commands section
-          if bundle['commands'] || bundle[:commands]
-            sections['commands'] = {
-              title: "Commands",
-              commands: bundle['commands'] || bundle[:commands]
-            }
-          end
-
-          # Diffs section - handle diff/diffs/ranges
-          ranges = nil
-          if bundle['diff'] || bundle[:diff]
-            diff_config = bundle['diff'] || bundle[:diff]
-            if diff_config.is_a?(Hash)
-              ranges = diff_config['ranges'] || diff_config[:ranges]
-              if !ranges && (diff_config['since'] || diff_config[:since])
-                since_ref = diff_config['since'] || diff_config[:since]
-                ranges = ["#{since_ref}...HEAD"]
-              end
-            elsif diff_config.is_a?(String)
-              ranges = [diff_config]
-            elsif diff_config.is_a?(Array)
-              ranges = diff_config
-            end
-          elsif bundle['diffs'] || bundle[:diffs]
-            ranges = bundle['diffs'] || bundle[:diffs]
-          elsif bundle['ranges'] || bundle[:ranges]
-            ranges = bundle['ranges'] || bundle[:ranges]
-          end
-
-          if ranges
-            sections['diffs'] = {
-              title: "Diffs",
-              ranges: ranges
-            }
-          end
-
-          sections
-        end
 
         # Merges two section data hashes
         # Normalizes keys to symbols for consistent internal access
@@ -599,8 +458,6 @@ module Ace
 
       end
 
-      # Backward-compat alias for centralized error class
-      SectionValidationError = Ace::Bundle::SectionValidationError
     end
   end
 end

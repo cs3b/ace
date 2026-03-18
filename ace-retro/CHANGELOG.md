@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-18
+
+### Changed
+- Removed legacy backward-compatibility behavior as part of the 0.10 cleanup release.
+
+
 ## [0.12.2] - 2026-03-15
 
 ### Changed

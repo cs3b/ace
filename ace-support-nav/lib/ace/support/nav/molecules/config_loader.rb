@@ -147,18 +147,13 @@ module Ace
           private
 
           # Load user config from explicit config directory
-          # Supports legacy settings.yml with deprecation warning
           # @param config_dir [String] Path to .ace/nav directory
           # @return [Hash] User configuration
           def load_user_config_from_dir(config_dir)
             config_path = File.join(config_dir, "config.yml")
-            legacy_path = File.join(config_dir, "settings.yml")
 
             if File.exist?(config_path)
               load_yaml_file(config_path)
-            elsif File.exist?(legacy_path)
-              warn "DEPRECATION: #{legacy_path} is deprecated, rename to config.yml"
-              load_yaml_file(legacy_path)
             else
               {}
             end

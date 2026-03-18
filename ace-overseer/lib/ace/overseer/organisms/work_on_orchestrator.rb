@@ -169,7 +169,7 @@ module Ace
                 "name" => result[:current].name
               }
             }
-          rescue Ace::Assign::NoActiveAssignmentError
+          rescue Ace::Assign::AssignmentErrors::NoActive
             nil
           ensure
             ENV["PROJECT_ROOT_PATH"] = original_project_root

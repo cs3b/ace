@@ -10,17 +10,6 @@ module Ace
       # FeedbackItem is an immutable data structure containing all information
       # about a review finding, including its status, priority, and resolution.
       #
-      # @example Creating a feedback item (single reviewer)
-      #   item = FeedbackItem.new(
-      #     id: "8o7abcd123",
-      #     title: "Missing error handling",
-      #     files: ["src/handlers/user.rb:42-55"],
-      #     reviewer: "google:gemini-2.5-flash",
-      #     status: "pending",
-      #     priority: "high",
-      #     finding: "The error handling is incomplete..."
-      #   )
-      #
       # @example Creating a feedback item (multiple reviewers with consensus)
       #   item = FeedbackItem.new(
       #     id: "8o7abcd123",
@@ -55,8 +44,8 @@ module Ace
         # @option attrs [String] :id 10-character Base36 ID (6-char timestamp + 4-char random)
         # @option attrs [String] :title Short description of the finding
         # @option attrs [Array<String>] :files File references (path:line-range format)
-        # @option attrs [Array<String>] :reviewers LLM models that found this (new format)
-        # @option attrs [String] :reviewer LLM model that found this (legacy, converted to reviewers)
+        # @option attrs [Array<String>] :reviewers LLM models that found this
+        # @option attrs [String] :reviewer Single reviewer string (converted to reviewers array)
         # @option attrs [String] :status One of: draft, pending, invalid, skip, done
         # @option attrs [String] :priority One of: critical, high, medium, low
         # @option attrs [Boolean] :consensus True if 3+ models agree on this finding
@@ -75,7 +64,6 @@ module Ace
           @title = attrs[:title]
           @files = Array(attrs[:files])
 
-          # Support both legacy :reviewer (string) and new :reviewers (array)
           @reviewers = normalize_reviewers(attrs[:reviewers], attrs[:reviewer])
 
           @status = attrs[:status] || "draft"
@@ -94,7 +82,7 @@ module Ace
           freeze_arrays
         end
 
-        # Legacy accessor for single reviewer (returns first reviewer)
+        # Accessor for single reviewer (returns first reviewer)
         # @return [String, nil] First reviewer or nil if none
         def reviewer
           @reviewers.first
@@ -118,7 +106,7 @@ module Ace
             "resolution" => resolution
           }
 
-          # Use reviewers array if multiple reviewers, otherwise use legacy reviewer key
+          # Use reviewers array if multiple reviewers, otherwise use singular reviewer key
           if @reviewers.length > 1
             hash["reviewers"] = @reviewers.dup
             hash["consensus"] = consensus if consensus
@@ -194,8 +182,8 @@ module Ace
 
         # Normalize reviewers from various input formats
         #
-        # @param reviewers [Array<String>, nil] New format reviewers array
-        # @param reviewer [String, nil] Legacy single reviewer string
+        # @param reviewers [Array<String>, nil] Reviewers array
+        # @param reviewer [String, nil] Single reviewer string
         # @return [Array<String>] Normalized reviewers array
         def normalize_reviewers(reviewers, reviewer)
           if reviewers.is_a?(Array) && reviewers.any?

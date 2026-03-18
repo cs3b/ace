@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-03-18
+
+### Changed
+- Removed legacy backward-compatibility behavior as part of the 0.10 cleanup release.
+
+
 ## [0.36.7] - 2026-03-15
 
 ### Changed

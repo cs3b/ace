@@ -84,7 +84,7 @@ class SessionBuilderTest < Minitest::Test
   end
 
   def test_build_raises_for_missing_preset
-    assert_raises(Ace::Tmux::Molecules::PresetNotFoundError) do
+    assert_raises(Ace::Tmux::PresetNotFoundError) do
       @builder.build("nonexistent")
     end
   end
@@ -105,7 +105,7 @@ class SessionBuilderTest < Minitest::Test
   end
 
   def test_build_window_raises_for_missing_preset
-    assert_raises(Ace::Tmux::Molecules::PresetNotFoundError) do
+    assert_raises(Ace::Tmux::PresetNotFoundError) do
       @builder.build_window("nonexistent")
     end
   end

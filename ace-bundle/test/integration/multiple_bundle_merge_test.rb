@@ -27,27 +27,35 @@ class MultipleBundleMergeTest < AceTestCase
   end
 
   def create_test_presets
-    File.write(
-      File.join(@presets_dir, "preset1.md"),
-      <<~PRESET
+      File.write(
+        File.join(@presets_dir, "preset1.md"),
+        <<~PRESET
         ---
         description: First test preset
         bundle:
           files:
             - file1.md
+          sections:
+            main:
+              files:
+                - file1.md
         ---
         Preset 1 content
       PRESET
     )
 
-    File.write(
-      File.join(@presets_dir, "preset2.md"),
-      <<~PRESET
+      File.write(
+        File.join(@presets_dir, "preset2.md"),
+        <<~PRESET
         ---
         description: Second test preset
         bundle:
           files:
             - file2.md
+          sections:
+            main:
+              files:
+                - file2.md
         ---
         Preset 2 content
       PRESET

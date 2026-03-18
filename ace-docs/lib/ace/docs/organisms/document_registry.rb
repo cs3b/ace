@@ -13,11 +13,10 @@ module Ace
         attr_reader :documents, :config
 
         # Initialize the document registry
-        # @param config_path [String, nil] Deprecated, kept for backward compatibility
         # @param project_root [String, nil] Project root directory
         # @param config [Hash, nil] Optional config override (for testing)
-        def initialize(config_path: nil, project_root: nil, config: nil, scope_globs: nil)
-          @project_root = project_root || determine_project_root(config_path)
+        def initialize(project_root: nil, config: nil, scope_globs: nil)
+          @project_root = project_root || determine_project_root
           @config = config || Ace::Docs.config
           @scope_globs = Array(scope_globs).compact
           @documents = []
@@ -91,11 +90,7 @@ module Ace
 
         private
 
-        def determine_project_root(config_path)
-          # If config_path is provided, derive project root from it
-          return File.dirname(File.dirname(File.dirname(config_path))) if config_path
-
-          # Otherwise use ProjectRootFinder to support both main repos and git worktrees
+        def determine_project_root
           Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
         end
 
