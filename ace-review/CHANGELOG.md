@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.1] - 2026-03-18
+
+### Fixed
+- Hardened feedback synthesis to preserve raw output, clean common malformed JSON, and run a bounded JSON-repair pass before failing extraction.
+- Switched the default feedback synthesis model to `gemini:flash-latest@ro` so synthesis uses the Gemini CLI read-only provider path.
+
+### Technical
+- Isolated review-driven synthesis artifacts under a dedicated `feedback-synthesis` session subdirectory to avoid prompt-file collisions with the parent review session.
+- Added regression coverage for malformed JSON cleanup/repair and review-manager session propagation during feedback extraction.
+
 ## [0.46.0] - 2026-03-18
 
 ### Changed

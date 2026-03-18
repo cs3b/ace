@@ -197,7 +197,10 @@ class FeedbackSynthesizerTest < AceReviewTest
   def test_synthesize_handles_invalid_json_response
     report_path = create_report_file("report.md", sample_report_content)
 
-    @mock_executor.set_response("This is not valid JSON")
+    @mock_executor.set_responses([
+      "This is not valid JSON",
+      "Still not valid JSON"
+    ])
 
     result = @synthesizer.synthesize(
       report_paths: [report_path],
@@ -206,6 +209,57 @@ class FeedbackSynthesizerTest < AceReviewTest
 
     refute result[:success]
     assert_includes result[:error], "Invalid JSON"
+  end
+
+  def test_synthesize_repairs_trailing_comma_json
+    report_path = create_report_file("report.md", sample_report_content)
+
+    response = <<~JSON
+      {
+        "findings": [
+          {
+            "title": "Fix SQL injection vulnerability",
+            "finding": "The query builder uses string interpolation without sanitization.",
+            "priority": "critical",
+          }
+        ]
+      }
+    JSON
+    @mock_executor.set_response(response)
+
+    result = @synthesizer.synthesize(
+      report_paths: [report_path],
+      session_dir: @session_dir
+    )
+
+    assert result[:success], "Expected deterministic JSON cleanup to succeed: #{result[:error]}"
+    assert_equal 1, result[:items].length
+    assert File.exist?(File.join(@session_dir, "feedback-synthesis.cleaned.json"))
+  end
+
+  def test_synthesize_repairs_truncated_json_with_second_pass
+    report_path = create_report_file("report.md", sample_report_content)
+
+    @mock_executor.set_responses([
+      <<~BROKEN,
+        {
+          "findings": [
+            {
+              "title": "Fix SQL injection vulnerability",
+              "finding": "The query builder uses string interpolation
+      BROKEN
+      single_report_response
+    ])
+
+    result = @synthesizer.synthesize(
+      report_paths: [report_path],
+      session_dir: @session_dir
+    )
+
+    assert result[:success], "Expected repair pass to succeed: #{result[:error]}"
+    assert_equal 2, @mock_executor.call_count
+    assert File.exist?(File.join(@session_dir, "feedback-synthesis.repair.raw.txt"))
+    assert File.exist?(File.join(@session_dir, "feedback-synthesis.cleaned.json"))
   end
 
   def test_synthesize_handles_json_with_markdown_fences
@@ -455,6 +509,20 @@ class FeedbackSynthesizerTest < AceReviewTest
     assert Dir.exist?(nonexistent_session)
   end
 
+  def test_synthesize_persists_raw_output_in_session_dir
+    report_path = create_report_file("report.md", sample_report_content)
+
+    @mock_executor.set_response(single_report_response)
+
+    result = @synthesizer.synthesize(
+      report_paths: [report_path],
+      session_dir: @session_dir
+    )
+
+    assert result[:success]
+    assert File.exist?(File.join(@session_dir, "feedback-synthesis.raw.txt"))
+  end
+
   def test_synthesize_creates_temp_session_if_not_provided
     report_path = create_report_file("report.md", sample_report_content)
 
@@ -582,19 +650,24 @@ class FeedbackSynthesizerTest < AceReviewTest
     attr_reader :call_count
 
     def initialize
-      @response = nil
+      @responses = []
       @error = nil
       @call_count = 0
     end
 
     def set_response(response)
-      @response = response
+      @responses = [response]
+      @error = nil
+    end
+
+    def set_responses(responses)
+      @responses = responses.dup
       @error = nil
     end
 
     def set_error(error)
       @error = error
-      @response = nil
+      @responses = []
     end
 
     def execute(system_prompt:, user_prompt:, model:, session_dir:, output_file: nil)
@@ -603,7 +676,9 @@ class FeedbackSynthesizerTest < AceReviewTest
       if @error
         { success: false, error: @error }
       else
-        { success: true, response: @response }
+        response = @responses.empty? ? nil : @responses.shift
+        File.write(output_file, response.to_s) if output_file
+        { success: true, response: response }
       end
     end
   end

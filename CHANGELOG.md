@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.841] - 2026-03-18
+
+### Fixed
+- **ace-review v0.46.1**: Hardened feedback synthesis to preserve raw output, recover from common malformed JSON, and default synthesis to the Gemini CLI read-only provider (`gemini:flash-latest@ro`).
+
+### Technical
+- **ace-review v0.46.1**: Isolated synthesis artifacts under a dedicated review-session subdirectory and added regression coverage for JSON repair and session propagation.
+
 ## [0.9.840] - 2026-03-18
 
 ### Added

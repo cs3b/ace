@@ -952,7 +952,8 @@ module Ace
             feedback_result = feedback_manager.extract_and_save(
               report_paths: report_paths,
               base_path: base_path,
-              model: model
+              model: model,
+              session_dir: File.join(session_dir, "feedback-synthesis")
             )
 
             if feedback_result[:success]

@@ -106,14 +106,15 @@ module Ace
           system_prompt = load_system_prompt
           user_prompt = build_reports_prompt(reports)
 
-          output_file = File.join(session_dir, "feedback-synthesis.json")
+          output_file = File.join(session_dir, "feedback-synthesis.raw.txt")
 
-          display_synthesis_start(reports.size, model || default_synthesis_model)
+          synthesis_model = model || default_synthesis_model
+          display_synthesis_start(reports.size, synthesis_model)
 
           result = @llm_executor.execute(
             system_prompt: system_prompt,
             user_prompt: user_prompt,
-            model: model || default_synthesis_model,
+            model: synthesis_model,
             session_dir: session_dir,
             output_file: output_file
           )
@@ -125,7 +126,12 @@ module Ace
           # All reviewers for reference
           all_reviewers = reports.map { |r| r[:reviewer] }
 
-          parse_synthesis_response(result[:response], all_reviewers)
+          parse_synthesis_response(
+            result[:response],
+            all_reviewers,
+            session_dir: session_dir,
+            model: synthesis_model
+          )
         end
 
         # Load the synthesis system prompt
@@ -220,9 +226,20 @@ module Ace
         # @param response [String] LLM response (should be JSON)
         # @param available_reviewers [Array<String>] List of available reviewers
         # @return [Hash] Result with :success, :items, :metadata or :error
-        def parse_synthesis_response(response, available_reviewers)
-          cleaned = extract_json_from_response(response)
-          data = JSON.parse(cleaned)
+        def parse_synthesis_response(response, available_reviewers, session_dir:, model:)
+          parse_result = parse_json_candidate(response)
+
+          unless parse_result[:success]
+            repair_result = attempt_json_repair(response, session_dir, model)
+            return repair_result unless repair_result[:success]
+
+            parse_result = parse_json_candidate(repair_result[:response], stage: "repair")
+          end
+
+          return error_result(parse_result[:error]) unless parse_result[:success]
+
+          data = parse_result[:data]
+          persist_cleaned_json(session_dir, data)
           findings = data["findings"] || []
 
           # Pre-generate unique sequential IDs for all findings
@@ -242,8 +259,6 @@ module Ace
           display_synthesis_complete(items.length, metadata[:consensus_findings])
 
           { success: true, items: items, metadata: metadata }
-        rescue JSON::ParserError => e
-          error_result("Invalid JSON response: #{e.message}")
         end
 
         # Extract JSON from LLM response
@@ -272,6 +287,101 @@ module Ace
 
           # Return as-is (already clean JSON or will fail parsing with clear error)
           cleaned
+        end
+
+        def parse_json_candidate(response, stage: "initial")
+          extracted = extract_json_from_response(response)
+          candidates = [
+            extracted,
+            sanitize_json_candidate(extracted)
+          ].compact.uniq
+
+          last_error = nil
+
+          candidates.each_with_index do |candidate, idx|
+            begin
+              return {
+                success: true,
+                data: JSON.parse(candidate),
+                cleaned: candidate,
+                stage: idx.zero? ? stage : "#{stage}/sanitized"
+              }
+            rescue JSON::ParserError => e
+              last_error = e
+            end
+          end
+
+          error_message = last_error ? last_error.message : "no JSON object found"
+          {
+            success: false,
+            error: "Invalid JSON response during #{stage}: #{error_message}"
+          }
+        end
+
+        def sanitize_json_candidate(candidate)
+          return nil if candidate.nil? || candidate.strip.empty?
+
+          sanitized = candidate.strip
+
+          if (start_idx = sanitized.index("{")) && (end_idx = sanitized.rindex("}")) && end_idx > start_idx
+            sanitized = sanitized[start_idx..end_idx]
+          end
+
+          sanitized.gsub(/,\s*([}\]])/, '\1')
+        end
+
+        def attempt_json_repair(response, session_dir, model)
+          repair_prompt = build_json_repair_prompt(response)
+          repair_output = File.join(session_dir, "feedback-synthesis.repair.raw.txt")
+
+          result = @llm_executor.execute(
+            system_prompt: repair_system_prompt,
+            user_prompt: repair_prompt,
+            model: model,
+            session_dir: session_dir,
+            output_file: repair_output
+          )
+
+          unless result[:success]
+            return error_result("Invalid JSON response and repair failed: #{result[:error]}")
+          end
+
+          { success: true, response: result[:response] }
+        end
+
+        def repair_system_prompt
+          <<~PROMPT
+            You repair malformed JSON.
+
+            Return exactly one valid JSON object.
+            Do not add commentary, markdown, or code fences.
+            Do not change the meaning of the data.
+            Only make the smallest syntax corrections needed for valid JSON.
+          PROMPT
+        end
+
+        def build_json_repair_prompt(response)
+          <<~PROMPT
+            Repair this malformed JSON so it becomes valid JSON.
+
+            Requirements:
+            - Preserve the existing schema and values
+            - Do not invent new findings
+            - If the JSON is truncated, only close the minimal missing quotes/brackets/braces
+            - Return only the repaired JSON object
+
+            Malformed JSON:
+            #{response}
+          PROMPT
+        end
+
+        def persist_cleaned_json(session_dir, data)
+          File.write(
+            File.join(session_dir, "feedback-synthesis.cleaned.json"),
+            JSON.pretty_generate(data)
+          )
+        rescue StandardError => e
+          warn "Warning: Failed to persist cleaned synthesis JSON: #{e.message}" if Ace::Review.debug?
         end
 
         # Create a FeedbackItem from synthesized finding data
