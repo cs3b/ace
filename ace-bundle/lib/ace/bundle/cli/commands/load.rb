@@ -227,9 +227,13 @@ module Ace
             if explicit_output
               # Explicit output mode specified - honor it
               output_mode = explicit_output
-            else
-              # Auto-format: decide based on line count vs threshold
-              line_count = Atoms::LineCounter.count(context.content)
+          else
+            # Auto-format: decide based on line count vs threshold
+              size_key = :raw_content_for_auto_format
+              size_source = context.metadata[size_key] ||
+                context.metadata[size_key.to_s] ||
+                context.content
+              line_count = Atoms::LineCounter.count(size_source)
               threshold = Ace::Bundle.auto_format_threshold
 
               output_mode = line_count >= threshold ? "cache" : "stdio"

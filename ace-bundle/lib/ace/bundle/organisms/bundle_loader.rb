@@ -121,6 +121,7 @@ module Ace
               # Plain file inputs should emit readable content to stdout.
               # Keep content as primary payload and record source metadata.
               bundle.content = result[:content]
+              bundle.metadata[:raw_content_for_auto_format] = bundle.content
               bundle.metadata[:source] = path
             else
               bundle.metadata[:error] = result[:error]
@@ -979,6 +980,8 @@ module Ace
         end
 
         def format_bundle(bundle, format)
+          bundle.metadata[:raw_content_for_auto_format] = bundle.content
+
           # Apply compression before formatting (if enabled)
           compress_bundle_sections(bundle)
 
@@ -1384,6 +1387,7 @@ module Ace
           bundle = Models::BundleData.new
           # Use original_content (preserved before frontmatter stripping)
           bundle.content = original_content
+          bundle.metadata[:raw_content_for_auto_format] = original_content
           # Store metadata from frontmatter using merge to preserve any existing metadata
           # Include frontmatter and frontmatter_yaml for parity with template path
           bundle.metadata = (bundle.metadata || {}).merge(
