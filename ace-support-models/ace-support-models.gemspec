@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Integrates with models.dev API to provide model validation, " \
                      "cost tracking, and change monitoring for 40+ LLM providers. " \
                      "Validate model names, calculate query costs, and track pricing changes."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 

@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Development-only infrastructure gem providing shared test utilities, base test cases, ' \
                      'and helpers for all ace-* gems. Includes configuration helpers, ' \
                      'test environment management, and common test patterns. Library-only gem following ace-support-* pattern.'
-  spec.homepage = 'https://github.com/cs3b/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 

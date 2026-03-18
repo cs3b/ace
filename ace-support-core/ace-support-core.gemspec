@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Foundational infrastructure gem providing configuration cascade resolution, ' \
                      'environment variable handling, and shared utilities for all ace-* gems. ' \
                      'Library-only gem following ace-support-* pattern for infrastructure components.'
-  spec.homepage = 'https://github.com/cs3b/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 
