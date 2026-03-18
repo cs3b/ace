@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Unified search tool for codebases with ripgrep/fd backends"
   spec.description = "ACE search provides intelligent file and content search with DWIM heuristics, preset support, and git-aware filtering"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
