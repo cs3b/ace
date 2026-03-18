@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.5] - 2026-03-18
+
+### Fixed
+- Fixed Claude response extraction when the provider payload returned nested JSON content instead of a top-level string, preventing valid outputs from being dropped as empty.
+
+### Technical
+- Added nested payload parsing coverage for `parse_claude_response` to ensure future response-shape changes continue saving valid LLM output.
+
 ## [0.25.4] - 2026-03-17
 
 ### Fixed

@@ -197,7 +197,7 @@ module Ace
             end
 
             # Extract the text result
-            text = response["result"] || response["response"] || ""
+            text = extract_claude_text(response)
 
             if text.strip.empty?
               raise Ace::LLM::ProviderError, build_response_error(response)
@@ -211,6 +211,70 @@ module Ace
               text: text,
               metadata: metadata
             }
+          end
+
+          def extract_claude_text(response)
+            direct_result = response["result"]
+            direct_response = response["response"]
+            direct_message = response["message"]
+            direct_text = response["text"]
+
+            candidates = [
+              direct_result,
+              direct_response,
+              direct_message,
+              direct_text,
+              response["content"]
+            ]
+
+            candidates.each do |candidate|
+              text = extract_claude_text_value(candidate)
+              return text unless text.empty?
+            end
+
+            ""
+          end
+
+          def extract_claude_text_value(value)
+            case value
+            when String
+              text = value.to_s.strip
+              return text unless text.empty?
+            when Hash
+              nested_candidates = [
+                value["text"],
+                value["content"],
+                value["response"],
+                value["result"]
+              ]
+
+              nested_candidates.each do |candidate|
+                text = extract_claude_text_value(candidate)
+                return text unless text.empty?
+              end
+
+              if value["messages"].is_a?(Array)
+                text = extract_claude_text_value(value["messages"])
+                return text unless text.empty?
+              end
+
+              if value["parts"].is_a?(Array)
+                text = extract_claude_text_value(value["parts"])
+                return text unless text.empty?
+              end
+
+              if value["choices"].is_a?(Array)
+                text = extract_claude_text_value(value["choices"])
+                return text unless text.empty?
+              end
+            when Array
+              value.each do |entry|
+                text = extract_claude_text_value(entry)
+                return text unless text.empty?
+              end
+            end
+
+            ""
           end
 
           def build_metadata(response, prompt, options)

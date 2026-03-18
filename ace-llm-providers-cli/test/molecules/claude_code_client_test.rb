@@ -131,6 +131,30 @@ describe "ClaudeCodeClient" do
       assert_includes error.message, "session_id=sess-123"
     end
 
+    it "extracts text from nested Claude result content" do
+      stdout = {
+        "result" => {
+          "content" => [
+            {
+              "type" => "text",
+              "text" => "Nested response content"
+            }
+          ]
+        }
+      }.to_json
+
+      result = @client.send(
+        :parse_claude_response,
+        stdout,
+        "",
+        success_status,
+        "prompt",
+        {}
+      )
+
+      assert_equal "Nested response content", result[:text]
+    end
+
     it "surfaces provider error payload details when response is marked as error" do
       stdout = {
         "type" => "result",
