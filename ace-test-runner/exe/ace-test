@@ -18,7 +18,7 @@ begin
   $stdout.flush
   $stderr.flush
   exit!(exit_code.respond_to?(:to_i) ? exit_code.to_i : 0)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   $stdout.flush
   $stderr.flush

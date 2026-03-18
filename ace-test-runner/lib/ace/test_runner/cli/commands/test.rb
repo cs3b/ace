@@ -12,7 +12,7 @@ module Ace
       # This command runs tests with flexible package, target, and file selection.
       # All business logic is inline in this single command class.
       class Test < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc <<~DESC.strip
           Run tests with flexible package, target, and file selection
@@ -141,17 +141,17 @@ module Ace
             parsed_args = arg_parser.parse
             test_options.merge!(parsed_args)
           rescue ArgumentError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           # Run tests with special exit! handling for Minitest compatibility
           run_tests_with_exit_handling(test_options)
         rescue Ace::TestRunner::Error => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         rescue Interrupt
-          raise Ace::Core::CLI::Error.new("Test execution interrupted", exit_code: 130)
+          raise Ace::Support::Cli::Error.new("Test execution interrupted", exit_code: 130)
         rescue => e
-          raise Ace::Core::CLI::Error.new("Unexpected error: #{e.message}")
+          raise Ace::Support::Cli::Error.new("Unexpected error: #{e.message}")
         end
 
         private
@@ -243,12 +243,12 @@ module Ace
           if options[:set_default_rake]
             result = integration.set_default
             puts result[:message]
-            raise Ace::Core::CLI::Error.new(result[:message]) unless result[:success]
+            raise Ace::Support::Cli::Error.new(result[:message]) unless result[:success]
             return
           elsif options[:unset_default_rake]
             result = integration.unset_default
             puts result[:message]
-            raise Ace::Core::CLI::Error.new(result[:message]) unless result[:success]
+            raise Ace::Support::Cli::Error.new(result[:message]) unless result[:success]
             return
           elsif options[:check_rake_status]
             status = integration.check_status
