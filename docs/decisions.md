@@ -179,6 +179,11 @@ This document provides actionable decisions from Architecture Decision Records (
 - Token handling uses memory-backed tmpfs when available
 **Details**: [ADR-025](decisions/ADR-025-ace-git-secrets-security-model.md)
 
+### Repository Slug and Naming Strategy
+**Decision**: The canonical brand is **ACE**, expanded as **Agentic Coding Environment**. The category framing is **Agentic Development Environment (ADE)**. The repository slug is `ace` (renamed from `ace-meta`). Gem names, CLI binaries, module namespaces, and config directories remain unchanged.
+**Impact**: When referencing the project publicly, use "ACE (Agentic Coding Environment)" as the standard introduction. Use "ADE" only in category/positioning contexts. All `spec.homepage` URLs point to `https://github.com/cs3b/ace`. Historical references to `ace-meta` in CHANGELOGs and retrospectives are unchanged.
+**Details**: [ADR-033](decisions/ADR-033-repository-slug-and-naming-strategy.md)
+
 ## Archived Decisions
 
 ADR-006/007/008 (legacy tech), ADR-009/018/019 (superseded). See `docs/decisions/archive/README.md` for details and `docs/decisions/` for complete history.
