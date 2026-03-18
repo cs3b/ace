@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require "ace/core/cli/base"
+require "ace/support/cli"
 require_relative "../../atoms/validator_registry"
 require_relative "../../organisms/lint_orchestrator"
 require_relative "../../organisms/result_reporter"
@@ -17,7 +17,7 @@ module Ace
         # This command provides linting functionality for markdown, YAML, and
         # frontmatter files, with built-in doctor diagnostics via --doctor flag.
         class Lint < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Lint markdown, YAML, Ruby, and frontmatter files
@@ -99,14 +99,14 @@ module Ace
 
             # Validate inputs
             if files.empty?
-              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint [FILES...] [OPTIONS]")
+              raise Ace::Support::Cli::Error.new("No files specified\nUsage: ace-lint [FILES...] [OPTIONS]")
             end
 
             # Expand globs
             expanded_paths = expand_file_paths(files)
 
             if expanded_paths.empty?
-              raise Ace::Core::CLI::Error.new("No files found matching the given patterns")
+              raise Ace::Support::Cli::Error.new("No files found matching the given patterns")
             end
 
             # Create orchestrator with ruby groups configuration
@@ -143,7 +143,7 @@ module Ace
             if results.any?(&:failed?)
               failed_count = results.count(&:failed?)
               exit_code = Organisms::ResultReporter.exit_code(results)
-              raise Ace::Core::CLI::Error.new("#{failed_count} file(s) had lint errors", exit_code: exit_code)
+              raise Ace::Support::Cli::Error.new("#{failed_count} file(s) had lint errors", exit_code: exit_code)
             end
           end
 
@@ -169,9 +169,9 @@ module Ace
             display_diagnostics(diagnostics, verbose: verbose)
 
             if doctor.errors?
-              raise Ace::Core::CLI::Error.new("Configuration has errors", exit_code: 2)
+              raise Ace::Support::Cli::Error.new("Configuration has errors", exit_code: 2)
             elsif doctor.warnings?
-              raise Ace::Core::CLI::Error.new("Configuration has warnings", exit_code: 1)
+              raise Ace::Support::Cli::Error.new("Configuration has warnings", exit_code: 1)
             end
           end
 
