@@ -12,7 +12,7 @@ module Ace
           # - 1: Failed (tokens detected)
           # - 2: Error occurred
           class CheckRelease < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Pre-release security validation check"
 
@@ -30,7 +30,7 @@ module Ace
               Ace::Git::Secrets::Commands::CheckReleaseCommand.execute(options)
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              raise Ace::Core::CLI::Error.new(e.message)
+              raise Ace::Support::Cli::Error.new(e.message)
             end
           end
         end

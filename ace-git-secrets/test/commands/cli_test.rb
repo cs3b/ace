@@ -58,7 +58,7 @@ class CLITest < GitSecretsTestCase
           dispatch_cli(["scan"])
         rescue SystemExit
           # ace-support-cli may call exit
-        rescue Ace::Core::CLI::Error
+        rescue Ace::Support::Cli::Error
           # CLI raises Error with exit_code when tokens found
         end
       end
@@ -190,7 +190,7 @@ class CLITest < GitSecretsTestCase
           dispatch_cli(["check-release"])
         rescue SystemExit
           # ace-support-cli may call exit
-        rescue Ace::Core::CLI::Error
+        rescue Ace::Support::Cli::Error
           # CLI raises Error with exit_code when tokens found
         end
       end

@@ -12,7 +12,7 @@ module Ace
           # - 1: Partial success or failure
           # - 2: Error occurred
           class Revoke < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Revoke detected tokens via provider APIs"
 
@@ -29,12 +29,12 @@ module Ace
               debug_log("Starting revoke with options: #{format_pairs(options)}", options)
 
               exit_code = Ace::Git::Secrets::Commands::RevokeCommand.execute(options)
-              raise Ace::Core::CLI::Error.new("Revocation failed", exit_code: exit_code) if exit_code != 0
-            rescue Ace::Core::CLI::Error
+              raise Ace::Support::Cli::Error.new("Revocation failed", exit_code: exit_code) if exit_code != 0
+            rescue Ace::Support::Cli::Error
               raise
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              raise Ace::Core::CLI::Error.new(e.message, exit_code: 2)
+              raise Ace::Support::Cli::Error.new(e.message, exit_code: 2)
             end
           end
         end

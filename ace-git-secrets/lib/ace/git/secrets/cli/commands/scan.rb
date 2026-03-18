@@ -14,7 +14,7 @@ module Ace
           # - 1: Tokens detected
           # - 2: Error occurred
           class Scan < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Scan Git history for authentication tokens"
 
@@ -36,12 +36,12 @@ module Ace
               debug_log("Starting scan with options: #{format_pairs(options)}", options)
 
               exit_code = Ace::Git::Secrets::Commands::ScanCommand.execute(options)
-              raise Ace::Core::CLI::Error.new("Tokens detected", exit_code: exit_code) if exit_code != 0
-            rescue Ace::Core::CLI::Error
+              raise Ace::Support::Cli::Error.new("Tokens detected", exit_code: exit_code) if exit_code != 0
+            rescue Ace::Support::Cli::Error
               raise
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              raise Ace::Core::CLI::Error.new(e.message, exit_code: 2)
+              raise Ace::Support::Cli::Error.new(e.message, exit_code: 2)
             end
           end
         end
