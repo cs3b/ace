@@ -170,13 +170,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.25.6)
+    ace-llm-providers-cli (0.25.7)
       ace-llm (~> 0.26)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.26.12)
+    ace-llm (0.26.13)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
