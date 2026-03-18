@@ -1,6 +1,6 @@
 ---
 id: 8qb.t.q3r
-status: in-progress
+status: done
 priority: high
 created_at: "2026-03-12 17:24:10"
 estimate: TBD
