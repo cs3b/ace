@@ -24,7 +24,7 @@ integration:
   providers: {}
 assign:
   source: wfi://git/rebase
-  phases:
+  steps:
     - name: rebase-with-main
       description: Rebase current branch onto origin/main while preserving changelog intent
       intent:
