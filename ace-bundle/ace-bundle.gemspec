@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Bundle loading gem for ACE projects. Provides preset-based bundle ' \
                      'loading with configuration cascade support via ace-support-core. Supports ' \
                      'multiple file formats and dynamic content generation.'
-  spec.homepage = 'https://github.com/cs3b/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 
