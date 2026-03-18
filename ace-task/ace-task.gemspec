@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "B36TS-based task management for ACE"
   spec.description = "Provides task management with B36TS-based IDs, folder-based storage, " \
                      "and CLI commands for creating and viewing tasks."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
