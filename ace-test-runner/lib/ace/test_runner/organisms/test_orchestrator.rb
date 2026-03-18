@@ -350,7 +350,7 @@ module Ace
           # Create TestConfiguration with merged data
           Models::TestConfiguration.new(
             format: config_with_options.defaults[:reporter] || options[:format],
-            report_dir: config_with_options.defaults[:report_dir] || options[:report_dir],
+            report_dir: options[:report_dir] || config_with_options.defaults[:report_dir],
             save_reports: config_with_options.defaults[:save_reports] != false && options[:save_reports] != false,
             fail_fast: config_with_options.defaults[:fail_fast] || options[:fail_fast],
             verbose: options[:verbose],

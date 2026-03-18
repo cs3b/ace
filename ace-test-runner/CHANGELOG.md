@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.17] - 2026-03-18
+
+### Fixed
+- Fixed CLI option precedence so `--report-dir` now properly overrides config defaults.
+
 ## [0.15.16] - 2026-03-18
 
 ### Fixed
