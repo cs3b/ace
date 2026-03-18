@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-retro list
         class List < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           C = Ace::Support::Items::Atoms::AnsiColors
           desc "List retros\n\n" \

@@ -23,7 +23,7 @@ class RetroCliTest < AceRetroTestCase
 
     begin
       Ace::Retro::RetroCLI.start(args)
-    rescue Ace::Core::CLI::Error => e
+    rescue Ace::Support::Cli::Error => e
       $stderr.puts e.message
       exit_code = e.exit_code
     rescue SystemExit => e

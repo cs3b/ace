@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-retro create
         class Create < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Create a new retro
@@ -52,7 +52,7 @@ module Ace
               warn "Error: title is required"
               warn ""
               warn "Usage: ace-retro create TITLE [--type TYPE] [--tags T1,T2] [--task-ref REF] [--move-to FOLDER]"
-              raise Ace::Core::CLI::Error.new("Title required")
+              raise Ace::Support::Cli::Error.new("Title required")
             end
 
             if dry_run
