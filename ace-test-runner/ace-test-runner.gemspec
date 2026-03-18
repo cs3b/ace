@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Test execution and reporting tool for ace-* gems"
   spec.description = "Provides comprehensive test execution with AI-friendly output formats and detailed reporting"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
