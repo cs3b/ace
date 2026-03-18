@@ -2,7 +2,7 @@
 name: task-work
 description: Execute task implementation against behavioral spec using pre-loaded plan
 assign:
-  sub-phases:
+  sub-steps:
     - onboard-base
     - task-load
     - plan-task
@@ -20,7 +20,7 @@ update:
 
 ## Start State
 
-You have context sources already loaded from prior sub-phases:
+You have context sources already loaded from prior sub-steps:
 - **Project** (`project-base`) — vision, architecture, CLI tools, conventions, and repo-level onboarding context
 - **Task** (`ace-bundle task://<ref>`) — behavioral spec, success criteria, interface contract
 - **Plan** (`ace-task plan <ref> --content`) — implementation checklist with steps, file paths, verification commands

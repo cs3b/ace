@@ -301,7 +301,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 **Question**: Should we include [feature X] in this implementation?
 **Answer Template**:
 - Include in current scope: [Yes/No]
-- If deferred, target phase: [Phase N]
+- If deferred, target step: [Step N]
 - Dependencies affected: [list]
 - Alternative approach: [if not included]
 ```

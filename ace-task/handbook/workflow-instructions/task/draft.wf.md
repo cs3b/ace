@@ -14,7 +14,7 @@ update:
 
 ## Goal
 
-Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan phase. The workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
+Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan step. The workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
 
 ## Prerequisites
 
@@ -157,7 +157,7 @@ Create high-level behavioral specifications that define WHAT the system should d
    * If additional files are required context for implementation, list them in `bundle.files`
    * For subtasks, list required shared context files explicitly in EACH subtask's bundle (no implicit inheritance)
    * Include behavioral specification template
-   * Focus on behavioral content, leave implementation for replan phase
+   * Focus on behavioral content, leave implementation for replan step
 
 ### Spike-First Rule for Engine/Pipeline Redesigns
 
@@ -548,6 +548,6 @@ the decomposition was premature. Consider consolidating remaining subtasks.
 ```
 
 ## Notes for Implementer
-- Full usage documentation to be completed during work-on-task phase using `wfi://docs/update-usage`
+- Full usage documentation to be completed during work-on-task step using `wfi://docs/update-usage`
 </template>
 </documents>

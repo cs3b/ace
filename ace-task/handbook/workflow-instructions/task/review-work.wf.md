@@ -17,7 +17,7 @@ Critically evaluate work execution output for completeness, credibility, and del
 
 - As Phase 2 (self-critique) in a work execution step
 - After any implementation report is produced, before declaring work complete
-- When reviewing execution quality in ace-assign pipeline phases
+- When reviewing execution quality in ace-assign pipeline steps
 
 ## Evaluation Dimensions
 

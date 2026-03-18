@@ -23,9 +23,9 @@ Create a JIT (just-in-time) implementation plan for a pending task. The plan is 
 - The calling system handles persistence (cache artifacts, pointers, freshness)
 - Does NOT modify task specification files
 - Does NOT change task status
-- Plan is consumed by the next phase (work-on-task) or by the developer
+- Plan is consumed by the next step (work-on-task) or by the developer
 
-This workflow can be invoked standalone for ad-hoc planning or as a phase within ace-assign.
+This workflow can be invoked standalone for ad-hoc planning or as a step within ace-assign.
 
 ## Output Contract
 
@@ -254,7 +254,7 @@ The plan will be consumed by a separate execution agent that has no access to th
    - Include a freshness summary that lists tracked input files and stale/fresh determination
 
    **UX/Usage Documentation Note**
-   For user-facing features (commands, CLI tools, APIs, workflows), draft usage documentation (`ux/usage.md`) with key scenarios is created during the draft phase. The full usage documentation is completed during implementation (work-on-task phase) using `wfi://docs/update-usage`.
+   For user-facing features (commands, CLI tools, APIs, workflows), draft usage documentation (`ux/usage.md`) with key scenarios is created during the draft step. The full usage documentation is completed during implementation (work-on-task step) using `wfi://docs/update-usage`.
 
 ## Implementation Planning Templates
 
@@ -374,7 +374,7 @@ When planning from a behavioral spec:
 
 ---
 
-This workflow creates JIT implementation plans that guide the work-on-task phase, returning complete inline plans without modifying task specifications or changing task status.
+This workflow creates JIT implementation plans that guide the work-on-task step, returning complete inline plans without modifying task specifications or changing task status.
 
 ## REPORT
 
