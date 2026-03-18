@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.37.2] - 2026-03-18
+
+### Fixed
+- Fixed preset auto-format line counting to use raw content for plain files and frontmatter-preserved content, preventing short content from incorrectly being emitted as cached output.
+
 ## [0.37.1] - 2026-03-18
 
 ### Changed
