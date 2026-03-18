@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.7] - 2026-03-18
+
+### Technical
+- Added Claude command coverage for explicit tool allowlists so provider presets can distinguish tool-assisted read-only mode from strict no-tools prompt-only mode.
+
 ## [0.25.6] - 2026-03-18
 
 ### Fixed

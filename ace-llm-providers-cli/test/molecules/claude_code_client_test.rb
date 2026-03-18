@@ -33,6 +33,14 @@ describe "ClaudeCodeClient" do
       refute_nil tools_idx
       assert_equal "", cmd[tools_idx + 1]
     end
+
+    it "preserves explicit tool allowlists from cli_args arrays" do
+      cmd = @client.send(:build_claude_command, cli_args: ["--tools", "Bash,Read"])
+      tools_idx = cmd.index("--tools")
+
+      refute_nil tools_idx
+      assert_equal "Bash,Read", cmd[tools_idx + 1]
+    end
   end
 
   describe "execute_claude_command" do
