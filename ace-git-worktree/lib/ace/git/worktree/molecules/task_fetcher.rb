@@ -86,7 +86,7 @@ module Ace
               For standalone installation:
               1. Install ace-task gem: gem install ace-task
 
-              For more information: https://github.com/cs3b/ace-meta
+              For more information: https://github.com/cs3b/ace
             MESSAGE
           end
 
@@ -226,7 +226,7 @@ module Ace
             For standalone installation:
             1. Install ace-task gem: gem install ace-task
 
-            For more information: https://github.com/cs3b/ace-meta
+            For more information: https://github.com/cs3b/ace
           MESSAGE
         end
 
