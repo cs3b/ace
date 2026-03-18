@@ -9,7 +9,7 @@ module Ace
       module Commands
         # Start a tmux session from a preset
         class Start < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Start a tmux session from a YAML preset
@@ -49,7 +49,7 @@ module Ace
             tmux_bin = config.dig("tmux_binary") || "tmux"
 
             preset ||= config.dig("defaults", "session")
-            raise Ace::Core::CLI::Error.new("No preset specified and no default session configured") unless preset
+            raise Ace::Support::Cli::Error.new("No preset specified and no default session configured") unless preset
 
             preset_loader = Molecules::PresetLoader.new(
               gem_root: Tmux.gem_root
@@ -73,7 +73,7 @@ module Ace
             )
             puts "Session '#{preset}' created." if options[:detach] && !options[:quiet]
           rescue Molecules::PresetNotFoundError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
         end
       end

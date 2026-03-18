@@ -9,7 +9,7 @@ module Ace
       module Commands
         # Add a window to an existing session from a preset
         class Window < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Add a window to an existing tmux session from a preset
@@ -44,7 +44,7 @@ module Ace
             tmux_bin = config.dig("tmux_binary") || "tmux"
 
             preset ||= config.dig("defaults", "window")
-            raise Ace::Core::CLI::Error.new("No preset specified and no default window configured") unless preset
+            raise Ace::Support::Cli::Error.new("No preset specified and no default window configured") unless preset
 
             preset_loader = Molecules::PresetLoader.new(
               gem_root: Tmux.gem_root
@@ -64,9 +64,9 @@ module Ace
             manager.add_window(preset, session: options[:session], root: options[:root], name: options[:name])
             puts "Window '#{effective_name}' added." unless options[:quiet]
           rescue Molecules::PresetNotFoundError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           rescue Organisms::NotInTmuxError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
         end
       end
