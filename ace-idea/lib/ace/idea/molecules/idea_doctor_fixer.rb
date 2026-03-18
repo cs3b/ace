@@ -66,8 +66,6 @@ module Ace
             fix_missing_tags(issue[:location])
           when /Missing recommended field: created_at/
             fix_missing_created_at(issue[:location])
-          when /Legacy status value: 'cancelled'/
-            fix_legacy_cancelled_status(issue[:location])
           when /terminal status.*not in _archive/
             fix_move_to_archive(issue[:location])
           when /in _archive\/ but status is/
@@ -109,7 +107,6 @@ module Ace
           /Missing recommended field: created_at/,
           /Derived field 'location' should not be stored in frontmatter/,
           /Field 'tags' is not an array/,
-          /Legacy status value: 'cancelled'/,
           /terminal status.*not in _archive/,
           /in _archive\/ but status is/,
           /in _maybe\/ with terminal status/,
@@ -225,14 +222,6 @@ module Ace
           update_frontmatter_field(file_path, "created_at", created_at, "Added missing 'created_at' field decoded from ID")
         end
 
-        def fix_legacy_cancelled_status(file_path)
-          update_frontmatter_field(
-            file_path,
-            "status",
-            "obsolete",
-            "Updated legacy status from 'cancelled' to 'obsolete'"
-          )
-        end
 
         def fix_move_to_archive(file_path)
           return false unless file_path && @root_dir

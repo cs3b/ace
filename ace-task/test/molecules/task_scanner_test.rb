@@ -32,9 +32,9 @@ class TaskScannerTest < AceTaskTestCase
     assert_equal "8pp.t.q7w", results.first.id
   end
 
-  def test_scan_all_includes_subtask_folders
+  def test_scan_all_includes_multiple_tasks
     create_task_folder("8pp.t.q7w-fix-login")
-    create_task_folder("8pp.t.q7w.a-setup-db")
+    create_task_folder("8pp.t.r8x-maybe-task")
 
     scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
     results = scanner.scan_all

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-18
+
+### Changed
+- Removed legacy backward-compatibility behavior as part of the 0.10 cleanup release.
+
+
 ## [0.21.3] - 2026-03-15
 
 ### Changed

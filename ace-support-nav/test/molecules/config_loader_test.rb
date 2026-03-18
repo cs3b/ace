@@ -257,30 +257,6 @@ module Ace
             end
           end
 
-          def test_loads_legacy_settings_yml_with_deprecation_warning
-            # Create legacy settings.yml file (not config.yml)
-            nav_dir = File.join(@test_dir, ".ace", "nav")
-            FileUtils.mkdir_p(nav_dir)
-
-            legacy_settings = {
-              "cache" => {
-                "enabled" => true
-              }
-            }
-
-            File.write(File.join(nav_dir, "settings.yml"), legacy_settings.to_yaml)
-
-            config_loader = ConfigLoader.new(nav_dir)
-
-            # Capture stderr for deprecation warning
-            _out, err = capture_io do
-              settings = config_loader.load_settings
-              assert_equal true, settings["cache"]["enabled"]
-            end
-
-            assert_match(/DEPRECATION/, err)
-            assert_match(/settings\.yml is deprecated/, err)
-          end
         end
       end
     end

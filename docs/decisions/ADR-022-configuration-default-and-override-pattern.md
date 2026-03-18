@@ -368,7 +368,7 @@ def self.config
   @config ||= begin
     defaults = load_gem_defaults
     user_config = Ace::Core.config.get("ace", "gem") || {}
-    Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
+    Ace::Support::Config::Atoms::DeepMerger.merge(defaults, user_config)
   end
 end
 

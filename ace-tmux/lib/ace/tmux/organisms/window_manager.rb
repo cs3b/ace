@@ -216,9 +216,6 @@ module Ace
           end
         end
       end
-
-      # Backward-compat alias for centralized error class
-      NotInTmuxError = Ace::Tmux::NotInTmuxError
     end
   end
 end

@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.842] - 2026-03-18
+
+### Changed
+- **ace-assign v0.33.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-b36ts v0.11.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-bundle v0.37.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-compressor v0.22.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-demo v0.11.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-docs v0.26.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-git v0.15.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-git-secrets v0.10.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-git-worktree v0.16.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-handbook v0.16.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-idea v0.15.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-lint v0.21.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-llm v0.27.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-overseer v0.6.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-prompt-prep v0.20.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-retro v0.13.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-review v0.47.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-sim v0.9.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-support-core v0.27.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-support-models v0.7.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-support-nav v0.23.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-task v0.29.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-test-runner-e2e v0.26.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+- **ace-tmux v0.7.0**: Removed legacy backward-compatibility behavior for the 0.10 compatibility cleanup. 
+
+
 ## [0.9.841] - 2026-03-18
 
 ### Fixed

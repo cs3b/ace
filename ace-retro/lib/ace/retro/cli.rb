@@ -43,14 +43,14 @@ module Ace
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
 
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: "ace-retro",
         version: Ace::Retro::VERSION
       )
       register "version",   version_cmd
       register "--version", version_cmd
 
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Retro::VERSION,
         commands: REGISTERED_COMMANDS,

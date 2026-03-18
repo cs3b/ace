@@ -71,6 +71,35 @@ module Ace
     file&.unlink
   end
 
+  def test_subject_configurations_returns_empty_for_single_subject_hash
+    content = <<~MARKDOWN
+      ---
+      doc-type: reference
+      purpose: Test single-subject hash configuration
+      ace-docs:
+        subject:
+          diff:
+            filters:
+              - "**/*.rb"
+              - "**/*.md"
+      ---
+
+      # Test Document
+      Content here
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+
+    assert_empty doc.subject_configurations
+  ensure
+    file&.close
+    file&.unlink
+  end
+
   def test_subject_configurations_multi_subject
     # Create document with multi-subject configuration
     content = <<~MARKDOWN
@@ -118,38 +147,6 @@ module Ace
     # Check third subject (docs)
     assert_equal "docs", configs[2][:name]
     assert_equal ["**/*.md"], configs[2][:filters]
-  ensure
-    file&.close
-    file&.unlink
-  end
-
-  def test_subject_configurations_single_subject_backward_compat
-    # Create document with single-subject configuration
-    content = <<~MARKDOWN
-      ---
-      doc-type: reference
-      purpose: Test single subject backward compatibility
-      ace-docs:
-        subject:
-          diff:
-            filters:
-              - "**/*.rb"
-              - "**/*.md"
-      ---
-
-      # Test Document
-    MARKDOWN
-
-    file = Tempfile.new(['test', '.md'])
-    file.write(content)
-    file.rewind
-
-    doc = Molecules::DocumentLoader.load_file(file.path)
-    configs = doc.subject_configurations
-
-    assert_equal 1, configs.length, "Should have 1 subject configuration"
-    assert_equal "default", configs[0][:name], "Single subject should have 'default' name"
-    assert_equal ["**/*.rb", "**/*.md"], configs[0][:filters]
   ensure
     file&.close
     file&.unlink
@@ -237,7 +234,7 @@ module Ace
       doc-type: guide
       purpose: Test date+time timestamp
       ace-docs:
-        last-updated: 2025-11-01 14:30
+        last-updated: 2025-11-01T14:30:00Z
       ---
 
       # Test Document
@@ -261,42 +258,14 @@ module Ace
     file&.unlink
   end
 
-  def test_last_updated_legacy_namespace
-    # Test backward compatibility with legacy update namespace
-    content = <<~MARKDOWN
-      ---
-      doc-type: guide
-      purpose: Test legacy namespace
-      update:
-        last-updated: 2025-11-01 14:30
-      ---
-
-      # Test Document
-    MARKDOWN
-
-    file = Tempfile.new(['test', '.md'])
-    file.write(content)
-    file.rewind
-
-    doc = Molecules::DocumentLoader.load_file(file.path)
-    last_updated = doc.last_updated
-
-    assert_instance_of Time, last_updated, "Legacy namespace should also support date+time"
-    assert_equal 14, last_updated.hour
-    assert_equal 30, last_updated.min
-  ensure
-    file&.close
-    file&.unlink
-  end
-
-  def test_last_checked_with_datetime_format
-    # Test that last-checked also supports date+time format
+  def test_last_checked_with_iso8601_format
+    # Test that last-checked supports ISO 8601 UTC format
     content = <<~MARKDOWN
       ---
       doc-type: guide
       purpose: Test last-checked timestamp
       update:
-        last-checked: 2025-11-01 09:15
+        last-checked: 2025-11-01T09:15:00Z
       ---
 
       # Test Document
@@ -309,7 +278,7 @@ module Ace
     doc = Molecules::DocumentLoader.load_file(file.path)
     last_checked = doc.last_checked
 
-    assert_instance_of Time, last_checked, "last-checked should support date+time format"
+    assert_instance_of Time, last_checked, "last-checked should support ISO 8601 UTC format"
     assert_equal 9, last_checked.hour
     assert_equal 15, last_checked.min
   ensure

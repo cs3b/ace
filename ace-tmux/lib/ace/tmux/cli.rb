@@ -42,7 +42,7 @@ module Ace
       register "list", CLI::Commands::List.new
 
       # Register version command
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: "ace-tmux",
         version: Ace::Tmux::VERSION
       )
@@ -50,7 +50,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Tmux::VERSION,
         commands: REGISTERED_COMMANDS,

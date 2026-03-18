@@ -100,7 +100,7 @@ module Ace
       register 'status', Commands::Status.new
 
       # Version command
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: 'ace-gem',
         version: Ace::Gem::VERSION
       )
@@ -108,7 +108,7 @@ module Ace
       register '--version', version_cmd
 
       # Help command (standard pattern)
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Gem::VERSION,
         commands: REGISTERED_COMMANDS,

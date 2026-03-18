@@ -140,7 +140,7 @@ module Ace
           }
         }
 
-        assert_raises(Ace::Bundle::Molecules::SectionValidationError) do
+        assert_raises(Ace::Bundle::SectionValidationError) do
           @section_processor.process_sections(
             { 'bundle' => { 'sections' => sections } },
             mock_preset_manager
@@ -249,7 +249,7 @@ module Ace
           }
         }
 
-        error = assert_raises(Ace::Bundle::Molecules::SectionValidationError) do
+        error = assert_raises(Ace::Bundle::SectionValidationError) do
           @section_processor.process_sections(
             { 'bundle' => { 'sections' => sections } },
             mock_preset_manager

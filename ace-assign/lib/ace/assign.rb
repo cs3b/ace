@@ -58,13 +58,6 @@ module Ace
       class InvalidState < Error; end
     end
 
-    # Aliases for backward compatibility
-    AssignmentNotFoundError = AssignmentErrors::NotFound
-    NoActiveAssignmentError = AssignmentErrors::NoActive
-    ConfigNotFoundError = ConfigErrors::NotFound
-    PhaseNotFoundError = PhaseErrors::NotFound
-    InvalidPhaseStateError = PhaseErrors::InvalidState
-
     # Define module namespaces
     module Commands; end
 

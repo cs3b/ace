@@ -12,12 +12,10 @@ module Ace
       # ClientRegistry manages provider configurations and instantiation
       # Loads provider definitions from YAML files and creates client instances dynamically
       class ClientRegistry
-        attr_reader :providers, :config_paths, :global_aliases, :model_aliases
+        attr_reader :providers, :global_aliases, :model_aliases
 
         # Initialize the client registry
-        # @param config_paths [Array<String>] Paths to search for provider configurations
-        def initialize(config_paths: nil)
-          @config_paths = config_paths || default_config_paths
+        def initialize
           @providers = {}
           @loaded_gems = {}
           @global_aliases = {}
@@ -202,25 +200,9 @@ module Ace
             File.expand_path("../../../..", __dir__)
         end
 
-        # Get default configuration paths (legacy support for custom paths)
-        # @return [Array<String>] Default paths to search
-        def default_config_paths
-          # When using Ace::Support::Config, paths are handled by the resolver
-          # This method kept for backward compatibility with custom config_paths
-          [File.join(gem_root, ".ace-defaults", "llm", "providers")]
-        end
-
         # Load all provider configurations using Configuration class
-        # Uses ProviderConfigReader which handles project → home → gem cascade
+        # Uses ProviderConfigReader which handles project -> home -> gem cascade
         def load_all_configurations
-          # If custom config_paths were provided, use legacy loading
-          if @config_paths != default_config_paths
-            load_all_configurations_legacy
-            return
-          end
-
-          # Use Configuration class to get all providers from the cascade
-          # This properly handles project-level provider discovery
           require_relative "../configuration"
           providers = Ace::LLM.providers
 
@@ -236,8 +218,6 @@ module Ace
           end
         rescue StandardError => e
           warn "Error loading provider configurations: #{e.message}"
-          # Fallback to legacy loading on error
-          load_all_configurations_legacy
         end
 
         # Load a single provider with cascade (deep merge)
@@ -258,40 +238,6 @@ module Ace
           warn "Error parsing provider config #{filename}: #{e.message}"
         rescue StandardError => e
           warn "Error loading provider #{filename}: #{e.message}"
-        end
-
-        # Legacy loading for custom config paths (first-found-wins)
-        def load_all_configurations_legacy
-          @config_paths.each do |path|
-            next unless File.directory?(path)
-
-            Dir.glob([File.join(path, "*.yml"), File.join(path, "*.yaml")]).each do |file|
-              load_configuration_file_legacy(file)
-            end
-          end
-        end
-
-        # Legacy: Load a single configuration file (first-found-wins)
-        # @param file_path [String] Path to YAML configuration file
-        def load_configuration_file_legacy(file_path)
-          content = File.read(file_path)
-          config = YAML.safe_load(content, permitted_classes: [Date], aliases: true)
-
-          unless config["name"] && config["class"]
-            warn "Invalid provider configuration in #{file_path}: missing 'name' or 'class'"
-            return
-          end
-
-          provider_name = normalize_provider_name(config["name"])
-
-          # Don't override if already loaded (first found wins - legacy behavior)
-          unless @providers.key?(provider_name)
-            @providers[provider_name] = config
-          end
-        rescue Psych::DisallowedClass => e
-          warn "Invalid YAML in #{file_path}: #{e.message} (symbol keys not permitted)"
-        rescue StandardError => e
-          warn "Error loading provider configuration from #{file_path}: #{e.message}"
         end
 
         # Normalize provider name for consistency

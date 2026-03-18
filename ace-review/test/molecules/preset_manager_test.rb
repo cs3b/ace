@@ -114,11 +114,11 @@ class PresetManagerTest < AceReviewTest
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
     resolved = manager.resolve_preset("base", {
-      model: "override-model"
+      models: ["override-model"]
     })
 
     # Test that basic overrides work
-    assert_equal "override-model", resolved[:model]
+    assert_equal ["override-model"], resolved[:models]
     assert_equal "Base preset", resolved[:description]
 
     # Test that prompt_composition is passed through (ace-bundle processes it)

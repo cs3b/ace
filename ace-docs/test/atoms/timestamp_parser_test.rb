@@ -92,59 +92,6 @@ module Ace
         end
 
         # ====================
-        # Legacy Format Tests (Backward Compatibility)
-        # ====================
-
-        def test_parse_legacy_datetime_format
-          result = TimestampParser.parse_timestamp("2025-11-15 14:30")
-
-          assert_kind_of Time, result
-          assert_equal "UTC", result.zone
-          assert_equal 2025, result.year
-          assert_equal 11, result.month
-          assert_equal 15, result.day
-          assert_equal 14, result.hour
-          assert_equal 30, result.min
-        end
-
-        def test_parse_legacy_datetime_at_midnight
-          result = TimestampParser.parse_timestamp("2025-11-01 00:00")
-          assert_instance_of Time, result
-          assert_equal 0, result.hour
-          assert_equal 0, result.min
-        end
-
-        def test_parse_legacy_datetime_at_end_of_day
-          result = TimestampParser.parse_timestamp("2025-11-01 23:59")
-          assert_instance_of Time, result
-          assert_equal 23, result.hour
-          assert_equal 59, result.min
-        end
-
-        def test_parse_legacy_year_end
-          result = TimestampParser.parse_timestamp("2024-12-31 23:59")
-          assert_equal 2024, result.year
-          assert_equal 12, result.month
-          assert_equal 31, result.day
-          assert_equal 23, result.hour
-          assert_equal 59, result.min
-        end
-
-        def test_parse_legacy_year_start
-          result = TimestampParser.parse_timestamp("2025-01-01 00:00")
-          assert_equal 2025, result.year
-          assert_equal 1, result.month
-          assert_equal 1, result.day
-          assert_equal 0, result.hour
-          assert_equal 0, result.min
-        end
-
-        def test_validate_legacy_datetime_format
-          assert TimestampParser.validate_format("2025-11-15 14:30")
-          assert TimestampParser.validate_format("2025-01-01 00:00")
-        end
-
-        # ====================
         # Date-Only Format Tests
         # ====================
 
@@ -197,10 +144,6 @@ module Ace
           # ISO 8601
           iso_result = TimestampParser.parse_timestamp("2025-11-15T08:30:45Z")
           assert_equal "UTC", iso_result.zone
-
-          # Legacy format
-          legacy_result = TimestampParser.parse_timestamp("2025-11-15 14:30")
-          assert_equal "UTC", legacy_result.zone
         end
 
         def test_format_converts_local_time_to_utc
@@ -262,11 +205,6 @@ module Ace
           refute TimestampParser.validate_format("2025-11-01T14:30")
         end
 
-        def test_reject_legacy_format_with_seconds
-          # Legacy format doesn't support seconds
-          refute TimestampParser.validate_format("2025-11-01 14:30:00")
-        end
-
         # ====================
         # Edge Cases
         # ====================
@@ -274,13 +212,6 @@ module Ace
         def test_parse_leap_year_date
           result = TimestampParser.parse_timestamp("2024-02-29")
           assert_equal Date.new(2024, 2, 29), result
-        end
-
-        def test_parse_leap_year_datetime
-          result = TimestampParser.parse_timestamp("2024-02-29 14:30")
-          assert_equal 2024, result.year
-          assert_equal 2, result.month
-          assert_equal 29, result.day
         end
 
         def test_parse_invalid_leap_year_raises_error
@@ -325,16 +256,6 @@ module Ace
           formatted = TimestampParser.format_timestamp(parsed)
 
           assert_equal original, formatted
-        end
-
-        def test_legacy_format_converts_to_iso8601
-          legacy = "2025-11-15 14:30"
-          parsed = TimestampParser.parse_timestamp(legacy)
-          formatted = TimestampParser.format_timestamp(parsed)
-
-          # Should be formatted as ISO 8601 UTC
-          assert_match(/T\d{2}:\d{2}:\d{2}Z/, formatted)
-          refute_equal legacy, formatted  # Should be different from legacy
         end
 
         # ====================

@@ -31,12 +31,12 @@ module Ace
           @taskflow_timeout = options[:taskflow_timeout] || TASKFLOW_TIMEOUT
         end
 
-        # Extract subject from configuration (legacy API)
+      # Extract subject from configuration
         # @param subject_config [String, Hash] subject configuration
         # @return [String] extracted subject content
         # @note Prefer parse_typed_subject_config or merge_typed_subject_configs for new code
-        def extract(subject_config)
-          return "" unless subject_config
+      def extract(subject_config)
+        return "" unless subject_config
 
           case subject_config
           when String
@@ -98,29 +98,12 @@ module Ace
         def resolve_single_subject(subject)
           case subject
           when String
-            # Parse typed subject or fall back to legacy auto-detect
-            parse_typed_subject(subject) || parse_legacy_to_config(subject)
-          when Hash
-            subject
-          else
+          parse_typed_subject(subject) || parse_keyword_or_pattern(subject)
+        when Hash
+          subject
+        else
             {}
           end
-        end
-
-        # Parse legacy string subjects to config hash
-        # Wraps extract_from_string logic to return config instead of content
-        # @param input [String] legacy subject string
-        # @return [Hash] ace-bundle config hash
-        def parse_legacy_to_config(input)
-          # Try to parse as YAML first
-          begin
-            parsed = YAML.safe_load(input)
-            return parsed if parsed.is_a?(Hash)
-          rescue Psych::SyntaxError
-            # Continue with string processing
-          end
-
-          parse_keyword_or_pattern(input)
         end
 
         def extract_from_string(input)

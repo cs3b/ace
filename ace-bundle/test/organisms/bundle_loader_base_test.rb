@@ -20,8 +20,8 @@ class BundleLoaderBaseTest < AceTestCase
 
       # Verify base content was loaded
       refute_nil context.content
-      assert context.content.include?("Base System Content")
-      assert context.content.include?("This is the primary document")
+      assert_match(/This is the primary document that should appear first\./, context.content)
+      assert_match(/It contains core instructions and guidelines\./, context.content)
 
       # Verify metadata tracks base info
       assert_equal "./test/base/system.md", context.metadata[:base_ref]
@@ -97,24 +97,23 @@ class BundleLoaderBaseTest < AceTestCase
       # This should log warning but not fail
       context = Ace::Bundle.load_preset("empty-base")
 
-      # Content will be empty, formatted output includes metadata header
-      assert context.content.include?("base_ref")
-      assert context.content.include?("./test/base/empty.md")
+      # Content should still be formatted from section mode even when base is empty
+      assert_match(/SEC\|main|#\s*Main/, context.content)
 
       # Should still have metadata
       assert_equal "./test/base/empty.md", context.metadata[:base_ref]
     end
   end
 
-  def test_base_only_no_sections
+  def test_base_only_with_empty_section
     Dir.chdir(@env.project_dir) do
       context = Ace::Bundle.load_preset("base-only")
 
       # Should have base content in the output
-      assert context.content.include?("Base System Content")
+      assert_match(/This is the primary document that should appear first\./, context.content)
 
-      # Should have no sections
-      assert_empty context.sections
+      # Should have a section container so content is processed in section mode
+      refute_empty context.sections
     end
   end
 
@@ -123,7 +122,7 @@ class BundleLoaderBaseTest < AceTestCase
       context = Ace::Bundle.load_preset("extensionless-base")
 
       # Should load file content, not treat filename as inline content
-      assert context.content.include?("README content for testing"),
+      assert context.content.include?("This file has no extension but should be resolved as a file, not inline content."),
              "Should include README file content"
 
       # Verify it was loaded as file, not inline
@@ -139,7 +138,8 @@ class BundleLoaderBaseTest < AceTestCase
       context = Ace::Bundle.load_preset("inline-base")
 
       # Should use the literal string as content
-      assert_equal "This is inline base content", context.content.strip
+      assert_match(/This is inline base content/, context.content)
+      assert_match(/SEC\|main|#\s*Main/, context.content)
 
       # Verify it was treated as inline
       assert_equal 'inline', context.metadata[:base_type]
@@ -189,6 +189,9 @@ class BundleLoaderBaseTest < AceTestCase
       description: "Preset with base field"
       bundle:
         base: "./test/base/system.md"
+        sections:
+          main:
+            files: []
       ---
     PRESET
 
@@ -253,6 +256,9 @@ class BundleLoaderBaseTest < AceTestCase
       description: "Preset with empty base file"
       bundle:
         base: "./test/base/empty.md"
+        sections:
+          main:
+            files: []
       ---
     PRESET
 
@@ -262,6 +268,9 @@ class BundleLoaderBaseTest < AceTestCase
       description: "Preset with base only"
       bundle:
         base: "./test/base/system.md"
+        sections:
+          main:
+            files: []
       ---
     PRESET
 
@@ -271,6 +280,9 @@ class BundleLoaderBaseTest < AceTestCase
       description: "Preset with extension-less base file"
       bundle:
         base: "README"
+        sections:
+          main:
+            files: []
       ---
     PRESET
 
@@ -280,6 +292,9 @@ class BundleLoaderBaseTest < AceTestCase
       description: "Preset with inline base content"
       bundle:
         base: "This is inline base content"
+        sections:
+          main:
+            files: []
       ---
     PRESET
   end

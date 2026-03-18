@@ -53,7 +53,7 @@ module Ace
         register "clear", CLI::Commands::Cache::Clear
 
         # Version command
-        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        version_cmd = Ace::Core::CLI::VersionCommand.build(
           gem_name: PROGRAM_NAME,
           version: VERSION
         )
@@ -61,7 +61,7 @@ module Ace
         register "--version", version_cmd
 
         # Help command
-        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        help_cmd = Ace::Core::CLI::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: VERSION,
           commands: REGISTERED_COMMANDS,

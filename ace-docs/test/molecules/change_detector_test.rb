@@ -151,11 +151,14 @@ module Ace
         def test_determine_since_uses_document_last_updated
           document = Models::Document.new(
             path: "test.md",
-            frontmatter: {
+          frontmatter: {
               "doc-type" => "guide",
               "purpose" => "Test",
-              "update" => {
+              "ace-docs" => {
                 "last-updated" => "2024-09-15"
+              },
+              "update" => {
+                "frequency" => "weekly"
               }
             }
           )

@@ -33,9 +33,6 @@ module Ace
           adaptive: "Ace::Review::Molecules::Strategies::AdaptiveStrategy"
         }.freeze
 
-        # Backward-compat alias for centralized error class
-        UnknownStrategyError = Ace::Review::Errors::UnknownStrategyError
-
         # Factory method to create a strategy instance
         #
         # @param type [Symbol] Strategy type (:full, :chunked, :adaptive)
@@ -52,7 +49,7 @@ module Ace
 
           unless class_name
             available = STRATEGIES.keys.join(", ")
-            raise UnknownStrategyError,
+            raise Ace::Review::Errors::UnknownStrategyError,
                   "Unknown strategy type '#{type}'. Available strategies: #{available}"
           end
 

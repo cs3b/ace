@@ -199,11 +199,6 @@ module Ace
             .sort_by { |n| parse(n)[:index] }
         end
 
-        # Backward-compatible alias
-        class << self
-          alias_method :jobs_to_renumber, :phases_to_renumber
-        end
-
         # Generate the shifted number for a phase being renumbered.
         #
         # @param number [String] Original phase number

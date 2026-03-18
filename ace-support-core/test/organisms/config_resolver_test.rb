@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/core/organisms/config_resolver"
+require "ace/support/config"
 
 class ConfigResolverTest < AceTestCase
   def test_resolve_with_cascade
@@ -29,7 +29,7 @@ class ConfigResolverTest < AceTestCase
       original_home = ENV["HOME"]
       ENV["HOME"] = home_dir
 
-      resolver = Ace::Core::Organisms::ConfigResolver.new
+      resolver = Ace::Support::Config::Organisms::ConfigResolver.new
       config = resolver.resolve
 
       assert_equal "value", config.get("ace", "local")
@@ -42,7 +42,7 @@ class ConfigResolverTest < AceTestCase
 
   def test_resolve_empty_when_no_configs
     with_temp_dir do
-      resolver = Ace::Core::Organisms::ConfigResolver.new
+      resolver = Ace::Support::Config::Organisms::ConfigResolver.new
       config = resolver.resolve
 
       assert config.empty?
@@ -61,7 +61,7 @@ class ConfigResolverTest < AceTestCase
       }
       create_config_file(".ace/config.yml", config_data.to_yaml)
 
-      resolver = Ace::Core::Organisms::ConfigResolver.new
+      resolver = Ace::Support::Config::Organisms::ConfigResolver.new
       value = resolver.get("ace", "nested", "deep")
 
       assert_equal "value", value
@@ -73,7 +73,7 @@ class ConfigResolverTest < AceTestCase
       local_config = { "ace" => { "type" => "local" } }
       create_config_file(".ace/config.yml", local_config.to_yaml)
 
-      resolver = Ace::Core::Organisms::ConfigResolver.new
+      resolver = Ace::Support::Config::Organisms::ConfigResolver.new
       config = resolver.resolve_type(:local)
 
       assert_equal "local", config.get("ace", "type")
@@ -83,7 +83,7 @@ class ConfigResolverTest < AceTestCase
   def test_create_default
     with_temp_dir do
       config_path = ".ace/core/config.yml"
-      config = Ace::Core::Organisms::ConfigResolver.create_default(config_path)
+      config = Ace::Support::Config::Organisms::ConfigResolver.create_default(config_path)
 
       assert File.exist?(config_path)
       # ace-config uses "config" namespace (not "ace") for its defaults

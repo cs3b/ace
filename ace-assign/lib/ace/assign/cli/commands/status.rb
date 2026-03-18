@@ -56,7 +56,6 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :assignment, desc: "Show status for specific assignment ID"
-          option :filter, desc: "Filter by scope (e.g., 010.01 or (assignment@)010.01)"
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
           def call(**options)
@@ -165,7 +164,7 @@ module Ace
             return { state: state, current: state.current, root: nil } if scope.nil? || scope.strip.empty?
 
             root = state.find_by_number(scope.strip)
-            raise PhaseNotFoundError, "Phase #{scope} not found in queue" unless root
+            raise PhaseErrors::NotFound, "Phase #{scope} not found in queue" unless root
 
             scoped_phases = state.subtree_phases(root.number)
             scoped_state = Models::QueueState.new(phases: scoped_phases, assignment: state.assignment)

@@ -93,33 +93,6 @@ module Ace
           assert_includes error.message, "weight must be between 0 and 1"
         end
 
-        # Factory method tests
-
-        def test_from_model_string
-          reviewer = Reviewer.from_model_string("google:gemini-2.5-flash")
-
-          assert_equal "default", reviewer.name
-          assert_equal "google:gemini-2.5-flash", reviewer.model
-        end
-
-        def test_from_model_string_with_custom_name
-          reviewer = Reviewer.from_model_string("claude:sonnet", name: "custom-reviewer")
-
-          assert_equal "custom-reviewer", reviewer.name
-          assert_equal "claude:sonnet", reviewer.model
-        end
-
-        def test_from_models_array
-          models = ["google:gemini-2.5-flash", "openai:gpt-4o"]
-          reviewers = Reviewer.from_models_array(models)
-
-          assert_equal 2, reviewers.length
-          assert_equal "reviewer-1", reviewers[0].name
-          assert_equal "google:gemini-2.5-flash", reviewers[0].model
-          assert_equal "reviewer-2", reviewers[1].name
-          assert_equal "openai:gpt-4o", reviewers[1].model
-        end
-
         def test_from_preset_config_with_reviewers_array
           config = {
             "reviewers" => [
@@ -136,38 +109,9 @@ module Ace
           assert_equal true, reviewers[1].critical
         end
 
-        def test_from_preset_config_with_legacy_models_array
-          config = { "models" => ["google:gemini-2.5-flash", "openai:gpt-4o"] }
-          reviewers = Reviewer.from_preset_config(config)
-
-          assert_equal 2, reviewers.length
-          assert_equal "reviewer-1", reviewers[0].name
-          assert_equal "google:gemini-2.5-flash", reviewers[0].model
-        end
-
-        def test_from_preset_config_with_legacy_single_model
-          config = { "model" => "google:gemini-2.5-flash" }
-          reviewers = Reviewer.from_preset_config(config)
-
-          assert_equal 1, reviewers.length
-          assert_equal "default", reviewers[0].name
-          assert_equal "google:gemini-2.5-flash", reviewers[0].model
-        end
-
         def test_from_preset_config_with_empty_config
           reviewers = Reviewer.from_preset_config({})
           assert_empty reviewers
-        end
-
-        def test_from_preset_config_prefers_reviewers_over_models
-          config = {
-            "reviewers" => [{ "name" => "custom", "model" => "custom:model" }],
-            "models" => ["google:gemini-2.5-flash"]
-          }
-          reviewers = Reviewer.from_preset_config(config)
-
-          assert_equal 1, reviewers.length
-          assert_equal "custom", reviewers[0].name
         end
 
         # System prompt enhancement tests

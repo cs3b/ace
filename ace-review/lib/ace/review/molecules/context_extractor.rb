@@ -146,7 +146,7 @@ module Ace
             ""
           end
         end
-      rescue Ace::Review::Molecules::ContextComposer::ContextComposerError => e
+      rescue Ace::Review::Errors::ContextComposerError => e
         # Fail-fast error handling for ace-bundle failures
         raise ContextExtractorError, "Context extraction failed: #{e.message}"
       end

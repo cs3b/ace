@@ -193,9 +193,10 @@ module Ace
             ---
             doc-type: guide
             purpose: Outdated document
+            ace-docs:
+              last-updated: 2024-01-01
             update:
               frequency: weekly
-              last-updated: 2024-01-01
             ---
 
             Content
@@ -205,9 +206,10 @@ module Ace
             ---
             doc-type: guide
             purpose: Current document
+            ace-docs:
+              last-updated: #{Date.today}
             update:
               frequency: weekly
-              last-updated: #{Date.today}
             ---
 
             Content
@@ -437,9 +439,10 @@ module Ace
             ---
             doc-type: guide
             purpose: Current document
+            ace-docs:
+              last-updated: #{Date.today}
             update:
               frequency: weekly
-              last-updated: #{Date.today}
             ---
 
             Content
@@ -449,9 +452,10 @@ module Ace
             ---
             doc-type: guide
             purpose: Stale document
+            ace-docs:
+              last-updated: #{Date.today - 10}
             update:
               frequency: weekly
-              last-updated: #{Date.today - 10}
             ---
 
             Content
@@ -461,9 +465,10 @@ module Ace
             ---
             doc-type: guide
             purpose: Outdated document
+            ace-docs:
+              last-updated: #{Date.today - 30}
             update:
               frequency: weekly
-              last-updated: #{Date.today - 30}
             ---
 
             Content

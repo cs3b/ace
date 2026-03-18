@@ -75,9 +75,6 @@ module Ace
             value  # Already a date-only string
           when Atoms::TimestampParser::ISO8601_UTC_PATTERN
             value  # Already ISO 8601 UTC
-          when Atoms::TimestampParser::DATETIME_PATTERN
-            # Legacy format - convert to ISO 8601 UTC
-            Time.parse(value).utc.strftime("%Y-%m-%dT%H:%M:%SZ")
           else
             value
           end

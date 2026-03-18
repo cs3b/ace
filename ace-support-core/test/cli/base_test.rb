@@ -67,10 +67,6 @@ module Ace
           assert_equal %i[h v q d o], Ace::Core::CLI::Base::RESERVED_FLAGS
         end
 
-        def test_old_require_path_loads_compatibility_alias
-          require "ace/core/cli/dry_cli/base"
-          assert_equal Ace::Core::CLI::Base, Ace::Core::CLI::Base
-        end
       end
     end
   end

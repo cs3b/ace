@@ -113,9 +113,9 @@ class IdeaFrontmatterValidatorTest < AceIdeaTestCase
     end
   end
 
-  def test_validates_legacy_cancelled_status_value
+  def test_validates_cancelled_is_invalid_status_value
     with_ideas_dir do |root|
-      file = write_idea_file(root, "legacy-cancelled", <<~CONTENT)
+      file = write_idea_file(root, "cancelled-status", <<~CONTENT)
         ---
         id: abc123
         status: cancelled
@@ -126,7 +126,7 @@ class IdeaFrontmatterValidatorTest < AceIdeaTestCase
       CONTENT
 
       issues = Validator.validate(file)
-      assert issues.any? { |i| i[:message].include?("Legacy status value: 'cancelled'") }
+      assert issues.any? { |i| i[:message].include?("Invalid status value: 'cancelled'") }
     end
   end
 

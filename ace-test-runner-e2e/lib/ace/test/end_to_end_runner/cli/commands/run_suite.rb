@@ -2,7 +2,7 @@
 
 require "ace/support/cli"
 require "stringio"
-require "ace/core/cli/dry_cli/base"
+require "ace/core/cli/base"
 
 module Ace
   module Test

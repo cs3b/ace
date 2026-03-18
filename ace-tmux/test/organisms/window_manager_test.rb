@@ -69,7 +69,7 @@ class WindowManagerTest < Minitest::Test
   def test_add_window_raises_when_not_in_tmux
     ENV.delete("TMUX")
 
-    assert_raises(Ace::Tmux::Organisms::NotInTmuxError) do
+    assert_raises(Ace::Tmux::NotInTmuxError) do
       @manager.add_window("code-editor")
     end
   end

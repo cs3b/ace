@@ -342,7 +342,7 @@ class ForkRunCommandTest < AceAssignTestCase
       writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
       writer.mark_in_progress(state_before.find_by_number("020.02").file_path)
 
-      error = assert_raises(Ace::Assign::InvalidPhaseStateError) do
+      error = assert_raises(Ace::Assign::PhaseErrors::InvalidState) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "020", assignment: assignment.id, quiet: true)

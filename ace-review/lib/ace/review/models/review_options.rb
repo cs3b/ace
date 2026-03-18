@@ -115,7 +115,7 @@ module Ace
           !@no_feedback
         end
 
-        # Get effective model (single model for backward compatibility)
+        # Get effective model (single model)
         # Priority: model scalar > first model in models array > config_model > default
         def effective_model(config_model = nil)
           return model if model
@@ -130,7 +130,7 @@ module Ace
           # If models array is set (from CLI), use it
           return models if models&.any?
 
-          # If model scalar is set (backward compatibility), wrap in array
+          # If model scalar is set, wrap in array
           return [model] if model
 
           # If config provides models array, use it
@@ -170,7 +170,7 @@ module Ace
           @context ||= config["context"]
           @subject ||= config["subject"]
 
-          # Handle models from config (backward compatible)
+          # Handle models from config
           # CLI models override preset models
           unless @models&.any?
             if config["models"].is_a?(Array) && config["models"].any?

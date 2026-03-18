@@ -146,9 +146,6 @@ module Ace
           )
         end
       end
-
-      # Backward-compat alias for centralized error class
-      PresetNotFoundError = Ace::Tmux::PresetNotFoundError
     end
   end
 end

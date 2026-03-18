@@ -75,12 +75,9 @@ module Ace
         end
 
         # Get the default context from configuration
-        # Supports bundle: (new) and context: (old) keys for backward compatibility
         def default_context
           config&.dig("defaults", "bundle") ||
-            config&.dig("defaults", "context") ||
-            Ace::Review.get("defaults", "bundle") ||
-            Ace::Review.get("defaults", "context")
+            Ace::Review.get("defaults", "bundle")
         end
 
         # Get the default output format
@@ -95,10 +92,9 @@ module Ace
           preset = load_preset(preset_name)
           return nil unless preset
 
-          # Resolve models with backward compatibility
           models_config = resolve_models_config(preset, overrides)
 
-          # Support both bundle: (new) and context: (old) keys
+          # Support both bundle: and context: for context resolution
           preset_context = preset["bundle"] || preset["context"]
 
           {
@@ -110,8 +106,6 @@ module Ace
             context: resolve_context_config(preset_context, overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             models: models_config,
-            # Keep model for backward compatibility (first model in array)
-            model: models_config.first,
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
         end
@@ -282,10 +276,6 @@ module Ace
             return path if path
           end
 
-          # Legacy support for .coding-agent/code-review.yml
-          legacy_path = File.join(project_root, ".coding-agent/code-review.yml")
-          return legacy_path if File.exist?(legacy_path)
-
           # Fallback to .ace/review/config.yml for tests and standalone usage
           fallback_path = File.join(project_root, ".ace/review/config.yml")
           return fallback_path if File.exist?(fallback_path)
@@ -432,27 +422,17 @@ module Ace
           preset_subject
         end
 
-        # Resolve models configuration with backward compatibility
-        # Priority: override models > override model > preset models > preset model > default
+        # Resolve models configuration
+        # Priority: override models > preset models > default
         def resolve_models_config(preset, overrides)
           # If override provides models array, use it
           if overrides[:models].is_a?(Array) && overrides[:models].any?
             return overrides[:models]
           end
 
-          # If override provides single model, wrap in array
-          if overrides[:model]
-            return [overrides[:model]]
-          end
-
           # If preset has models array, use it
           if preset["models"].is_a?(Array) && preset["models"].any?
             return preset["models"]
-          end
-
-          # If preset has single model, wrap in array
-          if preset["model"]
-            return [preset["model"]]
           end
 
           # Fallback to default model

@@ -20,10 +20,6 @@ module Ace
       #     critical: false
       #   )
       #
-      # @example Creating from legacy model string
-      #   reviewer = Reviewer.from_model_string("google:gemini-2.5-flash")
-      #   # Creates a default reviewer with name "default"
-      #
       class Reviewer
         # Default weight for reviewers (1.0 = full contribution)
         DEFAULT_WEIGHT = 1.0
@@ -56,29 +52,7 @@ module Ace
           validate!
         end
 
-        # Create a Reviewer from a legacy model string
-        #
-        # @param model_string [String] Model identifier (e.g., "google:gemini-2.5-flash")
-        # @param name [String, nil] Optional name (defaults to "default")
-        # @return [Reviewer] New reviewer instance
-        def self.from_model_string(model_string, name: nil)
-          new(
-            name: name || "default",
-            model: model_string
-          )
-        end
-
-        # Create Reviewers from legacy models array
-        #
-        # @param models [Array<String>] Array of model identifiers
-        # @return [Array<Reviewer>] Array of reviewer instances
-        def self.from_models_array(models)
-          models.each_with_index.map do |model, index|
-            from_model_string(model, name: "reviewer-#{index + 1}")
-          end
-        end
-
-        # Create Reviewers from preset config (handles both new and legacy formats)
+        # Create Reviewers from preset config (new reviewers array format)
         #
         # @param config [Hash] Preset configuration
         # @return [Array<Reviewer>] Array of reviewer instances
@@ -90,17 +64,6 @@ module Ace
             return config["reviewers"].map { |r| new(r) }
           end
 
-          # Legacy format: models array
-          if config["models"].is_a?(Array) && config["models"].any?
-            return from_models_array(config["models"])
-          end
-
-          # Legacy format: single model
-          if config["model"]
-            return [from_model_string(config["model"])]
-          end
-
-          # No reviewers configured
           []
         end
 

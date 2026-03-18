@@ -44,7 +44,6 @@ module Ace
         # Polymorphic Return Type:
         #   - Date object for date-only timestamps (YYYY-MM-DD)
         #   - Time object (UTC) for ISO 8601 timestamps (YYYY-MM-DDTHH:MM:SSZ)
-        #   - Time object (UTC) for legacy datetime timestamps (YYYY-MM-DD HH:MM)
         #
         # This preserves the precision of the original timestamp format. When comparing
         # dates for freshness calculations, Time objects are converted to Date objects.
@@ -53,8 +52,6 @@ module Ace
         def last_updated
           # Try ace-docs namespace first
           date_str = @ace_docs_config["last-updated"]
-          # Fall back to legacy update namespace
-          date_str ||= @update_config["last-updated"]
 
           return nil unless date_str
 
@@ -78,7 +75,6 @@ module Ace
         # Polymorphic Return Type:
         #   - Date object for date-only timestamps (YYYY-MM-DD)
         #   - Time object (UTC) for ISO 8601 timestamps (YYYY-MM-DDTHH:MM:SSZ)
-        #   - Time object (UTC) for legacy datetime timestamps (YYYY-MM-DD HH:MM)
         #
         # @return [Date, Time, nil] The last checked timestamp, or nil if not set
         # @see #last_updated for detailed behavior documentation
@@ -201,17 +197,12 @@ module Ace
           @ace_docs_config
         end
 
-        # Get subject diff filters with backward compatibility
-        # Tries new format first, falls back to legacy format
+        # Get subject diff filters
         # @return [Array<String>] Flat array of path filters for single subject
         def subject_diff_filters
           # Try new format first
           filters = @ace_docs_config.dig("subject", "diff", "filters")
           return filters if filters && !filters.empty?
-
-          # Fall back to legacy format
-          legacy = @update_config.dig("focus", "paths")
-          return legacy if legacy && !legacy.empty?
 
           []
         end
@@ -225,7 +216,6 @@ module Ace
 
         # Get structured subject configurations for multi-subject support
         # @return [Array<Hash>] Array of {name: String, filters: Array<String>}
-        # Returns single subject for backward compatibility if not multi-subject
         def subject_configurations
           subject_config = @ace_docs_config["subject"]
 
@@ -243,13 +233,6 @@ module Ace
                 filters: filters
               }
             end.reject { |s| s[:filters].empty? }
-          elsif subject_config.is_a?(Hash) && subject_config.key?("diff")
-            # Single subject format (backward compatibility)
-            # { "diff" => { "filters" => [...] } }
-            filters = subject_config.dig("diff", "filters") || []
-            return [] if filters.empty?
-
-            [{ name: "default", filters: filters }]
           else
             # No valid subject configuration
             []

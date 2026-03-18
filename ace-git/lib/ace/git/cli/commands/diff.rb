@@ -3,7 +3,7 @@
 require "fileutils"
 require "tmpdir"
 require "yaml"
-require "ace/core/cli/dry_cli/base"
+require "ace/core/cli/base"
 
 module Ace
   module Git

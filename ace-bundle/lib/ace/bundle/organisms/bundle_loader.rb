@@ -24,9 +24,6 @@ module Ace
     module Organisms
       # Main bundle loader that orchestrates preset loading using ace-core components
       class BundleLoader
-        # Backward-compat alias for centralized error class
-        PresetLoadError = Ace::Bundle::PresetLoadError
-
         def initialize(options = {})
           @options = options
           @template_dir = nil
@@ -62,7 +59,7 @@ module Ace
           # Process the preset bundle configuration
           begin
             bundle = load_from_preset_config(preset, merged_options)
-          rescue PresetLoadError => e
+          rescue Ace::Bundle::PresetLoadError => e
             # Handle errors from top-level preset processing (fail-fast behavior)
             return Models::BundleData.new(
               preset_name: preset_name,
@@ -475,7 +472,7 @@ module Ace
               begin
                 preset_names_loaded = config['presets'].dup
                 config = process_top_level_presets(config)
-              rescue PresetLoadError => e
+              rescue Ace::Bundle::PresetLoadError => e
                 preset_error = e.message
                 warn "Warning: #{e.message}" if @options[:debug]
                 config.delete('presets')
@@ -626,33 +623,18 @@ module Ace
           # Process base content if present
           process_base_content(bundle, bundle_config, options)
 
-          # Process sections if present
-          if @section_processor.has_sections?(preset)
-            sections = @section_processor.process_sections(preset, @preset_manager)
-            bundle.sections = sections
+          # Process sections (legacy non-section preset formats are no longer supported)
+          raise Ace::Bundle::PresetLoadError, "Preset '#{preset[:name]}' must define bundle sections" unless @section_processor.has_sections?(preset)
 
-            # Process content for each section
-            sections.each do |section_name, section_data|
-              process_section_content(bundle, section_name, section_data, options, bundle_config)
-            end
-          else
-            # Migrate legacy configuration to sections if needed
-            if should_migrate_to_sections?(bundle_config)
-              migrated_config = @section_processor.migrate_legacy_to_sections(preset)
-              sections = @section_processor.process_sections(migrated_config, @preset_manager)
-              bundle.sections = sections
+          sections = @section_processor.process_sections(preset, @preset_manager)
+          bundle.sections = sections
 
-              # Process migrated sections
-              sections.each do |section_name, section_data|
-                process_section_content(bundle, section_name, section_data, options, bundle_config)
-              end
-            else
-              # Legacy processing for non-section configurations
-              process_legacy_content(bundle, bundle_config, options)
-            end
+          # Process content for each section
+          sections.each do |section_name, section_data|
+            process_section_content(bundle, section_name, section_data, options, bundle_config)
           end
 
-          # Process top-level PR references (works with both sections and legacy formats)
+          # Process top-level PR references
           # Called after section processing so PR diffs merge into existing sections
           process_pr_config(bundle, bundle_config, options)
 
@@ -768,7 +750,7 @@ module Ace
 
           # Fail fast if any referenced preset failed to load
           if errors.any?
-            raise PresetLoadError, "Failed to load referenced presets: #{errors.join('; ')}"
+            raise Ace::Bundle::PresetLoadError, "Failed to load referenced presets: #{errors.join('; ')}"
           end
 
           return bundle_config unless preset_bundles.any?
@@ -1287,65 +1269,6 @@ module Ace
           section_data[:_processed_content] = content if content
         end
 
-        # Process legacy content (non-section configurations)
-        def process_legacy_content(bundle, bundle_config, options)
-          # Process files from bundle configuration
-          if bundle_config['files'] && bundle_config['files'].any?
-            # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = bundle_config['files'].map do |file_ref|
-              resolve_file_reference(file_ref)
-            end.compact
-
-            aggregator = Ace::Core::Molecules::FileAggregator.new(
-              max_size: options[:max_size] || options['max_size'],
-              base_dir: options[:base_dir] || project_root,
-              exclude: bundle_config['exclude'] || []
-            )
-
-            # Use aggregate to handle glob patterns
-            result = aggregator.aggregate(resolved_files)
-
-            # Add files to bundle if embed_document_source is true
-            if bundle_config['embed_document_source']
-              result[:files].each do |file_info|
-                bundle.add_file(file_info[:path], file_info[:content])
-              end
-            end
-
-            # Add errors if any
-            result[:errors].each do |error|
-              bundle.metadata[:errors] ||= []
-              bundle.metadata[:errors] << error
-            end
-          end
-
-          # Process commands
-          if bundle_config['commands'] && bundle_config['commands'].any?
-            timeout = options[:timeout] || options['timeout'] || 30
-            bundle_config['commands'].each do |command|
-              cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
-              bundle.commands ||= []
-              bundle.commands << {
-                command: command,
-                output: cmd_result[:stdout],
-                success: cmd_result[:success],
-                error: cmd_result[:error]
-              }
-            end
-          end
-        end
-
-        # Check if configuration should be migrated to sections
-        def should_migrate_to_sections?(bundle_config)
-          # Auto-migrate if there are files, commands, or diffs but no sections
-          return false if @section_processor.has_sections?({ 'context' => bundle_config })
-
-          (bundle_config['files'] && bundle_config['files'].any?) ||
-          (bundle_config['commands'] && bundle_config['commands'].any?) ||
-          (bundle_config['diffs'] && bundle_config['diffs'].any?) ||
-          (bundle_config['ranges'] && bundle_config['ranges'].any?)
-        end
-
         # Process base content from context.base field
         #
         # Supports both file paths and inline content strings:
@@ -1484,8 +1407,7 @@ module Ace
         # Delegate to Atoms::TypoDetector for architectural consistency
         # @deprecated Use Atoms::TypoDetector.detect_suspicious_keys directly
         def detect_suspicious_keys(frontmatter, path)
-          # Support both new ACE_BUNDLE_STRICT and legacy ACE_CONTEXT_STRICT for migration
-          return [] unless ENV['ACE_BUNDLE_STRICT'] || ENV['ACE_CONTEXT_STRICT']
+          return [] unless ENV["ACE_BUNDLE_STRICT"]
 
           Atoms::TypoDetector.detect_suspicious_keys(frontmatter, path)
         end

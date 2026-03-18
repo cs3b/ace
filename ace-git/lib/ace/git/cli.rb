@@ -66,14 +66,14 @@ module Ace
       register "branch", Commands::Branch.new
       register "pr", Commands::Pr.new
 
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: "ace-git",
         version: Ace::Git::VERSION
       )
       register "version", version_cmd
       register "--version", version_cmd
 
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Git::VERSION,
         commands: REGISTERED_COMMANDS,

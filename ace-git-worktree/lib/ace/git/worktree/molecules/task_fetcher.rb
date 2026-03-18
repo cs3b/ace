@@ -70,9 +70,6 @@ module Ace
             defined?(Ace::Task::Organisms::TaskManager)
           end
 
-          # Legacy alias for backwards compatibility
-          alias_method :ace_taskflow_available?, :ace_task_available?
-
           # Get helpful error message when ace-task is unavailable
           #
           # @return [String] User-friendly error message with installation guidance

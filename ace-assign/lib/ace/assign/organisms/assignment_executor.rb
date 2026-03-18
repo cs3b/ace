@@ -32,13 +32,12 @@ module Ace
         # @param parent_id [String, nil] Parent assignment ID for hierarchy linking
         # @return [Hash] Result with assignment and first phase
         def start(config_path, parent_id: nil)
-          raise ConfigNotFoundError, "Config file not found: #{config_path}" unless File.exist?(config_path)
+          raise ConfigErrors::NotFound, "Config file not found: #{config_path}" unless File.exist?(config_path)
 
           config = YAML.safe_load_file(config_path, permitted_classes: [Time, Date])
 
-          # Support both new terminology (assignment/phases) and legacy (session/steps)
-          assignment_config = config["assignment"] || config["session"] || {}
-          phases_config = config["phases"] || config["steps"] || []
+          assignment_config = config["assignment"] || {}
+          phases_config = config["phases"] || []
 
           raise Error, "No phases defined in config" if phases_config.empty?
 
@@ -107,7 +106,7 @@ module Ace
         # @return [Hash] Result with assignment and state
         def status
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           {
@@ -129,16 +128,16 @@ module Ace
         # @return [Hash] Result with started phase and updated state
         def start_phase(phase_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          raise InvalidPhaseStateError, "Cannot start: phase #{state.current.number} is already in progress. Finish or fail it first." if state.current
+          raise PhaseErrors::InvalidState, "Cannot start: phase #{state.current.number} is already in progress. Finish or fail it first." if state.current
 
           fork_root = fork_root&.strip
           target_phase = if phase_number && !phase_number.to_s.strip.empty?
                            find_target_phase_for_start(state, phase_number, fork_root)
                          elsif fork_root && !fork_root.empty?
-                           raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+                           raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
                            state.next_workable_in_subtree(fork_root)
                          else
                            state.next_workable
@@ -146,9 +145,9 @@ module Ace
 
           unless target_phase
             if fork_root && !fork_root.empty?
-              raise InvalidPhaseStateError, "No pending workable phase found in subtree #{fork_root}."
+              raise PhaseErrors::InvalidState, "No pending workable phase found in subtree #{fork_root}."
             end
-            raise InvalidPhaseStateError, "No pending workable phase found."
+            raise PhaseErrors::InvalidState, "No pending workable phase found."
           end
 
           phase_writer.mark_in_progress(target_phase.file_path)
@@ -171,7 +170,7 @@ module Ace
         # @return [Hash] Result with completed phase and updated state
         def finish_phase(report_content:, phase_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           current = find_target_phase_for_finish(state, phase_number, fork_root)
@@ -231,7 +230,7 @@ module Ace
         # @param fork_root [String, nil] Optional subtree root to constrain advancement
         # @return [Hash] Result with updated state
         def advance(report_path, fork_root: nil)
-          raise ConfigNotFoundError, "Report file not found: #{report_path}" unless File.exist?(report_path)
+          raise ConfigErrors::NotFound, "Report file not found: #{report_path}" unless File.exist?(report_path)
 
           # Auto-start the next workable subtree phase when fork_root is given but
           # no phase in the subtree is yet in_progress (subtree entry case).
@@ -243,7 +242,7 @@ module Ace
               active_in_subtree = state.in_progress_in_subtree(fork_root_str)
               if active_in_subtree.size > 1
                 active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
-                raise InvalidPhaseStateError, "Cannot advance subtree #{fork_root_str}: multiple phases are in progress (#{active_refs})."
+                raise PhaseErrors::InvalidState, "Cannot advance subtree #{fork_root_str}: multiple phases are in progress (#{active_refs})."
               end
 
               if active_in_subtree.empty?
@@ -262,7 +261,7 @@ module Ace
         # @return [Hash] Result with updated state
         def fail(message)
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           current = state.current
@@ -292,14 +291,14 @@ module Ace
         # @return [Hash] Result with new phase
         def add(name, instructions, after: nil, as_child: false)
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           existing_numbers = queue_scanner.phase_numbers(assignment.phases_dir)
 
           # Validate --after phase exists
           if after && !existing_numbers.include?(after)
-            raise PhaseNotFoundError, "Phase #{after} not found. Available phases: #{existing_numbers.join(', ')}"
+            raise PhaseErrors::NotFound, "Phase #{after} not found. Available phases: #{existing_numbers.join(', ')}"
           end
 
           new_number, renumbered = calculate_insertion_point(
@@ -362,13 +361,13 @@ module Ace
         # @return [Hash] Result with new retry phase
         def retry_phase(phase_ref)
           assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
 
           # Find the phase to retry
           original = state.find_by_number(phase_ref.to_s)
-          raise PhaseNotFoundError, "Phase #{phase_ref} not found in queue" unless original
+          raise PhaseErrors::NotFound, "Phase #{phase_ref} not found in queue" unless original
 
           # Get existing numbers
           existing_numbers = queue_scanner.phase_numbers(assignment.phases_dir)
@@ -1118,15 +1117,15 @@ module Ace
 
         def find_target_phase_for_start(state, phase_number, fork_root)
           target = state.find_by_number(phase_number)
-          raise PhaseNotFoundError, "Phase #{phase_number} not found in queue" unless target
+          raise PhaseErrors::NotFound, "Phase #{phase_number} not found in queue" unless target
 
           if fork_root && !fork_root.empty?
-            raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
-            raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
+            raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            raise PhaseErrors::InvalidState, "Phase #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
           end
-          raise InvalidPhaseStateError, "Cannot start phase #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
+          raise PhaseErrors::InvalidState, "Cannot start phase #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
           if state.has_incomplete_children?(target.number)
-            raise InvalidPhaseStateError, "Cannot start phase #{target.number}: has incomplete children."
+            raise PhaseErrors::InvalidState, "Cannot start phase #{target.number}: has incomplete children."
           end
 
           target
@@ -1136,22 +1135,22 @@ module Ace
           fork_root = fork_root&.strip
           if phase_number && !phase_number.to_s.strip.empty?
             target = state.find_by_number(phase_number)
-            raise PhaseNotFoundError, "Phase #{phase_number} not found in queue" unless target
+            raise PhaseErrors::NotFound, "Phase #{phase_number} not found in queue" unless target
             if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
-              raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}."
+              raise PhaseErrors::InvalidState, "Phase #{target.number} is outside scoped subtree #{fork_root}."
             end
-            raise InvalidPhaseStateError, "Cannot finish phase #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
+            raise PhaseErrors::InvalidState, "Cannot finish phase #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
 
             return target
           end
 
           current = state.current
           if fork_root && !fork_root.empty?
-            raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
             active_in_subtree = state.in_progress_in_subtree(fork_root)
             if active_in_subtree.size > 1
               active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
-              raise InvalidPhaseStateError, "Cannot finish in subtree #{fork_root}: multiple phases are in progress (#{active_refs})."
+              raise PhaseErrors::InvalidState, "Cannot finish in subtree #{fork_root}: multiple phases are in progress (#{active_refs})."
             end
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root)

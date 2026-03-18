@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Nav
-      VERSION = "0.22.1"
+      VERSION = "0.23.0"
     end
   end
 end

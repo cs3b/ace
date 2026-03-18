@@ -122,7 +122,7 @@ module Ace
       register "fork-run", wrap_command(Commands::ForkRun)
 
       # Register version command
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      version_cmd = Ace::Core::CLI::VersionCommand.build(
         gem_name: "ace-assign",
         version: Ace::Assign::VERSION
       )
@@ -130,7 +130,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      help_cmd = Ace::Core::CLI::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Assign::VERSION,
         commands: REGISTERED_COMMANDS,

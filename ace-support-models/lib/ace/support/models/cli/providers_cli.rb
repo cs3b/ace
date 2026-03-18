@@ -41,7 +41,7 @@ module Ace
         register "sync", CLI::Commands::Providers::Sync
 
         # Register version command
-        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        version_cmd = Ace::Core::CLI::VersionCommand.build(
           gem_name: PROGRAM_NAME,
           version: VERSION
         )
@@ -49,7 +49,7 @@ module Ace
         register "--version", version_cmd
 
         # Register help command
-        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        help_cmd = Ace::Core::CLI::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: VERSION,
           commands: REGISTERED_COMMANDS,
