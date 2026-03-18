@@ -208,7 +208,7 @@ module Ace
           # test_handles_special_characters                                FAIL (0.00s)
           #         Expected: "path\\to\\file"
           #           Actual: nil
-          #         /Users/mc/Ps/ace-meta/ace-core/test/atoms/env_parser_test.rb:50:in 'EnvParserTest#test_handles_special_characters'
+          #         /Users/mc/Ps/ace/ace-core/test/atoms/env_parser_test.rb:50:in 'EnvParserTest#test_handles_special_characters'
 
           lines = content.strip.lines
 
