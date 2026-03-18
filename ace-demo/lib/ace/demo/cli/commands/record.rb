@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Record < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Record terminal demo from VHS tape"
 
@@ -29,7 +29,7 @@ module Ace
           def call(tape:, args: [], **options)
             format = (options[:format] || "gif").downcase
             unless Organisms::DemoRecorder::SUPPORTED_FORMATS.include?(format)
-              raise Ace::Core::CLI::Error, "Unsupported format: #{format}. Use gif, mp4, or webm."
+              raise Ace::Support::Cli::Error, "Unsupported format: #{format}. Use gif, mp4, or webm."
             end
             options = options.dup
             options.delete(:format)
@@ -44,7 +44,7 @@ module Ace
           rescue TapeNotFoundError, VhsNotFoundError, VhsExecutionError, FfmpegNotFoundError, MediaRetimeError,
                  PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError,
                  ArgumentError => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private

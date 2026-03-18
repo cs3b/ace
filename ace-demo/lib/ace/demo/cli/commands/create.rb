@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Create < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Create a new demo tape from shell commands"
 
@@ -48,7 +48,7 @@ module Ace
               puts "Created: #{result[:path]}"
             end
           rescue TapeAlreadyExistsError => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
@@ -61,7 +61,7 @@ module Ace
             end
 
             if commands.empty?
-              raise Ace::Core::CLI::Error, "No commands provided. Pass commands after -- or pipe via stdin."
+              raise Ace::Support::Cli::Error, "No commands provided. Pass commands after -- or pipe via stdin."
             end
 
             commands

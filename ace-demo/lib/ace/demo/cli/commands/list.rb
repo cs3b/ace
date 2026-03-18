@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class List < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "List available demo tapes"
 
@@ -25,7 +25,7 @@ module Ace
               puts format("  %-#{width}s  %-40s  (%s)", item[:name], description, item[:source])
             end
           rescue StandardError => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
         end
       end

@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Show < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Show metadata and contents for a demo tape"
 
@@ -30,7 +30,7 @@ module Ace
             puts "--- Contents ---"
             print entry[:content]
           rescue TapeNotFoundError, ArgumentError => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
