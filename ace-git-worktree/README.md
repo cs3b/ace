@@ -596,15 +596,15 @@ When reporting issues, include:
 4. **Configuration:** `ace-git-worktree config show`
 5. **Git status:** `git status` and `git worktree list`
 
-For more help, open an issue at: https://github.com/cs3b/ace-meta/issues
+For more help, open an issue at: https://github.com/cs3b/ace/issues
 
 ## Development
 
 ### Setup
 
 ```bash
-git clone https://github.com/ace-ecosystem/ace-meta
-cd ace-meta/ace-git-worktree
+git clone https://github.com/cs3b/ace
+cd ace/ace-git-worktree
 bundle install
 ```
 
@@ -735,4 +735,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ace-ecosystem/ace-meta.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace.
