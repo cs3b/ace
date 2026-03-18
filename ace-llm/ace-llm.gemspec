@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "LLM provider integration for AI-assisted development"
   spec.description = "Query any LLM provider through a unified CLI interface with cost tracking and output formatting"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
