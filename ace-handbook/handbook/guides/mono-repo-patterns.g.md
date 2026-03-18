@@ -36,7 +36,7 @@ Individual gems do NOT have their own `Gemfile`. The mono-repo uses a single roo
 # Wrapper script to run ace-gem with proper bundler context
 require "pathname"
 
-# Find the ace-meta root directory
+# Find the ace root directory
 ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
 
 # Set the Gemfile location
