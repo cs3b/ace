@@ -25,6 +25,8 @@ coverage
 ace-taskflow/.ace-taskflow/
 *.tmp
 *.diff
+# tmux capture artifacts
+tmux-*.log
 # current path (task or release)
 _current
 
