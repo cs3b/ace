@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Safe markdown editing with frontmatter support for ACE gems"
   spec.description = "Provides safe, atomic markdown file operations with frontmatter extraction, section editing, and validation. Prevents file corruption through backup/rollback mechanisms."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 

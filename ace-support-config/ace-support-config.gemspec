@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Reusable configuration cascade with customizable folder names. " \
                      "Supports project-level, user-level, and gem-level configuration " \
                      "with deep merging and priority-based resolution."
-  spec.homepage = "https://github.com/cs3b/ace-meta/tree/main/ace-support-config"
+  spec.homepage = "https://github.com/cs3b/ace/tree/main/ace-support-config"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
@@ -33,6 +33,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace-meta"
-  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace-meta/blob/main/ace-support-config/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace"
+  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-support-config/CHANGELOG.md"
 end

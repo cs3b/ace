@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "ace-support-nav provides unified navigation and path resolution across the ACE ecosystem. " \
                      "It automatically discovers handbooks bundled within ace-* gems, resolves resource URIs " \
                      "to actual file paths, and supports a multi-level override cascade."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
