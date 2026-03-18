@@ -11,13 +11,6 @@ defaults:
   llm_timeout: 900  # Timeout for LLM queries in seconds (15 minutes)
   auto_execute: true  # Automatically execute LLM query without confirmation
   gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
-  # NOTE: Auto-save is enabled for this project's contributors.
-  # The gem's user-facing default is `false` (opt-in).
-  auto_save: true
-  task_branch_patterns:
-    - '^(\d+(?:\.\d+)?)-'  # Standard: 121-feature, 121.01-subtask
-    - '^feature/(\d+)-'     # Feature branches: feature/123-name
-  auto_save_release_fallback: true
 
 # Storage configuration
 # storage:
