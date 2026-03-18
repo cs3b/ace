@@ -23,7 +23,7 @@ module Ace
       # This replaces the Thor-based CLI with ace-support-cli while maintaining
       # complete command parity and user-facing behavior.
       module CLI
-        extend Ace::Core::CLI::RegistryDsl
+        extend Ace::Support::Cli::RegistryDsl
 
         PROGRAM_NAME = "ace-git-secrets"
 
@@ -53,14 +53,14 @@ module Ace
         register "check-release", CLI::Commands::CheckRelease.new
 
         # Register version command
-        version_cmd = Ace::Core::CLI::VersionCommand.build(
+        version_cmd = Ace::Support::Cli::VersionCommand.build(
           gem_name: "ace-git-secrets",
           version: Ace::Git::Secrets::VERSION
         )
         register "version", version_cmd
         register "--version", version_cmd
 
-        help_cmd = Ace::Core::CLI::HelpCommand.build(
+        help_cmd = Ace::Support::Cli::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: Ace::Git::Secrets::VERSION,
           commands: REGISTERED_COMMANDS,

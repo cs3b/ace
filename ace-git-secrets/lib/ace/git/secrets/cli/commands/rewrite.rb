@@ -12,7 +12,7 @@ module Ace
           # - 1: Failure
           # - 2: Error occurred
           class Rewrite < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Remove detected tokens from Git history"
 
@@ -31,12 +31,12 @@ module Ace
               debug_log("Starting rewrite-history with options: #{format_pairs(options)}", options)
 
               exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(options)
-              raise Ace::Core::CLI::Error.new("Rewrite failed", exit_code: exit_code) if exit_code != 0
-            rescue Ace::Core::CLI::Error
+              raise Ace::Support::Cli::Error.new("Rewrite failed", exit_code: exit_code) if exit_code != 0
+            rescue Ace::Support::Cli::Error
               raise
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              raise Ace::Core::CLI::Error.new(e.message, exit_code: 2)
+              raise Ace::Support::Cli::Error.new(e.message, exit_code: 2)
             end
           end
         end
