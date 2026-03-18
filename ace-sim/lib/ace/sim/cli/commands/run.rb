@@ -5,7 +5,7 @@ module Ace
     module CLI
       module Commands
         class Run < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Run preset simulation"
 
@@ -38,7 +38,7 @@ module Ace
 
             return if result[:success]
 
-            raise Ace::Core::CLI::Error.new(result[:error] || "Simulation failed")
+            raise Ace::Support::Cli::Error.new(result[:error] || "Simulation failed")
           end
 
           private
@@ -47,29 +47,29 @@ module Ace
             preset_name = pick_value(options[:preset], Ace::Sim.default_preset_name)
             preset_data = Ace::Sim.load_preset(preset_name)
             if preset_data.nil?
-              raise Ace::Core::CLI::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
+              raise Ace::Support::Cli::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
             end
 
             sources = options[:source] || Array(preset_data["source"])
-            raise Ace::Core::CLI::Error.new("--source is required") if sources.empty?
+            raise Ace::Support::Cli::Error.new("--source is required") if sources.empty?
 
             steps = if options[:steps] && !options[:steps].to_s.strip.empty?
               parse_steps(options[:steps])
             else
               Ace::Sim.normalize_list(preset_data["steps"] || Ace::Sim.get("sim", "default_steps"))
             end
-            raise Ace::Core::CLI::Error.new("At least one step is required") if steps.empty?
+            raise Ace::Support::Cli::Error.new("At least one step is required") if steps.empty?
 
             providers = if options[:provider].nil?
               Ace::Sim.normalize_list(preset_data["provider"] || preset_data["providers"] || Ace::Sim.get("sim", "default_providers"))
             else
               Ace::Sim.normalize_list(options[:provider])
             end
-            raise Ace::Core::CLI::Error.new("At least one --provider is required") if providers.empty?
+            raise Ace::Support::Cli::Error.new("At least one --provider is required") if providers.empty?
 
             repeat = pick_value(options[:repeat], preset_data["repeat"], Ace::Sim.get("sim", "default_repeat") || 1)
             repeat = Integer(repeat)
-            raise Ace::Core::CLI::Error.new("--repeat must be >= 1") if repeat < 1
+            raise Ace::Support::Cli::Error.new("--repeat must be >= 1") if repeat < 1
 
             synthesis_workflow = pick_value(
               options[:synthesis_workflow],
@@ -101,9 +101,9 @@ module Ace
               synthesis_provider: synthesis_provider
             )
           rescue ArgumentError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           rescue Ace::Sim::ValidationError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           def parse_steps(raw_steps)
@@ -114,7 +114,7 @@ module Ace
             steps.each_with_object({}) do |step, configs|
               config_path = Ace::Sim.step_bundle_path(step)
               if config_path.nil?
-                raise Ace::Core::CLI::Error.new("Missing step config for '#{step}' in .ace/sim/steps or defaults")
+                raise Ace::Support::Cli::Error.new("Missing step config for '#{step}' in .ace/sim/steps or defaults")
               end
 
               configs[step] = config_path
