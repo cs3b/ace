@@ -47,7 +47,7 @@ class FeedbackCreateCommandTest < AceReviewTest
   end
 
   def test_create_errors_when_session_not_found
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::Create.new
       cmd.call(session: "/nonexistent/path")
     end
@@ -55,7 +55,7 @@ class FeedbackCreateCommandTest < AceReviewTest
 
   def test_create_errors_when_no_review_reports_found
     # Session dir exists but has no review reports
-    assert_raises(Ace::Core::CLI::Error) do
+    assert_raises(Ace::Support::Cli::Error) do
       cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::Create.new
       cmd.call(session: @session_dir)
     end

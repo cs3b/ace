@@ -15,7 +15,7 @@ module Ace
         # All subcommands (list, show, verify, skip, resolve) are handled
         # by nested ace-support-cli commands in CLI::Commands::FeedbackSubcommands:: namespace.
         class Feedback < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Manage feedback items from code reviews

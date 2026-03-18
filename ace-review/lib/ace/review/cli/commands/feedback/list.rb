@@ -14,7 +14,7 @@ module Ace
           #
           # Lists feedback items with optional filters.
           class List < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
             include SessionDiscovery
 
             desc <<~DESC.strip
@@ -57,7 +57,7 @@ module Ace
               base_path = resolve_feedback_path(options)
 
               unless base_path
-                raise Ace::Core::CLI::Error.new("Could not determine feedback path. Use --session to specify a review session.")
+                raise Ace::Support::Cli::Error.new("Could not determine feedback path. Use --session to specify a review session.")
               end
 
               debug_log("Feedback base path: #{base_path}", options)

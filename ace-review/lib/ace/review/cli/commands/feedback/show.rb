@@ -13,7 +13,7 @@ module Ace
           #
           # Displays detailed information about a feedback item.
           class Show < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
             include SessionDiscovery
 
             desc <<~DESC.strip
@@ -41,14 +41,14 @@ module Ace
             def call(id:, **options)
               # Validate ID length
               if id.length < 3
-                raise Ace::Core::CLI::Error.new("ID must be at least 3 characters for matching.")
+                raise Ace::Support::Cli::Error.new("ID must be at least 3 characters for matching.")
               end
 
               # Resolve feedback path from session context
               base_path = resolve_feedback_path(options)
 
               unless base_path
-                raise Ace::Core::CLI::Error.new("No session found. Run a review first or use --session to specify path.")
+                raise Ace::Support::Cli::Error.new("No session found. Run a review first or use --session to specify path.")
               end
 
               debug_log("Feedback base path: #{base_path}", options)
@@ -57,7 +57,7 @@ module Ace
               item = find_item_by_id(base_path, id, include_archived: true)
 
               unless item
-                raise Ace::Core::CLI::Error.new("Feedback item not found: #{id}")
+                raise Ace::Support::Cli::Error.new("Feedback item not found: #{id}")
               end
 
               display_item(item)
@@ -100,7 +100,7 @@ module Ace
 
               # If multiple matches, require more specific ID
               if files.length > 1
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "Multiple items match '#{id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
                   "Please provide more characters."
                 )

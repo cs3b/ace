@@ -140,7 +140,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   def test_verify_requires_mode_flag
     create_draft_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc111")
     end
 
@@ -150,7 +150,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   def test_verify_rejects_multiple_modes
     create_draft_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc111", valid: true, invalid: true)
     end
 
@@ -160,7 +160,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   def test_verify_rejects_valid_and_skip_together
     create_draft_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc111", valid: true, skip: true)
     end
 
@@ -170,7 +170,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   def test_verify_rejects_invalid_and_skip_together
     create_draft_item("abc111")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc111", invalid: true, skip: true)
     end
 
@@ -178,7 +178,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   end
 
   def test_verify_fails_for_nonexistent_item
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("xyz999", valid: true)
     end
 
@@ -188,7 +188,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
   def test_verify_fails_for_pending_item
     create_pending_item("abc222")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc222", valid: true)
     end
 
@@ -211,7 +211,7 @@ class FeedbackVerifyCommandTest < AceReviewTest
     create_draft_item("abc111")
     create_draft_item("abc222")
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       run_verify_command("abc", valid: true)
     end
 

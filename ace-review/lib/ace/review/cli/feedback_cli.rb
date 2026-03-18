@@ -20,7 +20,7 @@ module Ace
     # Replaces the nested `ace-review feedback <subcommand>` pattern with
     # flat `ace-review-feedback <command>` invocations.
     module FeedbackCLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       PROGRAM_NAME = "ace-review-feedback"
 
@@ -50,7 +50,7 @@ module Ace
       register "resolve", CLI::Commands::FeedbackSubcommands::Resolve
 
       # Register version command
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-review-feedback",
         version: Ace::Review::VERSION
       )
@@ -58,7 +58,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Review::VERSION,
         commands: REGISTERED_COMMANDS,

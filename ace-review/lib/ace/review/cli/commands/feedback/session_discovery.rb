@@ -26,7 +26,7 @@ module Ace
                 session_path = File.expand_path(options[:session])
                 return session_path if Dir.exist?(session_path)
 
-                raise Ace::Core::CLI::Error.new("Session not found: #{session_path}")
+                raise Ace::Support::Cli::Error.new("Session not found: #{session_path}")
               end
 
               # Default: use most recent session
