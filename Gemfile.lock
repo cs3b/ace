@@ -13,7 +13,7 @@ PATH
 PATH
   remote: ace-b36ts
   specs:
-    ace-b36ts (0.11.1)
+    ace-b36ts (0.11.2)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -21,7 +21,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.37.1)
+    ace-bundle (0.37.2)
       ace-compressor (~> 0.21)
       ace-git (~> 0.11)
       ace-support-cli (~> 0.3)
@@ -345,7 +345,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.15.16)
+    ace-test-runner (0.15.17)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
