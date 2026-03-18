@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Compress < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           SUPPORTED_MODES = %w[exact compact agent].freeze
           SUPPORTED_SOURCE_SCOPES = %w[merged per-source].freeze
@@ -33,17 +33,17 @@ module Ace
 
             sources = normalize_sources(options[:sources] || [])
             if sources.empty?
-              raise Ace::Core::CLI::Error,
+              raise Ace::Support::Cli::Error,
                     "Missing input path. Usage: ace-compressor <file-or-dir> [more-paths...] --mode <exact|compact|agent>"
             end
 
             mode = (options[:mode] || "exact").to_s
             unless SUPPORTED_MODES.include?(mode)
-              raise Ace::Core::CLI::Error, "Unsupported mode '#{mode}'. Use --mode exact, --mode compact, or --mode agent"
+              raise Ace::Support::Cli::Error, "Unsupported mode '#{mode}'. Use --mode exact, --mode compact, or --mode agent"
             end
             source_scope = (options[:source_scope] || "merged").to_s
             unless SUPPORTED_SOURCE_SCOPES.include?(source_scope)
-              raise Ace::Core::CLI::Error,
+              raise Ace::Support::Cli::Error,
                     "Unsupported source scope '#{source_scope}'. Use --source-scope merged or --source-scope per-source"
             end
 
@@ -61,10 +61,10 @@ module Ace
             end
             puts result[:console_output]
             if result[:exit_code].to_i.nonzero?
-              raise Ace::Core::CLI::Error, refusal_message_for(mode)
+              raise Ace::Support::Cli::Error, refusal_message_for(mode)
             end
           rescue Ace::Compressor::Error => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
