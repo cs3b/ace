@@ -267,7 +267,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ace-meta/ace-test-runner.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace.
 
 ## License
 
