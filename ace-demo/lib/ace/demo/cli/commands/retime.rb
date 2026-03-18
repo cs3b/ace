@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Retime < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Post-process an existing recording into a faster playback artifact"
 
@@ -19,7 +19,7 @@ module Ace
           option :dry_run, type: :boolean, aliases: ["-n"], default: false, desc: "Preview without writing output"
 
           def call(file:, **options)
-            raise Ace::Core::CLI::Error, "Playback speed is required" unless options[:playback_speed]
+            raise Ace::Support::Cli::Error, "Playback speed is required" unless options[:playback_speed]
 
             retimer = Molecules::MediaRetimer.new
             result = retimer.retime(
@@ -37,7 +37,7 @@ module Ace
               puts "Retimed: #{result[:output_path]} (#{result[:speed]})"
             end
           rescue FfmpegNotFoundError, MediaRetimeError, ArgumentError => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
         end
       end

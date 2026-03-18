@@ -27,7 +27,7 @@ class RetimeTest < AceDemoTestCase
         @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
       rescue SystemExit => e
         @result = e.status
-      rescue Ace::Core::CLI::Error => e
+      rescue Ace::Support::Cli::Error => e
         $stderr.puts e.message
         @result = e.exit_code
       end
