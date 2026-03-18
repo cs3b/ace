@@ -25,7 +25,7 @@ integration:
     - pi
 assign:
   source: wfi://test/verify-suite
-  phases:
+  steps:
     - name: verify-test-suite
       description: Run package test suites with profiling to verify correctness and performance
       intent:
