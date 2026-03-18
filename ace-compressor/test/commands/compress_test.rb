@@ -25,7 +25,7 @@ class CompressCommandTest < AceCompressorTestCase
         @result = Ace::Compressor::CLI.start(args)
       rescue SystemExit => e
         @result = e.status
-      rescue Ace::Core::CLI::Error => e
+      rescue Ace::Support::Cli::Error => e
         $stderr.puts e.message
         @result = e.exit_code
       end

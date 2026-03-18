@@ -8,7 +8,7 @@ module Ace
     module CLI
       module Commands
         class Benchmark < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Compare exact, compact, and agent output on live sources"
 
@@ -20,7 +20,7 @@ module Ace
           def call(**options)
             sources = normalize_sources(options[:sources] || [])
             if sources.empty?
-              raise Ace::Core::CLI::Error,
+              raise Ace::Support::Cli::Error,
                     "Missing input path. Usage: ace-compressor benchmark <file-or-dir> [more-paths...]"
             end
 
@@ -34,7 +34,7 @@ module Ace
             puts runner.render(report)
             0
           rescue Ace::Compressor::Error => e
-            raise Ace::Core::CLI::Error, e.message
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
