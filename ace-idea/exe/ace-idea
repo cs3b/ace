@@ -13,7 +13,7 @@ trap("INT") { exit 130 }
 # Start ace-support-cli with exception-based exit code handling (per ADR-023)
 begin
   Ace::Idea::IdeaCLI.start(args)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 rescue ArgumentError => e
