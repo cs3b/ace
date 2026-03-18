@@ -2,7 +2,7 @@
 
 require "ace/support/cli"
 require "stringio"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Test
@@ -14,7 +14,7 @@ module Ace
           # Discovers all E2E tests in the monorepo and executes them
           # with optional parallel execution and affected package filtering.
           class RunSuite < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               Run E2E test suite across all packages
@@ -98,18 +98,18 @@ module Ace
 
               if results[:total].zero?
                 if only_failures
-                  raise Ace::Core::CLI::Error.new(
+                  raise Ace::Support::Cli::Error.new(
                     "No failed test scenarios found in cache"
                   )
                 else
-                  raise Ace::Core::CLI::Error.new("No tests found to run")
+                  raise Ace::Support::Cli::Error.new("No tests found to run")
                 end
               end
 
               # Exit with error if any test failed
               if results[:failed] > 0 || results[:errors] > 0
                 failed_count = results[:failed] + results[:errors]
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "#{failed_count} test(s) failed or errored"
                 )
               end
