@@ -20,7 +20,7 @@ integration:
   providers: {}
 assign:
   source: wfi://onboard
-  phases:
+  steps:
     - name: onboard
       description: Load project context and understand the codebase
       tags: [setup, context-loading]
