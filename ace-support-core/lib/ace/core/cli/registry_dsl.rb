@@ -35,8 +35,6 @@ module Ace
         end
 
         def normalize_command(command_class)
-          return command_class.class unless command_class.is_a?(Class)
-
           command_class
         end
       end
