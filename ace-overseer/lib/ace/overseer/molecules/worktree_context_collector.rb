@@ -61,14 +61,14 @@ module Ace
               "name" => info.name,
               "state" => info.state.to_s
             },
-            "phase_summary" => {
+            "step_summary" => {
               "total" => info.queue_state.summary[:total],
               "done" => info.queue_state.summary[:done],
               "failed" => info.queue_state.summary[:failed],
               "in_progress" => info.queue_state.summary[:in_progress],
               "pending" => info.queue_state.summary[:pending]
             },
-            "current_phase" => current ? current.name : nil
+            "current_step" => current ? current.name : nil
           }
         end
 

@@ -59,7 +59,7 @@ module Ace
                                 progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
                                 {
                                   assignment_id: existing.dig("assignment", "id"),
-                                  first_phase: existing.dig("current_phase", "number"),
+                                  first_step: existing.dig("current_step", "number"),
                                   created: false
                                 }
                               else
@@ -82,7 +82,7 @@ module Ace
             branch: worktree[:branch],
             worktree_created: worktree[:created],
             assignment_id: assignment_result[:assignment_id],
-            first_phase: assignment_result[:first_phase],
+            first_step: assignment_result[:first_step],
             assignment_created: assignment_result[:created]
           }
         end
@@ -164,7 +164,7 @@ module Ace
                 "name" => result[:assignment].name,
                 "state" => result[:state].assignment_state.to_s
               },
-              "current_phase" => result[:current] && {
+              "current_step" => result[:current] && {
                 "number" => result[:current].number,
                 "name" => result[:current].name
               }

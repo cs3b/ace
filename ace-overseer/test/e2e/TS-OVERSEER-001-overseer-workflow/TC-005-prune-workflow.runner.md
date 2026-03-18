@@ -37,8 +37,8 @@ Capture output to:
 
 ### Step 5 — Complete task 8pp.t.q7w assignment
 
-Create a phase report file at `results/tc/05/task-q7w-phase-report.md` with a brief summary.
-Run `(cd "$TASK_Q7W_WORKTREE" && ace-assign finish --message "$SANDBOX_ROOT/results/tc/05/task-q7w-phase-report.md")`.
+Create a step report file at `results/tc/05/task-q7w-step-report.md` with a brief summary.
+Run `(cd "$TASK_Q7W_WORKTREE" && ace-assign finish --message "$SANDBOX_ROOT/results/tc/05/task-q7w-step-report.md")`.
 Capture output to:
 - `results/tc/05/task-q7w-assign-report.stdout`
 - `results/tc/05/task-q7w-assign-report.stderr`

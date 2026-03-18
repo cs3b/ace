@@ -5,7 +5,7 @@ require_relative "../test_helper"
 
 class AssignmentLauncherTest < AceOverseerTestCase
   FakeAssignment = Struct.new(:id)
-  FakePhase = Struct.new(:number, :name)
+  FakeStep = Struct.new(:number, :name)
 
   class FakeExecutor
     attr_reader :start_calls
@@ -18,7 +18,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       @start_calls << job_path
       {
         assignment: FakeAssignment.new("abc123"),
-        current: FakePhase.new("010", "onboard")
+        current: FakeStep.new("010", "onboard")
       }
     end
   end
@@ -47,7 +47,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       result = launcher.launch(worktree_path: worktree, preset_name: "work-on-task", task_ref: "235.03")
 
       assert_equal "abc123", result[:assignment_id]
-      assert_equal "010-onboard", result[:first_phase]
+      assert_equal "010-onboard", result[:first_step]
       assert File.exist?(result[:job_path])
       assert_equal 1, fake_executor.start_calls.length
       assert_includes File.read(result[:job_path]), "Work on task 235.03"

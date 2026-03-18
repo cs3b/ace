@@ -88,7 +88,7 @@ class WorkOnCommandTest < AceOverseerTestCase
       branch: "230-feature",
       worktree_created: true,
       assignment_id: "abc123",
-      first_phase: "010-onboard",
+      first_step: "010-onboard",
       assignment_created: true
     }
   end

@@ -56,7 +56,7 @@ class StatusCollectorTest < AceOverseerTestCase
   def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
     {
       "assignment" => { "state" => state, "id" => id, "name" => name },
-      "phase_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
+      "step_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
     }
   end
 

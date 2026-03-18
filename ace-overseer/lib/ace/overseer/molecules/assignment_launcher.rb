@@ -28,7 +28,7 @@ module Ace
 
             {
               assignment_id: result[:assignment].id,
-              first_phase: current ? "#{current.number}-#{current.name}" : nil,
+              first_step: current ? "#{current.number}-#{current.name}" : nil,
               job_path: job_path
             }
           end

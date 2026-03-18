@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-18
+
+### Changed
+- Updated assignment system references from "phase" to "step" terminology: `first_phase` → `first_step`, `current_phase` → `current_step`, `phase_summary` → `step_summary` across launcher, orchestrator, status formatter, and context collector
+
 ## [0.6.1] - 2026-03-18
 
 ### Changed
@@ -177,7 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.2] - 2026-02-19
 
 ### Added
-- Orchestrator subtask expansion for `work-on-tasks` preset — when a task is an orchestrator with subtasks, `AssignmentLauncher` expands subtask refs into individual foreach phases (e.g., `work-on-272.01`, `work-on-272.02`) instead of a single `work-on-272` phase
+- Orchestrator subtask expansion for `work-on-tasks` preset — when a task is an orchestrator with subtasks, `AssignmentLauncher` expands subtask refs into individual foreach steps (e.g., `work-on-272.01`, `work-on-272.02`) instead of a single `work-on-272` step
 - `extract_subtask_refs` helper in `WorkOnOrchestrator` to extract subtask numbers from orchestrator task data
 - `subtask_refs:` keyword argument on `AssignmentLauncher#launch` for passing expanded subtask references
 
@@ -195,13 +200,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Progress bar visualization in assignment sub-rows — filled/empty bar segments alongside numeric counts
-- Current phase name display for running assignments (e.g., `implement` shown dimmed after progress)
+- Current step name display for running assignments (e.g., `implement` shown dimmed after progress)
 - Header row and separator line above hierarchical dashboard for column labeling
 - Blank line separators between location groups for visual breathing room
-- `current_phase` field propagated from `QueueState` through `WorktreeContextCollector` to status display
+- `current_step` field propagated from `QueueState` through `WorktreeContextCollector` to status display
 
 ### Changed
-- Widen progress column to accommodate progress bar and current phase text
+- Widen progress column to accommodate progress bar and current step text
 
 ## [0.3.1] - 2026-02-19
 
@@ -357,7 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace release-centric status view with assignment-focused dashboard showing path, state, progress, and PR columns.
 - Remove release resolver dependency from status collector.
-- Add phase summary data (total/done/failed) to worktree context collection.
+- Add step summary data (total/done/failed) to worktree context collection.
 - Add PR metadata display with abbreviated state (OPN, MRG, CLS, DFT) in status output.
 
 ## [0.2.3] - 2026-02-17

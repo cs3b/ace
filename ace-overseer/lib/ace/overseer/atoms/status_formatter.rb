@@ -117,7 +117,7 @@ module Ace
         private_class_method :extract_pr_number
 
         def self.format_progress(assignment)
-          summary = assignment["phase_summary"] || assignment[:phase_summary]
+          summary = assignment["step_summary"] || assignment[:step_summary]
           return "-" unless summary.is_a?(Hash)
 
           total = summary["total"] || summary[:total]
@@ -128,7 +128,7 @@ module Ace
           bar = progress_bar(done.to_i, total.to_i)
           counts = "#{done}/#{total}"
           counts = "#{counts} (#{failed} failed)" if failed.positive?
-          current = assignment["current_phase"] || assignment[:current_phase]
+          current = assignment["current_step"] || assignment[:current_step]
           parts = "#{bar} #{counts}"
           parts = "#{parts} #{colorize(current, :dim)}" if current
           parts
