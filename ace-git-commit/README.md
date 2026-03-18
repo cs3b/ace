@@ -18,10 +18,10 @@ LLM-powered git commit tool for streamlined, meaningful commit messages.
 
 ## Installation
 
-As part of the ace-meta monorepo:
+As part of the ace monorepo:
 
 ```bash
-# From ace-meta root
+# From ace root
 bundle install
 ```
 
@@ -214,7 +214,7 @@ bundle exec rake test
 ### Testing the CLI
 
 ```bash
-# From ace-meta root
+# From ace root
 bundle exec ace-git-commit --dry-run
 ```
 
