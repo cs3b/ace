@@ -130,7 +130,7 @@ module Ace
           exit_code = result[:exit_code]
 
           # Check for diff too large (HTTP 406 / file limit exceeded)
-          if exit_code == 1 && (error_msg.include?("406") || error_msg.include?("exceeded the maximum"))
+          if exit_code == 1 && (error_msg.match?(/\bHTTP 406\b|Not Acceptable/) || error_msg.include?("exceeded the maximum"))
             raise Ace::Review::Errors::DiffTooLargeError.new(pr_identifier, error_msg)
           end
 
