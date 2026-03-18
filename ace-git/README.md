@@ -265,8 +265,8 @@ Works seamlessly with:
 
 ```bash
 # Clone repository
-git clone https://github.com/cs3b/ace-meta.git
-cd ace-meta/ace-git
+git clone https://github.com/cs3b/ace.git
+cd ace/ace-git
 
 # Install dependencies
 bundle install
@@ -300,7 +300,7 @@ MIT License. See LICENSE file for details.
 
 ## Support
 
-- Issues: https://github.com/cs3b/ace-meta/issues
+- Issues: https://github.com/cs3b/ace/issues
 - Documentation: See workflow files in `handbook/workflow-instructions/`
 
 ## Changelog
