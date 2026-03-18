@@ -47,10 +47,10 @@ module Ace
       end
     end
 
-    # Phase-related errors
-    module PhaseErrors
+    # Step-related errors
+    module StepErrors
       class NotFound < Error
-        def initialize(message = "Phase not found")
+        def initialize(message = "Step not found")
           super(message, exit_code: 4)
         end
       end

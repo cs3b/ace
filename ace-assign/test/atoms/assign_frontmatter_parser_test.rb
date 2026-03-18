@@ -28,15 +28,15 @@ class AssignFrontmatterParserTest < AceAssignTestCase
     assert_equal "implement-with-pr", result[:config][:goal]
     assert_equal({ "taskref" => "148", "review_cycles" => 2 }, result[:config][:variables])
     assert_equal 2, result[:config][:hints].size
-    assert_equal({ action: :include, phase: "security-audit" }, result[:config][:hints][0])
-    assert_equal({ action: :skip, phase: "lint" }, result[:config][:hints][1])
+    assert_equal({ action: :include, step: "security-audit" }, result[:config][:hints][0])
+    assert_equal({ action: :skip, step: "lint" }, result[:config][:hints][1])
   end
 
-  def test_parse_workflow_frontmatter_with_sub_phases
+  def test_parse_workflow_frontmatter_with_sub_steps
     frontmatter = {
       "name" => "work-on-task",
       "assign" => {
-        "sub-phases" => %w[onboard implement verify-tests],
+        "sub-steps" => %w[onboard implement verify-tests],
         "context" => "fork"
       }
     }
@@ -45,7 +45,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
 
     assert result[:valid]
     assert_empty result[:errors]
-    assert_equal %w[onboard implement verify-tests], result[:config][:sub_phases]
+    assert_equal %w[onboard implement verify-tests], result[:config][:sub_steps]
     assert_equal "fork", result[:config][:context]
   end
 
@@ -76,7 +76,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
     assert_equal "quick-fix", result[:config][:goal]
     assert_equal({}, result[:config][:variables])
     assert_empty result[:config][:hints]
-    assert_empty result[:config][:sub_phases]
+    assert_empty result[:config][:sub_steps]
     assert_nil result[:config][:context]
     assert_nil result[:config][:parent]
   end
@@ -202,22 +202,22 @@ class AssignFrontmatterParserTest < AceAssignTestCase
     assert result[:errors].any? { |e| e.include?("cannot have both 'include' and 'skip'") }
   end
 
-  def test_parse_sub_phases_not_array_returns_error
-    frontmatter = { "assign" => { "sub-phases" => "not an array" } }
+  def test_parse_sub_steps_not_array_returns_error
+    frontmatter = { "assign" => { "sub-steps" => "not an array" } }
 
     result = Parser.parse(frontmatter)
 
     refute result[:valid]
-    assert result[:errors].any? { |e| e.include?("assign.sub-phases must be an array") }
+    assert result[:errors].any? { |e| e.include?("assign.sub-steps must be an array") }
   end
 
-  def test_parse_sub_phases_entries_not_strings_returns_error
-    frontmatter = { "assign" => { "sub-phases" => [123, "valid"] } }
+  def test_parse_sub_steps_entries_not_strings_returns_error
+    frontmatter = { "assign" => { "sub-steps" => [123, "valid"] } }
 
     result = Parser.parse(frontmatter)
 
     refute result[:valid]
-    assert result[:errors].any? { |e| e.include?("assign.sub-phases entries must be strings") }
+    assert result[:errors].any? { |e| e.include?("assign.sub-steps entries must be strings") }
   end
 
   def test_parse_context_not_string_returns_error

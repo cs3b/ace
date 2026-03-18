@@ -9,7 +9,7 @@ matches:
 parameters:
   taskref: { required: true }
 
-phases:
+steps:
   - name: onboard
     required: true
   - name: plan-task

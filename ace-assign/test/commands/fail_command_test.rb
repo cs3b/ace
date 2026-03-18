@@ -3,7 +3,7 @@
 require_relative "../test_helper"
 
 class FailCommandTest < AceAssignTestCase
-  def test_fail_marks_phase_failed
+  def test_fail_marks_step_failed
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -62,13 +62,13 @@ class FailCommandTest < AceAssignTestCase
       assert_includes output.first, "marked as failed"
       assert_includes output.first, "Build broke"
 
-      # Verify the targeted assignment's current phase was failed
+      # Verify the targeted assignment's current step was failed
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      target_state = scanner.scan(result2[:assignment].phases_dir, assignment: result2[:assignment])
+      target_state = scanner.scan(result2[:assignment].steps_dir, assignment: result2[:assignment])
       assert_equal :failed, target_state.assignment_state
 
       # Verify the first assignment was not affected
-      first_state = scanner.scan(result1[:assignment].phases_dir, assignment: result1[:assignment])
+      first_state = scanner.scan(result1[:assignment].steps_dir, assignment: result1[:assignment])
       assert_equal :running, first_state.assignment_state
 
       Ace::Assign.reset_config!

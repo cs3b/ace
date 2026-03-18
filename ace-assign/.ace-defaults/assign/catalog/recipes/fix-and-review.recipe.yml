@@ -10,7 +10,7 @@ parameters:
   taskref: { required: true }
   review_cycles: { required: false, default: 1 }
 
-phases:
+steps:
   - name: onboard
     required: true
   - name: work-on-task
@@ -24,7 +24,7 @@ phases:
     required: true
   - name: review-cycle
     repeat: "{{review_cycles}}"
-    sub_phases: [review-pr, apply-feedback]
+    sub_steps: [review-pr, apply-feedback]
 
 customization_hints:
   - "Add fix-tests after verify-test-suite if failures found"

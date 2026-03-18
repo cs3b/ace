@@ -1,5 +1,5 @@
 name: auto-complete-test
-description: Test auto-completion of parent phases
+description: Test auto-completion of parent steps
 
 steps:
   - name: parent-job

@@ -13,7 +13,7 @@ module Ace
       # 1) Find SKILL.md by skill name (e.g., "ace-task-work")
       # 2) Read assign.source URI from skill frontmatter (e.g., wfi://task/work)
       # 3) Resolve workflow file from URI
-      # 4) Parse workflow assign frontmatter (sub-phases/context)
+      # 4) Parse workflow assign frontmatter (sub-steps/context)
       class SkillAssignSourceResolver
         ASSIGN_CAPABLE_KINDS = %w[workflow orchestration].freeze
 
@@ -37,7 +37,7 @@ module Ace
         # Resolve assign config for a skill.
         #
         # @param skill_name [String] Skill identifier (e.g., "ace-task-work")
-        # @return [Hash, nil] Parsed assign config (keys: :sub_phases, :context, etc.) or nil if not declared
+        # @return [Hash, nil] Parsed assign config (keys: :sub_steps, :context, etc.) or nil if not declared
         # @raise [Ace::Assign::Error] If skill declares an invalid/unresolvable source
         def resolve_assign_config(skill_name)
           skill_path = skill_index[skill_name] || find_skill_by_convention(skill_name)
@@ -85,43 +85,43 @@ module Ace
           end
         end
 
-        # Build assignment phase entries from canonical skills.
+        # Build assignment step entries from canonical skills.
         #
-        # Only phases declared under `assign.phases` are emitted here. This keeps
-        # canonical skills authoritative for public skill-backed assignment phases,
-        # while internal helper phases can continue to use catalog templates.
+        # Only steps declared under `assign.steps` are emitted here. This keeps
+        # canonical skills authoritative for public skill-backed assignment steps,
+        # while internal helper steps can continue to use catalog templates.
         #
-        # @return [Array<Hash>] Phase definitions keyed by canonical precedence
-        def assign_phase_catalog
+        # @return [Array<Hash>] Step definitions keyed by canonical precedence
+        def assign_step_catalog
           catalog = {}
 
           each_assign_capable_skill do |skill_name, frontmatter|
-            phases = frontmatter.dig("assign", "phases")
+            steps = frontmatter.dig("assign", "steps")
             workflow_source = frontmatter.dig("assign", "source")&.to_s&.strip
             workflow_source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip if workflow_source.nil? || workflow_source.empty?
-            next unless phases.is_a?(Array)
+            next unless steps.is_a?(Array)
 
-            phases.each do |phase|
-              next unless phase.is_a?(Hash)
+            steps.each do |step|
+              next unless step.is_a?(Hash)
 
-              phase_name = phase["name"]&.to_s&.strip
-              next if phase_name.nil? || phase_name.empty?
-              next if catalog.key?(phase_name)
+              step_name = step["name"]&.to_s&.strip
+              next if step_name.nil? || step_name.empty?
+              next if catalog.key?(step_name)
 
-              entry = phase.dup
-              entry["name"] = phase_name
+              entry = step.dup
+              entry["name"] = step_name
               entry["skill"] = skill_name
               entry["source_skill"] = skill_name
               entry["workflow"] = workflow_source if workflow_source && !workflow_source.empty?
               entry["description"] ||= frontmatter["description"]
-              catalog[phase_name] = entry
+              catalog[step_name] = entry
             end
           end
 
           catalog.values
         end
 
-        # Resolve canonical skill rendering details for a skill-backed phase.
+        # Resolve canonical skill rendering details for a skill-backed step.
         #
         # @param skill_name [String]
         # @return [Hash, nil]
@@ -148,16 +148,16 @@ module Ace
           }
         end
 
-        def resolve_workflow_rendering(workflow_source, phase_name: nil, source_skill: nil)
+        def resolve_workflow_rendering(workflow_source, step_name: nil, source_skill: nil)
           workflow_ref = workflow_source&.to_s&.strip
           return nil if workflow_ref.nil? || workflow_ref.empty?
 
-          workflow_path = resolve_workflow_path(workflow_ref, phase_name || source_skill || workflow_ref)
+          workflow_path = resolve_workflow_path(workflow_ref, step_name || source_skill || workflow_ref)
           return nil unless workflow_path
 
           frontmatter, body = parse_frontmatter_and_body(File.read(workflow_path))
           {
-            "name" => phase_name || frontmatter["name"],
+            "name" => step_name || frontmatter["name"],
             "description" => frontmatter["description"],
             "workflow" => workflow_ref,
             "workflow_path" => workflow_path,
@@ -166,8 +166,8 @@ module Ace
           }
         end
 
-        def resolve_workflow_assign_config(workflow_source, phase_name: nil, source_skill: nil)
-          rendering = resolve_workflow_rendering(workflow_source, phase_name: phase_name, source_skill: source_skill)
+        def resolve_workflow_assign_config(workflow_source, step_name: nil, source_skill: nil)
+          rendering = resolve_workflow_rendering(workflow_source, step_name: step_name, source_skill: source_skill)
           return nil unless rendering && rendering["workflow_path"]
 
           workflow_frontmatter = parse_frontmatter(File.read(rendering["workflow_path"]))
@@ -177,17 +177,17 @@ module Ace
           parsed[:config]
         end
 
-        # Resolve canonical rendering details for a public phase name.
+        # Resolve canonical rendering details for a public step name.
         #
-        # @param phase_name [String]
+        # @param step_name [String]
         # @return [Hash, nil]
-        def resolve_phase_rendering(phase_name)
-          entry = assign_phase_catalog.find { |phase| phase["name"] == phase_name }
+        def resolve_step_rendering(step_name)
+          entry = assign_step_catalog.find { |step| step["name"] == step_name }
           return nil unless entry
 
           workflow_rendering = resolve_workflow_rendering(
             entry["workflow"],
-            phase_name: entry["name"],
+            step_name: entry["name"],
             source_skill: entry["source_skill"] || entry["skill"]
           )
           return entry.merge(workflow_rendering) if workflow_rendering

@@ -11,8 +11,8 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Parent finish blocked** — `advance-parent.exit` contains non-zero value. Output explains phase `010` is `pending` and cannot be finished because `finish` requires an `in_progress` phase.
-2. **Invalid --after rejected** — `invalid-after.exit` contains non-zero value. Output mentions "not found" and shows available phase numbers (010, 020).
+1. **Parent finish blocked** — `advance-parent.exit` contains non-zero value. Output explains step `010` is `pending` and cannot be finished because `finish` requires an `in_progress` step.
+2. **Invalid --after rejected** — `invalid-after.exit` contains non-zero value. Output mentions "not found" and shows available step numbers (010, 020).
 3. **Both return non-zero** — Both error cases produce non-zero exit codes, confirming proper error handling.
 
 ## Verdict

@@ -8,8 +8,8 @@ module Ace
       module Commands
         # Display current queue status
         #
-        # Shows the work queue with hierarchical phase structure.
-        # Nested phases are indented to show parent-child relationships.
+        # Shows the work queue with hierarchical step structure.
+        # Nested steps are indented to show parent-child relationships.
         #
         # @example Basic usage
         #   ace-assign status
@@ -80,10 +80,10 @@ module Ace
 
               if current_for_display
                 fork_root = fork_scope_root(state, current_for_display)
-                scoped_fork_phase = scoped_fork_metadata_phase(state, current_for_display, target.scope, scope_root)
+                scoped_fork_step = scoped_fork_metadata_step(state, current_for_display, target.scope, scope_root)
 
                 puts
-                puts "Current Phase: #{current_for_display.number} - #{current_for_display.name}"
+                puts "Current Step: #{current_for_display.number} - #{current_for_display.name}"
                 puts "Current Status: #{current_for_display.status}"
                 if current_for_display.stall_reason
                   lines = current_for_display.stall_reason.to_s.strip.lines
@@ -99,7 +99,7 @@ module Ace
                   puts "Context: #{current_for_display.context}"
                 end
                 puts
-                print_scoped_fork_pid_info(scoped_fork_phase)
+                print_scoped_fork_pid_info(scoped_fork_step)
 
                 if current_for_display.fork? && %i[pending in_progress].include?(current_for_display.status)
                   # Fork context: output Task tool instructions
@@ -129,34 +129,34 @@ module Ace
 
           private
 
-          def status_to_h(assignment, state, current_phase)
+          def status_to_h(assignment, state, current_step)
             {
               assignment: {
                 id: assignment.id,
                 name: assignment.name,
                 state: state.assignment_state.to_s
               },
-              phases: state.phases.map { |phase| phase_to_h(phase) },
-              current_phase: phase_to_h(current_phase),
+              steps: state.steps.map { |step| step_to_h(step) },
+              current_step: step_to_h(current_step),
               progress: "#{state.done.size}/#{state.size} done"
             }
           end
 
-          def phase_to_h(phase)
-            return nil unless phase
+          def step_to_h(step)
+            return nil unless step
 
             {
-              number: phase.number,
-              name: phase.name,
-              status: phase.status.to_s,
-              skill: phase.skill,
-              workflow: phase.workflow,
-              context: phase.context,
-              batch_parent: phase.batch_parent,
-              parallel: phase.parallel,
-              max_parallel: phase.max_parallel,
-              fork_retry_limit: phase.fork_retry_limit,
-              parent: phase.parent
+              number: step.number,
+              name: step.name,
+              status: step.status.to_s,
+              skill: step.skill,
+              workflow: step.workflow,
+              context: step.context,
+              batch_parent: step.batch_parent,
+              parallel: step.parallel,
+              max_parallel: step.max_parallel,
+              fork_retry_limit: step.fork_retry_limit,
+              parent: step.parent
             }.compact
           end
 
@@ -164,10 +164,10 @@ module Ace
             return { state: state, current: state.current, root: nil } if scope.nil? || scope.strip.empty?
 
             root = state.find_by_number(scope.strip)
-            raise PhaseErrors::NotFound, "Phase #{scope} not found in queue" unless root
+            raise StepErrors::NotFound, "Step #{scope} not found in queue" unless root
 
-            scoped_phases = state.subtree_phases(root.number)
-            scoped_state = Models::QueueState.new(phases: scoped_phases, assignment: state.assignment)
+            scoped_steps = state.subtree_steps(root.number)
+            scoped_state = Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
             current = scoped_state.current || scoped_state.next_workable
 
             { state: scoped_state, current: current, root: root.number }
@@ -177,20 +177,20 @@ module Ace
             puts "QUEUE - Assignment: #{assignment.name} (#{assignment.id})"
             puts
 
-            if flat || !has_nested_phases?(state)
+            if flat || !has_nested_steps?(state)
               print_flat_status(state)
             else
               print_hierarchical_status(state, root_number: root_number)
             end
           end
 
-          def has_nested_phases?(state)
-            state.phases.any? { |s| !Atoms::PhaseNumbering.top_level?(s.number) }
+          def has_nested_steps?(state)
+            state.steps.any? { |s| !Atoms::StepNumbering.top_level?(s.number) }
           end
 
           def print_flat_status(state)
             # Calculate column widths
-            file_width = [30, state.phases.map { |s| File.basename(s.file_path || "").length }.max || 20].max
+            file_width = [30, state.steps.map { |s| File.basename(s.file_path || "").length }.max || 20].max
             status_width = 12
             name_width = 20
 
@@ -198,16 +198,16 @@ module Ace
             puts format("%-#{file_width}s %-#{status_width}s %-#{name_width}s", "FILE", "STATUS", "NAME")
 
             # Rows
-            state.phases.each do |phase|
-              file = File.basename(phase.file_path || "#{phase.number}-#{phase.name}.ph.md")
-              status = format_status(phase.status)
-              name = phase.name
+            state.steps.each do |step|
+              file = File.basename(step.file_path || "#{step.number}-#{step.name}.st.md")
+              status = format_status(step.status)
+              name = step.name
 
               row = format("%-#{file_width}s %-#{status_width}s %-#{name_width}s", file, status, name)
 
-              # Add error message for failed phases
-              if phase.status == :failed && phase.error
-                row += "  (#{phase.error})"
+              # Add error message for failed steps
+              if step.status == :failed && step.error
+                row += "  (#{step.error})"
               end
 
               puts row
@@ -233,17 +233,17 @@ module Ace
             [build_hierarchy_node(state, root)]
           end
 
-          def build_hierarchy_node(state, phase)
-            children = state.children_of(phase.number).map do |child|
+          def build_hierarchy_node(state, step)
+            children = state.children_of(step.number).map do |child|
               build_hierarchy_node(state, child)
             end
 
-            { step: phase, children: children }
+            { step: step, children: children }
           end
 
           def print_hierarchy_level(nodes, state, depth:)
             nodes.each_with_index do |node, index|
-              phase = node[:step]
+              step = node[:step]
               children = node[:children]
               is_last = index == nodes.size - 1
 
@@ -257,13 +257,13 @@ module Ace
                        end
 
               # Format number with hierarchy indicator
-              number_display = prefix + phase.number
+              number_display = prefix + step.number
 
               # Status with icon
-              status_icon = STATUS_ICONS[phase.status] || phase.status.to_s.capitalize
+              status_icon = STATUS_ICONS[step.status] || step.status.to_s.capitalize
 
               # Fork indicator reflects execution context, not child presence.
-              fork_info = phase.fork? ? "yes" : ""
+              fork_info = step.fork? ? "yes" : ""
 
               # Children count (progress visibility)
               child_info = if children.any?
@@ -277,14 +277,14 @@ module Ace
                              ""
                            end
 
-              # Error info for failed phases
-              error_suffix = phase.status == :failed && phase.error ? " - #{phase.error}" : ""
+              # Error info for failed steps
+              error_suffix = step.status == :failed && step.error ? " - #{step.error}" : ""
 
               # Truncate name with ellipsis if too long
-              display_name = if phase.name.length > COL_NAME
-                               phase.name[0..COL_NAME - 4] + "..."
+              display_name = if step.name.length > COL_NAME
+                               step.name[0..COL_NAME - 4] + "..."
                              else
-                               phase.name
+                               step.name
                              end
               puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s%s",
                           number_display, status_icon, display_name, fork_info, child_info, error_suffix)
@@ -298,13 +298,13 @@ module Ace
             STATUS_ICONS[status]&.split(" ")&.last || status.to_s.capitalize
           end
 
-          # Print Task tool instructions for a fork context phase
-          def print_fork_instructions(phase, assignment)
-            escaped_name = phase.name.gsub('"', '\\"')
+          # Print Task tool instructions for a fork context step
+          def print_fork_instructions(step, assignment)
+            escaped_name = step.name.gsub('"', '\\"')
             # Derive project root from cache_dir: /project/.ace-local/assign/assignment-id -> /project
             project_root = assignment.cache_dir ? File.expand_path("../../..", assignment.cache_dir) : Dir.pwd
 
-            puts "Execute this phase in a forked context:"
+            puts "Execute this step in a forked context:"
             puts
             puts "  Task tool parameters:"
             puts "    description: \"#{escaped_name}\""
@@ -312,7 +312,7 @@ module Ace
             puts
             puts "  Prompt for forked agent:"
             puts "  ========================"
-            puts phase.instructions
+            puts step.instructions
             puts "  ========================"
             puts
             puts "  Working directory: #{project_root}"
@@ -322,37 +322,37 @@ module Ace
             puts "  ace-assign finish --message <report-file.md>"
             puts
             puts "To execute entire subtree in one forked process:"
-            puts "  ace-assign fork-run --root #{phase.number} --assignment #{assignment.id}"
+            puts "  ace-assign fork-run --root #{step.number} --assignment #{assignment.id}"
           end
 
-          def fork_scope_root(state, current_phase)
-            return nil unless current_phase
-            return current_phase if current_phase.fork?
+          def fork_scope_root(state, current_step)
+            return nil unless current_step
+            return current_step if current_step.fork?
 
-            state.nearest_fork_ancestor(current_phase.number)
+            state.nearest_fork_ancestor(current_step.number)
           end
 
-          def scoped_fork_metadata_phase(state, current_phase, scope, scope_root)
-            return nil unless current_phase
+          def scoped_fork_metadata_step(state, current_step, scope, scope_root)
+            return nil unless current_step
 
             if scope && !scope.strip.empty?
               return state.find_by_number(scope_root || scope.strip)
             end
 
-            fork_scope_root(state, current_phase)
+            fork_scope_root(state, current_step)
           end
 
-          def print_scoped_fork_pid_info(phase)
-            return unless phase
+          def print_scoped_fork_pid_info(step)
+            return unless step
 
-            has_pid = phase.fork_launch_pid
-            has_tree = phase.fork_tracked_pids && !phase.fork_tracked_pids.empty?
-            has_file = phase.fork_pid_file && !phase.fork_pid_file.empty?
+            has_pid = step.fork_launch_pid
+            has_tree = step.fork_tracked_pids && !step.fork_tracked_pids.empty?
+            has_file = step.fork_pid_file && !step.fork_pid_file.empty?
             return unless has_pid || has_tree || has_file
 
-            puts "Scoped Fork PID: #{phase.fork_launch_pid}" if has_pid
-            puts "Scoped Fork PID Tree: #{phase.fork_tracked_pids.join(', ')}" if has_tree
-            puts "Scoped Fork PID File: #{phase.fork_pid_file}" if has_file
+            puts "Scoped Fork PID: #{step.fork_launch_pid}" if has_pid
+            puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(', ')}" if has_tree
+            puts "Scoped Fork PID File: #{step.fork_pid_file}" if has_file
             puts
           end
 
@@ -372,17 +372,17 @@ module Ace
             col_id = 10
             col_status = 12
             col_progress = 10
-            col_phase = 20
-            puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_phase}s %s",
-                        "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT PHASE", "UPDATED")
+            col_step = 20
+            puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
+                        "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT STEP", "UPDATED")
 
             others.each do |info|
               state_label = STATE_LABELS[info.state] || info.state.to_s
               updated = format_relative_time(info.updated_at)
-              phase = info.current_phase.length > col_phase ? info.current_phase[0..col_phase - 4] + "..." : info.current_phase
+              step = info.current_step.length > col_step ? info.current_step[0..col_step - 4] + "..." : info.current_step
 
-              puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_phase}s %s",
-                          info.id, state_label, info.progress, phase, updated)
+              puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
+                          info.id, state_label, info.progress, step, updated)
             end
           end
 

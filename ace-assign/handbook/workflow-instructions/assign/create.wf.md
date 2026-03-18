@@ -83,26 +83,26 @@ If input is an exact preset/recipe-style request (for example `work-on-task --ta
 #### Path C: Explicit Step or Freeform Intent (Default)
 
 For explicit or natural-language requests:
-- Run `wfi://assign/compose` to resolve phases from canonical assign-capable skill data
+- Run `wfi://assign/compose` to resolve steps from canonical assign-capable skill data
 - Preserve explicit user-requested steps as primary intent
 - Keep catalog defaults and conditionals advisory unless a hard ordering/prerequisite rule applies
 
 ### 3. Resolve Explicit Steps (Path C)
 
 For explicit-step requests (for example `run tests, reorganize commits, push to remote`):
-- Resolve each phrase to one catalog phase using phase intent hints
-- Canonical phase source excludes capability skills; only assign-capable workflow/orchestration entries are eligible
-- Normalize duplicates (same phase requested multiple times -> one phase, unless repetition is explicit)
+- Resolve each phrase to one catalog step using step intent hints
+- Canonical step source excludes capability skills; only assign-capable workflow/orchestration entries are eligible
+- Normalize duplicates (same step requested multiple times -> one step, unless repetition is explicit)
 - Preserve user order first
 - Apply only hard ordering/prerequisite corrections and report each correction with the named rule
 
 For unmatched phrases:
 - Fail with actionable output that includes:
   - the unmatched phrase
-  - closest phase/skill candidates
+  - closest step/skill candidates
 
-Skill-backed phases (for example `work-on-task`) stay high-level in rendered YAML.
-Runtime `ace-assign create` will materialize `assign.source` sub-phases deterministically.
+Skill-backed steps (for example `work-on-task`) stay high-level in rendered YAML.
+Runtime `ace-assign create` will materialize `assign.source` sub-steps deterministically.
 
 ### 4. Render Hidden Spec (Paths B/C)
 
@@ -126,8 +126,8 @@ session:
   description: <assignment-description>
 
 steps:
-  - name: <phase-name>
-    workflow: <workflow-ref-if-public-phase>
+  - name: <step-name>
+    workflow: <workflow-ref-if-public-step>
     instructions:
       - <instruction line>
 ```
@@ -154,7 +154,7 @@ If `--run` is present, hand off to drive as the last step:
 /as-assign-drive <assignment-id>
 ```
 
-If no workable phase exists, keep creation successful and report why drive cannot continue.
+If no workable step exists, keep creation successful and report why drive cannot continue.
 
 ### 7. Report Result
 
@@ -165,7 +165,7 @@ Assignment: <name> (<id>)
 Created: .ace-local/assign/<id>/
 Created from hidden spec: .ace-local/assign/jobs/<timestamp>-<assignment-slug>.yml
 
-Phase 010: ...
+Step 010: ...
 ```
 
 ## Error Handling
@@ -176,14 +176,14 @@ Phase 010: ...
 | Conflicting explicit order | Reorder only by hard rule and report the named rule that required it |
 | Hidden-spec render failure | Return concrete render error; no assignment created |
 | `ace-assign create` rejection | Surface CLI error unchanged |
-| `--run` requested but no workable phase | Keep create success; report why drive did not continue |
+| `--run` requested but no workable step | Keep create success; report why drive did not continue |
 
 ## Edge Cases
 
 - Re-running the same request creates a new hidden spec file.
 - Explicit duplicate steps are normalized unless repetition is clearly requested.
 - Explicit steps take precedence over recipe defaults when both are present.
-- High-level skill-backed phases may expand into sub-phases at create runtime via `assign.source` metadata.
+- High-level skill-backed steps may expand into sub-steps at create runtime via `assign.source` metadata.
 - `--run` is a workflow-level create-then-drive handoff, not natural-language parsing in `ace-assign create`.
 - Quiet mode for `ace-assign create` suppresses non-essential output (including provenance line).
 
@@ -192,9 +192,9 @@ Phase 010: ...
 - Hidden spec is written under `.ace-local/assign/jobs/` for generated inputs
 - `ace-assign create FILE` receives the rendered spec path
 - Assignment metadata preserves hidden-spec provenance
-- Explicit step requests map to expected phases with explainable ordering
+- Explicit step requests map to expected steps with explainable ordering
 - Capability skills remain excluded from assign composition
-- Skill-backed phases still expand through runtime `assign.source` metadata
+- Skill-backed steps still expand through runtime `assign.source` metadata
 - `--run` (when requested) triggers drive handoff as the final workflow step
 
 ## Verification

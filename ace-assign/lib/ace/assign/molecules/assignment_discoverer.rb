@@ -6,8 +6,8 @@ module Ace
       # Discovers and enriches assignments with computed state.
       #
       # Combines AssignmentManager (file operations) with QueueScanner
-      # (phase scanning) to produce AssignmentInfo objects with full
-      # state, progress, and current phase information.
+      # (step scanning) to produce AssignmentInfo objects with full
+      # state, progress, and current step information.
       class AssignmentDiscoverer
         # @param cache_base [String, nil] Base cache directory
         def initialize(cache_base: nil)
@@ -48,7 +48,7 @@ module Ace
         # @param assignment [Models::Assignment] Raw assignment
         # @return [Models::AssignmentInfo] Enriched assignment
         def enrich_assignment(assignment)
-          state = @queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = @queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           Models::AssignmentInfo.new(assignment: assignment, queue_state: state)
         end
       end

@@ -51,7 +51,7 @@ class AceAssignTestCase < AceTestCase
         "name" => name,
         "description" => "Test workflow"
       },
-      "phases" => steps
+      "steps" => steps
     }
 
     config_path = File.join(dir, "job-#{name}.yaml")

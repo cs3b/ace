@@ -10,14 +10,14 @@ parameters:
   taskrefs: { required: true, type: array }
   review_cycles: { required: false, default: 3 }
 
-phases:
+steps:
   - name: onboard
     required: true
   - name: batch-parent
     required: true
     expansion:
       foreach: taskrefs
-      child_phase: work-on-task
+      child_step: work-on-task
       child_context: fork
     note: "Each child marks its task done after implementation"
   - name: release
@@ -28,7 +28,7 @@ phases:
   - name: review-cycle
     repeat: "{{review_cycles}}"
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     note: "Each cycle includes patch release after applying feedback"
   - name: reorganize-commits
     required: false

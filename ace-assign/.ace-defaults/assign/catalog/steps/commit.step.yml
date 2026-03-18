@@ -16,7 +16,7 @@ context:
 
 when_to_skip:
   - "No uncommitted changes"
-  - "Changes were already committed by a previous phase"
+  - "Changes were already committed by a previous step"
 
 effort: trivial
 tags: [git, versioning]

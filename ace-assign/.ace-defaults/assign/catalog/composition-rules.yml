@@ -1,9 +1,9 @@
-# Composition rules for ace-assign phase ordering and pairing.
-# Used by the compose-assignment workflow to validate and suggest phase sequences.
+# Composition rules for ace-assign step ordering and pairing.
+# Used by the compose-assignment workflow to validate and suggest step sequences.
 
 ordering:
   - rule: onboard-first
-    phase: onboard
+    step: onboard
     position: first
 
   - rule: pr-before-review
@@ -71,7 +71,7 @@ ordering:
   - rule: reflect-after-verify
     before: verify-test-suite
     after: reflect-and-refactor
-    note: "Reflection requires passing tests as baseline. The reflect-verify-cycle pair adds a second verify instance after refactoring — these are distinct phase instances, not a cycle."
+    note: "Reflection requires passing tests as baseline. The reflect-verify-cycle pair adds a second verify instance after refactoring — these are distinct step instances, not a cycle."
 
   - rule: reflect-before-mark-done
     before: reflect-and-refactor
@@ -110,52 +110,52 @@ ordering:
 
 pairs:
   - name: review-apply-cycle
-    phases: [review-pr, apply-feedback]
+    steps: [review-pr, apply-feedback]
     pattern: sequential
     note: "Reviews should be followed by feedback application"
 
   - name: test-fix-cycle
-    phases: [verify-test-suite, fix-tests]
+    steps: [verify-test-suite, fix-tests]
     pattern: conditional
     trigger: "test failures detected"
 
   - name: reorganize-push-sequence
-    phases: [reorganize-commits, push-to-remote]
+    steps: [reorganize-commits, push-to-remote]
     pattern: sequential
     note: "Reorganize then push for clean remote history"
 
   - name: apply-release-cycle
-    phases: [apply-feedback, release]
+    steps: [apply-feedback, release]
     pattern: sequential
     note: "Patch release after applying review feedback"
 
   - name: reflect-verify-cycle
-    phases: [reflect-and-refactor, verify-test-suite]
+    steps: [reflect-and-refactor, verify-test-suite]
     pattern: conditional
     trigger: "reflect-and-refactor produced refactoring commits"
     note: "Re-verify after refactoring to catch regressions"
 
   - name: reflect-fix-cycle
-    phases: [reflect-and-refactor, fix-tests]
+    steps: [reflect-and-refactor, fix-tests]
     pattern: conditional
     trigger: "re-verification after refactoring finds failures"
 
   - name: reflect-replan-cycle
-    phases: [reflect-and-refactor, work-on-task]
+    steps: [reflect-and-refactor, work-on-task]
     pattern: conditional
     trigger: "demo validation failure or fundamental architectural misalignment"
     cap: 1
     note: "Re-plan produces 1-2 sub-tasks, then reflect runs once more (no further re-plan)"
 
   - name: e2e-review-run-pair
-    phases: [verify-e2e]
+    steps: [verify-e2e]
     pattern: sequential
-    note: "E2E review (coverage matrix) and targeted run are a single phase with two steps"
+    note: "E2E review (coverage matrix) and targeted run are a single step with two steps"
 
   - name: docs-update-validate-pair
-    phases: [update-docs]
+    steps: [update-docs]
     pattern: sequential
-    note: "Doc update followed by validation in same phase"
+    note: "Doc update followed by validation in same step"
 
 conditional:
   - when: "assignment includes work-on-task"
@@ -186,7 +186,7 @@ conditional:
 
 fork_context:
   onboard_required: true
-  note: "Phases with fork context should include onboard instruction as first step"
+  note: "Steps with fork context should include onboard instruction as first step"
 
 review_cycles:
   default_count: 3

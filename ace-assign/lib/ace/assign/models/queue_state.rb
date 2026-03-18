@@ -9,52 +9,52 @@ module Ace
       # Provides convenient accessors for queue analysis.
       #
       # @example
-      #   state = QueueState.new(phases: phases, assignment: assignment)
-      #   state.current  # => Phase with status :in_progress
-      #   state.pending  # => Array of pending phases
+      #   state = QueueState.new(steps: steps, assignment: assignment)
+      #   state.current  # => Step with status :in_progress
+      #   state.pending  # => Array of pending steps
       class QueueState
-        attr_reader :phases, :assignment
+        attr_reader :steps, :assignment
 
-        # @param phases [Array<Phase>] All phases in queue order
+        # @param steps [Array<Step>] All steps in queue order
         # @param assignment [Assignment] Assignment metadata
-        def initialize(phases:, assignment:)
-          @phases = phases.freeze
+        def initialize(steps:, assignment:)
+          @steps = steps.freeze
           @assignment = assignment
-          @children_index = build_children_index(phases)
+          @children_index = build_children_index(steps)
         end
 
-        # Get current in-progress phase
-        # @return [Phase, nil] Current phase or nil
+        # Get current in-progress step
+        # @return [Step, nil] Current step or nil
         def current
-          in_progress_phases.first
+          in_progress_steps.first
         end
 
-        # Get all in-progress phases
-        # @return [Array<Phase>] In-progress phases
-        def in_progress_phases
-          phases.select { |s| s.status == :in_progress }
+        # Get all in-progress steps
+        # @return [Array<Step>] In-progress steps
+        def in_progress_steps
+          steps.select { |s| s.status == :in_progress }
         end
 
-        # Get all pending phases
-        # @return [Array<Phase>] Pending phases
+        # Get all pending steps
+        # @return [Array<Step>] Pending steps
         def pending
-          phases.select { |s| s.status == :pending }
+          steps.select { |s| s.status == :pending }
         end
 
-        # Get all done phases
-        # @return [Array<Phase>] Completed phases
+        # Get all done steps
+        # @return [Array<Step>] Completed steps
         def done
-          phases.select { |s| s.status == :done }
+          steps.select { |s| s.status == :done }
         end
 
-        # Get all failed phases
-        # @return [Array<Phase>] Failed phases
+        # Get all failed steps
+        # @return [Array<Step>] Failed steps
         def failed
-          phases.select { |s| s.status == :failed }
+          steps.select { |s| s.status == :failed }
         end
 
-        # Get next pending phase
-        # @return [Phase, nil] Next phase to work on
+        # Get next pending step
+        # @return [Step, nil] Next step to work on
         def next_pending
           pending.first
         end
@@ -62,52 +62,52 @@ module Ace
         # Check if queue is empty
         # @return [Boolean]
         def empty?
-          phases.empty?
+          steps.empty?
         end
 
-        # Check if all phases are complete (no pending or in_progress)
+        # Check if all steps are complete (no pending or in_progress)
         # @return [Boolean]
         def complete?
-          phases.all?(&:complete?)
+          steps.all?(&:complete?)
         end
 
-        # Get phase by number
-        # @param number [String] Phase number (e.g., "010", "040")
-        # @return [Phase, nil] Found phase
+        # Get step by number
+        # @param number [String] Step number (e.g., "010", "040")
+        # @return [Step, nil] Found step
         def find_by_number(number)
           # Normalize to string without leading zeros for comparison
           normalized = number.to_s.sub(/^0+/, "")
-          phases.find do |s|
+          steps.find do |s|
             s.number.sub(/^0+/, "") == normalized || s.number == number.to_s
           end
         end
 
-        # Get last phase in queue
-        # @return [Phase, nil] Last phase
+        # Get last step in queue
+        # @return [Step, nil] Last step
         def last
-          phases.last
+          steps.last
         end
 
-        # Get last completed phase
-        # @return [Phase, nil] Last done phase
+        # Get last completed step
+        # @return [Step, nil] Last done step
         def last_done
           done.last
         end
 
-        # Total phase count
-        # @return [Integer] Number of phases
+        # Total step count
+        # @return [Integer] Number of steps
         def size
-          phases.size
+          steps.size
         end
 
-        # Computed assignment state based on phase statuses
+        # Computed assignment state based on step statuses
         #
         # States (checked in priority order):
-        # - :empty     - No phases in queue
-        # - :completed - All phases complete (done or failed)
-        # - :failed    - Has failed phase(s) but NOT all complete (stuck)
-        # - :running   - Has in_progress phase with recent activity (< 1 hour)
-        # - :stalled   - Has in_progress phase but stale (> 1 hour)
+        # - :empty     - No steps in queue
+        # - :completed - All steps complete (done or failed)
+        # - :failed    - Has failed step(s) but NOT all complete (stuck)
+        # - :running   - Has in_progress step with recent activity (< 1 hour)
+        # - :stalled   - Has in_progress step but stale (> 1 hour)
         # - :paused    - Has pending but no in_progress (interrupted)
         #
         # @return [Symbol] Assignment state
@@ -121,7 +121,7 @@ module Ace
           :paused
         end
 
-        # Check if the current in_progress phase has recent activity
+        # Check if the current in_progress step has recent activity
         # @param threshold [Integer] Seconds since started_at to consider active (default: 1 hour)
         # @return [Boolean]
         def recently_active?(threshold: 3600)
@@ -136,85 +136,85 @@ module Ace
           {
             total: size,
             done: done.size,
-            in_progress: in_progress_phases.size,
+            in_progress: in_progress_steps.size,
             pending: pending.size,
             failed: failed.size
           }
         end
 
-        # Get all direct children of a phase (O(1) via index)
-        # @param parent_number [String] Parent phase number
-        # @return [Array<Phase>] Direct child phases
+        # Get all direct children of a step (O(1) via index)
+        # @param parent_number [String] Parent step number
+        # @return [Array<Step>] Direct child steps
         def children_of(parent_number)
           @children_index[parent_number] || []
         end
 
-        # Get all descendants (children, grandchildren, etc.) of a phase
-        # @param parent_number [String] Parent phase number
-        # @return [Array<Phase>] All descendant phases
+        # Get all descendants (children, grandchildren, etc.) of a step
+        # @param parent_number [String] Parent step number
+        # @return [Array<Step>] All descendant steps
         def descendants_of(parent_number)
-          phases.select { |s| Atoms::PhaseNumbering.child_of?(s.number, parent_number) }
+          steps.select { |s| Atoms::StepNumbering.child_of?(s.number, parent_number) }
         end
 
-        # Check whether a phase number belongs to a subtree rooted at root_number.
+        # Check whether a step number belongs to a subtree rooted at root_number.
         #
-        # @param root_number [String] Subtree root phase number
-        # @param phase_number [String] Candidate phase number
+        # @param root_number [String] Subtree root step number
+        # @param step_number [String] Candidate step number
         # @return [Boolean] True when candidate is root or descendant of root
-        def in_subtree?(root_number, phase_number)
-          phase_number == root_number || Atoms::PhaseNumbering.child_of?(phase_number, root_number)
+        def in_subtree?(root_number, step_number)
+          step_number == root_number || Atoms::StepNumbering.child_of?(step_number, root_number)
         end
 
-        # Get all phases in a subtree (root + descendants), preserving queue order.
+        # Get all steps in a subtree (root + descendants), preserving queue order.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Array<Phase>] Subtree phases in queue order
-        def subtree_phases(root_number)
-          phases.select { |s| in_subtree?(root_number, s.number) }
+        # @param root_number [String] Subtree root step number
+        # @return [Array<Step>] Subtree steps in queue order
+        def subtree_steps(root_number)
+          steps.select { |s| in_subtree?(root_number, s.number) }
         end
 
-        # Check whether all phases in a subtree are complete.
+        # Check whether all steps in a subtree are complete.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Boolean] True when every subtree phase is complete
+        # @param root_number [String] Subtree root step number
+        # @return [Boolean] True when every subtree step is complete
         def subtree_complete?(root_number)
-          scoped = subtree_phases(root_number)
+          scoped = subtree_steps(root_number)
           return false if scoped.empty?
 
           scoped.all?(&:complete?)
         end
 
-        # Check whether a subtree has at least one failed phase.
+        # Check whether a subtree has at least one failed step.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Boolean] True when any subtree phase failed
+        # @param root_number [String] Subtree root step number
+        # @return [Boolean] True when any subtree step failed
         def subtree_failed?(root_number)
-          subtree_phases(root_number).any? { |s| s.status == :failed }
+          subtree_steps(root_number).any? { |s| s.status == :failed }
         end
 
-        # Get the current in-progress phase within a subtree.
+        # Get the current in-progress step within a subtree.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Phase, nil] In-progress phase inside subtree, if any
+        # @param root_number [String] Subtree root step number
+        # @return [Step, nil] In-progress step inside subtree, if any
         def current_in_subtree(root_number)
           in_progress_in_subtree(root_number).first
         end
 
-        # Get all in-progress phases within a subtree.
+        # Get all in-progress steps within a subtree.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Array<Phase>] In-progress phases inside subtree
+        # @param root_number [String] Subtree root step number
+        # @return [Array<Step>] In-progress steps inside subtree
         def in_progress_in_subtree(root_number)
-          subtree_phases(root_number)
+          subtree_steps(root_number)
             .select { |s| s.status == :in_progress }
         end
 
-        # Get next workable phase constrained to a subtree.
+        # Get next workable step constrained to a subtree.
         #
-        # @param root_number [String] Subtree root phase number
-        # @return [Phase, nil] Next pending workable phase inside subtree
+        # @param root_number [String] Subtree root step number
+        # @return [Step, nil] Next pending workable step inside subtree
         def next_workable_in_subtree(root_number)
-          subtree_phases(root_number)
+          subtree_steps(root_number)
             .select { |s| s.status == :pending }
             .reject { |s| has_incomplete_children?(s.number) }
             .first
@@ -222,27 +222,27 @@ module Ace
 
         # Build ancestor chain from closest parent to root.
         #
-        # @param number [String] Phase number
+        # @param number [String] Step number
         # @return [Array<String>] Ancestor numbers, nearest first
         def ancestor_chain(number)
           chain = []
-          parent = Atoms::PhaseNumbering.parent_of(number)
+          parent = Atoms::StepNumbering.parent_of(number)
           while parent
             chain << parent
-            parent = Atoms::PhaseNumbering.parent_of(parent)
+            parent = Atoms::StepNumbering.parent_of(parent)
           end
           chain
         end
 
         # Find nearest ancestor (or self) that has context: fork.
         #
-        # @param number [String] Phase number
-        # @return [Phase, nil] Nearest fork-scoped phase
+        # @param number [String] Step number
+        # @return [Step, nil] Nearest fork-scoped step
         def nearest_fork_ancestor(number)
-          phase = find_by_number(number)
-          return nil unless phase
+          step = find_by_number(number)
+          return nil unless step
 
-          return phase if phase.fork?
+          return step if step.fork?
 
           ancestor_chain(number).each do |ancestor_number|
             ancestor = find_by_number(ancestor_number)
@@ -252,38 +252,38 @@ module Ace
           nil
         end
 
-        # Check if a phase has any incomplete children
-        # @param parent_number [String] Parent phase number
+        # Check if a step has any incomplete children
+        # @param parent_number [String] Parent step number
         # @return [Boolean] True if any child is not done
         def has_incomplete_children?(parent_number)
           children_of(parent_number).any? { |s| s.status != :done }
         end
 
-        # Get next workable phase considering hierarchy.
-        # A phase is workable if it's pending and has no incomplete children.
+        # Get next workable step considering hierarchy.
+        # A step is workable if it's pending and has no incomplete children.
         # Prefers children of current/recent work.
-        # @return [Phase, nil] Next phase to work on
+        # @return [Step, nil] Next step to work on
         def next_workable
-          # First, find pending phases
-          pending_phases = pending
+          # First, find pending steps
+          pending_steps = pending
 
-          # Filter to phases that don't have incomplete children
-          workable = pending_phases.reject { |s| has_incomplete_children?(s.number) }
+          # Filter to steps that don't have incomplete children
+          workable = pending_steps.reject { |s| has_incomplete_children?(s.number) }
 
-          # Return first workable phase (already sorted by number)
+          # Return first workable step (already sorted by number)
           workable.first
         end
 
-        # Get all phase numbers as an array
-        # @return [Array<String>] All phase numbers
+        # Get all step numbers as an array
+        # @return [Array<String>] All step numbers
         def all_numbers
-          phases.map(&:number)
+          steps.map(&:number)
         end
 
-        # Get top-level (root) phases only
-        # @return [Array<Phase>] Phases with no parent
+        # Get top-level (root) steps only
+        # @return [Array<Step>] Steps with no parent
         def top_level
-          phases.select { |s| Atoms::PhaseNumbering.top_level?(s.number) }
+          steps.select { |s| Atoms::StepNumbering.top_level?(s.number) }
         end
 
         # Build hierarchical structure for display
@@ -295,28 +295,28 @@ module Ace
         private
 
         # Build index of children by parent number for O(1) lookups
-        # @param phases [Array<Phase>] All phases
-        # @return [Hash<String, Array<Phase>>] Parent number => children mapping
-        def build_children_index(phases)
+        # @param steps [Array<Step>] All steps
+        # @return [Hash<String, Array<Step>>] Parent number => children mapping
+        def build_children_index(steps)
           index = Hash.new { |h, k| h[k] = [] }
-          phases.each do |phase|
-            parsed = Atoms::PhaseNumbering.parse(phase.number)
-            index[parsed[:parent]] << phase if parsed[:parent]
+          steps.each do |step|
+            parsed = Atoms::StepNumbering.parse(step.number)
+            index[parsed[:parent]] << step if parsed[:parent]
           end
           index
         end
 
         def build_hierarchy(parent_number)
-          parent_phases = if parent_number.nil?
+          parent_steps = if parent_number.nil?
                             top_level
                           else
                             children_of(parent_number)
                           end
 
-          parent_phases.map do |phase|
+          parent_steps.map do |step|
             {
-              step: phase,
-              children: build_hierarchy(phase.number)
+              step: step,
+              children: build_hierarchy(step.number)
             }
           end
         end

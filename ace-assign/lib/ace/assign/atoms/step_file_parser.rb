@@ -5,19 +5,19 @@ require "yaml"
 module Ace
   module Assign
     module Atoms
-      # Pure functions for parsing phase markdown files.
+      # Pure functions for parsing step markdown files.
       #
-      # Phase files have frontmatter + body structure:
+      # Step files have frontmatter + body structure:
       # ---
-      # name: phase-name
+      # name: step-name
       # status: pending
       # ---
       # # Instructions
       # ...
-      module PhaseFileParser
+      module StepFileParser
         FRONTMATTER_REGEX = /\A---\s*\n(.*?)\n---\s*\n/m
 
-        # Parse phase file content into structured data
+        # Parse step file content into structured data
         #
         # @param content [String] File content with frontmatter + body
         # @return [Hash] Parsed data with :frontmatter and :body keys
@@ -82,11 +82,11 @@ module Ace
 
         # Parse filename to extract number, name, and parent.
         #
-        # @param filename [String] Filename like "010-init-project.ph.md" or "010-init-project.r.md"
+        # @param filename [String] Filename like "010-init-project.st.md" or "010-init-project.r.md"
         # @return [Hash] Extracted number, name, and parent (if nested)
         def self.parse_filename(filename)
-          # Remove .ph.md or .r.md extension
-          base = filename.sub(/\.(ph|r)\.md$/, "")
+          # Remove .st.md or .r.md extension
+          base = filename.sub(/\.(st|r)\.md$/, "")
 
           # Match number pattern (with optional dot-separated parts) and name
           match = base.match(/^([\d.]+)-(.+)$/)
@@ -101,9 +101,9 @@ module Ace
           end
         end
 
-        # Extract parent number from a hierarchical phase number.
+        # Extract parent number from a hierarchical step number.
         #
-        # @param number [String] Phase number (e.g., "010.01")
+        # @param number [String] Step number (e.g., "010.01")
         # @return [String, nil] Parent number or nil for top-level
         def self.extract_parent_from_number(number)
           return nil if number.nil?
@@ -114,21 +114,21 @@ module Ace
           parts[0..-2].join(".")
         end
 
-        # Generate phase filename from number and name
+        # Generate step filename from number and name
         #
-        # @param number [String] Phase number
-        # @param name [String] Phase name
-        # @return [String] Phase filename with .ph.md extension
+        # @param number [String] Step number
+        # @param name [String] Step name
+        # @return [String] Step filename with .st.md extension
         def self.generate_filename(number, name)
           # Sanitize name for filename
           safe_name = name.to_s.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "")
-          "#{number}-#{safe_name}.ph.md"
+          "#{number}-#{safe_name}.st.md"
         end
 
         # Generate report filename from number and name
         #
-        # @param number [String] Phase number
-        # @param name [String] Phase name
+        # @param number [String] Step number
+        # @param name [String] Step name
         # @return [String] Report filename with .r.md extension
         def self.generate_report_filename(number, name)
           # Sanitize name for filename
@@ -141,7 +141,7 @@ module Ace
         def self.validate_context!(context)
           return if context.nil?
 
-          valid_contexts = Ace::Assign::Models::Phase::VALID_CONTEXTS
+          valid_contexts = Ace::Assign::Models::Step::VALID_CONTEXTS
           return if valid_contexts.include?(context)
 
           raise ArgumentError, "Invalid context '#{context}'. Valid values: #{valid_contexts.join(', ')}"

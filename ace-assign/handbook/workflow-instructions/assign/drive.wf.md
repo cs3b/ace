@@ -15,12 +15,12 @@ update:
 
 ## Purpose
 
-Drive agent execution through an active assignment by continuously checking status, executing the current phase, and reporting completion. This is the main execution loop for working through an assignment workflow.
+Drive agent execution through an active assignment by continuously checking status, executing the current step, and reporting completion. This is the main execution loop for working through an assignment workflow.
 
 ## Prerequisites
 
 - An active assignment exists (created via `ace-assign create` or `/as-assign-create`)
-- Assignment has at least one pending or in_progress phase
+- Assignment has at least one pending or in_progress step
 
 ## Assignment Context Propagation
 
@@ -67,7 +67,7 @@ ace-assign fail --message "err" --assignment abc123
 
 Once `ASSIGNMENT_TARGET` is pinned, do not run unscoped execution commands (`status`, `start`, `finish`, `fail`, `retry`, `add`) inside the drive loop.
 
-### Subtree Fork Scope (Explicit `@<phase-number>`)
+### Subtree Fork Scope (Explicit `@<step-number>`)
 
 For split-task delegation, run the entire subtree in one forked process:
 
@@ -106,40 +106,40 @@ ace-assign finish --message done.md --assignment <id>
 
 ## Execution Loop
 
-Repeat the following cycle until all phases are done or failed:
+Repeat the following cycle until all steps are done or failed:
 
-### Phase Execution Policy
+### Step Execution Policy
 
-- Planned phases are mandatory work items. Do not skip them by judgment.
-- For each active phase, do exactly one of:
-  1. Execute the phase and report completion with `ace-assign finish --message`
+- Planned steps are mandatory work items. Do not skip them by judgment.
+- For each active step, do exactly one of:
+  1. Execute the step and report completion with `ace-assign finish --message`
   2. Attempt execution, capture blocker evidence, and mark failed with `ace-assign fail`
-- Never use report text to "skip" or synthesize completion for planned phases.
-- **Fork-delegation constraint**: If the active phase has `FORK: yes`, the driver MUST delegate via `ace-assign fork-run`. The driver MUST NOT execute fork-marked phases inline, absorb remaining fork children after partial failure, or inject retry phases as top-level siblings. All fork recovery goes through re-fork (see [Fork-Run Crash Recovery](#fork-run-crash-recovery-partial-completion)).
-- **Conditional release in review subtrees**: A `release` phase inside a review cycle (e.g., `[review-pr, apply-feedback, release]`) MUST skip the version bump when prior sibling phases produced no code changes. If `apply-feedback` reported no findings or `git diff HEAD~1 --stat` shows only report files, mark release done with "no-op: no changes to release" instead of bumping.
+- Never use report text to "skip" or synthesize completion for planned steps.
+- **Fork-delegation constraint**: If the active step has `FORK: yes`, the driver MUST delegate via `ace-assign fork-run`. The driver MUST NOT execute fork-marked steps inline, absorb remaining fork children after partial failure, or inject retry steps as top-level siblings. All fork recovery goes through re-fork (see [Fork-Run Crash Recovery](#fork-run-crash-recovery-partial-completion)).
+- **Conditional release in review subtrees**: A `release` step inside a review cycle (e.g., `[review-pr, apply-feedback, release]`) MUST skip the version bump when prior sibling steps produced no code changes. If `apply-feedback` reported no findings or `git diff HEAD~1 --stat` shows only report files, mark release done with "no-op: no changes to release" instead of bumping.
 
-### Adaptation Assessment (After Each Phase)
+### Adaptation Assessment (After Each Step)
 
-After completing or failing each phase, evaluate whether the assignment needs adaptation:
+After completing or failing each step, evaluate whether the assignment needs adaptation:
 
-- **Test failures detected** → Consider adding a fix-tests phase:
+- **Test failures detected** → Consider adding a fix-tests step:
   ```bash
-  ace-assign add "fix-tests" --instructions "Fix failing tests identified in phase NNN" --assignment "$ASSIGNMENT_TARGET"
+  ace-assign add "fix-tests" --instructions "Fix failing tests identified in step NNN" --assignment "$ASSIGNMENT_TARGET"
    ```
 
-- **Review found critical issues** → Consider adding an apply-critical-fixes phase:
+- **Review found critical issues** → Consider adding an apply-critical-fixes step:
   ```bash
   ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding" --assignment "$ASSIGNMENT_TARGET"
   ```
 
-- **Missing prerequisite discovered** → Consider adding the prerequisite phase:
+- **Missing prerequisite discovered** → Consider adding the prerequisite step:
   ```bash
-  ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during phase NNN" --assignment "$ASSIGNMENT_TARGET"
+  ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during step NNN" --assignment "$ASSIGNMENT_TARGET"
   ```
 
-- **Metadata hint**: Phase file contains `trigger_on_failure` — if the phase failed, inject the referenced phase type
+- **Metadata hint**: Step file contains `trigger_on_failure` — if the step failed, inject the referenced step type
 
-Use `decision_notes` from phase metadata (if present) as additional guidance for these assessments.
+Use `decision_notes` from step metadata (if present) as additional guidance for these assessments.
 
 - **Review-cycle circuit breaker**: When a review fork subtree fails due to provider unavailability (not code bugs), evaluate whether to attempt the next review cycle:
   - If the **first** review cycle (valid) failed on providers: skip remaining cycles (fit, shine). Mark them done with "skipped: provider unavailable for prior cycle" reports.
@@ -157,25 +157,25 @@ echo "$STATUS_OUTPUT"
 
 Read the output to identify:
 - Assignment ID (must remain equal to pinned `ASSIGNMENT_ID`)
-- Current phase number, name, and status
-- Current phase's instructions
-- Current phase's skill reference (if any)
-- Remaining phases in the queue
+- Current step number, name, and status
+- Current step's instructions
+- Current step's skill reference (if any)
+- Remaining steps in the queue
 
-**Note:** `ace-assign status` is the source of truth for assignment state. The phase files in the `phases/` directory are the backing store, but always query status via the command for accurate information.
+**Note:** `ace-assign status` is the source of truth for assignment state. The step files in the `steps/` directory are the backing store, but always query status via the command for accurate information.
 
 ### 2. Auto-Delegate Fork Subtrees (When Applicable)
 
-Before executing the current phase inline, check whether the active phase is inside a fork-enabled subtree.
+Before executing the current step inline, check whether the active step is inside a fork-enabled subtree.
 
 #### Delegation Rule
 
-**FORK SIGNAL**: If a phase row shows `yes` in the `FORK` column, the phase itself has `context: fork` and MUST be delegated via `fork-run`.
+**FORK SIGNAL**: If a step row shows `yes` in the `FORK` column, the step itself has `context: fork` and MUST be delegated via `fork-run`.
 
 | Column | Meaning | Action |
 |--------|---------|--------|
-| `FORK: yes` | Phase has `context: fork` | Delegate via `fork-run` |
-| `FORK: ` (empty) | Phase is not fork-enabled | Execute inline (or inspect fork-enabled children if batch parent) |
+| `FORK: yes` | Step has `context: fork` | Delegate via `fork-run` |
+| `FORK: ` (empty) | Step is not fork-enabled | Execute inline (or inspect fork-enabled children if batch parent) |
 
 **Example status output:**
 ```
@@ -185,20 +185,20 @@ NUMBER       STATUS       NAME                           FORK   CHILDREN
 020          ○ Pending    implement-step                 yes
 ```
 
-Phase 020 shows `FORK: yes` → run:
+Step 020 shows `FORK: yes` → run:
 ```bash
 ace-assign fork-run --assignment <id>@020
 ```
 
 **Delegation boundary rule**
 
-- Outside a delegated fork scope, do NOT execute fork phases inline.
-- If status output is already scoped to `Current Phase: <root>.*` via `--assignment <id>@<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
-- If the current phase is a top-level phase with `FORK: yes` and no matching scope is active, delegate immediately.
+- Outside a delegated fork scope, do NOT execute fork steps inline.
+- If status output is already scoped to `Current Step: <root>.*` via `--assignment <id>@<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
+- If the current step is a top-level step with `FORK: yes` and no matching scope is active, delegate immediately.
 
 #### Nested Batch Containers (Container → Fork Children)
 
-A batch container (e.g., `010`) may have children but no fork context itself (`FORK` column empty). In that case, delegate child phases according to scheduler metadata on the parent:
+A batch container (e.g., `010`) may have children but no fork context itself (`FORK` column empty). In that case, delegate child steps according to scheduler metadata on the parent:
 
 - `batch_parent: true`
 - `parallel: true|false`
@@ -206,19 +206,19 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 - `fork_retry_limit: <N>` (default `1`)
 
 **How to distinguish:**
-- **Direct fork target**: `FORK: yes` on the current phase → fork-run the current phase.
-- **Batch container**: `FORK: ` on parent, but children include `FORK: yes` phases.
+- **Direct fork target**: `FORK: yes` on the current step → fork-run the current step.
+- **Batch container**: `FORK: ` on parent, but children include `FORK: yes` steps.
 
 **Pattern for batch containers:**
 ```bash
-# Read scheduler metadata from parent phase 010
+# Read scheduler metadata from parent step 010
 # parallel=false  => sequential, still fork every child
 # parallel=true   => windowed fork concurrency with max_parallel
 ```
 
 **Sequential mode (`parallel: false`)**
 
-- Iterate pending child phases in number order.
+- Iterate pending child steps in number order.
 - For each child with `FORK: yes`, run:
   - `ace-assign fork-run --assignment <id>@<child>`
 - Re-check status after each child.
@@ -228,13 +228,13 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 
 - `max_parallel` is an in-flight concurrency cap, not a wave size.
 - Maintain up to `max_parallel` in-flight child `fork-run` processes.
-- Launch only child phases with `FORK: yes`.
+- Launch only child steps with `FORK: yes`.
 - Refill a free slot immediately when any child completes, until pending queue is empty.
 - Do not launch a fixed group and wait for the whole group to finish before launching more work.
 
 **Rolling scheduler loop (required)**
 
-1. Build pending fork-child queue in phase-number order.
+1. Build pending fork-child queue in step-number order.
 2. Launch children until `in_flight == max_parallel` or pending is empty.
 3. Wait for any in-flight child to finish, then record done/failed state.
 4. If child succeeded, immediately launch the next pending child; if no pending remains, continue draining in-flight children.
@@ -264,7 +264,7 @@ The driver MUST NOT pause for user input between child fork-runs within a batch 
 STATUS_JSON=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
 ASSIGNMENT_ID=$(echo "$STATUS_JSON" | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
 FORK_ROOT=$(echo "$STATUS_JSON" | ruby -rjson -e '
-  p = JSON.parse(STDIN.read)["current_phase"]
+  p = JSON.parse(STDIN.read)["current_step"]
   puts p["number"] if p && p["context"] == "fork"
 ')
 if [ -n "$FORK_ROOT" ]; then
@@ -287,8 +287,8 @@ fi
 >   STATUS_JSON=$(ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" --format json)
 >   COMPLETE=$(echo "$STATUS_JSON" | ruby -rjson -e '
 >     json = JSON.parse(STDIN.read)
->     phases = json["phases"] || []
->     puts phases.all? { |phase| phase["status"] == "done" || phase["status"] == "failed" }
+>     steps = json["steps"] || []
+>     puts steps.all? { |step| step["status"] == "done" || step["status"] == "failed" }
 >   ')
 >   [ "$COMPLETE" = "true" ] && break
 >   sleep 300
@@ -301,7 +301,7 @@ After a fork subtree completes (work-on-task finishes successfully):
 
 1. **Verify ace-taskflow status matches assignment status.** If the assignment shows `work-on-task` as done but ace-taskflow still shows `in-progress`, status drift has occurred.
 
-2. **If mark-task-done phase was NOT included in the assignment** (common for ad-hoc assignments):
+2. **If mark-task-done step was NOT included in the assignment** (common for ad-hoc assignments):
    ```bash
    # Manually sync status before reporting subtree complete
    ace-task done {taskref}
@@ -312,7 +312,7 @@ After a fork subtree completes (work-on-task finishes successfully):
 
 #### Subtree Guard: Review Fork Reports Before Continuing
 
-After fork-run returns and completion is verified, the driver acts as the **guard** for the subtree. Before continuing to the next phase:
+After fork-run returns and completion is verified, the driver acts as the **guard** for the subtree. Before continuing to the next step:
 
 1. **Read all subtree report files** from `.ace-local/assign/<assignment-id>/reports/`:
    ```bash
@@ -320,27 +320,27 @@ After fork-run returns and completion is verified, the driver acts as the **guar
    ls .ace-local/assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
    # Read each report file to review the forked agent's work
    ```
-2. **Verify quality**: Check that reports indicate successful completion, not just phase advancement.
+2. **Verify quality**: Check that reports indicate successful completion, not just step advancement.
 3. **Flag concerns**: If any report indicates partial work, errors, or skipped steps, stop and ask the user before continuing.
-4. **Only then continue** the main drive loop to the next phase.
+4. **Only then continue** the main drive loop to the next step.
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
 
 #### Queue Advancement After Batch Container Completion
 
-After all fork subtrees within a batch container complete, the container auto-marks as Done. However, the queue pointer may not automatically advance to the next top-level phase.
+After all fork subtrees within a batch container complete, the container auto-marks as Done. However, the queue pointer may not automatically advance to the next top-level step.
 
-**After verifying all fork subtree reports**, if `ace-assign status` shows no Active phase (all completed phases but no new in-progress phase), run:
+**After verifying all fork subtree reports**, if `ace-assign status` shows no Active step (all completed steps but no new in-progress step), run:
 ```bash
 ace-assign start --assignment "$ASSIGNMENT_TARGET"
 ```
-This advances the queue to the next pending top-level phase.
+This advances the queue to the next pending top-level step.
 
 #### Fork-Run Crash Recovery (Partial Completion)
 
-When `fork-run` exits non-zero but has made partial progress (uncommitted files, some phases done, some in-progress):
+When `fork-run` exits non-zero but has made partial progress (uncommitted files, some steps done, some in-progress):
 
-**Detection**: fork-run exit code != 0 AND (`git status --short` shows changes OR some child phases are done while others are still active).
+**Detection**: fork-run exit code != 0 AND (`git status --short` shows changes OR some child steps are done while others are still active).
 
 **Recovery protocol**:
 
@@ -350,7 +350,7 @@ When `fork-run` exits non-zero but has made partial progress (uncommitted files,
    ace-git-commit -i "partial: save fork progress for {subtree}"
    ```
 
-2. **Write a progress report for the active phase** — Document what was accomplished and what remains:
+2. **Write a progress report for the active step** — Document what was accomplished and what remains:
    ```bash
    cat > /tmp/partial-report.md << 'EOF'
    ## Partial Completion (fork crashed)
@@ -363,73 +363,73 @@ When `fork-run` exits non-zero but has made partial progress (uncommitted files,
    - [list of components not yet implemented]
    - [tests not yet written]
    EOF
-   ace-assign finish --message /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_phase}
+   ace-assign finish --message /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_step}
    ```
 
-3. **Inject recovery phases** — Add new child phases for the remaining work:
+3. **Inject recovery steps** — Add new child steps for the remaining work:
    ```bash
    # Recovery onboard: re-read the plan and progress reports
-   ace-assign add "recovery-onboard" --after ${last_done_phase} --child \
+   ace-assign add "recovery-onboard" --after ${last_done_step} --child \
      --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Read reports from plan-task and work-on-task phases to understand progress. Continue implementation from where it stopped."
+     -i "Read reports from plan-task and work-on-task steps to understand progress. Continue implementation from where it stopped."
 
-   # Continue work phase
+   # Continue work step
    ace-assign add "continue-work" --after recovery-onboard --child \
      --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
      -i "Complete remaining implementation. Check git log and existing files to avoid redoing work."
   ```
 
-4. **Re-fork** — The injected phases are pending, so fork-run will pick them up:
+4. **Re-fork** — The injected steps are pending, so fork-run will pick them up:
    ```bash
    ace-assign fork-run --assignment ${ASSIGNMENT_ID}@${FORK_ROOT}
    ```
 
-**Key principle**: Never execute fork work inline — except for LLM-tool phases during provider unavailability (see below). The fork boundary exists for context isolation. If a fork crashes due to a code issue, recover and re-fork — don't absorb the work into the driver.
+**Key principle**: Never execute fork work inline — except for LLM-tool steps during provider unavailability (see below). The fork boundary exists for context isolation. If a fork crashes due to a code issue, recover and re-fork — don't absorb the work into the driver.
 
 #### Fork-Run Failure: Provider Unavailability
 
 When `fork-run` fails not because of a code bug but because an LLM provider timed out, hung, or returned no output, re-forking will crash the same way in a loop.
 
-**Detection heuristics**: fork-run exit != 0 AND the failed phase error or last fork message indicates a timeout, hang, or empty response — not a code bug (no stack trace, no test failure, no syntax error).
+**Detection heuristics**: fork-run exit != 0 AND the failed step error or last fork message indicates a timeout, hang, or empty response — not a code bug (no stack trace, no test failure, no syntax error).
 
 **Recovery protocol**:
 
-1. **Confirm provider failure** — Read the fork's last message and failed phase error. Look for: model timeout, API unavailability, empty/truncated response, connection reset, or tool hang with no output.
+1. **Confirm provider failure** — Read the fork's last message and failed step error. Look for: model timeout, API unavailability, empty/truncated response, connection reset, or tool hang with no output.
 
-2. **Classify the failed phase**:
-   - **LLM-tool phase** — Work that invokes an LLM-backed tool as its primary action (e.g., `ace-review`, `ace-lint`, audit, summarize). The fork existed to isolate the LLM call, not to produce code.
-   - **Code phase** — Work that produces or modifies source code (e.g., implement, fix, refactor). The fork existed for context isolation of code-producing work.
+2. **Classify the failed step**:
+   - **LLM-tool step** — Work that invokes an LLM-backed tool as its primary action (e.g., `ace-review`, `ace-lint`, audit, summarize). The fork existed to isolate the LLM call, not to produce code.
+   - **Code step** — Work that produces or modifies source code (e.g., implement, fix, refactor). The fork existed for context isolation of code-producing work.
 
-3. **Fork-side action** — The fork MUST only fail and exit. It must NEVER inject phases:
+3. **Fork-side action** — The fork MUST only fail and exit. It must NEVER inject steps:
    ```bash
-   # Mark the crashed phase as failed with evidence, then exit
+   # Mark the crashed step as failed with evidence, then exit
    ace-assign fail --message "Provider unavailable: <error details>" \
-     --assignment ${ASSIGNMENT_ID}@${failed_phase}
-   # EXIT — do not add phases, do not retry, do not modify the assignment tree
+     --assignment ${ASSIGNMENT_ID}@${failed_step}
+   # EXIT — do not add steps, do not retry, do not modify the assignment tree
    ```
 
-   **Forks NEVER inject phases outside their subtree scope. Recovery decisions belong to the driver.**
+   **Forks NEVER inject steps outside their subtree scope. Recovery decisions belong to the driver.**
 
 4. **Driver-side recovery** — After detecting a fork failure, the driver classifies and recovers:
 
-   **LLM-tool phases** → execute equivalent work inline at driver level:
+   **LLM-tool steps** → execute equivalent work inline at driver level:
    ```bash
-   # Option A: Execute inline (for LLM-tool phases only)
+   # Option A: Execute inline (for LLM-tool steps only)
    # Read changed files, analyze each, write review report directly
 
-   # Option B: Add retry as a child of the failed phase's parent
-   ace-assign add "retry-<phase-name>" --after <failed_phase> --child \
+   # Option B: Add retry as a child of the failed step's parent
+   ace-assign add "retry-<step-name>" --after <failed_step> --child \
      --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Provider was unavailable for forked <phase-name>. Execute equivalent work inline: <specific instructions>"
+     -i "Provider was unavailable for forked <step-name>. Execute equivalent work inline: <specific instructions>"
    ```
 
-   **Code phases** → do NOT execute inline. Wait for provider recovery or escalate:
+   **Code steps** → do NOT execute inline. Wait for provider recovery or escalate:
    ```bash
    # Ask user whether to wait and retry later
    # Do NOT attempt the code work inline — context isolation is required
    ```
 
-**Inline execution constraint**: Only LLM-tool phases may go inline during provider unavailability. Code-producing phases always require a fork for context isolation — wait for recovery or ask the user.
+**Inline execution constraint**: Only LLM-tool steps may go inline during provider unavailability. Code-producing steps always require a fork for context isolation — wait for recovery or ask the user.
 
 #### Re-Fork After Partial Provider Failure
 
@@ -437,7 +437,7 @@ When a fork subtree has a mix of done, failed, and pending children after a prov
 
 **Protocol**:
 
-1. **Inject retry as a child** of the failed phase's parent subtree (never as a top-level sibling):
+1. **Inject retry as a child** of the failed step's parent subtree (never as a top-level sibling):
    ```bash
    ace-assign add "retry-review-pr" --after ${failed_child} --child \
      --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
@@ -449,15 +449,15 @@ When a fork subtree has a mix of done, failed, and pending children after a prov
    ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
    ```
 
-3. **Do NOT inject phases as top-level siblings** — retry phases must be children of the original subtree root, never top-level phases like `101` or `121`.
+3. **Do NOT inject steps as top-level siblings** — retry steps must be children of the original subtree root, never top-level steps like `101` or `121`.
 
 **Anti-pattern**: Driver sees subtree 110 with 110.01 failed, 110.02 and 110.03 pending. Driver executes 110.02 and 110.03 inline. This defeats context isolation and violates the fork-delegation constraint.
 
-### 3. Execute Current Phase
+### 3. Execute Current Step
 
-Based on the phase configuration:
+Based on the step configuration:
 
-#### If Phase Has a `skill:` Field
+#### If Step Has a `skill:` Field
 
 Invoke the referenced skill as the primary action, extracting parameters from the instructions:
 
@@ -471,7 +471,7 @@ Invoke the referenced skill as the primary action, extracting parameters from th
 
 **Agent Action:** Run `/as-task-work 148` then follow the skill workflow.
 
-#### If Phase Has No Skill
+#### If Step Has No Skill
 
 Follow the instructions directly, performing the described work:
 
@@ -487,14 +487,14 @@ Follow the instructions directly, performing the described work:
 
 ### 4. External Action Rule (Attempt-First)
 
-For external-facing phases (for example PR/review/release/push/update lifecycle steps):
+For external-facing steps (for example PR/review/release/push/update lifecycle steps):
 
-- Attempt the phase command(s) first.
+- Attempt the step command(s) first.
 - If blocked, capture concrete evidence:
   - command attempted
   - exact error output
-  - why the phase cannot proceed
-- Mark phase failed with evidence (do not report synthetic completion).
+  - why the step cannot proceed
+- Mark step failed with evidence (do not report synthetic completion).
 
 ```bash
 ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assignment "$ASSIGNMENT_TARGET"
@@ -502,14 +502,14 @@ ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assig
 
 ### 5. Write Report (Only After Real Execution)
 
-After completing the phase work, write a brief report summarizing what was accomplished:
+After completing the step work, write a brief report summarizing what was accomplished:
 
 ```bash
 # Write report content to a temp file
-cat > /tmp/phase-report.md << 'EOF'
+cat > /tmp/step-report.md << 'EOF'
 ## Summary
 
-Completed the setup phase successfully:
+Completed the setup step successfully:
 
 - Installed all dependencies via npm install
 - Configured PostgreSQL database connection
@@ -519,7 +519,7 @@ All setup prerequisites are now satisfied.
 EOF
 
 # Submit report to advance the queue
-ace-assign finish --message /tmp/phase-report.md --assignment "$ASSIGNMENT_TARGET"
+ace-assign finish --message /tmp/step-report.md --assignment "$ASSIGNMENT_TARGET"
 ```
 
 ### 6. Verify State Transition (Required)
@@ -532,51 +532,51 @@ echo "$POST_STATUS"
 ```
 
 Required checks:
-- If report succeeded: active phase advanced consistently with work performed
+- If report succeeded: active step advanced consistently with work performed
 - If fail succeeded: assignment is stalled or moved according to retry/add logic
 - If output mismatches expected transition: stop and ask user before continuing
 
 ### 7. Handle Failures
 
-If a phase cannot be completed:
+If a step cannot be completed:
 
 ```bash
-# Mark phase as failed with reason
+# Mark step as failed with reason
 ace-assign fail --message "Tests failed: test_greet, test_shout" --assignment "$ASSIGNMENT_TARGET"
 ```
 
 Then decide on next action:
 
-#### Option A: Retry the Failed Phase
+#### Option A: Retry the Failed Step
 
 ```bash
-ace-assign retry <phase-number> --assignment "$ASSIGNMENT_TARGET"
+ace-assign retry <step-number> --assignment "$ASSIGNMENT_TARGET"
 ```
 
-Creates a new phase linked to the original. Original remains visible as failed.
+Creates a new step linked to the original. Original remains visible as failed.
 
-#### Option B: Add a Fix Phase
+#### Option B: Add a Fix Step
 
 ```bash
 ace-assign add "fix-issue" --instructions "Fix the failing tests and verify" --assignment "$ASSIGNMENT_TARGET"
 ```
 
-New phase is inserted after the current in-progress phase.
+New step is inserted after the current in-progress step.
 
 #### Option C: Ask the User
 
-If uncertain, ask the user whether to retry, add a fix phase, or abort.
+If uncertain, ask the user whether to retry, add a fix step, or abort.
 
 ### 8. Repeat
 
 Check status again:
-- If there is a next phase, continue the loop from step 1
-- If all phases are `done`, proceed to Completion
-- If assignment has failed phases and no fix is planned, report to user
+- If there is a next step, continue the loop from step 1
+- If all steps are `done`, proceed to Completion
+- If assignment has failed steps and no fix is planned, report to user
 
 ## Completion
 
-When `ace-assign status` shows all phases as `done`:
+When `ace-assign status` shows all steps as `done`:
 
 ```bash
 ace-assign status --assignment "$ASSIGNMENT_TARGET"
@@ -586,12 +586,12 @@ Example output:
 ```
 Assignment: work-on-task-123 (8or5kx)
 
-Phase  Status    Name
+Step  Status    Name
 010    done      onboard
 020    done      work-on-task
 030    done      finalize
 
-All phases complete!
+All steps complete!
 ```
 
 Summarize the assignment results to the user:
@@ -601,9 +601,9 @@ Summarize the assignment results to the user:
 
 ## Skill Invocation Pattern
 
-When executing a phase with a `skill:` field:
+When executing a step with a `skill:` field:
 
-1. **Read phase instructions** - Understand context and parameters
+1. **Read step instructions** - Understand context and parameters
 2. **Extract parameters** - Get task IDs, PR numbers from instructions
 3. **Invoke skill** - Run the referenced skill command
 4. **Follow skill workflow** - Complete the skill's process
@@ -625,22 +625,22 @@ When executing a phase with a `skill:` field:
 | Scenario | Action |
 |----------|--------|
 | No active assignment | Create an assignment first via `/as-assign-create` |
-| All phases done | Report completion to user |
-| Phase fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
+| All steps done | Report completion to user |
+| Step fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
 | Unclear instructions | Ask user for clarification |
-| Provider/tool unavailable | For fork phases: see Provider-Unavailability Recovery. For inline phases: attempt with alternate model, then fail with evidence |
+| Provider/tool unavailable | For fork steps: see Provider-Unavailability Recovery. For inline steps: attempt with alternate model, then fail with evidence |
 
 ## Assignment State Reference
 
-### Phase Status Values
+### Step Status Values
 
 | Status | Meaning | Next Action |
 |--------|---------|-------------|
-| `pending` | Phase not started | Cannot execute (wait for queue) |
-| `in_progress` | Phase is active | Execute this phase |
-| `done` | Phase completed | Move to next phase |
-| `failed` | Phase failed | Decide: retry, add fix, or abort |
+| `pending` | Step not started | Cannot execute (wait for queue) |
+| `in_progress` | Step is active | Execute this step |
+| `done` | Step completed | Move to next step |
+| `failed` | Step failed | Decide: retry, add fix, or abort |
 
 ### Assignment Directory Structure
 
@@ -650,30 +650,30 @@ When executing a phase with a `skill:` field:
 ├── .current → def456/            # Explicit user selection (optional)
 ├── abc123/
 │   ├── assignment.yaml           # Assignment metadata
-│   ├── phases/                   # Phase files (.ph.md extension)
-│   │   ├── 010-init.ph.md       # done
-│   │   ├── 020-implement.ph.md  # in_progress
-│   │   └── 030-test.ph.md       # pending
+│   ├── steps/                   # Step files (.st.md extension)
+│   │   ├── 010-init.st.md       # done
+│   │   ├── 020-implement.st.md  # in_progress
+│   │   └── 030-test.st.md       # pending
 │   └── reports/                  # Report files (.r.md extension)
 │       ├── 010-init.r.md        # completed report
 │       └── 020-implement.r.md   # in-progress report
 └── def456/
     ├── assignment.yaml
-    ├── phases/
+    ├── steps/
     └── reports/
 ```
 
-Each phase has:
-- **Phase file** (`phases/NNN-name.ph.md`) - Contains phase instructions and status
-- **Report file** (`reports/NNN-name.r.md`) - Contains completion report (created when phase is done)
+Each step has:
+- **Step file** (`steps/NNN-name.st.md`) - Contains step instructions and status
+- **Report file** (`reports/NNN-name.r.md`) - Contains completion report (created when step is done)
 
 ## Numbering Convention
 
 | Pattern | Purpose | Example |
 |---------|---------|---------|
-| `010`, `020`, `030` | Main tasks (10-phase gaps) | `010-init.ph.md` |
-| `010.01`, `010.02` | Subtasks | `010.01-setup.ph.md` |
-| `041`, `042` | Injected after existing | `041-fix.ph.md` |
+| `010`, `020`, `030` | Main tasks (10-step gaps) | `010-init.st.md` |
+| `010.01`, `010.02` | Subtasks | `010.01-setup.st.md` |
+| `041`, `042` | Injected after existing | `041-fix.st.md` |
 
 ## Exit Codes
 
@@ -683,14 +683,14 @@ Each phase has:
 | 1 | General error |
 | 2 | No active assignment |
 | 3 | File not found (report file) |
-| 4 | Invalid phase reference |
+| 4 | Invalid step reference |
 
 ## Success Criteria
 
-- All phases processed (done or failed)
-- Reports written for all completed phases
-- Failed phases have clear failure reasons
-- No planned phase is auto-completed via skip-by-assumption behavior
+- All steps processed (done or failed)
+- Reports written for all completed steps
+- Failed steps have clear failure reasons
+- No planned step is auto-completed via skip-by-assumption behavior
 - User informed of assignment completion state
 - Artifacts and next steps clearly communicated
 
@@ -702,21 +702,21 @@ $ ASSIGNMENT_TARGET=8or5kx
 
 # 1. Check status
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
-Phase 010: onboard [in_progress]
+Step 010: onboard [in_progress]
 
-# 2. Execute phase (has skill: onboard)
+# 2. Execute step (has skill: onboard)
 $ /as-onboard
 [Onboarding workflow runs...]
 
 # 3. Write report
 $ ace-assign finish --message onboard-complete.md --assignment "$ASSIGNMENT_TARGET"
-Phase 010 marked done, advancing to 020
+Step 010 marked done, advancing to 020
 
 # 4. Check status again
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
-Phase 020: work-on-task [in_progress]
+Step 020: work-on-task [in_progress]
 
-# 5. Execute next phase (has skill: as-task-work)
+# 5. Execute next step (has skill: as-task-work)
 $ /as-task-work 148
 [Task workflow runs...]
 
@@ -725,5 +725,5 @@ $ ace-assign finish --message task-done.md --assignment "$ASSIGNMENT_TARGET"
 
 # 7. Eventually...
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
-All phases complete!
+All steps complete!
 ```

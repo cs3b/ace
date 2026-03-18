@@ -3,12 +3,12 @@
 module Ace
   module Assign
     module Atoms
-      # Pure functions for sorting phase files lexicographically.
+      # Pure functions for sorting step files lexicographically.
       #
-      # Phases are sorted by their numeric components:
+      # Steps are sorted by their numeric components:
       # 010 < 010.01 < 010.01.01 < 010.02 < 020
-      module PhaseSorter
-        # Sort filenames lexicographically by phase number
+      module StepSorter
+        # Sort filenames lexicographically by step number
         #
         # @param filenames [Array<String>] Array of filenames
         # @return [Array<String>] Sorted filenames
@@ -24,7 +24,7 @@ module Ace
         # @param filename [String] Filename to generate key for
         # @return [Array<Integer>] Sort key
         def self.sort_key(filename)
-          # Extract number from filename (strip .ph.md or .r.md extension)
+          # Extract number from filename (strip .st.md or .r.md extension)
           base = filename.sub(/\.(ph|r)\.md$/, "")
           number_part = base.split("-").first
 
@@ -35,27 +35,27 @@ module Ace
           parts + Array.new(3 - parts.size, 0)
         end
 
-        # Sort phase numbers directly
+        # Sort step numbers directly
         #
-        # @param numbers [Array<String>] Array of phase numbers
-        # @return [Array<String>] Sorted phase numbers
+        # @param numbers [Array<String>] Array of step numbers
+        # @return [Array<String>] Sorted step numbers
         def self.sort_numbers(numbers)
           numbers.sort_by { |n| number_key(n) }
         end
 
-        # Generate a sort key for a phase number
+        # Generate a sort key for a step number
         #
-        # @param number [String] Phase number
+        # @param number [String] Step number
         # @return [Array<Integer>] Sort key
         def self.number_key(number)
           parts = number.split(".").map(&:to_i)
           parts + Array.new(3 - parts.size, 0)
         end
 
-        # Compare two phase numbers
+        # Compare two step numbers
         #
-        # @param a [String] First phase number
-        # @param b [String] Second phase number
+        # @param a [String] First step number
+        # @param b [String] Second step number
         # @return [Integer] -1, 0, or 1
         def self.compare(a, b)
           number_key(a) <=> number_key(b)

@@ -10,14 +10,14 @@ update:
 
 Comprehensive guide to ace-assign commands and features.
 
-## Hierarchical Phase Structure
+## Hierarchical Step Structure
 
-ace-assign supports nested phases to model complex workflows with parent-child relationships.
+ace-assign supports nested steps to model complex workflows with parent-child relationships.
 
 ### Numbering System
 
 ```
-010              # Top-level phase (depth 0)
+010              # Top-level step (depth 0)
 010.01           # First child of 010 (depth 1)
 010.02           # Second child of 010 (depth 1)
 010.01.01        # First grandchild of 010.01 (depth 2)
@@ -25,44 +25,44 @@ ace-assign supports nested phases to model complex workflows with parent-child r
 ```
 
 **Constraints**:
-- Top-level: 3-digit format (`%03d`), max 999 phases (001-999)
+- Top-level: 3-digit format (`%03d`), max 999 steps (001-999)
 - Children: 2-digit format (`%02d`), max 99 siblings per parent (01-99)
 - Maximum nesting depth: 3 levels (e.g., `010.01.01` is max)
 
-### Creating Hierarchical Phases
+### Creating Hierarchical Steps
 
-#### Child Phases
+#### Child Steps
 
-Use `--after` with `--child` to create nested phases:
+Use `--after` with `--child` to create nested steps:
 
 ```bash
-# Create first child of phase 010
+# Create first child of step 010
 ace-assign add setup-db --after 010 --child -i "Set up database"
-# Creates: 010.01-setup-db.ph.md
+# Creates: 010.01-setup-db.st.md
 
-# Create second child of phase 010
+# Create second child of step 010
 ace-assign add setup-cache --after 010 --child -i "Set up cache"
-# Creates: 010.02-setup-cache.ph.md
+# Creates: 010.02-setup-cache.st.md
 
 # Create grandchild (child of 010.01)
 ace-assign add create-tables --after 010.01 --child -i "Create tables"
-# Creates: 010.01.01-create-tables.ph.md
+# Creates: 010.01.01-create-tables.st.md
 ```
 
-#### Sibling Phases
+#### Sibling Steps
 
 Use `--after` without `--child` to insert siblings:
 
 ```bash
-# Insert after phase 010 (as sibling 011)
+# Insert after step 010 (as sibling 011)
 ace-assign add hotfix --after 010 -i "Apply hotfix"
-# Creates: 011-hotfix.ph.md
+# Creates: 011-hotfix.st.md
 # If 011 existed, it gets renumbered to 012, etc.
 ```
 
 ### Starting Work
 
-After an assignment is created, the first workable phase is started automatically. In sequential workflows, `finish` auto-advances to the next phase — no `start` call is needed between phases:
+After an assignment is created, the first workable step is started automatically. In sequential workflows, `finish` auto-advances to the next step — no `start` call is needed between steps:
 
 ```bash
 # Normal sequential flow
@@ -73,8 +73,8 @@ ace-assign finish --message done.md   # completes 020, auto-starts 030
 Use `ace-assign start` explicitly for recovery or subtree entry:
 
 ```bash
-ace-assign start            # start next workable phase (after fail/retry)
-ace-assign start 030        # start a specific pending phase
+ace-assign start            # start next workable step (after fail/retry)
+ace-assign start 030        # start a specific pending step
 ```
 
 Providing report content via piped stdin avoids creating temporary files:
@@ -88,8 +88,8 @@ When both `--message` and stdin are provided, `--message` takes precedence.
 
 ### Completion Semantics
 
-1. **Leaf phases** (no children): Complete via `ace-assign finish --message <string|file>` or piped stdin
-2. **Parent phases**: Auto-complete when ALL children are done
+1. **Leaf steps** (no children): Complete via `ace-assign finish --message <string|file>` or piped stdin
+2. **Parent steps**: Auto-complete when ALL children are done
 3. **Multi-level**: Completion cascades up the tree
 
 Example workflow:
@@ -103,7 +103,7 @@ When 010.02 completes → 010 auto-completes.
 
 ### Work Order (next_workable)
 
-The queue follows these rules for determining the next phase:
+The queue follows these rules for determining the next step:
 
 1. Skip parents that have incomplete children (work the children first)
 2. Within siblings, work in numerical order
@@ -152,7 +152,7 @@ parent: "012"  # Updated if parent was also renumbered
 ace-assign create path/to/job.yaml
 ```
 
-Output shows the assignment ID, cache directory, and first phase instructions.
+Output shows the assignment ID, cache directory, and first step instructions.
 
 ### Hidden Spec Provenance
 
@@ -174,7 +174,7 @@ The hidden spec is retained after creation for traceability. Assignment metadata
 | 1 | General error |
 | 2 | Assignment error (no active assignment or assignment not found) |
 | 3 | Configuration not found |
-| 4 | Phase not found |
+| 4 | Step not found |
 | 130 | Interrupted (SIGINT) |
 
 See [exit-codes.md](exit-codes.md) for details.
@@ -183,7 +183,7 @@ See [exit-codes.md](exit-codes.md) for details.
 
 ### Fork Context
 
-Phases with `context: fork` run in isolated agent contexts. See README.md for details.
+Steps with `context: fork` run in isolated agent contexts. See README.md for details.
 
 ### Status Display Modes
 
@@ -208,10 +208,10 @@ ace-assign finish --message report.md --quiet
 
 ### Verification Pattern
 
-Parent phase with verification children:
+Parent step with verification children:
 
 ```yaml
-phases:
+steps:
   - name: implement
     instructions: |
       Implement the feature.

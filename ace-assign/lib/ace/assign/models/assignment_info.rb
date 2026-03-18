@@ -7,13 +7,13 @@ module Ace
       #
       # Pure data carrier with computed state (ATOM pattern).
       # Wraps an assignment with its queue state to provide
-      # computed state, progress, and current phase information.
+      # computed state, progress, and current step information.
       #
       # @example
       #   info = AssignmentInfo.new(assignment: assignment, queue_state: state)
       #   info.state          # => :running
       #   info.progress       # => "2/5"
-      #   info.current_phase  # => "020-implement"
+      #   info.current_step  # => "020-implement"
       class AssignmentInfo
         attr_reader :assignment, :queue_state
 
@@ -39,10 +39,10 @@ module Ace
           "#{s[:done]}/#{s[:total]}"
         end
 
-        # Current phase display string
+        # Current step display string
         #
-        # @return [String] Current phase name or "-"
-        def current_phase
+        # @return [String] Current step name or "-"
+        def current_step
           queue_state.current&.name || "-"
         end
 

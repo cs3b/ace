@@ -16,7 +16,7 @@ parameters:
     default: false
     description: "Whether to create a PR for the documentation changes"
 
-phases:
+steps:
   - name: onboard
     required: true
   - name: research
@@ -29,7 +29,7 @@ phases:
     required: true
 
 customization_hints:
-  - "Add create-pr phase if create_pr=true for documentation PRs"
-  - "Add lint phase for markdown linting"
+  - "Add create-pr step if create_pr=true for documentation PRs"
+  - "Add lint step for markdown linting"
   - "Add review-cycle for critical documentation"
   - "Skip onboard if already in context"

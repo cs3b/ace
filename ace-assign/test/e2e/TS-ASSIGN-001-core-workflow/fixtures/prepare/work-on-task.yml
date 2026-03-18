@@ -10,7 +10,7 @@ parameters:
     required: true
     description: Task reference (e.g., 123 or 256.01)
 
-phases:
+steps:
   - name: onboard
     workflow: wfi://onboard
     taskref: "{{taskref}}"
@@ -41,13 +41,13 @@ phases:
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request for the task {{taskref}} changes."
-      - "Capture the PR number for the downstream review and PR-update phases."
+      - "Capture the PR number for the downstream review and PR-update steps."
 
   - name: review-valid-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the valid review cycle via child phases.
+      - Execute the valid review cycle via child steps.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
@@ -55,9 +55,9 @@ phases:
 
   - name: review-fit-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the fit review cycle via child phases.
+      - Execute the fit review cycle via child steps.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
@@ -65,9 +65,9 @@ phases:
 
   - name: review-shine-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the shine review cycle via child phases.
+      - Execute the shine review cycle via child steps.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."

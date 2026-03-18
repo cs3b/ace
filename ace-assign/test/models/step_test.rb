@@ -2,24 +2,24 @@
 
 require_relative "../test_helper"
 
-class PhaseTest < AceAssignTestCase
+class StepTest < AceAssignTestCase
   def test_initialization
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Do the thing"
     )
 
-    assert_equal "010", phase.number
-    assert_equal "init", phase.name
-    assert_equal :pending, phase.status
-    assert_equal "Do the thing", phase.instructions
+    assert_equal "010", step.number
+    assert_equal "init", step.name
+    assert_equal :pending, step.status
+    assert_equal "Do the thing", step.instructions
   end
 
   def test_invalid_status_raises
     assert_raises(ArgumentError) do
-      Ace::Assign::Models::Phase.new(
+      Ace::Assign::Models::Step.new(
         number: "010",
         name: "init",
         status: :invalid,
@@ -29,62 +29,62 @@ class PhaseTest < AceAssignTestCase
   end
 
   def test_complete_for_done
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :done,
       instructions: "Test"
     )
 
-    assert phase.complete?
+    assert step.complete?
   end
 
   def test_complete_for_failed
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :failed,
       instructions: "Test"
     )
 
-    assert phase.complete?
+    assert step.complete?
   end
 
   def test_not_complete_for_pending
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    refute phase.complete?
+    refute step.complete?
   end
 
   def test_workable_for_pending
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    assert phase.workable?
+    assert step.workable?
   end
 
   def test_not_workable_for_done
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :done,
       instructions: "Test"
     )
 
-    refute phase.workable?
+    refute step.workable?
   end
 
   def test_retry_detection
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "042",
       name: "run-tests",
       status: :pending,
@@ -92,12 +92,12 @@ class PhaseTest < AceAssignTestCase
       added_by: "retry_of:040"
     )
 
-    assert phase.retry?
-    assert_equal "040", phase.retry_of
+    assert step.retry?
+    assert_equal "040", step.retry_of
   end
 
   def test_not_retry
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "041",
       name: "fix",
       status: :pending,
@@ -105,13 +105,13 @@ class PhaseTest < AceAssignTestCase
       added_by: "dynamic"
     )
 
-    refute phase.retry?
-    assert_nil phase.retry_of
+    refute step.retry?
+    assert_nil step.retry_of
   end
 
   def test_to_frontmatter
     now = Time.utc(2026, 1, 28, 12, 0, 0)
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :in_progress,
@@ -119,7 +119,7 @@ class PhaseTest < AceAssignTestCase
       started_at: now
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
 
     assert_equal "init", fm["name"]
     assert_equal "in_progress", fm["status"]
@@ -127,7 +127,7 @@ class PhaseTest < AceAssignTestCase
   end
 
   def test_fork_detection
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "020",
       name: "implement",
       status: :pending,
@@ -135,25 +135,25 @@ class PhaseTest < AceAssignTestCase
       context: "fork"
     )
 
-    assert phase.fork?
-    assert_equal "fork", phase.context
+    assert step.fork?
+    assert_equal "fork", step.context
   end
 
   def test_not_fork_when_context_nil
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    refute phase.fork?
-    assert_nil phase.context
+    refute step.fork?
+    assert_nil step.context
   end
 
   def test_rejects_invalid_context
     error = assert_raises(ArgumentError) do
-      Ace::Assign::Models::Phase.new(
+      Ace::Assign::Models::Step.new(
         number: "010",
         name: "init",
         status: :pending,
@@ -167,7 +167,7 @@ class PhaseTest < AceAssignTestCase
   end
 
   def test_to_frontmatter_includes_context
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "020",
       name: "implement",
       status: :pending,
@@ -175,27 +175,27 @@ class PhaseTest < AceAssignTestCase
       context: "fork"
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
 
     assert_equal "fork", fm["context"]
   end
 
   def test_to_frontmatter_excludes_nil_context
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
 
     refute fm.key?("context")
   end
 
   def test_to_frontmatter_includes_fork_pid_metadata
     now = Time.utc(2026, 2, 25, 19, 0, 0)
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "work-on-task",
       status: :in_progress,
@@ -206,7 +206,7 @@ class PhaseTest < AceAssignTestCase
       fork_pid_file: "/tmp/010.pid.yml"
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
 
     assert_equal 355_349, fm["fork_launch_pid"]
     assert_equal [3_553_666, 3_553_667], fm["fork_tracked_pids"]
@@ -215,18 +215,18 @@ class PhaseTest < AceAssignTestCase
   end
 
   def test_stall_reason_defaults_to_nil
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    assert_nil phase.stall_reason
+    assert_nil step.stall_reason
   end
 
   def test_stall_reason_stored_when_provided
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :in_progress,
@@ -234,11 +234,11 @@ class PhaseTest < AceAssignTestCase
       stall_reason: "I need direction before continuing."
     )
 
-    assert_equal "I need direction before continuing.", phase.stall_reason
+    assert_equal "I need direction before continuing.", step.stall_reason
   end
 
   def test_to_frontmatter_includes_stall_reason_when_set
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :in_progress,
@@ -246,24 +246,24 @@ class PhaseTest < AceAssignTestCase
       stall_reason: "Unexpected state encountered."
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
     assert_equal "Unexpected state encountered.", fm["stall_reason"]
   end
 
   def test_to_frontmatter_excludes_stall_reason_when_nil
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
       status: :pending,
       instructions: "Test"
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
     refute fm.key?("stall_reason")
   end
 
   def test_batch_scheduler_metadata_round_trips_to_frontmatter
-    phase = Ace::Assign::Models::Phase.new(
+    step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "batch-items",
       status: :pending,
@@ -274,7 +274,7 @@ class PhaseTest < AceAssignTestCase
       fork_retry_limit: 1
     )
 
-    fm = phase.to_frontmatter
+    fm = step.to_frontmatter
     assert_equal true, fm["batch_parent"]
     assert_equal true, fm["parallel"]
     assert_equal 3, fm["max_parallel"]
@@ -283,7 +283,7 @@ class PhaseTest < AceAssignTestCase
 
   def test_rejects_invalid_max_parallel
     error = assert_raises(ArgumentError) do
-      Ace::Assign::Models::Phase.new(
+      Ace::Assign::Models::Step.new(
         number: "010",
         name: "batch-items",
         status: :pending,

@@ -1,5 +1,5 @@
 name: hierarchical-test
-description: Test nested phases and completion
+description: Test nested steps and completion
 
 steps:
   - name: implement-feature

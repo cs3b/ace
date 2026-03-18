@@ -41,8 +41,8 @@ echo $? > results/tc/05/preflight.exit
 
 - Use `rg` (ripgrep) to search the workflow file at `ace-assign/handbook/workflow-instructions/assign/drive.wf.md`.
 - If preflight fails, stop here and mark Goal 5 as incomplete.
-- Verify: mandatory no-skip rule text ("Planned phases are mandatory work items. Do not skip them by judgment.").
-- Verify: synthetic skip prohibition ("Never use report text to \"skip\" or synthesize completion for planned phases.").
+- Verify: mandatory no-skip rule text ("Planned steps are mandatory work items. Do not skip them by judgment.").
+- Verify: synthetic skip prohibition ("Never use report text to \"skip\" or synthesize completion for planned steps.").
 - Verify: old "Skip Assessment" section is removed (should NOT exist).
 - Verify: attempt-first external action section ("External Action Rule (Attempt-First)").
 - Verify: command evidence and exact error output requirements.

@@ -4,14 +4,14 @@ module Ace
   module Assign
     module CLI
       module Commands
-        # Complete in-progress phase with report content
+        # Complete in-progress step with report content
         class Finish < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
           include AssignmentTarget
 
-          desc "Complete in-progress phase with report content"
+          desc "Complete in-progress step with report content"
 
-          argument :step, required: false, desc: "Phase number to finish (active assignment only)"
+          argument :step, required: false, desc: "Step number to finish (active assignment only)"
           option :message, aliases: ["-m"], desc: "Report content: string, file path, or pipe stdin"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
@@ -25,24 +25,24 @@ module Ace
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
             report_content = resolve_report_content(options)
-            result = executor.finish_phase(
+            result = executor.finish_step(
               report_content: report_content,
-              phase_number: step,
+              step_number: step,
               fork_root: target.scope
             )
 
             return if options[:quiet]
 
             completed = result[:completed]
-            puts "Phase #{completed.number} (#{completed.name}) completed"
+            puts "Step #{completed.number} (#{completed.name}) completed"
 
             assignment = result[:assignment]
-            report_filename = Atoms::PhaseFileParser.generate_report_filename(completed.number, completed.name)
+            report_filename = Atoms::StepFileParser.generate_report_filename(completed.number, completed.name)
             report_path = File.join(assignment.reports_dir, report_filename)
             puts "Report saved to: #{report_path}"
 
             if result[:current]
-              puts "Advancing to phase #{result[:current].number}: #{result[:current].name}"
+              puts "Advancing to step #{result[:current].number}: #{result[:current].name}"
               puts
               puts "Instructions:"
               puts result[:current].instructions
@@ -52,9 +52,9 @@ module Ace
               if fork_root && result[:state].subtree_complete?(fork_root)
                 puts "Fork subtree #{fork_root} completed."
               elsif result[:state].complete?
-                puts "Assignment completed! All phases done."
+                puts "Assignment completed! All steps done."
               else
-                puts "No active phase selected."
+                puts "No active step selected."
               end
             end
           end

@@ -16,7 +16,7 @@ class CreateCommandTest < AceAssignTestCase
       end
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Assignment: test-session"
-      assert_includes output.first, "Phase 010: init"
+      assert_includes output.first, "Step 010: init"
 
       Ace::Assign.reset_config!
     end

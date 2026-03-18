@@ -1,14 +1,14 @@
 name: split-subtree-root
-description: Orchestrate subtree delegation and execution for split parent phases
+description: Orchestrate subtree delegation and execution for split parent steps
 
 instructions:
   common:
-    - "Subtree root orchestrator phase."
-    - "This phase is orchestration-only."
-    - "Do not execute the parent workflow directly in this parent phase."
-    - "Child phases: {{sub_phases}}."
+    - "Subtree root orchestrator step."
+    - "This step is orchestration-only."
+    - "Do not execute the parent workflow directly in this parent step."
+    - "Child steps: {{sub_steps}}."
     - "If subtree execution fails: use adaptive minimal-safe replay (do not replay whole subtree by default)."
-    - "Inject only required recovery phases before retrying failed or affected phases."
+    - "Inject only required recovery steps before retrying failed or affected steps."
   fork:
     - "Delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
@@ -17,9 +17,9 @@ instructions:
     - "After fork-run completes: read all subtree report files before continuing. The driver is the guard — review reports to verify quality before advancing."
     - "For failed subtrees: recovery typically includes context refresh (onboard + report review) and verify-test-suite before retry."
   inline:
-    - "Execute only child phases under this node."
+    - "Execute only child steps under this node."
 
-goal_header: "Goal to satisfy through child phases:"
+goal_header: "Goal to satisfy through child steps:"
 
 effort: low
-tags: [orchestration, fork, split-phase]
+tags: [orchestration, fork, split-step]

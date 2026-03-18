@@ -7,26 +7,26 @@ This document describes the exit codes returned by the `ace-assign` CLI.
 | Code | Meaning | Example Scenario |
 |------|---------|------------------|
 | 0 | Success | Command executed successfully |
-| 1 | General error | Unhandled error, invalid phase reference, finish rejected on stalled queue |
+| 1 | General error | Unhandled error, invalid step reference, finish rejected on stalled queue |
 | 2 | Assignment error | No active assignment or assignment not found |
 | 3 | Configuration not found | Config file does not exist |
-| 4 | Phase not found | Referencing a phase that does not exist |
+| 4 | Step not found | Referencing a step that does not exist |
 
 ## Exit Code Details
 
 ### Exit Code 0: Success
 The command executed successfully. This includes:
 - Creating an assignment (`create`)
-- Adding a phase (`add`)
-- Retrying a phase (`retry`)
-- Marking a phase as failed (`fail`)
+- Adding a step (`add`)
+- Retrying a step (`retry`)
+- Marking a step as failed (`fail`)
 - Displaying status (`status`)
-- Finishing a phase (`finish`)
+- Finishing a step (`finish`)
 
 ### Exit Code 1: General Error
 An error occurred that doesn't fit into other categories:
-- Invalid phase reference (e.g., `finish` with invalid phase number)
-- Report rejected when queue is stalled (no phase currently in progress)
+- Invalid step reference (e.g., `finish` with invalid step number)
+- Report rejected when queue is stalled (no step currently in progress)
 - Missing report input for `finish` (`--message` absent/blank and no piped stdin)
 - Other unhandled errors
 
@@ -41,10 +41,10 @@ Assignment state is invalid for the requested command:
 A required configuration file could not be found:
 - Config file does not exist when running `create`
 
-### Exit Code 4: Phase Not Found
-The requested phase reference does not exist in the target assignment:
-- `retry` with unknown phase number
-- Commands that target a specific missing phase
+### Exit Code 4: Step Not Found
+The requested step reference does not exist in the target assignment:
+- `retry` with unknown step number
+- Commands that target a specific missing step
 
 ## See Also
 

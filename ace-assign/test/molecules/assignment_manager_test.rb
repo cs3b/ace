@@ -18,7 +18,7 @@ class AssignmentManagerTest < AceAssignTestCase
       assert_equal "A test", assignment.description
       assert_equal "job.yaml", assignment.source_config
       assert File.directory?(assignment.cache_dir)
-      assert File.directory?(assignment.phases_dir)
+      assert File.directory?(assignment.steps_dir)
       assert File.exist?(assignment.assignment_file)
     end
   end

@@ -12,16 +12,16 @@ module Ace
       # Implements the state machine for queue operations:
       # start → advance → complete (with fail/add/retry branches)
       class AssignmentExecutor
-        attr_reader :assignment_manager, :queue_scanner, :phase_writer, :phase_renumberer, :skill_source_resolver
+        attr_reader :assignment_manager, :queue_scanner, :step_writer, :step_renumberer, :skill_source_resolver
 
         def initialize(cache_base: nil)
           @assignment_manager = Molecules::AssignmentManager.new(cache_base: cache_base)
           @queue_scanner = Molecules::QueueScanner.new
-          @phase_writer = Molecules::PhaseWriter.new
+          @step_writer = Molecules::StepWriter.new
           @skill_source_resolver = Molecules::SkillAssignSourceResolver.new
-          @phase_catalog = nil
-          @phase_renumberer = Molecules::PhaseRenumberer.new(
-            phase_writer: @phase_writer,
+          @step_catalog = nil
+          @step_renumberer = Molecules::StepRenumberer.new(
+            step_writer: @step_writer,
             queue_scanner: @queue_scanner
           )
         end
@@ -30,23 +30,23 @@ module Ace
         #
         # @param config_path [String] Path to job.yaml config
         # @param parent_id [String, nil] Parent assignment ID for hierarchy linking
-        # @return [Hash] Result with assignment and first phase
+        # @return [Hash] Result with assignment and first step
         def start(config_path, parent_id: nil)
           raise ConfigErrors::NotFound, "Config file not found: #{config_path}" unless File.exist?(config_path)
 
           config = YAML.safe_load_file(config_path, permitted_classes: [Time, Date])
 
           assignment_config = config["assignment"] || {}
-          phases_config = config["phases"] || []
+          steps_config = config["steps"] || []
 
-          raise Error, "No phases defined in config" if phases_config.empty?
+          raise Error, "No steps defined in config" if steps_config.empty?
 
-          # Enrich phases using declared workflow/skill assign metadata.
-          phases_config = enrich_declared_sub_phases(phases_config)
+          # Enrich steps using declared workflow/skill assign metadata.
+          steps_config = enrich_declared_sub_steps(steps_config)
 
-          # Expand sub-phase declarations into batch parent + child phases
-          phases_config = expand_sub_phases(phases_config)
-          phases_config = materialize_skill_backed_phases(phases_config)
+          # Expand sub-step declarations into batch parent + child steps
+          steps_config = expand_sub_steps(steps_config)
+          steps_config = materialize_skill_backed_steps(steps_config)
 
           # Create assignment
           assignment = assignment_manager.create(
@@ -56,29 +56,29 @@ module Ace
             parent: parent_id
           )
 
-          # Create initial phase files
-          # Phases may have pre-assigned numbers (from expansion) or need auto-numbering
-          phases_config.each_with_index do |phase, index|
+          # Create initial step files
+          # Steps may have pre-assigned numbers (from expansion) or need auto-numbering
+          steps_config.each_with_index do |step, index|
             # Use pre-assigned number if present, otherwise generate from index
-            number = phase["number"] || Atoms::NumberGenerator.from_index(index)
-            extra = phase.reject { |k, _| %w[name instructions number].include?(k) }
-            phase_writer.create(
-              phases_dir: assignment.phases_dir,
+            number = step["number"] || Atoms::NumberGenerator.from_index(index)
+            extra = step.reject { |k, _| %w[name instructions number].include?(k) }
+            step_writer.create(
+              steps_dir: assignment.steps_dir,
               number: number,
-              name: phase["name"],
-              instructions: normalize_instructions(phase["instructions"]),
+              name: step["name"],
+              instructions: normalize_instructions(step["instructions"]),
               status: :pending,
               extra: extra
             )
           end
 
-          # Mark first workable phase as in_progress.
+          # Mark first workable step as in_progress.
           # This skips batch parent containers that have incomplete children.
-          initial_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          initial_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           first_workable = initial_state.next_workable
-          phase_writer.mark_in_progress(first_workable.file_path) if first_workable
+          step_writer.mark_in_progress(first_workable.file_path) if first_workable
 
-          # Archive source config into task's phases directory and update assignment metadata
+          # Archive source config into task's steps directory and update assignment metadata
           archived_path = archive_source_config(config_path, assignment.id)
           assignment = Models::Assignment.new(
             id: assignment.id,
@@ -93,7 +93,7 @@ module Ace
           assignment_manager.update(assignment)
 
           # Return result
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
             state: state,
@@ -108,7 +108,7 @@ module Ace
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
             state: state,
@@ -116,100 +116,100 @@ module Ace
           }
         end
 
-        # Start a pending phase.
+        # Start a pending step.
         #
         # Rules:
-        # - Fails if any phase is already in progress (strict mode)
+        # - Fails if any step is already in progress (strict mode)
         # - Starts an explicit pending target when provided
-        # - Otherwise starts the next workable pending phase
+        # - Otherwise starts the next workable pending step
         #
-        # @param phase_number [String, nil] Optional target phase number
+        # @param step_number [String, nil] Optional target step number
         # @param fork_root [String, nil] Optional subtree root scope
-        # @return [Hash] Result with started phase and updated state
-        def start_phase(phase_number: nil, fork_root: nil)
+        # @return [Hash] Result with started step and updated state
+        def start_step(step_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          raise PhaseErrors::InvalidState, "Cannot start: phase #{state.current.number} is already in progress. Finish or fail it first." if state.current
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          raise StepErrors::InvalidState, "Cannot start: step #{state.current.number} is already in progress. Finish or fail it first." if state.current
 
           fork_root = fork_root&.strip
-          target_phase = if phase_number && !phase_number.to_s.strip.empty?
-                           find_target_phase_for_start(state, phase_number, fork_root)
+          target_step = if step_number && !step_number.to_s.strip.empty?
+                           find_target_step_for_start(state, step_number, fork_root)
                          elsif fork_root && !fork_root.empty?
-                           raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+                           raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
                            state.next_workable_in_subtree(fork_root)
                          else
                            state.next_workable
                          end
 
-          unless target_phase
+          unless target_step
             if fork_root && !fork_root.empty?
-              raise PhaseErrors::InvalidState, "No pending workable phase found in subtree #{fork_root}."
+              raise StepErrors::InvalidState, "No pending workable step found in subtree #{fork_root}."
             end
-            raise PhaseErrors::InvalidState, "No pending workable phase found."
+            raise StepErrors::InvalidState, "No pending workable step found."
           end
 
-          phase_writer.mark_in_progress(target_phase.file_path)
+          step_writer.mark_in_progress(target_step.file_path)
           assignment_manager.update(assignment)
 
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
             state: new_state,
-            started: new_state.find_by_number(target_phase.number),
+            started: new_state.find_by_number(target_step.number),
             current: new_state.current
           }
         end
 
-        # Finish an in-progress phase and advance queue state.
+        # Finish an in-progress step and advance queue state.
         #
         # @param report_content [String] Completion report content
-        # @param phase_number [String, nil] Optional in-progress phase number to finish
+        # @param step_number [String, nil] Optional in-progress step number to finish
         # @param fork_root [String, nil] Optional subtree root to constrain advancement
-        # @return [Hash] Result with completed phase and updated state
-        def finish_phase(report_content:, phase_number: nil, fork_root: nil)
+        # @return [Hash] Result with completed step and updated state
+        def finish_step(report_content:, step_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          current = find_target_phase_for_finish(state, phase_number, fork_root)
-          raise Error, "No phase currently in progress. Try 'ace-assign start' or 'ace-assign retry'." unless current
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          current = find_target_step_for_finish(state, step_number, fork_root)
+          raise Error, "No step currently in progress. Try 'ace-assign start' or 'ace-assign retry'." unless current
 
           # Enforce hierarchy: cannot mark parent as done with incomplete children
           if state.has_incomplete_children?(current.number)
             incomplete = state.children_of(current.number).reject { |c| c.status == :done }
             incomplete_nums = incomplete.map(&:number).join(", ")
-            raise Error, "Cannot complete phase #{current.number}: has incomplete children (#{incomplete_nums}). Complete children first or use 'ace-assign fail' to mark as failed."
+            raise Error, "Cannot complete step #{current.number}: has incomplete children (#{incomplete_nums}). Complete children first or use 'ace-assign fail' to mark as failed."
           end
 
-          # Mark current phase as done
-          phase_writer.mark_done(current.file_path, report_content: report_content, reports_dir: assignment.reports_dir)
+          # Mark current step as done
+          step_writer.mark_done(current.file_path, report_content: report_content, reports_dir: assignment.reports_dir)
 
           # Rescan to get updated state after marking done
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
 
-          # Auto-complete parent phases if all their children are done
+          # Auto-complete parent steps if all their children are done
           auto_complete_parents(state, assignment)
 
           # Re-scan to get fresh state after auto-completions
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
 
           fork_root = fork_root&.strip
-          # Find next phase to work on using hierarchical rules.
+          # Find next step to work on using hierarchical rules.
           # When fork_root is provided, keep advancement inside that subtree.
-          next_phase = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
-                         find_next_phase_in_subtree(state, current.number, fork_root)
+          next_step = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+                         find_next_step_in_subtree(state, current.number, fork_root)
                        else
-                         find_next_phase(state, current.number)
+                         find_next_step(state, current.number)
                        end
-          if next_phase
-            phase_writer.mark_in_progress(next_phase.file_path)
+          if next_step
+            step_writer.mark_in_progress(next_step.file_path)
           end
 
           assignment_manager.update(assignment)
 
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
             state: new_state,
@@ -218,10 +218,10 @@ module Ace
           }
         end
 
-        # Complete current phase with report and advance
+        # Complete current step with report and advance
         #
         # Legacy bridge: preserves single-call semantics for fork-run callers.
-        # Previously, advance() auto-started the next phase as a side effect.
+        # Previously, advance() auto-started the next step as a side effect.
         # The new start/finish split makes this explicit, but advance() retains
         # the auto-start behavior for subtree entry so fork-run workflows
         # (which call advance() with fork_root) continue to work unchanged.
@@ -232,30 +232,30 @@ module Ace
         def advance(report_path, fork_root: nil)
           raise ConfigErrors::NotFound, "Report file not found: #{report_path}" unless File.exist?(report_path)
 
-          # Auto-start the next workable subtree phase when fork_root is given but
-          # no phase in the subtree is yet in_progress (subtree entry case).
+          # Auto-start the next workable subtree step when fork_root is given but
+          # no step in the subtree is yet in_progress (subtree entry case).
           fork_root_str = fork_root&.strip
           if fork_root_str && !fork_root_str.empty?
             assignment = assignment_manager.find_active
             if assignment
-              state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+              state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
               active_in_subtree = state.in_progress_in_subtree(fork_root_str)
               if active_in_subtree.size > 1
-                active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
-                raise PhaseErrors::InvalidState, "Cannot advance subtree #{fork_root_str}: multiple phases are in progress (#{active_refs})."
+                active_refs = active_in_subtree.map { |step| "#{step.number}(#{step.name})" }.join(", ")
+                raise StepErrors::InvalidState, "Cannot advance subtree #{fork_root_str}: multiple steps are in progress (#{active_refs})."
               end
 
               if active_in_subtree.empty?
                 next_workable = state.next_workable_in_subtree(fork_root_str)
-                phase_writer.mark_in_progress(next_workable.file_path) if next_workable
+                step_writer.mark_in_progress(next_workable.file_path) if next_workable
               end
             end
           end
 
-          finish_phase(report_content: File.read(report_path), fork_root: fork_root)
+          finish_step(report_content: File.read(report_path), fork_root: fork_root)
         end
 
-        # Mark current phase as failed
+        # Mark current step as failed
         #
         # @param message [String] Error message
         # @return [Hash] Result with updated state
@@ -263,18 +263,18 @@ module Ace
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           current = state.current
-          raise Error, "No phase currently in progress. Try 'ace-assign add' to add a new phase or 'ace-assign retry' to retry a failed phase." unless current
+          raise Error, "No step currently in progress. Try 'ace-assign add' to add a new step or 'ace-assign retry' to retry a failed step." unless current
 
-          # Mark phase as failed
-          phase_writer.mark_failed(current.file_path, error_message: message)
+          # Mark step as failed
+          step_writer.mark_failed(current.file_path, error_message: message)
 
           # Update assignment timestamp
           assignment_manager.update(assignment)
 
           # Return updated state (no automatic advancement after failure)
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
             state: new_state,
@@ -282,23 +282,23 @@ module Ace
           }
         end
 
-        # Add a new phase dynamically
+        # Add a new step dynamically
         #
-        # @param name [String] Phase name
-        # @param instructions [String] Phase instructions
-        # @param after [String, nil] Insert after this phase number (optional)
-        # @param as_child [Boolean] Insert as child of 'after' phase (default: false, sibling)
-        # @return [Hash] Result with new phase
+        # @param name [String] Step name
+        # @param instructions [String] Step instructions
+        # @param after [String, nil] Insert after this step number (optional)
+        # @param as_child [Boolean] Insert as child of 'after' step (default: false, sibling)
+        # @return [Hash] Result with new step
         def add(name, instructions, after: nil, as_child: false)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          existing_numbers = queue_scanner.phase_numbers(assignment.phases_dir)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
 
-          # Validate --after phase exists
+          # Validate --after step exists
           if after && !existing_numbers.include?(after)
-            raise PhaseErrors::NotFound, "Phase #{after} not found. Available phases: #{existing_numbers.join(', ')}"
+            raise StepErrors::NotFound, "Step #{after} not found. Available steps: #{existing_numbers.join(', ')}"
           end
 
           new_number, renumbered = calculate_insertion_point(
@@ -308,11 +308,11 @@ module Ace
             existing_numbers: existing_numbers
           )
 
-          # Renumber existing phases if needed (uses molecule with rollback support)
+          # Renumber existing steps if needed (uses molecule with rollback support)
           if renumbered.any?
-            phase_renumberer.renumber(assignment.phases_dir, renumbered)
+            step_renumberer.renumber(assignment.steps_dir, renumbered)
             # Refresh existing numbers after renumbering
-            existing_numbers = queue_scanner.phase_numbers(assignment.phases_dir)
+            existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
           end
 
           # Determine initial status upfront to avoid redundant I/O
@@ -327,9 +327,9 @@ module Ace
                        "dynamic"
                      end
 
-          # Create new phase file with correct status
-          file_path = phase_writer.create(
-            phases_dir: assignment.phases_dir,
+          # Create new step file with correct status
+          file_path = step_writer.create(
+            steps_dir: assignment.steps_dir,
             number: new_number,
             name: name,
             instructions: instructions,
@@ -344,36 +344,36 @@ module Ace
           assignment_manager.update(assignment)
 
           # Return updated state
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          new_phase = new_state.phases.find { |s| s.number == new_number }
+          new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          new_step = new_state.steps.find { |s| s.number == new_number }
 
           {
             assignment: assignment,
             state: new_state,
-            added: new_phase,
+            added: new_step,
             renumbered: renumbered
           }
         end
 
-        # Retry a failed phase (creates new phase linked to original)
+        # Retry a failed step (creates new step linked to original)
         #
-        # @param phase_ref [String] Phase number or reference to retry
-        # @return [Hash] Result with new retry phase
-        def retry_phase(phase_ref)
+        # @param step_ref [String] Step number or reference to retry
+        # @return [Hash] Result with new retry step
+        def retry_step(step_ref)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
 
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
 
-          # Find the phase to retry
-          original = state.find_by_number(phase_ref.to_s)
-          raise PhaseErrors::NotFound, "Phase #{phase_ref} not found in queue" unless original
+          # Find the step to retry
+          original = state.find_by_number(step_ref.to_s)
+          raise StepErrors::NotFound, "Step #{step_ref} not found in queue" unless original
 
           # Get existing numbers
-          existing_numbers = queue_scanner.phase_numbers(assignment.phases_dir)
+          existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
 
-          # Insert after all current phases (at end of queue before pending)
-          # Find last done or failed phase
+          # Insert after all current steps (at end of queue before pending)
+          # Find last done or failed step
           base_number = if state.current
                           state.current.number
                         elsif state.last_done
@@ -384,9 +384,9 @@ module Ace
 
           new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
 
-          # Create retry phase with link to original
-          file_path = phase_writer.create(
-            phases_dir: assignment.phases_dir,
+          # Create retry step with link to original
+          file_path = step_writer.create(
+            steps_dir: assignment.steps_dir,
             number: new_number,
             name: original.name,
             instructions: original.instructions,
@@ -398,160 +398,160 @@ module Ace
           assignment_manager.update(assignment)
 
           # Return updated state
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          retry_phase = new_state.phases.find { |s| s.number == new_number }
+          new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          retry_step = new_state.steps.find { |s| s.number == new_number }
 
           {
             assignment: assignment,
             state: new_state,
-            retry: retry_phase,
+            retry: retry_step,
             original: original
           }
         end
 
         private
 
-        # Enrich phases by resolving workflow-level or legacy skill-level assign source metadata.
+        # Enrich steps by resolving workflow-level or legacy skill-level assign source metadata.
         #
-        # If a phase has `workflow: ...` or `skill: ...` and no explicit sub_phases,
+        # If a step has `workflow: ...` or `skill: ...` and no explicit sub_steps,
         # this resolves the workflow and applies
-        # workflow `assign.sub-phases` as phase sub_phases for deterministic runtime expansion.
+        # workflow `assign.sub-steps` as step sub_steps for deterministic runtime expansion.
         #
-        # @param phases_config [Array<Hash>] Original phases from config
-        # @return [Array<Hash>] Enriched phases
-        def enrich_declared_sub_phases(phases_config)
-          phases_config.map do |phase|
-            next phase unless phase.is_a?(Hash)
+        # @param steps_config [Array<Hash>] Original steps from config
+        # @return [Array<Hash>] Enriched steps
+        def enrich_declared_sub_steps(steps_config)
+          steps_config.map do |step|
+            next step unless step.is_a?(Hash)
 
-            sub_phases = phase["sub_phases"] || phase["sub-phases"]
-            next phase if sub_phases.is_a?(Array) && sub_phases.any?
+            sub_steps = step["sub_steps"] || step["sub-steps"]
+            next step if sub_steps.is_a?(Array) && sub_steps.any?
 
-            assign_config = resolve_phase_assign_config(phase)
-            next phase unless assign_config
+            assign_config = resolve_step_assign_config(step)
+            next step unless assign_config
 
-            resolved_sub_phases = assign_config[:sub_phases]
-            next phase unless resolved_sub_phases.is_a?(Array) && resolved_sub_phases.any?
+            resolved_sub_steps = assign_config[:sub_steps]
+            next step unless resolved_sub_steps.is_a?(Array) && resolved_sub_steps.any?
 
-            enriched = phase.merge("sub_phases" => resolved_sub_phases)
+            enriched = step.merge("sub_steps" => resolved_sub_steps)
             enriched["context"] ||= assign_config[:context] if assign_config[:context]
             enriched
           end
         end
 
-        # Expand phases with sub_phases into batch parent + child structure.
+        # Expand steps with sub_steps into batch parent + child structure.
         #
-        # When a phase declares `sub_phases` (from workflow frontmatter), it becomes
-        # a batch parent with fork context, and each sub-phase becomes a child phase.
+        # When a step declares `sub_steps` (from workflow frontmatter), it becomes
+        # a batch parent with fork context, and each sub-step becomes a child step.
         # This reuses the existing batch-parent pattern from compose.
         #
         # Numbers are pre-assigned based on the original index position so that
-        # subsequent phases keep their expected numbering (e.g., 010, 020, 030)
+        # subsequent steps keep their expected numbering (e.g., 010, 020, 030)
         # regardless of how many children are expanded.
         #
-        # @param phases_config [Array<Hash>] Original phases from config
-        # @return [Array<Hash>] Expanded phases with parent-child numbers
-        def expand_sub_phases(phases_config)
-          # Check if any phase has sub_phases; return early if none
-          has_sub_phases = phases_config.any? do |phase|
-            subs = phase["sub_phases"] || phase["sub-phases"]
+        # @param steps_config [Array<Hash>] Original steps from config
+        # @return [Array<Hash>] Expanded steps with parent-child numbers
+        def expand_sub_steps(steps_config)
+          # Check if any step has sub_steps; return early if none
+          has_sub_steps = steps_config.any? do |step|
+            subs = step["sub_steps"] || step["sub-steps"]
             subs.is_a?(Array) && subs.any?
           end
-          return phases_config unless has_sub_phases
+          return steps_config unless has_sub_steps
 
           expanded = []
 
-          phases_config.each_with_index do |phase, index|
-            sub_phases = phase["sub_phases"] || phase["sub-phases"]
-            parent_number = phase["number"] || Atoms::NumberGenerator.from_index(index)
+          steps_config.each_with_index do |step, index|
+            sub_steps = step["sub_steps"] || step["sub-steps"]
+            parent_number = step["number"] || Atoms::NumberGenerator.from_index(index)
 
-            if sub_phases.is_a?(Array) && sub_phases.any?
+            if sub_steps.is_a?(Array) && sub_steps.any?
               # Create split parent orchestration node
-              parent_context = phase["context"] || "fork"
-              parent_instructions = phase["instructions"]
-              parent_phase = build_split_parent_phase(
-                phase: phase,
+              parent_context = step["context"] || "fork"
+              parent_instructions = step["instructions"]
+              parent_step = build_split_parent_step(
+                step: step,
                 parent_number: parent_number,
                 parent_context: parent_context,
-                sub_phases: sub_phases
+                sub_steps: sub_steps
               )
-              expanded << parent_phase
+              expanded << parent_step
 
-              # Create child phases under the parent
-              sub_phases.each_with_index do |sub_name, sub_idx|
+              # Create child steps under the parent
+              sub_steps.each_with_index do |sub_name, sub_idx|
                 child_number = Atoms::NumberGenerator.subtask(parent_number, sub_idx + 1)
-                expanded << build_child_sub_phase(
+                expanded << build_child_sub_step(
                   sub_name: sub_name,
                   child_number: child_number,
                   parent_number: parent_number,
-                  parent_phase: phase,
+                  parent_step: step,
                   parent_instructions: parent_instructions,
                   parent_context: parent_context
                 )
               end
             else
-              # Pre-assign number to non-sub-phase entries to maintain position
-              expanded << phase.merge("number" => parent_number)
+              # Pre-assign number to non-sub-step entries to maintain position
+              expanded << step.merge("number" => parent_number)
             end
           end
 
           expanded
         end
 
-        # Build a split parent orchestration phase.
+        # Build a split parent orchestration step.
         #
-        # Parent nodes with sub_phases are subtree delegation roots and should not
+        # Parent nodes with sub_steps are subtree delegation roots and should not
         # execute the original skill directly. The parent instructions explain
         # how to drive the subtree; the original goals are preserved for context.
         #
-        # @param phase [Hash] Original parent phase config
-        # @param parent_number [String] Parent phase number
+        # @param step [Hash] Original parent step config
+        # @param parent_number [String] Parent step number
         # @param parent_context [String] Parent execution context
-        # @param sub_phases [Array<String>] Declared sub-phase names
-        # @return [Hash] Parent phase config for runtime queue
-        def build_split_parent_phase(phase:, parent_number:, parent_context:, sub_phases:)
-          source_skill = phase["skill"]
-          original_text = normalize_instructions(phase["instructions"]).strip
-          definition = find_phase_definition("split-subtree-root") || {}
+        # @param sub_steps [Array<String>] Declared sub-step names
+        # @return [Hash] Parent step config for runtime queue
+        def build_split_parent_step(step:, parent_number:, parent_context:, sub_steps:)
+          source_skill = step["skill"]
+          original_text = normalize_instructions(step["instructions"]).strip
+          definition = find_step_definition("split-subtree-root") || {}
 
           lines = split_parent_instruction_lines(
             definition: definition,
             parent_number: parent_number,
             parent_context: parent_context,
             source_skill: source_skill,
-            sub_phases: sub_phases
+            sub_steps: sub_steps
           )
 
           unless original_text.empty?
             lines << ""
-            lines << (definition["goal_header"] || "Goal to satisfy through child phases:")
+            lines << (definition["goal_header"] || "Goal to satisfy through child steps:")
             original_text.lines.map(&:strip).reject(&:empty?).each do |line|
               lines << "- #{line}"
             end
           end
 
-          parent_phase = phase.merge(
+          parent_step = step.merge(
             "number" => parent_number,
             "context" => parent_context,
             "instructions" => lines.join("\n")
           )
-          parent_phase.delete("sub_phases")
-          parent_phase.delete("sub-phases")
-          parent_phase.delete("skill")
-          parent_phase.delete("workflow")
-          parent_phase["source_skill"] = source_skill if source_skill
-          parent_phase["split_phase_type"] = definition["name"] || "split-subtree-root"
-          parent_phase
+          parent_step.delete("sub_steps")
+          parent_step.delete("sub-steps")
+          parent_step.delete("skill")
+          parent_step.delete("workflow")
+          parent_step["source_skill"] = source_skill if source_skill
+          parent_step["split_step_type"] = definition["name"] || "split-subtree-root"
+          parent_step
         end
 
         # Render split parent instructions from catalog with fallback defaults.
         #
-        # @param definition [Hash] Catalog definition for split parent phase
-        # @param parent_number [String] Parent phase number
+        # @param definition [Hash] Catalog definition for split parent step
+        # @param parent_number [String] Parent step number
         # @param parent_context [String] Parent execution context
-        # @param source_skill [String, nil] Source skill of original parent phase
-        # @param sub_phases [Array<String>] Child phase names
+        # @param source_skill [String, nil] Source skill of original parent step
+        # @param sub_steps [Array<String>] Child step names
         # @return [Array<String>] Rendered instruction lines
-        def split_parent_instruction_lines(definition:, parent_number:, parent_context:, source_skill:, sub_phases:)
+        def split_parent_instruction_lines(definition:, parent_number:, parent_context:, source_skill:, sub_steps:)
           instructions = definition["instructions"].is_a?(Hash) ? definition["instructions"] : {}
           context_key = parent_context == "fork" ? "fork" : "inline"
           template_lines = Array(instructions["common"]) + Array(instructions[context_key])
@@ -564,7 +564,7 @@ module Ace
             "parent_number" => parent_number,
             "parent_context" => parent_context,
             "source_skill" => source_skill.to_s,
-            "sub_phases" => sub_phases.join(", ")
+            "sub_steps" => sub_steps.join(", ")
           }
 
           template_lines
@@ -579,10 +579,10 @@ module Ace
         # @return [Array<String>]
         def default_split_parent_instruction_lines(parent_context)
           lines = [
-            "Subtree root orchestrator phase.",
-            "This phase is orchestration-only.",
-            "Do not execute the parent workflow directly in this phase.",
-            "Child phases: {{sub_phases}}."
+            "Subtree root orchestrator step.",
+            "This step is orchestration-only.",
+            "Do not execute the parent workflow directly in this step.",
+            "Child steps: {{sub_steps}}."
           ]
 
           if parent_context == "fork"
@@ -594,7 +594,7 @@ module Ace
               ]
             )
           else
-            lines << "Execute only child phases under this node."
+            lines << "Execute only child steps under this node."
           end
 
           lines
@@ -613,26 +613,26 @@ module Ace
           rendered
         end
 
-        # Build a concrete child phase from a sub-phase name.
+        # Build a concrete child step from a sub-step name.
         #
-        # Child phases inherit parent task context in instructions so skills can
+        # Child steps inherit parent task context in instructions so skills can
         # extract concrete parameters (e.g., task refs) during execution.
-        # Skill and context defaults are sourced from the phase catalog when available.
+        # Skill and context defaults are sourced from the step catalog when available.
         #
-        # @param sub_name [String] Child sub-phase name
-        # @param child_number [String] Generated child phase number
-        # @param parent_number [String] Parent phase number
-        # @param parent_phase [Hash] Parent phase config
+        # @param sub_name [String] Child sub-step name
+        # @param child_number [String] Generated child step number
+        # @param parent_number [String] Parent step number
+        # @param parent_step [Hash] Parent step config
         # @param parent_instructions [String, Array<String>, nil] Parent instructions
         # @param parent_context [String, nil] Parent execution context
-        # @return [Hash] Child phase config
-        def build_child_sub_phase(sub_name:, child_number:, parent_number:, parent_phase:, parent_instructions:, parent_context:)
-          phase_def = find_phase_definition(sub_name)
-          parent_task_ref = extract_parent_taskref(parent_phase, parent_instructions)
-          instructions = if phase_def&.dig("skill")
+        # @return [Hash] Child step config
+        def build_child_sub_step(sub_name:, child_number:, parent_number:, parent_step:, parent_instructions:, parent_context:)
+          step_def = find_step_definition(sub_name)
+          parent_task_ref = extract_parent_taskref(parent_step, parent_instructions)
+          instructions = if step_def&.dig("skill")
                            build_skill_backed_child_notes(sub_name, parent_instructions, task_ref: parent_task_ref)
                          else
-                           build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: parent_task_ref)
+                           build_child_instructions(sub_name, parent_instructions, step_def, task_ref: parent_task_ref)
                          end
           child = {
             "number" => child_number,
@@ -642,34 +642,34 @@ module Ace
           }
           child["taskref"] = parent_task_ref if parent_task_ref
 
-          if phase_def
-            child["workflow"] = phase_def["workflow"] if phase_def["workflow"]
-            child["skill"] = phase_def["skill"] if phase_def["skill"] && !phase_def["workflow"]
+          if step_def
+            child["workflow"] = step_def["workflow"] if step_def["workflow"]
+            child["skill"] = step_def["skill"] if step_def["skill"] && !step_def["workflow"]
 
-            context_default = phase_def.dig("context", "default")
+            context_default = step_def.dig("context", "default")
             child["context"] = context_default if context_default && parent_context != "fork"
           end
 
           child
         end
 
-        # Build child instructions with parent context and phase focus.
+        # Build child instructions with parent context and step focus.
         #
-        # @param sub_name [String] Child sub-phase name
+        # @param sub_name [String] Child sub-step name
         # @param parent_instructions [String, Array<String>, nil] Parent instructions
-        # @param phase_def [Hash, nil] Catalog definition for this sub-phase
+        # @param step_def [Hash, nil] Catalog definition for this sub-step
         # @param task_ref [String, nil] Explicit task reference from parent metadata
         # @return [String] Rendered instructions
-        def build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: nil)
+        def build_child_instructions(sub_name, parent_instructions, step_def, task_ref: nil)
           parent_text = normalize_instructions(parent_instructions).strip
-          focus = phase_def && phase_def["description"] ? phase_def["description"] : "Execute #{sub_name} sub-phase."
+          focus = step_def && step_def["description"] ? step_def["description"] : "Execute #{sub_name} sub-step."
           focus = focus.gsub("<taskref>", task_ref) if task_ref && !task_ref.empty?
           context = compact_task_context(parent_text, task_ref: task_ref)
           action = child_action_instructions(sub_name, parent_text, task_ref: task_ref)
 
           sections = []
           sections << "Task context:\n#{context}" unless context.empty?
-          sections << "Sub-phase focus:\n#{focus}"
+          sections << "Sub-step focus:\n#{focus}"
           sections << "Action:\n#{action}"
           sections.join("\n\n")
         end
@@ -685,8 +685,8 @@ module Ace
           sections.join("\n\n")
         end
 
-        # Build compact task context for child sub-phases.
-        # Avoid copying parent orchestration boilerplate into every child phase.
+        # Build compact task context for child sub-steps.
+        # Avoid copying parent orchestration boilerplate into every child step.
         #
         # @param parent_text [String]
         # @param task_ref [String, nil]
@@ -728,7 +728,7 @@ module Ace
 
           case sub_name
           when "onboard"
-            "- Load project context#{task_hint} using the phase workflow instructions.\n- Confirm required files and workflow context are available."
+            "- Load project context#{task_hint} using the step workflow instructions.\n- Confirm required files and workflow context are available."
           when "plan-task"
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
@@ -736,9 +736,9 @@ module Ace
           when "pre-commit-review"
             pre_commit_review_action_instructions(task_hint: task_hint)
           when "verify-test"
-            "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
+            "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this step skipped with a clear reason."
           when /\Arelease(?:-.+)?\z/
-            "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this phase."
+            "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this step."
           else
             "- Execute the #{sub_name} step."
           end
@@ -759,25 +759,25 @@ module Ace
           relevant.join("\n")
         end
 
-        def materialize_skill_backed_phases(phases_config)
-          phases_config.map do |phase|
-            materialize_skill_backed_phase(phase)
+        def materialize_skill_backed_steps(steps_config)
+          steps_config.map do |step|
+            materialize_skill_backed_step(step)
           end
         end
 
-        def materialize_skill_backed_phase(phase)
-          return phase unless phase.is_a?(Hash)
-          return phase if phase["split_phase_type"]
+        def materialize_skill_backed_step(step)
+          return step unless step.is_a?(Hash)
+          return step if step["split_step_type"]
 
-          rendering = resolve_phase_rendering(phase)
-          return phase unless rendering
+          rendering = resolve_step_rendering(step)
+          return step unless rendering
 
-          rendered_instructions = render_skill_backed_phase_instructions(
-            phase: phase,
+          rendered_instructions = render_skill_backed_step_instructions(
+            step: step,
             rendering: rendering
           )
 
-          materialized = phase.merge(
+          materialized = step.merge(
             "instructions" => rendered_instructions,
             "workflow" => rendering["workflow"]
           )
@@ -787,77 +787,77 @@ module Ace
           materialized
         end
 
-        def resolve_phase_rendering(phase)
-          explicit_workflow = phase["workflow"]&.to_s&.strip
+        def resolve_step_rendering(step)
+          explicit_workflow = step["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
-            canonical_phase = find_phase_definition(phase["name"]&.to_s)
-            source_skill = phase["source_skill"]&.to_s&.strip
-            source_skill = canonical_phase&.dig("source_skill") if source_skill.nil? || source_skill.empty?
+            canonical_step = find_step_definition(step["name"]&.to_s)
+            source_skill = step["source_skill"]&.to_s&.strip
+            source_skill = canonical_step&.dig("source_skill") if source_skill.nil? || source_skill.empty?
             rendering = skill_source_resolver.resolve_workflow_rendering(
               explicit_workflow,
-              phase_name: phase["name"]&.to_s,
+              step_name: step["name"]&.to_s,
               source_skill: source_skill
             )
-            return canonical_phase ? canonical_phase.merge(rendering || {}) : rendering if rendering
+            return canonical_step ? canonical_step.merge(rendering || {}) : rendering if rendering
           end
 
-          explicit_skill = phase["skill"]&.to_s&.strip
+          explicit_skill = step["skill"]&.to_s&.strip
           if explicit_skill && !explicit_skill.empty?
             return skill_source_resolver.resolve_skill_rendering(explicit_skill)
           end
 
-          skill_source_resolver.resolve_phase_rendering(phase["name"]&.to_s)
+          skill_source_resolver.resolve_step_rendering(step["name"]&.to_s)
         end
 
-        def render_skill_backed_phase_instructions(phase:, rendering:)
-          if phase_render_mode(rendering) == "phase_template"
-            return render_phase_template_instructions(phase: phase, rendering: rendering)
+        def render_skill_backed_step_instructions(step:, rendering:)
+          if step_render_mode(rendering) == "step_template"
+            return render_step_template_instructions(step: step, rendering: rendering)
           end
 
           sections = []
 
-          task_ref = extract_parent_taskref(phase, phase["instructions"])
-          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(phase["instructions"]), task_ref: task_ref)
+          task_ref = extract_parent_taskref(step, step["instructions"])
+          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
           sections << "Task context:\n#{task_context}" unless task_context.empty?
 
           body = rendering["body"].to_s.strip
           sections << body unless body.empty?
 
           assignment_notes = assignment_specific_notes(
-            phase_name: phase["name"]&.to_s,
-            instructions: phase["instructions"]
+            step_name: step["name"]&.to_s,
+            instructions: step["instructions"]
           )
           sections << "Assignment-specific context:\n#{assignment_notes}" unless assignment_notes.empty?
 
           sections.join("\n\n")
         end
 
-        def render_phase_template_instructions(phase:, rendering:)
+        def render_step_template_instructions(step:, rendering:)
           sections = []
 
-          task_ref = extract_parent_taskref(phase, phase["instructions"])
-          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(phase["instructions"]), task_ref: task_ref)
+          task_ref = extract_parent_taskref(step, step["instructions"])
+          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
           sections << "Task context:\n#{task_context}" unless task_context.empty?
 
           description = rendering["description"].to_s.strip
-          sections << "Phase focus:\n#{description}" unless description.empty?
+          sections << "Step focus:\n#{description}" unless description.empty?
 
-          steps = render_phase_template_steps(rendering["steps"])
+          steps = render_step_template_steps(rendering["steps"])
           sections << "Steps:\n#{steps}" unless steps.empty?
 
-          skip_guidance = render_phase_template_skip_guidance(rendering["when_to_skip"])
+          skip_guidance = render_step_template_skip_guidance(rendering["when_to_skip"])
           sections << "Skip when:\n#{skip_guidance}" unless skip_guidance.empty?
 
           assignment_notes = assignment_specific_notes(
-            phase_name: phase["name"]&.to_s,
-            instructions: phase["instructions"]
+            step_name: step["name"]&.to_s,
+            instructions: step["instructions"]
           )
           sections << "Assignment-specific context:\n#{assignment_notes}" unless assignment_notes.empty?
 
           sections.join("\n\n")
         end
 
-        def render_phase_template_steps(steps)
+        def render_step_template_steps(steps)
           Array(steps).filter_map do |step|
             next unless step.is_a?(Hash)
 
@@ -873,7 +873,7 @@ module Ace
           end.join("\n")
         end
 
-        def render_phase_template_skip_guidance(conditions)
+        def render_step_template_skip_guidance(conditions)
           Array(conditions).filter_map do |condition|
             text = condition&.to_s&.strip
             next if text.nil? || text.empty?
@@ -882,14 +882,14 @@ module Ace
           end.join("\n")
         end
 
-        def phase_render_mode(rendering)
+        def step_render_mode(rendering)
           mode = rendering["render"]&.to_s&.strip
           return "workflow_body" if mode.nil? || mode.empty?
 
           mode
         end
 
-        def assignment_specific_notes(phase_name:, instructions:)
+        def assignment_specific_notes(step_name:, instructions:)
           text = normalize_instructions(instructions).strip
           return "" if text.empty?
 
@@ -901,7 +901,7 @@ module Ace
             normalized
           end
 
-          if phase_name == "work-on-task"
+          if step_name == "work-on-task"
             filtered = filtered.reject do |line|
               line.start_with?("Implement task ") || line.start_with?("When complete, mark the task as done:")
             end
@@ -921,17 +921,17 @@ module Ace
           stripped.strip
         end
 
-        def resolve_phase_assign_config(phase)
-          explicit_workflow = phase["workflow"]&.to_s&.strip
+        def resolve_step_assign_config(step)
+          explicit_workflow = step["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
             return skill_source_resolver.resolve_workflow_assign_config(
               explicit_workflow,
-              phase_name: phase["name"]&.to_s,
-              source_skill: phase["source_skill"]&.to_s
+              step_name: step["name"]&.to_s,
+              source_skill: step["source_skill"]&.to_s
             )
           end
 
-          skill_name = phase["skill"]&.to_s
+          skill_name = step["skill"]&.to_s
           return nil if skill_name.nil? || skill_name.empty?
 
           skill_source_resolver.resolve_assign_config(skill_name)
@@ -945,7 +945,7 @@ module Ace
           lines = []
           lines << "- Resolve subtree review config#{task_hint}: pre_commit_review=#{subtree_cfg[:pre_commit_review]}, mode=#{subtree_cfg[:pre_commit_review_provider]}, block=#{subtree_cfg[:pre_commit_review_block]}."
           if subtree_cfg[:pre_commit_review] == false || subtree_cfg[:pre_commit_review_provider] == "skip"
-            lines << "- Pre-commit review is disabled by config; mark this phase skipped with the config reason and continue."
+            lines << "- Pre-commit review is disabled by config; mark this step skipped with the config reason and continue."
             return lines.join("\n")
           end
 
@@ -953,9 +953,9 @@ module Ace
           lines << "- If session metadata is unavailable, fallback to `execution.provider` from assign config."
           lines << "- Allowed native review clients: #{allowlist_text}."
           lines << "- If detected client is allowed and mode is `auto` or `native`, run native `/review` on the current diff."
-          lines << "- If client is not allowed or native `/review` is unavailable, skip this phase gracefully and continue."
+          lines << "- If client is not allowed or native `/review` is unavailable, skip this step gracefully and continue."
           lines << "- Summarize findings with severity counts and keep raw output when structure is incomplete."
-          lines << "- If `pre_commit_review_block` is true and a critical finding is confidently detected, fail this phase with evidence to block release."
+          lines << "- If `pre_commit_review_block` is true and a critical finding is confidently detected, fail this step with evidence to block release."
           lines.join("\n")
         end
 
@@ -979,11 +979,11 @@ module Ace
 
         # Resolve task reference from explicit metadata first, then parent instruction text.
         #
-        # @param parent_phase [Hash]
+        # @param parent_step [Hash]
         # @param parent_instructions [String, Array<String>, nil]
         # @return [String, nil]
-        def extract_parent_taskref(parent_phase, parent_instructions)
-          explicit = parent_phase["taskref"] || parent_phase["task_ref"]
+        def extract_parent_taskref(parent_step, parent_instructions)
+          explicit = parent_step["taskref"] || parent_step["task_ref"]
           explicit_value = explicit.to_s.strip
           return explicit_value unless explicit_value.empty?
 
@@ -994,68 +994,68 @@ module Ace
           inferred.join(", ")
         end
 
-        # Lookup phase definition from catalog by phase name.
+        # Lookup step definition from catalog by step name.
         #
-        # @param phase_name [String] Name of phase
+        # @param step_name [String] Name of step
         # @return [Hash, nil] Catalog definition
-        def find_phase_definition(phase_name)
-          Atoms::CatalogLoader.find_by_name(phase_catalog, phase_name)
+        def find_step_definition(step_name)
+          Atoms::CatalogLoader.find_by_name(step_catalog, step_name)
         end
 
-        # Load phase catalog from project override or gem defaults.
+        # Load step catalog from project override or gem defaults.
         #
-        # @return [Array<Hash>] Loaded phase definitions
-        def phase_catalog
-          @phase_catalog ||= begin
+        # @return [Array<Hash>] Loaded step definitions
+        def step_catalog
+          @step_catalog ||= begin
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
             gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir || File.expand_path("../../../..", __dir__)
 
-            project_catalog = File.join(project_root, ".ace", "assign", "catalog", "phases")
-            default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "phases")
+            project_catalog = File.join(project_root, ".ace", "assign", "catalog", "steps")
+            default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "steps")
 
-            default_phases = Atoms::CatalogLoader.load_all(default_catalog)
+            default_steps = Atoms::CatalogLoader.load_all(default_catalog)
             base_catalog = if File.directory?(project_catalog)
-                             project_phases = Atoms::CatalogLoader.load_all(project_catalog)
-                             merge_phase_catalog(default_phases, project_phases)
+                             project_steps = Atoms::CatalogLoader.load_all(project_catalog)
+                             merge_step_catalog(default_steps, project_steps)
                            else
-                             default_phases
+                             default_steps
                            end
 
-            canonical_phases = skill_source_resolver.assign_phase_catalog
-            merge_phase_catalog(base_catalog, canonical_phases)
+            canonical_steps = skill_source_resolver.assign_step_catalog
+            merge_step_catalog(base_catalog, canonical_steps)
           end
         end
 
-        # Merge default and project phase catalogs by phase name.
+        # Merge default and project step catalogs by step name.
         # Later definitions override earlier ones with matching names.
         #
-        # @param default_phases [Array<Hash>]
-        # @param project_phases [Array<Hash>]
+        # @param default_steps [Array<Hash>]
+        # @param project_steps [Array<Hash>]
         # @return [Array<Hash>]
-        def merge_phase_catalog(default_phases, project_phases)
+        def merge_step_catalog(default_steps, project_steps)
           index = {}
           order = []
 
-          default_phases.each do |phase|
-            name = phase["name"]
+          default_steps.each do |step|
+            name = step["name"]
             next if name.nil? || name.empty?
 
-            index[name] = phase
+            index[name] = step
             order << name
           end
 
-          project_phases.each do |phase|
-            name = phase["name"]
+          project_steps.each do |step|
+            name = step["name"]
             next if name.nil? || name.empty?
 
             order << name unless index.key?(name)
-            index[name] = deep_merge_phase_definition(index[name], phase)
+            index[name] = deep_merge_step_definition(index[name], step)
           end
 
           order.map { |name| index[name] }.compact
         end
 
-        def deep_merge_phase_definition(base, override)
+        def deep_merge_step_definition(base, override)
           return override unless base.is_a?(Hash)
           return base unless override.is_a?(Hash)
 
@@ -1063,7 +1063,7 @@ module Ace
           override.each do |key, value|
             merged[key] =
               if merged[key].is_a?(Hash) && value.is_a?(Hash)
-                deep_merge_phase_definition(merged[key], value)
+                deep_merge_step_definition(merged[key], value)
               else
                 value
               end
@@ -1072,7 +1072,7 @@ module Ace
         end
 
         # Archive source config into the task's jobs/ directory.
-        # If config is already in a jobs/ or phases/ directory, keeps it in place.
+        # If config is already in a jobs/ or steps/ directory, keeps it in place.
         # Otherwise moves job.yaml to <task>/jobs/<assignment_id>-job.yml for provenance.
         #
         # @param config_path [String] Path to the original job.yaml
@@ -1082,8 +1082,8 @@ module Ace
           expanded_path = File.expand_path(config_path)
           parent_dir = File.dirname(expanded_path)
 
-          # Keep pre-rendered hidden/job specs and legacy phase archives stable.
-          return expanded_path if %w[jobs phases].include?(File.basename(parent_dir))
+          # Keep pre-rendered hidden/job specs and legacy step archives stable.
+          return expanded_path if %w[jobs steps].include?(File.basename(parent_dir))
 
           # Otherwise, move to task's jobs/ directory.
           jobs_dir = File.join(parent_dir, "jobs")
@@ -1098,10 +1098,10 @@ module Ace
           current = state.current
           return unless current && current.number == parent_number
 
-          phase_writer.mark_pending(current.file_path)
-          rebalanced_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          next_phase = rebalanced_state.next_workable_in_subtree(parent_number)
-          phase_writer.mark_in_progress(next_phase.file_path) if next_phase
+          step_writer.mark_pending(current.file_path)
+          rebalanced_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          next_step = rebalanced_state.next_workable_in_subtree(parent_number)
+          step_writer.mark_in_progress(next_step.file_path) if next_step
         end
 
         # Normalize instructions to a string.
@@ -1115,42 +1115,42 @@ module Ace
           instructions.is_a?(Array) ? instructions.join("\n") : instructions.to_s
         end
 
-        def find_target_phase_for_start(state, phase_number, fork_root)
-          target = state.find_by_number(phase_number)
-          raise PhaseErrors::NotFound, "Phase #{phase_number} not found in queue" unless target
+        def find_target_step_for_start(state, step_number, fork_root)
+          target = state.find_by_number(step_number)
+          raise StepErrors::NotFound, "Step #{step_number} not found in queue" unless target
 
           if fork_root && !fork_root.empty?
-            raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
-            raise PhaseErrors::InvalidState, "Phase #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
+            raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            raise StepErrors::InvalidState, "Step #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
           end
-          raise PhaseErrors::InvalidState, "Cannot start phase #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
+          raise StepErrors::InvalidState, "Cannot start step #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
           if state.has_incomplete_children?(target.number)
-            raise PhaseErrors::InvalidState, "Cannot start phase #{target.number}: has incomplete children."
+            raise StepErrors::InvalidState, "Cannot start step #{target.number}: has incomplete children."
           end
 
           target
         end
 
-        def find_target_phase_for_finish(state, phase_number, fork_root)
+        def find_target_step_for_finish(state, step_number, fork_root)
           fork_root = fork_root&.strip
-          if phase_number && !phase_number.to_s.strip.empty?
-            target = state.find_by_number(phase_number)
-            raise PhaseErrors::NotFound, "Phase #{phase_number} not found in queue" unless target
+          if step_number && !step_number.to_s.strip.empty?
+            target = state.find_by_number(step_number)
+            raise StepErrors::NotFound, "Step #{step_number} not found in queue" unless target
             if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
-              raise PhaseErrors::InvalidState, "Phase #{target.number} is outside scoped subtree #{fork_root}."
+              raise StepErrors::InvalidState, "Step #{target.number} is outside scoped subtree #{fork_root}."
             end
-            raise PhaseErrors::InvalidState, "Cannot finish phase #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
+            raise StepErrors::InvalidState, "Cannot finish step #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
 
             return target
           end
 
           current = state.current
           if fork_root && !fork_root.empty?
-            raise PhaseErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
             active_in_subtree = state.in_progress_in_subtree(fork_root)
             if active_in_subtree.size > 1
-              active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
-              raise PhaseErrors::InvalidState, "Cannot finish in subtree #{fork_root}: multiple phases are in progress (#{active_refs})."
+              active_refs = active_in_subtree.map { |step| "#{step.number}(#{step.name})" }.join(", ")
+              raise StepErrors::InvalidState, "Cannot finish in subtree #{fork_root}: multiple steps are in progress (#{active_refs})."
             end
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root)
@@ -1161,7 +1161,7 @@ module Ace
           current
         end
 
-        # Auto-complete parent phases when all their children are done.
+        # Auto-complete parent steps when all their children are done.
         # Walks up the hierarchy marking parents as done, handling multi-level
         # completion in a single pass (grandparents become eligible when parents complete).
         #
@@ -1169,11 +1169,11 @@ module Ace
         # @param assignment [Models::Assignment] Current assignment
         def auto_complete_parents(state, assignment)
           completed_any = true
-          # Track completed phase numbers in this pass (avoids fragile ivar mutation)
+          # Track completed step numbers in this pass (avoids fragile ivar mutation)
           completed_this_pass = Set.new
 
-          # Safety guard: max iterations = total phases to prevent infinite loops
-          max_iterations = state.phases.size
+          # Safety guard: max iterations = total steps to prevent infinite loops
+          max_iterations = state.steps.size
 
           # Loop until no more parents can be completed
           # This handles multi-level hierarchies where completing a parent
@@ -1183,14 +1183,14 @@ module Ace
             iterations += 1
             completed_any = false
 
-            # Find all pending/in_progress parent phases that have children
-            eligible_parents = state.phases.select do |s|
+            # Find all pending/in_progress parent steps that have children
+            eligible_parents = state.steps.select do |s|
               (s.status == :pending || s.status == :in_progress) &&
                 !completed_this_pass.include?(s.number)
             end
 
-            eligible_parents.each do |phase|
-              children = state.children_of(phase.number)
+            eligible_parents.each do |step|
+              children = state.children_of(step.number)
               next if children.empty?
 
               # If all children are done (or completed this pass), mark parent as done too
@@ -1199,12 +1199,12 @@ module Ace
               end
 
               if all_done
-                phase_writer.mark_done(
-                  phase.file_path,
-                  report_content: "Auto-completed: all child phases finished.",
+                step_writer.mark_done(
+                  step.file_path,
+                  report_content: "Auto-completed: all child steps finished.",
                   reports_dir: assignment.reports_dir
                 )
-                completed_this_pass << phase.number
+                completed_this_pass << step.number
                 completed_any = true
               end
             end
@@ -1213,63 +1213,63 @@ module Ace
           # Warn if safety limit was reached while still completing parents
           if iterations >= max_iterations && completed_any
             warn "[ace-assign] Warning: auto_complete_parents reached iteration limit (#{max_iterations}). " \
-                 "Some parent phases may not have been auto-completed."
+                 "Some parent steps may not have been auto-completed."
           end
         end
 
-        # Find the next phase to work on using hierarchical rules.
+        # Find the next step to work on using hierarchical rules.
         #
         # @param state [Models::QueueState] Current queue state
-        # @param completed_number [String] Number of just-completed phase
-        # @return [Models::Phase, nil] Next phase to work on
-        def find_next_phase(state, completed_number)
-          # First priority: pending children of the completed phase
+        # @param completed_number [String] Number of just-completed step
+        # @return [Models::Step, nil] Next step to work on
+        def find_next_step(state, completed_number)
+          # First priority: pending children of the completed step
           children = state.children_of(completed_number)
           pending_child = children.find { |c| c.status == :pending }
           return pending_child if pending_child
 
-          # Second priority: next workable phase (respects hierarchy)
+          # Second priority: next workable step (respects hierarchy)
           # Uses next_workable to skip parents that have incomplete children
           state.next_workable
         end
 
-        # Find next phase within a constrained subtree.
+        # Find next step within a constrained subtree.
         #
         # @param state [Models::QueueState] Current queue state
-        # @param completed_number [String] Number of just-completed phase
+        # @param completed_number [String] Number of just-completed step
         # @param root_number [String] Root of fork-scoped subtree
-        # @return [Models::Phase, nil] Next phase in subtree, or nil when subtree done
-        def find_next_phase_in_subtree(state, completed_number, root_number)
-          # First priority: pending direct children of completed phase within subtree
+        # @return [Models::Step, nil] Next step in subtree, or nil when subtree done
+        def find_next_step_in_subtree(state, completed_number, root_number)
+          # First priority: pending direct children of completed step within subtree
           children = state.children_of(completed_number)
           pending_child = children.find { |c| c.status == :pending && state.in_subtree?(root_number, c.number) }
           return pending_child if pending_child
 
-          # Second priority: next workable phase within subtree
+          # Second priority: next workable step within subtree
           state.next_workable_in_subtree(root_number)
         end
 
-        # Calculate insertion point for a new phase.
+        # Calculate insertion point for a new step.
         #
-        # @param after [String, nil] Insert after this phase number
+        # @param after [String, nil] Insert after this step number
         # @param as_child [Boolean] Insert as child (true) or sibling (false)
         # @param state [Models::QueueState] Current queue state
-        # @param existing_numbers [Array<String>] Existing phase numbers
-        # @return [Array<String, Array>] [new_number, phases_to_renumber]
+        # @param existing_numbers [Array<String>] Existing step numbers
+        # @return [Array<String, Array>] [new_number, steps_to_renumber]
         def calculate_insertion_point(after:, as_child:, state:, existing_numbers:)
           if after
             if as_child
               # Insert as first child of 'after'
-              new_number = Atoms::PhaseNumbering.next_child(after, existing_numbers)
+              new_number = Atoms::StepNumbering.next_child(after, existing_numbers)
               [new_number, []]
             else
               # Insert as sibling after 'after'
-              new_number = Atoms::PhaseNumbering.next_sibling(after)
+              new_number = Atoms::StepNumbering.next_sibling(after)
 
               # Check if this number already exists
               if existing_numbers.include?(new_number)
                 # Need to renumber
-                renumber_list = Atoms::PhaseNumbering.phases_to_renumber(new_number, existing_numbers)
+                renumber_list = Atoms::StepNumbering.steps_to_renumber(new_number, existing_numbers)
                 [new_number, renumber_list]
               else
                 [new_number, []]

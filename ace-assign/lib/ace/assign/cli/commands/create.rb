@@ -20,7 +20,7 @@ module Ace
 
             unless options[:quiet]
               print_assignment_header(result[:assignment])
-              print_phase_instructions(result[:current])
+              print_step_instructions(result[:current])
             end
           end
 
@@ -48,13 +48,13 @@ module Ace
             expanded.delete_prefix("#{cwd}/")
           end
 
-          def print_phase_instructions(phase)
-            return unless phase
+          def print_step_instructions(step)
+            return unless step
 
-            puts "Phase #{phase.number}: #{phase.name} [#{phase.status}]"
+            puts "Step #{step.number}: #{step.name} [#{step.status}]"
             puts
             puts "Instructions:"
-            puts phase.instructions
+            puts step.instructions
           end
         end
       end

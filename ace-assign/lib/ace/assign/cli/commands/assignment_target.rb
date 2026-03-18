@@ -8,7 +8,7 @@ module Ace
         #
         # Supported syntax:
         # - <assignment-id>
-        # - <assignment-id>@<phase-number>
+        # - <assignment-id>@<step-number>
         module AssignmentTarget
           Target = Struct.new(:assignment_id, :scope, keyword_init: true)
 

@@ -20,8 +20,8 @@ Save all output to `results/tc/04/`. Capture:
   - `ace-bundle fixtures/prepare/work-on-tasks.yml --output results/tc/04/work-on-tasks.yml`
 - Validate single-task fixture (`work-on-task.yml`):
   - contains `name: work-on-task`
-  - contains `phases:`
-  - contains expected phase/skill references (for example `work-on-task`, `ace-task-work`, `create-pr`)
+  - contains `steps:`
+  - contains expected step/skill references (for example `work-on-task`, `ace-task-work`, `create-pr`)
 - Validate multi-task fixture (`work-on-tasks.yml`):
   - contains `name: work-on-tasks`
   - contains `expansion:`
