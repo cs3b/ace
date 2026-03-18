@@ -153,7 +153,7 @@ If you're migrating from dev-tools git-commit to ace-git-commit:
 ## Recommendations
 
 ### Use ace-git-commit when:
-- Working in a true monorepo (ace-meta)
+- Working in a true monorepo (ace)
 - Want automatic staging of all changes
 - Need better LLM integration performance
 - Prefer simpler, focused tooling
