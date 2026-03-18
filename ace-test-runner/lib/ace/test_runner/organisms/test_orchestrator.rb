@@ -539,11 +539,21 @@ module Ace
         def resolve_and_set_report_dir_context(test_files)
           explicit_cli_override = @report_dir_override == :user_specified
 
+          report_root_start_path = Dir.pwd
+          if explicit_cli_override && @package_dir
+            report_root_start_path = @original_dir
+          end
+
           report_root = Atoms::ReportDirectoryResolver.resolve_report_root(
             @configuration.report_dir,
             explicit_cli_override: explicit_cli_override,
-            start_path: Dir.pwd
+            start_path: report_root_start_path
           )
+
+          if explicit_cli_override
+            @configuration.report_dir = report_root
+            return
+          end
 
           package_name = Atoms::ReportDirectoryResolver.infer_package_name(
             package_dir: @package_dir,

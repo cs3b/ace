@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.16] - 2026-03-18
+
+### Fixed
+- Fixed explicit `--report-dir` resolution for package-scoped and single-file execution so report artifacts are written exactly where the user requested.
+
+### Technical
+- Clarified E2E failure-propagation cleanup requirements by documenting fixture removal for intentional-failure injection scenarios.
+
 ## [0.15.15] - 2026-03-18
 
 ### Changed
