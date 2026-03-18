@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "ace-tmux provides composable tmux session management via YAML presets " \
                      "with deep-merge composition at every level (session, window, pane), " \
                      "integrated with the ACE config cascade."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
