@@ -11,7 +11,7 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **No-skip rule present** — `no-skip-rule.stdout` contains the mandatory no-skip policy text about planned phases being mandatory.
+1. **No-skip rule present** — `no-skip-rule.stdout` contains the mandatory no-skip policy text about planned steps being mandatory.
 2. **Synthetic skip prohibited** — `synthetic-skip.stdout` contains prohibition against using report text to skip or synthesize completion.
 3. **Skip Assessment removed** — `skip-assessment.stdout` confirms no "Skip Assessment" section exists (empty or no match).
 4. **Attempt-first section** — `attempt-first.stdout` contains the External Action Rule (Attempt-First) section header.

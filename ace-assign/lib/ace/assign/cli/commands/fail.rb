@@ -4,12 +4,12 @@ module Ace
   module Assign
     module CLI
       module Commands
-        # Mark current phase as failed
+        # Mark current step as failed
         class Fail < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
           include AssignmentTarget
 
-          desc "Mark current phase as failed"
+          desc "Mark current step as failed"
 
           option :message, aliases: ["-m"], required: true, desc: "Error message"
           option :assignment, desc: "Target specific assignment ID"
@@ -25,13 +25,13 @@ module Ace
 
             unless options[:quiet]
               failed = result[:failed]
-              puts "Phase #{failed.number} (#{failed.name}) marked as failed"
+              puts "Step #{failed.number} (#{failed.name}) marked as failed"
               puts "Updated: #{File.basename(failed.file_path)}"
               puts "Error: #{message}"
               puts
               puts "Options:"
-              puts "- ace-assign add \"fix-phase\" to add a fix phase"
-              puts "- ace-assign retry #{failed.number} to retry this phase"
+              puts "- ace-assign add \"fix-step\" to add a fix step"
+              puts "- ace-assign retry #{failed.number} to retry this step"
             end
           end
 

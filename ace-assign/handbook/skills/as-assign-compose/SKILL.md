@@ -1,6 +1,6 @@
 ---
 name: as-assign-compose
-description: Compose a tailored assignment from ace-assign catalog phases and composition rules (catalog-only)
+description: Compose a tailored assignment from ace-assign catalog steps and composition rules (catalog-only)
 # bundle: wfi://assign/compose
 # agent: general-purpose
 user-invocable: true

@@ -5,7 +5,7 @@ require "fileutils"
 module Ace
   module Assign
     module Molecules
-      # Handles phase file renumbering with cascade support and atomic operations.
+      # Handles step file renumbering with cascade support and atomic operations.
       #
       # Extracted from AssignmentExecutor to provide:
       # - Testable renumbering logic
@@ -13,42 +13,42 @@ module Ace
       # - Parent metadata updates for descendants
       #
       # @example Basic usage
-      #   renumberer = PhaseRenumberer.new(phase_writer: phase_writer, queue_scanner: scanner)
-      #   renumberer.renumber(phases_dir, ["010", "011"])
-      class PhaseRenumberer
-        attr_reader :phase_writer, :queue_scanner
+      #   renumberer = StepRenumberer.new(step_writer: step_writer, queue_scanner: scanner)
+      #   renumberer.renumber(steps_dir, ["010", "011"])
+      class StepRenumberer
+        attr_reader :step_writer, :queue_scanner
 
-        def initialize(phase_writer:, queue_scanner:)
-          @phase_writer = phase_writer
+        def initialize(step_writer:, queue_scanner:)
+          @step_writer = step_writer
           @queue_scanner = queue_scanner
         end
 
-        # Renumber phases by shifting their file numbers.
+        # Renumber steps by shifting their file numbers.
         # Also cascades to all descendants to prevent orphaning children.
         #
-        # @param phases_dir [String] Path to phases directory
-        # @param numbers_to_shift [Array<String>] Phase numbers to shift
+        # @param steps_dir [String] Path to steps directory
+        # @param numbers_to_shift [Array<String>] Step numbers to shift
         # @return [Hash] Result with :renamed (count) and :rollback_needed (bool)
-        def renumber(phases_dir, numbers_to_shift)
+        def renumber(steps_dir, numbers_to_shift)
           return { renamed: 0, rollback_needed: false } if numbers_to_shift.empty?
 
-          all_numbers = queue_scanner.phase_numbers(phases_dir)
-          sorted_phases = build_shift_list(numbers_to_shift, all_numbers)
+          all_numbers = queue_scanner.step_numbers(steps_dir)
+          sorted_steps = build_shift_list(numbers_to_shift, all_numbers)
 
           # Track operations for potential rollback
           completed_renames = []
           rollback_needed = false
 
           begin
-            sorted_phases.each do |old_number|
+            sorted_steps.each do |old_number|
               new_number = calculate_new_number(old_number, numbers_to_shift)
               next if new_number == old_number
 
               # Calculate new parent for frontmatter update
               new_parent = calculate_new_parent(old_number, numbers_to_shift)
 
-              rename_result = rename_phase_files(
-                phases_dir,
+              rename_result = rename_step_files(
+                steps_dir,
                 old_number,
                 new_number,
                 new_parent: new_parent
@@ -67,18 +67,18 @@ module Ace
 
         private
 
-        # Build complete list of phases to shift including descendants.
+        # Build complete list of steps to shift including descendants.
         #
-        # @param numbers_to_shift [Array<String>] Explicit phases to shift
-        # @param all_numbers [Array<String>] All existing phase numbers
+        # @param numbers_to_shift [Array<String>] Explicit steps to shift
+        # @param all_numbers [Array<String>] All existing step numbers
         # @return [Array<String>] Sorted list (deepest children first)
         def build_shift_list(numbers_to_shift, all_numbers)
           all_to_shift = []
           numbers_to_shift.each do |num|
             all_to_shift << num
-            # Find all descendants (phases starting with "num.")
+            # Find all descendants (steps starting with "num.")
             all_numbers.each do |n|
-              all_to_shift << n if Atoms::PhaseNumbering.child_of?(n, num)
+              all_to_shift << n if Atoms::StepNumbering.child_of?(n, num)
             end
           end
           all_to_shift.uniq!
@@ -88,19 +88,19 @@ module Ace
           all_to_shift.sort.reverse
         end
 
-        # Calculate the new number for a phase being shifted.
+        # Calculate the new number for a step being shifted.
         #
-        # @param old_number [String] Current phase number
-        # @param numbers_to_shift [Array<String>] Phases explicitly being shifted
-        # @return [String] New phase number
+        # @param old_number [String] Current step number
+        # @param numbers_to_shift [Array<String>] Steps explicitly being shifted
+        # @return [String] New step number
         def calculate_new_number(old_number, numbers_to_shift)
           if numbers_to_shift.include?(old_number)
-            Atoms::PhaseNumbering.shift_number(old_number, 1)
+            Atoms::StepNumbering.shift_number(old_number, 1)
           else
             # This is a descendant - cascade parent shift
-            parent_old = Atoms::PhaseNumbering.parse(old_number)[:parent]
+            parent_old = Atoms::StepNumbering.parse(old_number)[:parent]
             parent_new = if parent_old && numbers_to_shift.include?(parent_old)
-                           Atoms::PhaseNumbering.shift_number(parent_old, 1)
+                           Atoms::StepNumbering.shift_number(parent_old, 1)
                          end
 
             # Replace old parent prefix with new parent prefix
@@ -108,9 +108,9 @@ module Ace
               old_number.sub(/^#{Regexp.escape(parent_old)}/, parent_new)
             else
               # Find shifted ancestor
-              ancestor = numbers_to_shift.find { |n| Atoms::PhaseNumbering.child_of?(old_number, n) }
+              ancestor = numbers_to_shift.find { |n| Atoms::StepNumbering.child_of?(old_number, n) }
               if ancestor
-                new_ancestor = Atoms::PhaseNumbering.shift_number(ancestor, 1)
+                new_ancestor = Atoms::StepNumbering.shift_number(ancestor, 1)
                 old_number.sub(/^#{Regexp.escape(ancestor)}/, new_ancestor)
               else
                 old_number
@@ -121,43 +121,43 @@ module Ace
 
         # Calculate new parent number for frontmatter update.
         #
-        # @param old_number [String] Phase being renamed
-        # @param numbers_to_shift [Array<String>] Phases explicitly being shifted
+        # @param old_number [String] Step being renamed
+        # @param numbers_to_shift [Array<String>] Steps explicitly being shifted
         # @return [String, nil] New parent number or nil if no parent update needed
         def calculate_new_parent(old_number, numbers_to_shift)
-          old_parent = Atoms::PhaseNumbering.parse(old_number)[:parent]
+          old_parent = Atoms::StepNumbering.parse(old_number)[:parent]
           return nil unless old_parent
 
-          ancestor = numbers_to_shift.find { |n| old_parent == n || Atoms::PhaseNumbering.child_of?(old_parent, n) }
+          ancestor = numbers_to_shift.find { |n| old_parent == n || Atoms::StepNumbering.child_of?(old_parent, n) }
           if ancestor
-            new_ancestor = Atoms::PhaseNumbering.shift_number(ancestor, 1)
+            new_ancestor = Atoms::StepNumbering.shift_number(ancestor, 1)
             old_parent.sub(/^#{Regexp.escape(ancestor)}/, new_ancestor)
           else
             old_parent
           end
         end
 
-        # Rename phase and report files from one number to another.
+        # Rename step and report files from one number to another.
         #
-        # @param phases_dir [String] Path to phases directory
-        # @param old_number [String] Old phase number
-        # @param new_number [String] New phase number
+        # @param steps_dir [String] Path to steps directory
+        # @param old_number [String] Old step number
+        # @param new_number [String] New step number
         # @param new_parent [String, nil] New parent number for frontmatter update
         # @return [Hash] Result with :files (renamed file paths)
-        def rename_phase_files(phases_dir, old_number, new_number, new_parent: nil)
+        def rename_step_files(steps_dir, old_number, new_number, new_parent: nil)
           renamed_files = []
 
-          # Find phase file with this number
-          pattern = File.join(phases_dir, "#{old_number}-*.ph.md")
-          phase_files = Dir.glob(pattern)
+          # Find step file with this number
+          pattern = File.join(steps_dir, "#{old_number}-*.st.md")
+          step_files = Dir.glob(pattern)
 
-          phase_files.each do |old_path|
+          step_files.each do |old_path|
             filename = File.basename(old_path)
             new_filename = filename.sub(/^#{Regexp.escape(old_number)}/, new_number)
-            new_path = File.join(phases_dir, new_filename)
+            new_path = File.join(steps_dir, new_filename)
 
             FileUtils.mv(old_path, new_path)
-            renamed_files << { old_path: old_path, new_path: new_path, type: :phase }
+            renamed_files << { old_path: old_path, new_path: new_path, type: :step }
 
             # Add audit trail metadata to track renumbering history
             metadata = {
@@ -165,11 +165,11 @@ module Ace
               "renumbered_at" => Time.now.utc.iso8601
             }
             metadata["parent"] = new_parent if new_parent
-            phase_writer.update_frontmatter(new_path, metadata)
+            step_writer.update_frontmatter(new_path, metadata)
           end
 
           # Also rename any report files
-          cache_dir = File.dirname(phases_dir)
+          cache_dir = File.dirname(steps_dir)
           reports_dir = File.join(cache_dir, "reports")
           if File.directory?(reports_dir)
             report_pattern = File.join(reports_dir, "#{old_number}-*.r.md")

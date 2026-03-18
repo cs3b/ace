@@ -8,7 +8,7 @@ module Ace
       # Takes a raw YAML frontmatter hash (already parsed from a .s.md or .wf.md file),
       # extracts the `assign:` block, validates fields, and returns a structured result.
       #
-      # No file I/O — reuses existing frontmatter extraction from PhaseFileParser or ace-support-markdown.
+      # No file I/O — reuses existing frontmatter extraction from StepFileParser or ace-support-markdown.
       #
       # @example
       #   frontmatter = { "id" => "v.0.9.0+task.148", "status" => "in-progress",
@@ -17,7 +17,7 @@ module Ace
       #   result[:config][:goal]  # => "implement-with-pr"
       #   result[:valid]          # => true
       module AssignFrontmatterParser
-        VALID_FIELDS = %w[goal variables hints sub-phases context parent].freeze
+        VALID_FIELDS = %w[goal variables hints sub-steps context parent].freeze
         VALID_HINT_ACTIONS = %w[include skip].freeze
         VALID_CONTEXTS = %w[fork].freeze
 
@@ -69,12 +69,12 @@ module Ace
             errors.concat(validate_hints(assign_block["hints"]))
           end
 
-          # Validate sub-phases (array of strings)
-          if assign_block.key?("sub-phases")
-            if !assign_block["sub-phases"].is_a?(Array)
-              errors << "assign.sub-phases must be an array"
-            elsif assign_block["sub-phases"].any? { |s| !s.is_a?(String) }
-              errors << "assign.sub-phases entries must be strings"
+          # Validate sub-steps (array of strings)
+          if assign_block.key?("sub-steps")
+            if !assign_block["sub-steps"].is_a?(Array)
+              errors << "assign.sub-steps must be an array"
+            elsif assign_block["sub-steps"].any? { |s| !s.is_a?(String) }
+              errors << "assign.sub-steps entries must be strings"
             end
           end
 
@@ -106,7 +106,7 @@ module Ace
             goal: assign_block["goal"],
             variables: assign_block["variables"] || {},
             hints: normalize_hints(assign_block["hints"] || []),
-            sub_phases: assign_block["sub-phases"] || [],
+            sub_steps: assign_block["sub-steps"] || [],
             context: assign_block["context"],
             parent: assign_block["parent"]
           }
@@ -156,13 +156,13 @@ module Ace
         # Normalize hints into a consistent structure.
         #
         # @param hints [Array<Hash>] Raw hints from frontmatter
-        # @return [Array<Hash>] Normalized hints with :action and :phase keys
+        # @return [Array<Hash>] Normalized hints with :action and :step keys
         def self.normalize_hints(hints)
           hints.map do |hint|
             if hint.key?("include")
-              { action: :include, phase: hint["include"] }
+              { action: :include, step: hint["include"] }
             elsif hint.key?("skip")
-              { action: :skip, phase: hint["skip"] }
+              { action: :skip, step: hint["skip"] }
             end
           end.compact
         end

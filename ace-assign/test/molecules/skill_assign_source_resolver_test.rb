@@ -27,7 +27,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       File.write(File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
-          sub-phases:
+          sub-steps:
             - onboard
             - plan-task
             - work-on-task
@@ -38,7 +38,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project_root)
       config = resolver.resolve_assign_config("as-task-work")
 
-      assert_equal %w[onboard plan-task work-on-task], config[:sub_phases]
+      assert_equal %w[onboard plan-task work-on-task], config[:sub_steps]
       assert_equal "fork", config[:context]
     end
   end
@@ -119,7 +119,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     end
   end
 
-  def test_assign_phase_catalog_uses_canonical_phase_metadata_from_skills
+  def test_assign_step_catalog_uses_canonical_step_metadata_from_skills
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
@@ -139,22 +139,22 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
           kind: workflow
         assign:
           source: wfi://task/plan
-          phases:
+          steps:
             - name: plan-task
-              description: Canonical phase description
+              description: Canonical step description
               context:
                 default: fork
         ---
       MD
 
       resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project_root)
-      phases = resolver.assign_phase_catalog
+      steps = resolver.assign_step_catalog
 
-      assert_equal 1, phases.length
-      assert_equal "plan-task", phases.first["name"]
-      assert_equal "as-task-plan", phases.first["skill"]
-      assert_equal "Canonical phase description", phases.first["description"]
-      assert_equal({ "default" => "fork" }, phases.first["context"])
+      assert_equal 1, steps.length
+      assert_equal "plan-task", steps.first["name"]
+      assert_equal "as-task-plan", steps.first["skill"]
+      assert_equal "Canonical step description", steps.first["description"]
+      assert_equal({ "default" => "fork" }, steps.first["context"])
     end
   end
 
@@ -353,16 +353,16 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       File.write(File.join(workflow_dir, "gem-work.wf.md"), <<~MD)
         ---
         assign:
-          sub-phases:
-            - gem-phase
+          sub-steps:
+            - gem-step
         ---
       MD
 
       File.write(File.join(workflow_dir, "project-work.wf.md"), <<~MD)
         ---
         assign:
-          sub-phases:
-            - project-phase
+          sub-steps:
+            - project-step
         ---
       MD
 
@@ -370,7 +370,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
         resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project_root)
         config = resolver.resolve_assign_config("as-task-work")
 
-        assert_equal ["project-phase"], config[:sub_phases]
+        assert_equal ["project-step"], config[:sub_steps]
       end
     end
   end
@@ -395,8 +395,8 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       File.write(File.join(workflow_dir, "fallback-work.wf.md"), <<~MD)
         ---
         assign:
-          sub-phases:
-            - fallback-phase
+          sub-steps:
+            - fallback-step
         ---
       MD
 
@@ -406,7 +406,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       )
       config = resolver.resolve_assign_config("as-task-work")
 
-      assert_equal ["fallback-phase"], config[:sub_phases]
+      assert_equal ["fallback-step"], config[:sub_steps]
     end
   end
 end

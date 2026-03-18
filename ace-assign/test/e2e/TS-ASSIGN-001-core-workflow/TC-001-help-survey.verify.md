@@ -14,7 +14,7 @@ Validation order (impact-first):
 1. **File exists** — At least one file exists in `results/tc/01/`.
 2. **Substantive content** — The file contains more than 5 lines of non-empty text.
 3. **Mentions key subcommands** — The content references create, status, report, add, drive, fail, or retry.
-4. **Observations present** — The content includes at least one observation about the tool's phase management interface.
+4. **Observations present** — The content includes at least one observation about the tool's step management interface.
 
 ## Verdict
 

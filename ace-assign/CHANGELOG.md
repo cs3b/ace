@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-03-18
+
+### Changed
+- Renamed "phases" to "steps" throughout the assignment system: models, atoms, molecules, organisms, CLI commands, config, catalog, and all user-facing strings
+- Renamed file extension from `.ph.md` to `.st.md` for step files
+- Renamed catalog directory from `catalog/phases/` to `catalog/steps/` and files from `*.phase.yml` to `*.step.yml`
+- Renamed YAML keys: `sub-phases` → `sub-steps`, `sub_phases` → `sub_steps`
+
+### Fixed
+- `AssignmentExecutor.start` now reads `config["steps"]` matching what `AssignmentLauncher.write_job_file` writes (was reading `config["phases"]`, causing "No phases defined in config" error)
+
 ## [0.33.1] - 2026-03-18
 
 ### Changed
@@ -29,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.32.3] - 2026-03-15
 
 ### Fixed
-- Release phase catalog entry now references `wfi://release/publish` workflow
+- Release step catalog entry now references `wfi://release/publish` workflow
 - Review cycle release instructions in work-on-task and work-on-tasks presets now point to `ace-bundle wfi://release/publish`
 
 ### Changed
@@ -44,27 +55,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.32.1] - 2026-03-13
 
 ### Fixed
-- Rendered `verify-test-suite` and `verify-e2e` assignment phases now use assignment-safe phase templates instead of persisting the full broad audit workflow bodies.
-- Cleaned assignment overlay serialization so generated child phases no longer leak nested `Assignment-specific context` / `Task context` headers or malformed double bullets.
+- Rendered `verify-test-suite` and `verify-e2e` assignment steps now use assignment-safe step templates instead of persisting the full broad audit workflow bodies.
+- Cleaned assignment overlay serialization so generated child steps no longer leak nested `Assignment-specific context` / `Task context` headers or malformed double bullets.
 
 ### Technical
-- Preserved local assignment render metadata when canonical phase catalog entries merge with workflow-backed skill metadata.
-- Added regression coverage for phase-template rendering and structural assignment-overlay cleanup.
+- Preserved local assignment render metadata when canonical step catalog entries merge with workflow-backed skill metadata.
+- Added regression coverage for step-template rendering and structural assignment-overlay cleanup.
 
 ## [0.32.0] - 2026-03-13
 
 ### Changed
-- Switched generated assignment artifacts for public phases to use workflow-backed execution references instead of generated `skill:` phase contracts.
+- Switched generated assignment artifacts for public steps to use workflow-backed execution references instead of generated `skill:` step contracts.
 - Restored assignment-specific orchestration overlays for `work-on-task` and `work-on-tasks` while keeping canonical workflow bodies as the reusable execution source.
 
 ### Technical
-- Promoted `workflow` to a first-class parsed/runtime phase field across assignment status, queue scanning, and phase persistence.
-- Updated assign resolver, executor, presets, and regression fixtures to materialize public phases from canonical workflow bodies with provenance metadata.
+- Promoted `workflow` to a first-class parsed/runtime step field across assignment status, queue scanning, and step persistence.
+- Updated assign resolver, executor, presets, and regression fixtures to materialize public steps from canonical workflow bodies with provenance metadata.
 
 ## [0.31.5] - 2026-03-13
 
 ### Technical
-- Completed canonical assign skill catalog composition and workflow-backed phase metadata wiring for public assignments.
+- Completed canonical assign skill catalog composition and workflow-backed step metadata wiring for public assignments.
 
 ## [0.31.4] - 2026-03-13
 
@@ -82,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.31.2] - 2026-03-12
 
 ### Changed
-- Updated the prepare-workflow E2E fixtures to use the current top-level `phases:` schema for single-task and batch workflows.
+- Updated the prepare-workflow E2E fixtures to use the current top-level `steps:` schema for single-task and batch workflows.
 - Refreshed hierarchy E2E guidance to capture copied auto-completion reports and to use the current fixture layout under `fixtures/*/jobs/`.
 
 ## [0.31.1] - 2026-03-10
@@ -119,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Canonical skill resolution in `SkillAssignSourceResolver` with assign-capable filtering by `skill.kind` and `assign.source`
-- Phase catalog reordering in `AssignmentExecutor` to prioritize canonical assign-capable skills over compatibility bridge entries
+- Step catalog reordering in `AssignmentExecutor` to prioritize canonical assign-capable skills over compatibility bridge entries
 
 ## [0.28.0] - 2026-03-09
 
@@ -150,18 +161,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `fork-run` now marks scoped leaf fork roots as `in_progress` before launching, preventing pending-state drift that could trigger repeated self-delegation loops in batch child execution.
-- Scoped `status` output no longer shows fork execution guidance for already-completed fork phases.
+- Scoped `status` output no longer shows fork execution guidance for already-completed fork steps.
 
 ### Changed
 - Updated `assign/drive` workflow delegation rules to explicitly prevent calling `fork-run` again when already operating inside the same scoped fork boundary.
 
 ### Technical
-- Added regressions for leaf-root fork activation and scoped done-phase status guidance behavior.
+- Added regressions for leaf-root fork activation and scoped done-step status guidance behavior.
 
 ## [0.26.0] - 2026-03-08
 
 ### Added
-- Added batch scheduling metadata (`batch_parent`, `parallel`, `max_parallel`, `fork_retry_limit`) to phase parsing/model/status JSON so assignment drivers can orchestrate controlled fork fan-out.
+- Added batch scheduling metadata (`batch_parent`, `parallel`, `max_parallel`, `fork_retry_limit`) to step parsing/model/status JSON so assignment drivers can orchestrate controlled fork fan-out.
 - Added `--max-parallel` guidance to run-in-batches workflow/skill contracts with default parallel cap semantics.
 
 ### Fixed
@@ -183,7 +194,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added phrase-intent metadata (`intent.phrases`) for core compose targets: `work-on-task`, `verify-test-suite`, `reorganize-commits`, `push-to-remote`, `create-pr`, and `update-pr-desc`.
-- Added new compose-target phases `squash-changelog` and `rebase-with-main` with skill mappings to `as-docs-squash-changelog` and `as-git-rebase`.
+- Added new compose-target steps `squash-changelog` and `rebase-with-main` with skill mappings to `as-docs-squash-changelog` and `as-git-rebase`.
 
 ### Changed
 - Reworked `assign/create` workflow to support preset input, explicit step-list intent, freeform high-level intent, and job-file passthrough while preserving deterministic `ace-assign create FILE` runtime boundary.
@@ -191,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended composition hard-ordering guidance with `squash-before-rebase`, `rebase-before-push`, and `rebase-before-update-pr`.
 
 ### Technical
-- Added workflow-level guidance clarifying that skill-backed phase expansion stays runtime-owned via `assign.source` during `ace-assign create`.
+- Added workflow-level guidance clarifying that skill-backed step expansion stays runtime-owned via `assign.source` during `ace-assign create`.
 
 ## [0.24.0] - 2026-03-08
 
@@ -204,10 +215,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.23.1] - 2026-03-08
 
 ### Fixed
-- Updated assignment release guidance so `release*` child steps consistently route through `/as-release`, including suffixed review-cycle release phases.
+- Updated assignment release guidance so `release*` child steps consistently route through `/as-release`, including suffixed review-cycle release steps.
 
 ### Changed
-- Updated release phase, preset, and fixture instructions to describe coordinated multi-package releases and both package and root changelog updates.
+- Updated release step, preset, and fixture instructions to describe coordinated multi-package releases and both package and root changelog updates.
 
 ## [0.23.0] - 2026-03-08
 
@@ -228,11 +239,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.22.6] - 2026-03-08
 
 ### Fixed
-- Rebalanced active phase selection after `add --child` when injecting under the currently active phase so execution moves into the newly created child subtree.
+- Rebalanced active step selection after `add --child` when injecting under the currently active step so execution moves into the newly created child subtree.
 
 ### Technical
-- Added `PhaseWriter#mark_pending` to clear runtime-only phase state when demoting blocked active parents.
-- Added regression coverage for active-phase rebalance behavior in parent/child/grandchild injection flows and for the new pending-state writer helper.
+- Added `StepWriter#mark_pending` to clear runtime-only step state when demoting blocked active parents.
+- Added regression coverage for active-step rebalance behavior in parent/child/grandchild injection flows and for the new pending-state writer helper.
 - Hardened TS-ASSIGN-002 Goal 5 artifacts to require JSON status oracles for scoped and unscoped assertions, reducing false positives from report synthesis drift.
 
 ## [0.22.5] - 2026-03-07
@@ -251,7 +262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Normalized `ace-assign create` output path formatting so `Created:` and `Created from hidden spec:` use the same display-path strategy.
 
 ### Technical
-- Added regression coverage for relative create output formatting and legacy `phases/` source-config path preservation.
+- Added regression coverage for relative create output formatting and legacy `steps/` source-config path preservation.
 
 ## [0.22.0] - 2026-03-07
 
@@ -260,7 +271,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added create-command and assignment-executor coverage for hidden-spec path retention and provenance output.
 
 ### Changed
-- Assignment source-config archiving now preserves existing `jobs/` paths (including hidden specs in `.ace-local/assign/jobs/`) and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` instead of `phases/`.
+- Assignment source-config archiving now preserves existing `jobs/` paths (including hidden specs in `.ace-local/assign/jobs/`) and archives non-job source configs into `<task>/jobs/<assignment-id>-job.yml` instead of `steps/`.
 - `assign/create` workflow and `as-assign-create` skill contract now document the tracer path `work-on-task --taskref <id>` with hidden-spec rendering and deterministic `ace-assign create FILE` handoff.
 
 ## [0.21.3] - 2026-03-07
@@ -281,18 +292,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.21.0] - 2026-03-07
 
 ### Added
-- New `pre-commit-review` phase catalog entry for subtree task workflows, enabling native client review gate behavior before verification/release.
+- New `pre-commit-review` step catalog entry for subtree task workflows, enabling native client review gate behavior before verification/release.
 - New subtree review defaults in assign config: `pre_commit_review`, `pre_commit_review_provider`, `pre_commit_review_block`, and `native_review_clients`.
 
 ### Changed
-- `task/work` workflow sub-phase sequence now includes `pre-commit-review` between `work-on-task` and `verify-test`.
-- Child phase instruction generation now renders config-aware native review run/skip/block guidance for `pre-commit-review`.
+- `task/work` workflow sub-step sequence now includes `pre-commit-review` between `work-on-task` and `verify-test`.
+- Child step instruction generation now renders config-aware native review run/skip/block guidance for `pre-commit-review`.
 
 ## [0.20.1] - 2026-03-05
 
 ### Fixed
-- `fork-run` stall detection now targets the in-progress phase within the subtree (`in_progress_in_subtree`) instead of the global current phase, preventing `stall_reason` from being written to the wrong phase during parallel fork execution.
-- Stall-reason clearing on successful rerun now skips phases that never had a `stall_reason`, avoiding unnecessary file I/O on every subtree phase.
+- `fork-run` stall detection now targets the in-progress step within the subtree (`in_progress_in_subtree`) instead of the global current step, preventing `stall_reason` from being written to the wrong step during parallel fork execution.
+- Stall-reason clearing on successful rerun now skips steps that never had a `stall_reason`, avoiding unnecessary file I/O on every subtree step.
 
 ## [0.20.0] - 2026-03-05
 
@@ -314,13 +325,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiline `stall_reason` values in `ace-assign status` output now display with indented continuation lines for readable terminal formatting.
 
 ### Technical
-- Added `test_stall_reason_cleared_after_successful_rerun` regression test verifying `stall_reason` is cleared across all subtree phases after a successful rerun.
+- Added `test_stall_reason_cleared_after_successful_rerun` regression test verifying `stall_reason` is cleared across all subtree steps after a successful rerun.
 
 ## [0.19.1] - 2026-03-05
 
 ### Fixed
 - `read_last_message` now rescues `SystemCallError` to prevent I/O errors from masking the stall error message.
-- Clear stale `stall_reason` from all subtree phase files on successful fork-run completion, preventing misleading status after recovery.
+- Clear stale `stall_reason` from all subtree step files on successful fork-run completion, preventing misleading status after recovery.
 
 ### Technical
 - Added comment in `ForkSessionLauncher` documenting the blocking assumption that makes the Layer 1 check-then-write pattern safe from concurrent writes.
@@ -329,16 +340,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Surface forked agent last message on stall: `fork-run` now reads the agent's last message from `<cache_dir>/sessions/<fork_root>-last-message.md` and includes it in the stall error output.
-- `stall_reason` field added to Phase model and frontmatter: persisted when a fork stall is detected, visible via `ace-assign status`.
+- `stall_reason` field added to Step model and frontmatter: persisted when a fork stall is detected, visible via `ace-assign status`.
 - Two-layer last-message capture: `ForkSessionLauncher` writes `result[:text]` after session ends (Layer 1 for all providers); Codex gets timeout-resilient capture via `--output-last-message` (Layer 2).
 
 ## [0.18.2] - 2026-03-04
 
 ### Fixed
-- Enforced single-active subtree invariants in fork execution paths: `fork-run` and scoped `advance` now reject multiple in-progress phases in the same subtree and reuse existing active subtree work instead of activating sibling phases.
+- Enforced single-active subtree invariants in fork execution paths: `fork-run` and scoped `advance` now reject multiple in-progress steps in the same subtree and reuse existing active subtree work instead of activating sibling steps.
 
 ### Changed
-- QueueState now exposes `in_progress_phases` and `in_progress_in_subtree` helpers used by fork/scoped execution guards.
+- QueueState now exposes `in_progress_steps` and `in_progress_in_subtree` helpers used by fork/scoped execution guards.
 
 ## [0.18.1] - 2026-03-04
 
@@ -354,7 +365,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.17.3] - 2026-03-04
 
 ### Changed
-- Convert review cycles in assignment presets and prepare fixtures to forked cycle-parent phases with `sub_phases: [review-pr, apply-feedback, release]` for valid/fit/shine cycles
+- Convert review cycles in assignment presets and prepare fixtures to forked cycle-parent steps with `sub_steps: [review-pr, apply-feedback, release]` for valid/fit/shine cycles
 - Align compose recipes to the forked review-cycle model and set default `review_cycles` to 3
 - Update assign compose/prepare workflow instructions and examples to document forked review-cycle expansion semantics
 
@@ -387,9 +398,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.16.0] - 2026-03-04
 
 ### Added
-- New `onboard-base` catalog phase — loads base project context via `ace-bundle project-base`
-- New `task-load` catalog phase — loads task behavioral spec via `ace-bundle task://<taskref>`
-- Taskref placeholder substitution in catalog phase descriptions — `<taskref>` in phase descriptions is replaced with actual task reference during child instruction building
+- New `onboard-base` catalog step — loads base project context via `ace-bundle project-base`
+- New `task-load` catalog step — loads task behavioral spec via `ace-bundle task://<taskref>`
+- Taskref placeholder substitution in catalog step descriptions — `<taskref>` in step descriptions is replaced with actual task reference during child instruction building
 
 ### Changed
 - Default assignment presets updated to use ace-task
@@ -403,17 +414,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.15.1] - 2026-03-01
 
 ### Added
-- Fork-run crash recovery protocol in drive workflow — detection, commit partial work, progress report, inject recovery phases, re-fork pattern for partial completion scenarios
+- Fork-run crash recovery protocol in drive workflow — detection, commit partial work, progress report, inject recovery steps, re-fork pattern for partial completion scenarios
 
 ## [0.15.0] - 2026-02-28
 
 ### Added
 - Add `verify-test-suite` step to `work-on-task` preset between `mark-task-done` and `verify-e2e` with profiling and performance budget enforcement
 - Add `verify-test-suite` step (number 012) to `work-on-tasks` preset between batch-parent and `verify-e2e`
-- Enrich `verify-test-suite` phase catalog with structured steps: `run-package-tests`, `check-performance-budgets`, `fix-violations`, `run-suite`
-- Add performance budget thresholds to phase definition: atoms <50ms, molecules <100ms, integration <1s, full package <30s
+- Enrich `verify-test-suite` step catalog with structured steps: `run-package-tests`, `check-performance-budgets`, `fix-violations`, `run-suite`
+- Add performance budget thresholds to step definition: atoms <50ms, molecules <100ms, integration <1s, full package <30s
 - Move `verify-test-suite` from Optional to Core in compose workflow for "Implement + PR" and "Batch tasks" intents
-- Add `verify-test-suite` inclusion guidance note to compose workflow Phase Selection Guidelines
+- Add `verify-test-suite` inclusion guidance note to compose workflow Step Selection Guidelines
 
 ### Changed
 - Strengthen `verify-test-suite` composition rule from `recommended` to `required` when assignment includes `work-on-task` or `fix-bug`
@@ -421,14 +432,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.14.0] - 2026-02-28
 
 ### Added
-- Add `verify-e2e` phase to catalog: E2E coverage review and targeted scenario execution for modified packages
-- Add `update-docs` phase to catalog: public-facing documentation updates when CLI contracts or public APIs change
+- Add `verify-e2e` step to catalog: E2E coverage review and targeted scenario execution for modified packages
+- Add `update-docs` step to catalog: public-facing documentation updates when CLI contracts or public APIs change
 - Add `verify-e2e` and `update-docs` steps to `work-on-task` preset (between `mark-task-done` and `release-minor`, and between `release-minor` and `create-pr`)
 - Add batch-level `verify-e2e` (step 015) and `update-docs` (step 025) to `work-on-tasks` preset
 - Add ordering rules to `composition-rules.yml`: `e2e-before-release`, `update-docs-after-release`, `update-docs-before-pr`, `e2e-after-verify`
 - Add conditional rule to suggest `verify-e2e` and `update-docs` when assignment touches CLI commands or public API
 - Add `e2e-review-run-pair` and `docs-update-validate-pair` to composition pairs
-- Update `compose.wf.md` Phase Selection Guidelines table to include `verify-e2e` and `update-docs` in all relevant workflow intents with skip guidance
+- Update `compose.wf.md` Step Selection Guidelines table to include `verify-e2e` and `update-docs` in all relevant workflow intents with skip guidance
 
 ## [0.13.4] - 2026-02-26
 
@@ -455,16 +466,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Short-circuit stdin read in `finish` when `--report` file content is already present, preventing unnecessary I/O or blocking
 - Narrow `rescue` in `read_stdin_if_piped` to `IOError, Errno::EBADF` instead of broad `StandardError`
-- Validate `fork_root` existence in `find_target_phase_for_start` consistently regardless of `phase_number` presence
+- Validate `fork_root` existence in `find_target_step_for_start` consistently regardless of `step_number` presence
 
 ### Added
-- Integration test for `finish` auto-advance and `start` conflict detection across sequential phases
+- Integration test for `finish` auto-advance and `start` conflict detection across sequential steps
 - Test for `--report` file precedence over piped stdin when both are present
 
 ## [0.13.1] - 2026-02-26
 
 ### Fixed
-- Raise `PhaseNotFoundError` in `start_phase` and `finish_phase` when `--assignment <id@root>` specifies a non-existent subtree root, preventing silent fallback to the global queue
+- Raise `StepNotFoundError` in `start_step` and `finish_step` when `--assignment <id@root>` specifies a non-existent subtree root, preventing silent fallback to the global queue
 - Use `ConfigNotFoundError` (exit 3) in `advance()` for missing report files, consistent with `finish` command behavior
 
 ### Added
@@ -473,11 +484,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.13.0] - 2026-02-26
 
 ### Added
-- Add `start` command for explicit phase lifecycle control: `ace-assign start [STEP]`
+- Add `start` command for explicit step lifecycle control: `ace-assign start [STEP]`
 - Add `finish` command replacing `report`: `ace-assign finish [STEP] --report <file>` or via piped stdin
 - Support piped stdin as report source in `finish`, eliminating mandatory temp-file creation
-- Enforce strict `start` conflict detection: fails when another phase is already `in_progress`
-- Add `start_phase` and `finish_phase` APIs to assignment executor for programmatic lifecycle control
+- Enforce strict `start` conflict detection: fails when another step is already `in_progress`
+- Add `start_step` and `finish_step` APIs to assignment executor for programmatic lifecycle control
 
 ### Changed
 - Replace `ace-assign report` with `ace-assign finish --report <file>` across all docs and workflows
@@ -495,12 +506,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.23] - 2026-02-26
 
 ### Fixed
-- Anchor FORK column detection regex to CHILDREN pattern in `assign/drive` workflow, preventing false matches on phase names containing 'yes'
+- Anchor FORK column detection regex to CHILDREN pattern in `assign/drive` workflow, preventing false matches on step names containing 'yes'
 
 ## [0.12.22] - 2026-02-26
 
 ### Added
-- Add explicit FORK column to status output showing "yes" for phases with children, making delegation signal unmissable
+- Add explicit FORK column to status output showing "yes" for steps with children, making delegation signal unmissable
 - Introduce adaptive recovery for failed subtrees with retry/fail-children strategies
 - Introduce fork PID telemetry and scoped status filtering for subprocess tracking
 
@@ -517,7 +528,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.21] - 2026-02-25
 
 ### Changed
-- Remove runtime assignment context coupling to `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`; assignment targeting now relies on explicit `--assignment <id>` and scoped `--assignment <id>@<phase>` usage.
+- Remove runtime assignment context coupling to `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`; assignment targeting now relies on explicit `--assignment <id>` and scoped `--assignment <id>@<step>` usage.
 - Update `assign/drive` workflow and fork-context guide to use explicit assignment flags for subprocess delegation.
 
 ### Fixed
@@ -526,12 +537,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.20] - 2026-02-25
 
 ### Changed
-- Update generated `plan-task` phase action instructions to require planning against behavioral spec sections, cover relevant operating modes, and report missing spec details in a `Behavioral Gaps` section
+- Update generated `plan-task` step action instructions to require planning against behavioral spec sections, cover relevant operating modes, and report missing spec details in a `Behavioral Gaps` section
 
 ## [0.12.19] - 2026-02-24
 
 ### Fixed
-- Apply assignment scope (`<id>@<phase>`) during report execution by setting `ACE_ASSIGN_FORK_ROOT` for the report command, so child-phase completions resolve in the correct subtree.
+- Apply assignment scope (`<id>@<step>`) during report execution by setting `ACE_ASSIGN_FORK_ROOT` for the report command, so child-step completions resolve in the correct subtree.
 
 ### Technical
 - Harden TS-ASSIGN-002 hierarchy E2E runner/verifier instructions for scoped completion commands and scoped subtree status assertions.
@@ -550,7 +561,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Prevent fork subtree recursion by auto-scoping `status` command to `ACE_ASSIGN_FORK_ROOT` when set
-- Mark first workable child phase as `in_progress` before launching forked session in `fork-run`
+- Mark first workable child step as `in_progress` before launching forked session in `fork-run`
 
 ## [0.12.15] - 2026-02-22
 
@@ -560,14 +571,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.14] - 2026-02-22
 
 ### Added
-- Subtree guard step in drive workflow — driver reviews all fork report files before continuing to next phase
-- Report review instruction in split-subtree-root phase template for fork context
+- Subtree guard step in drive workflow — driver reviews all fork report files before continuing to next step
+- Report review instruction in split-subtree-root step template for fork context
 
 ## [0.12.13] - 2026-02-22
 
 ### Added
 - Background execution guidance for fork-run in drive workflow (10-30 min timeout handling)
-- Timeout note in split-subtree-root phase template for environments with bash limits
+- Timeout note in split-subtree-root step template for environments with bash limits
 
 ## [0.12.11] - 2026-02-22
 
@@ -577,7 +588,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.10] - 2026-02-21
 
 ### Technical
-- Stabilize `TS-ASSIGN-004` by replacing live `fork-run` invocation with deterministic scoped `status --assignment <id>@<phase>` assertions
+- Stabilize `TS-ASSIGN-004` by replacing live `fork-run` invocation with deterministic scoped `status --assignment <id>@<step>` assertions
 - Rewrite `TS-ASSIGN-006` to deterministic preset-expansion verification using `Ace::Assign::Atoms::PresetExpander` (no chat-skill invocation dependency)
 - Add prepare-workflow fixture presets (`work-on-task.yml`, `work-on-tasks.yml`) for reproducible E2E generation checks
 
@@ -585,20 +596,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Migrate skill name references to colon-free convention (`ace_domain_action` format) for non-Claude Code agent compatibility
-- Update catalog phases and presets with new skill name format
+- Update catalog steps and presets with new skill name format
 - Update workflow instructions with new skill invocation patterns
 
 ## [0.12.8] - 2026-02-21
 
 ### Added
-- Verification instructions in `mark-task-done` phase requiring status confirmation after `ace-taskflow task done`
+- Verification instructions in `mark-task-done` step requiring status confirmation after `ace-taskflow task done`
 - Subtree completion section in drive workflow requiring task status verification before reporting complete
 
 ## [0.12.7] - 2026-02-21
 
 ### Fixed
 - Add `CACHE_BASE` env var support to `cache_dir` so E2E sandboxes resolve the correct cache path
-- Graceful return in `advance()` when fork subtree is exhausted (prevents "No phase currently in progress" error)
+- Graceful return in `advance()` when fork subtree is exhausted (prevents "No step currently in progress" error)
 - Nil guard in `report` command when `advance()` returns `completed: nil` after subtree exhaustion
 
 ## [0.12.6] - 2026-02-21
@@ -606,7 +617,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical
 - Add E2E tests for prepare workflow (from preset and from informal instructions)
 - Fix `ASSIGNMENT_DIR` lookup in injection/renumbering E2E tests to use dynamic directory discovery
-- Reorganize TS-ASSIGN-003b fixtures: replace flat `job.yaml` with structured `phases/` directory
+- Reorganize TS-ASSIGN-003b fixtures: replace flat `job.yaml` with structured `steps/` directory
 
 ## [0.12.5] - 2026-02-20
 
@@ -622,13 +633,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.3] - 2026-02-19
 
 ### Changed
-- Added clarifying comments for `skill: null` and `context.default: null` in reflect-and-refactor phase
+- Added clarifying comments for `skill: null` and `context.default: null` in reflect-and-refactor step
 
 ## [0.12.2] - 2026-02-19
 
 ### Changed
 - Clarified `reflect-after-verify` ordering note to distinguish baseline verify from post-refactor re-verify
-- Consolidated duplicate conditional suggestions for `work-on-task` into single entry with per-phase strength overrides
+- Consolidated duplicate conditional suggestions for `work-on-task` into single entry with per-step strength overrides
 
 ## [0.12.1] - 2026-02-19
 
@@ -639,10 +650,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.0] - 2026-02-19
 
 ### Added
-- New `reflect-and-refactor` phase in catalog — analyzes implementation against ATOM principles and executes targeted refactoring before PR creation
+- New `reflect-and-refactor` step in catalog — analyzes implementation against ATOM principles and executes targeted refactoring before PR creation
 - Composition rules for reflect-and-refactor: ordering (after verify, before mark-done/release/retro), pairs (verify cycle, fix cycle, replan cycle), and conditional suggestion
-- `create-retro` phase now consumes `findings-report` from reflect-and-refactor as recommended prerequisite
-- `implement-with-pr` recipe updated to include optional reflect-and-refactor phase after work-on-task
+- `create-retro` step now consumes `findings-report` from reflect-and-refactor as recommended prerequisite
+- `implement-with-pr` recipe updated to include optional reflect-and-refactor step after work-on-task
 
 ## [0.11.18] - 2026-02-19
 
@@ -653,43 +664,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `assignment_state` now checks `completed` before `failed` — assignments where all phases are done/failed correctly report `:completed` instead of `:failed`
+- `assignment_state` now checks `completed` before `failed` — assignments where all steps are done/failed correctly report `:completed` instead of `:failed`
 
 ### Added
 
-- `recently_active?` method on `QueueState` to detect stale in-progress phases (threshold: 1 hour)
-- New `:stalled` assignment state for in-progress phases with no recent activity
+- `recently_active?` method on `QueueState` to detect stale in-progress steps (threshold: 1 hour)
+- New `:stalled` assignment state for in-progress steps with no recent activity
 
 ## [0.11.16] - 2026-02-17
 
 ### Added
 
-- `current_in_subtree` method on `QueueState` to find in-progress phase within a subtree
+- `current_in_subtree` method on `QueueState` to find in-progress step within a subtree
 
 ### Fixed
 
-- Fork root executor now checks for existing in-progress phase in subtree before advancing to next workable phase
+- Fork root executor now checks for existing in-progress step in subtree before advancing to next workable step
 
 ## [0.11.15] - 2026-02-17
 
 ### Added
-- New catalog phase definition `split-subtree-root` for split parent/fork-root orchestration instructions (default template in `.ace-defaults/assign/catalog/phases/`)
+- New catalog step definition `split-subtree-root` for split parent/fork-root orchestration instructions (default template in `.ace-defaults/assign/catalog/steps/`)
 
 ### Changed
-- Split parent phases with `sub_phases` now materialize as orchestration-only subtree roots:
+- Split parent steps with `sub_steps` now materialize as orchestration-only subtree roots:
   - parent `skill` is removed to avoid duplicate execution semantics
   - parent keeps `source_skill` metadata for traceability
   - parent instructions are rendered from catalog template (project-overridable)
-- Phase catalog resolution now merges project overrides with default catalog by phase name, so projects can override a single phase definition without replacing the entire catalog
+- Step catalog resolution now merges project overrides with default catalog by step name, so projects can override a single step definition without replacing the entire catalog
 
 ### Fixed
-- Fork root parent phases no longer instruct direct `work-on-task` execution and now clearly drive subtree delegation/execution (`fork-run` + `assign-drive`) through child phases
+- Fork root parent steps no longer instruct direct `work-on-task` execution and now clearly drive subtree delegation/execution (`fork-run` + `assign-drive`) through child steps
 
 ## [0.11.14] - 2026-02-17
 
 ### Fixed
 - Scoped status rendering for nested roots (for example `--assignment <id>@010.01`) now prints the subtree hierarchy correctly instead of collapsing to an empty queue section
-- Runtime-expanded child phases now use explicit `taskref` metadata (when present) for deterministic task context, and preserve it in child phase frontmatter
+- Runtime-expanded child steps now use explicit `taskref` metadata (when present) for deterministic task context, and preserve it in child step frontmatter
 - Fork session launcher now loads `ace/llm` so `fork-run` handles provider errors without crashing on uninitialized LLM error constants
 
 ### Changed
@@ -698,8 +709,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.11.13] - 2026-02-17
 
 ### Fixed
-- Scoped status (`--assignment <id>@<phase>`) now selects the actionable phase within the subtree instead of always reporting the scope root as current
-- Runtime sub-phase expansion now generates step-specific action instructions per child phase and keeps parent goals as a verification checklist (instead of copy-pasting orchestration text into every child)
+- Scoped status (`--assignment <id>@<step>`) now selects the actionable step within the subtree instead of always reporting the scope root as current
+- Runtime sub-step expansion now generates step-specific action instructions per child step and keeps parent goals as a verification checklist (instead of copy-pasting orchestration text into every child)
 
 ## [0.11.12] - 2026-02-17
 
@@ -707,51 +718,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - E2E regression scenario `TS-ASSIGN-005-no-skip-policy` to enforce hard no-skip drive policy and keep `ace:assign-drive` skill thin
 
 ### Changed
-- `drive-assignment` workflow now enforces hard no-skip execution for planned phases and removes skip-assessment behavior
+- `drive-assignment` workflow now enforces hard no-skip execution for planned steps and removes skip-assessment behavior
 - Added required attempt-first failure evidence (command + exact error) and post-report/fail status transition verification in drive workflow
 
 ## [0.11.11] - 2026-02-17
 
 ### Changed
-- `drive-assignment` workflow now auto-delegates detected fork-enabled subtrees via `ace-assign fork-run --assignment <id>@<root>` before inline phase execution
+- `drive-assignment` workflow now auto-delegates detected fork-enabled subtrees via `ace-assign fork-run --assignment <id>@<root>` before inline step execution
 - Fork context guide now documents the runtime delegation path where parent drive sessions detect subtree roots and delegate scoped execution with `fork-run`
 
 ## [0.11.10] - 2026-02-17
 
 ### Changed
-- Use `Atoms::NumberGenerator.subtask` for sub-phase numbering in runtime expansion to keep numbering logic centralized
+- Use `Atoms::NumberGenerator.subtask` for sub-step numbering in runtime expansion to keep numbering logic centralized
 - Tree formatter state labels now explicitly include `pending` and `in_progress`
 
 ### Fixed
-- Added coverage for fork-scoped advancement when global current phase is outside scoped subtree
+- Added coverage for fork-scoped advancement when global current step is outside scoped subtree
 - Added stable tests for CLI provider env propagation and query-interface sandbox propagation
 
 ## [0.11.9] - 2026-02-17
 
 ### Added
-- Regression coverage for fork-scoped advancement when global current phase is outside the scoped subtree
+- Regression coverage for fork-scoped advancement when global current step is outside the scoped subtree
 
 ### Changed
 - `ace-assign status` now prints explicit `Current Status: <status>` for easier machine parsing and E2E assertions
 
 ### Fixed
-- Fork-scoped report advancement now selects and completes the next in-subtree phase instead of completing an out-of-scope global current phase
+- Fork-scoped report advancement now selects and completes the next in-subtree step instead of completing an out-of-scope global current step
 - E2E assertions for `parent` frontmatter now accept both single-quoted and double-quoted YAML scalars to avoid formatting-only false negatives
 
 ## [0.11.8] - 2026-02-17
 
 ### Added
-- Shared assignment target parser for CLI commands with scoped syntax support: `--assignment <id>@<phase>`
+- Shared assignment target parser for CLI commands with scoped syntax support: `--assignment <id>@<step>`
 - New command tests covering assignment target parsing and scoped subtree execution behavior
 - New E2E scenario scaffold for fork subtree scope isolation verification (`TS-ASSIGN-004`)
 
 ### Changed
 - Assignment-targeting commands (`status`, `report`, `fail`, `add`, `retry`, `fork-run`) now use a shared target resolver
-- `ace-assign fork-run` accepts subtree root from scoped assignment target (`<id>@<phase>`) and validates conflicts with `--root`
-- Scoped status output (`--assignment <id>@<phase>`) now renders only the selected node subtree and uses the scope root as displayed current phase
+- `ace-assign fork-run` accepts subtree root from scoped assignment target (`<id>@<step>`) and validates conflicts with `--root`
+- Scoped status output (`--assignment <id>@<step>`) now renders only the selected node subtree and uses the scope root as displayed current step
 
 ### Fixed
-- Removed global current-phase coupling in `fork-run` so subtree execution can start from any explicitly scoped root node
+- Removed global current-step coupling in `fork-run` so subtree execution can start from any explicitly scoped root node
 
 ## [0.11.7] - 2026-02-17
 
@@ -774,7 +785,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `ace-assign fork-run` command to initialize subtree-scoped fork execution using `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`
-- Subtree scope helpers in queue state (`in_subtree?`, `subtree_phases`, `subtree_complete?`, `next_workable_in_subtree`, `nearest_fork_ancestor`)
+- Subtree scope helpers in queue state (`in_subtree?`, `subtree_steps`, `subtree_complete?`, `next_workable_in_subtree`, `nearest_fork_ancestor`)
 
 ### Changed
 - Status output now detects forked ancestor scope and guides operators to run `fork-run` for whole-subtree delegation
@@ -782,16 +793,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fork context guide and workflow docs updated for explicit parent-only fork semantics and subtree execution model
 
 ### Fixed
-- Split-subphase expansion no longer writes `context: fork` on child phases (`onboard`, `plan-task`, `work-on-task`) when parent is forked
-- Queue advancement in fork scope now stays inside `ACE_ASSIGN_FORK_ROOT` subtree and does not leak into sibling phases
+- Split-substep expansion no longer writes `context: fork` on child steps (`onboard`, `plan-task`, `work-on-task`) when parent is forked
+- Queue advancement in fork scope now stays inside `ACE_ASSIGN_FORK_ROOT` subtree and does not leak into sibling steps
 
 ## [0.11.5] - 2026-02-17
 
 ### Fixed
-- Ensure runtime-expanded sub-phases are concrete and executable by materializing catalog metadata (skill, phase focus) instead of generic placeholder instructions
-- Preserve task context during sub-phase expansion so child phases receive parent task instructions for deterministic parameter extraction
-- Start assignments on the first workable leaf phase (not parent container phases), preventing blocked progression in parent-child trees
-- Use a single fork entrypoint for forked sub-phase subtrees (first child), avoiding nested fork-per-child behavior
+- Ensure runtime-expanded sub-steps are concrete and executable by materializing catalog metadata (skill, step focus) instead of generic placeholder instructions
+- Preserve task context during sub-step expansion so child steps receive parent task instructions for deterministic parameter extraction
+- Start assignments on the first workable leaf step (not parent container steps), preventing blocked progression in parent-child trees
+- Use a single fork entrypoint for forked sub-step subtrees (first child), avoiding nested fork-per-child behavior
 
 ## [0.11.4] - 2026-02-17
 
@@ -811,8 +822,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `workflow_source_paths`: `ace-taskflow/handbook/workflow-instructions`, `ace-assign/handbook/workflow-instructions`
 
 ### Changed
-- `AssignmentExecutor.start` now enriches phases with skill-declared workflow `assign.sub-phases` before expansion, enabling deterministic runtime sub-phase materialization without compose-specific wiring
-- `compose-assignment` workflow is now catalog-only and no longer documents source/frontmatter-driven phase composition
+- `AssignmentExecutor.start` now enriches steps with skill-declared workflow `assign.sub-steps` before expansion, enabling deterministic runtime sub-step materialization without compose-specific wiring
+- `compose-assignment` workflow is now catalog-only and no longer documents source/frontmatter-driven step composition
 
 ## [0.11.2] - 2026-02-16
 
@@ -827,12 +838,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.11.0] - 2026-02-16
 
 ### Added
-- JIT plan-task phase in implement-with-pr and implement-simple recipes (optional, between onboard and work-on-task)
+- JIT plan-task step in implement-with-pr and implement-simple recipes (optional, between onboard and work-on-task)
 - Composition rules: `onboard-before-plan` and `plan-before-implementation` ordering
 - Conditional suggestion: recommend plan-task when work-on-task is included
 
 ### Changed
-- plan-task phase catalog entry: produces `[implementation-plan]` only (removed `task-spec`), consumes `[project-context, task-spec]`
+- plan-task step catalog entry: produces `[implementation-plan]` only (removed `task-spec`), consumes `[project-context, task-spec]`
 
 ## [0.10.2] - 2026-02-16
 
@@ -848,7 +859,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Preset progression**: `preset_progression` mapping in composition rules (cycle 1→`code-valid`, 2→`code-fit`, 3→`code-shine`)
 
 ### Changed
-- Review cycle presets in `work-on-task.yml` and `work-on-tasks.yml` now use phase-specific presets instead of `code-deep`
+- Review cycle presets in `work-on-task.yml` and `work-on-tasks.yml` now use step-specific presets instead of `code-deep`
 - Updated `implement-with-pr.recipe.yml` to reference `preset_progression` from composition rules
 - Updated `compose-assignment.wf.md` with preset progression documentation and examples
 
@@ -874,14 +885,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Declarative assignment frontmatter: `assign:` block in `.s.md` and `.wf.md` files declares assignment intent (goal, variables, hints, sub-phases, context, parent)
+- Declarative assignment frontmatter: `assign:` block in `.s.md` and `.wf.md` files declares assignment intent (goal, variables, hints, sub-steps, context, parent)
 - `AssignFrontmatterParser` atom for extracting and validating `assign:` frontmatter blocks
 - `TreeFormatter` atom for rendering assignment hierarchy as indented tree with Unicode connectors
 - Parent-child assignment linking via `parent` field in Assignment model
 - `ace-assign list --tree` option for hierarchical assignment view
-- Sub-phase fork enforcement in executor: phases with sub-phases create batch parent in fork context
+- Sub-step fork enforcement in executor: steps with sub-steps create batch parent in fork context
 - Compose workflow integration: step 0 reads `assign:` frontmatter as structured input
-- `documentation.recipe.yml` for documentation workflows with research phase
+- `documentation.recipe.yml` for documentation workflows with research step
 - `release-only.recipe.yml` for version bump workflows without code changes
 - `work-on-docs.yml` preset exposing documentation workflow
 - `release-only.yml` preset exposing release-only workflow
@@ -896,12 +907,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New `mark-task-done` phase for marking tasks as done in ace-taskflow after implementation
+- New `mark-task-done` step for marking tasks as done in ace-taskflow after implementation
 - Composition rule to order `mark-task-done` after `work-on-task`
 - Conditional rule suggesting `mark-task-done` when assignment includes `work-on-task`
 - `mark-task-done` step in `work-on-task` preset (runs `ace-taskflow task done`)
 - Mark-done instruction in `work-on-tasks` child template for per-task completion
-- `mark-task-done` phase in `implement-with-pr`, `implement-simple`, and `fix-and-review` recipes
+- `mark-task-done` step in `implement-with-pr`, `implement-simple`, and `fix-and-review` recipes
 
 ## [0.8.2] - 2026-02-13
 
@@ -941,24 +952,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Misplaced doc block: `check_pair_completeness` documentation was above `check_conditional_rule`
 - Duplicate examples in `prepare-assignment.wf.md` now accurately reflect renamed `work-on-task` preset
-- `CatalogLoader.parse_phase_file` now warns on stderr when a phase YAML file fails to parse (was silently returning nil)
+- `CatalogLoader.parse_step_file` now warns on stderr when a step YAML file fails to parse (was silently returning nil)
 - `compose-assignment.wf.md` uses Read/Glob tool references instead of `cat`/`ls` per project conventions
 
 ### Changed
 
-- Added inline documentation for prefix matching constraints in `find_phase_index`
+- Added inline documentation for prefix matching constraints in `find_step_index`
 - Added comment clarifying that mixed "and"/"or" conjunctions are not supported in conditional rules
 
 ## [0.7.4] - 2026-02-13
 
 ### Added
 
-- New phase catalog entries: `push-to-remote`, `release`, `reorganize-commits`
+- New step catalog entries: `push-to-remote`, `release`, `reorganize-commits`
 
 ### Fixed
 
-- Missing `skill: ace:apply-feedback` in work-on-tasks preset apply-feedback phases
-- Ordering rules now match suffixed phase names via prefix matching (e.g., `release` matches `release-minor`, `release-patch-1`)
+- Missing `skill: ace:apply-feedback` in work-on-tasks preset apply-feedback steps
+- Ordering rules now match suffixed step names via prefix matching (e.g., `release` matches `release-minor`, `release-patch-1`)
 - Conditional composition rules with "and" conjunction now correctly require all conditions (was using `any?` instead of `all?`)
 
 ### Changed
@@ -970,29 +981,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Phase catalog system**: Registry of available phase types with prerequisites, produces/consumes, context defaults, and skip conditions (14 phase definitions)
-- **Composition rules**: Declarative ordering constraints, phase pairs, and conditional suggestions for intelligent assignment composition
+- **Step catalog system**: Registry of available step types with prerequisites, produces/consumes, context defaults, and skip conditions (14 step definitions)
+- **Composition rules**: Declarative ordering constraints, step pairs, and conditional suggestions for intelligent assignment composition
 - **Recipe system**: Flexible example patterns replacing rigid presets (4 recipes: implement-with-pr, implement-simple, batch-tasks, fix-and-review)
-- **Compose-assignment workflow**: LLM-driven assignment composition from phase catalog and user intent
-- `CatalogLoader` atom for loading and querying phase catalog YAML files
-- `CompositionRules` atom for loading, validating ordering, and suggesting phase additions
-- Conditional composition rule logic in `suggest_additions` for context-dependent phase suggestions
+- **Compose-assignment workflow**: LLM-driven assignment composition from step catalog and user intent
+- `CatalogLoader` atom for loading and querying step catalog YAML files
+- `CompositionRules` atom for loading, validating ordering, and suggesting step additions
+- Conditional composition rule logic in `suggest_additions` for context-dependent step suggestions
 
 ### Changed
 
-- Drive-assignment workflow now includes phase decision points for skip assessment and adaptation
+- Drive-assignment workflow now includes step decision points for skip assessment and adaptation
 - Start-assignment workflow updated to offer compose as alternative path
 
 ### Fixed
 
-- `apply-feedback.phase.yml` now correctly references `ace:apply-feedback` skill (was null)
+- `apply-feedback.step.yml` now correctly references `ace:apply-feedback` skill (was null)
 
 ## [0.7.2] - 2026-02-12
 
 ### Changed
 
 - E2E tests renamed from COWORKER to ASSIGN terminology
-- All test references updated: coworker → assign, session → assignment, step → phase, jobs → phases
+- All test references updated: coworker → assign, session → assignment, step → step, jobs → steps
 
 ## [0.7.1] - 2026-02-11
 
@@ -1018,8 +1029,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package renamed from ace-coworker to ace-assign
 - Internal "session" concept renamed to "assignment"
-- Internal "step" concept renamed to "phase"
-- Phase file extension changed from .j.md to .ph.md
+- Internal "step" concept renamed to "step"
+- Step file extension changed from .j.md to .st.md
 - Cache directory changed from .cache/ace-coworker/ to .cache/ace-assign/
 - Skills renamed from /ace:coworker-* to /ace:assign-*
 - New combined /ace:assign-start skill added (prepare + create in one step)
@@ -1035,7 +1046,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `prepare` CLI now uses Base36 timestamps (e.g., `8ouxjt`) instead of datetime format
-- `prepare` CLI now outputs phase files to task's `phases/` folder (e.g., `.ace-taskflow/v.0.9.0/tasks/253-xxx/phases/`) when task refs provided
+- `prepare` CLI now outputs step files to task's `steps/` folder (e.g., `.ace-taskflow/v.0.9.0/tasks/253-xxx/steps/`) when task refs provided
 - Correctly extracts parent task ID from subtask refs (e.g., `253.01` -> task folder `253-xxx`)
 
 ## [0.5.1] - 2026-01-31
@@ -1048,11 +1059,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Multi-task phase preparation**: New `work-on-tasks` preset enables batch processing of multiple tasks in a single job
+- **Multi-task step preparation**: New `work-on-tasks` preset enables batch processing of multiple tasks in a single job
 - `PresetExpander` atom for expanding preset templates with `expansion:` directives
 - Support for `batch-parent` and `foreach` expansion directives in presets
 - Array parameter parsing supporting comma-separated (`148,149,150`), range (`148-152`), and pattern (`240.*`) syntax
-- Pre-assigned phase numbers in job.yaml are now preserved by AssignmentExecutor
+- Pre-assigned step numbers in job.yaml are now preserved by AssignmentExecutor
 - Updated prepare-assignment workflow documentation with multi-task examples
 
 ### Fixed
@@ -1092,58 +1103,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Hierarchical phase structure**: Phases can now have nested sub-phases (010.01, 010.02) with parent-child relationships
-- New `PhaseNumbering` atom for parsing and generating hierarchical phase numbers
-- `--after` option for `add` command: inject phases after specific phase numbers (`ace-assign add verify --after 010`)
-- `--child` option for `add` command: create nested child phases (`ace-assign add verify --after 010 --child`)
+- **Hierarchical step structure**: Steps can now have nested sub-steps (010.01, 010.02) with parent-child relationships
+- New `StepNumbering` atom for parsing and generating hierarchical step numbers
+- `--after` option for `add` command: inject steps after specific step numbers (`ace-assign add verify --after 010`)
+- `--child` option for `add` command: create nested child steps (`ace-assign add verify --after 010 --child`)
 - `--flat` option for `status` command: show flat list without hierarchy indentation
-- Automatic phase renumbering when inserting phases at occupied positions
+- Automatic step renumbering when inserting steps at occupied positions
 - `children_of`, `descendants_of`, `has_incomplete_children?` methods on QueueState for hierarchy traversal
 - `hierarchical` method on QueueState for tree-structured display
-- Parent number extraction from filenames in `PhaseFileParser.parse_filename`
-- Audit trail metadata: `added_by`, `parent`, `renumbered_from`, `renumbered_at` fields for tracking phase history
+- Parent number extraction from filenames in `StepFileParser.parse_filename`
+- Audit trail metadata: `added_by`, `parent`, `renumbered_from`, `renumbered_at` fields for tracking step history
 - O(1) child lookups via parent index in QueueState for improved performance
 
 ### Changed
 
 - Auto-complete parents now handles multi-level hierarchies in a single pass (grandparents complete when parents complete)
 - Auto-complete now includes in_progress parents (not just pending) when all children finish
-- Status command now shows hierarchical structure when nested phases exist
-- Advance operation respects hierarchy: parent phases wait for all children to complete
+- Status command now shows hierarchical structure when nested steps exist
+- Advance operation respects hierarchy: parent steps wait for all children to complete
 
 ### Fixed
 
-- Cascade renumbering to descendants: when a phase is shifted, all its children are also renamed to prevent orphaning
+- Cascade renumbering to descendants: when a step is shifted, all its children are also renamed to prevent orphaning
 - Enforce hierarchy in `advance`: prevent marking parent as done while children are incomplete
-- Validate `--after` phase existence before injection (raises PhaseNotFoundError if not found)
+- Validate `--after` step existence before injection (raises StepNotFoundError if not found)
 - Replace fragile `instance_variable_set` mutation with local tracking Set in auto_complete_parents
-- Add safety guard to prevent infinite loops in auto-completion (max iterations = phase count)
-- Re-scan state after auto_complete_parents to ensure find_next_phase uses fresh data
-- Use `next_workable` instead of `next_pending` in find_next_phase to respect hierarchy
+- Add safety guard to prevent infinite loops in auto-completion (max iterations = step count)
+- Re-scan state after auto_complete_parents to ensure find_next_step uses fresh data
+- Use `next_workable` instead of `next_pending` in find_next_step to respect hierarchy
 - QueueState now supports `top_level`, `all_numbers`, and `next_workable` methods
 
 ## [0.3.1] - 2026-01-30
 
 ### Fixed
 
-- Phase files already in a `phases/` directory are kept in place instead of being moved to a nested path when creating assignments
+- Step files already in a `steps/` directory are kept in place instead of being moved to a nested path when creating assignments
 
 ## [0.3.0] - 2026-01-30
 
 ### Added
 
-- **Fork context support for phases**: Enable phase files to declare `context: fork` in frontmatter to run phases in isolated agent contexts via Claude Code's Task tool
-- New `context` field in Phase model with `fork?` predicate method
+- **Fork context support for steps**: Enable step files to declare `context: fork` in frontmatter to run steps in isolated agent contexts via Claude Code's Task tool
+- New `context` field in Step model with `fork?` predicate method
 - Context validation rejecting invalid values with helpful error messages (valid values: `fork`)
 - `handbook/guides/fork-context.g.md` documentation for the fork context feature
-- Status command outputs Task tool instructions for fork-context phases
-- Shell escaping for phase names in Task tool description field
+- Status command outputs Task tool instructions for fork-context steps
+- Shell escaping for step names in Task tool description field
 - E2E test (TC-005) for fork context feature validation
 
 ### Changed
 
-- Centralized `VALID_CONTEXTS` constant in Phase model, referenced by parser
-- QueueScanner surfaces ArgumentError for invalid phase files instead of silent nil return
+- Centralized `VALID_CONTEXTS` constant in Step model, referenced by parser
+- QueueScanner surfaces ArgumentError for invalid step files instead of silent nil return
 - Status output uses plain text separators instead of markdown backticks for better terminal compatibility
 - Use deterministic project root from cache_dir instead of Dir.pwd
 - Updated `work-on-task` preset to demonstrate fork pattern
@@ -1193,44 +1204,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- Fixed file extension documentation: `*.md` → `*.ph.md` for phase files in create-assignment workflow
+- Fixed file extension documentation: `*.md` → `*.st.md` for step files in create-assignment workflow
 - Clarified "source of truth" is `ace-assign status` command in workflow documentation
 - Added note about archived job.yaml being for provenance only, not status queries
-- Changed "Job files" → "Phase files" terminology in README for clarity
+- Changed "Job files" → "Step files" terminology in README for clarity
 
 ## [0.1.5] - 2026-01-28
 
 ### Added
 
-- Separate phase and report files with `.ph.md` and `.r.md` extensions
-- New `reports/` directory structure for storing completion reports separately from phase files
-- Report files include YAML frontmatter with `phase`, `name`, and `completed_at` fields for traceability
+- Separate step and report files with `.st.md` and `.r.md` extensions
+- New `reports/` directory structure for storing completion reports separately from step files
+- Report files include YAML frontmatter with `step`, `name`, and `completed_at` fields for traceability
 
 ### Changed
 
-- Phase files now use `.ph.md` extension (was `.md`)
-- Reports are written to separate `.r.md` files instead of being embedded in phase bodies
-- `PhaseFileParser.extract_fields()` now returns `nil` for report (loaded separately)
-- `PhaseFileParser.parse_filename()` handles both `.ph.md` and `.r.md` extensions
-- `PhaseFileParser.generate_filename()` produces `.ph.md` filenames
-- `PhaseFileParser.generate_report_filename()` produces `.r.md` filenames
-- `PhaseSorter.sort_key()` strips `.ph.md` extension
-- `QueueScanner.scan()` and `phase_numbers()` glob for `*.ph.md` files
+- Step files now use `.st.md` extension (was `.md`)
+- Reports are written to separate `.r.md` files instead of being embedded in step bodies
+- `StepFileParser.extract_fields()` now returns `nil` for report (loaded separately)
+- `StepFileParser.parse_filename()` handles both `.st.md` and `.r.md` extensions
+- `StepFileParser.generate_filename()` produces `.st.md` filenames
+- `StepFileParser.generate_report_filename()` produces `.r.md` filenames
+- `StepSorter.sort_key()` strips `.st.md` extension
+- `QueueScanner.scan()` and `step_numbers()` glob for `*.st.md` files
 - `QueueScanner.load_report()` loads report content from corresponding `.r.md` file
-- `AssignmentManager.create()` creates both `phases/` and `reports/` directories
+- `AssignmentManager.create()` creates both `steps/` and `reports/` directories
 - `Assignment.reports_dir` returns path to reports directory
-- `PhaseWriter.mark_done()` accepts `reports_dir:` parameter and writes report separately
-- `PhaseWriter.append_report()` accepts `reports_dir:` parameter and updates report files
-- `PhaseWriter.write_report()` private helper for atomic report file writes
+- `StepWriter.mark_done()` accepts `reports_dir:` parameter and writes report separately
+- `StepWriter.append_report()` accepts `reports_dir:` parameter and updates report files
+- `StepWriter.write_report()` private helper for atomic report file writes
 - `AssignmentExecutor.advance()` passes `reports_dir` to `mark_done()`
-- CLI status command fallback filename uses `.ph.md` extension
-- `Phase.to_display_row()` fallback filename uses `.ph.md` extension
+- CLI status command fallback filename uses `.st.md` extension
+- `Step.to_display_row()` fallback filename uses `.st.md` extension
 
 ## [0.1.4] - 2026-01-28
 
 ### Added
 
-- Archive job.yaml to task's `phases/` directory after assignment creation (`{assignment_id}-job.yml`)
+- Archive job.yaml to task's `steps/` directory after assignment creation (`{assignment_id}-job.yml`)
 
 ## [0.1.3] - 2026-01-28
 
@@ -1249,7 +1260,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support array format for phase instructions in presets (joined with newlines via `normalize_instructions`)
+- Support array format for step instructions in presets (joined with newlines via `normalize_instructions`)
 
 ### Changed
 
@@ -1261,9 +1272,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Persist skill field from job.yaml phases through full pipeline (PhaseWriter, PhaseFileParser, QueueScanner, Phase model)
-- Display skill in status command output for current phase
-- Pass through extra phase fields (beyond name/instructions) from job.yaml via AssignmentExecutor
+- Persist skill field from job.yaml steps through full pipeline (StepWriter, StepFileParser, QueueScanner, Step model)
+- Display skill in status command output for current step
+- Pass through extra step fields (beyond name/instructions) from job.yaml via AssignmentExecutor
 - Update default job.yaml output path in prepare-assignment workflow to task folder
 
 ## [0.1.0] - 2026-01-28
@@ -1272,11 +1283,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release with work queue-based assignment management
 - CLI commands: start, status, report, fail, add, retry
-- File-based queue storage with markdown phase files
+- File-based queue storage with markdown step files
 - Assignment persistence via assignment.yaml
-- History preservation (failed phases remain visible)
-- Dynamic phase addition with automatic numbering
-- Retry mechanism that creates new phases linked to original
+- History preservation (failed steps remain visible)
+- Dynamic step addition with automatic numbering
+- Retry mechanism that creates new steps linked to original
 
 
 ## [0.12.12] - 2026-02-22

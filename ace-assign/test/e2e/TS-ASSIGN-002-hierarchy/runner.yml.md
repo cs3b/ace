@@ -20,7 +20,7 @@ Required tools: ace-assign
 Workspace root: (current directory)
 
 Execute each goal sequentially. Each goal tests a distinct aspect of
-ace-assign's hierarchical phase management.
+ace-assign's hierarchical step management.
 
 ## Rules
 

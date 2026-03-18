@@ -3,10 +3,10 @@
 require_relative "../test_helper"
 
 class FinishCommandTest < AceAssignTestCase
-  def test_finish_completes_phase
+  def test_finish_completes_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
-      report_path = create_report(cache_dir, "Phase done!")
+      report_path = create_report(cache_dir, "Step done!")
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
@@ -19,17 +19,17 @@ class FinishCommandTest < AceAssignTestCase
         result = Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
       assert_nil result  # Verify success returns nil
-      assert_includes output.first, "Phase 010 (init) completed"
-      assert_includes output.first, "Advancing to phase 020"
+      assert_includes output.first, "Step 010 (init) completed"
+      assert_includes output.first, "Advancing to step 020"
 
       Ace::Assign.reset_config!
     end
   end
 
-  def test_finish_with_explicit_step_completes_targeted_phase
+  def test_finish_with_explicit_step_completes_targeted_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
-      report_path = create_report(cache_dir, "Phase done!")
+      report_path = create_report(cache_dir, "Step done!")
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
@@ -40,8 +40,8 @@ class FinishCommandTest < AceAssignTestCase
         Ace::Assign::CLI::Commands::Finish.new.call(step: "010", message: report_path)
       end
 
-      assert_includes output.first, "Phase 010 (init) completed"
-      assert_includes output.first, "Advancing to phase 020"
+      assert_includes output.first, "Step 010 (init) completed"
+      assert_includes output.first, "Advancing to step 020"
 
       Ace::Assign.reset_config!
     end
@@ -59,7 +59,7 @@ class FinishCommandTest < AceAssignTestCase
       output = capture_io do
         Ace::Assign::CLI::Commands::Finish.new.call(message: "nonexistent.md")
       end
-      assert_includes output.first, "Phase 010 (init) completed"
+      assert_includes output.first, "Step 010 (init) completed"
 
       assignment_cache = Dir.glob(File.join(cache_dir, "*/reports/010-init.r.md")).first
       report_saved = File.read(assignment_cache)
@@ -88,7 +88,7 @@ class FinishCommandTest < AceAssignTestCase
 
   def test_finish_with_assignment_flag
     with_temp_cache do |cache_dir|
-      report_path = create_report(cache_dir, "Phase done!")
+      report_path = create_report(cache_dir, "Step done!")
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
@@ -108,36 +108,36 @@ class FinishCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes output.first, "Phase 010 (init) completed"
-      assert_includes output.first, "Advancing to phase 020"
+      assert_includes output.first, "Step 010 (init) completed"
+      assert_includes output.first, "Advancing to step 020"
 
       # Verify the targeted assignment advanced
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      target_state = scanner.scan(result2[:assignment].phases_dir, assignment: result2[:assignment])
+      target_state = scanner.scan(result2[:assignment].steps_dir, assignment: result2[:assignment])
       assert_equal "020", target_state.current.number
 
       # Verify the first assignment was not affected (still on 010)
-      first_state = scanner.scan(result1[:assignment].phases_dir, assignment: result1[:assignment])
+      first_state = scanner.scan(result1[:assignment].steps_dir, assignment: result1[:assignment])
       assert_equal "010", first_state.current.number
 
       Ace::Assign.reset_config!
     end
   end
 
-  def test_finish_with_assignment_scope_completes_scoped_phase
+  def test_finish_with_assignment_scope_completes_scoped_step
     with_temp_cache do |cache_dir|
       report_path = create_report(cache_dir, "Scoped progress")
-      phases = [
+      steps = [
         { "name" => "precheck", "instructions" => "Run precheck" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         },
         { "name" => "postcheck", "instructions" => "Run postcheck" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -152,10 +152,10 @@ class FinishCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes output.first, "Phase 020.01 (onboard) completed"
+      assert_includes output.first, "Step 020.01 (onboard) completed"
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      state = scanner.scan(start[:assignment].phases_dir, assignment: start[:assignment])
+      state = scanner.scan(start[:assignment].steps_dir, assignment: start[:assignment])
 
       assert_equal :done, state.find_by_number("010").status
       assert_equal :done, state.find_by_number("020.01").status
@@ -183,7 +183,7 @@ class FinishCommandTest < AceAssignTestCase
         cmd.call
       end
 
-      assert_includes output.first, "Phase 010 (init) completed"
+      assert_includes output.first, "Step 010 (init) completed"
     ensure
       $stdin = original_stdin
       Ace::Assign.reset_config!
@@ -235,7 +235,7 @@ class FinishCommandTest < AceAssignTestCase
         cmd.call(message: report_path)
       end
 
-      assert_includes output.first, "Phase 010 (init) completed"
+      assert_includes output.first, "Step 010 (init) completed"
 
       # Verify file content was used (report file path recorded, not stdin)
       assignment_cache = Dir.glob(File.join(cache_dir, "*/reports/010-init.r.md")).first
@@ -251,7 +251,7 @@ class FinishCommandTest < AceAssignTestCase
   def test_lifecycle_finish_auto_advances_and_start_fails_until_free
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
-      report_path = create_report(cache_dir, "Phase done!")
+      report_path = create_report(cache_dir, "Step done!")
       Ace::Assign.config["cache_dir"] = cache_dir
 
       # Create assignment via executor — 010 is in_progress
@@ -262,8 +262,8 @@ class FinishCommandTest < AceAssignTestCase
       finish_output = capture_io do
         Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
-      assert_includes finish_output.first, "Phase 010 (init) completed"
-      assert_includes finish_output.first, "Advancing to phase 020"
+      assert_includes finish_output.first, "Step 010 (init) completed"
+      assert_includes finish_output.first, "Advancing to step 020"
 
       # start fails — 020 is already in_progress after auto-advance
       error = assert_raises(Ace::Support::Cli::Error) do
@@ -275,8 +275,8 @@ class FinishCommandTest < AceAssignTestCase
       finish_output2 = capture_io do
         Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
-      assert_includes finish_output2.first, "Phase 020 (build) completed"
-      assert_includes finish_output2.first, "Advancing to phase 030"
+      assert_includes finish_output2.first, "Step 020 (build) completed"
+      assert_includes finish_output2.first, "Advancing to step 030"
     ensure
       Ace::Assign.reset_config!
     end

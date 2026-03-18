@@ -35,7 +35,7 @@ steps:
     instructions:
       - "Verify test coverage and performance for task {{taskref}} changes."
       - "Focus on packages modified by this task before any broader regression checks required by the workflow."
-      - "If changes are documentation-only or otherwise do not affect runnable code, mark this phase skipped with a clear reason."
+      - "If changes are documentation-only or otherwise do not affect runnable code, mark this step skipped with a clear reason."
 
   - name: verify-e2e
     workflow: wfi://e2e/review
@@ -58,20 +58,20 @@ steps:
     instructions:
       - "Update usage/docs for public contract changes introduced by task {{taskref}}."
       - "Limit updates to packages whose CLI commands, flags, outputs, or public APIs changed."
-      - "Validate updated docs before completing the phase."
+      - "Validate updated docs before completing the step."
       - "Skip if the task introduced no public-facing contract change."
 
   - name: create-pr
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request for the task {{taskref}} changes."
-      - "Capture the PR number for the downstream review and PR-update phases."
+      - "Capture the PR number for the downstream review and PR-update steps."
 
   - name: review-valid-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the valid review cycle via child phases.
+      - Execute the valid review cycle via child steps.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
@@ -79,9 +79,9 @@ steps:
 
   - name: review-fit-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the fit review cycle via child phases.
+      - Execute the fit review cycle via child steps.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
@@ -89,9 +89,9 @@ steps:
 
   - name: review-shine-1
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the shine review cycle via child phases.
+      - Execute the shine review cycle via child steps.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."

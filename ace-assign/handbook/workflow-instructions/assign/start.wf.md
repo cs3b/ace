@@ -16,7 +16,7 @@ update:
 ## Purpose
 
 `assign/start` is retained as an orchestration compatibility layer for typed canonical skill examples.
-It delegates to create/drive flows that compose phases from assign-capable canonical skills.
+It delegates to create/drive flows that compose steps from assign-capable canonical skills.
 
 Primary public UX remains:
 - `/as-assign-create ...`

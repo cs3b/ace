@@ -2,15 +2,15 @@
 
 require_relative "../test_helper"
 
-class PhaseWriterTest < AceAssignTestCase
-  def test_create_phase
+class StepWriterTest < AceAssignTestCase
+  def test_create_step
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init-project",
         instructions: "Create the project.",
@@ -18,7 +18,7 @@ class PhaseWriterTest < AceAssignTestCase
       )
 
       assert File.exist?(file_path)
-      assert_equal "010-init-project.ph.md", File.basename(file_path)
+      assert_equal "010-init-project.st.md", File.basename(file_path)
 
       content = File.read(file_path)
       assert_includes content, "name: init-project"
@@ -27,14 +27,14 @@ class PhaseWriterTest < AceAssignTestCase
     end
   end
 
-  def test_create_phase_with_added_by
+  def test_create_step_with_added_by
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "041",
         name: "fix-bug",
         instructions: "Fix it.",
@@ -47,14 +47,14 @@ class PhaseWriterTest < AceAssignTestCase
     end
   end
 
-  def test_create_phase_with_extra_fields
+  def test_create_step_with_extra_fields
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "020",
         name: "work-on-task",
         instructions: "Implement the feature.",
@@ -70,12 +70,12 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_in_progress
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -92,12 +92,12 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_pending_clears_runtime_state
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -124,14 +124,14 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_done_with_report
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
+      steps_dir = File.join(cache_dir, "steps")
       reports_dir = File.join(cache_dir, "reports")
-      FileUtils.mkdir_p(phases_dir)
+      FileUtils.mkdir_p(steps_dir)
       FileUtils.mkdir_p(reports_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -140,18 +140,18 @@ class PhaseWriterTest < AceAssignTestCase
 
       writer.mark_done(file_path, report_content: "All done!", reports_dir: reports_dir)
 
-      # Phase file should have status done and completed_at, but no report content embedded
-      phase_content = File.read(file_path)
-      assert_includes phase_content, "status: done"
-      assert_includes phase_content, "completed_at:"
-      refute_includes phase_content, "All done!"
-      refute_includes phase_content, "# Report"
+      # Step file should have status done and completed_at, but no report content embedded
+      step_content = File.read(file_path)
+      assert_includes step_content, "status: done"
+      assert_includes step_content, "completed_at:"
+      refute_includes step_content, "All done!"
+      refute_includes step_content, "# Report"
 
       # Report should be in separate file
       report_path = File.join(reports_dir, "010-init.r.md")
       assert File.exist?(report_path)
       report_content = File.read(report_path)
-      assert_includes report_content, "phase: '010'"
+      assert_includes report_content, "step: '010'"
       assert_includes report_content, "name: init"
       assert_includes report_content, "All done!"
     end
@@ -159,12 +159,12 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_failed
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "040",
         name: "tests",
         instructions: "Run tests.",
@@ -181,12 +181,12 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_update_frontmatter
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
-      FileUtils.mkdir_p(phases_dir)
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -203,14 +203,14 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_append_report_creates_new_file
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
+      steps_dir = File.join(cache_dir, "steps")
       reports_dir = File.join(cache_dir, "reports")
-      FileUtils.mkdir_p(phases_dir)
+      FileUtils.mkdir_p(steps_dir)
       FileUtils.mkdir_p(reports_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -228,14 +228,14 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_append_report_appends_to_existing
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
+      steps_dir = File.join(cache_dir, "steps")
       reports_dir = File.join(cache_dir, "reports")
-      FileUtils.mkdir_p(phases_dir)
+      FileUtils.mkdir_p(steps_dir)
       FileUtils.mkdir_p(reports_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -257,14 +257,14 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_done_with_empty_report_raises_error
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
+      steps_dir = File.join(cache_dir, "steps")
       reports_dir = File.join(cache_dir, "reports")
-      FileUtils.mkdir_p(phases_dir)
+      FileUtils.mkdir_p(steps_dir)
       FileUtils.mkdir_p(reports_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",
@@ -287,14 +287,14 @@ class PhaseWriterTest < AceAssignTestCase
 
   def test_mark_done_with_nil_report_raises_error
     with_temp_cache do |cache_dir|
-      phases_dir = File.join(cache_dir, "phases")
+      steps_dir = File.join(cache_dir, "steps")
       reports_dir = File.join(cache_dir, "reports")
-      FileUtils.mkdir_p(phases_dir)
+      FileUtils.mkdir_p(steps_dir)
       FileUtils.mkdir_p(reports_dir)
 
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
       file_path = writer.create(
-        phases_dir: phases_dir,
+        steps_dir: steps_dir,
         number: "010",
         name: "init",
         instructions: "Do it.",

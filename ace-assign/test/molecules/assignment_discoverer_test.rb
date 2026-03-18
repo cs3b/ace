@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class AssignmentDiscovererTest < AceAssignTestCase
   def test_find_all_returns_enriched_assignments
     with_temp_cache do |cache_dir|
-      # Create two assignments with phases
+      # Create two assignments with steps
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
 
       config_path = create_test_config(cache_dir)
@@ -18,7 +18,7 @@ class AssignmentDiscovererTest < AceAssignTestCase
       info = results.first
       assert_instance_of Ace::Assign::Models::AssignmentInfo, info
       assert_equal :running, info.state
-      assert_equal "init", info.current_phase
+      assert_equal "init", info.current_step
     end
   end
 

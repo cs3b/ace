@@ -3,7 +3,7 @@ description: Test audit trail metadata
 
 steps:
   - name: initial-job
-    instructions: Starting phase
+    instructions: Starting step
 
   - name: second-job
-    instructions: Second phase
+    instructions: Second step

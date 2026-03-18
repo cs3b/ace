@@ -3,30 +3,30 @@
 module Ace
   module Assign
     module Atoms
-      # Pure functions for hierarchical phase numbering operations.
+      # Pure functions for hierarchical step numbering operations.
       #
-      # Supports nested phase structure where phases can have sub-phases:
-      # - Main phases: 010, 020, 030
-      # - Nested phases: 010.01, 010.02, 010.03
+      # Supports nested step structure where steps can have sub-steps:
+      # - Main steps: 010, 020, 030
+      # - Nested steps: 010.01, 010.02, 010.03
       # - Deeply nested: 010.01.01 (if needed)
       #
-      # This enables verification-as-phase patterns where parent phases
+      # This enables verification-as-step patterns where parent steps
       # wait for all children to complete before advancing.
       #
       # @example
-      #   PhaseNumbering.parse("010.02")
+      #   StepNumbering.parse("010.02")
       #   # => { parent: "010", index: 2, depth: 1, full: "010.02" }
       #
-      #   PhaseNumbering.next_sibling("010.02")
+      #   StepNumbering.next_sibling("010.02")
       #   # => "010.03"
       #
-      #   PhaseNumbering.first_child("010")
+      #   StepNumbering.first_child("010")
       #   # => "010.01"
       #
-      #   PhaseNumbering.child_of?("010.02", "010")
+      #   StepNumbering.child_of?("010.02", "010")
       #   # => true
-      module PhaseNumbering
-        # Maximum allowed nesting depth for phase numbers.
+      module StepNumbering
+        # Maximum allowed nesting depth for step numbers.
         # Prevents unbounded hierarchy (e.g., 010.01.01.01.01...).
         # Depth 0 = top-level (010), 1 = first nest (010.01), 2 = second nest (010.01.01).
         # Maximum is 010.01.01 (3 levels total).
@@ -38,11 +38,11 @@ module Ace
         MAX_SIBLINGS_TOP_LEVEL = 999
         MAX_SIBLINGS_NESTED = 99
 
-        # Parse a phase number into its components.
+        # Parse a step number into its components.
         #
-        # @param number [String] Phase number (e.g., "010", "010.02", "010.02.03")
+        # @param number [String] Step number (e.g., "010", "010.02", "010.02.03")
         # @return [Hash] Parsed components with keys:
-        #   - :parent [String, nil] Parent phase number (nil for top-level phases)
+        #   - :parent [String, nil] Parent step number (nil for top-level steps)
         #   - :index [Integer] The final sequence number
         #   - :depth [Integer] Nesting depth (0 for top-level, 1 for first nest, etc.)
         #   - :full [String] Original full number
@@ -57,9 +57,9 @@ module Ace
           }
         end
 
-        # Generate the next sibling phase number.
+        # Generate the next sibling step number.
         #
-        # @param number [String] Current phase number
+        # @param number [String] Current step number
         # @return [String] Next sibling number with same parent
         def self.next_sibling(number)
           parsed = parse(number)
@@ -79,9 +79,9 @@ module Ace
           end
         end
 
-        # Generate the first child phase number.
+        # Generate the first child step number.
         #
-        # @param number [String] Parent phase number
+        # @param number [String] Parent step number
         # @return [String] First child number (e.g., "010" -> "010.01")
         # @raise [ArgumentError] If adding a child would exceed MAX_DEPTH
         def self.first_child(number)
@@ -94,9 +94,9 @@ module Ace
           "#{number}.01"
         end
 
-        # Generate the next child phase number based on existing children.
+        # Generate the next child step number based on existing children.
         #
-        # @param parent [String] Parent phase number
+        # @param parent [String] Parent step number
         # @param existing_children [Array<String>] Existing child numbers
         # @return [String] Next child number
         # @raise [ArgumentError] If adding a child would exceed MAX_DEPTH
@@ -119,7 +119,7 @@ module Ace
           "#{parent}.#{format('%02d', max_index + 1)}"
         end
 
-        # Check if a phase number is a child (direct or nested) of another.
+        # Check if a step number is a child (direct or nested) of another.
         #
         # @param child [String] Potential child number
         # @param parent [String] Potential parent number
@@ -128,7 +128,7 @@ module Ace
           child.to_s.start_with?("#{parent}.")
         end
 
-        # Check if a phase number is a direct (immediate) child of another.
+        # Check if a step number is a direct (immediate) child of another.
         #
         # @param child [String] Potential child number
         # @param parent [String] Potential parent number
@@ -145,48 +145,48 @@ module Ace
 
         # Get all direct children of a parent from a list of numbers.
         #
-        # @param parent [String] Parent phase number
-        # @param all_numbers [Array<String>] All phase numbers to filter
+        # @param parent [String] Parent step number
+        # @param all_numbers [Array<String>] All step numbers to filter
         # @return [Array<String>] Direct children of parent
         def self.direct_children(parent, all_numbers)
           all_numbers.select { |n| direct_child_of?(n, parent) }
         end
 
-        # Get the parent number of a phase, if it has one.
+        # Get the parent number of a step, if it has one.
         #
-        # @param number [String] Phase number
-        # @return [String, nil] Parent number or nil for top-level phases
+        # @param number [String] Step number
+        # @return [String, nil] Parent number or nil for top-level steps
         def self.parent_of(number)
           parse(number)[:parent]
         end
 
-        # Check if a number is a top-level (root) phase.
+        # Check if a number is a top-level (root) step.
         #
-        # @param number [String] Phase number
+        # @param number [String] Step number
         # @return [Boolean] True if top-level
         def self.top_level?(number)
           parse(number)[:depth] == 0
         end
 
-        # Generate a phase number to insert after another phase.
+        # Generate a step number to insert after another step.
         # This creates a sibling at the same nesting level.
         #
-        # Note: This method does not check for collisions. Use phases_to_renumber
-        # to determine which existing phases need to be shifted when inserting.
+        # Note: This method does not check for collisions. Use steps_to_renumber
+        # to determine which existing steps need to be shifted when inserting.
         #
-        # @param after [String] Phase number to insert after
-        # @return [String] New phase number (next sibling)
+        # @param after [String] Step number to insert after
+        # @return [String] New step number (next sibling)
         def self.insert_after(after)
           next_sibling(after)
         end
 
-        # Find phase numbers that need to be renumbered when inserting at a position.
-        # Returns phases that have numbers >= the insertion point.
+        # Find step numbers that need to be renumbered when inserting at a position.
+        # Returns steps that have numbers >= the insertion point.
         #
-        # @param at_number [String] Number where new phase will be inserted
-        # @param existing [Array<String>] All existing phase numbers
+        # @param at_number [String] Number where new step will be inserted
+        # @param existing [Array<String>] All existing step numbers
         # @return [Array<String>] Numbers that need to be shifted (in ascending order)
-        def self.phases_to_renumber(at_number, existing)
+        def self.steps_to_renumber(at_number, existing)
           parsed_at = parse(at_number)
           parent = parsed_at[:parent]
 
@@ -199,9 +199,9 @@ module Ace
             .sort_by { |n| parse(n)[:index] }
         end
 
-        # Generate the shifted number for a phase being renumbered.
+        # Generate the shifted number for a step being renumbered.
         #
-        # @param number [String] Original phase number
+        # @param number [String] Original step number
         # @param shift [Integer] Amount to shift by (default: 1)
         # @return [String] New shifted number
         # @raise [ArgumentError] If shifting would exceed sibling limits
@@ -211,7 +211,7 @@ module Ace
           limit = parsed[:parent] ? MAX_SIBLINGS_NESTED : MAX_SIBLINGS_TOP_LEVEL
 
           if new_index > limit
-            raise ArgumentError, "Cannot shift phase number: would exceed maximum siblings " \
+            raise ArgumentError, "Cannot shift step number: would exceed maximum siblings " \
                                  "(#{limit}) at this level (new index would be: #{new_index})"
           end
 

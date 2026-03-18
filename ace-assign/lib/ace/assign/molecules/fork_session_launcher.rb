@@ -19,7 +19,7 @@ module Ace
         # Launch forked subtree execution synchronously.
         #
         # @param assignment_id [String] Assignment identifier
-        # @param fork_root [String] Subtree root phase number
+        # @param fork_root [String] Subtree root step number
         # @param provider [String, nil] Optional provider override
         # @param cli_args [String, nil] Optional provider CLI args
         # @param timeout [Integer, nil] Optional timeout override (seconds)

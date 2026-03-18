@@ -40,29 +40,29 @@ class ForkRunCommandTest < AceAssignTestCase
     def launch(assignment_id:, fork_root:, **_kwargs)
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      writer = Ace::Assign::Molecules::PhaseWriter.new
+      writer = Ace::Assign::Molecules::StepWriter.new
 
       assignment = manager.load(assignment_id)
-      state = scanner.scan(assignment.phases_dir, assignment: assignment)
-      state.subtree_phases(fork_root).each do |phase|
-        next if phase.status == :done
+      state = scanner.scan(assignment.steps_dir, assignment: assignment)
+      state.subtree_steps(fork_root).each do |step|
+        next if step.status == :done
 
-        writer.mark_done(phase.file_path, report_content: "Completed by subtree launcher", reports_dir: assignment.reports_dir)
+        writer.mark_done(step.file_path, report_content: "Completed by subtree launcher", reports_dir: assignment.reports_dir)
       end
     end
   end
 
   def test_fork_run_with_explicit_root_launches_and_completes_subtree
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task work-on-task]
+          "sub_steps" => %w[onboard plan-task work-on-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -83,15 +83,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_fork_run_auto_detects_nearest_fork_ancestor
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -129,15 +129,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_fork_run_errors_when_subtree_not_completed_by_launcher
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -157,18 +157,18 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_fork_run_marks_first_workable_child_as_in_progress
     with_temp_cache do |cache_dir|
-      # Two top-level phases: first non-fork, second fork with sub_phases.
+      # Two top-level steps: first non-fork, second fork with sub_steps.
       # start() marks 010 as in_progress, so 020.01 stays pending.
-      phases = [
+      steps = [
         { "name" => "pre-step", "instructions" => "Run pre-step" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -186,16 +186,16 @@ class ForkRunCommandTest < AceAssignTestCase
         define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
           manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
           scanner = Ace::Assign::Molecules::QueueScanner.new
-          writer = Ace::Assign::Molecules::PhaseWriter.new
+          writer = Ace::Assign::Molecules::StepWriter.new
 
           assignment = manager.load(assignment_id)
-          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
           marked_status = state.find_by_number("020.01")&.status
 
-          # Complete all phases so fork_run doesn't error
-          state.subtree_phases(fork_root).each do |phase|
-            next if phase.status == :done
-            writer.mark_done(phase.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
+          # Complete all steps so fork_run doesn't error
+          state.subtree_steps(fork_root).each do |step|
+            next if step.status == :done
+            writer.mark_done(step.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
           end
         end
       end
@@ -214,11 +214,11 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_fork_run_marks_leaf_root_as_in_progress_before_launch
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "pre-step", "instructions" => "Run pre-step" },
         { "name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -234,10 +234,10 @@ class ForkRunCommandTest < AceAssignTestCase
         define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
           manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
           scanner = Ace::Assign::Molecules::QueueScanner.new
-          writer = Ace::Assign::Molecules::PhaseWriter.new
+          writer = Ace::Assign::Molecules::StepWriter.new
 
           assignment = manager.load(assignment_id)
-          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
           leaf = state.find_by_number(fork_root)
           @snapshot[:leaf_status] = leaf&.status
 
@@ -257,18 +257,18 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
-  def test_fork_run_reuses_existing_active_phase_in_subtree
+  def test_fork_run_reuses_existing_active_step_in_subtree
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "pre-step", "instructions" => "Run pre-step" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -276,8 +276,8 @@ class ForkRunCommandTest < AceAssignTestCase
 
       assignment = result[:assignment]
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      writer = Ace::Assign::Molecules::PhaseWriter.new
-      state_before = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer = Ace::Assign::Molecules::StepWriter.new
+      state_before = scanner.scan(assignment.steps_dir, assignment: assignment)
       writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
 
       launch_snapshot = {}
@@ -290,17 +290,17 @@ class ForkRunCommandTest < AceAssignTestCase
         define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
           manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
           scanner = Ace::Assign::Molecules::QueueScanner.new
-          writer = Ace::Assign::Molecules::PhaseWriter.new
+          writer = Ace::Assign::Molecules::StepWriter.new
 
           assignment = manager.load(assignment_id)
-          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
           @snapshot[:child_a] = state.find_by_number("020.01")&.status
           @snapshot[:child_b] = state.find_by_number("020.02")&.status
 
-          state.subtree_phases(fork_root).each do |phase|
-            next if phase.status == :done
+          state.subtree_steps(fork_root).each do |step|
+            next if step.status == :done
 
-            writer.mark_done(phase.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
+            writer.mark_done(step.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
           end
         end
       end
@@ -318,18 +318,18 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
-  def test_fork_run_fails_when_multiple_phases_are_already_in_progress_in_subtree
+  def test_fork_run_fails_when_multiple_steps_are_already_in_progress_in_subtree
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "pre-step", "instructions" => "Run pre-step" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -337,18 +337,18 @@ class ForkRunCommandTest < AceAssignTestCase
 
       assignment = result[:assignment]
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      writer = Ace::Assign::Molecules::PhaseWriter.new
-      state_before = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer = Ace::Assign::Molecules::StepWriter.new
+      state_before = scanner.scan(assignment.steps_dir, assignment: assignment)
       writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
       writer.mark_in_progress(state_before.find_by_number("020.02").file_path)
 
-      error = assert_raises(Ace::Assign::PhaseErrors::InvalidState) do
+      error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "020", assignment: assignment.id, quiet: true)
       end
 
-      assert_includes error.message, "multiple phases are already in progress"
+      assert_includes error.message, "multiple steps are already in progress"
 
       Ace::Assign.reset_config!
     end
@@ -356,7 +356,7 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_fork_run_accepts_assignment_scope_without_root_and_without_current_in_scope
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "pre-step", "instructions" => "Run pre-step" },
         {
           "name" => "work-on-task",
@@ -365,13 +365,13 @@ class ForkRunCommandTest < AceAssignTestCase
         },
         { "name" => "post-step", "instructions" => "Run post-step" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Initial current phase is 010 (pre-step), while requested fork scope is 020.
+      # Initial current step is 010 (pre-step), while requested fork scope is 020.
       output = capture_io do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: DirectSubtreeCompletingLauncher.new(cache_base: cache_dir)
@@ -382,9 +382,9 @@ class ForkRunCommandTest < AceAssignTestCase
       assert_includes output.first, "Fork subtree 020 completed successfully."
 
       state = executor.status[:state]
-      assert state.find_by_number("020").complete?, "Scoped subtree phase should be done"
-      refute state.find_by_number("010").complete?, "Outside phase 010 should stay incomplete"
-      refute state.find_by_number("030").complete?, "Outside phase 030 should stay incomplete"
+      assert state.find_by_number("020").complete?, "Scoped subtree step should be done"
+      refute state.find_by_number("010").complete?, "Outside step 010 should stay incomplete"
+      refute state.find_by_number("030").complete?, "Outside step 030 should stay incomplete"
 
       Ace::Assign.reset_config!
     end
@@ -392,15 +392,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_error_includes_last_message_when_file_exists
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -427,15 +427,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_error_includes_session_id_when_metadata_file_exists
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -460,15 +460,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_error_omits_session_id_when_no_metadata_file
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -489,15 +489,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_error_omits_last_message_section_when_file_absent
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -516,17 +516,17 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
-  def test_stall_writes_stall_reason_to_active_phase_frontmatter
+  def test_stall_writes_stall_reason_to_active_step_frontmatter
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -544,7 +544,7 @@ class ForkRunCommandTest < AceAssignTestCase
       end
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      state = scanner.scan(assignment.steps_dir, assignment: assignment)
       active = state.current
       assert_equal "Unexpected state change encountered.", active.stall_reason
 
@@ -554,15 +554,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_truncates_long_last_message_in_error
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard]
+          "sub_steps" => %w[onboard]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -591,15 +591,15 @@ class ForkRunCommandTest < AceAssignTestCase
 
   def test_stall_reason_cleared_after_successful_rerun
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -618,7 +618,7 @@ class ForkRunCommandTest < AceAssignTestCase
       end
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      state = scanner.scan(assignment.steps_dir, assignment: assignment)
       assert state.current.stall_reason, "expected stall_reason to be set after stall"
 
       # Second run: complete successfully and verify stall_reason is cleared
@@ -628,10 +628,10 @@ class ForkRunCommandTest < AceAssignTestCase
         ).call(root: "010", assignment: assignment.id, quiet: true)
       end
 
-      state2 = scanner.scan(assignment.phases_dir, assignment: assignment)
-      state2.subtree_phases("010").each do |phase|
-        assert_nil phase.stall_reason,
-                   "expected stall_reason to be nil on phase #{phase.number} after successful rerun"
+      state2 = scanner.scan(assignment.steps_dir, assignment: assignment)
+      state2.subtree_steps("010").each do |step|
+        assert_nil step.stall_reason,
+                   "expected stall_reason to be nil on step #{step.number} after successful rerun"
       end
 
       Ace::Assign.reset_config!

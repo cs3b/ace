@@ -5,75 +5,75 @@ require "yaml"
 module Ace
   module Assign
     module Atoms
-      # Pure functions for loading and querying the phase catalog.
+      # Pure functions for loading and querying the step catalog.
       #
-      # The phase catalog is a directory of YAML files describing available
-      # phase types, their prerequisites, artifacts, and metadata.
+      # The step catalog is a directory of YAML files describing available
+      # step types, their prerequisites, artifacts, and metadata.
       #
       # @example Loading the catalog
-      #   phases = CatalogLoader.load_all("/path/to/catalog/phases")
+      #   steps = CatalogLoader.load_all("/path/to/catalog/steps")
       #   # => [{ "name" => "onboard", "skill" => "onboard", ... }, ...]
       #
-      # @example Finding a phase
-      #   phase = CatalogLoader.find_by_name(phases, "work-on-task")
+      # @example Finding a step
+      #   step = CatalogLoader.find_by_name(steps, "work-on-task")
       #   # => { "name" => "work-on-task", "skill" => "ace:work-on-task", ... }
       module CatalogLoader
-        # Load all phase definitions from a catalog directory.
+        # Load all step definitions from a catalog directory.
         #
-        # @param phases_dir [String] Path to catalog/phases/ directory
-        # @return [Array<Hash>] Array of phase definition hashes
-        def self.load_all(phases_dir)
-          return [] unless File.directory?(phases_dir)
+        # @param steps_dir [String] Path to catalog/steps/ directory
+        # @return [Array<Hash>] Array of step definition hashes
+        def self.load_all(steps_dir)
+          return [] unless File.directory?(steps_dir)
 
-          Dir.glob(File.join(phases_dir, "*.phase.yml")).sort.filter_map do |path|
-            parse_phase_file(path)
+          Dir.glob(File.join(steps_dir, "*.step.yml")).sort.filter_map do |path|
+            parse_step_file(path)
           end
         end
 
-        # Find a phase definition by name.
+        # Find a step definition by name.
         #
-        # @param phases [Array<Hash>] Loaded phase definitions
-        # @param name [String] Phase name to find
-        # @return [Hash, nil] Phase definition or nil if not found
-        def self.find_by_name(phases, name)
-          phases.find { |p| p["name"] == name }
+        # @param steps [Array<Hash>] Loaded step definitions
+        # @param name [String] Step name to find
+        # @return [Hash, nil] Step definition or nil if not found
+        def self.find_by_name(steps, name)
+          steps.find { |p| p["name"] == name }
         end
 
-        # Filter phases by tag.
+        # Filter steps by tag.
         #
-        # @param phases [Array<Hash>] Loaded phase definitions
+        # @param steps [Array<Hash>] Loaded step definitions
         # @param tag [String] Tag to filter by
-        # @return [Array<Hash>] Phases matching the tag
-        def self.filter_by_tag(phases, tag)
-          phases.select { |p| (p["tags"] || []).include?(tag) }
+        # @return [Array<Hash>] Steps matching the tag
+        def self.filter_by_tag(steps, tag)
+          steps.select { |p| (p["tags"] || []).include?(tag) }
         end
 
-        # Find phases that produce a given artifact.
+        # Find steps that produce a given artifact.
         #
-        # @param phases [Array<Hash>] Loaded phase definitions
+        # @param steps [Array<Hash>] Loaded step definitions
         # @param artifact [String] Artifact name (e.g., "code-changes")
-        # @return [Array<Hash>] Phases that produce the artifact
-        def self.producers_of(phases, artifact)
-          phases.select { |p| (p["produces"] || []).include?(artifact) }
+        # @return [Array<Hash>] Steps that produce the artifact
+        def self.producers_of(steps, artifact)
+          steps.select { |p| (p["produces"] || []).include?(artifact) }
         end
 
-        # Validate that prerequisites are satisfied for a selection of phases.
+        # Validate that prerequisites are satisfied for a selection of steps.
         #
-        # @param selected [Array<String>] Names of selected phases
-        # @param catalog [Array<Hash>] Full phase catalog
-        # @return [Array<Hash>] Validation issues, each with :phase, :prerequisite, :strength, :reason
+        # @param selected [Array<String>] Names of selected steps
+        # @param catalog [Array<Hash>] Full step catalog
+        # @return [Array<Hash>] Validation issues, each with :step, :prerequisite, :strength, :reason
         def self.validate_prerequisites(selected, catalog)
           issues = []
 
-          selected.each do |phase_name|
-            phase_def = find_by_name(catalog, phase_name)
-            next unless phase_def
+          selected.each do |step_name|
+            step_def = find_by_name(catalog, step_name)
+            next unless step_def
 
-            (phase_def["prerequisites"] || []).each do |prereq|
+            (step_def["prerequisites"] || []).each do |prereq|
               next if selected.include?(prereq["name"])
 
               issues << {
-                phase: phase_name,
+                step: step_name,
                 prerequisite: prereq["name"],
                 strength: prereq["strength"] || "recommended",
                 reason: prereq["reason"]
@@ -84,17 +84,17 @@ module Ace
           issues
         end
 
-        # Parse a single phase YAML file.
+        # Parse a single step YAML file.
         #
         # @param path [String] File path
-        # @return [Hash, nil] Parsed phase definition or nil on error
-        def self.parse_phase_file(path)
+        # @return [Hash, nil] Parsed step definition or nil on error
+        def self.parse_step_file(path)
           YAML.safe_load_file(path, permitted_classes: [Date])
         rescue StandardError => e
-          $stderr.puts "Warning: Failed to parse phase file #{path}: #{e.message}"
+          $stderr.puts "Warning: Failed to parse step file #{path}: #{e.message}"
           nil
         end
-        private_class_method :parse_phase_file
+        private_class_method :parse_step_file
       end
     end
   end

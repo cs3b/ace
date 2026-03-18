@@ -13,7 +13,7 @@ parameters:
     type: array
     description: Task references (comma-separated, range, or pattern)
 
-phases:
+steps:
   - name: onboard
     number: "000"
     workflow: wfi://onboard
@@ -33,14 +33,14 @@ phases:
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request summarizing batch tasks: {{taskrefs}}."
-      - "Capture the PR number for the downstream review and PR-update phases."
+      - "Capture the PR number for the downstream review and PR-update steps."
 
   - name: review-valid-1
     number: "040"
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the valid review cycle via child phases.
+      - Execute the valid review cycle via child steps.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
       - "Child apply-feedback: apply medium+ priority review findings and commit."
@@ -49,9 +49,9 @@ phases:
   - name: review-fit-1
     number: "070"
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the fit review cycle via child phases.
+      - Execute the fit review cycle via child steps.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
       - "Child apply-feedback: apply fit-cycle findings and commit."
@@ -60,9 +60,9 @@ phases:
   - name: review-shine-1
     number: "100"
     context: fork
-    sub_phases: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release]
     instructions:
-      - Execute the shine review cycle via child phases.
+      - Execute the shine review cycle via child steps.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
       - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."

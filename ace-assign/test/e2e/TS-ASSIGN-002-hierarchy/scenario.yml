@@ -19,7 +19,7 @@ e2e-justification: >
   Hierarchy operations require real assignment state with parent-child
   relationships, renumbering cascades, and audit metadata tracking. Auto-
   completion triggers state transitions across multiple levels. Subtree
-  scoping resolves phase addresses against real assignment structure.
+  scoping resolves step addresses against real assignment structure.
   None testable with mocks.
 
 requires:

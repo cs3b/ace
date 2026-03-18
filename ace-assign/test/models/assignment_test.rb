@@ -23,7 +23,7 @@ class AssignmentTest < AceAssignTestCase
     assert_equal "/tmp/test", assignment.cache_dir
   end
 
-  def test_phases_dir
+  def test_steps_dir
     assignment = Ace::Assign::Models::Assignment.new(
       id: "abc123",
       name: "test",
@@ -32,7 +32,7 @@ class AssignmentTest < AceAssignTestCase
       cache_dir: "/tmp/test"
     )
 
-    assert_equal "/tmp/test/phases", assignment.phases_dir
+    assert_equal "/tmp/test/steps", assignment.steps_dir
   end
 
   def test_assignment_file

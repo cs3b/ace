@@ -71,11 +71,11 @@ module Ace
           )
         end
 
-        # @return [String] Path to phases directory
-        def phases_dir
+        # @return [String] Path to steps directory
+        def steps_dir
           return nil unless cache_dir
 
-          File.join(cache_dir, "phases")
+          File.join(cache_dir, "steps")
         end
 
         # @return [String] Path to reports directory

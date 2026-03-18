@@ -3,19 +3,19 @@
 module Ace
   module Assign
     module Models
-      # Phase data model representing a work queue item.
+      # Step data model representing a work queue item.
       #
       # Pure data carrier with no business logic (ATOM pattern).
       # All attributes are immutable after initialization.
       #
       # @example
-      #   phase = Phase.new(
+      #   step = Step.new(
       #     number: "010",
       #     name: "init-project",
       #     status: :pending,
       #     instructions: "Create project structure..."
       #   )
-      class Phase
+      class Step
         # Valid status values
         STATUSES = %i[pending in_progress done failed].freeze
 
@@ -29,20 +29,20 @@ module Ace
                     :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
                     :stall_reason
 
-        # @param number [String] Phase number (e.g., "010", "010.01")
-        # @param name [String] Phase name
-        # @param status [Symbol] Phase status (:pending, :in_progress, :done, :failed)
-        # @param instructions [String] Phase instructions (markdown)
+        # @param number [String] Step number (e.g., "010", "010.01")
+        # @param name [String] Step name
+        # @param status [Symbol] Step status (:pending, :in_progress, :done, :failed)
+        # @param instructions [String] Step instructions (markdown)
         # @param report [String, nil] Completion report content
         # @param error [String, nil] Error message (if failed)
         # @param started_at [Time, nil] When work started
         # @param completed_at [Time, nil] When completed/failed
-        # @param added_by [String, nil] How phase was added (nil, "dynamic", "retry_of:NNN")
-        # @param parent [String, nil] Parent phase number (for sub-phases)
-        # @param file_path [String, nil] Path to phase file
-        # @param skill [String, nil] Skill reference for this phase (e.g., "ace-task-work")
+        # @param added_by [String, nil] How step was added (nil, "dynamic", "retry_of:NNN")
+        # @param parent [String, nil] Parent step number (for sub-steps)
+        # @param file_path [String, nil] Path to step file
+        # @param skill [String, nil] Skill reference for this step (e.g., "ace-task-work")
         # @param context [String, nil] Execution context ("fork" for Task tool execution)
-        # @param batch_parent [Boolean, nil] Whether phase is a batch scheduling parent
+        # @param batch_parent [Boolean, nil] Whether step is a batch scheduling parent
         # @param parallel [Boolean, nil] Batch scheduling mode hint (true=parallel, false=sequential)
         # @param max_parallel [Integer, nil] Max concurrent children for parallel batches
         # @param fork_retry_limit [Integer, nil] Retry attempts allowed per failed child
@@ -89,32 +89,32 @@ module Ace
           @stall_reason = stall_reason&.freeze
         end
 
-        # Check if phase is complete (done or failed)
+        # Check if step is complete (done or failed)
         # @return [Boolean]
         def complete?
           %i[done failed].include?(status)
         end
 
-        # Check if phase can be worked on
+        # Check if step can be worked on
         # @return [Boolean]
         def workable?
           status == :pending || status == :in_progress
         end
 
-        # Check if this is a retry of another phase
+        # Check if this is a retry of another step
         # @return [Boolean]
         def retry?
           added_by&.start_with?("retry_of:")
         end
 
-        # Check if this phase should run in a forked context (subagent)
+        # Check if this step should run in a forked context (subagent)
         # @return [Boolean]
         def fork?
           context == "fork"
         end
 
-        # Get the original phase number if this is a retry
-        # @return [String, nil] Original phase number
+        # Get the original step number if this is a retry
+        # @return [String, nil] Original step number
         def retry_of
           return nil unless retry?
 
@@ -151,7 +151,7 @@ module Ace
         # @return [Hash] Display row data
         def to_display_row
           {
-            file: File.basename(file_path || "#{number}-#{name}.ph.md"),
+            file: File.basename(file_path || "#{number}-#{name}.st.md"),
             status: status.to_s,
             name: name,
             error: error

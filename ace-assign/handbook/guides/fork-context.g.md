@@ -10,30 +10,30 @@ update:
 
 ## Overview
 
-Fork context enables phase files to run in isolated agent contexts using the Task tool. When a phase has `context: fork` in its frontmatter, ace-assign outputs instructions for the orchestrating agent to execute the phase via a subagent.
+Fork context enables step files to run in isolated agent contexts using the Task tool. When a step has `context: fork` in its frontmatter, ace-assign outputs instructions for the orchestrating agent to execute the step via a subagent.
 
 For hierarchical split workflows, use **parent-only** fork markers:
-- Split parent phase: `context: fork`
-- Child phases (`onboard-base`, `task-load`, `plan-task`, `work-on-task`, `verify-test`, `release-minor`): no `context: fork`
+- Split parent step: `context: fork`
+- Child steps (`onboard-base`, `task-load`, `plan-task`, `work-on-task`, `verify-test`, `release-minor`): no `context: fork`
 - Runtime execution scope is controlled explicitly with `--assignment <id>@<root>`
 
 ## When to Use Fork Context
 
 Use fork context when:
 
-- **Isolation is needed** - The phase requires a clean agent context without previous conversation state
-- **Complex multi-phase work** - The phase involves substantial implementation that benefits from focused agent attention
+- **Isolation is needed** - The step requires a clean agent context without previous conversation state
+- **Complex multi-step work** - The step involves substantial implementation that benefits from focused agent attention
 - **Independent execution** - The work can proceed without real-time interaction with the orchestrator
 
 Do **not** use fork context for:
 
 - Simple instructions that the orchestrator can execute directly
-- Phases that require continuous orchestrator oversight
-- Verification phases (see Anti-patterns below)
+- Steps that require continuous orchestrator oversight
+- Verification steps (see Anti-patterns below)
 
-## Phase File Structure
+## Step File Structure
 
-Fork context phases can use a rich structure with distinct sections:
+Fork context steps can use a rich structure with distinct sections:
 
 ```markdown
 ---
@@ -99,13 +99,13 @@ ace:assign-drive loop
 Fork context provides:
 
 - **Clean slate** - No prior conversation affecting the subagent
-- **Focused task** - Single phase with clear boundaries
+- **Focused task** - Single step with clear boundaries
 - **Structured output** - Report format ensures consistent results
 
 The orchestrating agent:
 
 - Maintains workflow state
-- Coordinates between phases
+- Coordinates between steps
 - Processes subagent reports
 - Handles failures and retries
 
@@ -114,20 +114,20 @@ The orchestrating agent:
 When a forked subtree fails, use **adaptive minimal-safe replay**:
 
 - Do not automatically replay the whole subtree.
-- Replay only the minimum set of phases needed to restore context confidence.
+- Replay only the minimum set of steps needed to restore context confidence.
 - Always review prior subtree reports before choosing replay depth.
 
 Typical recovery shape:
 
 ```
-failed phase
+failed step
   -> recovery onboarding/report review
   -> verify-test
-  -> retry failed or nearest affected phase
-  -> resume remaining subtree phases
+  -> retry failed or nearest affected step
+  -> resume remaining subtree steps
 ```
 
-Recovery phases are inserted between the failed phase and the next pending phase (or appended if the failure happened at subtree end). This keeps history intact while avoiding unnecessary rework.
+Recovery steps are inserted between the failed step and the next pending step (or appended if the failure happened at subtree end). This keeps history intact while avoiding unnecessary rework.
 
 ## Anti-Patterns
 
@@ -136,7 +136,7 @@ Recovery phases are inserted between the failed phase and the next pending phase
 **Wrong:** Worker verifies its own work
 
 ```yaml
-phases:
+steps:
   - name: implement-and-verify
     context: fork
     instructions: |
@@ -144,10 +144,10 @@ phases:
       Then verify it works correctly.  # BAD: self-verification
 ```
 
-**Right:** Separate phases for work and verification
+**Right:** Separate steps for work and verification
 
 ```yaml
-phases:
+steps:
   - name: implement
     context: fork
     instructions: |
@@ -164,7 +164,7 @@ phases:
 **Wrong:** Forking for trivial work
 
 ```yaml
-phases:
+steps:
   - name: run-tests
     context: fork
     instructions: Run ace-test
@@ -173,7 +173,7 @@ phases:
 **Right:** Orchestrator handles simple commands directly
 
 ```yaml
-phases:
+steps:
   - name: run-tests
     instructions: Run ace-test and report results
 ```
@@ -186,7 +186,7 @@ A typical work-on-task preset with fork context:
 name: work-on-task
 description: Work on a task with forked implementation
 
-phases:
+steps:
   - name: prepare
     instructions:
       - Load task context
@@ -213,10 +213,10 @@ phases:
 
 ## Debugging
 
-To see how fork phases are processed:
+To see how fork steps are processed:
 
 ```bash
-# Check current phase and context
+# Check current step and context
 ace-assign status
 
 # Enable debug output
@@ -227,4 +227,4 @@ ACE_DEBUG=1 ace-assign status
 
 - [ace-assign README](../../README.md) - Main documentation
 - [Work Queue Model](../workflow-instructions/drive-assignment.wf.md) - Assignment management
-- `ace-assign fork-run --root <phase> --assignment <id>` - Prepare subtree-scoped fork session
+- `ace-assign fork-run --root <step> --assignment <id>` - Prepare subtree-scoped fork session

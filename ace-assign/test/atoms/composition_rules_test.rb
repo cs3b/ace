@@ -41,15 +41,15 @@ class CompositionRulesTest < AceAssignTestCase
   # validate_ordering tests
 
   def test_validate_ordering_correct_sequence
-    phase_names = ["onboard", "work-on-task", "create-pr", "review-pr", "apply-feedback"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "create-pr", "review-pr", "apply-feedback"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     assert_empty violations
   end
 
   def test_validate_ordering_onboard_not_first
-    phase_names = ["work-on-task", "onboard", "create-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["work-on-task", "onboard", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     onboard_violation = violations.find { |v| v[:rule] == "onboard-first" }
     refute_nil onboard_violation
@@ -57,8 +57,8 @@ class CompositionRulesTest < AceAssignTestCase
   end
 
   def test_validate_ordering_review_before_pr
-    phase_names = ["onboard", "review-pr", "create-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "review-pr", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     pr_violation = violations.find { |v| v[:rule] == "pr-before-review" }
     refute_nil pr_violation
@@ -66,17 +66,17 @@ class CompositionRulesTest < AceAssignTestCase
   end
 
   def test_validate_ordering_apply_before_review
-    phase_names = ["onboard", "create-pr", "apply-feedback", "review-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "create-pr", "apply-feedback", "review-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     review_violation = violations.find { |v| v[:rule] == "review-before-apply" }
     refute_nil review_violation
   end
 
-  def test_validate_ordering_missing_phases_no_violation
-    # Rules only fire when both phases are present
-    phase_names = ["onboard", "work-on-task"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+  def test_validate_ordering_missing_steps_no_violation
+    # Rules only fire when both steps are present
+    step_names = ["onboard", "work-on-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     assert_empty violations
   end
@@ -87,25 +87,25 @@ class CompositionRulesTest < AceAssignTestCase
     assert_empty violations
   end
 
-  def test_validate_ordering_onboard_first_when_only_phase
-    phase_names = ["onboard"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+  def test_validate_ordering_onboard_first_when_only_step
+    step_names = ["onboard"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     assert_empty violations
   end
 
   def test_validate_ordering_without_onboard_no_violation
     # onboard-first only fires when onboard IS present but not first
-    phase_names = ["work-on-task", "create-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["work-on-task", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     assert_empty violations
   end
 
   def test_validate_ordering_plan_before_onboard
     # plan-task before onboard violates onboard-before-plan
-    phase_names = ["plan-task", "onboard", "work-on-task"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["plan-task", "onboard", "work-on-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     onboard_plan_violation = violations.find { |v| v[:rule] == "onboard-before-plan" }
     refute_nil onboard_plan_violation
@@ -114,8 +114,8 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_validate_ordering_work_before_plan
     # work-on-task before plan-task violates plan-before-implementation
-    phase_names = ["onboard", "work-on-task", "plan-task"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "plan-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     plan_impl_violation = violations.find { |v| v[:rule] == "plan-before-implementation" }
     refute_nil plan_impl_violation
@@ -124,8 +124,8 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_validate_ordering_plan_task_correct_sequence
     # Correct ordering: onboard, plan-task, work-on-task
-    phase_names = ["onboard", "plan-task", "work-on-task", "create-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "plan-task", "work-on-task", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     plan_violations = violations.select { |v| v[:rule].include?("plan") }
     assert_empty plan_violations
@@ -135,38 +135,38 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_suggest_additions_missing_pair_member
     # review-pr is present but apply-feedback is missing
-    phase_names = ["onboard", "work-on-task", "create-pr", "review-pr"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "create-pr", "review-pr"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    apply_suggestion = suggestions.find { |s| s[:phase] == "apply-feedback" }
+    apply_suggestion = suggestions.find { |s| s[:step] == "apply-feedback" }
     refute_nil apply_suggestion
     assert_equal "recommended", apply_suggestion[:strength]
   end
 
   def test_suggest_additions_pair_complete
-    phase_names = ["review-pr", "apply-feedback"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["review-pr", "apply-feedback"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
     # review-apply pair is complete, no suggestion needed
-    pair_suggestions = suggestions.select { |s| ["review-pr", "apply-feedback"].include?(s[:phase]) }
+    pair_suggestions = suggestions.select { |s| ["review-pr", "apply-feedback"].include?(s[:step]) }
     assert_empty pair_suggestions
   end
 
-  def test_suggest_additions_no_pair_phases
+  def test_suggest_additions_no_pair_steps
     # No pair members present — only conditional suggestions expected
-    phase_names = ["onboard"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    pair_suggestions = suggestions.select { |s| ["review-pr", "apply-feedback"].include?(s[:phase]) }
+    pair_suggestions = suggestions.select { |s| ["review-pr", "apply-feedback"].include?(s[:step]) }
     assert_empty pair_suggestions
   end
 
   def test_suggest_additions_conditional_pair_skipped
     # verify-test-suite/fix-tests pair is conditional, should not suggest
-    phase_names = ["verify-test-suite"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["verify-test-suite"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    fix_suggestion = suggestions.find { |s| s[:phase] == "fix-tests" }
+    fix_suggestion = suggestions.find { |s| s[:step] == "fix-tests" }
     assert_nil fix_suggestion
   end
 
@@ -179,67 +179,67 @@ class CompositionRulesTest < AceAssignTestCase
   # conditional suggestion tests
 
   def test_suggest_additions_conditional_work_on_task_suggests_test_suite
-    phase_names = ["onboard", "work-on-task", "create-pr"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "create-pr"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
+    test_suggestion = suggestions.find { |s| s[:step] == "verify-test-suite" }
     refute_nil test_suggestion
     assert_equal "required", test_suggestion[:strength]
   end
 
   def test_suggest_additions_conditional_fix_bug_suggests_test_suite
-    phase_names = ["onboard", "fix-bug"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "fix-bug"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
+    test_suggestion = suggestions.find { |s| s[:step] == "verify-test-suite" }
     refute_nil test_suggestion
   end
 
   def test_suggest_additions_conditional_no_trigger_no_suggestion
-    phase_names = ["onboard", "research"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "research"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
+    test_suggestion = suggestions.find { |s| s[:step] == "verify-test-suite" }
     assert_nil test_suggestion
   end
 
   def test_suggest_additions_conditional_already_included_not_suggested
-    phase_names = ["onboard", "work-on-task", "verify-test-suite"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "verify-test-suite"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
+    test_suggestion = suggestions.find { |s| s[:step] == "verify-test-suite" }
     assert_nil test_suggestion
   end
 
   def test_suggest_additions_conditional_plan_task_with_work
     # "assignment includes work-on-task" should suggest plan-task and mark-task-done
-    phase_names = ["onboard", "work-on-task", "create-pr"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "create-pr"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    plan_suggestion = suggestions.find { |s| s[:phase] == "plan-task" }
+    plan_suggestion = suggestions.find { |s| s[:step] == "plan-task" }
     refute_nil plan_suggestion
     assert_equal "recommended", plan_suggestion[:strength]
 
-    done_suggestion = suggestions.find { |s| s[:phase] == "mark-task-done" }
+    done_suggestion = suggestions.find { |s| s[:step] == "mark-task-done" }
     refute_nil done_suggestion
     assert_equal "recommended", done_suggestion[:strength]
   end
 
   def test_suggest_additions_conditional_plan_task_already_included
     # plan-task already present — should not be suggested
-    phase_names = ["onboard", "plan-task", "work-on-task"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "plan-task", "work-on-task"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    plan_suggestion = suggestions.find { |s| s[:phase] == "plan-task" }
+    plan_suggestion = suggestions.find { |s| s[:step] == "plan-task" }
     assert_nil plan_suggestion
   end
 
   # prefix matching tests
 
   def test_validate_ordering_prefix_match_release_minor
-    # "release" rule should match "release-minor" phase name
-    phase_names = ["onboard", "release-minor", "work-on-task"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    # "release" rule should match "release-minor" step name
+    step_names = ["onboard", "release-minor", "work-on-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     release_violation = violations.find { |v| v[:rule] == "release-after-implementation" }
     refute_nil release_violation
@@ -247,8 +247,8 @@ class CompositionRulesTest < AceAssignTestCase
   end
 
   def test_validate_ordering_prefix_match_correct_order
-    phase_names = ["onboard", "work-on-task", "release-minor", "create-pr"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "release-minor", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     release_violation = violations.find { |v| v[:rule] == "release-after-implementation" }
     assert_nil release_violation
@@ -256,8 +256,8 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_validate_ordering_prefix_match_release_patch
     # "release" should also match "release-patch-1"
-    phase_names = ["onboard", "release-patch-1", "work-on-task"]
-    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+    step_names = ["onboard", "release-patch-1", "work-on-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     release_violation = violations.find { |v| v[:rule] == "release-after-implementation" }
     refute_nil release_violation
@@ -267,29 +267,29 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_suggest_additions_conditional_and_both_present
     # "assignment includes review-pr and apply-feedback" → suggest release
-    phase_names = ["onboard", "work-on-task", "review-pr", "apply-feedback"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "review-pr", "apply-feedback"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    release_suggestion = suggestions.find { |s| s[:phase] == "release" }
+    release_suggestion = suggestions.find { |s| s[:step] == "release" }
     refute_nil release_suggestion
     assert_equal "recommended", release_suggestion[:strength]
   end
 
   def test_suggest_additions_conditional_and_only_one_present
     # Only review-pr present, not apply-feedback — "and" rule should NOT fire
-    phase_names = ["onboard", "work-on-task", "review-pr"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["onboard", "work-on-task", "review-pr"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    release_suggestion = suggestions.find { |s| s[:phase] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
+    release_suggestion = suggestions.find { |s| s[:step] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
     assert_nil release_suggestion
   end
 
   def test_suggest_additions_conditional_and_already_included
     # Both present but release already included — no suggestion
-    phase_names = ["review-pr", "apply-feedback", "release"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+    step_names = ["review-pr", "apply-feedback", "release"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
-    release_suggestion = suggestions.find { |s| s[:phase] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
+    release_suggestion = suggestions.find { |s| s[:step] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
     assert_nil release_suggestion
   end
 

@@ -11,7 +11,7 @@ steps:
     context: fork
     instructions: |
       Execute subtree A in forked context only.
-    sub_phases:
+    sub_steps:
       - onboard
       - plan-task
       - work-on-task

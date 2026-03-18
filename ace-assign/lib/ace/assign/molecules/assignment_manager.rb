@@ -33,7 +33,7 @@ module Ace
 
           # Create directories
           FileUtils.mkdir_p(cache_dir)
-          FileUtils.mkdir_p(File.join(cache_dir, "phases"))
+          FileUtils.mkdir_p(File.join(cache_dir, "steps"))
           FileUtils.mkdir_p(File.join(cache_dir, "reports"))
 
           now = Time.now.utc

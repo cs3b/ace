@@ -2,7 +2,7 @@
 
 ## Goal
 
-Explore `ace-assign --help` and any subcommand help it provides. Discover all subcommands (create, status, advance, report, add, drive, fail, retry, prepare), flags, and phase management features. Document the tool's interface comprehensively.
+Explore `ace-assign --help` and any subcommand help it provides. Discover all subcommands (create, status, advance, report, add, drive, fail, retry, prepare), flags, and step management features. Document the tool's interface comprehensively.
 
 ## Workspace
 

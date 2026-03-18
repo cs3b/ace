@@ -35,7 +35,7 @@ Loads the preset and injects parameter values.
 /as-assign-prepare "Work on task 123, create a PR, do 2 review cycles"
 ```
 
-Transforms prose into structured phases.
+Transforms prose into structured steps.
 
 ### 3. Preset + Customization
 
@@ -73,19 +73,19 @@ parameters:
     description: Task reference (e.g., task-123 or 123)
   pr_number:
     required: false
-    description: Optional PR number for review phases
+    description: Optional PR number for review steps
 
 steps:
-  - name: phase-name
+  - name: step-name
     skill: ace_skill_name  # Optional skill reference
     instructions:
-      - Phase instruction line one.
-      - "Phase instruction with {{parameter}} placeholder."
+      - Step instruction line one.
+      - "Step instruction with {{parameter}} placeholder."
 ```
 
 ### Preset with Expansion Directives
 
-For multi-task presets, use the `expansion` section to generate hierarchical phases:
+For multi-task presets, use the `expansion` section to generate hierarchical steps:
 
 ```yaml
 name: work-on-tasks
@@ -109,12 +109,12 @@ expansion:
   child-template:
     name: "work-on-{{item}}"  # {{item}} is current iteration value
     parent: "010"
-    context: fork  # Parent split phase can be forked (children stay non-fork)
+    context: fork  # Parent split step can be forked (children stay non-fork)
     instructions: |
       Implement task {{item}} per specification.
 
 steps:
-  # Phases after expansion are appended with their own numbers
+  # Steps after expansion are appended with their own numbers
   - name: consolidated-review
     number: "020"
     instructions: Review all batch changes.
@@ -177,27 +177,27 @@ When parsing informal instructions, identify:
 
 ### Loop Expansion
 
-Review loops expand into forked cycle parent phases with standard child sub-phases:
+Review loops expand into forked cycle parent steps with standard child sub-steps:
 
 ```yaml
 # "do 3 review cycles" becomes:
 - name: review-valid-1
   context: fork
-  sub_phases: [review-pr, apply-feedback, release]
+  sub_steps: [review-pr, apply-feedback, release]
   instructions:
     - "Child review-pr: use preset code-valid."
     - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
 - name: review-fit-1
   context: fork
-  sub_phases: [review-pr, apply-feedback, release]
+  sub_steps: [review-pr, apply-feedback, release]
   instructions:
     - "Child review-pr: use preset code-fit."
     - "Focus: quality — performance, architecture, standards, test coverage."
 
 - name: review-shine-1
   context: fork
-  sub_phases: [review-pr, apply-feedback, release]
+  sub_steps: [review-pr, apply-feedback, release]
   instructions:
     - "Child review-pr: use preset code-shine."
     - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
@@ -235,8 +235,8 @@ From informal instructions:
 ### 4. Apply Customizations (if prose provided)
 
 Parse modifications:
-- "skip onboarding" → remove onboard phase
-- "add security review" → insert security review phase
+- "skip onboarding" → remove onboard step
+- "add security review" → insert security review step
 - "only 2 cycles" → adjust loop count
 
 ### 5. Expand and Inject Parameters
@@ -248,12 +248,12 @@ require "ace/assign"
 
 preset = YAML.load_file("work-on-tasks.yml")
 params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
-phases = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
+steps = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 ```
 
 ### 5.1 Resolve Skill `assign.source` Metadata (Deterministic Runtime Expansion)
 
-After preset expansion, each phase with a `skill:` field may declare assignment source metadata via the skill frontmatter:
+After preset expansion, each step with a `skill:` field may declare assignment source metadata via the skill frontmatter:
 
 ```yaml
 assign:
@@ -261,16 +261,16 @@ assign:
 ```
 
 Resolution flow:
-1. Find `SKILL.md` by phase `skill` name (e.g., `ace:task-work`)
+1. Find `SKILL.md` by step `skill` name (e.g., `ace:task-work`)
 2. Read `assign.source` from skill frontmatter
 3. Resolve `wfi://...` to workflow file
-4. Parse workflow frontmatter `assign.sub-phases`
-5. Materialize those sub-phases into the concrete job phases
+4. Parse workflow frontmatter `assign.sub-steps`
+5. Materialize those sub-steps into the concrete job steps
 
 This keeps lifecycle ownership in workflow files while prepare/create remain deterministic.
 Compose intentionally does not perform this metadata scan.
 
-This generates hierarchical phases with:
+This generates hierarchical steps with:
 - Pre-assigned numbers (010, 010.01, 010.02, etc.)
 - Parent-child relationships
 - All `{{placeholder}}` tokens resolved
@@ -293,7 +293,7 @@ Check:
 - [ ] Session name is set
 - [ ] All required parameters have values
 - [ ] No unresolved `{{placeholder}}` tokens remain
-- [ ] Phases have names and instructions
+- [ ] Steps have names and instructions
 - [ ] Skill references are valid (if present)
 
 ### 7. Generate job.yaml
@@ -306,11 +306,11 @@ session:
   description: <preset description with context>
 
 steps:
-  - name: <phase-name>
+  - name: <step-name>
     skill: <skill-reference>  # If present in preset
     instructions:
       - <resolved instruction line>
-  # ... more phases
+  # ... more steps
 ```
 
 ### 8. Output Result
@@ -324,7 +324,7 @@ Report:
 Job configuration created: job.yaml
 
 Session: work-on-task-123
-Phases: 10 total
+Steps: 10 total
   - onboard
   - work-on-task
   - create-pr
@@ -365,10 +365,10 @@ steps:
     skill: as-github-pr-create
     instructions:
       - Create a pull request for the changes.
-      - Capture the PR number for subsequent review phases.
-      - Update the next phases with the PR number.
+      - Capture the PR number for subsequent review steps.
+      - Update the next steps with the PR number.
 
-  # ... more phases
+  # ... more steps
 ```
 
 ## Error Handling
@@ -388,7 +388,7 @@ steps:
 /as-assign-prepare work-on-task --taskref 148
 ```
 
-Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
+Creates job with 13 steps: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
 
 ### Example 2: Informal Instructions
 
@@ -447,8 +447,8 @@ Expands pattern to match subtasks (requires resolution at prepare time).
 - [ ] Input correctly parsed (preset, parameters, or prose)
 - [ ] Preset loaded and parameters injected
 - [ ] Expansion directives processed (if present)
-- [ ] Hierarchical phases numbered correctly
-- [ ] Loops expanded into separate phases
+- [ ] Hierarchical steps numbered correctly
+- [ ] Loops expanded into separate steps
 - [ ] All placeholders resolved
 - [ ] Valid job.yaml generated
 - [ ] Clear summary provided to user

@@ -3,14 +3,14 @@
 module Ace
   module Assign
     module Atoms
-      # Pure functions for expanding preset templates into phase definitions.
+      # Pure functions for expanding preset templates into step definitions.
       #
       # Handles `expansion:` directives in preset YAML files to generate
-      # hierarchical phase structures from parameter arrays.
+      # hierarchical step structures from parameter arrays.
       #
       # Supports:
-      # - `batch-parent`: Creates a parent container phase that auto-completes
-      # - `foreach`: Iterates over array parameter to create child phases
+      # - `batch-parent`: Creates a parent container step that auto-completes
+      # - `foreach`: Iterates over array parameter to create child steps
       # - `child-template`: Template for generating foreach children
       #
       # @example Preset with expansion
@@ -26,7 +26,7 @@ module Ace
       #       context: fork
       #       instructions: "Implement task {{item}}"
       #
-      # @example Generated phases for taskrefs: [148, 149, 150]
+      # @example Generated steps for taskrefs: [148, 149, 150]
       #   [
       #     { number: "010", name: "batch-tasks", instructions: "..." },
       #     { number: "010.01", name: "work-on-148", parent: "010", context: "fork", ... },
@@ -34,11 +34,11 @@ module Ace
       #     { number: "010.03", name: "work-on-150", parent: "010", context: "fork", ... }
       #   ]
       module PresetExpander
-        # Expand a preset configuration into concrete phases.
+        # Expand a preset configuration into concrete steps.
         #
         # @param preset [Hash] Parsed preset YAML with optional expansion section
         # @param parameters [Hash] Parameter values including arrays for foreach
-        # @return [Array<Hash>] Expanded phases ready for job.yaml
+        # @return [Array<Hash>] Expanded steps ready for job.yaml
         def self.expand(preset, parameters = {})
           expansion = preset["expansion"]
           base_steps = preset["steps"] || []
@@ -160,11 +160,11 @@ module Ace
         end
         private_class_method :normalize_array_parameter
 
-        # Build the batch parent phase.
+        # Build the batch parent step.
         #
         # @param config [Hash] batch-parent configuration
         # @param parameters [Hash] Parameter values for substitution
-        # @return [Hash] Parent phase definition
+        # @return [Hash] Parent step definition
         def self.build_batch_parent(config, parameters)
           step = {
             "number" => config["number"] || "010",
@@ -179,12 +179,12 @@ module Ace
         end
         private_class_method :build_batch_parent
 
-        # Build child phases from foreach template.
+        # Build child steps from foreach template.
         #
         # @param template [Hash] child-template configuration
         # @param items [Array<String>] Items to iterate over
         # @param parameters [Hash] Additional parameter values
-        # @return [Array<Hash>] Generated child phases
+        # @return [Array<Hash>] Generated child steps
         def self.build_foreach_children(template, items, parameters)
           parent_number = template["parent"] || "010"
           steps = []
@@ -209,11 +209,11 @@ module Ace
         end
         private_class_method :build_foreach_children
 
-        # Substitute parameters in a phase definition.
+        # Substitute parameters in a step definition.
         #
-        # @param step [Hash] Phase configuration
+        # @param step [Hash] Step configuration
         # @param parameters [Hash] Parameter values
-        # @return [Hash] Phase with substituted values
+        # @return [Hash] Step with substituted values
         def self.substitute_parameters(step, parameters)
           substitute_value(step, parameters)
         end

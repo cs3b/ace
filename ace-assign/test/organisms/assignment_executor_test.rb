@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class AssignmentExecutorTest < AceAssignTestCase
   include Ace::TestSupport::ConfigHelpers
 
-  def test_start_creates_assignment_and_phases
+  def test_start_creates_assignment_and_steps
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -61,7 +61,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     assert_includes allowlist, "codex"
   end
 
-  def test_advance_completes_phase_and_moves_to_next
+  def test_advance_completes_step_and_moves_to_next
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       report_path = create_report(cache_dir)
@@ -77,7 +77,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_fail_marks_phase_as_failed
+  def test_fail_marks_step_as_failed
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -91,7 +91,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_add_creates_dynamic_phase
+  def test_add_creates_dynamic_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -105,7 +105,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_retry_creates_linked_phase
+  def test_retry_creates_linked_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       report_path = create_report(cache_dir)
@@ -115,7 +115,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor.advance(report_path) # Complete init
       executor.fail("Tests failed") # Fail build
 
-      result = executor.retry_phase("020")
+      result = executor.retry_step("020")
 
       assert_equal "build", result[:retry].name
       assert_equal "retry_of:020", result[:retry].added_by
@@ -123,71 +123,71 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_persists_skill_in_phase_files
+  def test_start_persists_skill_in_step_files
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "onboard", "skill" => "as-onboard", "instructions" => "Load context" },
         { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review changes" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Verify skill is persisted in phase files
-      phases_dir = result[:assignment].phases_dir
-      phase_files = Dir.glob(File.join(phases_dir, "*.ph.md")).sort
+      # Verify skill is persisted in step files
+      steps_dir = result[:assignment].steps_dir
+      step_files = Dir.glob(File.join(steps_dir, "*.st.md")).sort
 
-      first_content = File.read(phase_files[0])
+      first_content = File.read(step_files[0])
       assert_includes first_content, "skill: as-onboard"
 
-      second_content = File.read(phase_files[1])
+      second_content = File.read(step_files[1])
       assert_includes second_content, "skill: ace_custom_work"
 
-      # Third phase has no skill — should not have skill key
-      third_content = File.read(phase_files[2])
+      # Third step has no skill — should not have skill key
+      third_content = File.read(step_files[2])
       refute_includes third_content, "skill:"
     end
   end
 
   def test_start_persists_skill_readable_by_queue_scanner
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assert_equal "ace_custom_work", result[:current].skill
-      assert_nil result[:state].phases[1].skill
+      assert_nil result[:state].steps[1].skill
     end
   end
 
   def test_start_handles_array_instructions
     with_temp_cache do |cache_dir|
-      phases = [
-        { "name" => "array-phase", "instructions" => ["Line one.", "Line two.", "Line three."] },
-        { "name" => "string-phase", "instructions" => "Single string instructions." }
+      steps = [
+        { "name" => "array-step", "instructions" => ["Line one.", "Line two.", "Line three."] },
+        { "name" => "string-step", "instructions" => "Single string instructions." }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
       # Array instructions should be joined with newlines
       current = result[:current]
-      assert_equal "array-phase", current.name
+      assert_equal "array-step", current.name
       assert_includes current.instructions, "Line one."
       assert_includes current.instructions, "Line two."
       assert_includes current.instructions, "Line three."
 
       # String instructions should pass through unchanged
-      string_phase = result[:state].phases[1]
-      assert_equal "Single string instructions.", string_phase.instructions.strip
+      string_step = result[:state].steps[1]
+      assert_equal "Single string instructions.", string_step.instructions.strip
     end
   end
 
@@ -231,20 +231,20 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_preserves_legacy_phase_archive_path
+  def test_start_preserves_legacy_step_archive_path
     with_temp_cache do |cache_dir|
-      legacy_phases_dir = File.join(cache_dir, "task-folder", "phases")
-      FileUtils.mkdir_p(legacy_phases_dir)
-      config_path = create_test_config(legacy_phases_dir, name: "legacy-phase-spec")
+      legacy_steps_dir = File.join(cache_dir, "task-folder", "steps")
+      FileUtils.mkdir_p(legacy_steps_dir)
+      config_path = create_test_config(legacy_steps_dir, name: "legacy-step-spec")
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert File.exist?(config_path), "Legacy phases config should remain in-place"
+      assert File.exist?(config_path), "Legacy steps config should remain in-place"
       assert_equal File.expand_path(config_path), result[:assignment].source_config
 
-      unexpected_archive = File.join(legacy_phases_dir, "jobs", "#{result[:assignment].id}-job.yml")
-      refute File.exist?(unexpected_archive), "Legacy phases config should not be moved into nested jobs/ directory"
+      unexpected_archive = File.join(legacy_steps_dir, "jobs", "#{result[:assignment].id}-job.yml")
+      refute File.exist?(unexpected_archive), "Legacy steps config should not be moved into nested jobs/ directory"
     end
   end
 
@@ -257,9 +257,9 @@ class AssignmentExecutorTest < AceAssignTestCase
       # Start
       result = executor.start(config_path)
 
-      # Complete all phases
+      # Complete all steps
       3.times do
-        report_path = create_report(cache_dir, "Phase completed")
+        report_path = create_report(cache_dir, "Step completed")
         result = executor.advance(report_path)
       end
 
@@ -289,70 +289,70 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert File.exist?(report_file), "Report file should exist in reports directory"
 
       report_content = File.read(report_file)
-      assert_includes report_content, "phase: '010'"
+      assert_includes report_content, "step: '010'"
       assert_includes report_content, "name: init"
       assert_includes report_content, "All done!"
 
-      # Phase file should not have report embedded
-      phase_file = File.join(assignment.phases_dir, "010-init.ph.md")
-      phase_content = File.read(phase_file)
-      refute_includes phase_content, "All done!"
+      # Step file should not have report embedded
+      step_file = File.join(assignment.steps_dir, "010-init.st.md")
+      step_content = File.read(step_file)
+      refute_includes step_content, "All done!"
     end
   end
 
-  def test_start_persists_context_in_phase_files
+  def test_start_persists_context_in_step_files
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "prepare", "instructions" => "Load context" },
         { "name" => "implement", "context" => "fork", "instructions" => "Do the work" },
         { "name" => "verify", "instructions" => "Run tests" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Verify context is persisted in phase files
-      phases_dir = result[:assignment].phases_dir
-      phase_files = Dir.glob(File.join(phases_dir, "*.ph.md")).sort
+      # Verify context is persisted in step files
+      steps_dir = result[:assignment].steps_dir
+      step_files = Dir.glob(File.join(steps_dir, "*.st.md")).sort
 
-      # First phase has no context
-      first_content = File.read(phase_files[0])
+      # First step has no context
+      first_content = File.read(step_files[0])
       refute_includes first_content, "context:"
 
-      # Second phase has fork context
-      second_content = File.read(phase_files[1])
+      # Second step has fork context
+      second_content = File.read(step_files[1])
       assert_includes second_content, "context: fork"
 
-      # Third phase has no context
-      third_content = File.read(phase_files[2])
+      # Third step has no context
+      third_content = File.read(step_files[2])
       refute_includes third_content, "context:"
     end
   end
 
   def test_start_persists_context_readable_by_queue_scanner
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "prepare", "instructions" => "Load context" },
         { "name" => "implement", "context" => "fork", "instructions" => "Do the work" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # First phase (current) has no context
+      # First step (current) has no context
       assert_nil result[:current].context
       refute result[:current].fork?
 
-      # Second phase has fork context
-      implement_phase = result[:state].phases[1]
-      assert_equal "fork", implement_phase.context
-      assert implement_phase.fork?
+      # Second step has fork context
+      implement_step = result[:state].steps[1]
+      assert_equal "fork", implement_step.context
+      assert implement_step.fork?
     end
   end
 
-  # === Hierarchical Phase Tests ===
+  # === Hierarchical Step Tests ===
 
   def test_add_with_after_creates_sibling
     with_temp_cache do |cache_dir|
@@ -361,7 +361,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      # Add a phase after 010 (init)
+      # Add a step after 010 (init)
       result = executor.add("verify", "Verify initialization", after: "010")
 
       assert_equal "verify", result[:added].name
@@ -372,17 +372,17 @@ class AssignmentExecutorTest < AceAssignTestCase
 
   def test_add_with_after_renumbers_existing
     with_temp_cache do |cache_dir|
-      # Create assignment with phases at 010, 020, 030
+      # Create assignment with steps at 010, 020, 030
       config_path = create_test_config(cache_dir)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Add a phase after 010 - should create 011
+      # Add a step after 010 - should create 011
       # Existing 020 and 030 should remain unchanged (they're not siblings of 010.xx)
       result = executor.add("verify", "Verify", after: "010")
 
-      # The new phase should be 011
+      # The new step should be 011
       assert_equal "011", result[:added].number
 
       # Get all current numbers
@@ -394,14 +394,14 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_add_with_as_child_creates_nested_phase
+  def test_add_with_as_child_creates_nested_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      # Add a child phase under 010 (init)
+      # Add a child step under 010 (init)
       result = executor.add("verify", "Verify initialization", after: "010", as_child: true)
 
       assert_equal "verify", result[:added].name
@@ -409,7 +409,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_add_child_under_active_phase_rebalances_to_child
+  def test_add_child_under_active_step_rebalances_to_child
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [
         { "name" => "parent-job", "instructions" => "Parent work" },
@@ -451,7 +451,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_add_child_under_non_active_phase_keeps_existing_current
+  def test_add_child_under_non_active_step_keeps_existing_current
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       report_path = create_report(cache_dir, "done")
@@ -468,7 +468,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_add_sibling_does_not_change_current_phase
+  def test_add_sibling_does_not_change_current_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -514,17 +514,17 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      # Add nested phases
+      # Add nested steps
       executor.add("verify-init", "Verify", after: "010", as_child: true)
       result = executor.add("fix-init", "Fix issues", after: "010.01")
 
       # Get hierarchical structure
       hierarchy = result[:state].hierarchical
 
-      # Should have 3 top-level phases (010, 020, 030)
+      # Should have 3 top-level steps (010, 020, 030)
       assert_equal 3, hierarchy.size
 
-      # First phase (010) should have children
+      # First step (010) should have children
       first = hierarchy[0]
       assert_equal "010", first[:step].number
       assert first[:children].size >= 1
@@ -538,7 +538,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      # Add nested phases
+      # Add nested steps
       executor.add("verify", "Verify", after: "010", as_child: true) # 010.01
       executor.add("deep", "Deep", after: "010.01", as_child: true)  # 010.01.01
 
@@ -551,20 +551,20 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  # === Sub-phase fork enforcement tests ===
+  # === Sub-step fork enforcement tests ===
 
-  def test_start_with_sub_phases_creates_batch_parent_and_children
+  def test_start_with_sub_steps_creates_batch_parent_and_children
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "onboard", "instructions" => "Load context" },
         {
           "name" => "work-on-task",
-          "instructions" => "Container for sub-phases",
-          "sub_phases" => %w[onboard implement verify-tests]
+          "instructions" => "Container for sub-steps",
+          "sub_steps" => %w[onboard implement verify-tests]
         },
         { "name" => "review", "instructions" => "Review changes" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
@@ -581,8 +581,8 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_includes numbers, "030"
 
       # Batch parent should have fork context
-      parent_phase = state.find_by_number("020")
-      assert_equal "fork", parent_phase.context
+      parent_step = state.find_by_number("020")
+      assert_equal "fork", parent_step.context
 
       # Children should have correct names
       child1 = state.find_by_number("020.01")
@@ -607,21 +607,21 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_without_sub_phases_unchanged
+  def test_start_without_sub_steps_unchanged
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Standard 3-phase setup, no sub-phases
+      # Standard 3-step setup, no sub-steps
       assert_equal 3, result[:state].size
       numbers = result[:state].all_numbers
       assert_equal %w[010 020 030], numbers.sort
     end
   end
 
-  def test_start_resolves_skill_assign_source_and_expands_sub_phases
+  def test_start_resolves_skill_assign_source_and_expands_sub_steps
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       FileUtils.mkdir_p(File.join(project_root, "ace-bundle", ".ace-defaults", "nav", "protocols", "skill-sources"))
@@ -694,7 +694,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
-          sub-phases:
+          sub-steps:
             - onboard
             - task-load
             - plan-task
@@ -710,7 +710,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         Follow the workflow body directly.
       MD
 
-      phases = [
+      steps = [
         { "name" => "work-on-task", "skill" => "as-task-work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review changes" }
       ]
@@ -729,7 +729,7 @@ class AssignmentExecutorTest < AceAssignTestCase
           "native_review_clients" => %w[claude codex]
         }
       }.to_yaml)
-      config_path = create_test_config(project_root, steps: phases)
+      config_path = create_test_config(project_root, steps: steps)
 
       with_real_config do
         Dir.chdir(project_root) do
@@ -755,67 +755,67 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes numbers, "010.07"
             assert_includes numbers, "020"
 
-            parent_phase = state.find_by_number("010")
-            assert_equal "fork", parent_phase.context
-            assert_nil parent_phase.skill
-            assert_includes parent_phase.instructions, "Subtree root orchestrator phase."
-            assert_includes parent_phase.instructions, "ace-assign fork-run --assignment <assignment-id>@010"
-            assert_includes parent_phase.instructions, "Do work"
+            parent_step = state.find_by_number("010")
+            assert_equal "fork", parent_step.context
+            assert_nil parent_step.skill
+            assert_includes parent_step.instructions, "Subtree root orchestrator step."
+            assert_includes parent_step.instructions, "ace-assign fork-run --assignment <assignment-id>@010"
+            assert_includes parent_step.instructions, "Do work"
 
-            onboard_phase = state.find_by_number("010.01")
-            task_load_phase = state.find_by_number("010.02")
-            plan_phase = state.find_by_number("010.03")
-            work_phase = state.find_by_number("010.04")
-            review_phase = state.find_by_number("010.05")
-            verify_phase = state.find_by_number("010.06")
-            release_phase = state.find_by_number("010.07")
+            onboard_step = state.find_by_number("010.01")
+            task_load_step = state.find_by_number("010.02")
+            plan_step = state.find_by_number("010.03")
+            work_step = state.find_by_number("010.04")
+            review_step = state.find_by_number("010.05")
+            verify_step = state.find_by_number("010.06")
+            release_step = state.find_by_number("010.07")
 
-            assert_equal "onboard", onboard_phase.name
-            assert_equal "plan-task", plan_phase.name
-            assert_equal "work-on-task", work_phase.name
-            assert_equal "task-load", task_load_phase.name
-            assert_equal "pre-commit-review", review_phase.name
-            assert_equal "verify-test", verify_phase.name
-            assert_equal "release-minor", release_phase.name
+            assert_equal "onboard", onboard_step.name
+            assert_equal "plan-task", plan_step.name
+            assert_equal "work-on-task", work_step.name
+            assert_equal "task-load", task_load_step.name
+            assert_equal "pre-commit-review", review_step.name
+            assert_equal "verify-test", verify_step.name
+            assert_equal "release-minor", release_step.name
 
             # First actionable child is activated (parent container is skipped)
             assert_equal "010.01", result[:current].number
 
-            # Skill-backed phases materialize from canonical skill bodies with provenance metadata.
-            assert_nil onboard_phase.skill
-            assert_nil plan_phase.skill
-            assert_nil work_phase.skill
-            assert_nil review_phase.skill
-            assert_nil verify_phase.skill
-            assert_nil release_phase.skill
+            # Skill-backed steps materialize from canonical skill bodies with provenance metadata.
+            assert_nil onboard_step.skill
+            assert_nil plan_step.skill
+            assert_nil work_step.skill
+            assert_nil review_step.skill
+            assert_nil verify_step.skill
+            assert_nil release_step.skill
 
             # Parent is fork context: children remain non-fork and execute in same delegated subtree process
-            assert_nil onboard_phase.context
-            assert_nil plan_phase.context
-            assert_nil work_phase.context
-            assert_nil review_phase.context
-            assert_nil task_load_phase.context
-            assert_nil verify_phase.context
-            assert_nil release_phase.context
+            assert_nil onboard_step.context
+            assert_nil plan_step.context
+            assert_nil work_step.context
+            assert_nil review_step.context
+            assert_nil task_load_step.context
+            assert_nil verify_step.context
+            assert_nil release_step.context
 
             # Child instructions include parent task context for parameter extraction
-            assert_includes File.read(onboard_phase.file_path), "source_skill: as-onboard"
-            assert_includes File.read(plan_phase.file_path), "source_skill: as-task-plan"
-            assert_includes File.read(work_phase.file_path), "source_skill: as-task-work"
-            assert_includes File.read(plan_phase.file_path), "source_workflow: wfi://task/plan"
-            assert_includes File.read(work_phase.file_path), "source_workflow: wfi://task/work"
-            assert_includes work_phase.instructions, "Task request: Do work"
-            assert_includes work_phase.instructions, "# Work on Task"
-            refute_includes work_phase.instructions, "Assignment-specific context:\n- Task context:"
-            assert_includes verify_phase.instructions, "Action:"
-            assert_includes verify_phase.instructions, "Identify modified packages"
-            assert_includes verify_phase.instructions, "ace-test --profile 6"
-            assert_includes review_phase.instructions, "run native `/review`"
-            assert_includes review_phase.instructions, "Allowed native review clients: claude, codex."
-            assert_includes review_phase.instructions, "pre_commit_review_block"
-            assert_includes release_phase.instructions, "Action:"
-            refute_includes release_phase.instructions, "/as-release"
-            assert_includes release_phase.instructions, "Release all modified packages"
+            assert_includes File.read(onboard_step.file_path), "source_skill: as-onboard"
+            assert_includes File.read(plan_step.file_path), "source_skill: as-task-plan"
+            assert_includes File.read(work_step.file_path), "source_skill: as-task-work"
+            assert_includes File.read(plan_step.file_path), "source_workflow: wfi://task/plan"
+            assert_includes File.read(work_step.file_path), "source_workflow: wfi://task/work"
+            assert_includes work_step.instructions, "Task request: Do work"
+            assert_includes work_step.instructions, "# Work on Task"
+            refute_includes work_step.instructions, "Assignment-specific context:\n- Task context:"
+            assert_includes verify_step.instructions, "Action:"
+            assert_includes verify_step.instructions, "Identify modified packages"
+            assert_includes verify_step.instructions, "ace-test --profile 6"
+            assert_includes review_step.instructions, "run native `/review`"
+            assert_includes review_step.instructions, "Allowed native review clients: claude, codex."
+            assert_includes review_step.instructions, "pre_commit_review_block"
+            assert_includes release_step.instructions, "Action:"
+            refute_includes release_step.instructions, "/as-release"
+            assert_includes release_step.instructions, "Release all modified packages"
           end
         ensure
           if original_home.nil?
@@ -848,10 +848,10 @@ class AssignmentExecutorTest < AceAssignTestCase
 
     notes = executor.send(
       :assignment_specific_notes,
-      phase_name: "review-pr",
+      step_name: "review-pr",
       instructions: <<~TEXT
         Task context:
-        Task request: Execute the valid review cycle via child phases.
+        Task request: Execute the valid review cycle via child steps.
 
         Assignment-specific context:
         - use preset code-valid.
@@ -867,12 +867,12 @@ class AssignmentExecutorTest < AceAssignTestCase
     assert_includes notes, "- Focus: correctness, behavioral regressions, and contract validation."
   end
 
-  def test_render_skill_backed_phase_instructions_uses_phase_template_for_verify_test_suite
+  def test_render_skill_backed_step_instructions_uses_step_template_for_verify_test_suite
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
 
     instructions = executor.send(
-      :render_skill_backed_phase_instructions,
-      phase: {
+      :render_skill_backed_step_instructions,
+      step: {
         "name" => "verify-test-suite",
         "taskref" => "8q5.1",
         "instructions" => "Verify only the modified packages.\nSkip if the change is docs-only."
@@ -880,7 +880,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       rendering: {
         "name" => "verify-test-suite",
         "workflow" => "wfi://test/verify-suite",
-        "render" => "phase_template",
+        "render" => "step_template",
         "description" => "Run package test suites with profiling to verify correctness and performance",
         "steps" => [
           { "description" => "Run ace-test --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep." },
@@ -892,7 +892,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       }
     )
 
-    assert_includes instructions, "Phase focus:"
+    assert_includes instructions, "Step focus:"
     assert_includes instructions, "Run ace-test --profile 6 for each modified package"
     assert_includes instructions, "Skip when:"
     assert_includes instructions, "Assignment-specific context:"
@@ -901,12 +901,12 @@ class AssignmentExecutorTest < AceAssignTestCase
     refute_includes instructions, "create follow-up tasks"
   end
 
-  def test_render_skill_backed_phase_instructions_uses_phase_template_for_verify_e2e
+  def test_render_skill_backed_step_instructions_uses_step_template_for_verify_e2e
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
 
     instructions = executor.send(
-      :render_skill_backed_phase_instructions,
-      phase: {
+      :render_skill_backed_step_instructions,
+      step: {
         "name" => "verify-e2e",
         "taskref" => "8q5.1",
         "instructions" => "Run only for heavily modified packages with public CLI changes."
@@ -914,7 +914,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       rendering: {
         "name" => "verify-e2e",
         "workflow" => "wfi://e2e/review",
-        "render" => "phase_template",
+        "render" => "step_template",
         "description" => "Review E2E coverage for modified packages and run targeted scenarios",
         "steps" => [
           { "description" => "Review coverage for heavily modified packages" },
@@ -935,7 +935,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     refute_includes instructions, "wfi://e2e/rewrite"
   end
 
-  def test_start_with_sub_phases_compacts_child_context_and_avoids_parent_boilerplate
+  def test_start_with_sub_steps_compacts_child_context_and_avoids_parent_boilerplate
     with_temp_dir do |project_root|
       cache_dir = File.join(project_root, ".cache", "ace-assign")
       FileUtils.mkdir_p(cache_dir)
@@ -999,7 +999,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             workflow: wfi://task/work
         assign:
           source: wfi://task/work
-          sub-phases:
+          sub-steps:
             - onboard
             - plan-task
             - work-on-task
@@ -1009,18 +1009,18 @@ class AssignmentExecutorTest < AceAssignTestCase
         read and run `ace-bundle wfi://task/work`
       MD
 
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "skill" => "as-task-work",
           "taskref" => "235.01",
-          "sub_phases" => %w[onboard plan-task work-on-task],
+          "sub_steps" => %w[onboard plan-task work-on-task],
           "instructions" => "First: onboard yourself using /as-onboard skill to load project context.\n" \
                             "Implement the selected task.\n" \
                             "When complete, mark the task as done: run `ace-taskflow task done 235.01`"
         }
       ]
-      config_path = create_test_config(project_root, steps: phases)
+      config_path = create_test_config(project_root, steps: steps)
 
       Dir.chdir(project_root) do
         original_project_root = ENV["PROJECT_ROOT_PATH"]
@@ -1030,17 +1030,17 @@ class AssignmentExecutorTest < AceAssignTestCase
         result = executor.start(config_path)
         state = result[:state]
 
-        plan_phase = state.find_by_number("010.02")
-        work_phase = state.find_by_number("010.03")
+        plan_step = state.find_by_number("010.02")
+        work_step = state.find_by_number("010.03")
 
-        assert_includes plan_phase.instructions, "Task reference: 235.01"
-        assert_includes work_phase.instructions, "Task reference: 235.01"
-        assert_includes File.read(plan_phase.file_path), "taskref: '235.01'"
-        assert_includes File.read(work_phase.file_path), "taskref: '235.01'"
-        assert_equal "as-task-plan", plan_phase.skill
-        assert_equal "as-task-work", work_phase.skill
-        refute_includes plan_phase.instructions, "Verification checklist (from parent phase goals):"
-        refute_includes work_phase.instructions, "Verification checklist (from parent phase goals):"
+        assert_includes plan_step.instructions, "Task reference: 235.01"
+        assert_includes work_step.instructions, "Task reference: 235.01"
+        assert_includes File.read(plan_step.file_path), "taskref: '235.01'"
+        assert_includes File.read(work_step.file_path), "taskref: '235.01'"
+        assert_equal "as-task-plan", plan_step.skill
+        assert_equal "as-task-work", work_step.skill
+        refute_includes plan_step.instructions, "Verification checklist (from parent step goals):"
+        refute_includes work_step.instructions, "Verification checklist (from parent step goals):"
       ensure
         if original_project_root.nil?
           ENV.delete("PROJECT_ROOT_PATH")
@@ -1052,7 +1052,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_with_sub_phases_uses_project_split_parent_template_and_preserves_default_catalog_entries
+  def test_start_with_sub_steps_uses_project_split_parent_template_and_preserves_default_catalog_entries
     with_temp_dir do |project_root|
       cache_dir = File.join(project_root, ".cache", "ace-assign")
       FileUtils.mkdir_p(cache_dir)
@@ -1081,28 +1081,28 @@ class AssignmentExecutorTest < AceAssignTestCase
         ---
       MD
 
-      project_catalog_dir = File.join(project_root, ".ace", "assign", "catalog", "phases")
+      project_catalog_dir = File.join(project_root, ".ace", "assign", "catalog", "steps")
       FileUtils.mkdir_p(project_catalog_dir)
-      File.write(File.join(project_catalog_dir, "split-subtree-root.phase.yml"), <<~YAML)
+      File.write(File.join(project_catalog_dir, "split-subtree-root.step.yml"), <<~YAML)
         name: split-subtree-root
         instructions:
           common:
             - "CUSTOM ROOT {{parent_number}}"
-            - "children={{sub_phases}}"
+            - "children={{sub_steps}}"
           fork:
             - "CUSTOM FORK {{parent_number}}"
         goal_header: "Custom goal header:"
       YAML
 
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "context" => "fork",
           "instructions" => "Implement task 235.01",
-          "sub_phases" => ["onboard"]
+          "sub_steps" => ["onboard"]
         }
       ]
-      config_path = create_test_config(project_root, steps: phases)
+      config_path = create_test_config(project_root, steps: steps)
 
       Dir.chdir(project_root) do
         original_project_root = ENV["PROJECT_ROOT_PATH"]
@@ -1112,16 +1112,16 @@ class AssignmentExecutorTest < AceAssignTestCase
         result = executor.start(config_path)
         state = result[:state]
 
-        parent_phase = state.find_by_number("010")
-        child_phase = state.find_by_number("010.01")
+        parent_step = state.find_by_number("010")
+        child_step = state.find_by_number("010.01")
 
-        assert_includes parent_phase.instructions, "CUSTOM ROOT 010"
-        assert_includes parent_phase.instructions, "children=onboard"
-        assert_includes parent_phase.instructions, "CUSTOM FORK 010"
-        assert_includes parent_phase.instructions, "Custom goal header:"
+        assert_includes parent_step.instructions, "CUSTOM ROOT 010"
+        assert_includes parent_step.instructions, "children=onboard"
+        assert_includes parent_step.instructions, "CUSTOM FORK 010"
+        assert_includes parent_step.instructions, "Custom goal header:"
 
         # Project override should not replace entire catalog; child metadata still resolves from default catalog.
-        assert_equal "as-onboard", child_phase.skill
+        assert_equal "as-onboard", child_step.skill
       ensure
         if original_project_root.nil?
           ENV.delete("PROJECT_ROOT_PATH")
@@ -1140,7 +1140,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      # Add nested phases
+      # Add nested steps
       executor.add("verify", "Verify", after: "010", as_child: true) # 010.01
       executor.add("deep", "Deep", after: "010.01", as_child: true)  # 010.01.01
 
@@ -1156,16 +1156,16 @@ class AssignmentExecutorTest < AceAssignTestCase
 
   def test_advance_respects_fork_root_scope_and_does_not_escape_subtree
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         },
         { "name" => "review", "instructions" => "Review changes" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
@@ -1182,19 +1182,19 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_advance_with_fork_root_uses_subtree_phase_when_global_current_is_outside_scope
+  def test_advance_with_fork_root_uses_subtree_step_when_global_current_is_outside_scope
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "precheck", "instructions" => "Run precheck" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         },
         { "name" => "postcheck", "instructions" => "Run postcheck" }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       start_result = executor.start(config_path)
@@ -1211,39 +1211,39 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_advance_with_fork_root_raises_when_multiple_subtree_phases_are_in_progress
+  def test_advance_with_fork_root_raises_when_multiple_subtree_steps_are_in_progress
     with_temp_cache do |cache_dir|
-      phases = [
+      steps = [
         { "name" => "precheck", "instructions" => "Run precheck" },
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
-          "sub_phases" => %w[onboard plan-task]
+          "sub_steps" => %w[onboard plan-task]
         }
       ]
-      config_path = create_test_config(cache_dir, steps: phases)
+      config_path = create_test_config(cache_dir, steps: steps)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       start_result = executor.start(config_path)
       assignment = start_result[:assignment]
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
-      writer = Ace::Assign::Molecules::PhaseWriter.new
-      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer = Ace::Assign::Molecules::StepWriter.new
+      state = scanner.scan(assignment.steps_dir, assignment: assignment)
       writer.mark_in_progress(state.find_by_number("020.01").file_path)
       writer.mark_in_progress(state.find_by_number("020.02").file_path)
 
       report_path = create_report(cache_dir, "Scoped progress")
-      error = assert_raises(Ace::Assign::PhaseErrors::InvalidState) do
+      error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
         executor.advance(report_path, fork_root: "020")
       end
 
-      assert_includes error.message, "multiple phases are in progress"
+      assert_includes error.message, "multiple steps are in progress"
     end
   end
 
-  def test_start_with_work_on_task_preset_emits_canonical_skill_backed_phases
+  def test_start_with_work_on_task_preset_emits_canonical_skill_backed_steps
     with_temp_cache do |cache_dir|
       project_root = File.expand_path("../../..", __dir__)
       steps = materialize_preset_steps(project_root, "work-on-task", "taskref" => "148")
@@ -1285,7 +1285,7 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_with_work_on_tasks_preset_emits_canonical_skill_backed_batch_phases
+  def test_start_with_work_on_tasks_preset_emits_canonical_skill_backed_batch_steps
     with_temp_cache do |cache_dir|
       project_root = File.expand_path("../../..", __dir__)
       steps = materialize_preset_steps(project_root, "work-on-tasks", "taskrefs" => %w[148 149])

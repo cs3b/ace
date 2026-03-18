@@ -1,6 +1,6 @@
 name: verify-test-suite
 skill: as-test-verify-suite
-render: phase_template
+render: step_template
 description: Run package test suites with profiling to verify correctness and performance
 intent:
   phrases:
@@ -24,7 +24,7 @@ context:
 
 when_to_skip:
   - "No code changes that could affect tests (documentation-only)"
-  - "Tests were already run and profiled in a previous phase"
+  - "Tests were already run and profiled in a previous step"
 
 effort: light
 tags: [testing, verification, performance]

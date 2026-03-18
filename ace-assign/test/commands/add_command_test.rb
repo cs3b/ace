@@ -3,7 +3,7 @@
 require_relative "../test_helper"
 
 class AddCommandTest < AceAssignTestCase
-  def test_add_creates_phase
+  def test_add_creates_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -20,7 +20,7 @@ class AddCommandTest < AceAssignTestCase
         )
       end
       assert_nil result  # Verify success returns nil
-      assert_includes output.first, "Created: phases/"
+      assert_includes output.first, "Created: steps/"
       assert_includes output.first, "fix-bug"
 
       Ace::Assign.reset_config!
@@ -59,7 +59,7 @@ class AddCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes output.first, "Created: phases/"
+      assert_includes output.first, "Created: steps/"
       assert_includes output.first, "011-verify"
       assert_includes output.first, "sibling after 010"
 
@@ -85,7 +85,7 @@ class AddCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes output.first, "Created: phases/"
+      assert_includes output.first, "Created: steps/"
       assert_includes output.first, "010.01-verify"
       assert_includes output.first, "child of 010"
 
@@ -114,18 +114,18 @@ class AddCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes output.first, "Created: phases/"
+      assert_includes output.first, "Created: steps/"
       assert_includes output.first, "hotfix"
 
-      # Verify the phase was added to the targeted assignment, not the first one
-      target_phases_dir = result2[:assignment].phases_dir
-      added_files = Dir.glob(File.join(target_phases_dir, "*hotfix*"))
-      refute_empty added_files, "Phase should be added to the targeted assignment"
+      # Verify the step was added to the targeted assignment, not the first one
+      target_steps_dir = result2[:assignment].steps_dir
+      added_files = Dir.glob(File.join(target_steps_dir, "*hotfix*"))
+      refute_empty added_files, "Step should be added to the targeted assignment"
 
       # Verify the first assignment was not modified
-      first_phases_dir = result1[:assignment].phases_dir
-      first_hotfix = Dir.glob(File.join(first_phases_dir, "*hotfix*"))
-      assert_empty first_hotfix, "First assignment should not have the new phase"
+      first_steps_dir = result1[:assignment].steps_dir
+      first_hotfix = Dir.glob(File.join(first_steps_dir, "*hotfix*"))
+      assert_empty first_hotfix, "First assignment should not have the new step"
 
       Ace::Assign.reset_config!
     end

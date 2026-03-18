@@ -15,12 +15,12 @@ update:
 
 ## Purpose
 
-Compose a tailored assignment by selecting phases from assign-capable canonical skills, applying composition rules, and using recipes as optional starting points.
+Compose a tailored assignment by selecting steps from assign-capable canonical skills, applying composition rules, and using recipes as optional starting points.
 
 Boundary:
-- Compose resolves intent from user input + assign-capable canonical phase data.
-- Compose is allowed to use phase-level intent metadata (phrase hints) from canonicalized phase entries.
-- Compose keeps skill-backed phases high-level. Runtime `ace-assign create` performs `assign.source` sub-phase expansion.
+- Compose resolves intent from user input + assign-capable canonical step data.
+- Compose is allowed to use step-level intent metadata (phrase hints) from canonicalized step entries.
+- Compose keeps skill-backed steps high-level. Runtime `ace-assign create` performs `assign.source` sub-step expansion.
 
 ## Input Formats
 
@@ -46,7 +46,7 @@ Boundary:
 
 ### 1. Load Canonical Assign-Capable Catalog
 
-Load public skill-backed phase entries from canonical skills:
+Load public skill-backed step entries from canonical skills:
 
 ```
 Canonical source: skill://* (workflow/orchestration skills with explicit assign metadata)
@@ -54,11 +54,11 @@ Read: ace-assign/.ace-defaults/assign/catalog/composition-rules.yml
 Glob: ace-assign/.ace-defaults/assign/catalog/recipes/*.recipe.yml
 ```
 
-Internal helper phase templates under `ace-assign/.ace-defaults/assign/catalog/phases/*.phase.yml`
-remain runtime support data for non-skill phases such as subtree orchestration helpers. They are not the
-authoritative source for public skill-backed phase composition.
+Internal helper step templates under `ace-assign/.ace-defaults/assign/catalog/steps/*.step.yml`
+remain runtime support data for non-skill steps such as subtree orchestration helpers. They are not the
+authoritative source for public skill-backed step composition.
 
-For each phase, read:
+For each step, read:
 - `name`, `skill`, `description`
 - `prerequisites`
 - `context`
@@ -71,50 +71,50 @@ Extract from user input:
 - Goal and requested actions
 - Explicit requested order
 - Task refs (`--taskref`, `--taskrefs`, or inline text)
-- Constraints (include/exclude specific phases)
+- Constraints (include/exclude specific steps)
 
 Classify request shape:
 - **Explicit-step mode**: user lists concrete steps (comma-separated or sequenced)
 - **Goal mode**: user states high-level outcome
 
-### 3. Resolve Explicit Phrases to Phases
+### 3. Resolve Explicit Phrases to Steps
 
 Apply deterministic matching per explicit phrase in order:
 
-1. Exact phase-name match (`push-to-remote`)
+1. Exact step-name match (`push-to-remote`)
 2. Exact/contains match against `intent.phrases`
-3. Token overlap against phase `name` + `description` + `intent.phrases`
+3. Token overlap against step `name` + `description` + `intent.phrases`
 
 Normalization rules:
 - Lowercase and trim punctuation before matching
-- Normalize duplicates to one phase unless repetition is explicitly requested
-- Keep first match as canonical phase selection
+- Normalize duplicates to one step unless repetition is explicitly requested
+- Keep first match as canonical step selection
 
 Unmatched phrase handling:
 - Stop composition
-- Return unmatched phrase and closest candidates (phase name + matching hint)
+- Return unmatched phrase and closest candidates (step name + matching hint)
 
 ### 4. Optional Recipe Match
 
 Recipe matching is optional and advisory:
 
 - If user provides an exact recipe name, use it as starting scaffold.
-- If request is explicit-step mode, explicit phases are primary and recipe phases are secondary defaults.
-- If both conflict, explicit user phases win unless hard ordering/prerequisite rules require correction.
+- If request is explicit-step mode, explicit steps are primary and recipe steps are secondary defaults.
+- If both conflict, explicit user steps win unless hard ordering/prerequisite rules require correction.
 
-### 5. Compose Phase Sequence
+### 5. Compose Step Sequence
 
 Precedence policy:
 
-1. **Explicit user phases** (primary)
-2. **Required prerequisites** from selected phases
+1. **Explicit user steps** (primary)
+2. **Required prerequisites** from selected steps
 3. **Hard ordering rules** from `composition-rules.yml`
 4. **Recommended conditionals/defaults** as suggestions (advisory)
 
 Hard-rule corrections must be explainable by rule name.
 
-Skill-backed phases (for example `work-on-task`) remain high-level in composed YAML.
-Do not manually inline sub-phases from external skill/workflow files in compose.
+Skill-backed steps (for example `work-on-task`) remain high-level in composed YAML.
+Do not manually inline sub-steps from external skill/workflow files in compose.
 
 ### 6. Validate
 
@@ -137,7 +137,7 @@ Show user the composed assignment:
 ```
 Proposed: <assignment-name>
 
-Phases:
+Steps:
   010: verify-test-suite
   020: reorganize-commits
   030: push-to-remote
@@ -150,7 +150,7 @@ Suggestions (advisory):
 ```
 
 Include:
-- Phase number + name + brief description
+- Step number + name + brief description
 - Fork context markers where applicable
 - Hard-rule reorder explanations
 - Advisory suggestions (clearly labeled optional)
@@ -159,7 +159,7 @@ Include:
 
 Use AskUserQuestion when needed:
 - Accept as-is
-- Add/remove phase
+- Add/remove step
 - Adjust review cycles
 - Provide custom changes
 
@@ -182,9 +182,9 @@ steps:
 ```
 
 Step mapping source of truth:
-- `name` from canonicalized phase catalog entry
-- `workflow` from canonicalized phase catalog entry
-- `context` from canonicalized phase catalog entry (if set)
+- `name` from canonicalized step catalog entry
+- `workflow` from canonicalized step catalog entry
+- `context` from canonicalized step catalog entry (if set)
 - `instructions` as assignment overlay from catalog description + request-specific context
 
 ### 10. Output Result
@@ -195,7 +195,7 @@ Write job.yaml to task jobs directory (or custom `--output`) and report:
 Assignment composed: <assignment-name>
 Job configuration: <path-to-job.yaml>
 
-Phases: N total
+Steps: N total
   010: ...
 
 Composition validated: no ordering violations
@@ -205,12 +205,12 @@ Composition validated: no ordering violations
 
 | Scenario | Action |
 |----------|--------|
-| No matching recipe | Compose directly from phases |
+| No matching recipe | Compose directly from steps |
 | Unmatched explicit phrase | Fail with unmatched phrase + closest candidates |
 | Missing required prerequisite | Insert required prerequisite and report why |
 | Ordering violation | Reorder by hard rule and report rule name |
 | Missing required parameter | Prompt user |
-| Empty phase selection | Suggest minimum viable assignment |
+| Empty step selection | Suggest minimum viable assignment |
 
 ## Examples
 
@@ -220,7 +220,7 @@ Composition validated: no ordering violations
 /as-assign-compose "run tests, reorganize commits, push to remote"
 ```
 
-Expected core phases:
+Expected core steps:
 - `verify-test-suite`, `reorganize-commits`, `push-to-remote`
 
 ### Example 2: Explicit + Mainline Maintenance
@@ -229,7 +229,7 @@ Expected core phases:
 /as-assign-compose "squash changelog, rebase with origin main, update pr description"
 ```
 
-Expected core phases:
+Expected core steps:
 - `squash-changelog`, `rebase-with-main`, `update-pr-desc`
 
 ### Example 3: High-level Task Intent
@@ -238,15 +238,15 @@ Expected core phases:
 /as-assign-compose "work on task 123 and create a PR"
 ```
 
-Expected composed phases include high-level `work-on-task` and `create-pr`; runtime create expands task sub-phases via `assign.source`.
+Expected composed steps include high-level `work-on-task` and `create-pr`; runtime create expands task sub-steps via `assign.source`.
 
 ## Success Criteria
 
 - [ ] Canonical assign-capable phrase hints are used for explicit-step matching
-- [ ] Common explicit requests resolve to stable phases
+- [ ] Common explicit requests resolve to stable steps
 - [ ] Explicit ordering is preserved unless hard rules require changes
 - [ ] Any reorder is explainable by named rule
-- [ ] Skill-backed phase expansion remains runtime responsibility
+- [ ] Skill-backed step expansion remains runtime responsibility
 - [ ] Output job.yaml stays compatible with `ace-assign create`
 
 ## Next Steps

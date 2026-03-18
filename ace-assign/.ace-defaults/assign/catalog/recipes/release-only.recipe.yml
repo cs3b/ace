@@ -17,7 +17,7 @@ parameters:
     default: false
     description: "Whether to push changes to remote"
 
-phases:
+steps:
   - name: onboard
     required: false
   - name: release

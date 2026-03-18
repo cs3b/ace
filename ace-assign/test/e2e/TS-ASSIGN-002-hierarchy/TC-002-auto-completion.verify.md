@@ -24,11 +24,11 @@ Validation order (impact-first):
 8. **Grandchild completion command succeeded** — `complete-grandchild.exit` is `0`.
 9. **Cascade auto-completion** — Completing grandchild triggers parent auto-completion, which triggers grandparent auto-completion.
 10. **Reports generated** — Prefer copied report artifacts in `results/tc/02/010.01-parent-job.r.md` and `results/tc/02/010-grandparent-job.r.md`; if filenames differ, accept equivalent copied reports or direct status/output evidence that both ancestors auto-completed.
-11. **Next phase current** — 020-next-task becomes in_progress after cascade.
+11. **Next step current** — 020-next-task becomes in_progress after cascade.
 
 ## Verdict
 
 - **PASS**: Both single-level and multi-level auto-completion work with correct cascade behavior and report generation.
 - **FAIL**: Auto-completion missing, cascade incomplete, or workflow stuck.
 
-Report: `PASS` or `FAIL` with evidence (phase states, report content, status output).
+Report: `PASS` or `FAIL` with evidence (step states, report content, status output).

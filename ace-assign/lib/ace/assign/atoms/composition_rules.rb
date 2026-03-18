@@ -7,7 +7,7 @@ module Ace
     module Atoms
       # Pure functions for loading and applying composition rules.
       #
-      # Composition rules define ordering constraints, phase pairs,
+      # Composition rules define ordering constraints, step pairs,
       # and conditional suggestions for building assignments.
       #
       # @example Validating ordering
@@ -31,40 +31,40 @@ module Ace
           default_rules
         end
 
-        # Validate phase ordering against rules.
+        # Validate step ordering against rules.
         #
-        # @param phase_names [Array<String>] Ordered list of phase names
+        # @param step_names [Array<String>] Ordered list of step names
         # @param rules [Hash] Loaded composition rules
         # @return [Array<Hash>] Violations, each with :rule and :message
-        def self.validate_ordering(phase_names, rules)
+        def self.validate_ordering(step_names, rules)
           violations = []
           ordering_rules = rules["ordering"] || []
 
           ordering_rules.each do |rule|
-            violation = check_ordering_rule(phase_names, rule)
+            violation = check_ordering_rule(step_names, rule)
             violations << violation if violation
           end
 
           violations
         end
 
-        # Suggest additional phases based on the selected set and rules.
+        # Suggest additional steps based on the selected set and rules.
         #
-        # @param phase_names [Array<String>] Currently selected phase names
+        # @param step_names [Array<String>] Currently selected step names
         # @param rules [Hash] Loaded composition rules
-        # @return [Array<Hash>] Suggestions, each with :phase, :strength, :reason
-        def self.suggest_additions(phase_names, rules)
+        # @return [Array<Hash>] Suggestions, each with :step, :strength, :reason
+        def self.suggest_additions(step_names, rules)
           suggestions = []
 
           # Check pair completeness
           (rules["pairs"] || []).each do |pair|
-            pair_suggestions = check_pair_completeness(phase_names, pair)
+            pair_suggestions = check_pair_completeness(step_names, pair)
             suggestions.concat(pair_suggestions)
           end
 
           # Check conditional rules
           (rules["conditional"] || []).each do |conditional|
-            conditional_suggestions = check_conditional_rule(phase_names, conditional)
+            conditional_suggestions = check_conditional_rule(step_names, conditional)
             suggestions.concat(conditional_suggestions)
           end
 
@@ -87,28 +87,28 @@ module Ace
         end
         private_class_method :default_rules
 
-        # Check a single ordering rule against phase sequence.
+        # Check a single ordering rule against step sequence.
         #
         # Uses prefix matching so a rule referencing "release" matches
-        # phases named "release-minor" or "release-patch-1".
+        # steps named "release-minor" or "release-patch-1".
         #
-        # @param phase_names [Array<String>] Ordered list of phase names
+        # @param step_names [Array<String>] Ordered list of step names
         # @param rule [Hash] Ordering rule definition
         # @return [Hash, nil] Violation hash or nil if rule is satisfied
-        def self.check_ordering_rule(phase_names, rule)
+        def self.check_ordering_rule(step_names, rule)
           # Position rules (e.g., "onboard must be first")
-          if rule["position"] == "first" && rule["phase"]
-            phase = rule["phase"]
-            idx = find_phase_index(phase_names, phase)
+          if rule["position"] == "first" && rule["step"]
+            step = rule["step"]
+            idx = find_step_index(step_names, step)
             if idx && idx != 0
-              return { rule: rule["rule"], message: "'#{phase}' must be first" }
+              return { rule: rule["rule"], message: "'#{step}' must be first" }
             end
           end
 
           # Before/after rules (e.g., "create-pr must come before review-pr")
           if rule["before"] && rule["after"]
-            before_idx = find_phase_index(phase_names, rule["before"])
-            after_idx = find_phase_index(phase_names, rule["after"])
+            before_idx = find_step_index(step_names, rule["before"])
+            after_idx = find_step_index(step_names, rule["after"])
 
             if before_idx && after_idx && before_idx >= after_idx
               return {
@@ -122,7 +122,7 @@ module Ace
         end
         private_class_method :check_ordering_rule
 
-        # Find the index of a phase by exact name or prefix match.
+        # Find the index of a step by exact name or prefix match.
         #
         # Allows rules to reference base names (e.g., "release") that match
         # suffixed variants (e.g., "release-minor", "release-patch-1").
@@ -131,29 +131,29 @@ module Ace
         # A short prefix like "re" would match both "release-minor" and
         # "reorganize-commits". Use full base names in composition rules.
         #
-        # @param phase_names [Array<String>] Phase name list
+        # @param step_names [Array<String>] Step name list
         # @param name [String] Name to find (exact or prefix)
         # @return [Integer, nil] Index or nil if not found
-        def self.find_phase_index(phase_names, name)
-          idx = phase_names.index(name)
+        def self.find_step_index(step_names, name)
+          idx = step_names.index(name)
           return idx if idx
 
-          phase_names.index { |p| p.start_with?("#{name}-") }
+          step_names.index { |p| p.start_with?("#{name}-") }
         end
-        private_class_method :find_phase_index
+        private_class_method :find_step_index
 
-        # Check a conditional rule against the selected phases.
+        # Check a conditional rule against the selected steps.
         #
         # Parses "assignment includes X or Y" patterns from the when field
-        # and checks if any referenced phases are present.
+        # and checks if any referenced steps are present.
         #
-        # @param phase_names [Array<String>] Currently selected phase names
+        # @param step_names [Array<String>] Currently selected step names
         # @param conditional [Hash] Conditional rule definition
-        # @return [Array<Hash>] Suggestions for phases to add
-        def self.check_conditional_rule(phase_names, conditional)
+        # @return [Array<Hash>] Suggestions for steps to add
+        def self.check_conditional_rule(step_names, conditional)
           suggestions = []
           when_clause = conditional["when"] || ""
-          suggest_phases = conditional["suggest"] || []
+          suggest_steps = conditional["suggest"] || []
           strength = conditional["strength"] || "recommended"
 
           # Parse "assignment includes X or/and Y" pattern.
@@ -163,19 +163,19 @@ module Ace
           if (match = when_clause.match(/assignment includes (.+)/i))
             raw = match[1]
             if raw.include?(" and ")
-              trigger_phases = raw.split(/\s+and\s+/).map(&:strip)
-              triggered = trigger_phases.all? { |p| phase_names.include?(p) }
+              trigger_steps = raw.split(/\s+and\s+/).map(&:strip)
+              triggered = trigger_steps.all? { |p| step_names.include?(p) }
             else
-              trigger_phases = raw.split(/\s+or\s+/).map(&:strip)
-              triggered = trigger_phases.any? { |p| phase_names.include?(p) }
+              trigger_steps = raw.split(/\s+or\s+/).map(&:strip)
+              triggered = trigger_steps.any? { |p| step_names.include?(p) }
             end
 
             if triggered
-              suggest_phases.each do |phase|
-                next if phase_names.include?(phase)
+              suggest_steps.each do |step|
+                next if step_names.include?(step)
 
                 suggestions << {
-                  phase: phase,
+                  step: step,
                   strength: strength,
                   reason: when_clause
                 }
@@ -187,26 +187,26 @@ module Ace
         end
         private_class_method :check_conditional_rule
 
-        # Check if paired phases are complete.
+        # Check if paired steps are complete.
         #
-        # @param phase_names [Array<String>] Currently selected phase names
+        # @param step_names [Array<String>] Currently selected step names
         # @param pair [Hash] Pair definition
         # @return [Array<Hash>] Suggestions for missing pair members
-        def self.check_pair_completeness(phase_names, pair)
+        def self.check_pair_completeness(step_names, pair)
           suggestions = []
-          pair_phases = pair["phases"] || []
-          return suggestions if pair_phases.length < 2
+          pair_steps = pair["steps"] || []
+          return suggestions if pair_steps.length < 2
           return suggestions if pair["pattern"] == "conditional"
 
-          present = pair_phases.select { |p| phase_names.include?(p) }
-          return suggestions if present.empty? || present.length == pair_phases.length
+          present = pair_steps.select { |p| step_names.include?(p) }
+          return suggestions if present.empty? || present.length == pair_steps.length
 
-          missing = pair_phases - present
-          missing.each do |phase|
+          missing = pair_steps - present
+          missing.each do |step|
             suggestions << {
-              phase: phase,
+              step: step,
               strength: "recommended",
-              reason: "Part of '#{pair["name"]}' pair (#{pair["note"] || "paired phases"})"
+              reason: "Part of '#{pair["name"]}' pair (#{pair["note"] || "paired steps"})"
             }
           end
 

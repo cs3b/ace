@@ -6,16 +6,16 @@ require_relative "../assign"
 
 # Models
 require_relative "models/assignment"
-require_relative "models/phase"
+require_relative "models/step"
 require_relative "models/queue_state"
 require_relative "models/assignment_info"
 
 # Atoms
-require_relative "atoms/phase_numbering"
+require_relative "atoms/step_numbering"
 require_relative "atoms/number_generator"
 require_relative "atoms/preset_expander"
-require_relative "atoms/phase_file_parser"
-require_relative "atoms/phase_sorter"
+require_relative "atoms/step_file_parser"
+require_relative "atoms/step_sorter"
 require_relative "atoms/catalog_loader"
 require_relative "atoms/composition_rules"
 require_relative "atoms/assign_frontmatter_parser"
@@ -25,8 +25,8 @@ require_relative "atoms/tree_formatter"
 require_relative "molecules/assignment_manager"
 require_relative "molecules/assignment_discoverer"
 require_relative "molecules/queue_scanner"
-require_relative "molecules/phase_writer"
-require_relative "molecules/phase_renumberer"
+require_relative "molecules/step_writer"
+require_relative "molecules/step_renumberer"
 require_relative "molecules/skill_assign_source_resolver"
 require_relative "molecules/fork_session_launcher"
 
@@ -58,11 +58,11 @@ module Ace
       REGISTERED_COMMANDS = [
         ["create", "Create assignment from preset or YAML"],
         ["status", "Show assignment status"],
-        ["start", "Start next workable phase"],
-        ["finish", "Complete current phase with report"],
-        ["fail", "Mark phase as failed"],
-        ["add", "Add phase to assignment"],
-        ["retry", "Retry failed phase"],
+        ["start", "Start next workable step"],
+        ["finish", "Complete current step with report"],
+        ["fail", "Mark step as failed"],
+        ["add", "Add step to assignment"],
+        ["retry", "Retry failed step"],
         ["list", "List all assignments"],
         ["select", "Select active assignment"],
         ["fork-run", "Run subtree in forked process"]
@@ -70,10 +70,10 @@ module Ace
 
       HELP_EXAMPLES = [
         "ace-assign create --preset review     # Start review assignment",
-        "ace-assign status                     # Current phase progress",
-        "ace-assign start                      # Start next workable phase",
-        "ace-assign finish --message done.md    # Complete active phase",
-        "cat report.md | ace-assign finish     # Complete phase via stdin",
+        "ace-assign status                     # Current step progress",
+        "ace-assign start                      # Start next workable step",
+        "ace-assign finish --message done.md    # Complete active step",
+        "cat report.md | ace-assign finish     # Complete step via stdin",
         "ace-assign fork-run 010.01            # Run subtree in subprocess"
       ].freeze
 

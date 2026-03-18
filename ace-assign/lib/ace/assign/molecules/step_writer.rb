@@ -6,25 +6,25 @@ require "fileutils"
 module Ace
   module Assign
     module Molecules
-      # Writes and updates phase markdown files.
+      # Writes and updates step markdown files.
       #
-      # Handles creation of new phase files and updating existing ones,
+      # Handles creation of new step files and updating existing ones,
       # including appending reports and updating frontmatter.
-      class PhaseWriter
-        # Create a new phase file
+      class StepWriter
+        # Create a new step file
         #
-        # @param phases_dir [String] Path to phases directory
-        # @param number [String] Phase number
-        # @param name [String] Phase name
-        # @param instructions [String] Phase instructions
+        # @param steps_dir [String] Path to steps directory
+        # @param number [String] Step number
+        # @param name [String] Step name
+        # @param instructions [String] Step instructions
         # @param status [Symbol] Initial status
-        # @param added_by [String, nil] How phase was added
-        # @param parent [String, nil] Parent phase number
+        # @param added_by [String, nil] How step was added
+        # @param parent [String, nil] Parent step number
         # @return [String] Path to created file
-        def create(phases_dir:, number:, name:, instructions:, status: :pending,
+        def create(steps_dir:, number:, name:, instructions:, status: :pending,
                    added_by: nil, parent: nil, extra: {})
-          filename = Atoms::PhaseFileParser.generate_filename(number, name)
-          file_path = File.join(phases_dir, filename)
+          filename = Atoms::StepFileParser.generate_filename(number, name)
+          file_path = File.join(steps_dir, filename)
 
           frontmatter = {
             "name" => name,
@@ -40,14 +40,14 @@ module Ace
           file_path
         end
 
-        # Update phase frontmatter
+        # Update step frontmatter
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @param updates [Hash] Frontmatter updates
         # @return [String] Updated file path
         def update_frontmatter(file_path, updates)
           content = File.read(file_path)
-          parsed = Atoms::PhaseFileParser.parse(content)
+          parsed = Atoms::StepFileParser.parse(content)
 
           # Merge updates into frontmatter
           new_frontmatter = parsed[:frontmatter].merge(updates.transform_keys(&:to_s))
@@ -59,9 +59,9 @@ module Ace
           file_path
         end
 
-        # Mark phase as in progress
+        # Mark step as in progress
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @return [String] Updated file path
         def mark_in_progress(file_path)
           update_frontmatter(file_path, {
@@ -70,9 +70,9 @@ module Ace
           })
         end
 
-        # Mark phase as pending again after it becomes blocked by newly added children.
+        # Mark step as pending again after it becomes blocked by newly added children.
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @return [String] Updated file path
         def mark_pending(file_path)
           update_frontmatter(file_path, {
@@ -84,9 +84,9 @@ module Ace
           })
         end
 
-        # Mark phase as done with report
+        # Mark step as done with report
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @param report_content [String] Report content to write
         # @param reports_dir [String] Path to reports directory
         # @return [String] Updated file path
@@ -97,10 +97,10 @@ module Ace
           raise ArgumentError, "Report content cannot be empty" if report_content.strip.empty?
 
           content = File.read(file_path)
-          parsed = Atoms::PhaseFileParser.parse(content)
+          parsed = Atoms::StepFileParser.parse(content)
 
           # Extract number and name from filename for report file
-          filename_info = Atoms::PhaseFileParser.parse_filename(File.basename(file_path))
+          filename_info = Atoms::StepFileParser.parse_filename(File.basename(file_path))
 
           # Update frontmatter only (status + completed_at)
           new_frontmatter = parsed[:frontmatter].merge({
@@ -108,12 +108,12 @@ module Ace
             "completed_at" => Time.now.utc.iso8601
           })
 
-          # Write phase file with updated frontmatter
+          # Write step file with updated frontmatter
           new_content = build_file_content(new_frontmatter, parsed[:body])
           atomic_write(file_path, new_content)
 
           # Write report to separate file
-          report_filename = Atoms::PhaseFileParser.generate_report_filename(
+          report_filename = Atoms::StepFileParser.generate_report_filename(
             filename_info[:number],
             filename_info[:name]
           )
@@ -124,9 +124,9 @@ module Ace
           file_path
         end
 
-        # Mark phase as failed
+        # Mark step as failed
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @param error_message [String] Error message
         # @return [String] Updated file path
         def mark_failed(file_path, error_message:)
@@ -137,9 +137,9 @@ module Ace
           })
         end
 
-        # Record fork execution PID metadata on a phase.
+        # Record fork execution PID metadata on a step.
         #
-        # @param file_path [String] Path to fork root phase file
+        # @param file_path [String] Path to fork root step file
         # @param launch_pid [Integer] PID of launcher process
         # @param tracked_pids [Array<Integer>] Observed subprocess/descendant PIDs
         # @return [String] Updated file path
@@ -152,18 +152,18 @@ module Ace
           })
         end
 
-        # Append report content to phase file
+        # Append report content to step file
         #
-        # @param file_path [String] Path to phase file
+        # @param file_path [String] Path to step file
         # @param report_content [String] Report content to append
         # @param reports_dir [String] Path to reports directory
         # @return [String] Updated file path
         def append_report(file_path, report_content, reports_dir:)
           # Extract number and name from filename for report file
-          filename_info = Atoms::PhaseFileParser.parse_filename(File.basename(file_path))
+          filename_info = Atoms::StepFileParser.parse_filename(File.basename(file_path))
 
           # Generate report filename
-          report_filename = Atoms::PhaseFileParser.generate_report_filename(
+          report_filename = Atoms::StepFileParser.generate_report_filename(
             filename_info[:number],
             filename_info[:name]
           )
@@ -227,12 +227,12 @@ module Ace
 
         # Write report to separate file with YAML frontmatter
         # @param report_path [String] Path to report file
-        # @param number [String] Phase number
-        # @param name [String] Phase name
+        # @param number [String] Step number
+        # @param name [String] Step name
         # @param content [String] Report content
         def write_report(report_path, number, name, content)
           frontmatter = {
-            "phase" => number,
+            "step" => number,
             "name" => name,
             "completed_at" => Time.now.utc.iso8601
           }
