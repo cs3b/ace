@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-idea create
         class Create < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Create a new idea
@@ -57,7 +57,7 @@ module Ace
               warn "Error: provide content or --clipboard"
               warn ""
               warn "Usage: ace-idea create [CONTENT] [--clipboard] [--title T] [--tags T1,T2] [--move-to FOLDER]"
-              raise Ace::Core::CLI::Error.new("Content or --clipboard required")
+              raise Ace::Support::Cli::Error.new("Content or --clipboard required")
             end
 
             if dry_run

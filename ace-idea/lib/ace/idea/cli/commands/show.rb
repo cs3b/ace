@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-idea show
         class Show < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Show idea details
@@ -37,7 +37,7 @@ module Ace
             idea = manager.show(ref)
 
             unless idea
-              raise Ace::Core::CLI::Error.new("Idea '#{ref}' not found")
+              raise Ace::Support::Cli::Error.new("Idea '#{ref}' not found")
             end
 
             if options[:path]
