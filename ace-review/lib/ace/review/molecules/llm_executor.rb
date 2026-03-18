@@ -7,8 +7,8 @@ module Ace
     module Molecules
       # Executes LLM queries for code reviews using Ruby API
       class LlmExecutor
-        # Warning threshold: 80% of typical 1M context window
-        PROMPT_SIZE_WARNING_THRESHOLD = 800_000
+        # Warning ratio: warn when estimated tokens exceed 80% of model context limit
+        PROMPT_SIZE_WARNING_RATIO = 0.8
 
         def initialize
           @default_model = Ace::Review.get("defaults", "model") || "google:gemini-2.5-flash"
@@ -67,10 +67,12 @@ module Ace
           total_chars = (system_prompt&.length || 0) + (user_prompt&.length || 0)
           estimated_tokens = total_chars / 4  # Rough estimate: 4 chars per token
 
-          return unless estimated_tokens > PROMPT_SIZE_WARNING_THRESHOLD
+          context_limit = Ace::Review::Atoms::ContextLimitResolver.resolve(model)
+          threshold = (context_limit * PROMPT_SIZE_WARNING_RATIO).to_i
+          return unless estimated_tokens > threshold
 
           warn "Warning: Prompt size (~#{estimated_tokens.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens) " \
-               "may exceed #{model} context limits"
+               "may exceed #{model} context limit (#{context_limit.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens)"
         end
 
         # Check if Ruby API is available
