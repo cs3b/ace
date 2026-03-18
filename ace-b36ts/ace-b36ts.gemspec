@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "ace-b36ts provides 6-character Base36 compact IDs as a replacement for " \
                      "14-character timestamp formats. Encodes timestamps with ~1.85s precision " \
                      "over a 108-year range using hierarchical field encoding."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
