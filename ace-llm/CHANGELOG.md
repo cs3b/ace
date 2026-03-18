@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.13] - 2026-03-18
+
+### Added
+- Added Claude `@prompt` preset for strict prompt-only execution using verified no-tools mode.
+
+### Changed
+- Updated Claude `@ro` preset to allow `Bash` and `Read` tool access for richer read-only review workflows.
+- Clarified in usage docs that `@prompt` is currently provider-specific and only available where no-tools execution can be enforced.
+
+### Technical
+- Added regression coverage for Claude `@ro` and `@prompt` preset wiring.
+
 ## [0.26.12] - 2026-03-18
 
 ### Fixed

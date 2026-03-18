@@ -85,6 +85,10 @@ ace-llm codex:gpt-5:high@ro "Review this code"
 `@ro` is the ace-llm read-only execution preset. It is provider-specific and is not a
 generic alias for native provider "plan" modes.
 
+`@prompt` is the prompt-only execution preset when a provider has a verified no-tools
+mode. At the moment, `claude:*@prompt` is supported; other CLI providers may not expose
+an enforceable no-tools mode yet.
+
 ## Common Scenarios
 
 ### Scenario 1: Simple query
