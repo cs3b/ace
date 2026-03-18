@@ -16,13 +16,14 @@ models:
   - gpt-5.3-codex
   - gpt-5.3-codex-spark
   - gpt-5.4
+  - gpt-5.4-mini
 aliases:
   model:
     gpt: gpt-5.4
     max: gpt-5.1-codex-max
     codex: gpt-5.3-codex
     spark: gpt-5.3-codex-spark
-    mini: gpt-5.1-codex-mini
+    mini: gpt-5.4-mini
 capabilities:
   - text_generation
   - code_generation
