@@ -12,7 +12,7 @@ module Ace
   module Git
     # ace-support-cli command registry for ace-git.
     module CLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       # Entry point for CLI invocation (used by tests via cli_helpers)
       #
@@ -66,14 +66,14 @@ module Ace
       register "branch", Commands::Branch.new
       register "pr", Commands::Pr.new
 
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-git",
         version: Ace::Git::VERSION
       )
       register "version", version_cmd
       register "--version", version_cmd
 
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Git::VERSION,
         commands: REGISTERED_COMMANDS,

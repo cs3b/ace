@@ -50,7 +50,7 @@ class BranchTest < AceGitTestCase
     mock_info = { error: "fatal: not a git repository" }
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         @command.call
       end
       assert_match(/not a git repository/, error.message)
@@ -100,7 +100,7 @@ class BranchTest < AceGitTestCase
 
   def test_execute_handles_ace_git_error
     Ace::Git::Molecules::BranchReader.stub :full_info, ->{ raise Ace::Git::Error, "Something went wrong" } do
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         @command.call
       end
       assert_match(/Something went wrong/, error.message)

@@ -3,7 +3,7 @@
 require "fileutils"
 require "tmpdir"
 require "yaml"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Git
@@ -12,7 +12,7 @@ module Ace
       # ace-support-cli command for generating diffs
       # Migrated from ace-git-diff
       class Diff < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc "Generate git diff with filtering (default command)"
 

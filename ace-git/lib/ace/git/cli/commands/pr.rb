@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Git
@@ -9,7 +9,7 @@ module Ace
       module Commands
       # ace-support-cli command for showing PR information
       class Pr < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc "Show PR information"
 
@@ -28,7 +28,7 @@ module Ace
         def call(number: nil, **options)
           # Check if gh is installed
           unless Molecules::PrMetadataFetcher.gh_installed?
-            raise Ace::Core::CLI::Error.new("GitHub CLI (gh) not installed. Install with: brew install gh")
+            raise Ace::Support::Cli::Error.new("GitHub CLI (gh) not installed. Install with: brew install gh")
           end
 
           # Determine PR identifier
@@ -38,7 +38,7 @@ module Ace
                          # Try to find PR for current branch
                          found = Molecules::PrMetadataFetcher.find_pr_for_branch
                          unless found
-                           raise Ace::Core::CLI::Error.new("No PR found for current branch. Specify a PR number.")
+                           raise Ace::Support::Cli::Error.new("No PR found for current branch. Specify a PR number.")
                          end
                          found
                        end
@@ -51,7 +51,7 @@ module Ace
                    end
 
           unless result[:success]
-            raise Ace::Core::CLI::Error.new(result[:error])
+            raise Ace::Support::Cli::Error.new(result[:error])
           end
 
           # Output based on format
@@ -65,9 +65,9 @@ module Ace
           end
 
         rescue Ace::Git::Error => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         rescue ArgumentError => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         end
 
         private

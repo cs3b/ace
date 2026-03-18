@@ -33,7 +33,7 @@ class StatusTest < AceGitTestCase
     )
 
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         @command.call(format: nil)
       end
       assert_match(/Not in a git repository/, error.message)
@@ -77,7 +77,7 @@ class StatusTest < AceGitTestCase
 
   def test_execute_handles_ace_git_error
     Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(_opts){ raise Ace::Git::Error, "Context loading failed" } do
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         @command.call(format: nil)
       end
       assert_match(/Context loading failed/, error.message)

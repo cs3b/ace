@@ -28,7 +28,7 @@ begin
   Ace::Support::Cli::Runner.new(Ace::Git::CLI).call(args: normalized_args(ARGV))
 rescue SystemExit => e
   exit(e.status)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 rescue Ace::Support::Cli::CommandNotFoundError => e
