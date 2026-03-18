@@ -23,7 +23,7 @@ integration:
     - pi
 assign:
   source: wfi://docs/squash-changelog
-  phases:
+  steps:
     - name: squash-changelog
       description: Squash multiple changelog entries into one before merge
       intent:

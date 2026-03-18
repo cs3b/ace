@@ -23,7 +23,7 @@ integration:
   providers: {}
 assign:
   source: wfi://docs/update
-  phases:
+  steps:
     - name: update-docs
       description: Update public-facing documentation when CLI contracts or public APIs change
       tags: [documentation, quality]
