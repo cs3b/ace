@@ -31,7 +31,7 @@ def stub_ace_nav_prompts(user_content: "mock user prompt", system_content: "mock
 end
 
 # Mock DocumentRegistry to prevent expensive file system scanning
-# Prevents scanning thousands of markdown files (7134 in ace-meta repo)
+# Prevents scanning thousands of markdown files (7134 in ace repo)
 def with_mock_registry(documents: [])
   mock_registry = Object.new
   mock_registry.define_singleton_method(:all) { documents }
