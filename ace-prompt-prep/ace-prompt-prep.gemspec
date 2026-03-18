@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Provides a single active prompt file with automatic history archiving. ' \
                      'Write prompts in your editor, run ace-prompt-prep, get automatic archiving ' \
                      'with optional context loading and LLM enhancement.'
-  spec.homepage = 'https://github.com/cs3b/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
 
