@@ -24,7 +24,7 @@ class WorkOnCommandTest < AceOverseerTestCase
     orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
     command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       command.call(task: nil)
     end
 
@@ -71,7 +71,7 @@ class WorkOnCommandTest < AceOverseerTestCase
     orchestrator = FakeWorkOnOrchestrator.new(error: Ace::Overseer::Error.new("Task not found: 999"))
     command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
 
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       command.call(task: "999", quiet: true)
     end
 

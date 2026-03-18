@@ -5,7 +5,7 @@ module Ace
     module CLI
       module Commands
         class WorkOn < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Create worktree, open tmux window, and prepare assignment"
 
@@ -23,7 +23,7 @@ module Ace
           def call(task: nil, preset: nil, **options)
             task_refs = normalize_task_refs(task)
             if task_refs.empty?
-              raise Ace::Core::CLI::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")
+              raise Ace::Support::Cli::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")
             end
 
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
@@ -37,10 +37,10 @@ module Ace
             return if options[:quiet]
 
             puts "Done. Switch to tmux window and run /ace-assign-drive"
-          rescue Ace::Core::CLI::Error
+          rescue Ace::Support::Cli::Error
             raise
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           private
