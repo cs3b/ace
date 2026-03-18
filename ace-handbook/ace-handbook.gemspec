@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Handbook management workflows for ACE"
   spec.description = "Pure workflow package containing handbook management workflows, templates, guides, and agents accessible via wfi:// protocol"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
