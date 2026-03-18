@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.846] - 2026-03-18
+
+### Fixed
+- **ace-b36ts v0.11.2**: Treated naïve timestamps as UTC in `encode` while preserving explicit timezone parsing.
+- **ace-bundle v0.37.2**: Fixed auto-format detection to use raw content for plain and frontmatter-preserved bundle inputs.
+- **ace-test-runner v0.15.17**: Fixed `--report-dir` option precedence so explicit CLI report directories are respected.
+
 ## [0.9.845] - 2026-03-18
 
 ### Changed
