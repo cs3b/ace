@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-15 11:26:00"
 estimate: TBD
@@ -9,6 +9,12 @@ tags: [e2e, testing, coverage]
 bundle:
   presets: [project]
 needs_review: false
+worktree:
+  branch: h5e-review-and-expand-e2e-test-coverage-across-ace-packages
+  path: ../ace-task.h5e
+  created_at: "2026-03-18 16:21:02"
+  updated_at: "2026-03-18 16:21:02"
+  target_branch: main
 ---
 
 # Review and expand E2E test coverage across ACE packages
