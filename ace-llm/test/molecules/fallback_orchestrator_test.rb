@@ -308,6 +308,34 @@ module Ace
           end
         end
 
+        def test_terminal_primary_error_does_not_add_total_timeout_status_before_fallback
+          config = Models::FallbackConfig.new(
+            retry_count: 0,
+            max_total_timeout: 0.1,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          registry.add_client("claude", MockClient.new(errors: [Ace::LLM::ProviderError.new("empty response")]))
+          registry.add_client("anthropic", MockClient.new(response: "fallback success"))
+
+          orchestrator.stub :timeout_exceeded?, true do
+            error = assert_raises(Ace::LLM::ProviderError) do
+              orchestrator.execute(primary_provider: "claude", registry: registry) do |client|
+                client.call
+              end
+            end
+
+            assert_match(/All configured providers unavailable/, error.message)
+            assert_includes @status_messages.join, "claude error: empty response"
+            refute_includes @status_messages.join, "Total timeout exceeded"
+          end
+        end
+
         def test_uses_per_provider_chain_for_matching_primary
           config = Models::FallbackConfig.new(
             retry_count: 0,

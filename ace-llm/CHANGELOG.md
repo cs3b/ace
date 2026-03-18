@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.12] - 2026-03-18
+
+### Fixed
+- Changed Claude `@ro` preset behavior to disable tools without entering native Claude `plan` mode, preserving read-only execution while avoiding empty-response failures in one-shot JSON output.
+- Suppressed misleading `Total timeout exceeded (...)` status reporting after terminal single-provider failures so the real provider error remains the primary signal.
+
+### Technical
+- Added regression coverage for Claude `@ro` preset wiring and fallback terminal-error timeout reporting.
+
 ## [0.26.11] - 2026-03-17
 
 ### Fixed
