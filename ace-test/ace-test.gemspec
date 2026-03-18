@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Testing workflows, guides, and patterns for ACE"
   spec.description = "Pure workflow package containing testing workflows, guides, mocking patterns, and best practices accessible via wfi://, guide://, and agent:// protocols"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
