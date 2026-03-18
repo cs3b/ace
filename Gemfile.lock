@@ -170,13 +170,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.25.5)
+    ace-llm-providers-cli (0.25.6)
       ace-llm (~> 0.26)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.26.11)
+    ace-llm (0.26.12)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -325,7 +325,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.28.7)
+    ace-task (0.28.8)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)

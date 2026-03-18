@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.839] - 2026-03-18
+
+### Changed
+- **ace-task v0.28.8**: Clarified that task-planning Claude native `--permission-mode plan` is workflow-specific and distinct from the shared `ace-llm` `@ro` execution preset.
+
+### Fixed
+- **ace-llm-providers-cli v0.25.6**: Fixed array-based CLI arg normalization so explicit empty values like Claude `--tools ""` are preserved instead of being dropped.
+- **ace-llm v0.26.12**: Kept Claude `@ro` genuinely read-only without using native Claude `plan` mode, and removed misleading total-timeout status after terminal single-provider failures.
+
 ## [0.9.838] - 2026-03-18
 
 ### Fixed
