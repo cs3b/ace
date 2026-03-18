@@ -21,7 +21,7 @@ module Ace
         # (config display, error messages, interactive selection). Business logic
         # is properly delegated to ATOM layers (UnifiedSearcher, SearchPathResolver).
         class Search < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Search across the codebase with intelligent pattern matching
@@ -135,7 +135,7 @@ module Ace
 
             # Validate pattern
             if @pattern.nil? || @pattern.empty?
-              raise Ace::Core::CLI::Error.new("No search pattern provided")
+              raise Ace::Support::Cli::Error.new("No search pattern provided")
             end
 
             # Resolve search path
@@ -147,7 +147,7 @@ module Ace
             # Execute search
             result = execute_search
             unless result[:success]
-              raise Ace::Core::CLI::Error.new("Search failed")
+              raise Ace::Support::Cli::Error.new("Search failed")
             end
 
             # Store result for interactive selection
@@ -159,7 +159,7 @@ module Ace
             # Format and output results
             output_results(@result)
           rescue => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           def resolve_search_path(search_path)
