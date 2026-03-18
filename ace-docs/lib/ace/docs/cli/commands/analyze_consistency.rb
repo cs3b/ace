@@ -15,7 +15,7 @@ module Ace
         #
         # This command handles cross-document consistency analysis.
         class AnalyzeConsistency < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include ScopeOptions
 
           # Exit codes

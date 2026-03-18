@@ -14,7 +14,7 @@ module Ace
         #
         # This command handles updating document frontmatter.
         class Update < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include ScopeOptions
 
           # Exit codes

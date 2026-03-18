@@ -12,7 +12,7 @@ class DocsCliRoutingTest < Minitest::Test
         @_cli_result = Ace::Support::Cli::Runner.new(Ace::Docs::CLI).call(args: args)
       rescue SystemExit => e
         @_cli_result = e.status
-      rescue Ace::Core::CLI::Error => e
+      rescue Ace::Support::Cli::Error => e
         $stderr.puts e.message
         @_cli_result = e.exit_code
       end

@@ -10,7 +10,7 @@ module Ace
     # This replaces the Thor-based CLI with ace-support-cli while maintaining
     # complete command parity and user-facing behavior.
     module CLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       PROGRAM_NAME = "ace-docs"
 
@@ -38,7 +38,7 @@ module Ace
       register "analyze-consistency", Commands::AnalyzeConsistency.new
 
       # Register version command
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-docs",
         version: Ace::Docs::VERSION
       )
@@ -46,7 +46,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Docs::VERSION,
         commands: REGISTERED_COMMANDS,
