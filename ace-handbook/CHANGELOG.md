@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.9] - 2026-03-18
+
+### Fixed
+- Updated `cli-support-cli.g.md` guide to remove stale `DryCli::` namespace prefix from `VersionCommand` and `HelpCommand` class references.
+
 ## [0.15.8] - 2026-03-17
 
 ### Changed
