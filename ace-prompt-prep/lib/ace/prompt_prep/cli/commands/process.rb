@@ -11,7 +11,7 @@ module Ace
         # This wraps the existing PromptProcessor logic in a ace-support-cli compatible
         # interface, maintaining complete parity with the Thor implementation.
         class Process < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Read prompt file, archive it with Base36 ID, update symlink, and output content
@@ -80,7 +80,7 @@ module Ace
             )
 
             unless result[:success]
-              raise Ace::Core::CLI::Error.new(result[:error])
+              raise Ace::Support::Cli::Error.new(result[:error])
             end
 
             # Handle output
@@ -101,11 +101,11 @@ module Ace
                 $stdout.puts "  Archive: #{result[:archive_path]}"
                 $stdout.puts "  Output:  #{File.expand_path(output_mode)}"
               rescue StandardError => e
-                raise Ace::Core::CLI::Error.new("Failed to write output file: #{e.message}")
+                raise Ace::Support::Cli::Error.new("Failed to write output file: #{e.message}")
               end
             end
           rescue Ace::PromptPrep::Error => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           private

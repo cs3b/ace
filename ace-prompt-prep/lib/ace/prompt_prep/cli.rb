@@ -21,7 +21,7 @@ module Ace
     #
     # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
     module CLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       PROGRAM_NAME = "ace-prompt-prep"
 
@@ -42,7 +42,7 @@ module Ace
       register "setup", Commands::Setup.new
 
       # Register version command
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-prompt-prep",
         version: Ace::PromptPrep::VERSION
       )
@@ -50,7 +50,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::PromptPrep::VERSION,
         commands: REGISTERED_COMMANDS,

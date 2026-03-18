@@ -11,7 +11,7 @@ module Ace
         # This wraps the existing PromptInitializer logic in a ace-support-cli compatible
         # interface, maintaining complete parity with the Thor implementation.
         class Setup < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Create prompt workspace and initialize with template
@@ -62,7 +62,7 @@ module Ace
             )
 
             unless result[:success]
-              raise Ace::Core::CLI::Error.new("Setup failed: #{result[:error]}")
+              raise Ace::Support::Cli::Error.new("Setup failed: #{result[:error]}")
             end
 
             $stdout.puts "Prompt initialized:"
@@ -71,7 +71,7 @@ module Ace
               $stdout.puts "  Archive: #{result[:archive_path]}"
             end
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new("Setup failed: #{e.message}")
+            raise Ace::Support::Cli::Error.new("Setup failed: #{e.message}")
           end
 
           private
