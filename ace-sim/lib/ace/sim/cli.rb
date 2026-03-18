@@ -7,7 +7,7 @@ require_relative "cli/commands/run"
 module Ace
   module Sim
     module CLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       PROGRAM_NAME = "ace-sim"
 
@@ -27,14 +27,14 @@ module Ace
 
       register "run", Commands::Run
 
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-sim",
         version: Ace::Sim::VERSION
       )
       register "version", version_cmd
       register "--version", version_cmd
 
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Sim::VERSION,
         commands: REGISTERED_COMMANDS,

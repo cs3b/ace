@@ -48,7 +48,7 @@ class RunCommandTest < AceSimTestCase
   def test_requires_source
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
 
-    err = assert_raises(Ace::Core::CLI::Error) do
+    err = assert_raises(Ace::Support::Cli::Error) do
       cmd.call(preset: "validate-idea", provider: ["codex:mini"], quiet: true)
     end
 
@@ -113,7 +113,7 @@ class RunCommandTest < AceSimTestCase
   def test_rejects_unknown_preset
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
 
-    err = assert_raises(Ace::Core::CLI::Error) do
+    err = assert_raises(Ace::Support::Cli::Error) do
       cmd.call(preset: "missing", source: @source, provider: ["codex:mini"], quiet: true)
     end
 
@@ -123,7 +123,7 @@ class RunCommandTest < AceSimTestCase
   def test_errors_when_runner_fails
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new(success: false))
 
-    err = assert_raises(Ace::Core::CLI::Error) do
+    err = assert_raises(Ace::Support::Cli::Error) do
       cmd.call(preset: "validate-idea", source: @source, provider: ["codex:mini"], quiet: true)
     end
 
@@ -133,7 +133,7 @@ class RunCommandTest < AceSimTestCase
   def test_rejects_synthesis_provider_without_workflow
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
 
-    err = assert_raises(Ace::Core::CLI::Error) do
+    err = assert_raises(Ace::Support::Cli::Error) do
       cmd.call(
         preset: "validate-idea",
         source: @source,
