@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.845] - 2026-03-18
+
+### Changed
+- **ace-assign v0.34.0**: Renamed "phases" to "steps" throughout the assignment system — models, atoms, molecules, organisms, CLI, config, catalog (`catalog/phases/` → `catalog/steps/`, `*.phase.yml` → `*.step.yml`), file extension (`.ph.md` → `.st.md`), and YAML keys (`sub-phases` → `sub-steps`).
+- **ace-overseer v0.7.0**: Updated assignment consumer references from "phase" to "step" terminology (`first_phase` → `first_step`, `current_phase` → `current_step`, `phase_summary` → `step_summary`).
+- **ace-task v0.29.2**: Updated workflow frontmatter key from `sub-phases` to `sub-steps` and prose references in workflow instructions.
+
+### Fixed
+- **ace-assign v0.34.0**: `AssignmentExecutor.start` now reads `config["steps"]` matching what `AssignmentLauncher.write_job_file` writes, fixing "No phases defined in config" error in `ace-overseer work-on`.
+
 ## [0.9.844] - 2026-03-18
 
 ### Fixed
