@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.8] - 2026-03-18
+
+### Changed
+- Clarified that task-planning Claude native `--permission-mode plan` configuration is workflow-specific and not equivalent to the shared `ace-llm` `@ro` execution preset.
+
 ## [0.28.7] - 2026-03-15
 
 ### Changed

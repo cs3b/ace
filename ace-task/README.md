@@ -91,6 +91,9 @@ task:
 
 Override at project level in `.ace/task/config.yml`.
 
+Note: the `plan.cli_args.claude` setting is task-planning specific native Claude plan mode.
+It is not equivalent to `ace-llm ...@ro`, which remains the read-only execution preset.
+
 Note: Gemini `--approval-mode plan` requires Gemini CLI `experimental.plan` to be enabled.
 
 ## License
