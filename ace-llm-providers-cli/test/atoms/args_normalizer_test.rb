@@ -51,6 +51,10 @@ module Ace
               assert_equal [], @normalizer.normalize_cli_args([])
             end
 
+            def test_preserves_explicit_empty_value_in_array_args
+              assert_equal ["--tools", ""], @normalizer.normalize_cli_args(["--tools", ""])
+            end
+
             def test_sentinel_passes_remaining_args_verbatim
               assert_equal ["--", "foo", "bar"], @normalizer.normalize_cli_args("-- foo bar")
             end

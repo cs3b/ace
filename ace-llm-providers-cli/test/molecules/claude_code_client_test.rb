@@ -25,6 +25,14 @@ describe "ClaudeCodeClient" do
       cmd = @client.send(:build_claude_command, temperature: 0.2)
       refute_includes cmd, "--temperature"
     end
+
+    it "preserves explicit empty tool list values from cli_args arrays" do
+      cmd = @client.send(:build_claude_command, cli_args: ["--tools", ""])
+      tools_idx = cmd.index("--tools")
+
+      refute_nil tools_idx
+      assert_equal "", cmd[tools_idx + 1]
+    end
   end
 
   describe "execute_claude_command" do

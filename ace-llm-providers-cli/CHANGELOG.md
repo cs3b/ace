@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.6] - 2026-03-18
+
+### Fixed
+- Preserve explicit empty CLI argument values in array-based `cli_args` normalization so flags like Claude `--tools ""` are forwarded correctly instead of losing their required value.
+
+### Technical
+- Added regression coverage for empty-value CLI arg normalization and Claude command construction.
+
 ## [0.25.5] - 2026-03-18
 
 ### Fixed
