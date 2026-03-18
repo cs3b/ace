@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Ruby-only linting gem for markdown, YAML, and frontmatter validation"
   spec.description = "ace-lint provides comprehensive validation for markdown (kramdown), YAML (Psych), and frontmatter using only Ruby dependencies. No Node.js or Python required."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
