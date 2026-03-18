@@ -4,8 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.837] - 2026-03-18
+
+### Changed
+- **ace-review v0.46.0**: Removed review-to-task linking integration (`--task`, `--no-auto-save`, `auto_save` config, branch-based task detection, symlink creation) and simplified `PrTaskSpecResolver` branch extraction.
+
 ### Fixed
-- **ace-review v0.45.4**: Fixed `auto_execute` option precedence so config `defaults.auto_execute` is honored when the CLI flag is omitted, while `--dry-run` continues to disable execution.
+- **ace-handbook v0.15.9**: Updated `cli-support-cli.g.md` guide to remove stale `DryCli::` namespace prefix from CLI class references.
 
 ## [0.9.836] - 2026-03-17
 
