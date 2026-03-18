@@ -117,7 +117,7 @@ class ForkRunCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new.call(root: "010", assignment: result[:assignment].id)
       end
 
@@ -143,7 +143,7 @@ class ForkRunCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: result[:assignment].id, quiet: true)
@@ -411,7 +411,7 @@ class ForkRunCommandTest < AceAssignTestCase
       FileUtils.mkdir_p(sessions_dir)
       File.write(File.join(sessions_dir, "010-last-message.md"), "I need your direction before I continue.")
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: assignment.id, quiet: true)
@@ -446,7 +446,7 @@ class ForkRunCommandTest < AceAssignTestCase
       FileUtils.mkdir_p(sessions_dir)
       File.write(File.join(sessions_dir, "010-session.yml"), { "session_id" => "sess-xyz789", "provider" => "claude" }.to_yaml)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: assignment.id, quiet: true)
@@ -474,7 +474,7 @@ class ForkRunCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: result[:assignment].id, quiet: true)
@@ -503,7 +503,7 @@ class ForkRunCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: result[:assignment].id, quiet: true)
@@ -537,7 +537,7 @@ class ForkRunCommandTest < AceAssignTestCase
       FileUtils.mkdir_p(sessions_dir)
       File.write(File.join(sessions_dir, "010-last-message.md"), "Unexpected state change encountered.")
 
-      assert_raises(Ace::Core::CLI::Error) do
+      assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: assignment.id, quiet: true)
@@ -574,7 +574,7 @@ class ForkRunCommandTest < AceAssignTestCase
       long_message = "x" * 2500
       File.write(File.join(sessions_dir, "010-last-message.md"), long_message)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: assignment.id, quiet: true)
@@ -611,7 +611,7 @@ class ForkRunCommandTest < AceAssignTestCase
       FileUtils.mkdir_p(sessions_dir)
       File.write(File.join(sessions_dir, "010-last-message.md"), "Something went wrong.")
 
-      assert_raises(Ace::Core::CLI::Error) do
+      assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
           launcher: NoopLauncher.new
         ).call(root: "010", assignment: assignment.id, quiet: true)

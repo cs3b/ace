@@ -10,7 +10,7 @@ args = ARGV.empty? ? ["--help"] : ARGV
 begin
   exit_code = Ace::Assign::CLI.start(args)
   exit(exit_code) if exit_code.nonzero?
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e
   exit(e.exit_code)
 end

@@ -6,7 +6,7 @@ module Ace
       module Commands
         # Start a pending phase
         class Start < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include AssignmentTarget
 
           desc "Start next workable pending phase"

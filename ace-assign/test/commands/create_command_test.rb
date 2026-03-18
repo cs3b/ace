@@ -23,7 +23,7 @@ class CreateCommandTest < AceAssignTestCase
   end
 
   def test_create_with_missing_config
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       Ace::Assign::CLI::Commands::Create.new.call(config: "nonexistent.yaml")
     end
 

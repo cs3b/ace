@@ -28,7 +28,7 @@ class FailCommandTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Fail.new.call(message: "Error")
       end
 

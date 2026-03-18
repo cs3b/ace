@@ -25,7 +25,7 @@ class AssignmentTargetTest < AceAssignTestCase
   end
 
   def test_parse_assignment_with_empty_scope_raises
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       Resolver.new.parse_assignment_target("8pg4g1@")
     end
 
@@ -33,7 +33,7 @@ class AssignmentTargetTest < AceAssignTestCase
   end
 
   def test_parse_assignment_without_id_raises
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       Resolver.new.parse_assignment_target("@010")
     end
 

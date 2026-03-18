@@ -4,7 +4,7 @@ require_relative "assign/version"
 require "ace/support/config"
 require "ace/support/fs"
 require "ace/support/nav"
-require "ace/core/cli/error"
+require "ace/support/cli"
 require "pathname"
 
 # CLI and commands
@@ -13,11 +13,11 @@ require_relative "assign/cli"
 module Ace
   module Assign
     # Base error class for all ace-assign exceptions.
-    # Inherits from Ace::Core::CLI::Error to support exception-based
+    # Inherits from Ace::Support::Cli::Error to support exception-based
     # exit code pattern (per ADR-023).
     #
     # Subclasses should call super with appropriate exit_code.
-    class Error < Ace::Core::CLI::Error
+    class Error < Ace::Support::Cli::Error
       def initialize(message, exit_code: 1)
         super(message, exit_code: exit_code)
       end
