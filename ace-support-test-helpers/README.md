@@ -110,4 +110,4 @@ end
 
 ## Development
 
-This gem is part of the ace-meta project and shares the root Gemfile dependencies.
+This gem is part of the ace project and shares the root Gemfile dependencies.
