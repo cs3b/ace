@@ -10,7 +10,7 @@ module Ace
         # or user-provided messages, maintaining complete parity with the
         # Thor implementation.
         class Commit < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Generate and execute git commit
@@ -77,11 +77,11 @@ module Ace
             orchestrator = Organisms::CommitOrchestrator.new
             success = orchestrator.execute(commit_options)
 
-            raise Ace::Core::CLI::Error.new("Commit failed") unless success
+            raise Ace::Support::Cli::Error.new("Commit failed") unless success
           rescue GitError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           rescue Interrupt
-            raise Ace::Core::CLI::Error.new("Commit cancelled", exit_code: 130)
+            raise Ace::Support::Cli::Error.new("Commit cancelled", exit_code: 130)
           end
 
           def display_config_summary
