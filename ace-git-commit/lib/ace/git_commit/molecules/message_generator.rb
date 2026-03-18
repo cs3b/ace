@@ -323,7 +323,7 @@ module Ace
             prompt_file = current.join(SYSTEM_PROMPT_PATH)
             return prompt_file.to_s if prompt_file.exist?
 
-            # Also check if we're already in ace-meta
+            # Also check if we're already in ace
             if current.basename.to_s == "ace-git-commit"
               parent_prompt = current.parent.join(SYSTEM_PROMPT_PATH)
               return parent_prompt.to_s if parent_prompt.exist?
