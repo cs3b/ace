@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-03-18
+
+### Changed
+- Removed `--task` and `--no-auto-save` CLI options and all review-to-task linking integration (symlink creation, branch-based task detection, `auto_save` config).
+- Removed `task_reference` state, `link_session_to_task`, `link_session_to_task_if_requested`, `auto_link_session_if_enabled`, and dead-code task feedback methods from `ReviewManager`.
+- Simplified `PrTaskSpecResolver.extract_from_branch` to use inline branch-prefix extraction instead of external `TaskPatternExtractor`.
+
+### Technical
+- Removed 15 task-linking tests and cleaned up stale `@task_reference` references in remaining tests.
+
 ## [0.45.4] - 2026-03-18
 
 ### Fixed
