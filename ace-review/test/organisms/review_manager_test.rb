@@ -1445,6 +1445,47 @@ class ReviewManagerTest < AceReviewTest
     assert options.feedback_enabled?, "Feedback should be enabled by default"
   end
 
+  def test_review_options_auto_execute_defaults_to_config
+    options = nil
+
+    Ace::Review.stub :get, ->(section, key) do
+      if section == "defaults" && key == "auto_execute"
+        true
+      end
+    end do
+      options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+    end
+
+    assert options.auto_execute
+  end
+
+  def test_review_options_auto_execute_false_when_explicit
+    options = nil
+
+    Ace::Review.stub :get, ->(_section, _key) { true } do
+      options = Ace::Review::Models::ReviewOptions.new(
+        preset: "pr",
+        auto_execute: false
+      )
+    end
+
+    refute options.auto_execute
+  end
+
+  def test_review_options_auto_execute_false_with_dry_run
+    options = nil
+
+    Ace::Review.stub :get, ->(_section, _key) { true } do
+      options = Ace::Review::Models::ReviewOptions.new(
+        preset: "pr",
+        auto_execute: true,
+        dry_run: true
+      )
+    end
+
+    refute options.auto_execute
+  end
+
   def test_review_options_feedback_enabled_false_with_no_feedback
     options = Ace::Review::Models::ReviewOptions.new(
       preset: "pr",

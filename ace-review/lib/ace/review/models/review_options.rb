@@ -38,10 +38,10 @@ module Ace
           @verbose = hash[:verbose] || false
           @auto_execute = if @dry_run
                             false
-                          elsif hash.key?(:auto_execute)
-                            hash[:auto_execute]
-                          else
+                          elsif hash[:auto_execute].nil?
                             Ace::Review.get("defaults", "auto_execute") || false
+                          else
+                            hash[:auto_execute]
                           end
 
           # Session options

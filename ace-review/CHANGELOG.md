@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.4] - 2026-03-18
+
+### Fixed
+- Fixed review CLI option precedence so `auto_execute` now uses config default when the flag is omitted and `--dry-run` remains authoritative.
+
 ## [0.45.3] - 2026-03-17
 
 ### Fixed

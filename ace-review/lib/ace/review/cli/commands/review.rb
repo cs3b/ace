@@ -53,7 +53,7 @@ module Ace
         option :no_feedback, type: :boolean, desc: "Skip feedback extraction from review reports"
         option :feedback_model, type: :string, desc: "Model to use for feedback extraction"
         option :dry_run, type: :boolean, desc: "Prepare review without executing"
-        option :auto_execute, type: :boolean, desc: "Execute LLM query automatically"
+        option :auto_execute, type: :boolean, default: nil, desc: "Execute LLM query automatically"
         option :save_session, type: :boolean, desc: "Save session files (default: true)"
         option :session_dir, type: :string, desc: "Custom session directory"
         option :task, type: :string, desc: "Save review report to task directory (task number, task.NNN, or v.X.Y.Z+NNN)"
