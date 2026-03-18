@@ -3,12 +3,12 @@
 require_relative "../test_helper"
 
 class StatusFormatterTest < AceOverseerTestCase
-  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_phase: nil)
+  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_step: nil)
     h = {
       "assignment" => { "state" => state, "id" => id, "name" => name },
-      "phase_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
+      "step_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
     }
-    h["current_phase"] = current_phase if current_phase
+    h["current_step"] = current_step if current_step
     h
   end
 
@@ -306,8 +306,8 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "5/10"
   end
 
-  def test_current_phase_shown_when_present
-    assignment = make_assignment(id: "8run1", state: "running", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_phase: "implement")
+  def test_current_step_shown_when_present
+    assignment = make_assignment(id: "8run1", state: "running", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_step: "implement")
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -315,7 +315,7 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "2/5"
   end
 
-  def test_current_phase_absent_when_nil
+  def test_current_step_absent_when_nil
     assignment = make_assignment(id: "8done1", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
@@ -349,7 +349,7 @@ class StatusFormatterTest < AceOverseerTestCase
   def test_assignment_row_with_missing_id
     assignment = {
       "assignment" => { "state" => "running", "name" => "work-on-task" },
-      "phase_summary" => { "total" => 3, "done" => 1, "failed" => 0, "in_progress" => 1, "pending" => 1 }
+      "step_summary" => { "total" => 3, "done" => 1, "failed" => 0, "in_progress" => 1, "pending" => 1 }
     }
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)

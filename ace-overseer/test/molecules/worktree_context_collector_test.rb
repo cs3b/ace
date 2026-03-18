@@ -10,7 +10,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
-  FakePhase = Struct.new(:name)
+  FakeStep = Struct.new(:name)
 
   FakeQueueState = Struct.new(:summary_data, :current) do
     def summary
@@ -79,8 +79,8 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       assert_equal 2, context.assignment_count
       assert_equal "8pdt3d", context.assignments[0].dig("assignment", "id")
       assert_equal "8pdtdb", context.assignments[1].dig("assignment", "id")
-      assert_equal 0, context.assignments[0].dig("phase_summary", "done")
-      assert_equal 10, context.assignments[1].dig("phase_summary", "done")
+      assert_equal 0, context.assignments[0].dig("step_summary", "done")
+      assert_equal 10, context.assignments[1].dig("step_summary", "done")
     end
   end
 
@@ -175,10 +175,10 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
-  def test_collect_includes_current_phase_when_running
+  def test_collect_includes_current_step_when_running
     queue_state = FakeQueueState.new(
       { total: 5, done: 2, failed: 0, in_progress: 1, pending: 2 },
-      FakePhase.new("implement")
+      FakeStep.new("implement")
     )
     info = FakeAssignmentInfo.new("8run1", "work-on-task-280", :running, queue_state)
 
@@ -190,11 +190,11 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
       context = collector.collect(worktree)
 
-      assert_equal "implement", context.assignments[0]["current_phase"]
+      assert_equal "implement", context.assignments[0]["current_step"]
     end
   end
 
-  def test_collect_current_phase_nil_when_not_running
+  def test_collect_current_step_nil_when_not_running
     info = make_info(id: "8done1", name: "work-on-task-281", state: :completed, total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
 
     Dir.mktmpdir("task.281") do |worktree|
@@ -205,7 +205,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
       context = collector.collect(worktree)
 
-      assert_nil context.assignments[0]["current_phase"]
+      assert_nil context.assignments[0]["current_step"]
     end
   end
 

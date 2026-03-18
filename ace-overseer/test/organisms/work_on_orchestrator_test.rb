@@ -83,7 +83,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
     def launch(**kwargs)
       @calls << kwargs
-      { assignment_id: "8or5kx", first_phase: "010-onboard" }
+      { assignment_id: "8or5kx", first_step: "010-onboard" }
     end
   end
 
@@ -163,7 +163,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       messages = []
       existing = {
         "assignment" => { "id" => "existing-id" },
-        "current_phase" => { "number" => "020-implement" }
+        "current_step" => { "number" => "020-implement" }
       }
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
         task_loader: FakeTaskManager.new("234" => { metadata: {} }),
