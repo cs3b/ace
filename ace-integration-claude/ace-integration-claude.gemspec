@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Claude Code integration workflows for ACE"
   spec.description = "Integration package containing Claude Code command templates, workflows, and tools for maintaining AI-assisted development integration"
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
