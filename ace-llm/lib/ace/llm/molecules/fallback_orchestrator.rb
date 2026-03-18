@@ -20,6 +20,7 @@ module Ace
           @timeout = timeout
           @visited_providers = Set.new
           @start_time = nil
+          @last_failure_terminal = false
         end
 
         # Execute a block with fallback support
@@ -47,7 +48,7 @@ module Ace
 
             # Check total timeout
             if timeout_exceeded?
-              report_status("⚠ Total timeout exceeded (#{@config.max_total_timeout}s)")
+              report_status("⚠ Total timeout exceeded (#{@config.max_total_timeout}s)") unless @last_failure_terminal
               break
             end
 
@@ -72,6 +73,7 @@ module Ace
           @visited_providers << provider_name
           attempts = 0
           last_error = nil
+          @last_failure_terminal = false
 
           loop do
             begin
@@ -103,9 +105,11 @@ module Ace
 
           case classification
           when Atoms::ErrorClassifier::SKIP_TO_NEXT
+            @last_failure_terminal = false
             report_status("⚠ #{provider_name} authentication failed, skipping...")
             :stop_and_fallback
           when Atoms::ErrorClassifier::FALLBACK_IMMEDIATELY
+            @last_failure_terminal = false
             reason = if Atoms::ErrorClassifier.quota_or_credit_limited?(error)
                        "quota/credit/window limit reached"
                      else
@@ -114,6 +118,7 @@ module Ace
             report_status("⚠ #{provider_name} #{reason}, trying next provider...")
             :stop_and_fallback
           when Atoms::ErrorClassifier::RETRYABLE_WITH_BACKOFF
+            @last_failure_terminal = false
             if attempts < @config.retry_count && !timeout_exceeded?
               delay = Atoms::ErrorClassifier.retry_delay(
                 error,
@@ -128,6 +133,7 @@ module Ace
               :stop_and_fallback
             end
           when Atoms::ErrorClassifier::TERMINAL
+            @last_failure_terminal = true
             report_status("⚠ #{provider_name} error: #{error.message}")
             :stop_and_fallback
           end

@@ -1,4 +1,7 @@
 timeout: 600
+# Keep @ro output-preserving in one-shot mode.
+# Claude native --permission-mode plan can return a success envelope without
+# final text in -p/--print JSON responses, which breaks ace-llm output saving.
 cli_args:
-  - --permission-mode
-  - plan
+  - --tools
+  - ""
