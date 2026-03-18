@@ -15,13 +15,13 @@ module Ace
                 if cli_args.is_a?(String)
                   Shellwords.split(cli_args)
                 else
-                  Array(cli_args).flat_map { |a| Shellwords.split(a.to_s) }
+                  normalize_cli_arg_array(cli_args)
                 end
               rescue ArgumentError => e
                 raise ArgumentError, "Malformed --cli-args '#{cli_args}': #{e.message}"
               end
 
-              args = args.compact.map(&:to_s).map(&:strip).reject(&:empty?)
+              args = normalize_arg_tokens(args)
 
               normalized = []
               previous_flag = false
@@ -55,6 +55,24 @@ module Ace
               end
 
               normalized
+            end
+
+            private
+
+            def normalize_cli_arg_array(cli_args)
+              Array(cli_args).flat_map do |arg|
+                next [] if arg.nil?
+                next [""] if arg == ""
+
+                Shellwords.split(arg.to_s)
+              end
+            end
+
+            def normalize_arg_tokens(args)
+              args.compact.map do |arg|
+                string_arg = arg.to_s
+                string_arg.empty? ? string_arg : string_arg.strip
+              end.reject { |arg| arg != "" && arg.empty? }
             end
           end
         end
