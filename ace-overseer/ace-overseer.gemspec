@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Project control plane orchestrator for task worktrees"
   spec.description = "ace-overseer orchestrates task execution across git worktrees, tmux windows, and assignment workflows."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
