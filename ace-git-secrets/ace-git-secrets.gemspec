@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
     LLM API keys, AWS credentials) in Git history, removing them via git-filter-repo,
     and revoking them via provider APIs. Requires gitleaks for detection.
   DESC
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
