@@ -22,7 +22,7 @@ integration:
   providers: {}
 assign:
   source: wfi://search/research
-  phases:
+  steps:
     - name: research
       description: Research a topic, codebase pattern, or external documentation
       tags: [analysis, exploration]
