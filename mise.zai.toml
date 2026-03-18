@@ -1,5 +1,5 @@
-# mise configuration for ace-meta monorepo
-# This file configures the development environment for the ace-meta project
+# mise configuration for ace monorepo
+# This file configures the development environment for the ace project
 
 [vars]
 _.file = ["~/.ace/.env"]
