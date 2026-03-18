@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "VHS recording pipeline for ACE demos"
   spec.description = "ace-demo records terminal demos from VHS tape presets or explicit tape paths."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
