@@ -1,0 +1,5 @@
+timeout: 600
+# Prompt-only mode: Claude receives only the composed prompt payload.
+cli_args:
+  - --tools
+  - ""

@@ -85,8 +85,15 @@ module Ace
         assert_equal "--verbose", client.received_options[:cli_args]
       end
 
-      def test_claude_ro_preset_disables_tools
+      def test_claude_ro_preset_allows_bash_and_read_tools
         preset_path = File.expand_path("../../.ace-defaults/llm/presets/claude/ro.yml", __dir__)
+        preset = YAML.load_file(preset_path)
+
+        assert_equal ["--tools", "Bash,Read"], preset["cli_args"]
+      end
+
+      def test_claude_prompt_preset_disables_tools
+        preset_path = File.expand_path("../../.ace-defaults/llm/presets/claude/prompt.yml", __dir__)
         preset = YAML.load_file(preset_path)
 
         assert_equal ["--tools", ""], preset["cli_args"]

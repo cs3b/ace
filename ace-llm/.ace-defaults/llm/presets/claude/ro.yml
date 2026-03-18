@@ -1,7 +1,6 @@
 timeout: 600
-# Keep @ro output-preserving in one-shot mode.
-# Claude native --permission-mode plan can return a success envelope without
-# final text in -p/--print JSON responses, which breaks ace-llm output saving.
+# Keep @ro tool-assisted for richer reviews while constraining Claude to
+# prompt inspection and shell access only.
 cli_args:
   - --tools
-  - ""
+  - Bash,Read
