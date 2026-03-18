@@ -71,7 +71,7 @@ defaults:
 # Feedback items are extracted from review reports for tracking and verification
 feedback:
   enabled: true                           # Enable feedback extraction (default: true)
-  synthesis_model: codex:codex@ro        # Model for synthesizing feedback items
+  synthesis_model: gemini:flash-latest@ro  # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
     - claude:sonnet
 

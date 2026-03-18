@@ -1231,7 +1231,8 @@ class ReviewManagerTest < AceReviewTest
     # First call fails (primary model)
     mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary model failed" }) do |**kwargs|
       call_count += 1
-      kwargs[:model] == "google:gemini-2.5-flash"
+      kwargs[:model] == "google:gemini-2.5-flash" &&
+        kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
 
     # Second call succeeds (fallback model)
@@ -1241,7 +1242,8 @@ class ReviewManagerTest < AceReviewTest
       paths: ["/path/fb1.s.md", "/path/fb2.s.md"]
     }) do |**kwargs|
       call_count += 1
-      kwargs[:model] == "claude:glm"
+      kwargs[:model] == "claude:glm" &&
+        kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
 
     output = capture_io do
@@ -1285,10 +1287,12 @@ class ReviewManagerTest < AceReviewTest
 
     # Both models fail
     mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary failed" }) do |**kwargs|
-      kwargs[:model] == "google:gemini-2.5-flash"
+      kwargs[:model] == "google:gemini-2.5-flash" &&
+        kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
     mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Fallback failed" }) do |**kwargs|
-      kwargs[:model] == "claude:glm"
+      kwargs[:model] == "claude:glm" &&
+        kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
 
     capture_io do
@@ -1323,6 +1327,44 @@ class ReviewManagerTest < AceReviewTest
 
       assert_equal ["primary-model", "fallback-1", "fallback-2"], models
     end
+  end
+
+  def test_extract_feedback_passes_feedback_synthesis_session_subdir
+    session_dir = File.join(@temp_dir, "session_for_feedback")
+    FileUtils.mkdir_p(session_dir)
+
+    report_path = File.join(session_dir, "report1.md")
+    File.write(report_path, "# Report 1\nFinding 1")
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: report_path }
+      }
+    }
+
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    mock_feedback_manager = Minitest::Mock.new
+    mock_feedback_manager.expect(:extract_and_save, {
+      success: true,
+      items_count: 1,
+      paths: ["/path/fb1.s.md"]
+    }) do |**kwargs|
+      kwargs[:report_paths] == [report_path] &&
+        kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
+    end
+
+    Ace::Review.stub :get, ->(_section, _key) { nil } do
+      Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
+        feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
+
+        assert feedback_result[:success]
+        assert_equal 1, feedback_result[:items_count]
+      end
+    end
+
+    mock_feedback_manager.verify
   end
 
   def test_build_synthesis_model_list_with_option_override
