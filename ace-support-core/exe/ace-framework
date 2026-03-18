@@ -7,7 +7,7 @@ require "ace/core/cli"
 # Start FrameworkCLI (separate from Ace::Core::CLI module which is ace-support-cli infrastructure)
 begin
   Ace::Core::FrameworkCLI.start(ARGV)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 end

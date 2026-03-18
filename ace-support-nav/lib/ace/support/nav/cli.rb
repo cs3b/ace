@@ -14,7 +14,7 @@ module Ace
     module Nav
       # ace-support-cli based CLI registry for ace-nav
       module CLI
-        extend Ace::Core::CLI::RegistryDsl
+        extend Ace::Support::Cli::RegistryDsl
 
         PROGRAM_NAME = "ace-nav"
 
@@ -44,14 +44,14 @@ module Ace
         register "sources", CLI::Commands::Sources.new
 
         # Register version command
-        version_cmd = Ace::Core::CLI::VersionCommand.build(
+        version_cmd = Ace::Support::Cli::VersionCommand.build(
           gem_name: "ace-support-nav",
           version: Ace::Support::Nav::VERSION
         )
         register "version", version_cmd
         register "--version", version_cmd
 
-        help_cmd = Ace::Core::CLI::HelpCommand.build(
+        help_cmd = Ace::Support::Cli::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: Ace::Support::Nav::VERSION,
           commands: REGISTERED_COMMANDS,

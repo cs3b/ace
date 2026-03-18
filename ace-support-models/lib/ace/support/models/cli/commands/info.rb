@@ -9,7 +9,7 @@ module Ace
         module Commands
           # Top-level shortcut for models info
           class InfoShortcut < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Show model info (shortcut for: models info)"
 

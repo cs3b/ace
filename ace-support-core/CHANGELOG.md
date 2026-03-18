@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-03-18
+
+### Changed
+- Migrated CLI infrastructure classes (`Error`, `Base`, `StandardOptions`, `RegistryDsl`, `VersionCommand`, `HelpCommand`) to ace-support-cli. Consumers now use `Ace::Support::Cli::*` namespace directly.
+- Removed thin wrappers (`HelpConcise`, `DefaultRouting`, `HelpRouter`, `CommandGroups`) that are no longer needed.
+- Updated ace-support-cli dependency constraint from `~> 0.3` to `~> 0.6`.
+- `ConfigSummaryMixin` remains in ace-support-core (depends on `Ace::Core::Atoms::ConfigSummary`).
+
 ## [0.27.0] - 2026-03-18
 
 ### Changed

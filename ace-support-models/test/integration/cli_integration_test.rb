@@ -237,7 +237,7 @@ class CLIIntegrationTest < AceModelsTestCase
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
       cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
-        assert_raises(Ace::Core::CLI::Error) do
+        assert_raises(Ace::Support::Cli::Error) do
           cmd.call(query: nil, filter: ["badfilter"], json: false, limit: 20)
         end
       end
@@ -280,7 +280,7 @@ class CLIIntegrationTest < AceModelsTestCase
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
       cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
-        assert_raises(Ace::Core::CLI::Error) do
+        assert_raises(Ace::Support::Cli::Error) do
           cmd.call(query: nil, filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20)
         end
       end

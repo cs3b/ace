@@ -38,7 +38,7 @@ module Ace
       #   assert_equal 0, result[:result]
       #
       # @note ace-support-cli calls exit(0) for --help, so we catch SystemExit.
-      #   Commands raise Ace::Core::CLI::Error for controlled failures
+      #   Commands raise Ace::Support::Cli::Error for controlled failures
       #   (exception-based exit code pattern per ADR-023).
       def invoke_cli(cli_class, args)
         stdout, stderr = capture_io do
@@ -46,7 +46,7 @@ module Ace
             @_cli_result = cli_class.start(args)
           rescue SystemExit => e
             @_cli_result = e.status
-          rescue Ace::Core::CLI::Error => e
+          rescue Ace::Support::Cli::Error => e
             $stderr.puts e.message
             @_cli_result = e.exit_code
           end

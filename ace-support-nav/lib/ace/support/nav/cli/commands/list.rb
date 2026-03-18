@@ -11,7 +11,7 @@ module Ace
         module Commands
           # ace-support-cli Command class for the list command
           class List < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               List matching resources
@@ -71,7 +71,7 @@ module Ace
               resources = @engine.list(@pattern, tree: @options[:tree], verbose: @options[:verbose])
 
               if resources.empty?
-                raise Ace::Core::CLI::Error.new("No resources found matching: #{@pattern}")
+                raise Ace::Support::Cli::Error.new("No resources found matching: #{@pattern}")
               end
 
               if @options[:verbose]

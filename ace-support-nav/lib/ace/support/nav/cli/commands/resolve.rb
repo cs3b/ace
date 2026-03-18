@@ -13,7 +13,7 @@ module Ace
         module Commands
           # ace-support-cli Command class for the resolve command
           class Resolve < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               Resolve resource path or content
@@ -111,7 +111,7 @@ module Ace
               result = @engine.resolve(@uri, content: @options[:content], verbose: @options[:verbose])
 
               if result.nil?
-                raise Ace::Core::CLI::Error.new("Resource not found: #{@uri}")
+                raise Ace::Support::Cli::Error.new("Resource not found: #{@uri}")
               end
 
               if @options[:verbose] && result.is_a?(Hash)

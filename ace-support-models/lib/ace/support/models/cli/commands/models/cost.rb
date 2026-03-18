@@ -10,7 +10,7 @@ module Ace
           module ModelsSubcommands
             # Show pricing for a model
             class Cost < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Show pricing for a model"
 
@@ -41,9 +41,9 @@ module Ace
                   puts calculator.format(result)
                 end
               rescue ProviderNotFoundError, ModelNotFoundError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
             end
           end

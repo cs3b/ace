@@ -17,6 +17,7 @@ module Ace
               end
 
               desc "Show top-level help"
+              argument :args, type: :array, required: false
 
               def call(**_params)
                 puts self.class.render

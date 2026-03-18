@@ -10,7 +10,7 @@ module Ace
           module Cache
             # Clear local cache
             class Clear < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Clear local cache"
 
@@ -29,10 +29,10 @@ module Ace
                   puts "Cache cleared successfully"
                   puts "Deleted: #{result[:deleted_files].join(', ')}" if result[:deleted_files]&.any?
                 else
-                  raise Ace::Core::CLI::Error.new(result[:message])
+                  raise Ace::Support::Cli::Error.new(result[:message])
                 end
               rescue StandardError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
             end
           end

@@ -20,6 +20,16 @@ class HelpCommandFactoryTest < AceSupportCliTestCase
     assert_includes stdout, "--version       # Print version"
   end
 
+  def test_build_accepts_args_argument
+    command_class = Ace::Support::Cli::HelpCommand.build(
+      program_name: "ace-tool",
+      version: "1.0.0",
+      commands: [["status", "Show status"]]
+    )
+
+    assert command_class.arguments.any? { |a| a.name == :args }
+  end
+
   private
 
   def capture_stdout

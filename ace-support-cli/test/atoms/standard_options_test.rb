@@ -3,8 +3,8 @@
 require_relative "../test_helper"
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       class StandardOptionsTest < Minitest::Test
         def test_option_description_constants
           assert_equal "Suppress non-essential output", StandardOptions::QUIET_DESC

@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
-require "ace/support/cli"
 require_relative "error"
 require_relative "standard_options"
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       # Shared CLI helper methods and option constants used across ACE commands.
       module Base
         STANDARD_OPTIONS = %i[quiet verbose debug].freeze
@@ -33,7 +32,7 @@ module Ace
         end
 
         def raise_cli_error(message, exit_code: 1)
-          raise Ace::Core::CLI::Error.new(message, exit_code: exit_code)
+          raise Ace::Support::Cli::Error.new(message, exit_code: exit_code)
         end
 
         def validate_required!(options, *required)
@@ -48,7 +47,6 @@ module Ace
         end
 
         # Type coercion for CLI option values.
-        # Retained for backward compatibility with downstream commands still using ace-support-cli.
         def coerce_types(options, conversions)
           conversions.each do |key, type|
             next if options[key].nil?

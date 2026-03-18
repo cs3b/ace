@@ -10,7 +10,7 @@ module Ace
           module ModelsSubcommands
             # Show model information
             class Info < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Show model information (brief by default)"
 
@@ -35,11 +35,11 @@ module Ace
                   puts format_model_info_brief(model)
                 end
               rescue ProviderNotFoundError => e
-                raise Ace::Core::CLI::Error.new("Model '#{e.model_id || model_id}' not found in provider '#{e.provider_id}'")
+                raise Ace::Support::Cli::Error.new("Model '#{e.model_id || model_id}' not found in provider '#{e.provider_id}'")
               rescue ModelNotFoundError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
 
               private

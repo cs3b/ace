@@ -30,15 +30,9 @@ module Ace
           puts e.output
           e.status
         rescue Ace::Support::Cli::ParseError => e
-          if defined?(Ace::Core::CLI::Error)
-            raise Ace::Core::CLI::Error.new(e.message)
-          end
-          raise
+          raise Ace::Support::Cli::Error.new(e.message)
         rescue Ace::Support::Cli::CommandNotFoundError => e
-          if defined?(Ace::Core::CLI::Error)
-            raise Ace::Core::CLI::Error.new(e.message)
-          end
-          raise
+          raise Ace::Support::Cli::Error.new(e.message)
         end
 
         private

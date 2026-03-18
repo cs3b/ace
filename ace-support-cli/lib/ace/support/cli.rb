@@ -2,6 +2,10 @@
 
 require_relative "cli/version"
 require_relative "cli/errors"
+require_relative "cli/error"
+require_relative "cli/standard_options"
+require_relative "cli/base"
+require_relative "cli/registry_dsl"
 require_relative "cli/models/option"
 require_relative "cli/models/argument"
 require_relative "cli/command"

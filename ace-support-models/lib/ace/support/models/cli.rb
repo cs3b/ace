@@ -21,7 +21,7 @@ module Ace
       # After the split, ace-models handles cache and model operations.
       # Provider management moved to ace-llm-providers.
       module CLI
-        extend Ace::Core::CLI::RegistryDsl
+        extend Ace::Support::Cli::RegistryDsl
 
         PROGRAM_NAME = "ace-models"
 
@@ -53,7 +53,7 @@ module Ace
         register "clear", CLI::Commands::Cache::Clear
 
         # Version command
-        version_cmd = Ace::Core::CLI::VersionCommand.build(
+        version_cmd = Ace::Support::Cli::VersionCommand.build(
           gem_name: PROGRAM_NAME,
           version: VERSION
         )
@@ -61,7 +61,7 @@ module Ace
         register "--version", version_cmd
 
         # Help command
-        help_cmd = Ace::Core::CLI::HelpCommand.build(
+        help_cmd = Ace::Support::Cli::HelpCommand.build(
           program_name: PROGRAM_NAME,
           version: VERSION,
           commands: REGISTERED_COMMANDS,

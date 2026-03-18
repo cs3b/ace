@@ -3,8 +3,8 @@
 require_relative "../test_helper"
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       class ErrorTest < Minitest::Test
         def test_inherits_from_standard_error
           error = Error.new("test")

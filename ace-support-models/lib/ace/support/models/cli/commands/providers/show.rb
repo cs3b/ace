@@ -10,7 +10,7 @@ module Ace
           module Providers
             # Show provider details and models
             class Show < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Show provider details and models"
 
@@ -21,13 +21,13 @@ module Ace
                 cache_manager = Molecules::CacheManager.new
 
                 unless cache_manager.cached?
-                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
+                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 provider_data = cache_manager.get_provider(provider_id)
 
                 unless provider_data
-                  raise Ace::Core::CLI::Error.new("Provider '#{provider_id}' not found")
+                  raise Ace::Support::Cli::Error.new("Provider '#{provider_id}' not found")
                 end
 
                 if options[:json]
@@ -43,7 +43,7 @@ module Ace
                   puts "    #{model[:name]}"
                 end
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
             end
           end

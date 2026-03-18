@@ -10,7 +10,7 @@ module Ace
           module Providers
             # Sync provider YAML configs with models.dev
             class Sync < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Sync provider YAML configs with models.dev"
 
@@ -44,7 +44,7 @@ module Ace
                 )
 
                 if result[:status] == :error
-                  raise Ace::Core::CLI::Error.new(result[:message])
+                  raise Ace::Support::Cli::Error.new(result[:message])
                 end
 
                 if options[:json]
@@ -53,9 +53,9 @@ module Ace
                   puts orchestrator.format_result(result)
                 end
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new("#{e.message}. Run 'ace-models cache sync' first to download model data.")
+                raise Ace::Support::Cli::Error.new("#{e.message}. Run 'ace-models cache sync' first to download model data.")
               rescue ConfigError => e
-                raise Ace::Core::CLI::Error.new("Config error: #{e.message}")
+                raise Ace::Support::Cli::Error.new("Config error: #{e.message}")
               end
             end
           end

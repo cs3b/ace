@@ -22,6 +22,15 @@ module Ace
               end
             end
           end
+
+          def self.module(gem_name:, version:)
+            Module.new do
+              define_method(:show_version) do
+                puts "#{gem_name} #{version.call}"
+                0
+              end
+            end
+          end
         end
       end
     end

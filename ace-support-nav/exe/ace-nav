@@ -43,7 +43,7 @@ begin
   Ace::Support::Cli::Runner.new(Ace::Support::Nav::CLI).call(args: argv)
 rescue SystemExit => e
   exit(e.status)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 end
