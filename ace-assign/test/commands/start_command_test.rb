@@ -32,7 +32,7 @@ class StartCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Start.new.call
       end
 
@@ -64,7 +64,7 @@ class StartCommandTest < AceAssignTestCase
   end
 
   def test_start_rejects_step_with_assignment_option
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       Ace::Assign::CLI::Commands::Start.new.call(step: "010", assignment: "abc123")
     end
 

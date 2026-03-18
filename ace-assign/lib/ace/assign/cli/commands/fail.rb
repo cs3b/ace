@@ -6,7 +6,7 @@ module Ace
       module Commands
         # Mark current phase as failed
         class Fail < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include AssignmentTarget
 
           desc "Mark current phase as failed"

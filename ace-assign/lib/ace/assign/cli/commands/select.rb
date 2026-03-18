@@ -12,7 +12,7 @@ module Ace
         # @example Clear current selection
         #   ace-assign select --clear
         class Select < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc "Select an assignment as the current active assignment"
 

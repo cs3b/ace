@@ -22,7 +22,7 @@ module Ace
         #   ace-assign add verify --after 010 --child -i "Verify"
         #   # Creates 010.01-verify.ph.md
         class Add < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include AssignmentTarget
 
           desc "Add a new phase to the queue dynamically"
@@ -38,7 +38,7 @@ module Ace
           def call(name:, **options)
             # Validate: --child requires --after
             if options[:child] && !options[:after]
-              raise Ace::Core::CLI::Error, "--child requires --after to specify the parent phase"
+              raise Ace::Support::Cli::Error, "--child requires --after to specify the parent phase"
             end
 
             # Validate: adding child would not exceed MAX_DEPTH
@@ -46,7 +46,7 @@ module Ace
               parsed = Atoms::PhaseNumbering.parse(options[:after])
               max_depth = Atoms::PhaseNumbering::MAX_DEPTH
               if parsed[:depth] >= max_depth
-                raise Ace::Core::CLI::Error,
+                raise Ace::Support::Cli::Error,
                       "Cannot add child: would exceed maximum nesting depth of #{max_depth + 1} levels " \
                       "(parent '#{options[:after]}' is at depth #{parsed[:depth]})"
               end

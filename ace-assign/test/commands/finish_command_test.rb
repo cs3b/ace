@@ -75,7 +75,7 @@ class FinishCommandTest < AceAssignTestCase
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
       end
 
@@ -204,7 +204,7 @@ class FinishCommandTest < AceAssignTestCase
       original_stdin = $stdin
       $stdin = stdin
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         cmd.call
       end
 
@@ -266,7 +266,7 @@ class FinishCommandTest < AceAssignTestCase
       assert_includes finish_output.first, "Advancing to phase 020"
 
       # start fails — 020 is already in_progress after auto-advance
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Start.new.call
       end
       assert_includes error.message, "already in progress"
@@ -283,7 +283,7 @@ class FinishCommandTest < AceAssignTestCase
   end
 
   def test_finish_rejects_step_with_assignment_option
-    error = assert_raises(Ace::Core::CLI::Error) do
+    error = assert_raises(Ace::Support::Cli::Error) do
       Ace::Assign::CLI::Commands::Finish.new.call(step: "010", assignment: "abc123")
     end
 
@@ -298,7 +298,7 @@ class FinishCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Finish.new.call(message: "")
       end
 
@@ -317,7 +317,7 @@ class FinishCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::Finish.new.call(message: "   ")
       end
 

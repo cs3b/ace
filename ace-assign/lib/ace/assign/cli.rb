@@ -50,7 +50,7 @@ module Ace
   module Assign
     # ace-support-cli based CLI registry for ace-assign
     module CLI
-      extend Ace::Core::CLI::RegistryDsl
+      extend Ace::Support::Cli::RegistryDsl
 
       PROGRAM_NAME = "ace-assign"
 
@@ -122,7 +122,7 @@ module Ace
       register "fork-run", wrap_command(Commands::ForkRun)
 
       # Register version command
-      version_cmd = Ace::Core::CLI::VersionCommand.build(
+      version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-assign",
         version: Ace::Assign::VERSION
       )
@@ -130,7 +130,7 @@ module Ace
       register "--version", version_cmd
 
       # Register help command
-      help_cmd = Ace::Core::CLI::HelpCommand.build(
+      help_cmd = Ace::Support::Cli::HelpCommand.build(
         program_name: PROGRAM_NAME,
         version: Ace::Assign::VERSION,
         commands: REGISTERED_COMMANDS,

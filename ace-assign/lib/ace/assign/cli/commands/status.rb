@@ -23,7 +23,7 @@ module Ace
         # @example Show all assignments including completed
         #   ace-assign status --all
         class Status < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
           include AssignmentTarget
 
           # Status icons for consistent display

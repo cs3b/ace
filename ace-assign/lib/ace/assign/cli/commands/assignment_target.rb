@@ -25,14 +25,14 @@ module Ace
 
           def parse_assignment_target(raw)
             value = raw.to_s.strip
-            raise Ace::Core::CLI::Error, "Assignment target cannot be empty" if value.empty?
+            raise Ace::Support::Cli::Error, "Assignment target cannot be empty" if value.empty?
 
             assignment_id, scope = value.split("@", 2)
             assignment_id = assignment_id&.strip
             scope = scope&.strip
 
-            raise Ace::Core::CLI::Error, "Assignment target requires assignment ID before '@'" if assignment_id.nil? || assignment_id.empty?
-            raise Ace::Core::CLI::Error, "Assignment target scope after '@' cannot be empty" if value.include?("@") && (scope.nil? || scope.empty?)
+            raise Ace::Support::Cli::Error, "Assignment target requires assignment ID before '@'" if assignment_id.nil? || assignment_id.empty?
+            raise Ace::Support::Cli::Error, "Assignment target scope after '@' cannot be empty" if value.include?("@") && (scope.nil? || scope.empty?)
 
             Target.new(assignment_id: assignment_id, scope: scope)
           end
