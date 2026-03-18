@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-review v0.45.4**: Fixed `auto_execute` option precedence so config `defaults.auto_execute` is honored when the CLI flag is omitted, while `--dry-run` continues to disable execution.
+
 ## [0.9.836] - 2026-03-17
 
 ### Fixed
