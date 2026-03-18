@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.843] - 2026-03-18
+
+### Changed
+- **ace-support-cli v0.6.0**: Absorbed CLI infrastructure classes (Error, Base, StandardOptions, RegistryDsl) from ace-support-core; added VersionCommand.module() factory and HelpCommand args argument; Runner now raises Ace::Support::Cli::Error directly.
+- **ace-support-core v0.28.0**: Removed 10 CLI wrapper/infrastructure files now canonical in ace-support-cli; kept ConfigSummaryMixin; updated ace-support-cli dep to ~> 0.6.
+- **ace-assign v0.33.1, ace-b36ts v0.11.1, ace-bundle v0.37.1, ace-compressor v0.22.1, ace-demo v0.11.1, ace-docs v0.26.1, ace-git v0.15.1, ace-git-commit v0.21.6, ace-git-secrets v0.10.1, ace-git-worktree v0.16.1, ace-handbook v0.16.1, ace-idea v0.15.1, ace-lint v0.21.1, ace-llm v0.27.1, ace-overseer v0.6.1, ace-prompt-prep v0.20.1, ace-retro v0.13.1, ace-review v0.47.1, ace-search v0.21.8, ace-sim v0.9.1, ace-support-models v0.7.1, ace-support-nav v0.23.1, ace-support-test-helpers v0.12.5, ace-task v0.29.1, ace-test-runner v0.15.15, ace-test-runner-e2e v0.26.1, ace-tmux v0.7.1**: Migrated CLI namespace from `Ace::Core::CLI::*` to `Ace::Support::Cli::*`.
+
 ## [0.9.842] - 2026-03-18
 
 ### Changed
