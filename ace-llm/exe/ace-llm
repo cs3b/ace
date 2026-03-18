@@ -19,7 +19,7 @@ args = ARGV.empty? ? ["--help"] : ARGV
 # Start ace-support-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
   Ace::Support::Cli::Runner.new(Ace::LLM::CLI::Commands::Query).call(args: args)
-rescue Ace::Core::CLI::Error => e
+rescue Ace::Support::Cli::Error => e
   warn e.message
   exit(e.exit_code)
 end

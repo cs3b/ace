@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module LLM
@@ -9,7 +9,7 @@ module Ace
       module Commands
       # Query command for ace-llm
       class Query < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc "Query an LLM provider"
 
@@ -62,9 +62,9 @@ module Ace
           display_config_summary(options)
           execute_query(options)
         rescue Ace::LLM::Error => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         rescue ArgumentError, EncodingError => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         end
 
         private
@@ -169,7 +169,7 @@ module Ace
         rescue Ace::LLM::ProviderError => e
           if e.message.include?("not found") || e.message.include?("not registered")
             available = Ace::LLM::ClientRegistry.available_providers rescue []
-            raise Ace::Core::CLI::Error, "#{e.message}\nAvailable providers: #{available.join(", ")}"
+            raise Ace::Support::Cli::Error, "#{e.message}\nAvailable providers: #{available.join(", ")}"
           end
           raise
         end
