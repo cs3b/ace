@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Provides workflows, templates, and conventions for end-to-end tests " \
                      "that are executed by AI agents rather than automated test runners. " \
                      "Includes test scenario templates and execution workflows."
-  spec.homepage = "https://github.com/cs3b/ace-meta/tree/main/ace-test-runner-e2e"
+  spec.homepage = "https://github.com/cs3b/ace/tree/main/ace-test-runner-e2e"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
@@ -39,6 +39,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace-meta"
-  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace-meta/blob/main/ace-test-runner-e2e/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace"
+  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-test-runner-e2e/CHANGELOG.md"
 end
