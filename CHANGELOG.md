@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.838] - 2026-03-18
+
+### Fixed
+- **ace-llm-providers-cli v0.25.5**: Fixed nested Claude response parsing to always persist valid output text when `result`/`response` payloads contain structured objects.
+
 ## [0.9.837] - 2026-03-18
 
 ### Changed
