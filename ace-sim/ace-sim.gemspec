@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Generic step-based simulation runner for ACE"
   spec.description = "ace-sim executes scenario-based multi-step simulations with provider comparison, repeat runs, and deterministic artifact outputs."
-  spec.homepage = "https://github.com/cs3b/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
