@@ -8,7 +8,7 @@ module Ace
       module Commands
           # Decode a compact ID to a timestamp
           class Decode < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Decode a compact ID (2-8 characters) to a timestamp"
 
