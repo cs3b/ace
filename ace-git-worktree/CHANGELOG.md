@@ -883,8 +883,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error handling and validation
 - Comprehensive test coverage
 
-[Unreleased]: https://github.com/ace-ecosystem/ace-meta/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/ace-ecosystem/ace-meta/releases/tag/v0.1.0
+[Unreleased]: https://github.com/cs3b/ace/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/cs3b/ace/releases/tag/v0.1.0
 
 
 ## [0.13.11] - 2026-02-22
