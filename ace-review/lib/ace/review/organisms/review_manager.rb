@@ -16,7 +16,6 @@ module Ace
       class ReviewManager
         attr_reader :preset_manager, :prompt_resolver, :prompt_composer,
                     :subject_extractor, :context_extractor
-        attr_accessor :task_reference
 
         def initialize(project_root: nil)
           @project_root = project_root
@@ -25,7 +24,6 @@ module Ace
           @prompt_composer = Ace::Review::Molecules::PromptComposer.new(resolver: @prompt_resolver)
           @subject_extractor = Ace::Review::Molecules::SubjectExtractor.new
           @context_extractor = Ace::Review::Molecules::ContextExtractor.new
-          @task_reference = nil
         end
 
         # Execute a code review with the given options
@@ -34,9 +32,6 @@ module Ace
         def execute_review(options)
           # Convert to ReviewOptions if needed
           options = ensure_review_options(options)
-
-          # Capture task reference for later use
-          @task_reference = options.task
 
           # Step 1: Prepare configuration
           config_result = prepare_review_config(options)
@@ -616,24 +611,11 @@ module Ace
             # Copy final review to release folder
             release_path = copy_to_release(session_dir, review_data)
 
-            # Link session to task directory if --task flag provided
-            task_link = link_session_to_task_if_requested(session_dir)
-
-            # Auto-link to task if enabled and no explicit task flag
-            auto_link_path = auto_link_session_if_enabled(session_dir, options) unless task_link
-
             # Handle PR comment posting if requested
             comment_result = handle_pr_comment_posting(options, result[:output_file], review_data)
 
-            # Build result message
-            messages = []
-            messages << "Review saved to #{release_path}" if release_path
-            messages << "Session linked to task: #{task_link}" if task_link
-            messages << "Session auto-linked to task: #{auto_link_path}" if auto_link_path
-            messages << "Review saved to #{result[:output_file]}" if messages.empty?
-
             # Build response with comment info if applicable
-            response = build_success_response(result, release_path, task_link || auto_link_path, comment_result)
+            response = build_success_response(result, release_path, comment_result)
 
             # Extract feedback after successful single model review (if enabled)
             feedback_result = maybe_extract_single_model_feedback(
@@ -677,24 +659,14 @@ module Ace
             # For multi-model, we don't copy to a single release location
             # Each model has its own output file already in session_dir
 
-            # Link session to task if --task flag provided (single symlink for entire session)
-            task_link = link_session_to_task_if_requested(session_dir)
-
-            # Auto-link to task if enabled and no explicit --task
-            auto_link_path = auto_link_session_if_enabled(session_dir, options) unless task_link
-
             # Extract feedback (always runs if we have results)
             feedback_result = nil
             if should_extract_feedback?(result, options)
               feedback_result = extract_feedback(result, session_dir, review_data, options)
             end
 
-            # Build task_paths for response (single link path if linked)
-            task_paths = [task_link || auto_link_path].compact
-            task_paths = nil if task_paths.empty?
-
             # Build multi-model success response
-            build_multi_model_response(result, session_dir, task_paths, feedback_result)
+            build_multi_model_response(result, session_dir, feedback_result)
           else
             {
               success: false,
@@ -785,65 +757,6 @@ module Ace
           base_cache_path
         end
 
-    
-        # Link session directory to task reviews folder
-        # Creates a symlink: task_dir/reviews/{session_name} → session_dir
-        # @param session_dir [String] Path to the session directory
-        # @param task_dir [String] Path to the task directory
-        # @return [String, nil] Path to created symlink or nil if not created
-        def link_session_to_task(session_dir, task_dir)
-          return nil unless task_dir && session_dir
-          return nil unless Dir.exist?(session_dir)
-
-          # Ensure task/reviews/ directory exists
-          reviews_dir = File.join(task_dir, "reviews")
-          FileUtils.mkdir_p(reviews_dir)
-
-          # Get session folder name (e.g., "review-8p2h11")
-          session_name = File.basename(session_dir)
-          link_path = File.join(reviews_dir, session_name)
-
-          # Skip if link already exists and points to correct target
-          if File.symlink?(link_path)
-            return link_path if File.readlink(link_path) == Pathname.new(session_dir).relative_path_from(Pathname.new(reviews_dir)).to_s
-          end
-
-          # Remove if regular file/dir exists at this path
-          FileUtils.rm_rf(link_path) if File.exist?(link_path) || File.symlink?(link_path)
-
-          # Create relative symlink
-          relative_path = Pathname.new(session_dir).relative_path_from(Pathname.new(reviews_dir))
-          File.symlink(relative_path.to_s, link_path)
-
-          link_path
-        end
-
-        # Link session to task if --task flag provided or auto-detected
-        # @param session_dir [String] Path to the session directory
-        # @return [String, nil] Path to created symlink or nil
-        def link_session_to_task_if_requested(session_dir)
-          return nil unless @task_reference
-
-          begin
-            require_relative '../molecules/task_resolver'
-
-            # Resolve task reference to directory path
-            task_info = Molecules::TaskResolver.resolve(@task_reference)
-
-            unless task_info
-              warn "Warning: Task '#{@task_reference}' not found. Review completed but not linked to task."
-              return nil
-            end
-
-            link_session_to_task(session_dir, task_info[:path])
-          rescue LoadError
-            warn "Warning: Cannot link to task (ace-task gem not available)"
-            nil
-          rescue => e
-            warn "Warning: Failed to link session to task: #{e.message}"
-            nil
-          end
-        end
 
         def copy_to_release(session_dir, review_data)
           # Copy final review reports to release folder
@@ -928,58 +841,6 @@ module Ace
           metadata + response
         end
 
-        # Save review report to task directory if --task flag provided
-        # @param review_data [Hash] Review metadata
-        # @param review_file [String] Path to the review file to save
-        # @return [String, nil] Path to saved report or nil if not saved
-        # Auto-link session to task if enabled (detects task from branch name)
-        # @param session_dir [String] Path to session directory
-        # @param options [ReviewOptions] Review options
-        # @return [String, nil] Path to symlink or nil
-        def auto_link_session_if_enabled(session_dir, options)
-          # Check if auto-save is disabled by flag
-          return nil if options.no_auto_save
-
-          # Check if auto-save is enabled in config
-          auto_save_enabled = Ace::Review.get("defaults", "auto_save")
-          return nil unless auto_save_enabled
-
-          # If explicit --task is set, don't auto-detect (already handled)
-          return nil if @task_reference
-
-          begin
-            require_relative '../molecules/task_resolver'
-
-            # Get current branch using ace-git
-            branch_name = Ace::Git::Molecules::BranchReader.current_branch
-            return nil unless branch_name
-
-            # Extract task ID from branch using ace-git
-            patterns = Ace::Review.get("defaults", "task_branch_patterns")
-            task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name, patterns: patterns)
-
-            if task_id
-              # Try to link to detected task
-              task_info = Molecules::TaskResolver.resolve(task_id)
-
-              if task_info
-                link_path = link_session_to_task(session_dir, task_info[:path])
-                return link_path if link_path
-              else
-                warn "Warning: Task '#{task_id}' not found."
-              end
-            end
-
-            nil
-          rescue LoadError => e
-            warn "Warning: Auto-link skipped (dependencies not available: #{e.message})"
-            nil
-          rescue => e
-            warn "Warning: Auto-link failed: #{e.message}"
-            nil
-          end
-        end
-
         # Handle PR comment posting workflow
         # @param options [ReviewOptions] Review options
         # @param review_file [String] Path to review file
@@ -993,14 +854,12 @@ module Ace
         # Build success response with optional comment info
         # @param result [Hash] LLM execution result
         # @param release_path [String] Path to saved release file
-        # @param task_link [String] Path to task symlink (or legacy task path)
         # @param comment_result [Hash, nil] Comment posting result
         # @return [Hash] Final response hash
-        def build_success_response(result, release_path, task_link, comment_result)
+        def build_success_response(result, release_path, comment_result)
           # Build result message
           messages = []
           messages << "Review saved to #{release_path}" if release_path
-          messages << "Session linked to task: #{task_link}" if task_link
           messages << "Review saved to #{result[:output_file]}" if messages.empty?
 
           # Build base response
@@ -1008,8 +867,6 @@ module Ace
             success: true,
             output_file: release_path || result[:output_file],
             message: messages.join("\n"),
-            task_link: task_link,
-            task_path: task_link, # Backward compatibility
             usage: result[:usage],
             model_info: result[:model_info],
             provider_info: result[:provider_info]
@@ -1166,40 +1023,12 @@ module Ace
           session_dir
         end
 
-        # Resolve task reference for feedback storage
-        # @param task_reference [String] Task reference (ID, number, etc.)
-        # @return [Hash, nil] Task info with :path or nil if not found
-        def resolve_task_for_feedback(task_reference)
-          require_relative '../molecules/task_resolver'
-          Molecules::TaskResolver.resolve(task_reference)
-        rescue => e
-          warn "Warning: Could not resolve task for feedback: #{e.message}"
-          nil
-        end
-
-        # Get the feedback directory path for a task
-        # @param task_path [String] Path to the task directory
-        # @return [String] The feedback directory path
-        def task_feedback_path(task_path)
-          File.join(task_path, "feedback")
-        end
-
-        # Ensure the task feedback directory structure exists
-        # Creates feedback/ and feedback/_archived/ subdirectories
-        # @param task_path [String] Path to the task directory
-        def ensure_task_feedback_directory(task_path)
-          feedback_dir = task_feedback_path(task_path)
-          FileUtils.mkdir_p(feedback_dir)
-          FileUtils.mkdir_p(File.join(feedback_dir, "_archived"))
-        end
-
         # Build multi-model response with optional feedback info
         # @param result [Hash] multi-model execution result
         # @param session_dir [String] session directory
-        # @param task_paths [Array<String>, nil] task file paths
         # @param feedback_result [Hash, nil] feedback extraction result
         # @return [Hash] response hash
-        def build_multi_model_response(result, session_dir, task_paths = nil, feedback_result = nil)
+        def build_multi_model_response(result, session_dir, feedback_result = nil)
           successful_models = result[:results].select { |_, r| r[:success] }
           failed_models = result[:results].reject { |_, r| r[:success] }
 
@@ -1211,9 +1040,6 @@ module Ace
             successful_models: successful_models.keys,
             failed_models: failed_models.keys
           }
-
-          # Add task paths if available
-          response[:task_paths] = task_paths if task_paths&.any?
 
           # Add output files
           output_files = successful_models.values.map { |r| r[:output_file] }.compact

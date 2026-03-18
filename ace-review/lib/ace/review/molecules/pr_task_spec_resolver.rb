@@ -35,8 +35,12 @@ module Ace
         def self.extract_from_branch(branch_name)
           return nil unless branch_name && !branch_name.strip.empty?
 
-          patterns = Ace::Review.get("defaults", "task_branch_patterns")
-          Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name, patterns: patterns)
+          # Extract prefix before first hyphen as potential task reference
+          prefix = branch_name.split("-", 2).first
+          return nil if prefix.nil? || prefix.empty?
+          return nil if prefix.include?("/")
+
+          prefix
         end
 
         def self.extract_from_text(text)

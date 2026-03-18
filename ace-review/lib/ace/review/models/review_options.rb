@@ -9,8 +9,8 @@ module Ace
                       :prompt_base, :prompt_format, :prompt_focus, :add_focus,
                       :prompt_guidelines, :model, :models, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
-                      :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
-                      :pr_comments, :pr_comment_data, :no_auto_save,
+                      :pr, :post_comment, :pr_metadata, :gh_timeout,
+                      :pr_comments, :pr_comment_data,
                       :no_feedback, :feedback_model,
                       :list_presets, :list_prompts, :help
 
@@ -48,9 +48,6 @@ module Ace
           @save_session = hash.fetch(:save_session, true)
           @session_dir = hash[:session_dir]
 
-          # Task integration
-          @task = hash[:task]
-
           # PR review options
           @pr = hash[:pr]
           @post_comment = hash[:post_comment] || false
@@ -60,9 +57,6 @@ module Ace
           # PR comment options
           @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
           @pr_comment_data = nil  # Populated during execution
-
-          # Auto-save options
-          @no_auto_save = hash[:no_auto_save] || false
 
           # Feedback extraction options
           @no_feedback = hash[:no_feedback] || false

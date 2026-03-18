@@ -4,15 +4,15 @@ require "test_helper"
 require "ace/review/molecules/task_resolver"
 
 class PrTaskSpecResolverTest < AceReviewTest
-  def test_extract_task_reference_prefers_branch_pattern
+  def test_extract_task_reference_prefers_branch_prefix
     metadata = {
-      "headRefName" => "281.05-review-spec-context",
+      "headRefName" => "q3r-review-spec-context",
       "title" => "task 999",
       "body" => "task 888"
     }
 
     result = Ace::Review::Molecules::PrTaskSpecResolver.extract_task_reference(metadata)
-    assert_equal "281.05", result
+    assert_equal "q3r", result
   end
 
   def test_extract_task_reference_falls_back_to_body_text

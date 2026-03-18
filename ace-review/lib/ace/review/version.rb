@@ -2,6 +2,6 @@
 
 module Ace
   module Review
-    VERSION = "0.45.4"
+    VERSION = "0.46.0"
   end
 end

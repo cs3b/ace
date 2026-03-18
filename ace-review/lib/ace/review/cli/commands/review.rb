@@ -56,8 +56,6 @@ module Ace
         option :auto_execute, type: :boolean, default: nil, desc: "Execute LLM query automatically"
         option :save_session, type: :boolean, desc: "Save session files (default: true)"
         option :session_dir, type: :string, desc: "Custom session directory"
-        option :task, type: :string, desc: "Save review report to task directory (task number, task.NNN, or v.X.Y.Z+NNN)"
-        option :no_auto_save, type: :boolean, desc: "Disable auto-save even if enabled in config"
         option :pr, type: :string, desc: "Review GitHub PR (number, URL, or owner/repo#number)"
         option :pr_comments, type: :boolean, desc: "Include PR comments as feedback source (default: true for --pr)"
         option :post_comment, type: :boolean, desc: "Post review as PR comment (requires --pr)"
@@ -251,18 +249,6 @@ module Ace
             puts "Failed models:"
             result[:failed_models].each do |model|
               puts "  ✗ #{model}"
-            end
-          end
-
-          if result[:task_paths]&.any?
-            puts
-            puts "Saved to task directory:"
-            first_path = result[:task_paths].first
-            task_dir = File.dirname(first_path)
-            relative_dir = Pathname.new(task_dir).relative_path_from(Dir.pwd).to_s
-            puts "  #{relative_dir}/"
-            result[:task_paths].each do |path|
-              puts "  ✓ #{File.basename(path)}"
             end
           end
 
