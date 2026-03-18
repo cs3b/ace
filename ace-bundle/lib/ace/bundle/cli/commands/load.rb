@@ -13,7 +13,7 @@ module Ace
         #
         # Loads context from preset, file, or protocol URL
         class Load < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Load context from preset, file, or protocol URL
@@ -173,7 +173,7 @@ module Ace
               if result[:context].metadata[:errors] && options[:debug]
                 msg = "#{msg}\n#{result[:context].metadata[:errors].join("\n")}"
               end
-              raise Ace::Core::CLI::Error.new(msg)
+              raise Ace::Support::Cli::Error.new(msg)
             end
 
             # Handle output
@@ -273,7 +273,7 @@ module Ace
                 puts cache_file
               end
             else
-              raise Ace::Core::CLI::Error.new("Error writing cache: #{result[:error]}")
+              raise Ace::Support::Cli::Error.new("Error writing cache: #{result[:error]}")
             end
           end
 
@@ -295,7 +295,7 @@ module Ace
                 puts file_path
               end
             else
-              raise Ace::Core::CLI::Error.new("Error writing file: #{result[:error]}")
+              raise Ace::Support::Cli::Error.new("Error writing file: #{result[:error]}")
             end
           end
 
