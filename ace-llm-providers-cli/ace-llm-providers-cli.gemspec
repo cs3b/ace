@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "CLI-based LLM providers for ace-llm"
   spec.description   = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, and OpenCode"
-  spec.homepage      = "https://github.com/cs3b/ace-meta"
+  spec.homepage      = "https://github.com/cs3b/ace"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
