@@ -2,7 +2,7 @@
 
 require "ace/support/cli"
 require "stringio"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Test
@@ -15,7 +15,7 @@ module Ace
           # Tests are executed via LLM and results are written to standard
           # report locations.
           class RunTest < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               Run E2E tests via LLM execution
@@ -92,7 +92,7 @@ module Ace
               )
 
               if results.empty?
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "No tests found for package '#{package}'" +
                   (test_id ? " with ID '#{test_id}'" : "")
                 )
@@ -102,7 +102,7 @@ module Ace
               if results.any?(&:failed?)
                 failed = results.select(&:failed?)
                 failed_ids = failed.map(&:test_id).join(", ")
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "#{failed.size} test(s) failed: #{failed_ids}"
                 )
               end
@@ -126,7 +126,7 @@ module Ace
                 base_dir: Dir.pwd
               )
               if files.empty?
-                raise Ace::Core::CLI::Error.new(
+                raise Ace::Support::Cli::Error.new(
                   "No tests found for package '#{package}'" +
                   (test_id ? " with ID '#{test_id}'" : "")
                 )
