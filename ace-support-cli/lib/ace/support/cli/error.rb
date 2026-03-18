@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       # Exception raised to signal non-zero exit code from CLI commands.
       #
       # This exception is used in the exception-based exit code pattern
@@ -27,12 +27,12 @@ module Ace
       #   # exe/ace-gem
       #   begin
       #     Ace::Gem::CLI.start(ARGV)
-      #   rescue Ace::Core::CLI::Error => e
+      #   rescue Ace::Support::Cli::Error => e
       #     warn e.message
       #     exit(e.exit_code)
       #   end
       #
-          # @see ADR-023 CLI framework conventions
+      # @see ADR-023 CLI framework conventions
       class Error < StandardError
         # Exit code to return when this exception is caught
         # @return [Integer]

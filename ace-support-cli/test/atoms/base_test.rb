@@ -3,10 +3,10 @@
 require_relative "../test_helper"
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       class BaseTestCommand
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         def call(**options)
           options
@@ -41,7 +41,7 @@ module Ace
         end
 
         def test_raise_cli_error_raises_cli_error
-          error = assert_raises(Ace::Core::CLI::Error) do
+          error = assert_raises(Ace::Support::Cli::Error) do
             @command.raise_cli_error("Test error", exit_code: 2)
           end
           assert_equal "Test error", error.message
@@ -60,13 +60,12 @@ module Ace
         end
 
         def test_standard_options_constant
-          assert_equal %i[quiet verbose debug], Ace::Core::CLI::Base::STANDARD_OPTIONS
+          assert_equal %i[quiet verbose debug], Ace::Support::Cli::Base::STANDARD_OPTIONS
         end
 
         def test_reserved_flags_constant
-          assert_equal %i[h v q d o], Ace::Core::CLI::Base::RESERVED_FLAGS
+          assert_equal %i[h v q d o], Ace::Support::Cli::Base::RESERVED_FLAGS
         end
-
       end
     end
   end

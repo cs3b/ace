@@ -10,7 +10,7 @@ module Ace
           module Providers
             # List all providers with model counts
             class List < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "List all providers with model counts"
 
@@ -20,7 +20,7 @@ module Ace
                 cache_manager = Molecules::CacheManager.new
 
                 unless cache_manager.cached?
-                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
+                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 providers = cache_manager.list_providers
@@ -35,7 +35,7 @@ module Ace
                   puts "  #{provider[:id]}: #{provider[:model_count]} models"
                 end
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
             end
           end

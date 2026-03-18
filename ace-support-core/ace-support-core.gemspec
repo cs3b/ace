@@ -40,6 +40,6 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'ace-support-config', '~> 0.7'
   spec.add_dependency 'ace-support-fs', '~> 0.2'
-  spec.add_dependency 'ace-support-cli', '~> 0.3'
+  spec.add_dependency 'ace-support-cli', '~> 0.6'
   # Development dependencies are managed in the root Gemfile
 end

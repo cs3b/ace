@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require "ace/support/cli"
+require_relative "registry"
+require_relative "error"
 
 module Ace
-  module Core
-    module CLI
-      # DSL adapter allowing existing CLI modules to keep `register` semantics
+  module Support
+    module Cli
+      # DSL adapter allowing CLI modules to keep `register` semantics
       # while using Ace::Support::Cli::Registry under the hood.
       module RegistryDsl
         def self.extended(base)
@@ -25,7 +26,7 @@ module Ace
 
           registry.resolve(["--help"])
         rescue Ace::Support::Cli::CommandNotFoundError
-          raise Ace::Core::CLI::Error.new("unknown command", exit_code: 1)
+          raise Ace::Support::Cli::Error.new("unknown command", exit_code: 1)
         end
 
         private

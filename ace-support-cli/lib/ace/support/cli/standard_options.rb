@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Ace
-  module Core
-    module CLI
+  module Support
+    module Cli
       module StandardOptions
         QUIET_DESC = "Suppress non-essential output"
         VERBOSE_DESC = "Show verbose output"

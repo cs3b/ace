@@ -10,7 +10,7 @@ module Ace
           module Cache
             # Show changes since last sync
             class Diff < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Show changes since last sync"
 
@@ -63,7 +63,7 @@ module Ace
 
                 puts "Summary: #{result.summary}"
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
             end
           end

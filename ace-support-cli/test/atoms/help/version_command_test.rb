@@ -11,6 +11,18 @@ class VersionCommandFactoryTest < AceSupportCliTestCase
     assert_equal "ace-tool 1.2.3\n", stdout
   end
 
+  def test_module_show_version_outputs_correctly
+    version_module = Ace::Support::Cli::VersionCommand.module(gem_name: "dynamic-gem", version: -> { "3.2.1" })
+    klass = Class.new { include version_module }
+
+    stdout = capture_stdout do
+      result = klass.new.show_version
+      assert_equal 0, result
+    end
+
+    assert_includes stdout, "dynamic-gem 3.2.1"
+  end
+
   private
 
   def capture_stdout

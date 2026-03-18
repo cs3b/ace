@@ -9,7 +9,7 @@ module Ace
         module Commands
           # Top-level shortcut for cache sync
           class SyncShortcut < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc "Sync from models.dev (shortcut for: cache sync)"
 

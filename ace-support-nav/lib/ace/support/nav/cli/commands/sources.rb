@@ -11,7 +11,7 @@ module Ace
         module Commands
           # ace-support-cli Command class for the sources command
           class Sources < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               Show available sources

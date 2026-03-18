@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
+require "ace/support/cli"
 require_relative "../atoms/config_summary"
-require_relative "base"
 
 module Ace
   module Core
     module CLI
       module ConfigSummaryMixin
-        include Base
+        include Ace::Support::Cli::Base
 
         def display_config_summary(command_name, options, summary_keys: nil)
           return if quiet?(options)

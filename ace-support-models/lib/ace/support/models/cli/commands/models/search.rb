@@ -11,7 +11,7 @@ module Ace
           module ModelsSubcommands
             # Search for models
             class Search < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Search for models (query optional with filters)"
 
@@ -34,7 +34,7 @@ module Ace
                 filter_errors = Atoms::ModelFilter.validate(options[:filter])
                 unless filter_errors.empty?
                   filter_errors.each { |e| warn "Error: #{e}" }
-                  raise Ace::Core::CLI::Error.new("Invalid model search filters")
+                  raise Ace::Support::Cli::Error.new("Invalid model search filters")
                 end
 
                 searcher = Molecules::ModelSearcher.new
@@ -84,7 +84,7 @@ module Ace
                   end
                 end
               rescue CacheError => e
-                raise Ace::Core::CLI::Error.new(e.message)
+                raise Ace::Support::Cli::Error.new(e.message)
               end
 
               private

@@ -10,7 +10,7 @@ module Ace
           module Cache
             # Fetch models from models.dev API
             class Sync < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Fetch models from models.dev API"
 
@@ -39,7 +39,7 @@ module Ace
                   puts result[:message]
                   puts "Last synced: #{result[:last_sync_at]}"
                 when :error
-                  raise Ace::Core::CLI::Error.new(result[:message])
+                  raise Ace::Support::Cli::Error.new(result[:message])
                 end
               end
             end

@@ -48,7 +48,7 @@ module Ace
         end
 
         def test_cli_raises_error_when_resource_not_found
-          # Test that CLI raises Ace::Core::CLI::Error when resource is not found
+          # Test that CLI raises Ace::Support::Cli::Error when resource is not found
           # Regression test for ADR-023 exception-based exit code pattern
           @test_dir = setup_test_environment
 
@@ -57,7 +57,7 @@ module Ace
               # Reset config to pick up test environment
               Ace::Support::Nav.reset_config!
 
-              error = assert_raises(Ace::Core::CLI::Error) do
+              error = assert_raises(Ace::Support::Cli::Error) do
                 capture_io { @resolve_cmd.call(uri: "test://nonexistent") }
               end
 
@@ -71,7 +71,7 @@ module Ace
         end
 
         def test_cli_raises_error_when_create_fails
-          # Test that CLI raises Ace::Core::CLI::Error when create command fails
+          # Test that CLI raises Ace::Support::Cli::Error when create command fails
           # Regression test for ADR-023 exception-based exit code pattern
           @test_dir = setup_test_environment
 
@@ -83,7 +83,7 @@ module Ace
               create_cmd = CLI::Commands::Create.new
 
               # Try to create from a nonexistent template
-              error = assert_raises(Ace::Core::CLI::Error) do
+              error = assert_raises(Ace::Support::Cli::Error) do
                 capture_io { create_cmd.call(uri: "wfi://nonexistent-template") }
               end
 
@@ -131,7 +131,7 @@ module Ace
               # Should NOT find the resource because:
               # - exact match "document.custom.md" doesn't exist
               # - inference is disabled, so won't try "document.cst.md"
-              error = assert_raises(Ace::Core::CLI::Error) do
+              error = assert_raises(Ace::Support::Cli::Error) do
                 capture_io { @resolve_cmd.call(uri: "custom://document") }
               end
 
@@ -195,7 +195,7 @@ module Ace
             Dir.chdir(@test_dir) do
               Ace::Support::Nav.reset_config!
 
-              error = assert_raises(Ace::Core::CLI::Error) do
+              error = assert_raises(Ace::Support::Cli::Error) do
                 capture_io { @resolve_cmd.call(uri: "skill://missing-skill") }
               end
 

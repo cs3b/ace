@@ -10,7 +10,7 @@ module Ace
           module Cache
             # Show cache info (freshness, age, counts)
             class Status < Ace::Support::Cli::Command
-              include Ace::Core::CLI::Base
+              include Ace::Support::Cli::Base
 
               desc "Show cache info (freshness, age, counts)"
 
@@ -25,7 +25,7 @@ module Ace
                 end
 
                 unless status_data[:cached]
-                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
+                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 puts "Cache Status:"

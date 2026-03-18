@@ -11,7 +11,7 @@ module Ace
         module Commands
           # ace-support-cli Command class for the create command
           class Create < Ace::Support::Cli::Command
-            include Ace::Core::CLI::Base
+            include Ace::Support::Cli::Base
 
             desc <<~DESC.strip
               Create resource from template
@@ -67,7 +67,7 @@ module Ace
               result = @engine.create(@uri, @target)
 
               if result[:error]
-                raise Ace::Core::CLI::Error.new(result[:error])
+                raise Ace::Support::Cli::Error.new(result[:error])
               end
 
               puts "Created: #{result[:created]}"

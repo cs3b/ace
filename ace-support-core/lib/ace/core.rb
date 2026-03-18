@@ -15,18 +15,9 @@ require_relative "core/atoms/command_executor"
 require_relative "core/organisms/environment_manager"
 require_relative "core/config_discovery"
 
-# CLI infrastructure based on ace-support-cli
-require_relative "core/cli/error"
-require_relative "core/cli/base"
-require_relative "core/cli/standard_options"
-require_relative "core/cli/registry_dsl"
-require_relative "core/cli/command_groups"
+# CLI infrastructure — main classes now live in ace-support-cli
+require "ace/support/cli"
 require_relative "core/cli/config_summary_mixin"
-require_relative "core/cli/help_command"
-require_relative "core/cli/default_routing"
-require_relative "core/cli/help_router"
-require_relative "core/cli/version_command"
-require_relative "core/cli/help_concise"
 
 module Ace
   module Core

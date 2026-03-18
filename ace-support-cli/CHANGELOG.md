@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-18
+
+### Added
+- Moved `Error`, `Base`, `StandardOptions`, and `RegistryDsl` classes from ace-support-core into ace-support-cli as their canonical home.
+- Added `.module(gem_name:, version:)` factory to `VersionCommand` for dynamic version display modules.
+- Added `argument :args` to `HelpCommand` for accepting trailing arguments.
+
+### Changed
+- Runner now raises `Ace::Support::Cli::Error` directly instead of bridging through `Ace::Core::CLI::Error`.
+
 ## [0.5.1] - 2026-03-17
 
 ### Fixed
