@@ -26,7 +26,7 @@ integration:
         model: haiku
 assign:
   source: wfi://github/pr/create
-  phases:
+  steps:
     - name: create-pr
       description: Create a pull request for the implemented changes
       intent:

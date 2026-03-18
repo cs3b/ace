@@ -22,7 +22,7 @@ integration:
     - pi
 assign:
   source: wfi://github/pr/update
-  phases:
+  steps:
     - name: update-pr-desc
       description: Update PR description with implementation summary and final state
       intent:

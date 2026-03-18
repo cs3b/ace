@@ -22,7 +22,7 @@ integration:
   providers: {}
 assign:
   source: wfi://git/reorganize-commits
-  phases:
+  steps:
     - name: reorganize-commits
       description: Reorganize commits into logical groups for clean history
       intent:
