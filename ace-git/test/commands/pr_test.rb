@@ -11,7 +11,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_returns_error_when_gh_not_installed
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, false do
-      error = assert_raises(Ace::Core::CLI::Error) do
+      error = assert_raises(Ace::Support::Cli::Error) do
         @command.call(format: nil)
       end
       assert_match(/GitHub CLI.*not installed/, error.message)
@@ -21,7 +21,7 @@ class PrTest < AceGitTestCase
   def test_execute_returns_error_when_no_pr_number_and_no_pr_for_branch
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(format: nil)
         end
         assert_match(/No PR found for current branch/, error.message)
@@ -130,7 +130,7 @@ class PrTest < AceGitTestCase
 
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 999, format: nil, with_diff: false)
         end
         assert_match(/PR not found/, error.message)
@@ -141,7 +141,7 @@ class PrTest < AceGitTestCase
   def test_execute_handles_gh_not_installed_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhNotInstalledError, "gh not found" } do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
         assert_match(/gh not found/, error.message)
@@ -152,7 +152,7 @@ class PrTest < AceGitTestCase
   def test_execute_handles_authentication_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhAuthenticationError, "Not authenticated" } do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
         assert_match(/Not authenticated/, error.message)
@@ -163,7 +163,7 @@ class PrTest < AceGitTestCase
   def test_execute_handles_pr_not_found_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::PrNotFoundError, "PR #999 not found" } do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 999, format: nil, with_diff: false)
         end
         assert_match(/PR #999 not found/, error.message)
@@ -174,7 +174,7 @@ class PrTest < AceGitTestCase
   def test_execute_handles_timeout_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::TimeoutError, "Request timed out" } do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
         assert_match(/Request timed out/, error.message)
@@ -185,7 +185,7 @@ class PrTest < AceGitTestCase
   def test_execute_handles_argument_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise ArgumentError, "Invalid PR identifier" } do
-        error = assert_raises(Ace::Core::CLI::Error) do
+        error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: "invalid", format: nil, with_diff: false)
         end
         assert_match(/Invalid PR identifier/, error.message)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "ace/core/cli/base"
+require "ace/support/cli"
 
 module Ace
   module Git
@@ -9,7 +9,7 @@ module Ace
       module Commands
       # ace-support-cli command for showing repository status
       class Status < Ace::Support::Cli::Command
-        include Ace::Core::CLI::Base
+        include Ace::Support::Cli::Base
 
         desc "Show repository context (branch, PR, activity)"
 
@@ -45,7 +45,7 @@ module Ace
 
           # Check for errors
           if status.branch.nil? && status.repository_type == :not_git
-            raise Ace::Core::CLI::Error.new("Not in a git repository")
+            raise Ace::Support::Cli::Error.new("Not in a git repository")
           end
 
           # Output based on format
@@ -76,7 +76,7 @@ module Ace
           end
 
         rescue Ace::Git::Error => e
-          raise Ace::Core::CLI::Error.new(e.message)
+          raise Ace::Support::Cli::Error.new(e.message)
         end
       end
     end
