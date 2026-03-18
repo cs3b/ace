@@ -360,7 +360,7 @@ From dev-tools/exe/search (0.8.0):
 - fd (external) for file search
 - fzf (external, optional) for interactive selection
 
-[0.9.0]: https://github.com/your-org/ace-meta/releases/tag/ace-search-v0.9.0
+[0.9.0]: https://github.com/cs3b/ace/releases/tag/ace-search-v0.9.0
 
 
 ## [0.19.5] - 2026-02-22
