@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-03-18
+
+### Fixed
+- Treated naïve timestamp strings as UTC while preserving explicit timezone parsing in `ace-b36ts encode`.
+
 ## [0.11.1] - 2026-03-18
 
 ### Changed

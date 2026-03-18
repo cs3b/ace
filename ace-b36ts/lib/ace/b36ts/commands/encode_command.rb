@@ -111,10 +111,22 @@ module Ace
               return Atoms::Formats.parse_timestamp(time_string)
             end
 
-            # Try standard parsing for other formats
-            Time.parse(time_string).utc
+            parsed = Time.parse(time_string)
+            return parsed if has_explicit_timezone?(time_string)
+
+            # Treat naïve timestamps as UTC to avoid local-time offsets on date-only
+            # inputs and systems with non-UTC defaults.
+            Time.utc(parsed.year, parsed.month, parsed.day, parsed.hour, parsed.min, parsed.sec, parsed.nsec)
           rescue ArgumentError
             raise ArgumentError, "Cannot parse time: #{time_string}"
+          end
+
+          def has_explicit_timezone?(time_string)
+            value = time_string.to_s
+            return true if value.match?(%r{[+-]\d{2}:?\d{2}\b})
+            return true if value.match?(%r{(?:\A|[[:space:]])(?:Z|UTC|GMT)\b}i)
+
+            false
           end
 
           # Display configuration summary (unless quiet mode)
