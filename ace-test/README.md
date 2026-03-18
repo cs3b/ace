@@ -1,12 +1,12 @@
 # ACE Test Gem
 
-> **[!NOTE]** **Workflow Package Only** - This is a pure documentation package (no CLI tool). For the `ace-test` CLI command, see [ace-test-runner](https://github.com/cs3b/ace-meta/tree/main/ace-test-runner).
+> **[!NOTE]** **Workflow Package Only** - This is a pure documentation package (no CLI tool). For the `ace-test` CLI command, see [ace-test-runner](https://github.com/cs3b/ace/tree/main/ace-test-runner).
 
 Testing workflows, guides, and patterns for ACE (Agentic Coding Environment). This pure workflow package contains comprehensive testing documentation, mocking patterns, and best practices for writing fast, reliable tests.
 
 ## Note
 
-This gem provides **testing documentation and resources only**. For the actual test execution CLI (`ace-test` command), see [ace-test-runner](https://github.com/cs3b/ace-meta/tree/main/ace-test-runner).
+This gem provides **testing documentation and resources only**. For the actual test execution CLI (`ace-test` command), see [ace-test-runner](https://github.com/cs3b/ace/tree/main/ace-test-runner).
 
 ## Installation
 
@@ -174,7 +174,7 @@ bundle exec rake install
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace-meta.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace.
 
 ## License
 
@@ -217,5 +217,5 @@ See [handbook/guides/SUMMARY.md](handbook/guides/SUMMARY.md) for the complete na
 
 This gem is part of the ACE (Agentic Coding Environment) ecosystem. For more information:
 
-- [ACE Documentation](https://github.com/cs3b/ace-meta)
-- [ace-nav Protocol](https://github.com/cs3b/ace-meta)
+- [ACE Documentation](https://github.com/cs3b/ace)
+- [ace-nav Protocol](https://github.com/cs3b/ace)
