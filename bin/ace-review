@@ -4,7 +4,7 @@
 # Wrapper script to run ace-review with proper bundler context
 require 'pathname'
 
-# Find the ace-meta root directory
+# Find the ace root directory
 ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
 
 # Set the Gemfile location
