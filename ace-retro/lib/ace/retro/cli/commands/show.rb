@@ -8,7 +8,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-retro show
         class Show < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Show retro details
@@ -37,7 +37,7 @@ module Ace
             retro = manager.show(ref)
 
             unless retro
-              raise Ace::Core::CLI::Error.new("Retro '#{ref}' not found")
+              raise Ace::Support::Cli::Error.new("Retro '#{ref}' not found")
             end
 
             if options[:path]

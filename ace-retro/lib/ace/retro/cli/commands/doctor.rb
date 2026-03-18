@@ -16,7 +16,7 @@ module Ace
         #
         # Runs health checks on retros and optionally auto-fixes issues.
         class Doctor < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Run health checks on retros
@@ -59,7 +59,7 @@ module Ace
 
             unless Dir.exist?(root_dir)
               puts "Error: Retros directory not found: #{root_dir}"
-              raise Ace::Core::CLI::Error.new("Retros directory not found")
+              raise Ace::Support::Cli::Error.new("Retros directory not found")
             end
 
             format = options[:json] ? :json : :terminal
@@ -72,7 +72,7 @@ module Ace
 
             if options[:quiet]
               results = run_diagnosis(root_dir, doctor_opts)
-              raise Ace::Core::CLI::Error.new("Health check failed") unless results[:valid]
+              raise Ace::Support::Cli::Error.new("Health check failed") unless results[:valid]
               return
             end
 
@@ -98,11 +98,11 @@ module Ace
               handle_agent_fix(root_dir, doctor_opts, options, config)
             end
 
-            raise Ace::Core::CLI::Error.new("Health check failed") unless results[:valid]
-          rescue Ace::Core::CLI::Error
+            raise Ace::Support::Cli::Error.new("Health check failed") unless results[:valid]
+          rescue Ace::Support::Cli::Error
             raise
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new(e.message)
+            raise Ace::Support::Cli::Error.new(e.message)
           end
 
           def run_diagnosis(root_dir, doctor_opts)

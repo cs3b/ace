@@ -9,7 +9,7 @@ module Ace
       module Commands
         # ace-support-cli Command class for ace-retro update
         class Update < Ace::Support::Cli::Command
-          include Ace::Core::CLI::Base
+          include Ace::Support::Cli::Base
 
           desc <<~DESC.strip
             Update retro metadata and/or move to a folder
@@ -51,7 +51,7 @@ module Ace
               warn "Error: at least one of --set, --add, --remove, or --move-to is required"
               warn ""
               warn "Usage: ace-retro update REF [--set K=V]... [--add K=V]... [--remove K=V]... [--move-to FOLDER]"
-              raise Ace::Core::CLI::Error.new("No update operations specified")
+              raise Ace::Support::Cli::Error.new("No update operations specified")
             end
 
             set_hash    = parse_kv_pairs(set_args)
@@ -62,7 +62,7 @@ module Ace
             retro = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash, move_to: move_to)
 
             unless retro
-              raise Ace::Core::CLI::Error.new("Retro '#{ref}' not found")
+              raise Ace::Support::Cli::Error.new("Retro '#{ref}' not found")
             end
 
             if move_to
@@ -94,7 +94,7 @@ module Ace
             result = {}
             args.each do |arg|
               unless arg.include?("=")
-                raise Ace::Core::CLI::Error.new("Invalid format '#{arg}': expected key=value")
+                raise Ace::Support::Cli::Error.new("Invalid format '#{arg}': expected key=value")
               end
 
               parsed = Ace::Support::Items::Atoms::FieldArgumentParser.parse([arg])
@@ -106,7 +106,7 @@ module Ace
                 end
               end
             rescue Ace::Support::Items::Atoms::FieldArgumentParser::ParseError => e
-              raise Ace::Core::CLI::Error.new("Invalid argument '#{arg}': #{e.message}")
+              raise Ace::Support::Cli::Error.new("Invalid argument '#{arg}': #{e.message}")
             end
             result
           end
