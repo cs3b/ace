@@ -362,7 +362,7 @@ git:
 
 ## Development
 
-This gem is part of the ace-meta project and uses:
+This gem is part of the ace project and uses:
 - ace-support-core for configuration and file operations
 - ace-git for Git/GitHub operations
 - ace-support-test-helpers for testing utilities
