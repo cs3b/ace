@@ -225,4 +225,4 @@ rake test TEST=test/organisms/config_resolver_test.rb  # Run specific test
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ace-meta/ace-core.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace.

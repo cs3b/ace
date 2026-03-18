@@ -214,7 +214,7 @@ ace-test ace-support-nav
 
 ## Contributing
 
-Bug reports and pull requests are welcome at https://github.com/cs3b/ace-meta.
+Bug reports and pull requests are welcome at https://github.com/cs3b/ace.
 
 ## License
 
