@@ -22,7 +22,7 @@ integration:
   providers: {}
 assign:
   source: wfi://e2e/review
-  phases:
+  steps:
     - name: verify-e2e
       description: Review E2E coverage for modified packages and run targeted scenarios
       tags: [testing, e2e, verification]
