@@ -1,78 +1,124 @@
 # Getting Started with ace-task
 
-Use `ace-task` to capture behavioral specs, track progress, and generate implementation plans.
+End-to-end tutorial from installation to productive task management.
 
 ## Prerequisites
 
 - Ruby installed
-- `ace-task` installed
-
-Run:
-
-
-```bash
-gem install ace-task
-```
+- `gem install ace-task`
 
 ## 1) Create your first task
-
-Run:
-
 
 ```bash
 ace-task create "Rewrite onboarding docs"
 ```
 
-This creates a new task spec in your configured task directory and returns a task reference.
+This creates a markdown task spec with a compact B36TS ID (e.g. `8q4.t.abc`), stored in your `.ace-tasks/` directory.
 
-## 2) View and update the task
-
-Run:
-
+Add options to set priority, tags, and target folder:
 
 ```bash
-ace-task show <task-ref>
-ace-task update <task-ref> --set status=in-progress
+ace-task create "Fix auth flow" --priority high --tags auth,security
+ace-task create "Backlog idea" --in maybe
 ```
 
-Use `show` to inspect the full spec and `update` to move through your workflow states.
-
-## 3) Create a subtask
-
-Run:
-
+Create subtasks to break work into slices:
 
 ```bash
-ace-task create "Draft quick-start outline" --child-of <task-ref>
-ace-task show <task-ref> --tree
+ace-task create "Draft quick-start outline" --child-of abc
 ```
 
-Subtasks let you split larger goals into smaller slices while keeping parent context visible.
-
-## 4) Generate an implementation plan
-
-Run:
-
+## 2) List and find tasks
 
 ```bash
-ace-task plan <task-ref>
+ace-task list
 ```
 
-`ace-task plan` converts the behavioral specification into a concrete implementation checklist.
-
-## 5) Keep task health in check
-
-Run:
-
+Shows active tasks in the root folder. Filter by status or folder:
 
 ```bash
-ace-task doctor --check
+ace-task list --status pending
+ace-task list --in all                   # Include archive, maybe
+ace-task list --in maybe
+ace-task list --tags ux,design
+ace-task list --sort priority
 ```
 
-Use doctor checks to detect structure issues early, especially in long-lived branches.
+**Status legend:** `◇ draft` `○ pending` `▶ in-progress` `✓ done` `✗ blocked` `– skipped` `— cancelled`
+
+## 3) View a task
+
+```bash
+ace-task show abc
+```
+
+See the full task spec with metadata. Use flags for different views:
+
+```bash
+ace-task show abc --tree              # Parent + subtask tree
+ace-task show abc --content           # Raw markdown content
+ace-task show abc --path              # File path only
+```
+
+## 4) Update task metadata
+
+Use `--set` for scalar fields and `--add`/`--remove` for array fields:
+
+```bash
+ace-task update abc --set status=in-progress
+ace-task update abc --set priority=high --add tags=docs
+ace-task update abc --set status=done --move-to archive
+```
+
+Move tasks between folders or reparent them:
+
+```bash
+ace-task update abc --move-to maybe
+ace-task update abc.1 --move-as-child-of none    # Promote to standalone
+ace-task update abc --position first              # Pin to top of list
+```
+
+## 5) Generate an implementation plan
+
+```bash
+ace-task plan abc
+```
+
+Converts the behavioral spec into an implementation checklist using an LLM. Plans are cached and reused when fresh:
+
+```bash
+ace-task plan abc --refresh            # Force regeneration
+ace-task plan abc --content            # Print full plan inline
+```
+
+## 6) Keep task health in check
+
+```bash
+ace-task doctor
+```
+
+Validates frontmatter, file structure, and scope/status consistency. Auto-fix safe issues:
+
+```bash
+ace-task doctor --auto-fix
+ace-task doctor --auto-fix --dry-run   # Preview without applying
+```
+
+## Common Commands
+
+| Command | What it does |
+|---------|-------------|
+| `ace-task create "..."` | Create a new task |
+| `ace-task show <ref> --tree` | View task with subtask tree |
+| `ace-task list --status pending` | Filter tasks by status |
+| `ace-task update <ref> --set status=done` | Mark a task done |
+| `ace-task update <ref> --move-to archive` | Archive a completed task |
+| `ace-task status` | Dashboard: up-next + recent completions |
+| `ace-task plan <ref>` | Generate implementation plan |
+| `ace-task doctor` | Run health checks |
 
 ## What to try next
 
-- Explore pending work: `ace-task list --status pending`
-- Refresh a stale plan: `ace-task plan <task-ref> --refresh`
-- Resolve task quality issues automatically: `ace-task doctor --auto-fix`
+- [Usage Guide](usage.md) — full command reference with all options
+- [Handbook Reference](handbook.md) — skills, workflows, guides, and templates
+- Runtime help: `ace-task --help` / `ace-task <command> --help`
