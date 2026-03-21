@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-18
+
+### Changed
+- Refined TS-LINT-001 E2E guidance by separating verifier validation order from explicit checks and clarifying config-routing fixture usage.
+
 ## [0.21.1] - 2026-03-18
 
 ### Changed
