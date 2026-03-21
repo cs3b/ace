@@ -87,11 +87,20 @@ ace-bundle guide://workflow-context-embedding
 
 Protocols let you load canonical ACE workflows and guides without hardcoding file paths.
 
+## Common Commands
+
+| Command | What it does |
+|---------|-------------|
+| `ace-bundle project` | Load full project context |
+| `ace-bundle project-base` | Lightweight onboarding context |
+| `ace-bundle --list` | List available presets |
+| `ace-bundle wfi://task/plan` | Load workflow via protocol |
+| `ace-bundle -p base -p custom` | Merge multiple presets |
+| `ace-bundle project --inspect-config` | Show resolved configuration |
+
 ## What to try next
 
-Examples:
-
-
-- Combine preset + file input: `ace-bundle -p project -f path/to/custom.md`
-- Inspect resolved configuration: `ace-bundle project --inspect-config`
-- Use structured output in automation: `ace-bundle project --output cache`
+- [Usage Guide](usage.md) — full command reference with all options
+- [Configuration Reference](configuration.md) — preset format, sections, parameters
+- [Handbook Reference](handbook.md) — skills, workflows, built-in presets
+- Runtime help: `ace-bundle --help`
