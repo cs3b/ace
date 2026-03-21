@@ -20,6 +20,19 @@ e2e-justification: >
   YAML state, and transitions steps. Fork context generates Task tool
   prompts. Prepare workflow expands preset templates. None testable with mocks.
 
+unit-coverage-reviewed:
+  - test/commands/create_command_test.rb
+  - test/commands/status_command_test.rb
+  - test/commands/finish_command_test.rb
+  - test/commands/fail_command_test.rb
+  - test/commands/retry_cmd_test.rb
+  - test/commands/add_command_test.rb
+  - test/commands/fork_run_command_test.rb
+  - test/commands/assignment_target_test.rb
+  - test/molecules/assignment_manager_test.rb
+  - test/molecules/fork_session_launcher_test.rb
+  - test/organisms/assignment_executor_test.rb
+
 requires:
   tools: [ace-assign, ace-bundle, ace-search]
   ruby: ">= 3.0"
