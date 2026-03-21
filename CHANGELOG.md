@@ -4,6 +4,131 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.871] - 2026-03-21
+
+### Changed
+- **ace-llm-providers-cli v0.26.0**: Added initial `TS-LLMCLI-001` value-gated smoke E2E coverage for `ace-llm-providers-cli-check` with deterministic no-tools and stubbed-tools command-path verification.
+
+## [0.9.870] - 2026-03-21
+
+### Changed
+- **ace-handbook v0.17.0**: Added initial `TS-HANDBOOK-001` value-gated smoke E2E coverage for CLI help and status command contracts.
+
+## [0.9.869] - 2026-03-21
+
+### Changed
+- **ace-compressor v0.23.0**: Added initial `TS-COMP-001` value-gated smoke E2E coverage with runner/verifier contracts and ADD/SKIP decision evidence.
+
+## [0.9.868] - 2026-03-21
+
+### Changed
+- **ace-support-models v0.8.0**: Added initial `TS-MODELS-001` value-gated smoke E2E coverage for `ace-models` and `ace-llm-providers`, including ADD/SKIP decision evidence.
+
+## [0.9.867] - 2026-03-21
+
+### Changed
+- **ace-demo v0.12.0**: Added initial `TS-DEMO-001` value-gated smoke E2E coverage and recorded ADD/SKIP decisions with unit-coverage evidence.
+
+## [0.9.866] - 2026-03-21
+
+### Changed
+- **ace-retro v0.14.0**: Added initial `TS-RETRO-001` value-gated smoke E2E coverage and recorded ADD/SKIP decisions with unit-coverage evidence.
+
+## [0.9.865] - 2026-03-21
+
+### Changed
+- **ace-task v0.30.0**: Added initial `TS-TASK-001` smoke E2E coverage for core CLI lifecycle flows (help discovery, create/show/list, archive updates, doctor health/error transitions) and recorded value-gate decisions with unit-coverage evidence.
+
+## [0.9.864] - 2026-03-21
+
+### Changed
+- **ace-tmux v0.8.0**: Expanded `TS-TMUX-001` E2E lifecycle coverage with a new window-management goal and tightened artifact-evidence contracts for preset and session execution paths.
+
+## [0.9.863] - 2026-03-21
+
+### Changed
+- **ace-llm v0.28.0**: Expanded `TS-LLM-001` E2E coverage with deterministic unknown-provider routing validation and tighter artifact-evidence verifier contracts for query/model-selection flows.
+
+## [0.9.862] - 2026-03-21
+
+### Changed
+- **ace-prompt-prep v0.21.0**: Expanded `TS-PREP-001` E2E coverage with a new bundle-context goal and tightened runner/verifier artifact-evidence contracts.
+
+## [0.9.861] - 2026-03-20
+
+### Changed
+- **ace-search v0.22.0**: Expanded `TS-SEARCH-001` E2E coverage with a new JSON-output goal and tightened runner/verifier artifact-evidence contracts.
+
+## [0.9.860] - 2026-03-20
+
+### Changed
+- **ace-idea v0.16.0**: Expanded `TS-IDEA-001` E2E lifecycle coverage with archive-transition validation and corrected root-scope list-filter runner/verifier contracts.
+
+## [0.9.859] - 2026-03-20
+
+### Changed
+- **ace-docs v0.27.0**: Expanded `TS-DOCS-001` E2E coverage with a new update-command goal and tightened discover/validate/status artifact-verification contracts.
+
+## [0.9.858] - 2026-03-20
+
+### Changed
+- **ace-sim v0.10.0**: Expanded `TS-SIM-001` smoke E2E coverage with `validate-task` preset contract checks and deterministic synthesis-provider guard validation, and tightened existing verifier assertions.
+
+## [0.9.857] - 2026-03-20
+
+### Changed
+- **ace-git v0.16.0**: Expanded `TS-GIT-001` E2E coverage with diff output-path security and deterministic status JSON/no-PR checks, and tightened PR fallback verification requirements.
+
+## [0.9.856] - 2026-03-20
+
+### Changed
+- **ace-test-runner v0.16.0**: Tightened `TS-TEST-001` and `TS-TEST-002` E2E verifier contracts with stronger artifact and exit-evidence requirements for package, suite, and failure-propagation checks.
+
+## [0.9.855] - 2026-03-19
+
+### Changed
+- **ace-support-nav v0.23.2**: Expanded `TS-NAV-001` help-survey E2E coverage to include `ace-nav sources` evidence and tightened error/cross-protocol verifier contracts for stronger artifact-based validation.
+
+## [0.9.854] - 2026-03-19
+
+### Changed
+- **ace-overseer v0.7.1**: Refined `TS-OVERSEER-001` E2E verifier contracts with explicit impact-first check sections and expanded Goal 2 status coverage to require both table and JSON status evidence.
+
+## [0.9.853] - 2026-03-18
+
+### Changed
+- **ace-bundle v0.38.0**: Consolidated TS-BUNDLE-001 output-routing E2E coverage by merging threshold and explicit `--output` override checks, reindexed CLI parity to Goal 5, and aligned scenario runner/verifier manifests to a 5-goal suite.
+
+## [0.9.852] - 2026-03-18
+
+### Changed
+- **ace-git-commit v0.22.0**: Refined `TS-COMMIT-001` E2E runner guidance to remove cross-goal coupling and normalized verifier expectations with task-scoped review/plan/rewrite artifacts.
+
+## [0.9.851] - 2026-03-18
+
+### Changed
+- **ace-git-secrets v0.11.0**: Expanded `TS-SECRETS-001` E2E coverage with a new `check-release` gate test case and synchronized scenario runner/verifier manifests to 8-goal execution.
+
+## [0.9.850] - 2026-03-18
+
+### Changed
+- **ace-review v0.48.0**: Refined `TS-REVIEW-001` E2E verifier guidance with clearer impact-first structure and explicit check sections.
+
+## [0.9.849] - 2026-03-18
+
+### Changed
+- **ace-lint v0.22.0**: Refined `TS-LINT-001` E2E runner/verifier guidance with clearer impact-first verification structure and explicit config-routing fixture expectations.
+
+## [0.9.848] - 2026-03-18
+
+### Changed
+- **ace-b36ts v0.11.3**: Tightened E2E goal contracts (`TS-B36TS-001` Goals 5-8) with deterministic runner inputs, explicit artifact contracts, and stronger verifier evidence requirements.
+
+## [0.9.847] - 2026-03-18
+
+### Changed
+- **ace-assign v0.34.1**: Added `unit-coverage-reviewed` decision evidence to E2E scenarios (`TS-ASSIGN-001`, `TS-ASSIGN-002`) to improve traceability between E2E coverage and unit-test coverage.
+
 ## [0.9.846] - 2026-03-18
 
 ### Fixed
