@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **Batch artifacts exist** — results/tc/05/ contains report.json copy and all three markdown files.
 2. **Correct categorization** — report.json shows: valid.rb in results.passed, fixable file in results.fixed, syntax_error.rb in results.failed.
 3. **All markdown files** — ok.md, fixed.md, and pending.md all exist with correct headers.

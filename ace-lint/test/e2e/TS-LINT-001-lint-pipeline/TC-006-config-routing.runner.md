@@ -34,5 +34,5 @@ Save all output to `results/tc/06/`. Capture:
 
 ## Constraints
 
-- Create the config file and fixture Ruby files as needed (or use fixtures if available).
+- Use the existing `fixtures/legacy/app.rb` and `fixtures/modern/app.rb` paths and create only the `.ace/lint/ruby.yml` config required for routing.
 - All artifacts must come from real tool execution, not fabricated.

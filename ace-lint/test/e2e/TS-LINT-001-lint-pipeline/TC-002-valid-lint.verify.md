@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **Artifacts exist** — Files exist in `results/tc/02/` including a report.json copy and exit code.
 2. **Zero exit code** — The captured exit code is `0`.
 3. **Report structure** — report.json contains top-level keys: `report_metadata`, `results`, `summary`.

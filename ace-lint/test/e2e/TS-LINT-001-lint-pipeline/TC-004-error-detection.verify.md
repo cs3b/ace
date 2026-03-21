@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **Artifacts exist** — Files exist in `results/tc/04/` including exit code and pending.md copy.
 2. **Non-zero exit code** — The captured exit code is non-zero (syntax errors are fatal).
 3. **pending.md exists** — A pending.md copy exists with a "Lint: Pending Issues" header.
