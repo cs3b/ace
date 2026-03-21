@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-list-presets.runner.md
     - ./TC-002-start-session.runner.md
+    - ./TC-003-add-window.runner.md
 ---
 
 # E2E Test Runner: ace-tmux Management
@@ -16,12 +17,12 @@ Tool under test: ace-tmux
 Required tools: ace-tmux, tmux
 Workspace root: (current directory)
 
-Run goals sequentially. Goal 1 discovers presets; Goal 2 uses discovered preset.
+Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, and Goal 3 adds a window.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 2)
+- Execute each goal in order (1 through 3)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
