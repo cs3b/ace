@@ -8,9 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "B36TS-based task management for ACE"
-  spec.description = "Provides task management with B36TS-based IDs, folder-based storage, " \
-                     "and CLI commands for creating and viewing tasks."
+  spec.summary = "Draft, organize, and tackle tasks — for you and your agents"
+  spec.description = "Behavioral spec-based task management with compact IDs, subtask trees, " \
+                     "AI-powered implementation plans, and automated health checks. " \
+                     "Same CLI for developers and coding agents."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
