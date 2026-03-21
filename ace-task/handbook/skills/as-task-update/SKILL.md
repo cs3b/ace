@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: "<ref> [--set K=V] [--move-to FOLDER]"
+argument-hint: "<ref> [--set K=V] [--move-to FOLDER] [--move-as-child-of PARENT|none] [--position first|after:<ref>]"
 last_modified: 2026-03-21
 source: ace-task
 skill:

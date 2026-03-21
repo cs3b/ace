@@ -67,6 +67,9 @@ ace-bundle guide://embedded-testing-guide
 # Create test cases for features
 ace-bundle wfi://test/create-cases
 
+# Generate coverage-improvement tasks from coverage reports
+ace-bundle wfi://test/improve-coverage
+
 # Fix failing tests systematically
 ace-bundle wfi://test/fix
 ```
@@ -206,6 +209,7 @@ The gem is available as open source under the terms of the MIT License.
 | `/ace-test-verify-suite` | Audit test suite health (quick/standard/deep) |
 | `/ace-test-optimize` | Profile and fix slow tests |
 | `/ace-test-performance-audit` | Profile tests and document slow cases with actionable fixes |
+| `/as-test-improve-coverage` | Analyze coverage gaps and create targeted test improvement tasks |
 | `/ace-test-review` | Review test PR for quality |
 | `/ace-e2e-setup-sandbox` | Set up safe E2E environment |
 

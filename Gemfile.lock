@@ -325,7 +325,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.30.0)
+    ace-task (0.30.1)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
@@ -358,7 +358,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.4.4)
+    ace-test (0.4.5)
 
 PATH
   remote: ace-tmux
