@@ -68,8 +68,19 @@ Then run:
 ace-review --preset team-review --subject diff:origin/main..HEAD --auto-execute
 ```
 
+## Common Commands
+
+| Command | What it does |
+|---------|-------------|
+| `ace-review --pr 123 --auto-execute` | Review a GitHub PR |
+| `ace-review --list-presets` | List available presets |
+| `ace-review --preset code --subject diff:origin/main..HEAD --auto-execute` | Review branch diff |
+| `ace-review-feedback list --status pending` | List verified findings |
+| `ace-review-feedback resolve <id>` | Mark finding as fixed |
+
 ## What to try next
 
-- Review a PR with developer feedback: `ace-review --pr 123 --pr-comments --auto-execute`
-- Post review results directly to GitHub: `ace-review --pr 123 --post-comment --auto-execute`
-- Read [Feedback Workflow](feedback-workflow.md) to operationalize findings
+- [Usage Guide](usage.md) — full command reference with all options
+- [Feedback Workflow](feedback-workflow.md) — feedback lifecycle and verification CLI
+- [Handbook Reference](handbook.md) — skills, workflows, prompts, guide, template
+- Runtime help: `ace-review --help`
