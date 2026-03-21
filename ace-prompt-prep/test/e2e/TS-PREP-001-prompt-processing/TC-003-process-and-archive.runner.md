@@ -7,10 +7,10 @@ Place a sample prompt file into the workspace created in Goal 2, then process it
 ## Workspace
 
 Save all output to `results/tc/03/`. Capture:
-- The command's stdout, stderr, and exit code
-- A listing of the archive directory showing the archived file(s)
-- The symlink target of `_previous.md`
-- A diff or comparison showing the archived content matches the original
+- `process.stdout`, `process.stderr`, `process.exit` from process invocation
+- `archive-list.txt` listing archived file(s)
+- `previous-link.txt` showing `_previous.md` symlink target
+- `content-diff.txt` or equivalent content comparison output
 
 ## Constraints
 
