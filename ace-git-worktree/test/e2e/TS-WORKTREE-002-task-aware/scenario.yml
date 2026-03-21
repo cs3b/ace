@@ -22,6 +22,16 @@ e2e-justification: >
   task ID resolution, and metadata injection into JSON output all depend on
   the real filesystem and git state.
 
+unit-coverage-reviewed:
+  - test/commands/create_command_test.rb
+  - test/commands/list_command_test.rb
+  - test/commands/switch_command_test.rb
+  - test/commands/remove_command_test.rb
+  - test/molecules/current_task_linker_test.rb
+  - test/molecules/parent_task_resolver_test.rb
+  - test/molecules/task_fetcher_test.rb
+  - test/organisms/task_worktree_orchestrator_test.rb
+
 requires:
   tools: [git, ace-git-worktree]
   ruby: ">= 3.0"

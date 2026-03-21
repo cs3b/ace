@@ -20,6 +20,17 @@ e2e-justification: >
   switching, removing, and pruning worktrees depend on real git state,
   filesystem paths, and branch management. None testable with mocks.
 
+unit-coverage-reviewed:
+  - test/commands/create_command_test.rb
+  - test/commands/list_command_test.rb
+  - test/commands/switch_command_test.rb
+  - test/commands/remove_command_test.rb
+  - test/commands/prune_command_test.rb
+  - test/molecules/worktree_creator_test.rb
+  - test/molecules/worktree_lister_test.rb
+  - test/molecules/worktree_remover_test.rb
+  - test/organisms/worktree_manager_test.rb
+
 requires:
   tools: [git, ace-git-worktree]
   ruby: ">= 3.0"
