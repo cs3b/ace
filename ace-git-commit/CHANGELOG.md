@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-18
+
+### Changed
+- Refined `TS-COMMIT-001` E2E runner guidance so each goal is self-contained and no longer depends on prior discovery output.
+
+### Technical
+- Normalized `TS-COMMIT-001` verifier expectation formatting for clearer impact-first evidence checks.
+- Added task-scoped E2E review, change-plan, and rewrite-summary artifacts for `8qe.t.h5e.6`.
+
 ## [0.21.6] - 2026-03-18
 
 ### Changed
