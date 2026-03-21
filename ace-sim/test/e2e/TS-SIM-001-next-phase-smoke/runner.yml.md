@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-preset-contract.runner.md
     - ./TC-003-run-chain-artifacts.runner.md
     - ./TC-004-full-chain-synthesis.runner.md
+    - ./TC-005-validate-task-preset.runner.md
+    - ./TC-006-synthesis-provider-guard.runner.md
 ---
 
 # E2E Test Runner: ace-sim Preset-Chain Smoke
@@ -23,7 +25,7 @@ Execute each goal sequentially. Goal 1 is discovery.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 4)
+- Execute each goal in order (1 through 6)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
