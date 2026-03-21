@@ -16,7 +16,7 @@ ace-task ships 12 skills for task and bug management. Each skill wraps a workflo
 | `as-task-review` | Review draft specs for completeness and promote to pending when ready |
 | `as-task-plan` | Generate a just-in-time implementation plan without modifying the task file |
 | `as-task-work` | Execute task implementation with context loading and incremental commits |
-| `as-task-manage-status` | Manage lifecycle transitions: start, done, undone |
+| `as-task-update` | Update task metadata, status, position, or location |
 | `as-task-finder` | List, filter, and discover tasks across the project |
 | `as-task-reorganize` | Move tasks between folders, convert subtasks, promote to standalone |
 | `as-task-review-questions` | Review and answer clarifying questions about a task or implementation |
@@ -42,7 +42,7 @@ Workflows are the step-by-step processes that skills invoke via the `wfi://` pro
 | `wfi://task/review` | Validate draft specs and promote to pending | `as-task-review` |
 | `wfi://task/plan` | Generate JIT implementation plans with caching | `as-task-plan` |
 | `wfi://task/work` | Execute task against behavioral spec using pre-loaded plan | `as-task-work` |
-| `wfi://task/manage-status` | Handle lifecycle status transitions | `as-task-manage-status` |
+| `wfi://task/update` | Handle lifecycle status transitions | `as-task-update` |
 | `wfi://task/finder` | Task discovery and filtering | `as-task-finder` |
 | `wfi://task/reorganize` | Restructure task hierarchy (promote, demote, convert) | `as-task-reorganize` |
 | `wfi://task/review-questions` | Surface and resolve critical validation questions | `as-task-review-questions` |
