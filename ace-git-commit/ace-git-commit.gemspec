@@ -8,8 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'LLM-powered git commit tool for ACE'
-  spec.description = 'Streamlined git commit tool that leverages LLM technology to generate meaningful commit messages'
+  spec.summary = 'Turn diffs into clear, conventional commit messages — powered by LLM'
+  spec.description = 'Analyzes diffs and developer intent to generate conventional commit messages. ' \
+                     'Handles monorepo scoping automatically — split commits across packages with one command.'
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
