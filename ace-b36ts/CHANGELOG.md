@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-03-18
+
+### Changed
+- Tightened `TS-B36TS-001-pilot` E2E runner and verifier contracts for Goals 5-8 with deterministic inputs, explicit artifact naming, and stronger evidence checks.
+
 ## [0.11.2] - 2026-03-18
 
 ### Fixed
