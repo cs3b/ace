@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-20
+
+### Changed
+- Expanded `TS-SEARCH-001` E2E coverage with a new JSON-output goal and tightened runner/verifier artifact-evidence contracts across existing goals.
+
 ## [0.21.8] - 2026-03-18
 
 ### Changed

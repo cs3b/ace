@@ -12,10 +12,12 @@ sandbox-layout:
   results/tc/01/: "Content-search artifacts"
   results/tc/02/: "File-search artifacts"
   results/tc/03/: "Count-mode artifacts"
+  results/tc/04/: "JSON-output artifacts"
 
 e2e-justification: >
-  Requires real ripgrep-backed execution across content, file, and count modes
-  through the CLI with filesystem traversal and auto-detection behavior.
+  Requires real ripgrep-backed execution across content, file, count, and JSON
+  output modes through the CLI with filesystem traversal and output formatting
+  behavior.
 
 unit-coverage-reviewed:
   - test/integration/cli_integration_test.rb

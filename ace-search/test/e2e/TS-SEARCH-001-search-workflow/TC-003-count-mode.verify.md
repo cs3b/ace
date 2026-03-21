@@ -10,6 +10,7 @@ Validation order (impact-first):
 1. `results/tc/03/` contains count-oriented search captures.
 2. Exit code is successful.
 3. Output includes count or files-with-matches summary semantics.
+4. Evidence cites both `files-with-matches.*` and `count.*` captures.
 
 ## Verdict
 

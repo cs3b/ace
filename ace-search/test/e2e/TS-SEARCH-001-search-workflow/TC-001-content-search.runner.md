@@ -8,6 +8,11 @@ proving content-search mode behavior.
 ## Workspace
 
 Save artifacts to `results/tc/01/`.
+
+Capture:
+- `results/tc/01/content-search.stdout`, `.stderr`, `.exit`
+- `results/tc/01/summary.md` (optional) with concise command/evidence notes
+
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
