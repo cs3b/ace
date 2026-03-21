@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'date'
 require 'ace/core'
 require_relative '../molecules/bundle_merger'
 require 'ace/core/molecules/file_aggregator'
@@ -198,10 +199,10 @@ module Ace
                 config = {}
 
                 if input.match?(/\.ya?ml$/i)
-                  config = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol]) || {}
+                  config = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol, Date]) || {}
                 elsif has_frontmatter?(input)
                   if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
-                    frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol]) || {}
+                    frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol, Date]) || {}
                     config = unwrap_bundle_config(frontmatter)
                   end
                 end
@@ -387,7 +388,7 @@ module Ace
         def load_inline_yaml(yaml_string)
           begin
             require 'yaml'
-            config = YAML.safe_load(yaml_string)
+            config = YAML.safe_load(yaml_string, aliases: true, permitted_classes: [Symbol, Date])
             # Unwrap 'bundle' key if present (typed subjects use nested structure)
             # This allows both flat configs (diffs: [...]) and nested (bundle: { diffs: [...] })
             template_config = unwrap_bundle_config(config)
@@ -426,7 +427,7 @@ module Ace
             frontmatter_yaml = frontmatter_text  # Store original YAML for output
             begin
               require 'yaml'
-              frontmatter = YAML.safe_load(frontmatter_text) || {}
+              frontmatter = YAML.safe_load(frontmatter_text, aliases: true, permitted_classes: [Symbol, Date]) || {}
               frontmatter = {} unless frontmatter.is_a?(Hash)
               # Remove frontmatter from content for processing
               template_content = template_content.sub(/\A---\s*\n.*?\n---\s*\n/m, '')
