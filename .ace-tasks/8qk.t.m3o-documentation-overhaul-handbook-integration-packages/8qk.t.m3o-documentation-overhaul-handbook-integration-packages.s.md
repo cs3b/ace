@@ -16,7 +16,9 @@ bundle:
 
 ## Objective
 
-Light refresh of handbook integration package READMEs for ace-handbook-integration-claude, ace-handbook-integration-codex, ace-handbook-integration-gemini, ace-handbook-integration-opencode, and ace-handbook-integration-pi to apply consistent structure. No GIFs needed. Add clear tagline, consistent sections, keep existing docs. These are provider projection packages — very uniform in structure.
+Light refresh of handbook integration package READMEs for ace-handbook-integration-claude, ace-handbook-integration-codex, ace-handbook-integration-gemini, ace-handbook-integration-opencode, and ace-handbook-integration-pi to apply consistent structure. No GIFs needed. Add clear tagline, consistent sections, keep existing docs. These are provider projection packages — very uniform in structure. Update gemspec summary/description to match README tagline (no internal jargon).
+
+See retros 8qkop7, 8qku8y, 8qkvc4 for learnings applied here.
 
 Research basis: Diataxis framework, top OSS library README patterns for internal/developer-facing packages.
 
@@ -25,8 +27,8 @@ Research basis: Diataxis framework, top OSS library README patterns for internal
 ### User Experience
 
 - **Input**: Existing handbook integration package READMEs (5-8 lines each)
-- **Process**: Refresh README structure with consistent tagline, sections, purpose statement
-- **Output**: Per package: refreshed README.md with consistent structure
+- **Process**: Refresh README structure with consistent tagline, sections, purpose statement, update gemspec metadata
+- **Output**: Per package: refreshed README.md with consistent structure, updated gemspec
 
 ### Expected Behavior
 
@@ -58,6 +60,7 @@ No GIF, no getting-started.md, no usage.md deletion required. Keep existing docs
 - [ ] Consistent section ordering across all five packages
 - [ ] Consistent section ordering matches other support library orchestrators for cross-group uniformity
 - [ ] Existing documentation is preserved (no deletions)
+- [ ] Gemspec summary matches README tagline (no internal jargon)
 - [ ] All internal links resolve correctly
 - [ ] ace-lint passes on all modified files
 
@@ -77,6 +80,7 @@ No GIF, no getting-started.md, no usage.md deletion required. Keep existing docs
 | Consistent tagline for ace-handbook-integration-opencode | ace-handbook-integration-opencode subtask | -- | KEPT |
 | Consistent tagline for ace-handbook-integration-pi | ace-handbook-integration-pi subtask | -- | KEPT |
 | Uniform section structure across handbook integration packages | all subtasks | -- | KEPT |
+| Gemspec metadata alignment | all subtasks | -- | KEPT |
 
 ### Verification Plan
 
@@ -99,18 +103,23 @@ No GIF, no getting-started.md, no usage.md deletion required. Keep existing docs
 
 **ace-handbook-integration-claude:**
 - Refreshed README.md with consistent tagline, purpose, install, what it provides, ace-handbook link, ACE link
+- Updated gemspec (summary = tagline, description = value prop, no jargon)
 
 **ace-handbook-integration-codex:**
 - Refreshed README.md with consistent tagline, purpose, install, what it provides, ace-handbook link, ACE link
+- Updated gemspec (summary = tagline, description = value prop, no jargon)
 
 **ace-handbook-integration-gemini:**
 - Refreshed README.md with consistent tagline, purpose, install, what it provides, ace-handbook link, ACE link
+- Updated gemspec (summary = tagline, description = value prop, no jargon)
 
 **ace-handbook-integration-opencode:**
 - Refreshed README.md with consistent tagline, purpose, install, what it provides, ace-handbook link, ACE link
+- Updated gemspec (summary = tagline, description = value prop, no jargon)
 
 **ace-handbook-integration-pi:**
 - Refreshed README.md with consistent tagline, purpose, install, what it provides, ace-handbook link, ACE link
+- Updated gemspec (summary = tagline, description = value prop, no jargon)
 
 ## Out of Scope
 
@@ -118,5 +127,4 @@ No GIF, no getting-started.md, no usage.md deletion required. Keep existing docs
 - New features or functionality
 - GIF recordings or demo assets
 - Creating new docs/getting-started.md files
-- Changes to package gemspecs or dependencies
 - Modifications to test suites
