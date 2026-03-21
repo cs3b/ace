@@ -2,6 +2,6 @@
 
 module Ace
   module Retro
-    VERSION = "0.13.1"
+    VERSION = "0.14.0"
   end
 end

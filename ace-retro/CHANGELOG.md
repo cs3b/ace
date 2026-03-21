@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-03-21
+
+### Changed
+- Added initial value-gated TS-format E2E smoke coverage under `TS-RETRO-001` for CLI help/error surface, create/list/show lifecycle, folder/filter views, and doctor health-to-failure transitions.
+- Added a package E2E Decision Record documenting ADD/SKIP outcomes with unit-test coverage evidence.
+
 ## [0.13.1] - 2026-03-18
 
 ### Changed
