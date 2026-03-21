@@ -49,14 +49,14 @@ module Ace
             # Handle special key mappings (convert to dot notation for DocumentEditor)
             mapped_key = case key
                         when "last-updated", "last_updated"
-                          "update.last-updated"
+                          "ace-docs.last-updated"
                         when "last-checked", "last_checked"
-                          "update.last-checked"
+                          "ace-docs.last-checked"
                         when "version"
                           "metadata.version"
                         else
                           key
-                        end
+                      end
 
             processed[mapped_key] = process_value(value)
           end
