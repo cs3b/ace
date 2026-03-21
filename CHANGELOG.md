@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
 
+## [0.9.875] - 2026-03-21
+
+### Changed
+- **ace-task v0.30.1**: Consolidated task workflow management by removing `task/reorganize` and routing coverage planning responsibilities out of task domain.
+- **ace-test v0.4.5**: Added canonical coverage-planning workflow and skills under `wfi://test/improve-coverage` to replace task-domain coverage planning ownership.
+
 ## [0.9.874] - 2026-03-21
 
 ### Added
