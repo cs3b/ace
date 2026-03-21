@@ -6,7 +6,7 @@ The `handbook/` directory powers agent-assisted workflows. Skills are invoked by
 
 ## Skills
 
-ace-task ships 21 skills grouped by domain. Each skill wraps a workflow instruction and can be invoked via `/as-<name>` in agent conversations.
+ace-task ships 12 skills for task and bug management. Each skill wraps a workflow instruction and can be invoked via `/as-<name>` in agent conversations.
 
 ### Task Lifecycle
 
@@ -29,35 +29,6 @@ ace-task ships 21 skills grouped by domain. Each skill wraps a workflow instruct
 |-------|-------------|
 | `as-bug-analyze` | Analyze bugs: identify root cause, verify reproduction, propose fix plan |
 | `as-bug-fix` | Execute bug fix: apply changes, create regression tests, verify resolution |
-
-### Ideas
-
-| Skill | What it does |
-|-------|-------------|
-| `as-idea-capture` | Capture a development idea to a structured idea file with tags |
-| `as-idea-capture-features` | Capture application features as structured idea files |
-| `as-idea-prioritize` | Prioritize and align ideas with project goals and roadmap |
-
-### Testing
-
-| Skill | What it does |
-|-------|-------------|
-| `as-test-create-cases` | Generate structured test cases for features and code changes |
-| `as-test-fix` | Systematically fix failing automated tests |
-
-### Documentation
-
-| Skill | What it does |
-|-------|-------------|
-| `as-docs-update-roadmap` | Update project roadmap with current progress and milestones |
-| `as-docs-update-usage` | Update usage documentation based on feedback or requirements |
-
-### Retrospectives
-
-| Skill | What it does |
-|-------|-------------|
-| `as-retro-create` | Create a task retrospective documenting learnings and improvements |
-| `as-retro-synthesize` | Synthesize retrospectives into patterns and improvement recommendations |
 
 ## Workflow Instructions
 
@@ -94,8 +65,6 @@ Development guides provide best-practice patterns and format specifications.
 | Guide | Purpose |
 |-------|---------|
 | `task-definition.g.md` | Playbook for writing clear, actionable dev tasks — anatomy, templates, planning vs execution steps |
-| `roadmap-definition.g.md` | Format requirements and validation criteria for project roadmap documents |
-| `project-management/release-codenames.g.md` | Philosophy, naming conventions, and selection process for release codenames |
 
 ## Templates
 
