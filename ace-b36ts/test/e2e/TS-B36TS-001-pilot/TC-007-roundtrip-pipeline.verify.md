@@ -6,20 +6,20 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **File exists** — At least one file exists in `results/tc/07/`.
-2. **Three values present** — The file contains all three components: an original date, an encoded token, and a decoded result.
-3. **Valid token** — The encoded token consists of lowercase alphanumeric characters only (base36 charset: `[0-9a-z]`).
-4. **Roundtrip match** — The decoded result contains the original date (the roundtrip preserved the input).
-5. **No trailing whitespace corruption** — The encoded token has no trailing whitespace or newline characters that would indicate pipe corruption.
+
+1. **Required artifacts exist** — `roundtrip.summary`, `roundtrip.stdout`, `roundtrip.stderr`, `roundtrip.exit`.
+2. **Pipeline succeeded** — `roundtrip.exit` contains `0`.
+3. **Three required fields present** — `roundtrip.summary` includes `ORIGINAL=`, `TOKEN=`, and `DECODED=` lines.
+4. **Token validity** — `TOKEN` value matches `[0-9a-z]{2,8}`.
+5. **Roundtrip semantic match** — `DECODED` reflects the original date (`2025-01-06`) in ISO-like output.
 
 ## Verdict
 
-- **PASS**: File exists with all three values. Token is valid base36. Decoded result matches the original date. No whitespace corruption evident.
-- **FAIL**: File missing, fewer than three values, token invalid, roundtrip mismatch, or evidence of whitespace corruption.
+- **PASS**: Required artifacts exist, pipeline succeeds, valid token is present, and decoded output matches original date semantics.
+- **FAIL**: Missing artifacts, non-zero exit, malformed fields, invalid token, or decoded mismatch.
 
-Report: `PASS` or `FAIL` with evidence (the three values found, or the absence/violation).
+Report: `PASS` or `FAIL` with evidence (summary fields and exit-code content).

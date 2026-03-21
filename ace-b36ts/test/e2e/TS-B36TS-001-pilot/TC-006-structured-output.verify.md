@@ -6,18 +6,19 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Artifacts exist** — At least one integration artifact exists in `results/tc/06/` proving a downstream tool consumed the structured output (e.g., a directory was created from path output, a jq-extracted field is saved to a file).
-2. **No manual munging** — The evidence shows direct consumption (tool output piped or fed directly to the downstream tool), not post-processed strings.
-3. **Downstream tool success** — The integration artifact is valid and non-empty — the downstream tool actually worked (e.g., directory exists, extracted JSON field is present and correct).
+
+1. **Required artifacts exist** — `encode.json`, `jq-length.txt`, `jq-first.txt`, and `integration-notes.md` exist.
+2. **JSON is valid and non-empty** — `encode.json` parses as JSON and contains at least one ID.
+3. **jq extraction evidence** — `jq-length.txt` contains a positive integer and `jq-first.txt` contains a token-like value.
+4. **Direct-consumption narrative** — `integration-notes.md` explains that `jq` consumed tool output directly.
 
 ## Verdict
 
-- **PASS**: At least one integration artifact exists proving a real downstream tool successfully consumed the structured output without manual transformation.
-- **FAIL**: No integration artifacts, evidence of manual string processing, or downstream tool failure.
+- **PASS**: Required artifacts exist, JSON is valid, jq extraction succeeded, and notes confirm direct integration.
+- **FAIL**: Missing artifacts, invalid/empty JSON, failed extraction evidence, or no integration explanation.
 
-Report: `PASS` or `FAIL` with evidence (artifacts found and what they demonstrate).
+Report: `PASS` or `FAIL` with evidence (artifact names and relevant snippets).
