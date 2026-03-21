@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-03-21
+
+### Added
+- `mark-tasks-done` step (number 155) in `work-on-tasks` preset to mark parent/umbrella tasks as done after all subtask forks complete
+
 ## [0.35.0] - 2026-03-21
 
 ### Added

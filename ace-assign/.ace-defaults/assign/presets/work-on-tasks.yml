@@ -122,6 +122,13 @@ steps:
       - "Include final release/version information and the key completed components when applicable."
       - "Make sure the PR description reflects the post-review final state."
 
+  - name: mark-tasks-done
+    number: "155"
+    instructions:
+      - "Mark parent task(s) as done and move to archive."
+      - "For each top-level taskref in {{taskrefs}}, run: `ace-task update <taskref> --set status=done --move-to archive`"
+      - "This marks the parent/umbrella tasks — subtasks were already marked done by their individual fork children."
+
   - name: create-retro
     number: "160"
     skill: as-retro-create
