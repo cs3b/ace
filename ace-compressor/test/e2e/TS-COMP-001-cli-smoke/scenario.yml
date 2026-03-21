@@ -1,0 +1,35 @@
+test-id: TS-COMP-001
+title: "ace-compressor CLI Smoke E2E"
+area: comp
+package: ace-compressor
+priority: medium
+cost-tier: smoke
+tags: [smoke, happy-path, "use-case:compressor"]
+tool-under-test: ace-compressor
+
+sandbox-layout:
+  results/tc/01/: "Help command-surface artifacts"
+  results/tc/02/: "Exact mode stdio+stats artifacts"
+  results/tc/03/: "Per-source output artifacts"
+  results/tc/04/: "Compact refusal artifacts"
+
+e2e-justification: >
+  These checks require the packaged `ace-compressor` executable, real CLI parsing,
+  and real filesystem/cache side effects across multiple invocations. Unit tests
+  cover internals and command adapters, but they do not replace end-to-end binary
+  wiring and operator-visible output contracts.
+
+unit-coverage-reviewed:
+  - test/commands/compress_test.rb
+  - test/organisms/compression_runner_test.rb
+  - test/organisms/exact_compressor_test.rb
+  - test/organisms/compact_compressor_test.rb
+
+requires:
+  tools: [ace-compressor, git]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: git add -A && git commit -m "initial" --quiet

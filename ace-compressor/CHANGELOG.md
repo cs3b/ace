@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-21
+
+### Changed
+- Added initial `TS-COMP-001` value-gated smoke E2E coverage for `ace-compressor`, including scenario runner/verifier contracts and an ADD/SKIP decision record with unit-coverage evidence.
+
 ## [0.22.1] - 2026-03-18
 
 ### Changed
