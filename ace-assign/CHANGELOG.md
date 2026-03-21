@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-03-21
+
+### Added
+- `create-retro` step in `work-on-task` and `work-on-tasks` presets to capture process learnings after each assignment
+
+### Changed
+- `verify-e2e` step now runs E2E tests with fix loops (up to 3 cycles) instead of only reviewing coverage; runs in forked context
+- `update-pr-desc` step now runs in forked context to prevent context-pressure truncation of grouped-stats output
+
 ## [0.34.1] - 2026-03-18
 
 ### Changed
