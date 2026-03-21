@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
 
+## [0.9.877] - 2026-03-21
+
+### Technical
+- **ace-bundle v0.38.1**: Documented the explicit `Date` safe-load allowance in `BundleLoader` so the wider YAML permission is explained at each parsing path.
+
 ## [0.9.876] - 2026-03-21
 
 ### Fixed
