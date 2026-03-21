@@ -12,6 +12,8 @@ sandbox-layout:
   results/tc/02/: "Diff command artifacts"
   results/tc/03/: "Branch command artifacts"
   results/tc/04/: "PR command artifacts"
+  results/tc/05/: "Diff output path security artifacts"
+  results/tc/06/: "Status JSON no-pr artifacts"
 
 e2e-justification: >
   Requires real git repository state inspection and subprocess-backed command
@@ -21,6 +23,7 @@ unit-coverage-reviewed:
   - test/commands/status_test.rb
   - test/commands/diff_test.rb
   - test/commands/branch_test.rb
+  - test/commands/pr_test.rb
 
 requires:
   tools: [ace-git, git]

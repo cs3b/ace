@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-20
+
+### Changed
+- Expanded `TS-GIT-001` E2E coverage with new goal-level checks for diff output-path security and deterministic status JSON/no-PR behavior.
+- Tightened PR summary runner/verifier contracts to require explicit fallback evidence when PR context is unavailable.
+
 ## [0.15.1] - 2026-03-18
 
 ### Changed
