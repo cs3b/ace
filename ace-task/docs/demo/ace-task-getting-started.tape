@@ -1,7 +1,7 @@
 # Description: Showcase ace-task list, create, show, and archive workflow
 # Tags: ace-task,docs,getting-started
 
-Output .ace-local/demo/ace-task-getting-started.gif
+Output docs/demo/ace-task-getting-started.gif
 
 Set FontSize 16
 Set Width 960
