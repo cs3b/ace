@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-03-21
+
+### Added
+- Add RubyGems publish workflow (`wfi://release/rubygems-publish`) for publishing ACE gems in dependency order with credential verification, conflict detection, and dry-run support.
+- Add `as-release-rubygems-publish` skill for invoking the RubyGems publish workflow.
+
 ## [0.17.0] - 2026-03-21
 
 ### Changed
