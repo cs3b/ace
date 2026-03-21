@@ -2,6 +2,6 @@
 
 module Ace
   module Bundle
-    VERSION = "0.38.0"
+    VERSION = "0.38.1"
   end
 end

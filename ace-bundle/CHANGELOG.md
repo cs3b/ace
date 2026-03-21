@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-03-21
+
+### Technical
+- Documented why `BundleLoader` permits `Date` in `YAML.safe_load` for file, frontmatter, inline YAML, and template frontmatter parsing paths.
+
 ## [0.38.0] - 2026-03-18
 
 ### Changed
