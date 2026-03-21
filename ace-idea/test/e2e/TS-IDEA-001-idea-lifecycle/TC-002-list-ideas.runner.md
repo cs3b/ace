@@ -5,11 +5,16 @@
 Run `ace-idea list` to confirm the idea created in Goal 1 appears in listing
 output. Also run `ace-idea list --status pending` to verify status-based
 filtering returns the same idea, and `ace-idea list --in next` to verify
-folder filtering returns empty (idea is in root).
+folder filtering includes root-scoped ideas.
 
 ## Workspace
 
 Save artifacts to `results/tc/02/`.
+
+Capture:
+- `results/tc/02/list.stdout`, `.stderr`, `.exit`
+- `results/tc/02/list-pending.stdout`, `.stderr`, `.exit`
+- `results/tc/02/list-next.stdout`, `.stderr`, `.exit`
 
 ## Constraints
 

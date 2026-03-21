@@ -14,4 +14,4 @@ Validation order (impact-first):
 ## Verdict
 
 - **PASS**: All three list invocations confirm correct filtering behavior.
-- **FAIL**: Idea absent from unfiltered listing, wrong result from status filter, or folder filter does not exclude root ideas.
+- **FAIL**: Idea absent from unfiltered listing, wrong result from status filter, or root-scope listing omits the idea.

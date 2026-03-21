@@ -9,6 +9,7 @@ bundle:
     - ./TC-001-create-idea.verify.md
     - ./TC-002-list-ideas.verify.md
     - ./TC-003-move-idea.verify.md
+    - ./TC-004-archive-idea.verify.md
 ---
 
 # E2E Verification: ace-idea Lifecycle
@@ -36,4 +37,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/4 passed**
