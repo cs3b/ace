@@ -36,10 +36,10 @@ setup:
         for i in $(seq 1 600); do echo "Line $i of large content"; done
       } > .ace/bundle/presets/large-test.md
   - run: |
-      # Generate below-threshold preset (100 lines)
+      # Generate small preset (100 lines, below threshold)
       {
-        printf '%s\n' '---' 'name: below-threshold-test' '---' '' '# Test Content' ''
+        printf '%s\n' '---' 'name: small-test' '---' '' '# Test Content' ''
         for i in $(seq 1 95); do echo "Line $i"; done
-      } > .ace/bundle/presets/below-threshold-test.md
+      } > .ace/bundle/presets/small-test.md
   - agent-env:
       PROJECT_ROOT_PATH: .
