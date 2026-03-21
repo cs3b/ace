@@ -15,5 +15,5 @@ Save all output to `results/tc/05/`. Capture:
 
 - The sandbox has pkg-a/ and pkg-b/ with separate `.ace/git/commit.yml` configs.
 - Modify a file in each package, then commit both paths at once.
-- Using what you learned from Goal 1, invoke ace-git-commit with both paths.
+- Invoke ace-git-commit with both package paths in one command.
 - All artifacts must come from real tool execution, not fabricated.

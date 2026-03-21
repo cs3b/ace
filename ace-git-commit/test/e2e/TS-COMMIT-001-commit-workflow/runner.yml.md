@@ -20,8 +20,7 @@ Tool under test: ace-git-commit
 Required tools: ace-git-commit, git
 Workspace root: (current directory)
 
-Execute each goal sequentially. Goal 1 is discovery — all later goals
-build on what you learn there. Do not re-run --help after Goal 1.
+Execute each goal sequentially. Each goal should be self-contained and must not depend on discoveries from earlier goals.
 
 ## Rules
 
