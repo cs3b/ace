@@ -1,6 +1,6 @@
 ---
 doc-type: guide
-title: Invalid Frontmatter
+title Invalid Frontmatter
 purpose: Documentation for ace-lint/test/fixtures/invalid.md
 ace-docs:
   last-updated: 2025-10-13

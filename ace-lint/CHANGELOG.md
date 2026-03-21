@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-03-21
+
+### Fixed
+- Restored malformed YAML in `test/fixtures/invalid.md` so invalid frontmatter coverage still exercises a genuinely broken fixture.
+
 ## [0.22.0] - 2026-03-18
 
 ### Changed
