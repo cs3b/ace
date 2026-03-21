@@ -10,6 +10,7 @@ tool-under-test: ace-tmux
 sandbox-layout:
   results/tc/01/: "Preset listing artifacts"
   results/tc/02/: "Session start artifacts"
+  results/tc/03/: "Window add artifacts"
 
 e2e-justification: >
   Requires real tmux process/session interactions and preset-driven CLI behavior

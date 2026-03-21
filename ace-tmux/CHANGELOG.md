@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-21
+
+### Changed
+- Expanded `TS-TMUX-001` E2E lifecycle coverage with a new window-management goal and tightened artifact-evidence contracts for preset discovery and session start flows.
+
 ## [0.7.1] - 2026-03-18
 
 ### Changed
