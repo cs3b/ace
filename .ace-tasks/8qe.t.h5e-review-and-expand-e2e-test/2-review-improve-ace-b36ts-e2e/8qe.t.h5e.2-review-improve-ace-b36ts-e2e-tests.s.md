@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-15 11:26:10"
 estimate: TBD
@@ -31,11 +31,11 @@ needs_review: false
 
 ### Success Criteria
 
-- [ ] Coverage matrix produced for `ace-b36ts`
-- [ ] Change plan documents KEEP / MODIFY / REMOVE / CONSOLIDATE / ADD decisions
-- [ ] Rewrite summary reflects the approved E2E changes
-- [ ] Package-scoped verification is recorded after the rewrite
-- [ ] No regressions in retained E2E coverage
+- [x] Coverage matrix produced for `ace-b36ts`
+- [x] Change plan documents KEEP / MODIFY / REMOVE / CONSOLIDATE / ADD decisions
+- [x] Rewrite summary reflects the approved E2E changes
+- [x] Package-scoped verification is recorded after the rewrite
+- [x] No regressions in retained E2E coverage
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -47,11 +47,11 @@ needs_review: false
 ### Verification Plan
 
 #### Integration / E2E Validation
-- [ ] Package-scoped verification passes after rewrite: `ace-test ace-b36ts`
-- [ ] Coverage matrix and change plan are attached or summarized in the task output
+- [x] Package-scoped verification passes after rewrite: `ace-test ace-b36ts`
+- [x] Coverage matrix and change plan are attached or summarized in the task output
 
 #### Verification Commands
-- [ ] `ace-test ace-b36ts`
+- [x] `ace-test ace-b36ts`
 
 ## Objective
 
