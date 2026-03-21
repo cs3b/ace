@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **Artifacts exist** — results/tc/06/ contains execution captures and session listing.
 2. **Zero exit code** — Review execution succeeded.
 3. **Session directory created** — Session listing shows a directory was created with review output.

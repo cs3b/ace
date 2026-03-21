@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **File exists** — At least one file exists in `results/tc/01/`.
 2. **Substantive content** — The file contains more than 5 lines of non-empty text.
 3. **Mentions key concepts** — The content references at least two of: presets, subjects, models, dry-run.
