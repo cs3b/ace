@@ -5,6 +5,12 @@ allowed-tools: Bash, Read
 argument-hint: "[list|show] [options]"
 doc-type: workflow
 purpose: task discovery workflow
+bundle:
+  sections: 
+    ace-task-params: 
+      commands: 
+        - ace-task list --help 
+        - ace-task show --help 
 ---
 
 # Task Finder Workflow
