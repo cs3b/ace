@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-03-21
+
+### Changed
+- Added initial `TS-LLMCLI-001` value-gated smoke E2E coverage for `ace-llm-providers-cli-check`, including deterministic no-tools and stubbed-tools command-path validation.
+
+### Technical
+- Added E2E runner/verifier artifacts and decision-record evidence for ADD/SKIP test-case gating.
+
 ## [0.25.7] - 2026-03-18
 
 ### Technical
