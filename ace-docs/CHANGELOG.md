@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-20
+
+### Changed
+- Expanded `TS-DOCS-001` E2E coverage with a new `TC-004` update-command goal and tightened discover/validate/status runner/verifier evidence contracts.
+
 ## [0.26.1] - 2026-03-18
 
 ### Changed
