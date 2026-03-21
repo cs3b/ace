@@ -97,7 +97,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.16.0)
+    ace-git (0.16.1)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -135,7 +135,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.17.0)
+    ace-handbook (0.17.1)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
