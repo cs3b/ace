@@ -1,7 +1,7 @@
 # Description: Showcase ace-review presets, diff review, PR review, and feedback
 # Tags: ace-review,docs,getting-started
 
-Output .ace-local/demo/ace-review-getting-started.gif
+Output docs/demo/ace-review-getting-started.gif
 
 Set FontSize 16
 Set Width 960
