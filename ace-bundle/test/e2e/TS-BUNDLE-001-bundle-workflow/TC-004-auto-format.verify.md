@@ -1,4 +1,4 @@
-# Goal 4 — Auto-Format Threshold Verification
+# Goal 4 — Output Routing Verification
 
 ## Injected Context
 
@@ -11,14 +11,16 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Both capture sets exist** — results/tc/04/ contains stdout/exit for both small and large presets.
-2. **Both exit codes zero** — Both presets processed successfully.
-3. **Small preset to stdio** — Small stdout contains actual content (e.g., "Small Test Content") and does NOT contain "Bundle saved" or "output file:".
-4. **Large preset to cache** — Large stdout contains "Bundle saved" or "output file:" with a cache path, and does NOT contain the full content inline.
+- **All capture sets exist** — `results/tc/04/` contains stdout/exit files for threshold and override checks.
+- **All exit codes zero** — Each invocation completes successfully.
+- **Small preset to stdio** — `small.stdout` contains actual content and does NOT contain cache-save messaging.
+- **Large preset to cache** — `large.stdout` contains cache-save messaging and does NOT inline full content.
+- **Large forced to stdio** — `large-to-stdio.stdout` contains actual content and does NOT contain cache-save messaging.
+- **Small forced to cache** — `small-to-cache.stdout` contains cache-save messaging.
 
 ## Verdict
 
-- **PASS**: Small content goes to stdio, large content goes to cache file.
-- **FAIL**: Routing is wrong for either size, or captures missing.
+- **PASS**: Threshold and explicit override routing both behave as expected.
+- **FAIL**: Any routing mode is wrong, exits are non-zero, or captures are missing.
 
 Report: `PASS` or `FAIL` with evidence (content snippets, presence/absence of cache indicators).
