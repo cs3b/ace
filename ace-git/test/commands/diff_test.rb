@@ -31,11 +31,10 @@ class DiffTest < AceGitTestCase
 
   def test_execute_returns_error_when_not_in_git_repo
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, false do
-      output = capture_io do
-        result = @command.call
-        assert_equal 1, result
+      error = assert_raises(Ace::Support::Cli::Error) do
+        @command.call
       end
-      assert_match(/Not a git repository/, output.last)
+      assert_match(/Not a git repository/, error.message)
     end
   end
 
@@ -66,11 +65,10 @@ class DiffTest < AceGitTestCase
       )
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
-        output = capture_io do
-          result = @command.call(output: "../../etc/passwd", format: "diff")
-          assert_equal 1, result
+        error = assert_raises(Ace::Support::Cli::Error) do
+          @command.call(output: "../../etc/passwd", format: "diff")
         end
-        assert_match(/path traversal not allowed/, output.last)
+        assert_match(/path traversal not allowed/, error.message)
       end
     end
   end
@@ -115,11 +113,10 @@ class DiffTest < AceGitTestCase
 
   def test_config_file_option_raises_on_missing_file
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, true do
-      output = capture_io do
-        result = @command.call(config: "/nonexistent/config.yml", format: "diff")
-        assert_equal 1, result
+      error = assert_raises(Ace::Support::Cli::Error) do
+        @command.call(config: "/nonexistent/config.yml", format: "diff")
       end
-      assert_match(/Config file not found/, output.last)
+      assert_match(/Config file not found/, error.message)
     end
   end
 
@@ -167,15 +164,13 @@ class DiffTest < AceGitTestCase
   def test_execute_returns_error_for_invalid_git_range
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, true do
       # Simulate git error for invalid range
-      error = Ace::Git::GitError.new("Git command failed: fatal: ambiguous argument 'invalid..range'")
+      git_error = Ace::Git::GitError.new("Git command failed: fatal: ambiguous argument 'invalid..range'")
 
-      Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(_opts) { raise error } do
-        output = capture_io do
-          result = @command.call(range: "invalid..range", format: "diff")
-          assert_equal 1, result
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(_opts) { raise git_error } do
+        cli_error = assert_raises(Ace::Support::Cli::Error) do
+          @command.call(range: "invalid..range", format: "diff")
         end
-        assert_match(/Error generating diff/, output.last)
-        assert_match(/ambiguous argument/, output.last)
+        assert_match(/ambiguous argument/, cli_error.message)
       end
     end
   end
@@ -193,14 +188,11 @@ class DiffTest < AceGitTestCase
 
       error_scenarios.each do |scenario|
         Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(_opts) { raise scenario[:error] } do
-          output = capture_io do
-            result = @command.call(range: "some-range", format: "diff")
-            assert_equal 1, result, "Command should return error status for: #{scenario[:error].message}"
+          cli_error = assert_raises(Ace::Support::Cli::Error,
+            "Command should raise Cli::Error for: #{scenario[:error].message}") do
+            @command.call(range: "some-range", format: "diff")
           end
-          # Error should be in stderr, not masked as "(no changes)" in stdout
-          refute_match(/\(no changes\)/, output.first, "Git error should not be masked as '(no changes)'")
-          assert_match(/Error generating diff/, output.last)
-          assert_match(scenario[:pattern], output.last)
+          assert_match(scenario[:pattern], cli_error.message)
         end
       end
     end
@@ -216,12 +208,10 @@ class DiffTest < AceGitTestCase
       )
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
-        output = capture_io do
-          # This absolute path is outside cwd and tmpdir
-          result = @command.call(output: "/etc/passwd", format: "diff")
-          assert_equal 1, result
+        error = assert_raises(Ace::Support::Cli::Error) do
+          @command.call(output: "/etc/passwd", format: "diff")
         end
-        assert_match(/must be within working directory or temp directory/, output.last)
+        assert_match(/must be within working directory or temp directory/, error.message)
       end
     end
   end

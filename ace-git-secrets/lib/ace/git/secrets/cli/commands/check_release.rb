@@ -26,8 +26,9 @@ module Ace
             def call(**options)
               debug_log("Starting check-release with options: #{format_pairs(options)}", options)
 
-              # Delegate to existing CheckReleaseCommand logic and return exit code directly
-              Ace::Git::Secrets::Commands::CheckReleaseCommand.execute(options)
+              # Delegate to existing CheckReleaseCommand logic
+              exit_code = Ace::Git::Secrets::Commands::CheckReleaseCommand.execute(options)
+              raise Ace::Support::Cli::Error.new("Pre-release check failed", exit_code: exit_code) if exit_code != 0
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
               raise Ace::Support::Cli::Error.new(e.message)

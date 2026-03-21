@@ -72,7 +72,7 @@ module Ace
               root: options[:root]
             )
             puts "Session '#{preset}' created." if options[:detach] && !options[:quiet]
-          rescue Molecules::PresetNotFoundError => e
+          rescue Ace::Tmux::PresetNotFoundError => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
         end
