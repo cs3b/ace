@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.48.0] - 2026-03-18
+
+### Changed
+- Refined `TS-REVIEW-001` E2E verifier goal structure with explicit impact-first validation and check sections across all review workflow goals.
+
 ## [0.47.1] - 2026-03-18
 
 ### Changed
