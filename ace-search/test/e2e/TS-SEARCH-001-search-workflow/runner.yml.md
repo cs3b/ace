@@ -9,6 +9,7 @@ bundle:
     - ./TC-001-content-search.runner.md
     - ./TC-002-file-search.runner.md
     - ./TC-003-count-mode.runner.md
+    - ./TC-004-json-output.runner.md
 ---
 
 # E2E Test Runner: ace-search Workflow
@@ -22,7 +23,7 @@ Execute each goal in order.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 3)
+- Execute each goal in order (1 through 4)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

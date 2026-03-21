@@ -9,6 +9,12 @@ then capture count-style output summary.
 ## Workspace
 
 Save artifacts to `results/tc/03/`.
+
+Capture:
+- `results/tc/03/files-with-matches.stdout`, `.stderr`, `.exit`
+- `results/tc/03/count.stdout`, `.stderr`, `.exit`
+- `results/tc/03/summary.md` (optional) with observed count semantics
+
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).

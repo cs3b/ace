@@ -9,6 +9,7 @@ bundle:
     - ./TC-001-content-search.verify.md
     - ./TC-002-file-search.verify.md
     - ./TC-003-count-mode.verify.md
+    - ./TC-004-json-output.verify.md
 ---
 
 # E2E Verification: ace-search Workflow
@@ -36,4 +37,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/4 passed**

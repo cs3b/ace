@@ -10,8 +10,9 @@ Validation order (impact-first):
 1. `results/tc/01/` contains command captures.
 2. Exit code is captured and successful.
 3. Output includes matched content lines and file references.
+4. Evidence cites `content-search.stdout` and `content-search.exit` specifically.
 
 ## Verdict
 
-- **PASS**: Content search returns real matches with evidence.
+- **PASS**: Content search returns real matches with explicit stdout/exit evidence.
 - **FAIL**: No match evidence or command failure.

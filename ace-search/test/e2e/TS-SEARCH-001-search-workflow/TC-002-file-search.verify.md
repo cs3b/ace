@@ -10,6 +10,7 @@ Validation order (impact-first):
 1. `results/tc/02/` has file-search command captures.
 2. Exit code is `0`.
 3. Output is file-oriented and includes `.rb` paths.
+4. Evidence cites `file-search.stdout` and `file-search.exit` specifically.
 
 ## Verdict
 
