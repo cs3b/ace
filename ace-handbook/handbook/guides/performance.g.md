@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Performance Tuning Guidelines
+purpose: Documentation for ace-handbook/handbook/guides/performance.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Performance Tuning Guidelines
 
 ## Goal

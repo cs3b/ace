@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git Usage Guide
+purpose: Documentation for ace-git/docs/usage.md
+ace-docs:
+  last-updated: 2026-02-26
+  last-checked: 2026-03-21
+---
+
 # ace-git Usage Guide
 
 Unified git operations for the ACE toolkit.

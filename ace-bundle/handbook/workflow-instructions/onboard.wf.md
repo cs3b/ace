@@ -1,10 +1,10 @@
 ---
-name: onboard
-description: Load onboarding context and summarize the current project state
-allowed-tools: Bash, Read
-argument-hint: "[preset]"
 doc-type: workflow
+title: Onboard Workflow
 purpose: onboarding context workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Onboard Workflow

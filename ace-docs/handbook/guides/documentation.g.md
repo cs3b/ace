@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Goal
+purpose: Documentation for ace-docs/handbook/guides/documentation.g.md
+ace-docs:
+  last-updated: 2026-01-18
+  last-checked: 2026-03-21
+---
+
 # Goal
 
 This guide defines the standards and best practices for documenting code and project artifacts within this

@@ -1,14 +1,10 @@
 ---
-name: lint/process-report
-allowed-tools: Bash, Read
-description: Process lint report and create tasks for manual fixes
-argument-hint: "[report-path]"
 doc-type: workflow
+title: Process Lint Report Workflow
 purpose: lint report processing workflow instruction
-
-update:
-  frequency: on-change
-  last-updated: '2026-01-08'
+ace-docs:
+  last-updated: 2026-03-06
+  last-checked: 2026-03-21
 ---
 
 # Process Lint Report Workflow

@@ -1,18 +1,10 @@
 ---
-name: test-responsibility-map
-description: Map behaviors to test layers to avoid redundant coverage
 doc-type: guide
+title: Test Responsibility Map Guide
 purpose: Test responsibility mapping and risk-based coverage
-search_keywords:
-  - test responsibility
-  - coverage matrix
-  - behavior mapping
-  - risk-based testing
-  - test pyramid
-  - layer assignment
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Test Responsibility Map Guide

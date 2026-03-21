@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Workflow Context Embedding Guide
+purpose: Documentation for ace-handbook/handbook/guides/workflow-context-embedding.g.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Workflow Context Embedding Guide
 
 This guide explains how to use `ace-bundle`'s `embed_document_source: true` feature to embed dynamic context directly into workflow instructions, reducing redundant command execution and improving agent efficiency.

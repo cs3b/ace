@@ -1,13 +1,10 @@
 ---
-name: git/rebase
-allowed-tools: Bash, Read
-description: Rebase feature branch with state capture, continue-first conflict handling, escalation to cherry-pick, and post-rebase verification
-argument-hint: "[target-branch] [--no-verify]"
 doc-type: workflow
+title: Rebase Workflow
 purpose: Safe rebase workflow with state capture, explicit conflict triage, and verification
-update:
-  frequency: on-change
-  last-updated: '2026-03-09'
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Rebase Workflow

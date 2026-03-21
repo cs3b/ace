@@ -1,21 +1,10 @@
 ---
-name: lint/run
-allowed-tools: Bash, Read
-description: Run ace-lint on project files with optional autofix and report generation
-argument-hint: "[file-pattern] [--fix] [--report]"
 doc-type: workflow
+title: Run Lint Workflow
 purpose: lint workflow instruction
-bundle:
-  embed_document_source: true
-  sections:
-    current_repository_status:
-      commands:
-        - git status -sb
-        - git diff --stat --name-only
-
-update:
-  frequency: on-change
-  last-updated: '2026-01-08'
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Run Lint Workflow

@@ -1,14 +1,10 @@
 ---
-name: assign/start
-allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Legacy compatibility wrapper for assignment startup via create and drive
-argument-hint: "[instructions|preset [params] [--run]]"
 doc-type: workflow
+title: Start Assignment Workflow (Legacy Compatibility)
 purpose: preserve compatibility for as-assign-start while routing to public assign/create + assign/drive flow
-
-update:
-  frequency: on-change
-  last-updated: '2026-03-09'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Start Assignment Workflow (Legacy Compatibility)

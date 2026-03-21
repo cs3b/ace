@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: High-Level Troubleshooting Workflow
+purpose: Documentation for ace-handbook/handbook/guides/debug-troubleshooting.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # High-Level Troubleshooting Workflow
 
 This guide provides a general, technology-agnostic workflow for approaching development challenges, from initial

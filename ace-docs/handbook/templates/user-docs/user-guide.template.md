@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: [Feature Name]
+purpose: Documentation for ace-docs/handbook/templates/user-docs/user-guide.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # [Feature Name]
 
 ## Overview

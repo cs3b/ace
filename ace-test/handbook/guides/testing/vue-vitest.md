@@ -1,16 +1,10 @@
 ---
-name: vue-vitest
-description: Quick reference for Vue component testing with Vitest
 doc-type: guide
+title: Vue + Vitest Testing Guide
 purpose: Vue Vitest testing reference
-search_keywords:
-  - vue
-  - vitest
-  - component testing
-  - single run
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Vue + Vitest Testing Guide

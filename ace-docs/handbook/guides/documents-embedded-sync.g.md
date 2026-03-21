@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Documents Embedded Synchronization Guide
+purpose: Documentation for ace-docs/handbook/guides/documents-embedded-sync.g.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Documents Embedded Synchronization Guide
 
 This guide covers the operational aspects of the document synchronization system, focusing on the `handbook sync-templates` tool usage, maintenance procedures, and troubleshooting. The system supports embedding both templates and guides within workflow instructions using the universal `<documents>` container format.

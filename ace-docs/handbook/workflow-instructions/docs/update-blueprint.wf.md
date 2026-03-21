@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Update Project Blueprint Workflow Instruction
+purpose: Documentation for ace-docs/handbook/workflow-instructions/docs/update-blueprint.wf.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
+---
+
 # Update Project Blueprint Workflow Instruction
 
 ## Goal

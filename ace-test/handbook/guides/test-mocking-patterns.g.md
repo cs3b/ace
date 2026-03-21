@@ -1,19 +1,10 @@
 ---
-name: test-mocking-patterns
-description: Patterns for effective mocking - testing behavior, avoiding zombies, contract testing
 doc-type: guide
+title: Test Mocking Patterns Guide
 purpose: Ensure mocks actually test real behavior and stay in sync with production
-search_keywords:
-  - mocking
-  - stubbing
-  - test doubles
-  - zombie mocks
-  - contract testing
-  - behavior testing
-  - mock verification
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-01
+  last-checked: 2026-03-21
 ---
 
 # Test Mocking Patterns Guide

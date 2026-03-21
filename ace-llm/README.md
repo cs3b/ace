@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-llm
+purpose: Documentation for ace-llm/README.md
+ace-docs:
+  last-updated: 2026-02-27
+  last-checked: 2026-03-21
+---
+
 # ace-llm
 
 LLM provider integration for AI-assisted development. Query any LLM provider through a unified CLI interface with cost tracking and output formatting. Features a configuration-based provider architecture that supports dynamic provider registration via YAML files.

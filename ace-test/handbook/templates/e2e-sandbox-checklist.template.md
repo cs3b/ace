@@ -1,11 +1,10 @@
 ---
-name: e2e-sandbox-checklist
-description: Template for setting up safe E2E test environments
 doc-type: template
+title: E2E Sandbox Setup Checklist
 purpose: E2E sandbox setup checklist
-update:
-  frequency: as-needed
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # E2E Sandbox Setup Checklist

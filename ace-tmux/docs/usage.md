@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Usage Guide
+purpose: Documentation for ace-tmux/docs/usage.md
+ace-docs:
+  last-updated: 2026-02-14
+  last-checked: 2026-03-21
+---
+
 # Usage Guide
 
 ## Commands

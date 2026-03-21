@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-support-items
+purpose: Documentation for ace-support-items/README.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # ace-support-items
 
 Shared item management infrastructure for ACE gems (ace-task, ace-idea, etc.).

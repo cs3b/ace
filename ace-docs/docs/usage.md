@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-docs Usage Guide
+purpose: Documentation for ace-docs/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
+---
+
 # ace-docs Usage Guide
 
 Comprehensive documentation for using ace-docs commands and features.
@@ -472,7 +481,7 @@ The `ace-docs` namespace provides enhanced configuration with backward compatibi
 ---
 ace-docs:
   # Update tracking
-  last-updated: '2025-10-18'       # ISO date format
+  last-updated: '2026-03-08'
   last-checked: '2025-10-18'       # Last review date
   frequency: weekly                # daily, weekly, monthly, on-change
 

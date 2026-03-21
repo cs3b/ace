@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Update Tools Documentation Workflow (v5)
+purpose: Documentation for ace-docs/handbook/workflow-instructions/docs/update-tools.wf.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Update Tools Documentation Workflow (v5)
 
 > **Scope:** Updates `docs/tools.md` for ACE ecosystem tools. Focus on active tools used in current workflows.

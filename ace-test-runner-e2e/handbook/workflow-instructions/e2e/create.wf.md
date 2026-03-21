@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-create-e2e-test
-name: e2e/create
-description: Create a new E2E test scenario from template
-version: "1.3"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Create E2E Test Workflow
+purpose: Create a new E2E test scenario from template
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Create E2E Test Workflow

@@ -1,11 +1,10 @@
 ---
-name: test-case
-description: Template for creating test case files
 doc-type: template
+title: "Test Case: {{FEATURE_NAME}}"
 purpose: Template for writing test cases
-update:
-  frequency: as-needed
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Test Case: {{FEATURE_NAME}}

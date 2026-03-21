@@ -1,20 +1,21 @@
 ---
 name: task-work
-description: Execute task implementation against behavioral spec using pre-loaded plan
+description: Execute task implementation against behavioral spec using pre-loaded
+  plan
 assign:
   sub-steps:
-    - onboard-base
-    - task-load
-    - plan-task
-    - work-on-task
-    - pre-commit-review
-    - verify-test
-    - release-minor
+  - onboard-base
+  - task-load
+  - plan-task
+  - work-on-task
+  - pre-commit-review
+  - verify-test
+  - release-minor
   context: fork
 doc-type: workflow
 purpose: Execute task implementation from plan with quality gates
 ace-docs:
-  last-updated: '2026-03-04'
+  last-updated: '2026-03-21'
 ---
 
 # Work on Task

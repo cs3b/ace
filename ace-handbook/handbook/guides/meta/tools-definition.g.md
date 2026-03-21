@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Development Tools Guide
+purpose: Documentation for ace-handbook/handbook/guides/meta/tools-definition.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Development Tools Guide
 
 This guide outlines best practices for creating, maintaining, and using development tools located within the tools directory. These tools are helper scripts and utilities designed to automate common tasks, enforce standards, and support the overall development workflow for both human developers and AI agents.

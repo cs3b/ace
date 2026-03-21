@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: ACE Taskflow Test Fixture Template
+purpose: Documentation for ace-test-runner-e2e/handbook/templates/ace-taskflow-fixture.template.md
+ace-docs:
+  last-updated: 2026-02-25
+  last-checked: 2026-03-21
+---
+
 # ACE Taskflow Test Fixture Template
 
 This template provides scaffolding for E2E tests that need valid ace-taskflow structures.

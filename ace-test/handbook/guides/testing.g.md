@@ -1,21 +1,10 @@
 ---
-name: testing
-description: Overall testing strategy and best practices for ACE projects
 doc-type: guide
+title: Testing Guidelines
 purpose: Testing guidelines overview
-search_keywords:
-  - testing
-  - testing strategy
-  - best practices
-  - unit tests
-  - integration tests
-  - E2E tests
-  - test coverage
-  - testing guidelines
-  - quality assurance
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-02-24
+  last-checked: 2026-03-21
 ---
 
 # Testing Guidelines

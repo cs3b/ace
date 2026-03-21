@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-manage-e2e-tests
-name: e2e/manage
-description: Orchestrate the 3-stage E2E test lifecycle pipeline (review → plan → rewrite)
-version: "2.0"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Manage E2E Tests Workflow
+purpose: Orchestrate the 3-stage E2E test lifecycle pipeline (review → plan → rewrite)
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Manage E2E Tests Workflow

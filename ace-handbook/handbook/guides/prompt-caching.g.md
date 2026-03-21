@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Prompt Caching Pattern
+purpose: Documentation for ace-handbook/handbook/guides/prompt-caching.g.md
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
+---
+
 # Prompt Caching Pattern
 
 Standardized pattern for gems that generate prompts for LLM interactions.

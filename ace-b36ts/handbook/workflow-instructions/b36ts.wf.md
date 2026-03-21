@@ -1,15 +1,10 @@
 ---
-name: b36ts
-allowed-tools: Bash, Read
-description: ENCODE and DECODE timestamps to/from compact Base36 IDs
-argument-hint: "[encode|decode|config] [value] [options]"
 doc-type: workflow
+title: B36ts Workflow
 purpose: b36ts workflow instruction
-bundle:
-  embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-02-14'
+ace-docs:
+  last-updated: 2026-02-14
+  last-checked: 2026-03-21
 ---
 
 # B36ts Workflow

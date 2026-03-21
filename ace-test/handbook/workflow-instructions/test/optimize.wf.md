@@ -1,20 +1,10 @@
 ---
-name: test/optimize
-description: Semi-automated test performance optimization workflow
-allowed-tools: Read, Edit, Write, Bash, Grep, Glob, Bash(ace-test:*), Bash(ace-search:*)
-argument-hint: 'package name'
 doc-type: workflow
+title: Optimize Tests Workflow
 purpose: Systematically improve test suite performance
-params:
-  package: Package to optimize (required)
-  target_time: Target suite time in seconds (optional)
-tools:
-  - ace-test
-  - ace-search
-embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Optimize Tests Workflow

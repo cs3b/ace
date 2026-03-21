@@ -1,16 +1,10 @@
 ---
-name: typescript-bun
-description: Testing best practices for TypeScript with Bun runtime
 doc-type: guide
+title: TypeScript (Bun) Testing Guide
 purpose: Bun TypeScript testing reference
-search_keywords:
-  - typescript
-  - bun
-  - bun test
-  - runtime
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # TypeScript (Bun) Testing Guide

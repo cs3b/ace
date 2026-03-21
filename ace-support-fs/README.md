@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-support-fs
+purpose: Documentation for ace-support-fs/README.md
+ace-docs:
+  last-updated: 2025-12-29
+  last-checked: 2026-03-21
+---
+
 # ace-support-fs
 
 Filesystem utilities for ace-* gems. Provides unified path expansion, project root detection, and directory traversal functionality.

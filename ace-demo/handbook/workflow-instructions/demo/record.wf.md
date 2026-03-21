@@ -1,13 +1,10 @@
 ---
-name: demo/record
-allowed-tools: Bash, Read
-description: Record terminal demos from VHS tapes or inline commands, optionally attach to PRs
-argument-hint: "<tape|name> [--pr <number>] [-- commands...]"
 doc-type: workflow
+title: Record Demo Workflow
 purpose: demo recording workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-03-05'
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
 ---
 
 # Record Demo Workflow

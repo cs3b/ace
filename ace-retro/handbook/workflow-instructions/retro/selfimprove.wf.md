@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Self-Improve Workflow
+purpose: Documentation for ace-retro/handbook/workflow-instructions/retro/selfimprove.wf.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # Self-Improve Workflow
 
 ## Goal

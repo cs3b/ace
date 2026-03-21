@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: LLM Query Tool Reference Guide
+purpose: Documentation for ace-llm/handbook/guides/llm-query-tool-reference.g.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # LLM Query Tool Reference Guide
 
 ## Purpose

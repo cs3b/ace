@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ACE Integration Claude Gem
+purpose: Documentation for ace-integration-claude/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ACE Integration Claude Gem
 
 Legacy Claude integration package for ACE. This package remains useful for historical and maintenance contexts, but the active provider-specific replacement is `ace-handbook-integration-claude`.

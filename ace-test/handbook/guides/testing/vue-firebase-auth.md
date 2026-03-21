@@ -1,17 +1,10 @@
 ---
-name: vue-firebase-auth
-description: Testing strategies for Vue.js 3 with Firebase Authentication
 doc-type: guide
+title: Vue.js 3 + Firebase Authentication Testing Guide
 purpose: Vue Firebase authentication testing
-search_keywords:
-  - vue
-  - firebase
-  - authentication
-  - vitest
-  - emulator
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Vue.js 3 + Firebase Authentication Testing Guide

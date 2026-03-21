@@ -1,18 +1,10 @@
 ---
-name: review/verify-feedback
-description: Verify feedback items through multi-dimensional claim analysis
-argument-hint: "[--session <path>] [--status draft]"
-allowed-tools: Read, Bash, Grep, Glob
-bundle:
-  embed_document_source: true
-  sections:
-    feedback_cli_reference:
-      commands:
-        - ace-review-feedback verify --help
-        - ace-review-feedback skip --help
-update:
-  frequency: on-change
-  last-updated: '2026-02-06'
+doc-type: workflow
+title: Verify Feedback Workflow
+purpose: Verify feedback items through multi-dimensional claim analysis
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Verify Feedback Workflow

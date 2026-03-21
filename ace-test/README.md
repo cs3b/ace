@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ACE Test Gem
+purpose: Documentation for ace-test/README.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ACE Test Gem
 
 > **[!NOTE]** **Workflow Package Only** - This is a pure documentation package (no CLI tool). For the `ace-test` CLI command, see [ace-test-runner](https://github.com/cs3b/ace/tree/main/ace-test-runner).

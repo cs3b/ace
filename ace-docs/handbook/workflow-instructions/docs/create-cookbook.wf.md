@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Create Cookbook Workflow Instruction
+purpose: Documentation for ace-docs/handbook/workflow-instructions/docs/create-cookbook.wf.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
+---
+
 # Create Cookbook Workflow Instruction
 
 **Goal:** Transform identified patterns and insights into reusable, high-quality cookbooks that accelerate future

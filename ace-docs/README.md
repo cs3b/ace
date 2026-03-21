@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-docs
+purpose: Documentation for ace-docs/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ace-docs
 
 Documentation management system with frontmatter-based tracking, LLM-powered analysis, and cross-document consistency checking.
@@ -28,7 +37,7 @@ Add ace-docs frontmatter to your documents:
 ace-docs:
   doc-type: guide
   purpose: Installation instructions
-  last-updated: 2025-11-15T08:30:45Z  # ISO 8601 UTC format (recommended)
+  last-updated: 2026-03-12
   # Or use date-only: 2025-11-15
   subject:
     diff-filters:

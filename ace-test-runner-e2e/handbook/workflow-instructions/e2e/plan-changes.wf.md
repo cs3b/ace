@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-plan-e2e-changes
-name: e2e/plan-changes
-description: Analyze coverage matrix and produce a concrete E2E test change plan
-version: "1.1"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Plan E2E Changes Workflow
+purpose: Analyze coverage matrix and produce a concrete E2E test change plan
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Plan E2E Changes Workflow

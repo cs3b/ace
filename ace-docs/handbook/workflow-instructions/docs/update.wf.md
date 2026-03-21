@@ -1,19 +1,10 @@
 ---
-name: docs/update
-purpose: Update documentation with ace-docs tool orchestration
-bundle: documentation-management
-parameters:
-  input:
-    description: Documents to update - can be specific files, preset, type, or 'all'
-    required: false
-    default: needs-update
-  options:
-    description: Additional options for filtering or processing
-    required: false
 doc-type: workflow
-update:
-  frequency: on-change
-  last-updated: '2025-10-18'
+title: Update Documentation with ace-docs
+purpose: Update documentation with ace-docs tool orchestration
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
 ---
 
 # Update Documentation with ace-docs

@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-execute-e2e-test
-name: e2e/execute
-description: Execute test cases in a pre-populated sandbox with reporting
-version: "2.0"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Execute E2E Test Workflow
+purpose: Execute test cases in a pre-populated sandbox with reporting
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # Execute E2E Test Workflow

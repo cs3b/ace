@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-secrets
+purpose: Documentation for ace-git-secrets/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ace-git-secrets
 
 Detect, remove, and revoke authentication tokens from Git history.

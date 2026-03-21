@@ -1,7 +1,10 @@
 ---
-update:
-  update_frequency: on-change
-  last-updated: '2025-11-04'
+doc-type: workflow
+title: Manage Worktree Workflow Instruction
+purpose: Documentation for ace-git-worktree/handbook/workflow-instructions/git/worktree-manage.wf.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Manage Worktree Workflow Instruction

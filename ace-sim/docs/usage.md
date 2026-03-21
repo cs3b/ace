@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-sim Usage
+purpose: Documentation for ace-sim/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
+---
+
 # ace-sim Usage
 
 ## Preset-Driven Run (Canonical)

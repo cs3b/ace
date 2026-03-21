@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Problem
+purpose: Documentation for ace-git/handbook/templates/pr/bugfix.template.md
+ace-docs:
+  last-updated: 2025-11-13
+  last-checked: 2026-03-21
+---
+
 ## Problem
 
 [Clear description of the bug]

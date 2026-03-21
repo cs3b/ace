@@ -1,21 +1,10 @@
 ---
-name: testable-code-patterns
-description: Patterns for writing code that is easy to test
 doc-type: guide
+title: Testable Code Patterns
 purpose: Testable code design
-search_keywords:
-  - testable code
-  - exit calls
-  - status codes
-  - exceptions
-  - dependency injection
-  - command pattern
-  - testability
-  - code design
-  - CLI design
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Testable Code Patterns

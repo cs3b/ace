@@ -1,11 +1,10 @@
 ---
-name: review/run
-description: Review code with preset and plan feedback application
-argument-hint: "[preset] [subjects...]"
-allowed-tools: Read, Bash, TodoWrite
-update:
-  frequency: on-change
-  last-updated: '2026-02-03'
+doc-type: workflow
+title: Code Review Workflow
+purpose: Review code with preset and plan feedback application
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Code Review Workflow

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Getting Started with ace-review
+purpose: Documentation for ace-review/docs/getting-started.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # Getting Started with ace-review
 
 Use `ace-review` to run repeatable, preset-driven code reviews from CLI or Claude Code.

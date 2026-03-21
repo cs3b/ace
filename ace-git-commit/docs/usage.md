@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-commit CLI Reference
+purpose: Documentation for ace-git-commit/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-git-commit CLI Reference
 
 Complete command reference for `ace-git-commit`.

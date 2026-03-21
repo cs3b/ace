@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-worktree
+purpose: Documentation for ace-git-worktree/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # ace-git-worktree
 
 Task-aware git worktree management for the ACE ecosystem.

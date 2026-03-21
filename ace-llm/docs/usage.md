@@ -1,9 +1,10 @@
 ---
 doc-type: how-to-guide
+title: ace-llm Usage Guide
 purpose: Usage guide for ace-llm CLI — querying LLM providers, provider filtering, and configuration.
-update:
-  update_frequency: on-change
-  last-updated: '2026-03-07'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # ace-llm Usage Guide

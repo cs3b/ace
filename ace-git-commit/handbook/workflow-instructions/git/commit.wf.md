@@ -1,22 +1,10 @@
 ---
-name: git/commit
-allowed-tools: Bash, Read
-description: Create well-structured Git commits using ace-git-commit's LLM-powered
-  message generation
-argument-hint: "[intention]"
 doc-type: workflow
+title: Commit Workflow
 purpose: commit workflow instruction
-bundle:
-  embed_document_source: true
-  sections:
-    current_repository_status:
-      commands:
-        - git status -sb -uall
-        - git diff --stat
-
-update:
-  frequency: on-change
-  last-updated: '2025-09-26'
+ace-docs:
+  last-updated: 2026-03-15
+  last-checked: 2026-03-21
 ---
 
 # Commit Workflow

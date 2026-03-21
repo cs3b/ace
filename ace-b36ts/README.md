@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-b36ts
+purpose: Documentation for ace-b36ts/README.md
+ace-docs:
+  last-updated: 2026-02-17
+  last-checked: 2026-03-21
+---
+
 # ace-b36ts
 
 Base36 compact ID generation for timestamps. Provides 6-character IDs as a replacement for 14-character timestamp formats (YYYYMMDD-HHMMSS).

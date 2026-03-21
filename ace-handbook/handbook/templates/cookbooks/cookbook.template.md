@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: "[Category] Cookbook: [Descriptive Name]"
+purpose: Documentation for ace-handbook/handbook/templates/cookbooks/cookbook.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # [Category] Cookbook: [Descriptive Name]
 
 **Created**: YYYY-MM-DD

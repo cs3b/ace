@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Version Control System Message Guide
+purpose: Documentation for ace-git-commit/handbook/guides/version-control-system-message.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Version Control System Message Guide
 
 ## Purpose

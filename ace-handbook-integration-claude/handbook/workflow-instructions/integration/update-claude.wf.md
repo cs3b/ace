@@ -1,10 +1,10 @@
 ---
-name: update-claude
-description: Synchronize Claude-native skill projections from canonical handbook skills
-allowed-tools: Bash, Read, Write, Edit, Glob
-argument-hint: "[full|skills|agents|meta]"
 doc-type: workflow
+title: Update Claude Integration Workflow
 purpose: claude integration sync workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Update Claude Integration Workflow

@@ -1,13 +1,10 @@
 ---
-name: git/token-remediation
-allowed-tools: Bash, Read, Write
-description: Complete workflow to detect, revoke, and remove authentication tokens from Git history
-argument-hint: "[scan-only|full]"
 doc-type: workflow
+title: Token Remediation Workflow
 purpose: security remediation workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2025-12-21'
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # Token Remediation Workflow

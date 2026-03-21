@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: "Workflow Instruction: Update Context Documents"
+purpose: Documentation for ace-docs/handbook/workflow-instructions/docs/update-context.wf.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
+---
+
 # Workflow Instruction: Update Context Documents
 
 **Goal:** Analyze repository changes and update the core context documents ensuring they remain accurate, focused, and

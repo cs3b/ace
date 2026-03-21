@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: [Project Name]
+purpose: Documentation for ace-docs/handbook/templates/project-docs/vision.template.md
+ace-docs:
+  last-updated: 2026-01-18
+  last-checked: 2026-03-21
+---
+
 # [Project Name]
 
 <!-- OPTIONAL: Manifesto-style opener for focused vision documents -->

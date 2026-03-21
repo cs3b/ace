@@ -1,17 +1,10 @@
 ---
-name: test-review-checklist
-description: Quick checklist for reviewing test PRs
 doc-type: guide
+title: Test Review Checklist Guide
 purpose: Test PR review checklist
-search_keywords:
-  - test review
-  - PR review
-  - code review
-  - test quality
-  - review checklist
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-19
+  last-checked: 2026-03-21
 ---
 
 # Test Review Checklist Guide

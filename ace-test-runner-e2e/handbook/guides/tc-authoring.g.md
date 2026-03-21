@@ -1,9 +1,10 @@
 ---
-guide-id: g-tc-authoring
+doc-type: guide
 title: Test Case Authoring Guide
-description: Guide for writing standalone TC runner/verifier files for TS-format E2E scenarios
-version: "2.0"
-source: ace-test-runner-e2e
+purpose: Guide for writing standalone TC runner/verifier files for TS-format E2E scenarios
+ace-docs:
+  last-updated: 2026-02-25
+  last-checked: 2026-03-21
 ---
 
 # Test Case Authoring Guide

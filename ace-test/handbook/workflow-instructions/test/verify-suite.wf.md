@@ -1,21 +1,10 @@
 ---
-name: test/verify-suite
-description: Audit test suite health - identify slow tests, zombie mocks, layer issues
-allowed-tools: Read, Bash, Grep, Glob, Bash(ace-test:*), Bash(ace-test-suite:*), Bash(ace-search:*)
-argument-hint: 'package name (optional)'
 doc-type: workflow
+title: Verify Test Suite Workflow
 purpose: Maintain healthy test suites through systematic verification
-params:
-  package: Optional - specific package to audit (default is all)
-  scope: quick, standard, or deep (default is standard)
-tools:
-  - ace-test
-  - ace-test-suite
-  - ace-search
-embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Verify Test Suite Workflow

@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Initialize Project Structure Workflow Instruction
+purpose: Documentation for ace-handbook/handbook/workflow-instructions/handbook/init-project.wf.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Initialize Project Structure Workflow Instruction
 
 ## Goal

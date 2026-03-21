@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Changelog Writing Guide
+purpose: Documentation for ace-handbook/handbook/guides/changelog.g.md
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
+---
+
 # Changelog Writing Guide
 
 ## Goal

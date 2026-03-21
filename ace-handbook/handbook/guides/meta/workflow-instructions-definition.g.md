@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Writing Effective Workflow Instructions
+purpose: Documentation for ace-handbook/handbook/guides/meta/workflow-instructions-definition.g.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Writing Effective Workflow Instructions
 
 

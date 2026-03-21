@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Documents Embedding Standards and Principles
+purpose: Documentation for ace-docs/handbook/guides/documents-embedding.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Documents Embedding Standards and Principles
 
 This guide establishes standards for embedding documents (templates and guides) within workflow instruction files using XML-based `<documents>` containers, ensuring consistency and enabling automated synchronization across the development handbook system.

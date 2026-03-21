@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-prompt-prep
+purpose: Documentation for ace-prompt-prep/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # ace-prompt-prep
 
 Prompt workspace with automatic archiving and history management.

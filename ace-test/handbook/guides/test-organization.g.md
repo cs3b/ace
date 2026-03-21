@@ -1,22 +1,10 @@
 ---
-name: test-organization
-description: Test directory structure and naming conventions for ACE gems
 doc-type: guide
+title: Test Organization
 purpose: Test file organization
-search_keywords:
-  - test organization
-  - directory structure
-  - test structure
-  - naming conventions
-  - flat structure
-  - ATOM architecture
-  - test files
-  - fixtures
-  - test helpers
-  - minitest
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Test Organization
