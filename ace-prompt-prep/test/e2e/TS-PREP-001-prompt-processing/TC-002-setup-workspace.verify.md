@@ -6,19 +6,18 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Artifacts exist** — At least one file exists in `results/tc/02/` containing directory listing or setup evidence.
-2. **Zero exit code** — The captured exit code is `0` (setup succeeded).
-3. **Workspace directory created** — Evidence shows a prompt workspace directory was created (e.g., `.ace-local/prompt-prep/prompts/` or similar path visible in the directory listing).
-4. **Template file present** — Evidence shows a template prompt file was created with non-empty content (more than 0 lines).
+4. **Primary captures exist** — `setup.stdout`, `setup.stderr`, and `setup.exit` exist in `results/tc/02/`.
+5. **Zero exit code** — `setup.exit` is `0` (setup succeeded).
+6. **Workspace directory created** — `workspace-tree.txt` shows prompt workspace path (e.g., `.ace-local/prompt-prep/prompts/`).
+7. **Template file present** — `template.md` exists and is non-empty.
 
 ## Verdict
 
 - **PASS**: Setup exited successfully, workspace directory was created, and a non-empty template file exists.
 - **FAIL**: Non-zero exit code, missing workspace directory, or empty/missing template file.
 
-Report: `PASS` or `FAIL` with evidence (exit code, directory paths, template content snippet).
+Report: `PASS` or `FAIL` with evidence (cite filenames, exit code value, and template snippet).
