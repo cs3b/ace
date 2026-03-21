@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: CLI Exit Codes
+purpose: Documentation for ace-assign/docs/exit-codes.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # CLI Exit Codes
 
 This document describes the exit codes returned by the `ace-assign` CLI.

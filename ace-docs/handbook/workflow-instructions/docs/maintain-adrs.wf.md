@@ -1,16 +1,10 @@
 ---
-name: docs/maintain-adrs
-purpose: Maintain ADR lifecycle including evolution, archival, and synchronization
-bundle: adr-management
-parameters:
-  action:
-    description: Maintenance action (review, archive, evolve, sync, check-missing)
-    required: false
-    default: review
 doc-type: workflow
-update:
-  frequency: on-change
-  last-updated: '2025-10-14'
+title: Maintain Architecture Decision Records
+purpose: Maintain ADR lifecycle including evolution, archival, and synchronization
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Maintain Architecture Decision Records
@@ -593,4 +587,3 @@ The **implementation evolved**:
 **See ADR-XXX: [New Pattern ADR]** for complete details of the current approach.
     </template>
 </documents>
-

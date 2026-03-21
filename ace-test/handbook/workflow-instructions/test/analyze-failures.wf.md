@@ -1,13 +1,10 @@
 ---
-name: test/analyze-failures
-description: Analyze failing automated tests and classify root cause before fixing
-allowed-tools: Read, Bash, Grep, Glob
-argument-hint: '[optional test-file-pattern]'
 doc-type: workflow
+title: Analyze Test Failures Workflow
 purpose: analyze-test-failures workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-02-24'
+ace-docs:
+  last-updated: 2026-02-24
+  last-checked: 2026-03-21
 ---
 
 # Analyze Test Failures Workflow

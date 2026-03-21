@@ -1,21 +1,10 @@
 ---
-name: embedded-testing-guide
-description: Standard for incorporating tests within AI agent workflow instruction files
 doc-type: guide
+title: Embedding Tests in AI Agent Workflows
 purpose: Embedded testing in workflows
-search_keywords:
-  - embedded testing
-  - workflow tests
-  - AI agent testing
-  - workflow validation
-  - embedded assertions
-  - preconditions
-  - postconditions
-  - workflow instructions
-  - agent testing
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Embedding Tests in AI Agent Workflows

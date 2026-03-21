@@ -1,10 +1,10 @@
 ---
-name: overseer
-description: Orchestrate task worktrees with ace-overseer
-allowed-tools: Bash, Read
-argument-hint: "[task-ref] [--preset name]"
 doc-type: workflow
+title: Overseer Workflow
 purpose: overseer workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Overseer Workflow

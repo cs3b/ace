@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Getting Started with ace-git-commit
+purpose: Documentation for ace-git-commit/docs/getting-started.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # Getting Started with ace-git-commit
 
 Use `ace-git-commit` to generate meaningful commit messages from your git diff with one command.

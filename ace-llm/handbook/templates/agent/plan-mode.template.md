@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Plan Mode Contract
+purpose: Documentation for ace-llm/handbook/templates/agent/plan-mode.template.md
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
+---
+
 # Plan Mode Contract
 
 <important_instruction>

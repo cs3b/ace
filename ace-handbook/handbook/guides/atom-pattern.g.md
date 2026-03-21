@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: ATOM Component Classification House Rules
+purpose: Documentation for ace-handbook/handbook/guides/atom-pattern.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # ATOM Component Classification House Rules
 
 ## Overview

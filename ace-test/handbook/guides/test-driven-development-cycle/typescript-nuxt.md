@@ -1,17 +1,10 @@
 ---
-name: tdd-typescript-nuxt
-description: Task cycle for TypeScript Nuxt application development
 doc-type: guide
+title: "Implementing Task Cycle: TypeScript + Nuxt"
 purpose: TDD workflow for Nuxt apps
-search_keywords:
-  - typescript
-  - nuxt
-  - tdd
-  - vitest
-  - nitro
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Implementing Task Cycle: TypeScript + Nuxt

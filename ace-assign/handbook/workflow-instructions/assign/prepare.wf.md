@@ -1,14 +1,10 @@
 ---
-name: assign/prepare
-allowed-tools: Bash, Read, Write
-description: Prepare job.yaml from preset or informal instructions
-argument-hint: "[preset-name] [--taskref value] [--taskrefs values] [--output path]"
 doc-type: workflow
+title: Prepare Assignment Workflow
 purpose: workflow instruction for preparing ace-assign job configurations
-
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Prepare Assignment Workflow

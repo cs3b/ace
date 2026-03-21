@@ -1,22 +1,10 @@
 ---
-name: testing-philosophy
-description: Core testing principles and IO isolation policy for ACE projects
 doc-type: guide
+title: Testing Philosophy
 purpose: Testing philosophy and pyramid structure
-search_keywords:
-  - testing philosophy
-  - testing pyramid
-  - IO isolation
-  - unit tests
-  - integration tests
-  - E2E tests
-  - TDD
-  - test-driven development
-  - test principles
-  - test strategy
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Testing Philosophy

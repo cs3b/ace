@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-retro
+purpose: Documentation for ace-retro/README.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # ace-retro
 
 Standalone retrospective management gem for ACE with b36ts-based IDs.

@@ -1,17 +1,10 @@
 ---
-name: tdd-meta-documentation
-description: Task cycle for documentation work in ace packages
 doc-type: guide
+title: "Implementing Task Cycle: Meta (Documentation)"
 purpose: Documentation workflow
-search_keywords:
-  - documentation
-  - meta
-  - markdown
-  - lint
-  - reflection
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Implementing Task Cycle: Meta (Documentation)

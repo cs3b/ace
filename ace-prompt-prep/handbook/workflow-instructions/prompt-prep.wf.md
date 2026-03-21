@@ -1,9 +1,10 @@
 ---
-name: prompt-prep
-description: Run ace-prompt-prep and follow the generated workspace instructions
-allowed-tools: Bash, Read
 doc-type: workflow
+title: Prompt Prep Workflow
 purpose: prompt-prep workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Prompt Prep Workflow

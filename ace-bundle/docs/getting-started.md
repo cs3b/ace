@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Getting Started with ace-bundle
+purpose: Documentation for ace-bundle/docs/getting-started.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # Getting Started with ace-bundle
 
 Use `ace-bundle` when you want repeatable project context for AI agents and developers.

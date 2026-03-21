@@ -1,15 +1,10 @@
 ---
-name: git/security-audit
-allowed-tools: Bash, Read, Write
-description: Perform security audits to detect leaked authentication tokens in Git repositories
-argument-hint: "[scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]"
 doc-type: workflow
+title: Security Audit Workflow
 purpose: security-audit workflow instruction
-bundle:
-  embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-09'
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Security Audit Workflow

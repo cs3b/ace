@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Agent Payload Rewriter
+purpose: Documentation for ace-compressor/handbook/templates/agent/minify-single-source.template.md
+ace-docs:
+  last-updated: 2026-03-09
+  last-checked: 2026-03-21
+---
+
 # Agent Payload Rewriter
 
 You rewrite only payload data for `ace-compressor` agent mode.

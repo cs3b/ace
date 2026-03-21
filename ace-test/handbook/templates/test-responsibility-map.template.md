@@ -1,11 +1,10 @@
 ---
-name: test-responsibility-map
-description: Template for mapping behaviors to test layers
 doc-type: template
+title: "Test Responsibility Map: {{SCOPE}}"
 purpose: Test responsibility mapping document
-update:
-  frequency: as-needed
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-19
+  last-checked: 2026-03-21
 ---
 
 # Test Responsibility Map: {{SCOPE}}

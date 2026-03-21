@@ -1,9 +1,10 @@
 ---
 doc-type: how-to-guide
+title: ace-compressor Usage Guide
 purpose: Usage guide for ace-compressor CLI tool — exact, compact, and agent context compression to ContextPack/3.
-update:
-  update_frequency: on-change
-  last-updated: '2026-03-09'
+ace-docs:
+  last-updated: 2026-03-09
+  last-checked: 2026-03-21
 ---
 
 # ace-compressor Usage Guide

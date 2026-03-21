@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Mono-Repo Development Patterns
+purpose: Documentation for ace-handbook/handbook/guides/mono-repo-patterns.g.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # Mono-Repo Development Patterns
 
 Patterns for developing ACE gems within the mono-repo structure.

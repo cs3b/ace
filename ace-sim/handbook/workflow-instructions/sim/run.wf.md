@@ -1,11 +1,10 @@
 ---
-name: sim/run
-description: Run ace-sim simulation with preset, source, and provider configuration
-argument-hint: "[--preset NAME] [--source PATH] [--provider PROVIDER]"
-allowed-tools: Read, Bash, TodoWrite
-update:
-  frequency: on-change
-  last-updated: '2026-02-28'
+doc-type: workflow
+title: Simulation Run Workflow
+purpose: Run ace-sim simulation with preset, source, and provider configuration
+ace-docs:
+  last-updated: 2026-02-28
+  last-checked: 2026-03-21
 ---
 
 # Simulation Run Workflow

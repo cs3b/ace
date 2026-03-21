@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: "Project Blueprint: [Project Name]"
+purpose: Documentation for ace-docs/handbook/templates/project-docs/blueprint.template.md
+ace-docs:
+  last-updated: 2026-01-10
+  last-checked: 2026-03-21
+---
+
 # Project Blueprint: [Project Name]
 
 ## What is a Blueprint?

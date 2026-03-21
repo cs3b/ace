@@ -1,7 +1,10 @@
 ---
-name: test-workflow
-description: A valid test workflow
-allowed-tools: Bash, Read, Edit
+doc-type: workflow
+title: Test Workflow
+purpose: A valid test workflow
+ace-docs:
+  last-updated: 2026-01-22
+  last-checked: 2026-03-21
 ---
 
 # Test Workflow

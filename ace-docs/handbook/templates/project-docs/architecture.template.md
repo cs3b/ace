@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: "[Project Name] - Architecture"
+purpose: Documentation for ace-docs/handbook/templates/project-docs/architecture.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # [Project Name] - Architecture
 
 ## Overview

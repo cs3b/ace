@@ -1,19 +1,10 @@
 ---
-name: git/reorganize-commits
-allowed-tools: Bash, Read
-description: Reorganize commits into clean, logical groups using ace-git-commit
-argument-hint: "[base-commit]"
 doc-type: workflow
+title: Reorganize Commits Workflow
 purpose: simplified commit reorganization workflow
-update:
-  frequency: on-change
-  last-updated: '2026-02-04'
-bundle:
-  embed_document_source: true
-  sections:
-    current_repository_status:
-      commands:
-        - ace-git status
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Reorganize Commits Workflow

@@ -1,11 +1,15 @@
 ---
-id: {id}
+id:
+  id:
 status: draft
-priority: {priority}
+priority:
+  priority:
 estimate: TBD
-dependencies: {dependencies}
+dependencies:
+  dependencies:
 bundle:
-  presets: ["project"]
+  presets:
+  - project
   files: []
   commands: []
 doc-type: template

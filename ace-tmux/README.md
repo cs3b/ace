@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-tmux
+purpose: Documentation for ace-tmux/README.md
+ace-docs:
+  last-updated: 2026-02-14
+  last-checked: 2026-03-21
+---
+
 # ace-tmux
 
 Composable tmux session management via YAML presets.

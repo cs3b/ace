@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-commit
+purpose: Documentation for ace-git-commit/README.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-git-commit
 
 Turn diffs into clear, conventional commit messages — powered by LLM.

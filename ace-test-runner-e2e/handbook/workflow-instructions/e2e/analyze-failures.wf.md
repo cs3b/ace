@@ -1,13 +1,10 @@
 ---
-name: e2e/analyze-failures
-description: Analyze failing E2E scenarios and classify root cause before fixing
-allowed-tools: Read, Bash, Grep, Glob
-argument-hint: '[package] [test-id]'
 doc-type: workflow
+title: Analyze E2E Failures Workflow
 purpose: analyze-e2e-failures workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-02-24'
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # Analyze E2E Failures Workflow

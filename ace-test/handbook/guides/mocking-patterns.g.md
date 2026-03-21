@@ -1,24 +1,10 @@
 ---
-name: mocking-patterns
-description: Patterns for mocking and stubbing in tests - ENV, git, http, subprocess
 doc-type: guide
+title: Mocking Patterns
 purpose: Mocking and isolation patterns
-search_keywords:
-  - mocking
-  - stubbing
-  - ENV testing
-  - git mocking
-  - MockGitRepo
-  - WebMock
-  - HTTP mocking
-  - subprocess stubbing
-  - test isolation
-  - Open3
-  - parallel tests
-  - protected method pattern
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Mocking Patterns

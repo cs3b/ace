@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: JavaScript JSDoc Documentation Template
+purpose: Documentation for ace-docs/handbook/templates/code-docs/javascript-jsdoc.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # JavaScript JSDoc Documentation Template
 
 ```javascript

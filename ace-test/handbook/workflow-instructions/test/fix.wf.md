@@ -1,13 +1,10 @@
 ---
-name: test/fix
-description: Apply fixes for automated test failures using prior analysis output
-allowed-tools: Read, Edit, Write, Bash, Grep, Glob
-argument-hint: ''
 doc-type: workflow
+title: Fix Tests Workflow
 purpose: fix-tests workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-02-24'
+ace-docs:
+  last-updated: 2026-02-24
+  last-checked: 2026-03-21
 ---
 
 # Fix Tests Workflow

@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Markdown Usage Standards
+purpose: Documentation for ace-handbook/handbook/guides/meta/markdown-definition.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Markdown Usage Standards
 
 This guide establishes standards for markdown formatting within the development handbook system, focusing on proper code block escaping and markdown-within-markdown examples.

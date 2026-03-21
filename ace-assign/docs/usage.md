@@ -1,9 +1,10 @@
 ---
 doc-type: user
+title: ace-assign Usage Guide
 purpose: User-facing usage guide for ace-assign commands, hierarchy behavior, and fork execution workflows.
-update:
-  frequency: on-change
-  last-updated: '2026-03-08'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # ace-assign Usage Guide

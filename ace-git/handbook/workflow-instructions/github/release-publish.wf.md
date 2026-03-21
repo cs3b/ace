@@ -1,13 +1,10 @@
 ---
-name: github-release-publish
-allowed-tools: Bash, Read
-description: Create GitHub releases from CHANGELOG entries not yet published
-argument-hint: "[version-or-range] [--since duration] [--dry-run]"
 doc-type: workflow
+title: GitHub Release Publish Workflow
 purpose: GitHub release publishing workflow
-update:
-  frequency: on-change
-  last-updated: '2026-03-21'
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
 ---
 
 # GitHub Release Publish Workflow

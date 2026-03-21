@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-run-e2e-test
-name: e2e/run
-description: Execute an E2E test scenario with full agent guidance
-version: "2.0"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Run E2E Test Workflow
+purpose: Execute an E2E test scenario with full agent guidance
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Run E2E Test Workflow

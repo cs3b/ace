@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-review Handbook Reference
+purpose: Documentation for ace-review/docs/handbook.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-review Handbook Reference
 
 Skills, workflows, prompts, guide, and template shipped with ace-review.

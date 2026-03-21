@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Writing Development Guides
+purpose: Documentation for ace-handbook/handbook/guides/meta/guides-definition.g.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Writing Development Guides
 
 This guide outlines best practices for creating and maintaining the development guides located within the handbook guides directory. These guides serve as the primary reference for project standards, processes, and technical approaches, intended for both human developers and AI agents collaborating on the project.

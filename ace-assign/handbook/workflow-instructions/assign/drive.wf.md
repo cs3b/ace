@@ -1,14 +1,10 @@
 ---
-name: assign/drive
-allowed-tools: Bash, Read, Write, AskUserQuestion, Skill
-description: Drive agent execution through an active assignment
-argument-hint: ""
 doc-type: workflow
+title: Drive Assignment Workflow
 purpose: workflow instruction for driving ace-assign assignment execution
-
-update:
-  frequency: on-change
-  last-updated: '2026-03-08'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Drive Assignment Workflow

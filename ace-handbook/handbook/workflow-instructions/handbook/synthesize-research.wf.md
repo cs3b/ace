@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Synthesize Research Workflow
+purpose: Documentation for ace-handbook/handbook/workflow-instructions/handbook/synthesize-research.wf.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Synthesize Research Workflow
 
 ## Goal

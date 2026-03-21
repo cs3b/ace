@@ -1,13 +1,10 @@
 ---
-name: e2e/fix
-description: Apply fixes for failing E2E scenarios using prior analysis output
-allowed-tools: Read, Edit, Write, Bash, Grep, Glob
-argument-hint: '[package] [test-id]'
 doc-type: workflow
+title: Fix E2E Tests Workflow
 purpose: fix-e2e-tests workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-03-13'
+ace-docs:
+  last-updated: 2026-03-13
+  last-checked: 2026-03-21
 ---
 
 # Fix E2E Tests Workflow

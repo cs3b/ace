@@ -1,14 +1,10 @@
 ---
-name: assign/create
-allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Public assignment creation workflow with optional handoff to drive
 doc-type: workflow
+title: Create Assignment Workflow
 purpose: workflow instruction for smart public create UX that renders hidden specs and calls deterministic ace-assign create
-argument-hint: "[instructions|preset|job.yaml [params] [--run]]"
-
-update:
-  frequency: on-change
-  last-updated: '2026-03-08'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Create Assignment Workflow

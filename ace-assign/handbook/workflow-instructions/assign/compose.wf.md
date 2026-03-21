@@ -1,14 +1,10 @@
 ---
-name: assign/compose
-allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Compose a tailored assignment from assign-capable canonical skills and composition rules
-argument-hint: '"description of what you need" [--taskref value] [--taskrefs values]'
 doc-type: workflow
+title: Compose Assignment Workflow
 purpose: LLM-driven composition of assignments using canonical assign-capable skill metadata, phrase hints, and hard ordering rules
-
-update:
-  frequency: on-change
-  last-updated: '2026-03-08'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Compose Assignment Workflow

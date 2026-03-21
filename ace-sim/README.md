@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-sim
+purpose: Documentation for ace-sim/README.md
+ace-docs:
+  last-updated: 2026-02-28
+  last-checked: 2026-03-21
+---
+
 # ace-sim
 
 Standalone file-chained simulation runner for ACE.

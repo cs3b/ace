@@ -1,10 +1,10 @@
 ---
-test-id: {test-id}
-test-title: {test-title}
-package: {package}
-agent: {agent-name}
-executed: {timestamp}  # ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
-status: complete|partial|incomplete
+doc-type: template
+title: "Agent Experience Report: {test-id}"
+purpose: Documentation for ace-test-runner-e2e/handbook/templates/agent-experience-report.template.md
+ace-docs:
+  last-updated: 2026-02-14
+  last-checked: 2026-03-21
 ---
 
 # Agent Experience Report: {test-id}

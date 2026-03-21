@@ -2,7 +2,7 @@
 doc-type: workflow
 purpose: Resolve clarifying questions for tasks and implementation readiness
 ace-docs:
-  last-updated: '2025-10-08'
+  last-updated: '2026-03-21'
 ---
 
 # Review Questions Workflow Instruction

@@ -1,10 +1,10 @@
 ---
-name: test-performance-audit
-description: Profile tests and document slow cases with actionable fixes
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
-argument-hint: "[package | path]"
 doc-type: workflow
+title: Test Performance Audit Workflow
 purpose: test performance audit workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Test Performance Audit Workflow

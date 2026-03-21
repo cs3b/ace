@@ -1,22 +1,10 @@
 ---
-name: docs/squash-changelog
-allowed-tools: Bash, Read, Edit, Grep
-description: Squash multiple CHANGELOG.md entries from feature branch into one before merge
-argument-hint: "[target-branch]"
 doc-type: workflow
+title: Squash Changelog Entries Workflow
 purpose: changelog management workflow instruction
-bundle:
-  embed_document_source: true
-  sections:
-    current_repository_status:
-      commands:
-        - ace-git status
-    changelog_diff:
-      commands:
-        - "git diff $(gh pr view --json baseRefName --jq '.baseRefName' 2>/dev/null || echo main) -- CHANGELOG.md | head -120"
-update:
-  frequency: on-change
-  last-updated: '2026-02-13'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Squash Changelog Entries Workflow

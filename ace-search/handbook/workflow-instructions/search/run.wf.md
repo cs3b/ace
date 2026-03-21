@@ -1,15 +1,10 @@
 ---
-name: search/run
-allowed-tools: Bash, Read
-description: SEARCH code patterns and files - intelligent discovery across codebases
-argument-hint: "[pattern] [--file|--content] [options]"
 doc-type: workflow
+title: Search Workflow
 purpose: search workflow instruction
-bundle:
-  embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-09'
+ace-docs:
+  last-updated: 2026-03-06
+  last-checked: 2026-03-21
 ---
 
 # Search Workflow

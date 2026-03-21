@@ -1,16 +1,10 @@
 ---
-name: rust-testing
-description: Best practices for testing Rust code
 doc-type: guide
+title: Rust Testing Guide
 purpose: Rust testing conventions
-search_keywords:
-  - rust
-  - cargo test
-  - integration tests
-  - doc tests
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Rust Testing Guide

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: "Migration Guide: llm-query to ace-llm"
+purpose: Documentation for ace-llm/docs/migration-from-llm-query.md
+ace-docs:
+  last-updated: 2026-01-12
+  last-checked: 2026-03-21
+---
+
 # Migration Guide: llm-query to ace-llm
 
 > **Note**: This guide was originally written for the `ace-llm-query` executable,

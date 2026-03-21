@@ -1,9 +1,10 @@
 ---
 doc-type: reference
+title: ace-demo Setup
 purpose: System dependencies required to run ace-demo recordings.
-update:
-  update_frequency: on-change
-  last-updated: '2026-03-05'
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
 ---
 
 # ace-demo Setup

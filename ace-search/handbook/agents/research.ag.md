@@ -1,16 +1,10 @@
 ---
-name: research
-description: [DEPRECATED] Use `ace-search-run-research` instead - RESEARCH codebases through planned multi-search analysis
-expected_params:
-  required:
-  - goal: Research objective (e.g., "How is authentication implemented?")
-  optional:
-  - scope: 'Limit to path pattern or directory'
-  - depth: 'shallow (3-5 searches), normal (5-10), deep (10+). Default: normal'
-last_modified: '2026-01-09'
-type: agent
-status: deprecated
-source: ace-search
+doc-type: agent
+title: Role
+purpose: Documentation for ace-search/handbook/agents/research.ag.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 > **DEPRECATED**: This agent definition has been converted to a skill command.

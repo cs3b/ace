@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-prompt-prep Usage
+purpose: Documentation for ace-prompt-prep/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
+---
+
 # ace-prompt-prep Usage
 
 Prompt workspace management with template support and archiving.

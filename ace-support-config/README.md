@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-config
+purpose: Documentation for ace-support-config/README.md
+ace-docs:
+  last-updated: 2026-03-05
+  last-checked: 2026-03-21
+---
+
 # ace-config
 
 Generic configuration cascade management for Ruby applications.

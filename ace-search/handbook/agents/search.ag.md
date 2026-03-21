@@ -1,18 +1,10 @@
 ---
-name: search
-description: [DEPRECATED] Use `ace-search-run-run` instead - SEARCH code patterns and files
-expected_params:
-  required:
-  - pattern: Search pattern (text, regex, file glob, or auto-detected)
-  optional:
-  - search_type: 'Search mode: file, content, hybrid, auto (default: auto)'
-  - search_root: 'Root directory for search (default: project root)'
-  - glob: 'Filter by file pattern (e.g., "**/*.rb", "**/*.md")'
-  - scope: 'Git scope: staged, tracked, changed, all (default: all)'
-last_modified: '2026-01-09'
-type: agent
-status: deprecated
-source: ace-search
+doc-type: agent
+title: Core Responsibilities
+purpose: Documentation for ace-search/handbook/agents/search.ag.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 > **DEPRECATED**: This agent definition has been converted to a skill command.

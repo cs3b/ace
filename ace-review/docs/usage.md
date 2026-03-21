@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-review CLI Reference
+purpose: Documentation for ace-review/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-review CLI Reference
 
 Complete command reference for `ace-review` and `ace-review-feedback`.

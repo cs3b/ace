@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Ace Framework Configuration
+purpose: Documentation for ace-support-core/docs/config.md
+ace-docs:
+  last-updated: 2026-01-17
+  last-checked: 2026-03-21
+---
+
 # Ace Framework Configuration
 
 The `ace-framework` command (from the `ace-core` gem) manages centralized configuration for all ace-* gems.

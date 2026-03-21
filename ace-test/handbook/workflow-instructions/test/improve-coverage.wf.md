@@ -1,13 +1,10 @@
 ---
-name: test/improve-coverage
-description: Analyze coverage and create targeted test tasks to improve coverage
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-argument-hint: ''
 doc-type: workflow
+title: Improve Code Coverage
 purpose: improve-code-coverage workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2025-10-02'
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
 ---
 
 # Improve Code Coverage

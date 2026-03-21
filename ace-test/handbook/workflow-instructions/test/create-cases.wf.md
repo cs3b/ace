@@ -1,13 +1,10 @@
 ---
-name: test/create-cases
-description: Generate structured test cases for features and code changes
-allowed-tools: Read, Write, Edit, Bash
-argument-hint: ''
 doc-type: workflow
+title: Create Test Cases Workflow Instruction
 purpose: create-test-cases workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-02-03'
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Create Test Cases Workflow Instruction

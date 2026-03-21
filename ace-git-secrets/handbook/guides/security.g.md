@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Security Guidelines
+purpose: Documentation for ace-git-secrets/handbook/guides/security.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Security Guidelines
 
 ## Goal

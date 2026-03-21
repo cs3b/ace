@@ -1,15 +1,10 @@
 ---
-name: search/feature-research
-allowed-tools: Bash, Read
-description: RESEARCH codebases to identify feature gaps and implementation patterns
-argument-hint: "[feature_description] [--scope=path] [--depth=shallow|normal|deep]"
 doc-type: workflow
+title: Feature Research Workflow
 purpose: feature-research workflow instruction
-bundle:
-  embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-09'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Feature Research Workflow

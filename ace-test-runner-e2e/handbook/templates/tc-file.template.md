@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Goal {N} - {Goal Title}
+purpose: Documentation for ace-test-runner-e2e/handbook/templates/tc-file.template.md
+ace-docs:
+  last-updated: 2026-02-25
+  last-checked: 2026-03-21
+---
+
 # Goal {N} - {Goal Title}
 
 ## Goal

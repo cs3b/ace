@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Multi-Agent Research Guide
+purpose: Documentation for ace-handbook/handbook/guides/multi-agent-research.g.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Multi-Agent Research Guide
 
 This guide explains when and how to leverage multiple AI agents for research tasks, combining their diverse capabilities to produce higher-quality, more comprehensive results.

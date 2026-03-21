@@ -1,6 +1,7 @@
 ---
 doc-type: user
-purpose: Project-level task management overview and quickstart documentation entry point
+purpose: Project-level task management overview and quickstart documentation entry
+  point
 ace-docs:
   last-updated: '2026-03-21'
 ---

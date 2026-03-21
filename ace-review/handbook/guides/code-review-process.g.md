@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Code Review Process
+purpose: Documentation for ace-review/handbook/guides/code-review-process.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Code Review Process
 
 ## Goal

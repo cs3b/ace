@@ -1,9 +1,10 @@
 ---
-guide-id: g-e2e-testing
+doc-type: guide
 title: E2E Testing Guide
-description: Conventions and best practices for agent-executed end-to-end tests
-version: "2.0"
-source: ace-test-runner-e2e
+purpose: Conventions and best practices for agent-executed end-to-end tests
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # E2E Testing Guide

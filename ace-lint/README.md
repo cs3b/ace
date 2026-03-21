@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-lint
+purpose: Documentation for ace-lint/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ace-lint
 
 Ruby-only linting gem for markdown, YAML, Ruby, and frontmatter validation. No Node.js or Python required!

@@ -1,9 +1,10 @@
 ---
-workflow-id: wfi-review-e2e-tests
-name: e2e/review
-description: Deep exploration producing a coverage matrix of functionality, unit tests, and E2E tests
-version: "2.1"
-source: ace-test-runner-e2e
+doc-type: workflow
+title: Review E2E Tests Workflow
+purpose: Deep exploration producing a coverage matrix of functionality, unit tests, and E2E tests
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Review E2E Tests Workflow

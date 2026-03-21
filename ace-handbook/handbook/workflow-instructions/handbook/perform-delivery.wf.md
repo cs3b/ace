@@ -1,12 +1,10 @@
 ---
-name: perform-delivery
-description: Coordinate complete task delivery across implementation, review, release, and review cycles.
 doc-type: workflow
+title: Perform Delivery Workflow
 purpose: Coordinate complete task delivery across implementation, review, release, and review cycles.
-allowed-tools:
-  - Bash
-  - Read
-  - TodoWrite
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Perform Delivery Workflow

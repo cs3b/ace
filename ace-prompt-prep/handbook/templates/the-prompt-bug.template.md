@@ -1,8 +1,10 @@
 ---
-bundle:
-  presets: []
-  files: []
-  commands: []
+doc-type: template
+title: Bug Report
+purpose: Documentation for ace-prompt-prep/handbook/templates/the-prompt-bug.template.md
+ace-docs:
+  last-updated: 2026-01-20
+  last-checked: 2026-03-21
 ---
 
 # Bug Report

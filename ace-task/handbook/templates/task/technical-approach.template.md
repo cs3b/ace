@@ -1,6 +1,7 @@
 ---
 doc-type: template
-purpose: Technical approach template for implementation planning and architecture decisions
+purpose: Technical approach template for implementation planning and architecture
+  decisions
 ace-docs:
   last-updated: '2026-03-21'
 ---

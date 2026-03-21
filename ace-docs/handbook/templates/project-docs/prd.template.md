@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Product Requirements Document (PRD) Template
+purpose: Documentation for ace-docs/handbook/templates/project-docs/prd.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Product Requirements Document (PRD) Template
 
 ## Project Overview

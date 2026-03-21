@@ -1,14 +1,10 @@
 ---
-test-id: {test-id}
-package: {package}
-agent: {agent-name}
-executed: {timestamp}  # ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
-status: pass|fail|partial|incomplete
-tcs-passed: {count}
-tcs-failed: {count}
-tcs-total: {count}
-score: "{passed-count}/{total-count}"
-verdict: pass|fail|partial|incomplete
+doc-type: template
+title: "E2E Test Report: {test-id}"
+purpose: Documentation for ace-test-runner-e2e/handbook/templates/test-report.template.md
+ace-docs:
+  last-updated: 2026-02-24
+  last-checked: 2026-03-21
 ---
 
 # E2E Test Report: {test-id}

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-demo
+purpose: Documentation for ace-demo/README.md
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
+---
+
 # ace-demo
 
 `ace-demo` records terminal demos from VHS tape files.

@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Features
+purpose: Documentation for ace-git/handbook/templates/commit/squash.template.md
+ace-docs:
+  last-updated: 2025-11-13
+  last-checked: 2026-03-21
+---
+
 v[X.Y.Z]: [Brief Summary of Version]
 
 ## Features

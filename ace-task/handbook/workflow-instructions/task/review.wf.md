@@ -1,11 +1,12 @@
 ---
 name: task-review
 allowed-tools: Bash, Read
-description: Review draft tasks for readiness, vertical slice quality, verification plans, and promotion to pending
+description: Review draft tasks for readiness, vertical slice quality, verification
+  plans, and promotion to pending
 doc-type: workflow
 purpose: Review draft tasks for readiness and quality before promotion
 ace-docs:
-  last-updated: '2026-03-03'
+  last-updated: '2026-03-21'
 ---
 
 # Review Task Workflow Instruction

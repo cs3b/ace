@@ -1,10 +1,10 @@
 ---
-name: review-package
-description: Review a package across code quality, docs, UX, DX, and tests
-allowed-tools: Bash, Read, Glob, Grep, Write, Edit, TodoWrite
-argument-hint: "[package-name]"
 doc-type: workflow
+title: Review Package Workflow
 purpose: package review workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Review Package Workflow

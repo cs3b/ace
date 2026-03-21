@@ -1,15 +1,10 @@
 ---
-name: search/research
-allowed-tools: Bash, Read
-description: RESEARCH codebases through planned multi-search analysis
-argument-hint: "[goal] [--scope=path] [--depth=shallow|normal|deep]"
 doc-type: workflow
+title: Research Workflow
 purpose: research workflow instruction
-bundle:
-  embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-09'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Research Workflow
