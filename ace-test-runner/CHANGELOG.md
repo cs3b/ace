@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-20
+
+### Changed
+- Tightened E2E verifier contracts for `TS-TEST-001` and `TS-TEST-002` with explicit `.exit`, command-capture, and report-artifact evidence requirements to improve assertion reliability.
+
 ## [0.15.17] - 2026-03-18
 
 ### Fixed
