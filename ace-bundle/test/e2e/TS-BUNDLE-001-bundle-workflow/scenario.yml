@@ -11,9 +11,8 @@ sandbox-layout:
   results/tc/01/:  "Help survey observations"
   results/tc/02/:  "Preset loading artifacts (section output, simple preset output)"
   results/tc/03/:  "File pattern matching evidence (included/excluded files)"
-  results/tc/04/:  "Auto-format threshold evidence (small→stdio, large→cache)"
-  results/tc/05/:  "Output override evidence (--output stdio, --output cache)"
-  results/tc/06/:  "CLI-API parity evidence (output comparison, error handling)"
+  results/tc/04/:  "Output routing evidence (auto-format threshold + explicit --output overrides)"
+  results/tc/05/:  "CLI-API parity evidence (output comparison, error handling)"
 
 e2e-justification: >
   All goals require the real ace-bundle binary executing through a shell.

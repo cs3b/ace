@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-03-18
+
+### Changed
+- Consolidated TS-BUNDLE-001 output-routing E2E coverage by merging threshold and explicit `--output` override checks into a single goal, reducing scenario test-case count from 6 to 5 while preserving behavior coverage.
+- Reindexed CLI parity coverage from Goal 6 to Goal 5 and synchronized scenario/runner/verifier manifests to the 5-goal structure.
+
 ## [0.37.2] - 2026-03-18
 
 ### Fixed

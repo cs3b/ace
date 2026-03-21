@@ -1,4 +1,4 @@
-# Goal 6 — CLI-API Parity
+# Goal 5 — CLI-API Parity
 
 ## Goal
 
@@ -9,11 +9,11 @@ Verify CLI behavior parity across success and error paths for the same input set
 
 ## Workspace
 
-Save all output to `results/tc/06/`. Capture:
-- `results/tc/06/cli-valid.stdout`, `.exit` — CLI output for test-context.md
-- `results/tc/06/cli-valid-cache.stdout`, `.exit` — CLI output for test-context.md with `--output cache`
-- `results/tc/06/comparison.md` — success-path comparison summary
-- `results/tc/06/cli-error.stdout`, `.stderr`, `.exit` — CLI output for nonexistent file
+Save all output to `results/tc/05/`. Capture:
+- `results/tc/05/cli-valid.stdout`, `.exit` — CLI output for test-context.md
+- `results/tc/05/cli-valid-cache.stdout`, `.exit` — CLI output for test-context.md with `--output cache`
+- `results/tc/05/comparison.md` — success-path comparison summary
+- `results/tc/05/cli-error.stdout`, `.stderr`, `.exit` — CLI output for nonexistent file
 
 ## Constraints
 
