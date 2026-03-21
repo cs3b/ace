@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-list-presets.verify.md
     - ./TC-002-start-session.verify.md
+    - ./TC-003-add-window.verify.md
 ---
 
 # E2E Verification: ace-tmux Management
@@ -35,4 +36,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/3 passed**

@@ -2,6 +2,6 @@
 
 module Ace
   module Tmux
-    VERSION = "0.7.1"
-end
+    VERSION = "0.8.0"
+  end
 end
