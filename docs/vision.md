@@ -1,11 +1,9 @@
 ---
-update:
-  update_frequency: on-change
-  last-updated: '2026-01-17'
-  max_lines: 120
-  required_sections:
-  - why-ace-exists
-  - core-principles
+doc-type: bundle
+title: ACE Vision
+purpose: Documentation for docs/vision.md
+ace-docs:
+  last-updated: '2026-03-12'
 ---
 
 # ACE Vision
