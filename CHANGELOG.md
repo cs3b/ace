@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
 
+## [0.9.873] - 2026-03-21
+
+### Added
+- **ace-assign v0.35.1**: Added `mark-tasks-done` step to `work-on-tasks` batch preset so parent/umbrella tasks are marked done after subtask forks complete
+
 ## [0.9.872] - 2026-03-21
 
 ### Changed
