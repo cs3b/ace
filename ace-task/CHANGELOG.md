@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-03-21
+
+### Changed
+- Added initial `ace-task` TS-format smoke E2E coverage at `test/e2e/TS-TASK-001-core-cli-smoke` with runner/verifier goal contracts for help survey, create/show/list lifecycle, archive updates, and doctor health/error transitions.
+- Added an E2E Decision Record documenting ADD/SKIP value-gate outcomes with unit-coverage evidence for `create`, `update`, `doctor`, and `plan` command suites.
+
 ## [0.29.2] - 2026-03-18
 
 ### Changed
