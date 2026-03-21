@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-03-21
+
+### Changed
+- Expanded `TS-PREP-001` E2E coverage with a new bundle-context goal and tightened runner/verifier artifact-evidence contracts across existing goals.
+
 ## [0.20.1] - 2026-03-18
 
 ### Changed

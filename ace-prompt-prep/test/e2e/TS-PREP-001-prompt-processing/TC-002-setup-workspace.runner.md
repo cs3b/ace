@@ -7,9 +7,9 @@ Using the setup subcommand discovered in Goal 1, create the prompt workspace. Ve
 ## Workspace
 
 Save all output to `results/tc/02/`. Capture:
-- A directory listing showing the created workspace structure
-- The content of any template file created by the setup command
-- The command's stdout, stderr, and exit code
+- `setup.stdout`, `setup.stderr`, `setup.exit` from the setup invocation
+- `workspace-tree.txt` listing the prompt workspace structure
+- `template.md` containing the created prompt template content
 
 ## Constraints
 

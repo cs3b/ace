@@ -6,7 +6,10 @@ Explore `ace-prompt-prep --help` and any subcommand help it provides. Summarize 
 
 ## Workspace
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+Save all output to `results/tc/01/`. Capture:
+- `help.stdout`, `help.stderr`, `help.exit` from the primary help command
+- `subcommands.md` summarizing discovered subcommands/flags
+- `observations.md` with usability observations grounded in captured outputs
 
 ## Constraints
 
