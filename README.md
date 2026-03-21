@@ -1,88 +1,45 @@
-# ACE (Agentic Coding Environment)
+# ACE - Agentic Coding Environment
 
-ACE is a modular toolkit for AI-assisted software development, easily customizable per user and per project.
+> CLI tools designed for developers, ready for agents.
 
-Both human developers and AI agents use the same tools through consistent, predictable interfaces. Every capability is an installable gem with CLI commands that work identically whether typed by a developer or executed by an agent.
+![ACE Demo](docs/demo.gif)
 
-## Key Capabilities
+## The Problem
 
-| Tool | Purpose |
-|------|---------|
-| **ace-review** | Multi-model code review with configurable presets |
-| **ace-git-commit** | LLM-powered commit message generation |
-| **ace-git-worktree** | Git worktree management for task isolation |
-| **ace-bundle** | Project context loading with smart caching |
-| **ace-taskflow** | Task, release, and idea management |
-| **ace-search** | Unified file and content search |
+Developers and AI agents now work side by side, but most tooling was built for one or the other. GUI-heavy workflows, verbose outputs, and scattered APIs make agent collaboration fragile and slow. ACE closes that gap with deterministic CLI tools and composable workflows that both humans and agents can run the same way.
 
-Each gem is independently installable: `gem install ace-review ace-git-commit`
+## Tools
 
-> See [docs/architecture.md](docs/architecture.md#tools-ace--gems) for the complete list of available capabilities.
+| Tool | What it does |
+|------|--------------|
+| `ace-review` | Runs multi-model code reviews with configurable presets. |
+| `ace-git-commit` | Generates consistent commit messages from your staged changes. |
+| `ace-bundle` | Loads project context, workflows, and docs with protocol support. |
+| `ace-task` | Manages tasks with spec-first planning and execution flow. |
+| `ace-git-worktree` | Creates and manages isolated task worktrees quickly. |
+| `ace-search` | Searches files and content with agent-friendly output. |
 
-## Quick Start: ace-review
+## Quick Start
 
-Install and run a multi-model code review:
+Install a minimal set of tools and run your first command:
 
-```bash
-gem install ace-review
+- `gem install ace-git-commit ace-review ace-bundle`
+- `ace-git-commit -i "fix auth bug"`
 
-# Review current PR with default preset
-ace-review --pr 123
+## Principles
 
-# Review with a specific preset
-ace-review --preset code-deep --pr 123
-```
-
-**Configuration** (`.ace/review/config.yml`):
-
-```yaml
-defaults:
-  preset: "code"
-  model: "google:gemini-2.5-flash"
-  auto_execute: true
-```
-
-**Workflow-first usage:**
-
-```bash
-# Load the canonical review workflow instructions
-ace-bundle wfi://review/pr
-```
-
-Provider-specific skills exist for CLI agents and `ace-assign` discovery, but the default documentation path in ACE is direct `ace-*` commands plus `ace-bundle wfi://...` for multi-step workflows.
-
-> See [ace-review/README.md](ace-review/README.md) for full documentation. Each tool has its own README with detailed usage.
-
-## Core Principles
-
-1. **Same Environment, Same Tools** - Humans and agents use identical CLI commands
-2. **DX/AX Dual Optimization** - Excellent for both developer and agent experience
-3. **Configuration Without Lock-In** - Override defaults at any level
-4. **Distribution Without Friction** - Every capability is an installable gem
-
-## Configuration
-
-ACE uses a cascade configuration system:
-
-```
-CLI flags        # Command-line arguments (highest priority)
-./.ace/          # Project-specific
-~/.ace/          # User defaults
-gem defaults     # Bundled with each gem (lowest priority)
-```
+1. **Same Tools** - Developers and agents use identical CLI commands.
+2. **Transparent** - Outputs are inspectable, with file-based artifacts and dry-run support.
+3. **Modular** - Capabilities ship as focused, installable gems.
+4. **Provider Freedom** - Switch providers or CLI agents without changing your workflow.
 
 ## Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [Vision](docs/vision.md) | Why ACE exists and core principles (manifesto) |
-| [Architecture](docs/architecture.md) | System architecture and ATOM pattern |
-| [Tools Reference](docs/tools.md) | CLI command quick reference |
-
-## Contributing
-
-See [docs/contributing/](docs/contributing/) for development setup and contribution guidelines.
+- [Vision](docs/vision.md)
+- [Architecture](docs/architecture.md)
+- [Tools Reference](docs/tools.md)
+- [Contributing](docs/contributing/)
 
 ## License
 
-MIT License - See LICENSE file.
+MIT
