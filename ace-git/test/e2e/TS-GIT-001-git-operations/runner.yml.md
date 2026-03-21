@@ -10,12 +10,14 @@ bundle:
     - ./TC-002-git-diff.runner.md
     - ./TC-003-branch-info.runner.md
     - ./TC-004-pr-summary.runner.md
+    - ./TC-005-diff-output-path-security.runner.md
+    - ./TC-006-status-json-no-pr.runner.md
 ---
 
 # E2E Test Runner: ace-git Operations
 
 Tool under test: ace-git
-Required tools: ace-git
+Required tools: ace-git, git
 Workspace root: (current directory)
 
 Execute each goal in order.
@@ -23,7 +25,7 @@ Execute each goal in order.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 4)
+- Execute each goal in order (1 through 6)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
