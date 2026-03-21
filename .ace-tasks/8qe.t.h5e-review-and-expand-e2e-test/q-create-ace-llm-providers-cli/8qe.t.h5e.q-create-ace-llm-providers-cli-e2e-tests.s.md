@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.q
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-15 11:26:37"
 estimate: TBD
@@ -31,12 +31,12 @@ needs_review: false
 
 ### Success Criteria
 
-- [ ] E2E test directory structure created in `ace-llm-providers-cli/test/e2e/`
-- [ ] 1-2 value-gated smoke scenarios are created with 2-5 TCs each
-- [ ] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence
-- [ ] Tests use proper sandbox isolation
-- [ ] Package-scoped verification is recorded
-- [ ] Test patterns are consistent with existing E2E tests in other packages
+- [x] E2E test directory structure created in `ace-llm-providers-cli/test/e2e/`
+- [x] 1-2 value-gated smoke scenarios are created with 2-5 TCs each
+- [x] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence
+- [x] Tests use proper sandbox isolation
+- [x] Package-scoped verification is recorded
+- [x] Test patterns are consistent with existing E2E tests in other packages
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -48,11 +48,11 @@ needs_review: false
 ### Verification Plan
 
 #### Integration / E2E Validation
-- [ ] Package-scoped verification passes: `ace-test ace-llm-providers-cli`
-- [ ] Scenario objectives and unit-coverage-reviewed fields reflect genuine E2E-only behavior
+- [x] Package-scoped verification passes: `ace-test ace-llm-providers-cli`
+- [x] Scenario objectives and unit-coverage-reviewed fields reflect genuine E2E-only behavior
 
 #### Verification Commands
-- [ ] `ace-test ace-llm-providers-cli`
+- [x] `ace-test ace-llm-providers-cli`
 
 ## Objective
 

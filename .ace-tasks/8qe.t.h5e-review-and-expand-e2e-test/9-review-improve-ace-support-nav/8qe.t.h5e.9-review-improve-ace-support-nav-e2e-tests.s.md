@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e.9
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-15 11:26:15"
 estimate: TBD
@@ -31,11 +31,11 @@ needs_review: false
 
 ### Success Criteria
 
-- [ ] Coverage matrix produced from `/as-e2e-review`
-- [ ] Gaps identified and documented
-- [ ] Improvements applied to E2E test files
-- [ ] All E2E tests pass after changes
-- [ ] No regressions in existing test coverage
+- [x] Coverage matrix produced from `/as-e2e-review`
+- [x] Gaps identified and documented
+- [x] Improvements applied to E2E test files
+- [x] All E2E tests pass after changes
+- [x] No regressions in existing test coverage
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -47,11 +47,11 @@ needs_review: false
 ### Verification Plan
 
 #### Integration / E2E Validation
-- [ ] All E2E tests pass: `ace-test ace-support-nav`
-- [ ] Coverage matrix shows no critical gaps remaining
+- [x] All E2E tests pass: `ace-test ace-support-nav`
+- [x] Coverage matrix shows no critical gaps remaining
 
 #### Verification Commands
-- [ ] `ace-test ace-support-nav`
+- [x] `ace-test ace-support-nav`
 
 ## Objective
 
