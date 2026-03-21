@@ -22,6 +22,16 @@ e2e-justification: >
   scoping resolves step addresses against real assignment structure.
   None testable with mocks.
 
+unit-coverage-reviewed:
+  - test/atoms/step_numbering_test.rb
+  - test/atoms/tree_formatter_test.rb
+  - test/commands/add_command_test.rb
+  - test/commands/finish_command_test.rb
+  - test/commands/status_command_test.rb
+  - test/molecules/assignment_manager_test.rb
+  - test/molecules/queue_scanner_test.rb
+  - test/organisms/assignment_executor_step_catalog_test.rb
+
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"
