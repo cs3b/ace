@@ -79,7 +79,7 @@ module Ace
         # @return [Date, Time, nil] The last checked timestamp, or nil if not set
         # @see #last_updated for detailed behavior documentation
         def last_checked
-          date_str = @update_config["last-checked"]
+          date_str = @ace_docs_config["last-checked"] || @update_config["last-checked"]
           return nil unless date_str
 
           result = case date_str
