@@ -29,16 +29,13 @@ Built for both human developers and coding agents — same CLI, same task specs,
 
 ## Agent Skills
 
-ace-task ships 21 skills for agent-assisted workflows, covering the full development lifecycle:
+ace-task ships skills for agent-assisted task management:
 
-- **Task lifecycle:** `draft` → `review` → `plan` → `work` → `manage-status`
-- **Discovery:** `finder`, `reorganize`, `review-questions`, `improve-coverage`
-- **Bugs:** `analyze` → `fix`
-- **Ideas:** `capture` → `prioritize` → `draft`
-- **Quality:** `test-create-cases`, `test-fix`, `document-unplanned`
-- **Docs & retros:** `update-roadmap`, `update-usage`, `retro-create`, `retro-synthesize`
+- **Task lifecycle:** `task-draft` → `task-review` → `task-plan` → `task-work` → `task-manage-status`
+- **Discovery:** `task-finder`, `task-reorganize`, `task-review-questions`, `task-improve-coverage`
+- **Unplanned work:** `task-document-unplanned`
 
-See [Handbook Reference](docs/handbook.md) for the complete skill catalog, workflow instructions, guides, and templates.
+The handbook also includes cross-domain skills for bugs, ideas, testing, docs, and retrospectives. See [Handbook Reference](docs/handbook.md) for the complete catalog.
 
 ## Documentation
 
