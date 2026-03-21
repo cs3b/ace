@@ -111,7 +111,18 @@ module Ace
           step_results = []
 
           session.steps.each_with_index do |step, index|
-            step_dir = session_store.prepare_step_dir(run_dir, provider, iteration, index + 1, step)
+            step_index = case step
+            when "draft"
+              1
+            when "plan"
+              2
+            when "work"
+              3
+            else
+              index + 1
+            end
+
+            step_dir = session_store.prepare_step_dir(run_dir, provider, iteration, step_index, step)
             result = stage_executor.execute(
               step: step,
               provider: provider,
