@@ -55,8 +55,18 @@ ace-git-commit ace-review/README.md ace-review/docs/getting-started.md
 
 When changes span multiple packages, `ace-git-commit` can split work by scope based on your config so commit history stays clean.
 
+## Common Commands
+
+| Command | What it does |
+|---------|-------------|
+| `ace-git-commit` | Commit all changes with LLM-generated message |
+| `ace-git-commit -i "..."` | Commit with intention context |
+| `ace-git-commit --dry-run` | Preview message without committing |
+| `ace-git-commit --only-staged` | Commit only staged files |
+| `ace-git-commit path/ path/` | Commit specific files/dirs |
+
 ## What to try next
 
-- Preview without writing a commit: `ace-git-commit --dry-run`
-- Use only already staged files: `ace-git-commit --only-staged`
-- See full command reference: `ace-git-commit --help`
+- [Usage Guide](usage.md) — full command reference with all options
+- [Handbook Reference](handbook.md) — skill, workflow, Conventional Commits guide, prompts
+- Runtime help: `ace-git-commit --help`
