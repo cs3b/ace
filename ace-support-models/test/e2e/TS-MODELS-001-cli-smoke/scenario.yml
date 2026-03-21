@@ -1,0 +1,36 @@
+test-id: TS-MODELS-001
+title: "ace-support-models CLI smoke"
+area: models
+package: ace-support-models
+priority: high
+tags: [smoke, happy-path, "use-case:models-cli", "use-case:providers-cli"]
+cost-tier: smoke
+tool-under-test: ace-models
+
+sandbox-layout:
+  results/tc/01/: "CLI help captures for both executables"
+  results/tc/02/: "Cache clear lifecycle evidence"
+  results/tc/03/: "Providers list/show evidence from seeded cache"
+  results/tc/04/: "Invalid filter error-path evidence"
+
+e2e-justification: >
+  These checks validate packaged executable wiring, real process exit semantics,
+  and filesystem-backed cache behavior across both CLI entrypoints. Unit and
+  command tests cover parsing/formatting internals, but not the end-to-end shell
+  invocation contract with real file artifacts.
+
+unit-coverage-reviewed:
+  - test/integration/cli_integration_test.rb
+  - test/commands/models_commands_test.rb
+  - test/commands/providers_commands_test.rb
+  - test/commands/cache_commands_test.rb
+
+requires:
+  tools: [ace-models, ace-llm-providers]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - agent-env:
+      PROJECT_ROOT_PATH: .

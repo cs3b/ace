@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-21
+
+### Changed
+- Added initial `TS-MODELS-001` value-gated smoke E2E coverage for `ace-models` and `ace-llm-providers`, including ADD/SKIP decision evidence.
+
 ## [0.7.1] - 2026-03-18
 
 ### Changed
