@@ -13,6 +13,7 @@ bundle:
     - ./TC-005-rewrite-workflow.runner.md
     - ./TC-006-error-handling.runner.md
     - ./TC-007-config-cascade.runner.md
+    - ./TC-008-check-release-gate.runner.md
 ---
 
 # E2E Test Runner: ace-git-secrets
@@ -21,13 +22,13 @@ Tool under test: ace-git-secrets
 Required tools: ace-git-secrets, git, gitleaks
 Workspace root: (current directory)
 
-Execute each goal sequentially. Goal 1 is discovery — all later goals
+Execute each goal sequentially. Goal 1 is discovery - all later goals
 build on what you learn there. Do not re-run --help after Goal 1.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 7)
+- Execute each goal in order (1 through 8)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
