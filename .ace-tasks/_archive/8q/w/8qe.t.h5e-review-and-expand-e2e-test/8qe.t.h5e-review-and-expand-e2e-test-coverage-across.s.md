@@ -1,6 +1,6 @@
 ---
 id: 8qe.t.h5e
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-03-15 11:26:00"
 estimate: TBD
