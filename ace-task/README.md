@@ -32,7 +32,7 @@ Built for both human developers and coding agents — same CLI, same task specs,
 ace-task ships skills for agent-assisted task management:
 
 - **Task lifecycle:** `task-draft` → `task-review` → `task-plan` → `task-work` → `task-update`
-- **Discovery:** `task-finder`, `task-reorganize`, `task-review-questions`, `task-improve-coverage`
+- **Discovery:** `task-finder`, `task-review-questions`
 - **Unplanned work:** `task-document-unplanned`
 
 The handbook also includes cross-domain skills for bugs, ideas, testing, docs, and retrospectives. See [Handbook Reference](docs/handbook.md) for the complete catalog.
