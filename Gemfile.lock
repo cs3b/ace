@@ -50,7 +50,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.27.0)
+    ace-docs (0.27.1)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.26)
@@ -158,7 +158,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.22.0)
+    ace-lint (0.22.1)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -325,7 +325,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.30.1)
+    ace-task (0.30.2)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
@@ -358,7 +358,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.4.5)
+    ace-test (0.4.6)
 
 PATH
   remote: ace-tmux
