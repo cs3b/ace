@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-20
+
+### Changed
+- Expanded `TS-SIM-001-next-phase-smoke` E2E coverage with two new goals: `validate-task` preset contract validation and deterministic synthesis-provider guard failure validation.
+- Strengthened existing verifier assertions for help-surface flags and explicit single-step override behavior.
+
 ## [0.9.1] - 2026-03-18
 
 ### Changed

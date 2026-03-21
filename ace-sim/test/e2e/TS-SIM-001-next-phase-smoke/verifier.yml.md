@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-preset-contract.verify.md
     - ./TC-003-run-chain-artifacts.verify.md
     - ./TC-004-full-chain-synthesis.verify.md
+    - ./TC-005-validate-task-preset.verify.md
+    - ./TC-006-synthesis-provider-guard.verify.md
 ---
 
 # E2E Verification: ace-sim Preset-Chain Smoke
@@ -35,4 +37,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/6 passed**
