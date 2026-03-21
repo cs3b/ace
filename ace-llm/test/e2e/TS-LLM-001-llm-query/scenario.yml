@@ -10,6 +10,7 @@ tool-under-test: ace-llm
 sandbox-layout:
   results/tc/01/: "Basic query artifacts"
   results/tc/02/: "Model-selection query artifacts"
+  results/tc/03/: "Unknown-provider routing artifacts"
 
 e2e-justification: >
   Requires live provider integration and response handling through the real

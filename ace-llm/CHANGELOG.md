@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-03-21
+
+### Changed
+- Expanded `TS-LLM-001` E2E coverage with a deterministic unknown-provider routing goal and tightened verifier artifact evidence requirements for query and model-selection flows.
+
 ## [0.27.1] - 2026-03-18
 
 ### Changed
