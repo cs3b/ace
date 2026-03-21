@@ -1,5 +1,5 @@
 ---
-description: "E2E verifier input for ace-docs operations"
+description: "E2E verifier input for ace-docs discover/validate/status/update operations"
 bundle:
   embed_document_source: true
   params:
@@ -9,6 +9,7 @@ bundle:
     - ./TC-001-discover-docs.verify.md
     - ./TC-002-validate-docs.verify.md
     - ./TC-003-status-check.verify.md
+    - ./TC-004-update-docs.verify.md
 ---
 
 # E2E Verification: ace-docs Operations
@@ -36,4 +37,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/4 passed**

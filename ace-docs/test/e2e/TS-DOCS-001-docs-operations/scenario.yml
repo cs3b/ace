@@ -11,15 +11,19 @@ sandbox-layout:
   results/tc/01/: "Discover command artifacts"
   results/tc/02/: "Validate command artifacts"
   results/tc/03/: "Status command artifacts"
+  results/tc/04/: "Update command artifacts"
 
 e2e-justification: >
-  Validates real document discovery, frontmatter validation, and status summary
-  behavior on filesystem-backed documentation sets.
+  Validates real document discovery, frontmatter validation, status summary, and
+  metadata update behavior on filesystem-backed documentation sets. Unit tests
+  verify command internals, while this scenario verifies CLI-level behavior
+  across a shared docs corpus and real file updates.
 
 unit-coverage-reviewed:
   - test/cli/commands/discover_test.rb
   - test/cli/commands/validate_test.rb
   - test/cli/commands/status_test.rb
+  - test/cli/commands/update_test.rb
 
 requires:
   tools: [ace-docs]

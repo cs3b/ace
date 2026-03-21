@@ -2,8 +2,8 @@
 
 ## Goal
 
-Run `ace-docs validate` and capture output demonstrating structure/frontmatter
-validation behavior.
+Run `ace-docs validate` against the seeded docs corpus and capture validation
+output plus process exit evidence.
 
 ## Workspace
 
@@ -16,3 +16,7 @@ Save artifacts to `results/tc/02/`.
 - Do not write outside the sandbox.
 - Reuse the docs seeded in Goal 1; do not run validation against an empty workspace.
 - If Goal 1 docs are missing, create the same minimal docs set first and capture that bootstrap as `results/tc/02/setup.*`.
+- Capture validate command artifacts as:
+  - `results/tc/02/validate.stdout`
+  - `results/tc/02/validate.stderr`
+  - `results/tc/02/validate.exit`
