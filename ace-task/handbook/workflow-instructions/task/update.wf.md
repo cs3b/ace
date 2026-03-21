@@ -6,8 +6,7 @@ argument-hint: "<ref> [--set K=V] [--move-to FOLDER] [--move-as-child-of PARENT|
   [--position first|after:<ref>]"
 doc-type: workflow
 purpose: Update task fields, change status, move between folders, and manage hierarchy
-update:
-  frequency: on-change
+ace-docs:
   last-updated: '2026-03-21'
   last-checked: '2026-03-21'
 ---

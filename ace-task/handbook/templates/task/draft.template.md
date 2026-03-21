@@ -8,6 +8,10 @@ bundle:
   presets: ["project"]
   files: []
   commands: []
+doc-type: template
+purpose: Template for drafting task definitions
+ace-docs:
+  last-updated: '2026-03-21'
 ---
 
 # {title}

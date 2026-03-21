@@ -1,3 +1,10 @@
+---
+doc-type: guide
+purpose: Guide for writing clear, actionable task definitions in ace-task
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 <!-- markdownlint-disable -->
 # 📑 Writing Clear, Actionable Dev Tasks
 

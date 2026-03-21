@@ -11,6 +11,8 @@ bundle:
       commands: 
         - ace-task list --help 
         - ace-task show --help 
+ace-docs:
+  last-updated: '2026-03-21'
 ---
 
 # Task Finder Workflow

@@ -1,9 +1,7 @@
 ---
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
+doc-type: workflow
+purpose: Resolve clarifying questions for tasks and implementation readiness
+ace-docs:
   last-updated: '2025-10-08'
 ---
 
