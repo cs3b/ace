@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-03-19
+
+### Changed
+- Expanded `TS-NAV-001` Goal 1 to include `ace-nav sources` command evidence capture in the runner and verifier contracts.
+- Tightened Goal 4 and Goal 5 verifier expectations for missing-resource identification and protocol-specific shorthand evidence.
+
 ## [0.23.1] - 2026-03-18
 
 ### Changed
