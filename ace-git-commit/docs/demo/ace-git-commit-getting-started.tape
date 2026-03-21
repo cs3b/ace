@@ -1,7 +1,7 @@
 # Description: Showcase ace-git-commit with intention, specific files, and dry-run
 # Tags: ace-git-commit,docs,getting-started
 
-Output .ace-local/demo/ace-git-commit-getting-started.gif
+Output docs/demo/ace-git-commit-getting-started.gif
 
 Set FontSize 16
 Set Width 960
