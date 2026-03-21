@@ -8,6 +8,8 @@ PASS when:
 - `results/tc/03/run-tree.txt` includes `01-draft/user.bundle.md` and `01-draft/user.prompt.md`
 - `results/tc/03/run-tree.txt` does not include `02-plan/`
 - `results/tc/03/run-tree.txt` does not include `03-work/`
+- `results/tc/03/run-tree.txt` does not include `chains/glite-1/02-plan/output.md`
+- `results/tc/03/run-tree.txt` does not include `chains/glite-1/03-work/output.md`
 - `results/tc/03/run-tree.txt` includes `final/source.original.md`
 - `results/tc/03/run-tree.txt` includes `final/output.sequence.md`
 - `results/tc/03/run-tree.txt` includes `final/suggestions.report.md`

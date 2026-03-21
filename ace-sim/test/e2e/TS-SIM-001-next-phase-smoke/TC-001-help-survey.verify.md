@@ -6,3 +6,5 @@ PASS when:
 - `results/tc/01/run-help.stdout` mentions `--preset`
 - `results/tc/01/run-help.stdout` mentions `--source`
 - `results/tc/01/run-help.stdout` mentions `--provider`
+- `results/tc/01/run-help.stdout` mentions `--dry-run`
+- `results/tc/01/run-help.stdout` mentions `--writeback`
