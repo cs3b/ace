@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-basic-query.verify.md
     - ./TC-002-model-selection.verify.md
+    - ./TC-003-unknown-provider.verify.md
 ---
 
 # E2E Verification: ace-llm Query Scenarios
@@ -35,4 +36,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/3 passed**
