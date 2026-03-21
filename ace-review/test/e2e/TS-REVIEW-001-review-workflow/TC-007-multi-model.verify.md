@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
-Validation order (impact-first):
+### Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+### Checks
 1. **Both capture sets exist** — results/tc/07/ contains captures for multi and reviewers tests.
 2. **Both exit codes zero** — Both review executions succeeded.
 3. **Session directories created** — Both tests created session directories with review output files.
