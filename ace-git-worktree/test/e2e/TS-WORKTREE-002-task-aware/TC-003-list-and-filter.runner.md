@@ -14,5 +14,5 @@ Save all output to `results/tc/03/`. Capture:
 ## Constraints
 
 - Using what you learned from Goal 1, invoke ace-git-worktree list with the task filter flags.
-- The task 8pp.t.q7w worktree from Goal 2 should be the only task-associated worktree at this point.
+- The task 8pp.t.q7w worktree from Goal 2 is the only task-associated worktree at this point.
 - All artifacts must come from real tool execution, not fabricated.

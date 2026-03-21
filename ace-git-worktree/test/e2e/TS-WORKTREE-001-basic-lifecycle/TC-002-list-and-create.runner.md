@@ -2,7 +2,7 @@
 
 ## Goal
 
-List worktrees in the fresh repo (should show only main), then create a worktree from an existing branch (`feature/test-worktree`) and create another worktree with a new branch (`--from main`). Capture list output before and after creation, plus directory listings of the created worktrees.
+List worktrees in the fresh repo, then create a worktree from an existing branch (`feature/test-worktree`) and create another worktree with a new branch (`--from main`). Capture list output before and after creation, plus directory listings of the created worktrees.
 
 ## Workspace
 
