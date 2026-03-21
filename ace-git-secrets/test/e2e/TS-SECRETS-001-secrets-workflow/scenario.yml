@@ -15,6 +15,7 @@ sandbox-layout:
   results/tc/05/:  "Rewrite workflow evidence (dry run, raw values)"
   results/tc/06/:  "Error handling evidence (graceful failure without raw values)"
   results/tc/07/:  "Configuration cascade evidence (defaults, overrides, missing config)"
+  results/tc/08/:  "Release gate evidence (check-release JSON + strict mode)"
 
 e2e-justification: >
   All goals require the real ace-git-secrets binary with gitleaks executing
