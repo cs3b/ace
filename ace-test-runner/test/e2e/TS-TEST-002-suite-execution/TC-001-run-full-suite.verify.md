@@ -8,8 +8,9 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. `results/tc/01/` contains suite command captures.
-2. Output references multiple package runs or grouped execution.
-3. Exit code is captured and interpreted correctly.
+2. `results/tc/01/command.txt` confirms an `ace-test-suite` invocation was executed.
+3. Output captures show grouped or multi-package execution evidence.
+4. `results/tc/01/.exit` exists and is interpreted consistently with captured output.
 
 ## Verdict
 
