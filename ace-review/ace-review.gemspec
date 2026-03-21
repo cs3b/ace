@@ -8,9 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Automated code review tool for the ACE framework'
-  spec.description = 'ace-review enables automated code review and quality analysis using LLM-powered ' \
-                     'insights, supporting preset-based workflows and release integration with ace-taskflow'
+  spec.summary = 'Multi-model code review with preset-based analysis — for PRs, tasks, and packages'
+  spec.description = 'Run focused, repeatable code reviews using configurable presets and multiple ' \
+                     'LLM models in parallel. Findings become trackable feedback items with a ' \
+                     'verify-apply-resolve lifecycle.'
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
