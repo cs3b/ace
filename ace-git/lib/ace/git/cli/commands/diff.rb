@@ -60,8 +60,7 @@ module Ace
           # Return success
           0
         rescue Ace::Git::Error => e
-          warn "Error generating diff: #{e.message}"
-          1
+          raise Ace::Support::Cli::Error.new(e.message)
         end
 
         private
