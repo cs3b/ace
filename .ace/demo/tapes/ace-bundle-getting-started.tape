@@ -1,7 +1,7 @@
 # Description: Showcase ace-bundle preset loading, listing, and protocol usage
 # Tags: ace-bundle,docs,getting-started
 
-Output .ace-local/demo/ace-bundle-getting-started.gif
+Output docs/demo/ace-bundle-getting-started.gif
 
 Set FontSize 16
 Set Width 960
