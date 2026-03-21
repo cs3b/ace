@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
 
+## [0.9.874] - 2026-03-21
+
+### Added
+- **ace-git v0.16.1**: Add GitHub release publish workflow and skill for creating GitHub releases from unpublished CHANGELOG entries with daily grouping and dry-run support.
+- **ace-handbook v0.17.1**: Add RubyGems publish workflow and skill for publishing ACE gems to RubyGems.org in dependency order with credential verification and dry-run support.
+
 ## [0.9.873] - 2026-03-21
 
 ### Added
