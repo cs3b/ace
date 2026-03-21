@@ -13,5 +13,5 @@ Save all output to `results/tc/06/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-commit with --no-split and both file paths.
+- Invoke ace-git-commit with `--no-split` and both file paths.
 - All artifacts must come from real tool execution, not fabricated.

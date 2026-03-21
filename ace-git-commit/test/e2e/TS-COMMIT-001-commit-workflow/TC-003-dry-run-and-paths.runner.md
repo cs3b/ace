@@ -14,5 +14,5 @@ Save all output to `results/tc/03/`. Capture:
 
 - For dry run: stage a change, record HEAD, run with -n, verify HEAD unchanged and changes still staged.
 - For path handling: modify two files, commit only one by specifying its path, verify the other remains uncommitted.
-- Using what you learned from Goal 1, invoke the appropriate flags.
+- Use explicit flags in your commands (`-n` for dry-run and path arguments for path handling).
 - All artifacts must come from real tool execution, not fabricated.

@@ -14,5 +14,5 @@ Save all output to `results/tc/02/`. Capture:
 ## Constraints
 
 - Modify at least one tracked file (e.g., append content to app.rb or helper.rb).
-- Using what you learned from Goal 1, invoke ace-git-commit with -m flag.
+- Invoke ace-git-commit with `-m` and an explicit commit message.
 - All artifacts must come from real tool execution, not fabricated.
