@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-llm-providers-cli
+purpose: Documentation for ace-llm-providers-cli/README.md
+ace-docs:
+  last-updated: 2026-03-05
+  last-checked: 2026-03-21
+---
+
 # ace-llm-providers-cli
 
 CLI-based LLM providers for ace-llm. This gem extends ace-llm with providers that interact with LLMs through command-line interfaces, including Claude Code, Codex, OpenCode, and Codex OSS.

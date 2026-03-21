@@ -1,11 +1,12 @@
 ---
 name: task-plan
 allowed-tools: Bash, Read
-description: Create a cache-backed implementation plan with freshness checks and anchored execution checklist output
+description: Create a cache-backed implementation plan with freshness checks and anchored
+  execution checklist output
 doc-type: workflow
 purpose: Create implementation plans with caching and execution checklists
 ace-docs:
-  last-updated: '2026-03-03'
+  last-updated: '2026-03-21'
 ---
 
 # Plan Task Workflow Instruction

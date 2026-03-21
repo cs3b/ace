@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-test-runner-e2e
+purpose: Documentation for ace-test-runner-e2e/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ace-test-runner-e2e
 
 End-to-end test runner infrastructure for agent-executed testing.

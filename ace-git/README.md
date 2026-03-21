@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git
+purpose: Documentation for ace-git/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # ace-git
 
 Git workflow instructions for ACE projects - comprehensive guidance for rebase operations, PR creation, and commit reorganization.

@@ -1,13 +1,10 @@
 ---
-name: demo/create
-allowed-tools: Bash, Read
-description: Create or update VHS demo tapes from shell commands
-argument-hint: "<name> [--force] [--desc <text>] [--tags <tags>] -- <commands...>"
 doc-type: workflow
+title: Create Demo Tape Workflow
 purpose: tape creation workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2026-03-05'
+ace-docs:
+  last-updated: 2026-03-05
+  last-checked: 2026-03-21
 ---
 
 # Create Demo Tape Workflow

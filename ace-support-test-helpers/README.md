@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-support-test-helpers
+purpose: Documentation for ace-support-test-helpers/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # ace-support-test-helpers
 
 Shared test utilities for all ace-* gems.

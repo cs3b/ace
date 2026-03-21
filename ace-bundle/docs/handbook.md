@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-bundle Handbook Reference
+purpose: Documentation for ace-bundle/docs/handbook.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-bundle Handbook Reference
 
 Skills, workflows, and presets shipped with ace-bundle.

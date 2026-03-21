@@ -1,13 +1,10 @@
 ---
-name: github-pr-update
-allowed-tools: Bash, Read, Grep
-description: Update PR title and description from code evidence
-argument-hint: "[pr-number]"
 doc-type: workflow
+title: Update PR Description Workflow
 purpose: evidence-based PR documentation
-update:
-  frequency: on-change
-  last-updated: '2026-02-25'
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # Update PR Description Workflow

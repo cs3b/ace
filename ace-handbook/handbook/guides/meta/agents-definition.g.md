@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Writing Agent Definitions
+purpose: Documentation for ace-handbook/handbook/guides/meta/agents-definition.g.md
+ace-docs:
+  last-updated: 2026-01-17
+  last-checked: 2026-03-21
+---
+
 # Writing Agent Definitions
 
 This guide outlines best practices for creating and maintaining agent definitions located within the `.claude/agents/` directory. These agents serve as specialized task handlers that can be invoked directly by Claude Code or enhanced through the MCP proxy system.

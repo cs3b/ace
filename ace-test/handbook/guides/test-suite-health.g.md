@@ -1,19 +1,10 @@
 ---
-name: test-suite-health
-description: Metrics, monitoring, and periodic audits for test suite quality
 doc-type: guide
+title: Test Suite Health Guide
 purpose: Maintain healthy test suites through measurement and continuous improvement
-search_keywords:
-  - test metrics
-  - test health
-  - test audit
-  - flaky tests
-  - test performance
-  - CI integration
-  - test monitoring
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Test Suite Health Guide

@@ -6,11 +6,11 @@ argument-hint: "[list|show] [options]"
 doc-type: workflow
 purpose: task discovery workflow
 bundle:
-  sections: 
-    ace-task-params: 
-      commands: 
-        - ace-task list --help 
-        - ace-task show --help 
+  sections:
+    ace-task-params:
+      commands:
+      - ace-task list --help
+      - ace-task show --help
 ace-docs:
   last-updated: '2026-03-21'
 ---

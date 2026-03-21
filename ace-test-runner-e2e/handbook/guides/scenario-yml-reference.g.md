@@ -1,9 +1,10 @@
 ---
-guide-id: g-scenario-yml-reference
+doc-type: guide
 title: scenario.yml Reference
-description: Complete schema reference for TS-format scenario configuration files
-version: "2.0"
-source: ace-test-runner-e2e
+purpose: Complete schema reference for TS-format scenario configuration files
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # scenario.yml Reference

@@ -1,20 +1,10 @@
 ---
-name: testing-tdd-cycle
-description: Standard TDD development cycle for implementing tasks
 doc-type: guide
+title: Implementing the Task Cycle
 purpose: Task cycle implementation
-search_keywords:
-  - TDD
-  - test-driven development
-  - task cycle
-  - development cycle
-  - red green refactor
-  - task implementation
-  - workflow
-  - AI agents
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
 ---
 
 # Implementing the Task Cycle

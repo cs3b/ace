@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: "Reflection: [Topic/Date]"
+purpose: Documentation for ace-retro/handbook/templates/retro/retro.template.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # Reflection: [Topic/Date]
 
 **Date**: YYYY-MM-DD

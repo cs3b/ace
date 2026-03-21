@@ -1,14 +1,10 @@
 ---
-name: assign/run-in-batches
-allowed-tools: Bash, Read, Write, AskUserQuestion
-description: Create a generic per-item fan-out assignment from one template and explicit item list
 doc-type: workflow
+title: Run In Batches Workflow
 purpose: workflow instruction for reusable repeated-item orchestration with deterministic assignment creation
-argument-hint: "\"instruction template\" --items item1,item2 [--sequential] [--max-parallel N] [--run]"
-
-update:
-  frequency: on-change
-  last-updated: '2026-03-08'
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Run In Batches Workflow

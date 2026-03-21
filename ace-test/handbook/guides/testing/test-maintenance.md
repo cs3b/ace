@@ -1,16 +1,10 @@
 ---
-name: test-maintenance
-description: Best practices for maintaining reliable test suites
 doc-type: guide
+title: Test Maintenance Guide
 purpose: Test maintenance and reliability
-search_keywords:
-  - test maintenance
-  - flaky tests
-  - slow tests
-  - test reliability
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Test Maintenance Guide

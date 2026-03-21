@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-support-mac-clipboard
+purpose: Documentation for ace-support-mac-clipboard/README.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # ace-support-mac-clipboard
 
 macOS NSPasteboard integration for ACE - provides FFI-based access to rich clipboard content on macOS.

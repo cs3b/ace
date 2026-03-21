@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Configuration Guide
+purpose: Documentation for ace-bundle/docs/configuration.md
+ace-docs:
+  last-updated: 2026-01-17
+  last-checked: 2026-03-21
+---
+
 # Configuration Guide
 
 This guide explains all configuration options available in ace-bundle YAML presets, including both simplified and section-based formats.

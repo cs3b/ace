@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Update Handbook Documentation Workflow
+purpose: Documentation for ace-handbook/handbook/workflow-instructions/handbook/update-docs.wf.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Update Handbook Documentation Workflow
 
 ## Goal

@@ -1,10 +1,10 @@
 ---
-name: test-review
-description: Review tests for layer fit, mock quality, and performance
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
-argument-hint: "[paths | PR-number]"
 doc-type: workflow
+title: Test Review Workflow
 purpose: test review workflow
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Test Review Workflow

@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Manage Agents Workflow Instruction
+purpose: Documentation for ace-handbook/handbook/workflow-instructions/handbook/manage-agents.wf.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Manage Agents Workflow Instruction
 
 ## Goal

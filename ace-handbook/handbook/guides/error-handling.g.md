@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Error Handling Guidelines
+purpose: Documentation for ace-handbook/handbook/guides/error-handling.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Error Handling Guidelines
 
 ## Goal

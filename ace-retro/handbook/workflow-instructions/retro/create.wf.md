@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Create Retro Workflow Instruction
+purpose: Documentation for ace-retro/handbook/workflow-instructions/retro/create.wf.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # Create Retro Workflow Instruction
 
 ## Goal

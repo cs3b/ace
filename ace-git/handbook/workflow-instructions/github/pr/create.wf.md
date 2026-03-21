@@ -1,13 +1,10 @@
 ---
-name: github-pr-create
-allowed-tools: Bash, Read
-description: Create pull requests with evidence-based descriptions
-argument-hint: "[pr-type]"
 doc-type: workflow
+title: Pull Request Creation Workflow
 purpose: pull request creation workflow
-update:
-  frequency: on-change
-  last-updated: '2026-02-25'
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
 ---
 
 # Pull Request Creation Workflow

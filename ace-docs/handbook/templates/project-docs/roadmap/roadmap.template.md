@@ -1,7 +1,10 @@
 ---
+doc-type: template
 title: Project Roadmap
-last_reviewed: YYYY-MM-DD
-status: [draft|active|archived]
+purpose: Documentation for ace-docs/handbook/templates/project-docs/roadmap/roadmap.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
 ---
 
 # Project Roadmap

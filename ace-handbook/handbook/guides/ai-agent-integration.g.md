@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: AI Agent Integration Guide
+purpose: Documentation for ace-handbook/handbook/guides/ai-agent-integration.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # AI Agent Integration Guide
 
 ## Overview

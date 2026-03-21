@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Quality Assurance Guidelines
+purpose: Documentation for ace-handbook/handbook/guides/quality-assurance.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Quality Assurance Guidelines
 
 ## Goal

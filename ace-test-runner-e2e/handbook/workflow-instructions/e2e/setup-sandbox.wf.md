@@ -1,21 +1,10 @@
 ---
-name: e2e/setup-sandbox
-description: Set up safe, isolated E2E test environment with external API handling
-allowed-tools: Read, Write, Bash
-argument-hint: 'package and test-id'
 doc-type: workflow
+title: E2E Sandbox Setup Workflow
 purpose: E2E test environment setup workflow
-params:
-  package: Package being tested
-  test_id: E2E test ID (e.g., TS-LINT-001)
-tools:
-  - Bash
-  - Read
-  - Write
-embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-02-01'
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # E2E Sandbox Setup Workflow

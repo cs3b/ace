@@ -1,20 +1,10 @@
 ---
-name: test/plan
-description: Plan test coverage before writing code - decide what to test at each layer
-allowed-tools: Read, Bash, Grep, Glob, Bash(ace-search:*), Bash(ace-bundle:*)
-argument-hint: 'feature description or task specification'
 doc-type: workflow
+title: Plan Tests Workflow
 purpose: Ensure comprehensive test coverage with tests at the right layer
-params:
-  feature: Description of feature or change being implemented
-  files: List of files that will be modified
-tools:
-  - ace-search
-  - ace-bundle
-embed_document_source: false
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Plan Tests Workflow

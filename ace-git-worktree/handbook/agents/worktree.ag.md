@@ -1,7 +1,11 @@
 ---
-name: worktree
-short_name: Worktree
-description: Manages git worktrees with task-aware automation and traditional operations
+doc-type: agent
+title: Worktree Agent
+purpose: Documentation for ace-git-worktree/handbook/agents/worktree.ag.md
+ace-docs:
+  last-updated: 2025-12-27
+  last-checked: 2026-03-21
+---
 
 # Worktree Agent
 

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-idea
+purpose: Documentation for ace-idea/README.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # ace-idea
 
 Standalone idea management gem for ACE with b36ts-based IDs.

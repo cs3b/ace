@@ -1,10 +1,10 @@
 ---
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
-  last-updated: '2025-10-03'
+doc-type: workflow
+title: Update Usage Documentation
+purpose: Documentation for ace-docs/handbook/workflow-instructions/docs/update-usage.wf.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Update Usage Documentation

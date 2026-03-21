@@ -1,20 +1,10 @@
 ---
-name: testing-strategy
-description: Fast and Slow testing loops - the ACE strategy for high-performance test suites
 doc-type: guide
+title: "Testing Strategy: The Fast and Slow Loops"
 purpose: Define the ACE testing strategy with fast loop (unit/integration) and slow loop (E2E)
-search_keywords:
-  - testing strategy
-  - fast loop
-  - slow loop
-  - test pyramid
-  - unit test
-  - integration test
-  - e2e test
-  - stub the boundary
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-19
+  last-checked: 2026-03-21
 ---
 
 # Testing Strategy: The Fast and Slow Loops

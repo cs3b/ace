@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-secrets Usage Guide
+purpose: Documentation for ace-git-secrets/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-04
+  last-checked: 2026-03-21
+---
+
 # ace-git-secrets Usage Guide
 
 Comprehensive guide for scanning, revoking, and removing authentication tokens from Git history.

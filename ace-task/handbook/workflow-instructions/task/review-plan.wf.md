@@ -2,7 +2,7 @@
 doc-type: workflow
 purpose: Review implementation plans before execution
 ace-docs:
-  last-updated: '2026-02-27'
+  last-updated: '2026-03-21'
 ---
 
 # Review Plan Workflow Instruction

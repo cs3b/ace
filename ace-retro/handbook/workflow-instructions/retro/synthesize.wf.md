@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Synthesize Retros Workflow Instruction
+purpose: Documentation for ace-retro/handbook/workflow-instructions/retro/synthesize.wf.md
+ace-docs:
+  last-updated: 2026-03-01
+  last-checked: 2026-03-21
+---
+
 # Synthesize Retros Workflow Instruction
 
 ## Goal

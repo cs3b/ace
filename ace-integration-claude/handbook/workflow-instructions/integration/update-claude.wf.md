@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Update Claude Integration Meta Workflow
+purpose: Documentation for ace-integration-claude/handbook/workflow-instructions/integration/update-claude.wf.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # Update Claude Integration Meta Workflow
 
 ## Goal

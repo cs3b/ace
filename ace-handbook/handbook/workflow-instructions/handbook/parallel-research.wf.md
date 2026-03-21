@@ -1,3 +1,12 @@
+---
+doc-type: workflow
+title: Parallel Research Workflow
+purpose: Documentation for ace-handbook/handbook/workflow-instructions/handbook/parallel-research.wf.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Parallel Research Workflow
 
 ## Goal

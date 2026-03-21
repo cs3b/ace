@@ -1,9 +1,10 @@
 ---
 doc-type: reference
+title: ace-demo Usage Guide
 purpose: CLI usage guide for ace-demo — VHS-based terminal demo recording and PR attachment.
-update:
-  update_frequency: on-change
-  last-updated: '2026-03-05'
+ace-docs:
+  last-updated: 2026-03-08
+  last-checked: 2026-03-21
 ---
 
 # ace-demo Usage Guide

@@ -1,17 +1,10 @@
 ---
-name: ruby-rspec
-description: Best practices for Ruby testing with RSpec
 doc-type: guide
+title: Ruby RSpec Testing Guide
 purpose: Ruby RSpec testing conventions
-search_keywords:
-  - ruby
-  - rspec
-  - testing
-  - conventions
-  - structure
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Ruby RSpec Testing Guide

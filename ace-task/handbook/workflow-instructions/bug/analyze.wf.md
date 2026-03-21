@@ -1,13 +1,14 @@
 ---
 name: bug/analyze
-description: Systematically analyze bugs to identify root cause, reproduction status, and fix plan
+description: Systematically analyze bugs to identify root cause, reproduction status,
+  and fix plan
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
 argument-hint: ''
 estimate: 1-2h
 doc-type: workflow
 purpose: analyze-bug workflow instruction
 ace-docs:
-  last-updated: '2025-12-09'
+  last-updated: '2026-03-21'
 ---
 
 # Analyze Bug Workflow Instruction

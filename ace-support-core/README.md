@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Ace::Support::Core
+purpose: Documentation for ace-support-core/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # Ace::Support::Core
 
 Foundational infrastructure gem providing configuration cascade resolution and shared functionality for all ace-* gems. This gem implements a configuration cascade system (.ace directories) with deep merging, environment variable handling, and follows the ATOM architecture pattern.

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-compressor
+purpose: Documentation for ace-compressor/README.md
+ace-docs:
+  last-updated: 2026-03-07
+  last-checked: 2026-03-21
+---
+
 # ace-compressor
 
 Compresses Markdown and text files into compact `ContextPack/3` records for LLM consumption.

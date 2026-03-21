@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: dry-cli CLI Framework Guide
+purpose: Documentation for ace-handbook/handbook/guides/cli-dry-cli.g.md
+ace-docs:
+  last-updated: 2026-02-22
+  last-checked: 2026-03-21
+---
+
 # dry-cli CLI Framework Guide
 
 Complete reference for implementing CLI interfaces in ace-* gems using dry-cli.

@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Research Comparison Matrix
+purpose: Documentation for ace-handbook/handbook/templates/research-comparison.template.md
+ace-docs:
+  last-updated: 2026-01-31
+  last-checked: 2026-03-21
+---
+
 # Research Comparison Matrix
 
 ## Overview

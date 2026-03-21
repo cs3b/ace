@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ACE Handbook Gem
+purpose: Documentation for ace-handbook/README.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # ACE Handbook Gem
 
 Workflow and guide governance for ACE (Agentic Coding Environment). This package owns the handbook-level workflows and guides used to create, review, and maintain handbook content across the monorepo.

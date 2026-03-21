@@ -1,17 +1,10 @@
 ---
-name: tdd-rust-cli
-description: Task cycle for Rust CLI application development
 doc-type: guide
+title: "Implementing Task Cycle: Rust CLI"
 purpose: TDD workflow for Rust CLI apps
-search_keywords:
-  - rust
-  - cli
-  - tdd
-  - cargo test
-  - clippy
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Implementing Task Cycle: Rust CLI

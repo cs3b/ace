@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Task Review Summary
+purpose: Documentation for ace-review/handbook/templates/review-tasks/task-review-summary.template.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # Task Review Summary
 
 ## 1. Executive Summary

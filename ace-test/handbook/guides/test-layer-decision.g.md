@@ -1,19 +1,10 @@
 ---
-name: test-layer-decision
-description: Decision framework for choosing the right test layer (unit, integration, E2E)
 doc-type: guide
+title: Test Layer Decision Guide
 purpose: Help developers and agents decide where to test each behavior
-search_keywords:
-  - test layer
-  - unit test
-  - integration test
-  - e2e test
-  - test decision
-  - what to test
-  - test pyramid
-update:
-  frequency: on-change
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Test Layer Decision Guide

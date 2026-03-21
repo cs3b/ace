@@ -1,15 +1,10 @@
 ---
-name: docs/create-adr
-purpose: Create structured Architecture Decision Records for significant decisions
-bundle: adr-management
-parameters:
-  decision_title:
-    description: Title of the architectural decision (kebab-case)
-    required: true
 doc-type: workflow
-update:
-  frequency: on-change
-  last-updated: '2025-10-14'
+title: Create Architecture Decision Record
+purpose: Create structured Architecture Decision Records for significant decisions
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Create Architecture Decision Record
@@ -337,4 +332,3 @@ Key aspects of this decision:
 - [Related GitHub issues or pull requests]
     </template>
 </documents>
-

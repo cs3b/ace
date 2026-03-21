@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: General Coding Standards
+purpose: Documentation for ace-handbook/handbook/guides/coding-standards.g.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # General Coding Standards
 
 ## Goal

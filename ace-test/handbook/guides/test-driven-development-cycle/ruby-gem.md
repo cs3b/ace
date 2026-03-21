@@ -1,17 +1,10 @@
 ---
-name: tdd-ruby-gem
-description: Task cycle for Ruby gem development
 doc-type: guide
+title: "Implementing Task Cycle: Ruby Gem"
 purpose: TDD workflow for Ruby gems
-search_keywords:
-  - ruby
-  - gem
-  - tdd
-  - rake release
-  - rubygems
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Implementing Task Cycle: Ruby Gem

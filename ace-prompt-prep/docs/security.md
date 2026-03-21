@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Security Documentation
+purpose: Documentation for ace-prompt-prep/docs/security.md
+ace-docs:
+  last-updated: 2026-01-20
+  last-checked: 2026-03-21
+---
+
 # Security Documentation
 
 This document covers security considerations, implemented protections, and recommended practices for ace-prompt context loading.

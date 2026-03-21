@@ -1,11 +1,10 @@
 ---
-name: test-performance-audit
-description: Template for monthly test suite health audit
 doc-type: template
+title: Test Suite Performance Audit
 purpose: Test performance audit report
-update:
-  frequency: as-needed
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-01
+  last-checked: 2026-03-21
 ---
 
 # Test Suite Performance Audit

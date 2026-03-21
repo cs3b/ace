@@ -1,13 +1,10 @@
 ---
-update:
-  update_frequency: on-change
-  last-updated: '2025-10-24'
-bundle:
-  embed_document_source: true
-  sections:
-    available_presets:
-      commands:
-        - ace-bundle --list
+doc-type: workflow
+title: Load Bundle Workflow Instruction
+purpose: Documentation for ace-bundle/handbook/workflow-instructions/bundle.wf.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Load Bundle Workflow Instruction

@@ -2,7 +2,7 @@
 doc-type: workflow
 purpose: Document significant unplanned work
 ace-docs:
-  last-updated: '2025-10-02'
+  last-updated: '2026-03-21'
 ---
 
 # Document Unplanned Work Workflow Instruction

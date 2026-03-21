@@ -1,11 +1,10 @@
 ---
-name: review/pr
-description: Review PR and plan feedback application with comment resolution
-argument-hint: "[pr-number] [--preset <name>] [flags]"
-allowed-tools: Read, Bash, TodoWrite
-update:
-  frequency: on-change
-  last-updated: '2026-02-03'
+doc-type: workflow
+title: Review PR and Plan Feedback Workflow
+purpose: Review PR and plan feedback application with comment resolution
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
 ---
 
 # Review PR and Plan Feedback Workflow

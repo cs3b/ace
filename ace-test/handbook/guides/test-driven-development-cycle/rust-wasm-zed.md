@@ -1,17 +1,10 @@
 ---
-name: tdd-rust-wasm-zed
-description: Task cycle for Rust Wasm Zed extension development
 doc-type: guide
+title: "Implementing Task Cycle: Rust→Wasm Zed Extension"
 purpose: TDD workflow for Zed extensions
-search_keywords:
-  - rust
-  - wasm
-  - zed
-  - wit
-  - extension
-update:
-  frequency: on-change
-  last-updated: '2026-01-23'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Implementing Task Cycle: Rust→Wasm Zed Extension

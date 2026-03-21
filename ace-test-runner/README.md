@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: Ace::TestRunner
+purpose: Documentation for ace-test-runner/README.md
+ace-docs:
+  last-updated: 2026-03-18
+  last-checked: 2026-03-21
+---
+
 # Ace::TestRunner
 
 Test execution and reporting tool for ace-* gems with AI-friendly output formats.

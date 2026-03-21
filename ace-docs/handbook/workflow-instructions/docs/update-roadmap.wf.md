@@ -1,14 +1,10 @@
 ---
-name: docs/update-roadmap
-allowed-tools: Read, Write, Edit, Bash
-description: Update project roadmap with current release information and synchronize
-  with .ace-taskflow structure
-argument-hint: ''
 doc-type: workflow
+title: Update Roadmap Workflow
 purpose: update-roadmap workflow instruction
-update:
-  frequency: on-change
-  last-updated: '2025-10-02'
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
 ---
 
 # Update Roadmap Workflow

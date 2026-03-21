@@ -1,19 +1,10 @@
 ---
-name: review/apply-feedback
-description: Apply verified feedback items from code review
-argument-hint: "[--session <path>] [--priority <level>]"
-allowed-tools: Read, Bash, Write, Edit, Grep, Glob
-bundle:
-  embed_document_source: true
-  sections:
-    feedback_cli_reference:
-      commands:
-        - ace-review-feedback verify --help
-        - ace-review-feedback resolve --help
-        - ace-review-feedback skip --help
-update:
-  frequency: on-change
-  last-updated: '2026-02-06'
+doc-type: workflow
+title: Apply Feedback Workflow
+purpose: Apply verified feedback items from code review
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
 ---
 
 # Apply Feedback Workflow

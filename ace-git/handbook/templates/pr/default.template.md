@@ -1,3 +1,12 @@
+---
+doc-type: template
+title: Summary
+purpose: Documentation for ace-git/handbook/templates/pr/default.template.md
+ace-docs:
+  last-updated: 2026-02-28
+  last-checked: 2026-03-21
+---
+
 ## Summary
 
 What is easier now:

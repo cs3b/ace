@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-bundle CLI Reference
+purpose: Documentation for ace-bundle/docs/usage.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-bundle CLI Reference
 
 Complete command reference for `ace-bundle`.

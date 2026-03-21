@@ -1,11 +1,12 @@
 ---
 name: task-draft
 allowed-tools: Bash, Read
-description: Create behavior-first draft tasks and subtasks with vertical slicing and verification plans
+description: Create behavior-first draft tasks and subtasks with vertical slicing
+  and verification plans
 doc-type: workflow
 purpose: task draft workflow instruction
 ace-docs:
-  last-updated: '2026-03-03'
+  last-updated: '2026-03-21'
 ---
 
 # Draft Task - Behavior-First Specification

@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-review
+purpose: Documentation for ace-review/README.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-review
 
 Multi-model code review with preset-based analysis — for PRs, tasks, and packages.

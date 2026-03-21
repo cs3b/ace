@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-search
+purpose: Documentation for ace-search/README.md
+ace-docs:
+  last-updated: 2026-01-08
+  last-checked: 2026-03-21
+---
+
 # ace-search
 
 Unified search tool for codebases with intelligent pattern matching and configuration.

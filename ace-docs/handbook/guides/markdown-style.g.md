@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Markdown Style Guide
+purpose: Documentation for ace-docs/handbook/guides/markdown-style.g.md
+ace-docs:
+  last-updated: 2026-02-23
+  last-checked: 2026-03-21
+---
+
 # Markdown Style Guide
 
 This guide defines typography and formatting conventions for technical markdown documents. These standards optimize readability in monospace environments - terminals, code editors, and documentation tools.

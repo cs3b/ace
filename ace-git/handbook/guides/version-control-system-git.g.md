@@ -1,3 +1,12 @@
+---
+doc-type: guide
+title: Version Control System Git Guide
+purpose: Documentation for ace-git/handbook/guides/version-control-system-git.g.md
+ace-docs:
+  last-updated: 2026-03-12
+  last-checked: 2026-03-21
+---
+
 # Version Control System Git Guide
 
 ## Purpose

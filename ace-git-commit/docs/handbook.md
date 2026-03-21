@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-git-commit Handbook Reference
+purpose: Documentation for ace-git-commit/docs/handbook.md
+ace-docs:
+  last-updated: 2026-03-21
+  last-checked: 2026-03-21
+---
+
 # ace-git-commit Handbook Reference
 
 Skill, workflow, guide, and prompts shipped with ace-git-commit.

@@ -1,22 +1,10 @@
 ---
-name: quick-reference
-description: Quick reference card for ACE testing conventions
 doc-type: guide
+title: Testing Quick Reference
 purpose: Testing quick reference
-search_keywords:
-  - testing
-  - quick reference
-  - cheatsheet
-  - conventions
-  - patterns
-  - best practices
-  - IO isolation
-  - performance targets
-  - flat structure
-  - naming conventions
-update:
-  frequency: on-change
-  last-updated: '2026-01-22'
+ace-docs:
+  last-updated: 2026-01-23
+  last-checked: 2026-03-21
 ---
 
 # Testing Quick Reference

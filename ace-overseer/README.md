@@ -1,3 +1,12 @@
+---
+doc-type: user
+title: ace-overseer
+purpose: Documentation for ace-overseer/README.md
+ace-docs:
+  last-updated: 2026-02-19
+  last-checked: 2026-03-21
+---
+
 # ace-overseer
 
 `ace-overseer` is the project control plane for multi-task execution across git worktrees.

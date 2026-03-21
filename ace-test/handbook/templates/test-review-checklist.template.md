@@ -1,11 +1,10 @@
 ---
-name: test-review-checklist
-description: Template for reviewing test PRs
 doc-type: template
+title: Test Review Checklist
 purpose: Test PR review checklist
-update:
-  frequency: as-needed
-  last-updated: '2026-01-31'
+ace-docs:
+  last-updated: 2026-02-19
+  last-checked: 2026-03-21
 ---
 
 # Test Review Checklist
