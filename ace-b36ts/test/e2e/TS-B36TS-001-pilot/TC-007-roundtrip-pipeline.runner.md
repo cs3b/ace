@@ -2,17 +2,23 @@
 
 ## Goal
 
-Encode a known date, then pipe or feed the encoded result into the decode operation — all through a shell pipeline or command substitution. Save a file with the original date, the encoded token, and the decoded result, proving the roundtrip works end-to-end.
+Encode a fixed timestamp and immediately decode the produced token through a shell
+pipeline or command substitution, proving roundtrip integrity.
 
 ## Workspace
 
-Save output to `results/tc/07/`. The file should contain all three values: the original date, the encoded token, and the decoded result.
+Save output to `results/tc/07/` using this contract:
+
+- `roundtrip.summary` with three lines:
+  - `ORIGINAL=<timestamp>`
+  - `TOKEN=<token>`
+  - `DECODED=<decoded-value>`
+- `roundtrip.stdout`, `roundtrip.stderr`, `roundtrip.exit`
 
 ## Constraints
 
-- Using the encode and decode operations you've already exercised in Goals 2–3, compose them into a pipeline.
-- The encode→decode must happen through shell pipeline (`|`) or command substitution (`$(...)`) — not by manually copying the encoded value.
-- Do not fabricate output — all values must come from actual tool execution.
-- The original date should be a specific, known date (not "today" — use a fixed date so the roundtrip can be verified).
-- Additionally, capture the pipeline's stdout, stderr, and exit code:
-  `results/tc/07/roundtrip.stdout`, `results/tc/07/roundtrip.stderr`, `results/tc/07/roundtrip.exit`.
+- Use fixed original timestamp: `2025-01-06T12:30:00Z`.
+- Encode then decode in one composed shell flow (`|` or `$(...)`) without manual token copy.
+- Decode with an explicit format (`--format iso`) so the comparison is deterministic.
+- Capture stdout/stderr/exit for the composed operation.
+- Do not fabricate output.

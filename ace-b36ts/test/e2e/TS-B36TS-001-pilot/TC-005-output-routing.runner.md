@@ -2,16 +2,23 @@
 
 ## Goal
 
-Run the same encode operation in different verbosity modes. Using your knowledge of the tool's flags from Goal 1, capture stdout and stderr into separate files for each mode to prove that output streams are routed correctly.
+Prove stream routing behavior for `ace-b36ts encode` across three modes: default,
+quiet (`--quiet`), and verbose (`--verbose`).
 
 ## Workspace
 
-Save all output to `results/tc/05/`. Use descriptive filenames that identify the mode and stream
-(e.g., `results/tc/05/quiet.stdout`, `results/tc/05/quiet.stderr`, `results/tc/05/quiet.exit`).
+Save all output to `results/tc/05/` using this exact naming contract:
+
+- `default.stdout`, `default.stderr`, `default.exit`
+- `quiet.stdout`, `quiet.stderr`, `quiet.exit`
+- `verbose.stdout`, `verbose.stderr`, `verbose.exit`
 
 ## Constraints
 
-- Using your knowledge of the tool's flags from Goal 1, run the same encode operation in different verbosity modes.
-- Test at least 2 distinct modes (e.g., quiet/default, or quiet/verbose).
-- Capture stdout and stderr separately for each mode — do not merge streams.
-- Do not fabricate output — all captured content must come from actual tool execution.
+- Use a fixed input timestamp for all three runs:
+  - `2025-01-06T12:30:00Z`
+- Use the same command shape each time:
+  - `ace-b36ts encode <timestamp> [mode-flag]`
+- Capture stdout/stderr/exit separately for each mode.
+- Do not fabricate output — all captures must come from real tool execution.
+- Include one short note file `routing-notes.md` summarizing observed differences.

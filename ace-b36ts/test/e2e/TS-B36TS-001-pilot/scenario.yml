@@ -3,19 +3,19 @@ title: "ace-b36ts Goal-Based E2E Pilot"
 area: timestamp
 package: ace-b36ts
 priority: high
-tags: [smoke, happy-path, "use-case:b36ts", pilot]
+tags: [smoke, happy-path, "use-case:b36ts", pilot, decision-evidence]
 cost-tier: smoke
 tool-under-test: ace-b36ts
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Encoded today-date file"
-  results/tc/03/:  "Decoded i50jj3 token file"
-  results/tc/04/:  "Error behavior captures (exit code, stdout, stderr)"
-  results/tc/05/:  "Output routing captures per verbosity mode"
-  results/tc/06/:  "Structured output integration artifacts"
-  results/tc/07/:  "Roundtrip pipeline evidence (original, encoded, decoded)"
-  results/tc/08/:  "Batch sort order comparison files"
+  results/tc/01/: "Help survey observations"
+  results/tc/02/: "Encoded today-date file"
+  results/tc/03/: "Decoded i50jj3 token file"
+  results/tc/04/: "Error behavior captures (exit code, stdout, stderr)"
+  results/tc/05/: "Output routing captures for default/quiet/verbose runs"
+  results/tc/06/: "Structured JSON output + jq consumption evidence"
+  results/tc/07/: "Roundtrip pipeline evidence (original, token, decoded)"
+  results/tc/08/: "Batch encode order vs sorted order comparison files"
 
 e2e-justification: >
   All goals require real binary execution through a shell. The runner discovers

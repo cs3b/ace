@@ -6,19 +6,20 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Files exist** — Two files exist in `results/tc/08/`: one with encode-order IDs and one with sorted IDs.
-2. **At least 4 IDs** — Each file contains at least 4 token/date pairs.
-3. **Lexicographic = chronological** — The lexicographically sorted order of the tokens matches the chronological order of their original dates. Earlier dates produce tokens that sort before later dates.
-4. **Valid tokens** — All tokens consist of lowercase alphanumeric characters only (base36 charset: `[0-9a-z]`).
+
+1. **Required files exist** — `encode-order.tsv` and `sorted-order.tsv` both exist.
+2. **Exactly four rows per file** — each file contains 4 non-empty rows.
+3. **Row format is valid** — each row is `<token>\t<date>`; tokens match `[0-9a-z]{2,8}`.
+4. **Sorted token order** — `sorted-order.tsv` is lexicographically sorted by token.
+5. **Chronological alignment** — dates in `sorted-order.tsv` are non-decreasing, showing lexical token order tracks date order for this set.
 
 ## Verdict
 
-- **PASS**: Both files exist with at least 4 IDs each. Lexicographic sort order of tokens matches chronological order of dates. All tokens are valid base36.
-- **FAIL**: Files missing, fewer than 4 IDs, sort order does not match chronological order, or invalid tokens.
+- **PASS**: Required files and formats are valid, sorted file is truly sorted by token, and date order is non-decreasing.
+- **FAIL**: Missing files, wrong row count/format, unsorted tokens, invalid tokens, or date order mismatch.
 
-Report: `PASS` or `FAIL` with evidence (the two orderings and whether they align chronologically).
+Report: `PASS` or `FAIL` with evidence (rows and ordering checks).
