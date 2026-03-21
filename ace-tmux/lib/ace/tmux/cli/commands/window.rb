@@ -63,7 +63,7 @@ module Ace
             puts "Adding window '#{effective_name}' (preset: #{preset})..." unless options[:quiet]
             manager.add_window(preset, session: options[:session], root: options[:root], name: options[:name])
             puts "Window '#{effective_name}' added." unless options[:quiet]
-          rescue Molecules::PresetNotFoundError => e
+          rescue Ace::Tmux::PresetNotFoundError => e
             raise Ace::Support::Cli::Error.new(e.message)
           rescue Organisms::NotInTmuxError => e
             raise Ace::Support::Cli::Error.new(e.message)
