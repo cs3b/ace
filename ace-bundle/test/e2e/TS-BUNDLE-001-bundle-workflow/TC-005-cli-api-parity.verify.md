@@ -1,4 +1,4 @@
-# Goal 6 — CLI-API Parity Verification
+# Goal 5 — CLI-API Parity Verification
 
 ## Injected Context
 
@@ -11,10 +11,10 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **All capture sets exist** — results/tc/06/ contains stdout/exit for both success-mode CLI runs and the error-path run.
-2. **Success path exits are zero** — `cli-valid.exit` and `cli-valid-cache.exit` are `0`.
-3. **Success behavior comparison exists** — `comparison.md` classifies behavior as `consistent` or `divergent` with evidence.
-4. **Error handling is non-zero** — `cli-error.exit` is non-zero for nonexistent file input and has informative stderr/stdout evidence.
+- **All capture sets exist** — `results/tc/05/` contains stdout/exit for both success-mode CLI runs and the error-path run.
+- **Success path exits are zero** — `cli-valid.exit` and `cli-valid-cache.exit` are `0`.
+- **Success behavior comparison exists** — `comparison.md` classifies behavior as `consistent` or `divergent` with evidence.
+- **Error handling is non-zero** — `cli-error.exit` is non-zero for nonexistent file input and has informative stderr/stdout evidence.
 
 ## Verdict
 

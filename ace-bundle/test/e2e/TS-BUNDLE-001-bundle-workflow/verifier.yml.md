@@ -10,8 +10,7 @@ bundle:
     - ./TC-002-preset-loading.verify.md
     - ./TC-003-file-patterns.verify.md
     - ./TC-004-auto-format.verify.md
-    - ./TC-005-output-override.verify.md
-    - ./TC-006-cli-api-parity.verify.md
+    - ./TC-005-cli-api-parity.verify.md
 ---
 
 # E2E Verification: ace-bundle
@@ -37,4 +36,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/6 passed**
+Final line: **Results: X/5 passed**

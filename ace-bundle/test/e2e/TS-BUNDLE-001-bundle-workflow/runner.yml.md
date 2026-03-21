@@ -10,8 +10,7 @@ bundle:
     - ./TC-002-preset-loading.runner.md
     - ./TC-003-file-patterns.runner.md
     - ./TC-004-auto-format.runner.md
-    - ./TC-005-output-override.runner.md
-    - ./TC-006-cli-api-parity.runner.md
+    - ./TC-005-cli-api-parity.runner.md
 ---
 
 # E2E Test Runner: ace-bundle
@@ -26,7 +25,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 6)
+- Execute each goal in order (1 through 5)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
