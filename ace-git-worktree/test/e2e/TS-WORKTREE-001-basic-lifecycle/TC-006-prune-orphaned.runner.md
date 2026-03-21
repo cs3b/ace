@@ -17,7 +17,7 @@ Save all output to `results/tc/06/`. Capture:
 
 ## Constraints
 
-- One worktree from Goal 2 should remain (the one not removed in Goal 5). Manually delete its directory with `rm -rf` to create an orphan.
+- One worktree from Goal 2 remains (the one not removed in Goal 5). Manually delete its directory with `rm -rf` to create an orphan.
 - Use command captures (stdout/stderr/exit) for the orphan-create step; do not use narrative-only evidence files.
 - Invoke prune with `--dry-run` first, then without.
 - Final-state verification is primary: after prune, prove there is no orphaned worktree in git metadata and no orphan directory on disk.

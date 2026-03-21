@@ -2,7 +2,7 @@
 
 ## Goal
 
-Remove task 8pp.t.r8x worktree by task ID. Then remove task 8pp.t.q7w worktree with the --delete-branch flag (which should also delete the associated branch). Verify clean state: main worktree intact, both task worktrees gone, branches deleted where specified. Also test the current-branch fallback behavior if applicable.
+Remove task 8pp.t.r8x worktree by task ID. Then remove task 8pp.t.q7w worktree with the --delete-branch flag (which also deletes the associated branch). Capture clean-state evidence: main worktree intact, both task worktrees gone, branches deleted where specified. Also test the current-branch fallback behavior if applicable.
 
 ## Workspace
 
