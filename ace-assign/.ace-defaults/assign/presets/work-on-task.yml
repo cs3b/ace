@@ -38,13 +38,17 @@ steps:
       - "If changes are documentation-only or otherwise do not affect runnable code, mark this step skipped with a clear reason."
 
   - name: verify-e2e
-    workflow: wfi://e2e/review
-    taskref: "{{taskref}}"
+    context: fork
     instructions:
-      - "Review E2E coverage for task {{taskref}} changes when public CLI behavior moved."
-      - "Limit review and any follow-up execution to packages whose public CLI/API behavior changed."
-      - "If the review shows stale or missing scenarios, update them before running targeted E2E verification."
-      - "Skip when the task only changed internal behavior with no public CLI/API impact."
+      - "Run E2E tests for packages modified by task {{taskref}}."
+      - "Detect modified packages from the current diff: `git diff origin/main --name-only | grep '^ace-' | cut -d/ -f1 | sort -u`."
+      - "Run `ace-test-e2e <package>` for each modified package that has test/e2e/ scenarios."
+      - "If more than 5 packages were modified with cross-dependencies, run the full suite: `ace-test-e2e-suite`."
+      - "If any scenarios fail, use /as-e2e-fix to diagnose and fix each failing scenario."
+      - "After fixing, rerun the failing scenarios to confirm they pass."
+      - "Repeat fix→rerun cycle up to 3 times if new failures appear."
+      - "Final gate: all previously-failing scenarios must pass before completing this step."
+      - "Skip only when no modified package has test/e2e/ scenarios."
 
   - name: release-minor
     instructions:
@@ -110,8 +114,16 @@ steps:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
+    context: fork
     workflow: wfi://github/pr/update
     instructions:
       - "Update the PR description with the final summary for task {{taskref}}."
+      - "CRITICAL: The File Changes section must contain the complete, untruncated grouped-stats output from `ace-git diff`. Paste it verbatim — never summarize or abbreviate."
       - "Include final release/version information and the key completed components when applicable."
       - "Make sure the PR description reflects the post-review final state."
+
+  - name: create-retro
+    skill: as-retro-create
+    instructions:
+      - "Create a retrospective for task {{taskref}} capturing what went well, what could improve, and action items."
+      - "Focus on process learnings, not just task outcomes."
