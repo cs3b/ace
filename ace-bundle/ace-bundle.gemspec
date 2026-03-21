@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Bundle loading for ACE projects'
-  spec.description = 'Bundle loading gem for ACE projects. Provides preset-based bundle ' \
-                     'loading with configuration cascade support via ace-support-core. Supports ' \
-                     'multiple file formats and dynamic content generation.'
+  spec.summary = 'Assemble project context for AI agents and developers — in one command'
+  spec.description = 'Collects files, presets, diffs, and protocol resources into a single ' \
+                     'context package. Supports compression, mixed inputs, and team-level ' \
+                     'preset composition via configuration cascade.'
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
