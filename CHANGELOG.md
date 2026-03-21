@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.872] - 2026-03-21
+
+### Changed
+- **ace-assign v0.35.0**: Added `create-retro` step to assignment presets; redesigned `verify-e2e` to run E2E tests with fix loops instead of coverage-only review; made `update-pr-desc` fork-enabled to prevent context truncation
+
 ## [0.9.871] - 2026-03-21
 
 ### Changed
