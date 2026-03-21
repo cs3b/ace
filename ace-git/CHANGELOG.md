@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-03-21
+
+### Added
+- Add GitHub release publish workflow (`wfi://github/release-publish`) for creating GitHub releases from unpublished CHANGELOG entries with daily grouping, commit targeting, and dry-run support.
+- Add `as-github-release-publish` skill for invoking the GitHub release publish workflow.
+
 ## [0.16.0] - 2026-03-20
 
 ### Changed
