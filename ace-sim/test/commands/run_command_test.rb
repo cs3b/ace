@@ -146,4 +146,20 @@ class RunCommandTest < AceSimTestCase
 
     assert_match(/synthesis_provider requires synthesis_workflow/, err.message)
   end
+
+  def test_rejects_synthesis_provider_without_workflow_flag
+    cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
+
+    err = assert_raises(Ace::Support::Cli::Error) do
+      cmd.call(
+        preset: "validate-idea",
+        source: @source,
+        provider: ["codex:mini"],
+        synthesis_provider: "glite",
+        quiet: true
+      )
+    end
+
+    assert_match(/synthesis_provider requires synthesis_workflow/, err.message)
+  end
 end
