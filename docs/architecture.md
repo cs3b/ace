@@ -1,12 +1,9 @@
 ---
-update:
-  update_frequency: weekly
-  max_lines: 160
-  required_sections:
-  - overview
-  - scope
-  frequency: weekly
-  last-updated: '2026-02-23'
+doc-type: bundle
+title: ACE - System Architecture
+purpose: Documentation for docs/architecture.md
+ace-docs:
+  last-updated: '2026-03-12'
 ---
 
 # ACE - System Architecture

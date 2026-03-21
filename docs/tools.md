@@ -1,11 +1,8 @@
 ---
 doc-type: reference
 purpose: Quick CLI tool reference for ace-* commands. Used by agents to discover available tools and correct invocation patterns.
-update:
-  update_frequency: weekly
-  max_lines: 150
-  required_sections: []
-  last-updated: '2026-02-23'
+ace-docs:
+  last-updated: '2026-03-12'
 ---
 
 # ACE CLI Tools Reference

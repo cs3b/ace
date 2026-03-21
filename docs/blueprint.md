@@ -1,12 +1,9 @@
 ---
-update:
-  update_frequency: weekly
-  max_lines: 100
-  required_sections:
-  - overview
-  - scope
-  frequency: weekly
-  last-updated: '2026-02-23'
+doc-type: bundle
+title: "Project Blueprint: ACE (Agentic Coding Environment)"
+purpose: Documentation for docs/blueprint.md
+ace-docs:
+  last-updated: '2026-03-04'
 ---
 
 # Project Blueprint: ACE (Agentic Coding Environment)
