@@ -2,11 +2,9 @@
 name: task-draft
 allowed-tools: Bash, Read
 description: Create behavior-first draft tasks and subtasks with vertical slicing and verification plans
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
+doc-type: workflow
+purpose: task draft workflow instruction
+ace-docs:
   last-updated: '2026-03-03'
 ---
 

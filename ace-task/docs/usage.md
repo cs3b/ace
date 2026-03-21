@@ -1,3 +1,10 @@
+---
+doc-type: user
+purpose: CLI reference for ace-task commands and options
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 # ace-task CLI Reference
 
 Complete command reference for `ace-task`.

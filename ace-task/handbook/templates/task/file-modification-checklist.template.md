@@ -1,3 +1,10 @@
+---
+doc-type: template
+purpose: Checklist template for tracking file changes in task and code reviews
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 ## File Modifications
 
 ### Create

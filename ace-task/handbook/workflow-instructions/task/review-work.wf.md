@@ -1,9 +1,7 @@
 ---
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
+doc-type: workflow
+purpose: Review implementation work before completion
+ace-docs:
   last-updated: '2026-02-27'
 ---
 

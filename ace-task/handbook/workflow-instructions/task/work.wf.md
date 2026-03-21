@@ -11,8 +11,9 @@ assign:
     - verify-test
     - release-minor
   context: fork
-update:
-  update_frequency: on-change
+doc-type: workflow
+purpose: Execute task implementation from plan with quality gates
+ace-docs:
   last-updated: '2026-03-04'
 ---
 

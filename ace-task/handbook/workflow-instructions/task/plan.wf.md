@@ -1,12 +1,10 @@
 ---
 name: task-plan
 allowed-tools: Bash, Read
-description: Create a cache-backed implementation plan artifact with freshness checks and anchored execution checklist output
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
+description: Create a cache-backed implementation plan with freshness checks and anchored execution checklist output
+doc-type: workflow
+purpose: Create implementation plans with caching and execution checklists
+ace-docs:
   last-updated: '2026-03-03'
 ---
 
