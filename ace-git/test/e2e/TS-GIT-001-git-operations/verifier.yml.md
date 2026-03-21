@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-git-diff.verify.md
     - ./TC-003-branch-info.verify.md
     - ./TC-004-pr-summary.verify.md
+    - ./TC-005-diff-output-path-security.verify.md
+    - ./TC-006-status-json-no-pr.verify.md
 ---
 
 # E2E Verification: ace-git Operations
@@ -37,4 +39,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/6 passed**
