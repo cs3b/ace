@@ -1,0 +1,38 @@
+test-id: TS-LLMCLI-001
+title: "ace-llm-providers-cli-check smoke"
+area: llmcli
+package: ace-llm-providers-cli
+priority: high
+duration: ~8min
+cost-tier: smoke
+tags: [smoke, happy-path, "use-case:llmcli-check"]
+tool-under-test: ace-llm-providers-cli-check
+
+sandbox-layout:
+  results/tc/01/: "CLI help surface evidence"
+  results/tc/02/: "No-tools deterministic failure-path evidence"
+  results/tc/03/: "Stubbed-tools deterministic success-path evidence"
+
+e2e-justification: >
+  These checks validate executable wiring, shell-level invocation behavior,
+  and user-visible exit semantics for `ace-llm-providers-cli-check` under real
+  filesystem/PATH conditions. Existing unit coverage focuses on provider client
+  internals and formatting logic, but not end-to-end binary behavior.
+
+unit-coverage-reviewed:
+  - test/edge/cli_execution_edge_test.rb
+  - test/atoms/session_finders/codex_session_finder_test.rb
+  - test/atoms/session_finders/claude_session_finder_test.rb
+  - test/molecules/codex_client_test.rb
+  - test/molecules/claude_code_client_test.rb
+
+requires:
+  tools: [ruby]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "mkdir -p tools"
+  - agent-env:
+      PROJECT_ROOT_PATH: .
