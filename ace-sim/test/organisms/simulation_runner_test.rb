@@ -54,11 +54,19 @@ class SimulationRunnerTest < AceSimTestCase
   end
 
   def build_session(source:, run_id: "runtest", providers: ["codex:mini"], repeat: 1,
-                    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true)
+                    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true,
+                    steps: %w[draft plan], step_bundles: nil)
+    default_step_bundles = {
+      "draft" => File.expand_path("../../.ace-defaults/sim/steps/draft.md", __dir__),
+      "plan" => File.expand_path("../../.ace-defaults/sim/steps/plan.md", __dir__),
+      "work" => File.expand_path("../../.ace-defaults/sim/steps/work.md", __dir__)
+    }
+    step_bundles = default_step_bundles.merge(step_bundles || {})
+
     Ace::Sim::Models::SimulationSession.new(
       preset: "validate-idea",
       source: source,
-      steps: %w[draft plan],
+      steps: steps,
       providers: providers,
       repeat: repeat,
       dry_run: dry_run,
@@ -66,10 +74,7 @@ class SimulationRunnerTest < AceSimTestCase
       synthesis_workflow: synthesis_workflow,
       synthesis_provider: synthesis_provider,
       run_id: run_id,
-      step_bundles: {
-        "draft" => File.expand_path("../../.ace-defaults/sim/steps/draft.md", __dir__),
-        "plan" => File.expand_path("../../.ace-defaults/sim/steps/plan.md", __dir__)
-      }
+      step_bundles: step_bundles.slice(*steps)
     )
   end
 
@@ -101,6 +106,25 @@ class SimulationRunnerTest < AceSimTestCase
       assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "02-plan", "output.md"))
       assert File.exist?(File.join(run_dir, "input.md"))
       assert File.exist?(File.join(run_dir, "input.bundle.md"))
+    end
+  end
+
+  def test_run_chain_uses_absolute_phase_numbering_for_plan_and_work
+    Dir.mktmpdir do |dir|
+      source = File.join(dir, "source.md")
+      File.write(source, "initial")
+      store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
+
+      result = runner.run(build_session(source: source, steps: %w[plan work]))
+
+      assert result[:success]
+      run_dir = File.join(dir, "simulations", "runtest")
+      assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "02-plan", "input.md"))
+      assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "02-plan", "output.md"))
+      assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "03-work", "input.md"))
+      assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "03-work", "output.md"))
+      refute Dir.exist?(File.join(run_dir, "chains", "codex-mini-1", "01-draft"))
     end
   end
 

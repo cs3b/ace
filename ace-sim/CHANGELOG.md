@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Corrected validate-task chain phase numbering for `plan` and `work` steps so file artifacts use absolute phase indices (`02-plan`, `03-work`) when draft is intentionally omitted.
 - Require explicit `--synthesis-workflow` when `--synthesis-provider` is provided, preventing preset default fallback from masking invalid provider/workflow combinations.
 
 ## [0.10.0] - 2026-03-20
