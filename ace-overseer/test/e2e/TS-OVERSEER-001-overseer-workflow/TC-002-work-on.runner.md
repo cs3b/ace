@@ -10,8 +10,12 @@ Save all output to `results/tc/02/`. Capture:
 - The command's stdout, stderr, and exit code
 - Worktree verification (ace-git-worktree list showing task 8pp.t.q7w)
 - Tmux verification (tmux list showing window for task)
-- Assignment verification (ace-overseer status --format json showing task 8pp.t.q7w assignment state)
+- Assignment verification in both status modes:
+  - `ace-overseer status --format table`
+  - `ace-overseer status --format json`
 - `results/tc/02/overseer-status.json` — machine-readable overseer status output
+- `results/tc/02/overseer-status-table.stdout`
+- `results/tc/02/overseer-status-table.exit` and `results/tc/02/overseer-status-table.stderr`
 - `results/tc/02/overseer-status.exit` and `results/tc/02/overseer-status.stderr`
 
 ## Constraints

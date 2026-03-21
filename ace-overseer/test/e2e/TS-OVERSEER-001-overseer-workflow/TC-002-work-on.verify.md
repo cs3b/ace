@@ -6,16 +6,18 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
-1. Confirm sandbox/project state impact first.
-2. Confirm explicit artifacts under `results/tc/{NN}/`.
-3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+- Confirm sandbox/project state impact first.
+- Confirm explicit artifacts under `results/tc/{NN}/`.
+- Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+Checks:
 1. **Artifacts exist** — results/tc/02/ contains stdout/exit and verification outputs.
 2. **Zero exit code** — work-on command succeeded.
 3. **Worktree created** — Worktree list shows an entry for task 8pp.t.q7w.
 4. **Tmux window created** — Tmux output shows a window was created or exists.
 5. **Assignment active (overseer oracle)** — `overseer-status.json` shows task 8pp.t.q7w with active assignment state.
+6. **Table status output present** — `overseer-status-table.stdout` includes overseer status table content and references task/worktree state for 8pp.t.q7w.
 
 ## Verdict
 
