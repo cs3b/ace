@@ -11,11 +11,13 @@ sandbox-layout:
   results/tc/01/: "Idea creation artifacts"
   results/tc/02/: "Idea listing artifacts"
   results/tc/03/: "Idea move transition artifacts"
+  results/tc/04/: "Idea archive transition artifacts"
 
 e2e-justification: >
   Idea lifecycle requires real CLI subprocess execution, real filesystem state
   (directory creation, file placement, frontmatter written to disk), and real
-  path transitions across create, list (with filter flags), and move operations.
+  path transitions across create, list (with filter flags), and move operations
+  including archive transitions.
   Unit and integration tests mock filesystem state; E2E confirms the full
   CLI-to-disk pipeline.
 

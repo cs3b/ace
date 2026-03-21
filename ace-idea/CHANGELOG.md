@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-20
+
+### Changed
+- Expanded `TS-IDEA-001` E2E lifecycle coverage with a new archive-transition goal and aligned list-filter runner/verifier contracts with root-scope behavior.
+
 ## [0.15.1] - 2026-03-18
 
 ### Changed
