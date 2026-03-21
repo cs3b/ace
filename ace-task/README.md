@@ -1,101 +1,48 @@
 # ace-task
 
-B36TS-based task management for ACE.
+Manage development tasks with unique IDs, subtask trees, and AI-generated plans.
 
-## Installation
+![ace-task demo](docs/demo/ace-task-getting-started.gif)
 
-Add to your Gemfile:
+## Why ace-task
 
-```ruby
-gem "ace-task"
-```
+`ace-task` gives you lightweight task specs that are easy to track in git and easy for AI agents to execute. Every task gets a compact B36TS-based ID, and subtasks let you split work without losing context.
 
-## Usage
+When a spec is ready, `ace-task plan` generates an implementation plan you can execute step by step. `ace-task doctor` keeps task structure healthy across refactors and long-running branches.
+
+## Quick Start
+
+Run:
+
 
 ```bash
-# Create a task
-ace-task create "Fix login bug"
-ace-task create "Fix auth" --priority high --tags auth,security
-ace-task create "Setup DB" --child-of q7w    # Subtask
-ace-task create "Quick task" --in next        # In _next/ folder
-ace-task create "Preview" --dry-run           # Show without writing
-
-# Show a task
-ace-task show q7w                # By suffix shortcut
-ace-task show 8pp.t.q7w          # By full ID
-ace-task show q7w --path         # Print file path only
-ace-task show q7w --content      # Raw markdown
-ace-task show q7w --tree         # With subtask tree
-
-# Resolve/generate an implementation plan
-ace-task plan q7w                            # Reuse fresh plan or generate
-ace-task plan q7w --refresh                  # Force regeneration
-ace-task plan q7w --content                  # Print plan content
-ace-task plan q7w --model codex:codex        # Override model
-
-# List tasks
-ace-task list                    # All tasks
-ace-task list --status pending   # Filter by status
-ace-task list --in maybe         # Tasks in _maybe/ folder
-ace-task list --tags urgent      # Filter by tag
-
-# Move a task
-ace-task move q7w --to archive   # Move to _archive/
-ace-task move q7w --to maybe     # Move to _maybe/
-ace-task move q7w --to root      # Move back to root
-
-# Update task metadata
-ace-task update q7w --set status=done
-ace-task update q7w --set status=done,priority=high
-ace-task update q7w --add tags=shipped
-ace-task update q7w --remove tags=pending-review
-
-# Health check
-ace-task doctor                      # Full health report
-ace-task doctor --auto-fix           # Auto-fix common issues
-ace-task doctor --auto-fix --dry-run # Preview fixes without applying
-ace-task doctor --json               # JSON output
-ace-task doctor --check              # Exit 1 if issues found (CI mode)
-ace-task doctor --quiet              # Summary only
+gem install ace-task
+ace-task create "Rewrite README"
+ace-task show <task-ref>
 ```
 
-## Task ID Format
+## Features
 
-Tasks use a type-marked B36TS ID format: `xxx.t.yyy`
+- B36TS IDs: short, unique task references that work well in commits and chat
+- Subtask trees: break large work into manageable slices
+- AI-generated plans: convert behavior specs into actionable implementation checklists
+- Doctor checks: detect and fix common task structure issues
 
-- `xxx` — first 3 chars of 6-char b36ts timestamp
-- `.t.` — type marker for tasks
-- `yyy` — last 3 chars of 6-char b36ts timestamp
+## Documentation
 
-Shortcuts: use the last 3 chars (`yyy`) to reference a task.
+- [Getting Started](docs/getting-started.md)
+- Runtime help: `ace-task --help`
 
-Subtask IDs append a character: `xxx.t.yyy.a`, `xxx.t.yyy.b`, etc.
+## Common Commands
 
-## Configuration
 
-Default config in `.ace-defaults/task/config.yml`:
-
-```yaml
-task:
-  root_dir: .ace-tasks
-  default_status: pending
-  file_pattern: "*.s.md"
-  special_folder_prefix: "_"
-  plan:
-    model: "gemini:pro-latest"
-    cli_args:
-      claude: "--permission-mode plan"
-      codex: "--sandbox read-only"
-      gemini: "--approval-mode plan"
+```bash
+ace-task create "Add health checks"
+ace-task show <task-ref> --tree
+ace-task plan <task-ref>
+ace-task doctor --check
 ```
 
-Override at project level in `.ace/task/config.yml`.
+## Part of ACE
 
-Note: the `plan.cli_args.claude` setting is task-planning specific native Claude plan mode.
-It is not equivalent to `ace-llm ...@ro`, which remains the read-only execution preset.
-
-Note: Gemini `--approval-mode plan` requires Gemini CLI `experimental.plan` to be enabled.
-
-## License
-
-MIT
+`ace-task` is part of ACE (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
