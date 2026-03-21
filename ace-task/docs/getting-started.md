@@ -1,3 +1,10 @@
+---
+doc-type: user
+purpose: Quickstart guide for installing and using ace-task workflows
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 # Getting Started with ace-task
 
 End-to-end tutorial from installation to productive task management.

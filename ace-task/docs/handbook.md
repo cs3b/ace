@@ -1,3 +1,10 @@
+---
+doc-type: user
+purpose: Handbooks index for ace-task workflows, guides, and task management structure
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 # ace-task Handbook Reference
 
 Complete catalog of skills, workflows, guides, and templates shipped with ace-task.

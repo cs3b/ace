@@ -2,11 +2,9 @@
 name: task-review
 allowed-tools: Bash, Read
 description: Review draft tasks for readiness, vertical slice quality, verification plans, and promotion to pending
-update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
-  frequency: on-change
+doc-type: workflow
+purpose: Review draft tasks for readiness and quality before promotion
+ace-docs:
   last-updated: '2026-03-03'
 ---
 

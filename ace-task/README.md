@@ -1,3 +1,10 @@
+---
+doc-type: user
+purpose: Project-level task management overview and quickstart documentation entry point
+ace-docs:
+  last-updated: '2026-03-21'
+---
+
 # ace-task
 
 Draft, organize, and tackle tasks — for you and your agents.

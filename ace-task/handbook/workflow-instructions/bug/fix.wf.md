@@ -6,8 +6,7 @@ argument-hint: ''
 estimate: 1-2h
 doc-type: workflow
 purpose: fix-bug workflow instruction
-update:
-  frequency: on-change
+ace-docs:
   last-updated: '2025-12-09'
 ---
 
