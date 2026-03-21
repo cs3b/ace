@@ -419,7 +419,7 @@ If needed, add **`## Behavioral Gaps`** only after `## Freshness Summary`.
 - Never return status-only text such as "plan delivered" without the required sections
 
 <documents>
-    <template path="tmpl://task-management/task.technical-approach">## Technical Approach
+    <template path="tmpl://task/technical-approach">## Technical Approach
 
 ### Architecture Pattern
 - [ ] Pattern selection and rationale
@@ -439,7 +439,7 @@ If needed, add **`## Behavioral Gaps`** only after `## Freshness Summary`.
 - [ ] Performance monitoring
 </template>
 
-    <template path="tmpl://task-management/task.file-modification-checklist">## File Modifications
+    <template path="tmpl://task/file-modification-checklist">## File Modifications
 
 ### Create
 - path/to/new/file.ext
@@ -470,7 +470,7 @@ If needed, add **`## Behavioral Gaps`** only after `## Freshness Summary`.
   - Documentation updates: [number of markdown files with references]
 </template>
 
-    <template path="tmpl://task-management/task.plan-anchored-checklist">## Plan Checklist
+    <template path="tmpl://task/plan-anchored-checklist">## Plan Checklist
 
 ### STEP-01
 - **Anchor**: path/to/task.s.md:42

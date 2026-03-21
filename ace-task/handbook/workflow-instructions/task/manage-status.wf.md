@@ -7,6 +7,10 @@ bundle:
   params:
     output: cache
   embed_document_source: true
+  sections: 
+    ace-task-params:
+      commands:
+        - ace-task update --help
 variables:
   task_ref: Task reference to update (e.g., "019", "121.01")
   action: Status action (start, done, undone)

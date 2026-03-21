@@ -68,28 +68,10 @@ Development guides provide best-practice patterns and format specifications.
 
 ## Templates
 
-Reusable templates for task creation and planning.
+Reusable templates in `handbook/templates/task/`, referenced via `tmpl://task/<name>` protocol.
 
-### Task Templates
-
-| Template | Purpose |
-|----------|---------|
-| `task.draft.template.md` | Behavioral specification (WHAT): user experience, interface contract, success criteria, vertical slices |
-| `task.pending.template.md` | Implementation planning (HOW): behavioral context, planning steps, execution steps |
-
-### Planning Templates
-
-| Template | Purpose |
-|----------|---------|
-| `task.technical-approach.template.md` | Architecture pattern, technology stack, implementation strategy |
-| `task.file-modification-checklist.template.md` | Create/Modify/Delete/Rename file changes with impact analysis |
-| `task.risk-assessment.template.md` | Risk identification and mitigation planning |
-| `task.next-steps.template.md` | Follow-up actions after task completion |
-| `task.tool-selection-matrix.template.md` | Tool evaluation and selection criteria |
-
-### Other
-
-| Template | Purpose |
-|----------|---------|
-| `sample-auth-task.md` | Complete example task for reference |
-| `impact-note.template.md` | Impact assessment for changes |
+| Template | Protocol | Purpose |
+|----------|----------|---------|
+| `draft.template.md` | `tmpl://task/draft` | Behavioral specification (WHAT): user experience, interface contract, success criteria, vertical slices |
+| `technical-approach.template.md` | `tmpl://task/technical-approach` | Architecture pattern, technology stack, implementation strategy |
+| `file-modification-checklist.template.md` | `tmpl://task/file-modification-checklist` | Create/Modify/Delete/Rename file changes with impact analysis |
