@@ -6,11 +6,12 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
-1. Confirm sandbox/project state impact first.
-2. Confirm explicit artifacts under `results/tc/{NN}/`.
-3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+- Confirm sandbox/project state impact first.
+- Confirm explicit artifacts under `results/tc/{NN}/`.
+- Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+
+Checks:
 1. **All capture sets exist** — results/tc/05/ contains assignment completion evidence, dry-run, prune, and post-prune captures.
 2. **Prune ran from sandbox root** — `pwd-before-dry-run.txt` and `pwd-before-prune.txt` match `sandbox-root-path.txt` and do not point to `task-q7w`.
 3. **Correct prune commands used** — command files show only normal prune flow (`ace-overseer prune --dry-run`, `ace-overseer prune --yes`) with no assignment-prune flags, no `--force`, and no positional targets.

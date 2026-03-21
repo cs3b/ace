@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-03-19
+
+### Changed
+- Refined `TS-OVERSEER-001` E2E verifier structure with explicit impact-first validation and normalized check sections across all goals.
+- Expanded Goal 2 E2E coverage to require both `ace-overseer status --format json` and `--format table` evidence artifacts.
+
 ## [0.7.0] - 2026-03-18
 
 ### Changed
