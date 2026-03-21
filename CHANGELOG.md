@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
 
+## [0.9.876] - 2026-03-21
+
+### Fixed
+- **ace-docs v0.27.1**: Restored `Document#last_checked` compatibility by reading `ace-docs.last-checked` before falling back to legacy metadata.
+- **ace-lint v0.22.1**: Restored malformed `invalid.md` fixture coverage so frontmatter negative-case checks still exercise invalid YAML.
+- **ace-task v0.30.2**: Restored historical package changelog entries removed during the documentation sweep.
+- **ace-test v0.4.6**: Restored historical package changelog entries removed during the documentation sweep.
+
+### Technical
+- **ace-task v0.30.2**: Removed stale projected provider skill wrappers for retired task skills.
+
 ## [0.9.875] - 2026-03-21
 
 ### Changed
