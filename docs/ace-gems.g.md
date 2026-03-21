@@ -1,12 +1,9 @@
 ---
-update:
-  update_frequency: weekly
-  max_lines: 250
-  required_sections:
-  - overview
-  - scope
-  frequency: weekly
-  last-updated: '2026-02-23'
+doc-type: guide
+title: ACE Gem Development Guide
+purpose: Documentation for docs/ace-gems.g.md
+ace-docs:
+  last-updated: '2026-03-18'
 ---
 
 # ACE Gem Development Guide

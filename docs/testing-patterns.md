@@ -1,3 +1,10 @@
+---
+doc-type: bundle
+purpose: Repository documentation for testing-patterns
+ace-docs:
+  last-updated: '2026-03-18'
+---
+
 # Testing Patterns
 
 > **NOTE**: This document has been moved to the `ace-test` package.
