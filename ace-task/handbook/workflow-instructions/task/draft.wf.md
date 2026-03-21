@@ -366,7 +366,7 @@ This workflow creates behavior-first specifications that serve as clear contract
 ## Embedded Templates
 
 <documents>
-<template path="tmpl://task-management/task.draft">---
+<template path="tmpl://task/draft">---
 id: {id}
 status: draft
 priority: {priority}
@@ -514,7 +514,7 @@ the decomposition was premature. Consider consolidating remaining subtasks.
 - Interface specification examples
 ```
 </template>
-<template path="tmpl://task-management/draft-usage">
+<template path="tmpl://task/draft-usage">
 # [Feature/Change Name] - Draft Usage
 
 ## API Surface
