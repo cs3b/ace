@@ -13,6 +13,7 @@ bundle:
     - ./TC-005-rewrite-workflow.verify.md
     - ./TC-006-error-handling.verify.md
     - ./TC-007-config-cascade.verify.md
+    - ./TC-008-check-release-gate.verify.md
 ---
 
 # E2E Verification: ace-git-secrets
@@ -38,4 +39,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/7 passed**
+Final line: **Results: X/8 passed**

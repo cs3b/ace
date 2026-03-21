@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-18
+
+### Changed
+- Expanded `TS-SECRETS-001` E2E coverage with a new `check-release` gate test case and synchronized scenario runner/verifier manifests to 8-goal execution.
+
+### Technical
+- Added task-level E2E lifecycle artifacts (`e2e-review.md`, `e2e-change-plan.md`) documenting coverage analysis and rewrite decisions for `8qe.t.h5e.5`.
+
 ## [0.10.1] - 2026-03-18
 
 ### Changed
