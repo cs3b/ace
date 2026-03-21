@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-03-21
+
+### Fixed
+- Restored `Document#last_checked` compatibility with current frontmatter writes by reading `ace-docs.last-checked` before falling back to the legacy `update.last-checked` field.
+
 ## [0.27.0] - 2026-03-20
 
 ### Changed
