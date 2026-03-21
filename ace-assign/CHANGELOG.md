@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.1] - 2026-03-18
+
+### Changed
+- Added `unit-coverage-reviewed` decision evidence to `TS-ASSIGN-001` and `TS-ASSIGN-002` E2E scenarios to map coverage against related unit tests.
+
 ## [0.34.0] - 2026-03-18
 
 ### Changed
