@@ -50,6 +50,10 @@ module Ace
               raise Ace::Support::Cli::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
             end
 
+            if !options[:synthesis_provider].to_s.strip.empty? && options[:synthesis_workflow].nil?
+              raise Ace::Support::Cli::Error.new("synthesis_provider requires synthesis_workflow")
+            end
+
             sources = options[:source] || Array(preset_data["source"])
             raise Ace::Support::Cli::Error.new("--source is required") if sources.empty?
 
