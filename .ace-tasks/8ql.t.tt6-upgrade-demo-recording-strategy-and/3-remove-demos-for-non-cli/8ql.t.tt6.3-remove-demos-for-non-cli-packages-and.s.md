@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.3
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-22 19:52:32"
 estimate: TBD
@@ -52,10 +52,10 @@ Error Handling:
 
 ### Success Criteria
 
-- [ ] `ace-test/docs/demo/` directory removed entirely (tape + GIF)
-- [ ] No other non-CLI packages have `docs/demo/` directories
-- [ ] No README files reference removed demo GIFs (no broken image links)
-- [ ] `ace-demo list` output is clean — only CLI packages with demos appear
+- [x] `ace-test/docs/demo/` directory removed entirely (tape + GIF)
+- [x] No other non-CLI packages have `docs/demo/` directories
+- [x] No README files reference removed demo GIFs (no broken image links)
+- [x] `ace-demo list` output is clean — only CLI packages with demos appear
 
 ### Validation Questions
 
@@ -72,18 +72,18 @@ Error Handling:
 
 ### Unit/Component Validation
 
-- [ ] `ace-test/docs/demo/` directory does not exist after cleanup
-- [ ] No other non-CLI package has a `docs/demo/` with tape files
+- [x] `ace-test/docs/demo/` directory does not exist after cleanup
+- [x] No other non-CLI package has a `docs/demo/` with tape files
 
 ### Integration/E2E Validation
 
-- [ ] `ace-demo list` shows only valid CLI package demos
-- [ ] All README.md files render without broken image references
+- [x] `ace-demo list` shows only valid CLI package demos
+- [x] All README.md files render without broken image references
 
 ### Failure/Invalid Path Validation
 
-- [ ] Glob search for `.tape` and `.tape.yml` in non-CLI packages returns empty
-- [ ] Grep for removed GIF filenames in README files returns no matches
+- [x] Glob search for `.tape` and `.tape.yml` in non-CLI packages returns empty
+- [x] Grep for removed GIF filenames in README files returns no matches
 
 ## Scope of Work
 

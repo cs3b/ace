@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-22 19:52:31"
 estimate: TBD
@@ -149,17 +149,17 @@ Error Handling:
 
 ### Success Criteria
 
-- [ ] `DemoYamlParser` parses valid `.tape.yml` and rejects invalid structures with clear errors
-- [ ] `VhsTapeCompiler` produces correct VHS tape syntax from parsed YAML
-- [ ] `DemoSandboxBuilder` creates sandbox, runs all setup directives in order
-- [ ] `DemoTeardownExecutor` cleans up sandbox even after recording failure
-- [ ] `DemoRecorder` routes `.tape.yml` through new pipeline, `.tape` through existing
-- [ ] `TapeResolver` resolves both formats with `.tape.yml` priority for extensionless names
-- [ ] `ace-demo create` generates `.tape.yml` template
-- [ ] `ace-demo list` shows both formats
-- [ ] `ace-demo show` displays YAML metadata for `.tape.yml` files
-- [ ] `ace-test ace-demo` passes with all new and existing tests
-- [ ] `TapeMetadataParser` replaced by `DemoYamlParser` for `.tape.yml` files (kept for `.tape` backward compat)
+- [x] `DemoYamlParser` parses valid `.tape.yml` and rejects invalid structures with clear errors
+- [x] `VhsTapeCompiler` produces correct VHS tape syntax from parsed YAML
+- [x] `DemoSandboxBuilder` creates sandbox, runs all setup directives in order
+- [x] `DemoTeardownExecutor` cleans up sandbox even after recording failure
+- [x] `DemoRecorder` routes `.tape.yml` through new pipeline, `.tape` through existing
+- [x] `TapeResolver` resolves both formats with `.tape.yml` priority for extensionless names
+- [x] `ace-demo create` generates `.tape.yml` template
+- [x] `ace-demo list` shows both formats
+- [x] `ace-demo show` displays YAML metadata for `.tape.yml` files
+- [x] `ace-test ace-demo` passes with all new and existing tests
+- [x] `TapeMetadataParser` replaced by `DemoYamlParser` for `.tape.yml` files (kept for `.tape` backward compat)
 
 ### Validation Questions
 
