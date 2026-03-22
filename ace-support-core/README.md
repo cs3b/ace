@@ -1,64 +1,58 @@
 ---
 doc-type: user
-title: Ace::Support::Core
+title: ace-support-core
 purpose: Documentation for ace-support-core/README.md
 ace-docs:
-  last-updated: 2026-03-18
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# Ace::Support::Core
+# ace-support-core
 
-Foundational infrastructure gem providing configuration cascade resolution and shared functionality for all ace-* gems. This gem implements a configuration cascade system (.ace directories) with deep merging, environment variable handling, and follows the ATOM architecture pattern.
+Foundational configuration cascade and shared infrastructure for all ace-* gems.
 
-Part of the ace-support-* pattern for library-only infrastructure gems (no CLI tools).
+## Overview
 
-## Features
+`ace-support-core` provides shared infrastructure for ACE packages that need consistent configuration loading,
+environment handling, and configuration summaries.
 
-- **Configuration Cascade**: Powered by ace-config gem with `./.ace` → `~/.ace` → gem defaults resolution
-- **Deep Merging**: Intelligent merging of nested configuration with configurable merge strategies
-- **Environment Variables**: Load and manage .env files with proper precedence
-- **Filesystem Utilities**: Path resolution and project root finding via ace-support-fs
-- **ATOM Architecture**: Clean separation of concerns using Atoms, Molecules, Organisms pattern
+It builds on [ace-support-config](../ace-support-config/README.md) for cascade resolution and delegates filesystem
+operations to [ace-support-fs](../ace-support-fs/README.md). The gem follows the ATOM architecture pattern so
+configuration primitives, composition layers, and orchestration remain clearly separated.
 
-**Note**: During migration, gem defaults are loaded from `.ace.example/` (legacy) or `.ace-defaults/` (new standard). The fallback to `.ace.example` will be removed after all gems complete migration.
-
-## Dependencies
-
-- **ace-config** (~> 0.2): Generic configuration cascade management
-- **ace-support-fs** (~> 0.1): Filesystem utilities (PathExpander, ProjectRootFinder, DirectoryTraverser)
+Part of the `ace-support-*` pattern for library-only infrastructure gems (no CLI tools).
 
 ## Installation
 
 Add this gem to your application's Gemfile:
 
 ```ruby
-gem 'ace-support-core'
+gem "ace-support-core"
 ```
 
 Or install it directly:
 
 ```bash
-$ gem install ace-support-core
+gem install ace-support-core
 ```
 
-## Usage
+## Basic Usage
 
 ### Basic Configuration Loading
 
 ```ruby
-require 'ace/core'
+require "ace/core"
 
 # Load configuration with cascade resolution
 config = Ace::Core.config
 # Searches: ./.ace/config.yml → ~/.ace/config.yml → gem defaults
 
 # Get specific values
-value = Ace::Core.get('ace', 'settings', 'verbose_logging')
+value = Ace::Core.get("ace", "settings", "verbose_logging")
 
 # Or use the config object
 config = Ace::Core.config
-project_name = config.get('ace', 'project', 'name')
+project_name = config.get("ace", "project", "name")
 ```
 
 ### Environment Variables
@@ -69,26 +63,26 @@ Ace::Core.load_environment
 
 # Or use the environment manager directly
 env = Ace::Core.environment
-env.load  # Loads .env.local, .env based on config
-env.set('MY_VAR', 'value')
-env.get('MY_VAR', 'default')
+env.load # Loads .env.local, .env based on config
+env.set("MY_VAR", "value")
+env.get("MY_VAR", "default")
 ```
 
 ### Custom Configuration
 
 ```ruby
 # Create a resolver with custom directories
-resolver = Ace::Config.create(
-  config_dir: ".myapp",           # Custom config directory (default: .ace)
+resolver = Ace::Support::Config.create(
+  config_dir: ".myapp",            # Custom config directory (default: .ace)
   defaults_dir: ".myapp-defaults", # Custom defaults directory
-  gem_path: __dir__               # Gem root for bundled defaults (optional)
+  gem_path: __dir__                 # Gem root for bundled defaults (optional)
 )
 config = resolver.resolve
 
 # Or use the ConfigResolver directly for more control
 resolver = Ace::Core::Organisms::ConfigResolver.new(
   config_dir: ".ace",
-  defaults_dir: ".ace-defaults",  # Or ".ace.example" for legacy gems
+  defaults_dir: ".ace-defaults", # Or ".ace.example" for legacy gems
   gem_path: __dir__
 )
 config = resolver.resolve
@@ -98,20 +92,37 @@ config = resolver.resolve
 
 ```ruby
 # Create a default config file structure
-Ace::Core.create_default_config('./.ace/core/config.yml')
+Ace::Core.create_default_config("./.ace/core/config.yml")
 ```
 
-### Path Resolution
+## Features
+
+- **Configuration Cascade**: Powered by ace-support-config with `./.ace` → `~/.ace` → gem defaults resolution
+- **Deep Merging**: Intelligent merging of nested configuration with configurable merge strategies
+- **Environment Variables**: Load and manage `.env` files with proper precedence
+- **Filesystem Utilities**: Path resolution and project root finding via ace-support-fs
+- **ATOM Architecture**: Clean separation of concerns using Atoms, Molecules, and Organisms
+
+**Note**: During migration, gem defaults are loaded from `.ace.example/` (legacy) or `.ace-defaults/`
+(new standard). Fallback to `.ace.example` will be removed after all gems complete migration.
+
+## Dependencies
+
+- [ace-support-config](../ace-support-config/README.md) (`~> 0.7`): Generic configuration cascade management
+- [ace-support-fs](../ace-support-fs/README.md) (`~> 0.2`): Filesystem utilities
+  (`PathExpander`, `ProjectRootFinder`, `DirectoryTraverser`)
+
+## Path Resolution
 
 Path expansion and project root finding are provided by the **ace-support-fs** gem:
 
 ```ruby
-require 'ace/support/fs'
+require "ace/support/fs"
 
 # PathExpander: unified path resolution with context inference
 expander = Ace::Support::Fs::Atoms::PathExpander.for_file(".ace/nav/config.yml")
-expander.resolve("./local/file.md")        # Source-relative
-expander.resolve("docs/architecture.md")   # Project-relative
+expander.resolve("./local/file.md")      # Source-relative
+expander.resolve("docs/architecture.md") # Project-relative
 
 # ProjectRootFinder: locate project root by markers (.git, .ace, etc.)
 root = Ace::Support::Fs::Molecules::ProjectRootFinder.find
@@ -122,15 +133,19 @@ traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
 config_dirs = traverser.find_config_directories
 ```
 
-See **ace-support-fs** gem for complete documentation on path resolution, protocol URIs, and directory traversal.
+See [ace-support-fs](../ace-support-fs/README.md) for complete documentation on path resolution,
+protocol URIs, and directory traversal.
 
 ## ConfigSummary
 
-`ConfigSummary` provides configuration summary display for CLI commands. It shows effective configuration state to stderr, displaying only values that differ from defaults and filtering sensitive keys.
+`ConfigSummary` provides configuration summary display for CLI commands. It shows effective
+configuration state to stderr, displaying only values that differ from defaults and filtering
+sensitive keys.
 
 ### Verbose-Only Behavior
 
-**Important**: `ConfigSummary.display()` and `ConfigSummary.display_if_needed()` only show output when `--verbose` is passed. This keeps normal command output clean and readable.
+**Important**: `ConfigSummary.display()` and `ConfigSummary.display_if_needed()` only show output when
+`--verbose` is passed. This keeps normal command output clean and readable.
 
 ```ruby
 # Normal command execution (no config shown)
@@ -166,13 +181,14 @@ def execute
 end
 ```
 
-### Features
+### ConfigSummary Features
 
 - **Verbose-only**: Output only shown when `options[:verbose]` is true
 - **Help detection**: `display_if_needed` automatically skips output when help is requested
-- **Sensitive key filtering**: Keys ending with `token`, `password`, `secret`, `credential`, `key`, `api_key` are filtered
+- **Sensitive key filtering**: Keys ending with `token`, `password`, `secret`, `credential`, `key`, `api_key`
+  are filtered
 - **Default diffing**: Only shows values that differ from defaults
-- **Nested config**: Flattens nested hashes with dot notation (e.g., `llm.provider=google`)
+- **Nested config**: Flattens nested hashes with dot notation (for example, `llm.provider=google`)
 
 ## Configuration Structure
 
@@ -186,17 +202,17 @@ ace:
   config_cascade:
     enabled: true
     search_paths:
-      - "./.ace"        # Project-local (highest priority)
-      - "~/.ace"        # User home
-    merge_strategy: deep  # deep, shallow, replace
-    array_strategy: replace  # replace, concat, union
+      - "./.ace"      # Project-local (highest priority)
+      - "~/.ace"      # User home
+    merge_strategy: deep # deep, shallow, replace
+    array_strategy: replace # replace, concat, union
 
   # Environment variable handling
   environment:
     load_dotenv: true
     dotenv_files:
-      - ".env.local"    # Local overrides
-      - ".env"          # Project defaults
+      - ".env.local" # Local overrides
+      - ".env"       # Project defaults
 
   # Your custom settings
   project:
@@ -209,7 +225,7 @@ ace:
 This gem follows the ATOM (Atoms, Molecules, Organisms, Models) architecture:
 
 - **Atoms**: Pure functions with no side effects (`yaml_parser`, `env_parser`, `deep_merger`)
-- **Molecules**: Composed operations using Atoms (`yaml_loader`, `env_loader`, `config_finder`)
+- **Molecules**: Composed operations using atoms (`yaml_loader`, `env_loader`, `config_finder`)
 - **Organisms**: Business logic orchestration (`config_resolver`, `environment_manager`)
 - **Models**: Data structures with no behavior (`config`, `cascade_path`)
 
@@ -220,18 +236,23 @@ After checking out the repo:
 ```bash
 cd ace-core
 bundle install
-rake test  # Run the test suite
+rake test # Run the test suite
 ```
 
 ## Testing
 
-The gem includes comprehensive tests for all ATOM layers:
+The gem includes tests for all ATOM layers:
 
 ```bash
-rake test  # Run all tests
-rake test TEST=test/organisms/config_resolver_test.rb  # Run specific test
+rake test
+rake test TEST=test/organisms/config_resolver_test.rb
 ```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/ace.
+Bug reports and pull requests are welcome on GitHub at <https://github.com/cs3b/ace>.
+
+## Part of ACE
+
+`ace-support-core` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for
+agent-assisted development.

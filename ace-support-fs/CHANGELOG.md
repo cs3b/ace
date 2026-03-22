@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-03-22
+
+### Technical
+- Updated README dependency example to use the current `~> 0.2` version constraint.
+
+## [0.2.2] - 2026-03-22
+
+### Technical
+- Refreshed README structure with consistent tagline, overview, basic usage, and ACE project footer
+
 ## [0.2.1] - 2026-03-08
 
 ### Fixed

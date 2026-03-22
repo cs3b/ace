@@ -3,17 +3,21 @@ doc-type: user
 title: ace-support-mac-clipboard
 purpose: Documentation for ace-support-mac-clipboard/README.md
 ace-docs:
-  last-updated: 2026-02-22
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-support-mac-clipboard
 
-macOS NSPasteboard integration for ACE - provides FFI-based access to rich clipboard content on macOS.
+macOS NSPasteboard integration for ACE -- FFI-based access to rich clipboard content including images,
+files, and formatted text.
 
 ## Overview
 
-This gem provides native macOS clipboard support via `NSPasteboard`, enabling ACE applications to read rich content including:
+`ace-support-mac-clipboard` provides native macOS clipboard support via `NSPasteboard` so ACE applications
+can consume more than plain text from the clipboard.
+
+Supported content classes include:
 
 - **Images**: PNG, JPEG, TIFF from screenshots or image editors
 - **Files**: File paths from Finder clipboard
@@ -39,7 +43,7 @@ Or install directly:
 gem install ace-support-mac-clipboard
 ```
 
-## Usage
+## Basic Usage
 
 ### Reading Clipboard Content
 
@@ -59,6 +63,18 @@ parsed = Ace::Support::MacClipboard::ContentParser.parse(result)
 #     { type: :file, source_path: "/path/to/file.pdf", filename: "file.pdf" }
 #   ]
 # }
+```
+
+### Integration with ace-idea
+
+The `ace-idea` gem uses this library automatically on macOS:
+
+```bash
+# Copy a screenshot (Cmd+Ctrl+Shift+4)
+# Then create an idea with the clipboard content
+ace-idea create --clipboard "Bug in login form"
+
+# Result: Creates directory with idea.md and clipboard-image-1.png
 ```
 
 ### Supported Content Types
@@ -173,18 +189,6 @@ Summary:
   Attachments: 0
 ```
 
-### Integration with ace-taskflow
-
-The `ace-taskflow` gem uses this library automatically on macOS:
-
-```bash
-# Copy a screenshot (Cmd+Ctrl+Shift+4)
-# Then create an idea with the clipboard content
-ace-idea create --clipboard "Bug in login form"
-
-# Result: Creates directory with idea.md and clipboard-image-1.png
-```
-
 ## Development
 
 ### Setup
@@ -196,8 +200,8 @@ bundle install
 ### Testing
 
 ```bash
-# Run test suite (requires mocking - coming soon)
-bundle exec rake test
+# Run package tests
+ace-test ace-support-mac-clipboard
 
 # Manual testing
 echo "test" | pbcopy && ruby bin/inspect_clipboard.rb
@@ -219,23 +223,21 @@ ruby bin/debug_clipboard.rb
 
 ## Future Enhancements
 
-- [ ] Video/audio clip support
-- [ ] Markdown conversion for HTML content
-- [ ] ZIP creation for bulk file attachments
-- [ ] Unit tests with mocked NSPasteboard
+- [ ] Add video/audio clipboard support
+- [ ] Add Markdown conversion for HTML clipboard content
+- [ ] Add mocked NSPasteboard coverage for automated tests
+
+## Contributing
+
+1. Create a focused branch for your change.
+2. Update docs/examples and validation steps as needed.
+3. Open a pull request with a concise summary.
+
+## Part of ACE
+
+`ace-support-mac-clipboard` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first
+toolkit for agent-assisted development.
 
 ## License
 
 MIT
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Write tests
-5. Submit a pull request
-
-## Credits
-
-Part of the ACE (Agentic Coding Environment) ecosystem.

@@ -3,17 +3,31 @@ doc-type: user
 title: ace-support-items
 purpose: Documentation for ace-support-items/README.md
 ace-docs:
-  last-updated: 2026-03-01
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-support-items
 
-Shared item management infrastructure for ACE gems (ace-task, ace-idea, etc.).
+Shared item management infrastructure for ACE gems -- directory scanning, ID resolution, and slug sanitization.
 
 ## Overview
 
-Provides reusable components for managing items (tasks, ideas) stored as directories with b36ts-based IDs:
+`ace-support-items` provides reusable item-management primitives for ACE packages such as `ace-task`
+and `ace-idea`.
+
+It standardizes directory scanning, shortcut resolution, and slug sanitization for b36ts-based item
+stores while keeping CLI field parsing and special-folder detection consistent across tools.
+
+## Installation
+
+Add to your gemspec:
+
+```ruby
+spec.add_dependency "ace-support-items", "~> 0.15"
+```
+
+## Core Components
 
 - **`DirectoryScanner`** - Recursively scans item directories, returns `ScanResult` objects
 - **`ShortcutResolver`** - Resolves 3-char suffix shortcuts to full 6-char b36ts IDs
@@ -24,6 +38,7 @@ Provides reusable components for managing items (tasks, ideas) stored as directo
 ## Item Directory Convention
 
 Items follow this convention:
+
 ```
 .ace-ideas/
   8ppq7w-dark-mode-support/
@@ -33,7 +48,7 @@ Items follow this convention:
       9xzr1k-some-idea.idea.s.md
 ```
 
-## Usage
+## Basic Usage
 
 ```ruby
 require "ace/support/items"
@@ -49,6 +64,11 @@ results = scanner.scan
 resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results)
 result = resolver.resolve("q7w")  # Matches ID ending in "q7w"
 ```
+
+## Part of ACE
+
+`ace-support-items` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit
+for agent-assisted development.
 
 ## License
 
