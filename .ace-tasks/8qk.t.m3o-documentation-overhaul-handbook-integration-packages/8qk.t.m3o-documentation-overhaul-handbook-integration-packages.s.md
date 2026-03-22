@@ -1,15 +1,16 @@
 ---
 id: 8qk.t.m3o
-status: draft
+status: pending
 priority: low
 created_at: "2026-03-21 14:44:05"
 estimate: TBD
 dependencies: []
 tags: [docs, readme]
 bundle:
-  presets: ["project"]
+  presets: [project]
   files: []
   commands: []
+needs_review: false
 ---
 
 # Documentation Overhaul - Handbook Integration Packages (Light Refresh)
