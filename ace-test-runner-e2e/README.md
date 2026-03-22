@@ -1,12 +1,3 @@
----
-doc-type: user
-title: Ace::Test::EndToEndRunner
-purpose: Documentation landing page for ace-test-runner-e2e
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # Ace::Test::EndToEndRunner
 
 Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
