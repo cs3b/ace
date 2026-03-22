@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Test execution and reporting tool for ace-* gems"
-  spec.description = "Provides comprehensive test execution with AI-friendly output formats and detailed reporting"
+  spec.summary = "AI-friendly test runner with smart grouping, failure analysis, and persistent reports"
+  spec.description = "Runs ACE package tests with layered grouping, failure analysis context, and persistent run history for reproducible debugging."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
