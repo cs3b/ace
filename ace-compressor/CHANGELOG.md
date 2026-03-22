@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-03-22
+
+### Changed
+- Normalized installation and quick-start README examples to fenced code blocks and updated command examples to consistent `mise exec --` execution format.
+
+## [0.23.1] - 2026-03-22
+
+### Changed
+- Refreshed the README structure with dedicated purpose/install sections, preserved quick-start command coverage, and added a canonical ACE footer link.
+
 ## [0.23.0] - 2026-03-21
 
 ### Changed
