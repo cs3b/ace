@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Handbook management workflows for ACE"
-  spec.description = "Pure workflow package containing handbook management workflows, templates, guides, and agents accessible via wfi:// protocol"
+  spec.summary = "Standardized workflows for creating and managing guides, workflow instructions, and agent definitions."
+  spec.description = "Workflow package for creating, reviewing, and maintaining ACE handbook guides, workflows, and agent definitions."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
