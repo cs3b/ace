@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Unified search tool for codebases with ripgrep/fd backends"
-  spec.description = "ACE search provides intelligent file and content search with DWIM heuristics, preset support, and git-aware filtering"
+  spec.summary = "Unified codebase search with DWIM file/content detection"
+  spec.description = "ace-search gives one command that auto-detects file vs content search, with preset support and git-aware filtering"
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
