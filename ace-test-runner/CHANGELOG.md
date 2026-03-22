@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-03-22
+
+### Changed
+- Rewrote README as concise landing page (~60 lines, down from 275)
+- Updated gemspec summary and description to match new tagline
+
+### Added
+- New `docs/getting-started.md` tutorial-style guide
+- New `docs/usage.md` with full CLI reference
+- New `docs/handbook.md` with skills and workflows catalog
+- Demo VHS tape and GIF in `docs/demo/`
+
 ## [0.16.1] - 2026-03-22
 
 ### Fixed
