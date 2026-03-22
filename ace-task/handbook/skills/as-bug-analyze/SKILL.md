@@ -23,4 +23,4 @@ skill:
 
 ---
 
-Load and run `mise exec -- ace-bundle wfi://bug/analyze` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://bug/analyze` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
