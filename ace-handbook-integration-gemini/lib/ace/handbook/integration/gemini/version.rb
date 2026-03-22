@@ -4,7 +4,7 @@ module Ace
   module Handbook
     module Integration
       module Gemini
-        VERSION = "0.3.0"
+        VERSION = "0.3.1"
       end
     end
   end
