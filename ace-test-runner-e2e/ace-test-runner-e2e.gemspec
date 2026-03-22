@@ -8,10 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "End-to-end test runner infrastructure for agent-executed testing"
-  spec.description = "Provides workflows, templates, and conventions for end-to-end tests " \
-                     "that are executed by AI agents rather than automated test runners. " \
-                     "Includes test scenario templates and execution workflows."
+  spec.summary = "Agent-executed end-to-end tests with reproducible sandboxes and structured reporting"
+  spec.description = "Runs package E2E scenarios through agents with reproducible setup, " \
+                     "sandbox isolation, and structured reports for reliable validation workflows."
   spec.homepage = "https://github.com/cs3b/ace/tree/main/ace-test-runner-e2e"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

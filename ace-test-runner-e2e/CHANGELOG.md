@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-22
+
+### Changed
+- Reworked package documentation with a landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo tape/GIF assets, and refreshed gem metadata messaging.
+
 ## [0.26.1] - 2026-03-18
 
 ### Changed
