@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-03-22
+
+### Technical
+- Aligned the getting-started demo tape output path with the checked-in `docs/demo` asset.
+
+## [0.17.1] - 2026-03-22
+
+### Fixed
+- Corrected user-doc frontmatter and Markdown table rendering in the README plus getting-started, usage, and handbook docs.
+- Replaced Kramdown-only code block markup with fenced Markdown blocks in user-facing docs.
+- Added `docs/**/*` to the gemspec file manifest and removed the duplicated `--keep-directory` option entry from the usage reference.
+
+## [0.17.0] - 2026-03-22
+
+### Changed
+- Rewrote the README as a landing page and split long-form package documentation into getting-started, usage, and handbook guides.
+- Added committed demo tape and GIF assets for the new documentation flow.
+- Refreshed package metadata messaging to match the landing-page positioning.
+
 ## [0.16.1] - 2026-03-18
 
 ### Changed
