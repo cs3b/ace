@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-03-22
+
+### Changed
+- Replaced placeholder commands in `docs/demo/ace-docs-getting-started.tape.yml` with real `ace-docs` onboarding workflow commands.
+
 ## [0.29.2] - 2026-03-22
 
 ### Changed

@@ -1,0 +1,27 @@
+---
+description: Showcase ace-docs tracking document freshness and analyzing changes
+tags:
+- ace-docs
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 1200
+  height: 700
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-docs status
+    sleep: 3s
+  - type: ace-docs status --needs-update
+    sleep: 3s
+  - type: ace-docs analyze docs/getting-started.md --since "2026-03-01"
+    sleep: 3s
+  - type: ace-docs analyze-consistency --terminology
+    sleep: 3s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
