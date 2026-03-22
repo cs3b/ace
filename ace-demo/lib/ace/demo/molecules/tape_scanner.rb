@@ -17,8 +17,8 @@ module Ace
           search_dirs.each do |dir|
             next unless Dir.exist?(dir)
 
-            Dir.glob(File.join(dir, "*.tape")).sort.each do |path|
-              name = File.basename(path, ".tape")
+            discover_paths(dir).each do |path|
+              name = logical_name(path)
               next if discovered.key?(name)
 
               discovered[name] = build_record(name, path)
@@ -31,12 +31,12 @@ module Ace
         def find(tape_ref)
           direct_path = File.expand_path(tape_ref, @cwd)
           if File.exist?(direct_path) && File.file?(direct_path)
-            name = File.basename(direct_path, ".tape")
+            name = logical_name(direct_path)
             return build_record(name, direct_path)
           end
 
-          lookup_name = File.basename(tape_ref, ".tape")
-          match = find_in_search_dirs(lookup_name)
+          lookup_name = logical_name(tape_ref)
+          match = find_in_search_dirs(lookup_name, tape_ref)
           return match if match
 
           raise TapeNotFoundError, missing_message(tape_ref)
@@ -48,30 +48,68 @@ module Ace
           Atoms::TapeSearchDirs.build(cwd: @cwd, home_dir: @home_dir, gem_root: @gem_root)
         end
 
+        def discover_paths(dir)
+          patterns = [File.join(dir, "*.tape.yml"), File.join(dir, "*.tape.yaml"), File.join(dir, "*.tape")]
+          patterns.flat_map { |pattern| Dir.glob(pattern).sort }
+        end
+
         def build_record(name, path)
           content = File.read(path)
-          metadata = @parser.parse(content)
+          format = path.end_with?(".tape.yml", ".tape.yaml") ? "yaml" : "tape"
+          metadata = extract_metadata(path: path, content: content, format: format)
 
           {
             name: name,
             path: path,
             display_path: display_path(path),
             source: "#{display_path(File.dirname(path))}/",
+            format: format,
             metadata: metadata,
             description: metadata["description"],
             content: content
           }
         end
 
-        def find_in_search_dirs(name)
-          search_dirs.each do |dir|
-            path = File.join(dir, "#{name}.tape")
-            next unless File.file?(path)
+        def extract_metadata(path:, content:, format:)
+          return @parser.parse(content) if format == "tape"
 
-            return build_record(name, path)
+          spec = Atoms::DemoYamlParser.parse_file(path)
+          {
+            "description" => spec["description"],
+            "tags" => spec["tags"],
+            "settings" => spec["settings"],
+            "scene_names" => spec.fetch("scenes", []).map { |scene| scene["name"] }.compact
+          }
+        rescue DemoYamlParseError => e
+          { "description" => nil, "parse_error" => e.message }
+        end
+
+        def find_in_search_dirs(name, tape_ref)
+          explicit = explicit_filename?(tape_ref)
+          candidates = if explicit
+                         [tape_ref]
+                       else
+                         ["#{name}.tape.yml", "#{name}.tape.yaml", "#{name}.tape"]
+                       end
+
+          search_dirs.each do |dir|
+            candidates.each do |filename|
+              path = File.join(dir, filename)
+              next unless File.file?(path)
+
+              return build_record(logical_name(path), path)
+            end
           end
 
           nil
+        end
+
+        def explicit_filename?(tape_ref)
+          tape_ref.end_with?(".tape", ".tape.yml", ".tape.yaml", ".yml", ".yaml")
+        end
+
+        def logical_name(path)
+          File.basename(path).sub(/\.tape\.ya?ml\z/, "").sub(/\.tape\z/, "").sub(/\.ya?ml\z/, "")
         end
 
         def display_path(path)

@@ -106,6 +106,7 @@ ace-demo create my-demo --dry-run -- "echo hello"
 ```bash
 ace-demo record hello
 ace-demo record ./local.tape --format mp4 --output /tmp/demo.mp4
+ace-demo record ace-task/docs/demo/ace-task-getting-started.tape.yml
 ace-demo record my-demo -- "git status" "make deploy"
 ace-demo record my-demo --timeout 3s --width 1100 -- "git status"
 echo "git status" | ace-demo record my-demo
@@ -117,6 +118,7 @@ ace-demo record hello --pr 42 --dry-run
 - `<tape|name>`:
   - preset name (`hello`)
   - direct `.tape` path (`./local.tape`)
+  - direct `.tape.yml` path (`ace-task/docs/demo/ace-task-getting-started.tape.yml`)
   - inline session name when commands are passed after `--`
 
 ### Options
@@ -139,6 +141,7 @@ ace-demo record hello --pr 42 --dry-run
 
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
+- `.tape.yml` paths run in sandbox mode: setup directives execute, scenes compile to VHS, and teardown cleanup runs.
 - With `--dry-run`, output shows planned recording and attachment actions only.
 - `--playback-speed` creates a `-<speed>` file and, when `--pr` is set, attaches that variant.
 

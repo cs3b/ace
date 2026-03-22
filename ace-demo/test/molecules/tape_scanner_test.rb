@@ -32,11 +32,11 @@ class TapeScannerTest < AceDemoTestCase
     write_tape(File.join(@gem_root, ".ace-defaults", "demo", "tapes", "hello.tape"), "Default hello")
     write_tape(File.join(@home, ".ace", "demo", "tapes", "hello.tape"), "Home hello")
     write_tape(File.join(@cwd, ".ace", "demo", "tapes", "hello.tape"), "Project hello")
-    write_tape(File.join(@home, ".ace", "demo", "tapes", "ace-test.tape"), "Home test")
+    write_tape(File.join(@home, ".ace", "demo", "tapes", "beta.tape"), "Home beta")
 
     list = @scanner.list
 
-    assert_equal %w[ace-test hello], list.map { |item| item[:name] }
+    assert_equal %w[beta hello], list.map { |item| item[:name] }
     hello = list.find { |item| item[:name] == "hello" }
     assert_equal "Project hello", hello[:description]
     assert_equal ".ace/demo/tapes/", hello[:source]
@@ -76,12 +76,12 @@ class TapeScannerTest < AceDemoTestCase
 
   def test_find_missing_reports_available_tapes
     write_tape(File.join(@gem_root, ".ace-defaults", "demo", "tapes", "hello.tape"), "Default hello")
-    write_tape(File.join(@home, ".ace", "demo", "tapes", "ace-test.tape"), "Home test")
+    write_tape(File.join(@home, ".ace", "demo", "tapes", "beta.tape"), "Home beta")
 
     error = assert_raises(Ace::Demo::TapeNotFoundError) { @scanner.find("missing") }
 
     assert_includes error.message, "Tape not found: missing"
-    assert_includes error.message, "Available tapes: ace-test, hello"
+    assert_includes error.message, "Available tapes: beta, hello"
   end
 
   private

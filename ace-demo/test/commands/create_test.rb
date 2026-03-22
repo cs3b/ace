@@ -38,50 +38,53 @@ class CreateTest < AceDemoTestCase
     result = invoke(["create", "my-demo", "--", "echo hello"])
 
     assert_includes result[:stdout], "Created:"
-    assert_includes result[:stdout], "my-demo.tape"
+    assert_includes result[:stdout], "my-demo.tape.yml"
 
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "my-demo.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "my-demo.tape.yml")
     assert File.exist?(tape_path)
 
     content = File.read(tape_path)
-    assert_includes content, 'Type "echo hello"'
+    assert_includes content, "type: echo hello"
   end
 
   def test_creates_tape_with_multiple_commands
     result = invoke(["create", "multi", "--", "git status", "make deploy"])
 
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "multi.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "multi.tape.yml")
     content = File.read(tape_path)
-    assert_includes content, 'Type "git status"'
-    assert_includes content, 'Type "make deploy"'
+    assert_includes content, "type: git status"
+    assert_includes content, "type: make deploy"
     assert_includes result[:stdout], "Created:"
   end
 
   def test_creates_tape_with_options
     result = invoke(["create", "opts", "--desc", "My demo", "--tags", "ci,test", "--", "echo hi"])
 
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "opts.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "opts.tape.yml")
     content = File.read(tape_path)
-    assert_includes content, "# Description: My demo"
-    assert_includes content, "# Tags: ci,test"
+    assert_includes content, "description: My demo"
+    assert_includes content, "- ci"
+    assert_includes content, "- test"
     assert_includes result[:stdout], "Created:"
   end
 
   def test_dry_run_prints_content_without_writing
     result = invoke(["create", "preview", "--dry-run", "--", "echo hello"])
 
-    assert_includes result[:stdout], 'Type "echo hello"'
-    assert_includes result[:stdout], "Output"
+    assert_includes result[:stdout], "type: echo hello"
+    assert_includes result[:stdout], "scenes:"
 
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "preview.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "preview.tape.yml")
     refute File.exist?(tape_path)
   end
 
-  def test_error_when_no_commands
+  def test_allows_no_commands_with_default_template_command
     result = invoke(["create", "empty"])
 
-    assert_equal 1, result[:result]
-    assert_includes result[:stderr], "No commands provided"
+    assert_equal 0, result[:result]
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "empty.tape.yml")
+    assert File.exist?(tape_path)
+    assert_includes File.read(tape_path), "Hello from empty"
   end
 
   def test_error_on_existing_tape
@@ -97,9 +100,9 @@ class CreateTest < AceDemoTestCase
     result = invoke(["create", "exists", "--force", "--", "echo second"])
 
     assert_includes result[:stdout], "Created:"
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "exists.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "exists.tape.yml")
     content = File.read(tape_path)
-    assert_includes content, 'Type "echo second"'
+    assert_includes content, "type: echo second"
   end
 
   def test_reads_from_stdin
@@ -117,10 +120,10 @@ class CreateTest < AceDemoTestCase
     reader.close
 
     assert_includes result[:stdout], "Created:"
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "stdin-demo.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "stdin-demo.tape.yml")
     content = File.read(tape_path)
-    assert_includes content, 'Type "git status"'
-    assert_includes content, 'Type "make deploy"'
+    assert_includes content, "type: git status"
+    assert_includes content, "type: make deploy"
   end
 
   def test_help_lists_create_command

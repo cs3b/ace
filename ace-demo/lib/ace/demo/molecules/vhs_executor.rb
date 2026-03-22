@@ -15,8 +15,10 @@ module Ace
           false
         end
 
-        def run(cmd, vhs_bin: "vhs")
-          stdout, stderr, status = Open3.capture3(*cmd)
+        def run(cmd, vhs_bin: "vhs", chdir: nil)
+          options = {}
+          options[:chdir] = chdir if chdir
+          stdout, stderr, status = Open3.capture3(*cmd, **options)
           result = Models::ExecutionResult.new(
             stdout: stdout.strip,
             stderr: stderr.strip,

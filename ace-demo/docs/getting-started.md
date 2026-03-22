@@ -28,7 +28,7 @@ ace-demo --version
 
 ## 3. Discover available presets
 
-The built-in `hello` and `ace-test` demos are ready to use immediately.
+The built-in `hello` demo is ready to use immediately.
 
 ```bash
 ace-demo list
@@ -68,7 +68,7 @@ ace-demo record hello --pr 42 --dry-run
 ace-demo create my-demo -- "git status"
 ```
 
-This writes `.ace/demo/tapes/my-demo.tape`.
+This writes `.ace/demo/tapes/my-demo.tape.yml`.
 
 ```bash
 ace-demo record my-demo
@@ -83,7 +83,7 @@ ace-demo record quick-check -- "echo hello"
 ```
 
 This creates both:
-- a temporary `.ace-local/demo/<session>/quick-check.tape`
+- a temporary `.ace-local/demo/<session>/quick-check.tape.yml`
 - an output recording file in the same session folder
 
 ## 8. Tune format and speed
