@@ -1,6 +1,6 @@
 ---
 id: 8qlonb
-status: pending
+status: done
 title: Upgrade Demo Recording Strategy and Execution
 tags: []
 created_at: "2026-03-22 16:25:54"
