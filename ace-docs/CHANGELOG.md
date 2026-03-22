@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-03-22
+
+### Changed
+- Clarified frontmatter-free documentation contract in `docs/usage.md` to state README-focused metadata inference and removed the non-README example.
+
+## [0.29.1] - 2026-03-22
+
+### Changed
+- Reused shared `Ace::Core::Molecules::FrontmatterFreePolicy` through `FrontmatterFreeMatcher` to align frontmatter-free matching behavior across packages.
+- Moved git-backed README last-updated resolution into molecule layer and injected the resolved date into `ReadmeMetadataInferrer`.
+- Updated `TypeInferrer` precedence so configured `pattern_type` wins before README basename fallback.
+- Narrowed default `frontmatter_free` patterns from `**/README.md` to `README.md` and `*/README.md` to avoid nested fixture/test README auto-discovery.
+
+## [0.29.0] - 2026-03-22
+
+### Added
+- Configurable frontmatter-free document support via `frontmatter_free` config key (default: `**/README.md`).
+- New `FrontmatterFreeMatcher` atom for centralized glob matching of frontmatter-free paths.
+- New `ReadmeMetadataInferrer` atom to infer doc-type, purpose, and title from README file path and content.
+- New `GitDateResolver` atom to resolve `last-updated` from git history with nil-safe fallback.
+
+### Changed
+- `DocumentLoader` now loads frontmatter-free files as managed documents with inferred metadata.
+- `TypeInferrer` infers `user` doc-type for README files without explicit frontmatter.
+- `Update` command skips frontmatter writes for frontmatter-free files with explicit skip message.
+- Removed YAML frontmatter blocks from all package `README.md` files.
+
 ## [0.28.0] - 2026-03-22
 
 ### Changed

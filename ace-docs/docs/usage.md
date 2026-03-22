@@ -3,8 +3,8 @@ doc-type: user
 title: ace-docs Usage Guide
 purpose: CLI reference for ace-docs commands and options
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: '2026-03-22'
+  last-checked: '2026-03-22'
 ---
 
 # ace-docs Usage Guide
@@ -194,6 +194,22 @@ ace-docs validate --package ace-docs
 - `status`, `discover`, `analyze`, `update`: `0` success, `1` error
 - `analyze-consistency`: `0` success, `1` issues found with `--strict`, `2` error
 - `validate`: `0` pass, `1` validation failure, `2` error
+
+## Frontmatter-Free Files
+
+Files matching the `frontmatter_free` config patterns (default: `README.md`, `*/README.md`) are managed without YAML frontmatter. `ace-docs` currently infers metadata only for README basenames, so status/discover management for frontmatter-free files is README-focused.
+
+- `status` and `discover` include them with metadata inferred from file path, content, and git history.
+- `update` skips frontmatter writes and prints a skip message instead of inserting YAML.
+- `validate` (via ace-lint) exempts them from missing-frontmatter errors.
+
+Override the default README patterns in `.ace/docs/config.yml`:
+
+```yaml
+frontmatter_free:
+  - "README.md"
+  - "*/README.md"
+```
 
 ## Notes
 

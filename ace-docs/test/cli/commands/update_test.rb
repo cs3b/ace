@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/docs/cli/commands/update"
+require "ace/docs/models/document"
 require "ace/docs/molecules/frontmatter_manager"
 require "ace/docs/organisms/document_registry"
 require "tmpdir"
@@ -18,7 +19,7 @@ module Ace
 
           def test_infer_doc_type_readme
             result = @command.send(:infer_doc_type, "/path/to/README.md")
-            assert_equal "reference", result
+            assert_equal "user", result
           end
 
           def test_infer_doc_type_workflow
@@ -112,6 +113,23 @@ module Ace
             assert_match(%r{/docs/guide\.md$}, docs.first.path)
           ensure
             FileUtils.rm_rf(temp_dir) if temp_dir
+          end
+
+          def test_update_documents_skips_frontmatter_free_paths
+            doc = Ace::Docs::Models::Document.new(
+              path: "/tmp/example/README.md",
+              frontmatter: {"doc-type" => "user", "purpose" => "README"},
+              content: "# README"
+            )
+
+            Ace::Docs.stub :config, {"frontmatter_free" => ["**/README.md"]} do
+              output, = capture_io do
+                updated = @command.send(:update_documents, [doc], {set: {"last-updated" => "today"}})
+                assert_equal 0, updated
+              end
+
+              assert_match(/Skipped: .*README\.md/, output)
+            end
           end
         end
       end

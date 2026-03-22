@@ -26,8 +26,9 @@ module Ace
 
         # Resolve document type using priority hierarchy:
         # 1. Explicit frontmatter doc-type (highest priority)
-        # 2. File extension inference
-        # 3. Config pattern type (lowest priority)
+        # 2. Config pattern type
+        # 3. README basename inference
+        # 4. File extension inference (lowest priority)
         #
         # @param path [String] File path
         # @param pattern_type [String, nil] Type from config pattern matching
@@ -37,12 +38,17 @@ module Ace
           # Priority 1: Explicit frontmatter (overrides everything)
           return frontmatter_type if frontmatter_type && !frontmatter_type.empty?
 
-          # Priority 2: Extension-based inference
+          # Priority 2: Config pattern type
+          return pattern_type if pattern_type && !pattern_type.empty?
+
+          # Priority 3: Basename inference
+          return "user" if File.basename(path).casecmp("README.md").zero?
+
+          # Priority 4: Extension-based inference
           extension_type = from_extension(path)
           return extension_type if extension_type
 
-          # Priority 3: Config pattern type
-          pattern_type
+          nil
         end
       end
     end
