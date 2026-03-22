@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-22
+
+### Fixed
+- Add ID discovery hints to getting-started guide so tutorial steps are runnable from a clean workspace.
+
+## [0.15.0] - 2026-03-22
+
+### Changed
+- Reworked package documentation into a landing-page experience with a new README, tutorial-style getting-started guide, comprehensive usage reference, handbook catalog, and demo artifacts.
+- Updated gem metadata messaging to align with the new value-first tagline and included `docs/**/*` in packaged gem files.
+
 ## [0.14.0] - 2026-03-21
 
 ### Changed
