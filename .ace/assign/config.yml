@@ -21,7 +21,7 @@ workflow_source_paths:
 # Fork execution defaults
 execution:
   # provider: "codex:spark"
-  provider: "codex:gpt@yolo"
+  provider: "codex:spark:high@yolo"
   # provider: "claude:sonnet"
   timeout: 1800
 
