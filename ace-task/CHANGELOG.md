@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-03-22
+
+### Changed
+- Add `create-retro` to the work-on-task fork sub-steps, so each forked task implementation captures a retrospective before completing.
+
 ## [0.30.2] - 2026-03-21
 
 ### Fixed
