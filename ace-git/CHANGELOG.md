@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-03-22
+
+### Fixed
+- Added `docs/**/*` to the gemspec file manifest so the packaged gem ships the documentation files linked from the README.
+
+## [0.17.0] - 2026-03-22
+
+### Changed
+- Rewrote the README as a landing page, added getting-started and handbook docs, refreshed the usage reference, added committed demo artifacts, and aligned gemspec metadata with the new package messaging.
+
 ## [0.16.1] - 2026-03-21
 
 ### Added

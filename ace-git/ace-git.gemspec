@@ -8,11 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Unified git operations for ACE projects'
-  spec.description = 'Comprehensive git integration for ACE ecosystem: unified diff generation, ' \
-                     'branch/PR information, repository context loading, and workflow instructions. ' \
-                     'Consolidates ace-git-diff functionality with new context/PR/branch commands. ' \
-                     'Requires Git >= 2.23.0.'
+  spec.summary = 'Git workflows and context commands for developers and AI agents'
+  spec.description = 'ace-git combines repository context commands with guided workflows for rebases, ' \
+                     'pull requests, and commit reorganization, with smart diff output and Git 2.23+ guardrails.'
   spec.homepage = 'https://github.com/cs3b/ace/tree/main/ace-git'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
@@ -29,6 +27,7 @@ Gem::Specification.new do |spec|
                           lib/**/*
                           exe/*
                           handbook/**/*
+                          docs/**/*
                           .ace-defaults/**/*
                           *.md
                           LICENSE
