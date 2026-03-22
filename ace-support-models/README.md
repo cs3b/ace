@@ -3,15 +3,29 @@ doc-type: user
 title: ace-support-models
 purpose: Documentation for ace-support-models/README.md
 ace-docs:
-  last-updated: 2026-03-04
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-support-models
 
 Model metadata, validation, and cost tracking for ACE via [models.dev](https://models.dev/).
 
+## Purpose
+
+`ace-support-models` provides shared model metadata and pricing helpers used across ACE tooling.
+It keeps provider/model references consistent, supports validation workflows, and offers cost
+calculation primitives backed by the models.dev dataset.
+
 ## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem "ace-support-models"
+```
+
+Or install directly:
 
 ```bash
 gem install ace-support-models
@@ -34,6 +48,20 @@ The CLI uses git-style subcommands organized into three groups:
 - `models` - Search, query, and price models
 
 Top-level shortcuts are available for common operations.
+
+### Basic Usage
+
+```bash
+# Refresh local metadata
+ace-models cache sync
+
+# Find and inspect a model
+ace-models models search gpt-4o
+ace-models models info openai:gpt-4o
+
+# Estimate request cost
+ace-models models cost openai:gpt-4o --input 10000 --output 2000
+```
 
 ### Cache Commands
 
@@ -204,6 +232,10 @@ This gem uses data from [models.dev](https://models.dev/), an open-source databa
 
 - API: https://models.dev/api.json
 - GitHub: https://github.com/sst/models.dev
+
+## Part of ACE
+
+Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
 
 ## License
 
