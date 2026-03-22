@@ -60,10 +60,6 @@ module Ace
               commands = $stdin.read.lines.map(&:strip).reject(&:empty?)
             end
 
-            if commands.empty?
-              raise Ace::Support::Cli::Error, "No commands provided. Pass commands after -- or pipe via stdin."
-            end
-
             commands
           end
         end

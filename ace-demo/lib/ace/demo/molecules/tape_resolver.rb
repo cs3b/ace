@@ -15,11 +15,11 @@ module Ace
           return direct_path if File.file?(direct_path)
 
           candidates = search_dirs.map do |dir|
-            name = tape_ref.end_with?(".tape") ? tape_ref : "#{tape_ref}.tape"
-            File.join(dir, name)
+            candidate_names(tape_ref).map { |name| File.join(dir, name) }
           end
+          candidates.flatten!
 
-          match = candidates.find { |path| File.exist?(path) }
+          match = candidates.find { |path| File.file?(path) }
           return match if match
 
           raise TapeNotFoundError, missing_message(tape_ref)
@@ -30,6 +30,16 @@ module Ace
         end
 
         private
+
+        def candidate_names(tape_ref)
+          return [tape_ref] if explicit_filename?(tape_ref)
+
+          ["#{tape_ref}.tape.yml", "#{tape_ref}.tape.yaml", "#{tape_ref}.tape"]
+        end
+
+        def explicit_filename?(tape_ref)
+          tape_ref.end_with?(".tape", ".tape.yml", ".tape.yaml", ".yml", ".yaml")
+        end
 
         def missing_message(tape_ref)
           searched = search_dirs.join(", ")
