@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-retro
-purpose: Landing page for retrospective management in ace-retro.
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-retro
 
 Lightweight retrospective management -- create, tag, and archive retros from the command line.
