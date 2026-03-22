@@ -1,6 +1,6 @@
 ---
 id: 8qk.t.m3o.1
-status: pending
+status: done
 priority: low
 created_at: "2026-03-21 14:44:45"
 estimate: TBD
@@ -8,9 +8,8 @@ dependencies: []
 tags: [docs, readme]
 parent: 8qk.t.m3o
 bundle:
-  presets: ["project"]
-  files:
-    - ace-handbook-integration-codex/README.md
+  presets: [project]
+  files: [ace-handbook-integration-codex/README.md]
   commands: []
 ---
 
