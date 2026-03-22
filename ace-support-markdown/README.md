@@ -11,15 +11,20 @@ ace-docs:
 
 Safe markdown editing with frontmatter support for ACE gems. Provides zero-corruption document operations through atomic writes, backup/rollback mechanisms, and Kramdown AST-based section editing.
 
+## Purpose
+
+`ace-support-markdown` provides safe, composable Markdown document editing primitives for ACE packages. It is designed for
+developer-facing tooling that needs reliable frontmatter and section updates without corrupting files.
+
 ## Features
 
-- ✅ **Zero Corruption**: Atomic file operations with backup and rollback
-- ✅ **Frontmatter Editing**: Safe YAML frontmatter updates with validation
-- ✅ **Section Editing**: Kramdown AST-based section manipulation (exact string matching)
-- ✅ **Document Building**: Fluent API for programmatic document generation
-- ✅ **Immutable Models**: Functional transformations prevent accidental mutations
-- ✅ **Performance**: <10ms frontmatter updates, <50ms section edits
-- ✅ **ATOM Architecture**: Testable, composable, maintainable
+- **Zero Corruption**: Atomic file operations with backup and rollback
+- **Frontmatter Editing**: Safe YAML frontmatter updates with validation
+- **Section Editing**: Kramdown AST-based section manipulation (exact string matching)
+- **Document Building**: Fluent API for programmatic document generation
+- **Immutable Models**: Functional transformations prevent accidental mutations
+- **Performance**: <10ms frontmatter updates, <50ms section edits
+- **ATOM Architecture**: Testable, composable, maintainable
 
 ## Installation
 
@@ -252,7 +257,8 @@ markdown = doc.to_markdown
 ## Testing
 
 ```bash
-bundle exec rake test    # Run full test suite
+ace-test ace-support-markdown                                   # Run full package test suite
+ace-test ace-support-markdown/test/integration/readme_examples_test.rb  # Run README example tests only
 ```
 
 Test coverage:
@@ -724,11 +730,11 @@ To ensure README examples stay in sync with the API:
 The test suite includes **README example validation** (`test/integration/readme_examples_test.rb`):
 
 ```bash
-# Run all tests including README examples
-bundle exec rake test
+# Run all package tests including README examples
+ace-test ace-support-markdown
 
 # Run only README example tests
-bundle exec ruby test/integration/readme_examples_test.rb
+ace-test ace-support-markdown/test/integration/readme_examples_test.rb
 ```
 
 These tests extract patterns from the README examples and verify they work against the actual API. If the API changes, the tests will fail, alerting you to update the documentation.
@@ -756,7 +762,7 @@ This ensures all documentation examples remain executable and accurate as the ge
 
 ```bash
 bundle install
-bundle exec rake test
+ace-test ace-support-markdown
 ```
 
 ## Platform Support
@@ -777,6 +783,8 @@ bundle lock --add-platform <your-platform>
 ## Contributing
 
 This gem is part of the ACE (AI-assisted Coding Environment) meta-project.
+
+Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
 
 ## License
 

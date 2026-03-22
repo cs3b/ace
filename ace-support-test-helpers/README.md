@@ -11,7 +11,7 @@ ace-docs:
 
 Shared test utilities for all ace-* gems.
 
-Part of the ace-support-* pattern for library-only infrastructure gems (no CLI tools).
+Follows the `ace-support-*` pattern for library-only infrastructure gems (no CLI tools).
 
 ## Purpose
 
@@ -119,4 +119,12 @@ end
 
 ## Development
 
-This gem is part of the ace project and shares the root Gemfile dependencies.
+This gem is part of the ACE project and shares the root Gemfile dependencies.
+
+## Part of ACE
+
+Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
+
+## License
+
+MIT
