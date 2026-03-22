@@ -53,7 +53,7 @@ None
 ## Execution
 
 - You are working in the current project.
-- Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+- Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
 - Read the loaded workflow and execute it end-to-end in this project.
 - Follow the workflow as the source of truth.
 - Do the work described by the workflow instead of only summarizing it.
