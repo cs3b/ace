@@ -30,6 +30,18 @@ instructions: |
 
   **Why verification matters:** Skipping this step causes status drift where the orchestrator progress no longer matches ace-task's record. This creates confusion in future sessions and breaks progress reporting.
 
+  3. **Close parent tasks when all children are done:**
+     If the task has a parent (visible in `ace-task show` output), check whether all sibling subtasks are now done:
+     ```bash
+     ace-task show {{parent_taskref}}
+     ```
+     If all subtasks show `✓` (done), mark the parent done too:
+     ```bash
+     ace-task update {{parent_taskref}} --set status=done
+     ace-task show {{parent_taskref}}
+     ```
+     Repeat upward if the parent itself has a parent.
+
 when_to_skip:
   - "Task was already marked done (verified via ace-task show)"
   - "Implementation was not completed"
