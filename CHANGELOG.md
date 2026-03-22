@@ -4,10 +4,74 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.919] - 2026-03-22
+## [0.9.924] - 2026-03-22
 
 ### Fixed
-- **ace-lint v0.24.2**: Fixed orchestrator test `chdir` setup so frontmatter-free path matching resolves correctly.
+- **ace-demo v0.17.3**: Resolved `record --dry-run` tape-mode preview drift by resolving YAML specs before reporting preview format/output behavior.
+
+### Changed
+- **ace-demo v0.17.3**: Switched generated `.tape.yml` templates to structured YAML serialization and removed default `copy-fixtures` from project template setup.
+
+### Technical
+- **ace-demo v0.17.3**: Expanded command/organism regression coverage for dry-run YAML preview and serialized template output behavior.
+
+## [0.9.923] - 2026-03-22
+
+### Changed
+- **ace-demo v0.17.2**: Consolidated YAML recording onto the production `DemoRecorder` sandbox pipeline and updated getting-started docs to `.tape.yml` output paths.
+- **ace-task v0.30.6**: Updated demo workflow to capture runtime task IDs and removed unconditional `git-init` setup.
+- **ace-retro v0.15.3**: Updated demo workflow to create and reuse runtime retro IDs instead of hard-coded references.
+- **ace-git-worktree v0.18.2**: Updated demo workflow to use runtime task IDs and added explicit sandbox git bootstrap steps for reproducible dry runs.
+- **ace-test-runner v0.17.1**: Replaced demo placeholder commands with real `ace-test` usage commands.
+
+### Technical
+- **ace-demo v0.17.2**: Removed obsolete legacy YAML parser/recorder compatibility files and added production-path regression + migrated tape smoke test coverage.
+
+## [0.9.922] - 2026-03-22
+
+### Fixed
+- **ace-demo v0.17.1**: Fixed YAML tape recording format fallback handling, sandbox-failure cleanup, setup error typing, and `.tape.yaml` compiled naming consistency.
+
+### Changed
+- **ace-docs v0.29.3**: Replaced placeholder getting-started demo commands with real `ace-docs` workflow commands.
+- **ace-lint v0.24.2**: Replaced placeholder getting-started demo commands with real `ace-lint` workflow commands.
+- **ace-llm v0.29.4**: Replaced placeholder getting-started demo commands with real `ace-llm` workflow commands.
+- **ace-search v0.23.1**: Replaced placeholder getting-started demo commands with real `ace-search` workflow commands.
+
+### Technical
+- **ace-demo v0.17.1**: Added regression coverage for CLI format passthrough, YAML compiled naming, and sandbox builder failure cleanup paths.
+
+## [0.9.921] - 2026-03-22
+
+### Changed
+- **ace-demo v0.17.0**: Removed the built-in non-CLI `ace-test` demo from default tape inventory and aligned docs/tests so `ace-demo list` reflects CLI-relevant demos only.
+
+### Technical
+- **ace-test v0.5.1**: Removed obsolete `docs/demo` tape and GIF assets from the non-CLI documentation package.
+
+## [0.9.920] - 2026-03-22
+
+### Added
+- **ace-demo v0.16.0**: Added production YAML demo engine components (`DemoYamlParser`, `VhsTapeCompiler`, `DemoSandboxBuilder`, `DemoTeardownExecutor`) for structured `.tape.yml` recording.
+
+### Changed
+- **ace-demo v0.16.0**: Unified recorder flow for `.tape` and `.tape.yml`, expanded resolver/scanner dual-format handling, and updated `ace-demo create` to generate `.tape.yml` templates by default.
+
+### Technical
+- **ace-demo v0.16.0**: Added compatibility wrappers for legacy YAML atoms and expanded package test coverage for parser/compiler/sandbox/CLI behaviors.
+
+## [0.9.919] - 2026-03-22
+
+### Added
+- **ace-demo v0.15.0**: Added YAML tape recording support (`.tape.yml`) with parsing, scene compilation, sandbox setup execution, and teardown cleanup.
+- **ace-task v0.30.5**: Added `ace-task` YAML demo source and fixture configuration for sandboxed recording scenarios.
+
+### Changed
+- **ace-demo v0.15.0**: Updated `record` command routing and usage docs to include YAML demo workflow.
+
+### Technical
+- **ace-demo v0.15.0**: Added parser/compiler/setup/recorder and CLI routing test coverage for YAML pipeline behavior.
+- **ace-task v0.30.5**: Added demo fixture config for deterministic sandbox setup.
 
 ## [0.9.918] - 2026-03-22
 
