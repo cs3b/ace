@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-03-22
+
+### Changed
+- Refreshed the package README with a clear tagline, consistent section structure, integration setup guidance, and canonical ACE footer links.
+
 ## [0.3.8] - 2026-03-12
 
 ### Changed
