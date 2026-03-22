@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ACE Handbook
-purpose: Landing page for handbook workflows and documentation standards
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ACE Handbook
 
 Standardized workflows for creating and managing guides, workflow instructions, and agent definitions.
