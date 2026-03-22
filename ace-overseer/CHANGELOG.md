@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-03-22
+
+### Fixed
+- Align README messaging: changed "start an assignment" to "prepare an assignment for execution" to match actual `work-on` behavior.
+
+## [0.8.1] - 2026-03-22
+
+### Fixed
+- Include `docs/**/*` in gemspec so documentation ships with the gem.
+
+## [0.8.0] - 2026-03-22
+
+### Added
+- Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+
 ## [0.7.1] - 2026-03-19
 
 ### Changed
