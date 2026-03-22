@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.6] - 2026-03-22
+
+### Changed
+- Add `create-retro` as the final child step in review-cycle fork subtrees, ensuring each review cycle captures its own retrospective.
+- Add ordering rules (`retro-after-release`, `retro-after-apply-feedback`) to composition rules.
+- Declare `review-sessions` as consumed input for the `create-retro` step.
+
 ## [0.36.5] - 2026-03-22
 
 ### Technical
