@@ -17,6 +17,14 @@ skill:
     workflow: wfi://task/plan
 assign:
   source: wfi://task/plan
+  steps:
+  - name: plan-task
+    description: Analyze task requirements and create an implementation plan
+    tags:
+    - planning
+    - analysis
+    context:
+      default: fork
 ---
 
-Load and run `mise exec -- ace-bundle wfi://task/plan` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://task/plan` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
