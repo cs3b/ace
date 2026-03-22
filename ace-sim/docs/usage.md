@@ -1,88 +1,126 @@
 ---
-doc-type: user
-title: ace-sim Usage
-purpose: Documentation for ace-sim/docs/usage.md
+doc-type: reference
+title: ace-sim Usage Reference
+purpose: Complete CLI reference for simulation runs and command behavior
 ace-docs:
-  last-updated: 2026-03-04
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# ace-sim Usage
+# ace-sim Usage Reference
 
-## Preset-Driven Run (Canonical)
+`ace-sim` runs provider simulations through configurable steps and presets.
 
-```bash
-ace-sim run \
-  --preset validate-idea \
-  --source path/to/source.md
-```
+## Command Overview
 
-`--source` must be an existing readable file path.
-Built-in presets include provider/synthesis defaults, so `--source` is enough.
+- `ace-sim` — entrypoint
+- `ace-sim run` — run a simulation preset with one or more source files
+- `ace-sim --help` — print command list and examples
 
-## Override Preset Defaults with CLI
+## `ace-sim --help`
 
-```bash
-ace-sim run \
-  --preset validate-idea \
-  --source path/to/source.md \
-  --steps draft,plan,work \
-  --provider codex:mini \
-  --provider google:gflash \
-  --repeat 2
-```
+Shows command examples and the `run` subcommand.
 
-## Final Suggestions Synthesis (Optional)
+## `ace-sim run`
+
+### Syntax
 
 ```bash
-ace-sim run \
-  --preset validate-task \
-  --source path/to/source.md
+ace-sim run [OPTIONS]
 ```
 
-- `--synthesis-workflow` enables a final run-level synthesis stage.
-- Common choices:
-  - `wfi://task/review` for task-focused synthesis
-  - `wfi://idea/review` for idea-focused synthesis
-- `--synthesis-provider` is optional; when omitted, the first run provider is used.
+### Purpose
 
-## Precedence
+Execute a preset-driven simulation with source files, provider list, and optional final synthesis.
 
-1. Explicit CLI flag
-2. Preset file (`.ace/sim/presets/*.yml`, fallback `.ace-defaults/sim/presets/*.yml`)
-3. Global sim defaults (`.ace-defaults/sim/config.yml`)
+### Options
 
-## Step Configs
+| Option | Type | Default / Source | Description |
+|---|---|---|---|
+| `--preset` | string | config `sim.default_preset` or `validate-idea` | Preset name from `.ace/sim/presets/*.yml|yaml` |
+| `--source` | array | preset `source` | One or more source files (repeatable, supports globs) |
+| `--steps` | string | preset steps | Comma-separated step names (override preset step list) |
+| `--provider` | array | preset providers | Provider:model values (`--provider` may repeat) |
+| `--repeat` | integer | sim default repeat (or `1`) | Run each provider this many times |
+| `--synthesis-workflow` | string | preset / config | Workflow/file ref for final synthesis |
+| `--synthesis-provider` | string | preset / config provider | Provider for final suggestions generation |
+| `--dry-run` | flag | preset / false | Prepare and preview without mutating providers |
+| `--writeback` | flag | preset / false | Write final revised source back to source when set |
+| `--quiet`, `-q` | flag | false | Suppress non-essential status output |
+| `--verbose`, `-v` | flag | false | Print extended diagnostics |
+| `--help`, `-h` | flag | false | Show command help |
 
-- Step configs are markdown bundle configs at `.ace/sim/steps/*.md` (fallback `.ace-defaults/sim/steps/*.md`).
-- Default step configs use strict sections (`project_context`, step workflow, `input`) and instruction/report headings.
-- Default preset `validate-idea` runs `draft -> plan -> work` with synthesis workflow `wfi://idea/review`.
-- Default preset `validate-task` runs `plan -> work` with synthesis workflow `wfi://task/review`.
+## Preset configuration model
+
+- Presets are resolved by name.
+- Preset loading precedence for files is:
+  - gem defaults (`.ace-defaults/sim/presets`)
+  - user presets (`~/.ace/sim/presets`)
+  - project presets (`.ace/sim/presets`)
+
+- File extensions: `.yml` and `.yaml`.
+
+If a preset is missing but known, fallback behavior is an empty preset with default steps and the system-level defaults for provider/repeat behavior.
+
+## Step config resolution
+
+Each requested step is resolved in this order:
+
+1. `.ace/sim/steps/<step>.md`
+2. `~/.ace/sim/steps/<step>.md`
+3. `.ace-defaults/sim/steps/<step>.md`
+
+Run fails with `Missing step config` if a required step file is not found.
+
+## Synthesis and precedence
+
+- If `--synthesis-provider` is passed, that provider is used for final synthesis.
+- If not passed, synthesis defaults use: preset `synthesis_provider`, then global config `sim.synthesis_provider`.
+- `--synthesis-provider` requires `--synthesis-workflow` to be set.
+- `--dry-run` is a non-mutating preview and cannot be combined with `--writeback`.
 
 ## Artifacts
 
-Top-level:
-- `.ace-local/sim/simulations/<run-id>/session.yml`
-- `.ace-local/sim/simulations/<run-id>/synthesis.yml`
-- `.ace-local/sim/simulations/<run-id>/final/source.original.md` (when synthesis enabled)
-- `.ace-local/sim/simulations/<run-id>/final/input.md` (when synthesis enabled)
-- `.ace-local/sim/simulations/<run-id>/final/output.sequence.md` (when synthesis enabled)
-- `.ace-local/sim/simulations/<run-id>/final/suggestions.report.md` (when synthesis enabled)
-- `.ace-local/sim/simulations/<run-id>/final/source.revised.md` (when synthesis enabled)
+Run output lives under `.ace-local/sim/simulations/<run-id>/`.
 
-Per chain (`provider x repeat`):
-- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
-- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.bundle.md`
-- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.prompt.md`
-- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/output.md`
+Run root:
 
-## Behavior Notes
+- `session.yml` — simulation session metadata
+- `synthesis.yml` — final synthesis status and summaries
+- `input.md` — bundled source content used for provider execution
+- `input.bundle.md` — source bundle manifest generated before execution
 
-- One independent full chain runs per provider x repeat.
-- Step 1 copies `--source` into `input.md`.
-- Step N copies previous `output.md` into next `input.md`.
-- Step success is minimal: `output.md` exists and is non-empty.
-- If one chain fails, only that chain stops; other chains continue.
-- `--dry-run` never mutates source ideas/tasks.
-- If synthesis is enabled, final run status also depends on final suggestions generation.
-- Synthesis input is an aggregate of executed steps only. If you run `--steps draft`, only draft appears in `final/input.md`.
+Per chain (`<provider>-<iteration>`):
+
+- `NN-step/input.md` — effective input for that step
+- `NN-step/user.bundle.md` — step bundle for LLM prompt
+- `NN-step/user.prompt.md` — resolved prompt file
+- `NN-step/output.md` — provider output for that step
+
+Final directory:
+
+- `final/input.md` — combined chain outputs
+- `final/user.bundle.md` — final synthesis bundle
+- `final/user.prompt.md` — final synthesis prompt
+- `final/output.sequence.md` — raw LLM output sequence
+- `final/suggestions.report.md` — parsed suggestions block
+- `final/source.original.md` — original source snapshot
+- `final/source.revised.md` — revised source output (if synthesis enabled)
+
+## Behavior notes
+
+- Provider step execution runs one chain per provider and repeat iteration.
+- `draft`, `plan`, `work` are common defaults; custom step order is supported via `--steps`.
+- Synthesis is optional; enable via preset or explicit `--synthesis-workflow`.
+- `--dry-run` does not perform provider calls.
+
+## Troubleshooting
+
+- `Unknown preset`:
+  - verify preset exists under one of `.ace-defaults/sim/presets`, `~/.ace/sim/presets`, or `.ace/sim/presets`
+- `Missing step config`:
+  - verify step bundles exist in step search path above
+- `--source is required`:
+  - provide source files directly or via preset defaults
+- `synthesis_provider requires synthesis_workflow`:
+  - include both flags together when overriding synthesis provider

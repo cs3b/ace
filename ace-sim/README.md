@@ -1,37 +1,60 @@
 ---
 doc-type: user
 title: ace-sim
-purpose: Documentation for ace-sim/README.md
+purpose: Landing page for ace-sim
 ace-docs:
-  last-updated: 2026-02-28
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-sim
 
-Standalone file-chained simulation runner for ACE.
+`ace-sim` runs **multi-provider simulation chains** over project tasks and ideas so teams can compare perspectives before deciding on a direction.
 
-## Quick Start
+![ace-sim getting started](docs/demo/ace-sim-run.gif)
 
-```bash
-ace-sim run \
-  --preset validate-idea \
-  --source path/to/source.md \
-  --dry-run
-```
+Multi-provider LLM simulations for validating ideas and reviewing tasks
 
-Preset defaults can be overridden by explicit CLI flags (`--steps`, `--provider`, `--repeat`, etc.).
+## Why
 
-Optional final synthesis can generate a last-mile report:
+`ace-sim` gives you structured, repeatable simulation runs when you need:
+- Alternative model reasoning before committing to a plan
+- A review lens on tasks before work starts
+- Confidence that assumptions were tested across multiple providers
 
-```bash
-ace-sim run \
-  --preset validate-task \
-  --source path/to/source.md
-```
+## Works With
 
-Built-in defaults:
-- `validate-idea` uses `wfi://idea/review`
-- `validate-task` uses `wfi://task/review`
+- `ace-sim` simulation presets (`validate-idea`, `validate-task`)
+- `ace-bundle` for source collection and context assembly
+- `ace-llm` for step-level provider execution
+- `ace-review` for applying synthesized recommendations
+- `ace-task` and `ace-assign` workflows
 
-See `docs/usage.md` for full usage.
+## Agent Skills
+
+- `as-sim-run`
+
+## Features
+
+- Multi-provider chains with repeatable execution and provider overrides
+- Preset-driven behavior for idea validation and task review
+- File-chained steps (`draft`, `plan`, `work`) for progressive refinement
+- Final synthesis aggregation into actionable suggestions and revised source
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [CLI Usage Reference](docs/usage.md)
+- [Handbook Catalog](docs/handbook.md)
+- `ace-sim` command reference in this package documentation
+
+## Part of ACE
+
+`ace-sim` is part of [ACE](../README.md): practical tooling for humans and AI working together.
+
+## Additional Context
+
+- Runs are deterministic and stored under `.ace-local/sim/simulations`.
+- Each run can be repeated with different providers and repeat counts.
+- Presets can be reused across team workflows and CI.
+- Agent-friendly output is designed for both manual review and automation.

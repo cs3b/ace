@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-03-22
+
+### Fixed
+- Corrected handbook documentation links in `docs/handbook.md` so skill and workflow references resolve correctly.
+- Updated usage guidance to document that `--dry-run` cannot be combined with `--writeback`, matching runtime validation behavior.
+
+### Changed
+- Re-recorded `docs/demo/ace-sim-run.gif` from the package tape so the demo reflects `ace-sim` behavior instead of a placeholder asset.
+
+## [0.11.0] - 2026-03-22
+
+### Added
+- Rebuilt package documentation as a landing-page experience with updated README, getting-started tutorial, usage reference, and handbook catalog.
+
+### Changed
+- Added a generated VHS demo tape and screenshot for the documented getting-started workflow.
+- Updated gem metadata text to reflect the new documentation-first positioning.
+
 ### Fixed
 - Corrected validate-task chain phase numbering for `plan` and `work` steps so file artifacts use absolute phase indices (`02-plan`, `03-work`) when draft is intentionally omitted.
 - Require explicit `--synthesis-workflow` when `--synthesis-provider` is provided, preventing preset default fallback from masking invalid provider/workflow combinations.
