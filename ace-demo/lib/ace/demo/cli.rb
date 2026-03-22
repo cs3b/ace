@@ -37,9 +37,9 @@ module Ace
         "ace-demo attach .ace-local/demo/hello.gif --pr 123",
         "ace-demo record hello --pr 123 --dry-run",
         "ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x",
-        "ace-demo create my-demo -- \"git status\" \"make deploy\"",
-        "ace-demo create my-demo --desc \"Deploy flow\" --dry-run -- \"echo hello\"",
-        "ace-demo create my-demo --timeout 3s --width 1200 -- \"git status\""
+        "ace-demo create my-demo",
+        "ace-demo create my-demo --desc \"Deploy flow\" --dry-run",
+        "ace-demo create my-demo --timeout 3s --width 1200"
       ].freeze
 
       register "list", Commands::List

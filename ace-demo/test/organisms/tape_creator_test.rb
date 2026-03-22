@@ -21,9 +21,9 @@ class TapeCreatorTest < AceDemoTestCase
     result = @creator.create(name: "hello", commands: ["echo hello"])
 
     assert_equal false, result[:dry_run]
-    assert result[:path].end_with?("hello.tape")
+    assert result[:path].end_with?("hello.tape.yml")
     assert File.exist?(result[:path])
-    assert_includes result[:content], 'Type "echo hello"'
+    assert_includes result[:content], "type: echo hello"
   end
 
   def test_dry_run_returns_content_without_writing
@@ -31,9 +31,9 @@ class TapeCreatorTest < AceDemoTestCase
 
     assert_equal true, result[:dry_run]
     assert_nil result[:path]
-    assert_includes result[:content], 'Type "echo hello"'
+    assert_includes result[:content], "type: echo hello"
 
-    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "hello.tape")
+    tape_path = File.join(@tmp, ".ace", "demo", "tapes", "hello.tape.yml")
     refute File.exist?(tape_path)
   end
 
@@ -45,14 +45,14 @@ class TapeCreatorTest < AceDemoTestCase
       tags: "ci"
     )
 
-    assert_includes result[:content], "# Description: Deploy flow"
-    assert_includes result[:content], "# Tags: ci"
+    assert_includes result[:content], "description: Deploy flow"
+    assert_includes result[:content], "- ci"
   end
 
   def test_uses_format_in_output_path
     result = @creator.create(name: "vid", commands: ["echo hi"], format: "mp4")
 
-    assert_includes result[:content], "Output .ace-local/demo/vid.mp4"
+    assert_includes result[:content], "format: mp4"
   end
 
   def test_raises_on_conflict_without_force
@@ -67,6 +67,6 @@ class TapeCreatorTest < AceDemoTestCase
     @creator.create(name: "conflict", commands: ["echo first"])
     result = @creator.create(name: "conflict", commands: ["echo second"], force: true)
 
-    assert_includes result[:content], 'Type "echo second"'
+    assert_includes result[:content], "type: echo second"
   end
 end

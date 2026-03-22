@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-03-22
+
+### Fixed
+- Updated `record --dry-run` tape-mode previews to resolve YAML tape specs before reporting preview format/output behavior.
+
+### Changed
+- Switched generated `.tape.yml` template rendering to structured YAML serialization for safer escaping and multiline handling.
+- Removed default `copy-fixtures` from generated project tape templates to avoid guaranteed no-op setup warnings.
+
+### Technical
+- Updated command/organism test expectations and added dry-run YAML format coverage for the new preview/serialization behavior.
+
+## [0.17.2] - 2026-03-22
+
+### Changed
+- Removed the legacy `YamlDemoRecorder`/`DemoSetupExecutor` pipeline and consolidated YAML recording on the production `DemoRecorder` sandbox flow.
+- Updated getting-started docs to reflect `.tape.yml` output paths for created and inline tapes.
+
+### Technical
+- Removed obsolete legacy YAML parser/content-generator compatibility files and their test coverage.
+- Added production-path regression coverage for `DemoRecorder` YAML execution, teardown behavior, and migrated getting-started tape smoke checks.
+
+## [0.17.1] - 2026-03-22
+
+### Fixed
+- Honored YAML `settings.format` during `ace-demo record` tape-mode execution when `--format` is omitted.
+- Cleaned up sandbox directories on setup failures and preserved `ArgumentError` type for invalid setup directives.
+- Guarded missing YAML `setup`/`teardown` sections and normalized `.tape.yaml` compiled tape naming.
+
+### Technical
+- Added regression tests for CLI format passthrough, YAML compiled naming, and sandbox-builder failure cleanup behavior.
+
+## [0.17.0] - 2026-03-22
+
+### Changed
+- Removed the built-in non-CLI `ace-test` demo tape from default demo inventory so `ace-demo list` only shows CLI-relevant demos.
+- Updated getting-started guidance and list/scan test fixtures to reflect the cleaned built-in tape set.
+
+## [0.16.0] - 2026-03-22
+
+### Added
+- Added `DemoYamlParser` and `VhsTapeCompiler` atoms for strict `.tape.yml` schema validation and VHS script compilation.
+- Added `DemoSandboxBuilder` and `DemoTeardownExecutor` molecules for sandbox lifecycle management, fixture setup, and teardown execution.
+
+### Changed
+- Updated `DemoRecorder` to support unified `.tape`/`.tape.yml` routing with YAML pipeline execution.
+- Updated `TapeResolver` and `TapeScanner` to support dual-format discovery and YAML-first extensionless resolution.
+- Updated `ace-demo create`/`TapeCreator` to generate `.tape.yml` templates as the default authoring format.
+- Updated CLI `list` and `show` output to include tape format and YAML metadata details.
+- Added `sandbox_dir` default configuration (`.ace-local/demo/sandbox`).
+
+### Technical
+- Added and updated tests across atoms, molecules, organisms, and commands for the new YAML engine path and compatibility shims.
+
+## [0.15.0] - 2026-03-22
+
+### Added
+- Added YAML demo recording support in `ace-demo record` for `.tape.yml` inputs, including YAML parsing, scene compilation, sandbox setup execution, and teardown cleanup.
+- Added demo spike artifacts for `ace-task` YAML recording (`ace-task-getting-started.tape.yml`) and fixture-based setup support.
+
+### Changed
+- Updated `VhsExecutor#run` to support sandbox-scoped execution via optional `chdir:`.
+- Updated usage docs to include `.tape.yml` recording workflow.
+
+### Technical
+- Added parser/compiler/setup/recorder test coverage for the YAML demo pipeline and CLI routing.
+
 ## [0.14.2] - 2026-03-22
 
 ### Fixed

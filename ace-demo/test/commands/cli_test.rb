@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/support/cli"
+require "tmpdir"
 
 class CliTest < AceDemoTestCase
   def invoke(args)
@@ -43,7 +44,7 @@ class CliTest < AceDemoTestCase
       def record(tape_ref:, output:, format:)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output == "/tmp/x.gif"
-        raise "bad format" unless format == "gif"
+        raise "bad format" unless format.nil?
 
         "/tmp/x.gif"
       end
@@ -52,6 +53,51 @@ class CliTest < AceDemoTestCase
     Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
       result = invoke(["record", "hello", "--output", "/tmp/x.gif"])
       assert_includes result[:stdout], "Recorded: /tmp/x.gif"
+    end
+  end
+
+  def test_record_yaml_path_calls_demo_recorder
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref.end_with?(".tape.yml")
+        raise "bad output" unless output.nil?
+        raise "bad format" unless format.nil?
+
+        ".ace-local/demo/yaml.gif"
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      result = invoke(["record", "./demo.tape.yml"])
+      assert_includes result[:stdout], "Recorded: .ace-local/demo/yaml.gif"
+    end
+  end
+
+  def test_record_yaml_dry_run_defaults_preview_format_to_gif_when_yaml_not_found
+    result = invoke(["record", "./demo.tape.yml", "--dry-run"])
+    assert_includes result[:stdout], "[dry-run] Would record tape: ./demo.tape.yml (format: gif)"
+  end
+
+  def test_record_yaml_dry_run_reads_format_from_resolved_yaml_spec
+    Dir.mktmpdir("ace_demo_cli") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      File.write(
+        tape_path,
+        <<~YAML
+          description: demo
+          tags: []
+          settings:
+            format: webm
+          scenes:
+            - name: one
+              commands:
+                - type: echo hi
+                  sleep: 1s
+        YAML
+      )
+
+      result = invoke(["record", tape_path, "--dry-run"])
+      assert_includes result[:stdout], "[dry-run] Would record tape: #{tape_path} (format: webm)"
     end
   end
 
@@ -91,7 +137,7 @@ class CliTest < AceDemoTestCase
       def record(tape_ref:, output:, format:)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output.nil?
-        raise "bad format" unless format == "gif"
+        raise "bad format" unless format.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -131,7 +177,7 @@ class CliTest < AceDemoTestCase
       def record(tape_ref:, output:, format:)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output.nil?
-        raise "bad format" unless format == "gif"
+        raise "bad format" unless format.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -183,7 +229,7 @@ class CliTest < AceDemoTestCase
     fake_recorder = Class.new do
       def record(tape_ref:, output:, format:)
         raise "bad tape" unless tape_ref == "hello"
-        raise "bad format" unless format == "gif"
+        raise "bad format" unless format.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -335,7 +381,7 @@ class CliTest < AceDemoTestCase
     fake_recorder = Class.new do
       def record(tape_ref:, output:, format:)
         raise "bad tape" unless tape_ref == "hello"
-        raise "bad format" unless format == "gif"
+        raise "bad format" unless format.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -389,8 +435,8 @@ class CliTest < AceDemoTestCase
     fake_scanner = Class.new do
       def list
         [
-          { name: "ace-test", description: "Shows ace-test run", source: ".ace-defaults/demo/tapes/" },
-          { name: "hello", description: "Built-in echo demo", source: ".ace/demo/tapes/" }
+          { name: "hello", description: "Built-in echo demo", source: ".ace-defaults/demo/tapes/" },
+          { name: "quick-check", description: "Project quick check demo", source: ".ace/demo/tapes/" }
         ]
       end
     end.new
@@ -400,7 +446,7 @@ class CliTest < AceDemoTestCase
 
       assert_equal "", result[:stderr]
       assert_includes result[:stdout], "Available demo tapes:"
-      assert_includes result[:stdout], "ace-test"
+      assert_includes result[:stdout], "hello"
       assert_includes result[:stdout], "Built-in echo demo"
       assert_includes result[:stdout], "(.ace-defaults/demo/tapes/)"
     end
@@ -441,7 +487,7 @@ class CliTest < AceDemoTestCase
   def test_show_not_found_returns_error
     fake_scanner = Class.new do
       def find(_name)
-        raise Ace::Demo::TapeNotFoundError, "Tape not found: missing\nAvailable tapes: ace-test, hello"
+        raise Ace::Demo::TapeNotFoundError, "Tape not found: missing\nAvailable tapes: hello"
       end
     end.new
 
@@ -450,7 +496,7 @@ class CliTest < AceDemoTestCase
 
       assert_equal 1, result[:result]
       assert_includes result[:stderr], "Tape not found: missing"
-      assert_includes result[:stderr], "Available tapes: ace-test, hello"
+      assert_includes result[:stderr], "Available tapes: hello"
     end
   end
 end

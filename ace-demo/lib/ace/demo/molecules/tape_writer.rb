@@ -10,8 +10,8 @@ module Ace
           @cwd = cwd
         end
 
-        def write(name:, content:, force: false)
-          path = tape_path(name)
+        def write(name:, content:, force: false, extension: ".tape")
+          path = tape_path(name, extension: extension)
 
           if File.exist?(path) && !force
             raise TapeAlreadyExistsError, "Tape already exists: #{path}\nUse --force to overwrite."
@@ -25,8 +25,8 @@ module Ace
 
         private
 
-        def tape_path(name)
-          File.join(@cwd, ".ace", "demo", "tapes", "#{name}.tape")
+        def tape_path(name, extension:)
+          File.join(@cwd, ".ace", "demo", "tapes", "#{name}#{extension}")
         end
       end
     end
