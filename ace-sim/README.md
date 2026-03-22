@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-sim
-purpose: Landing page for ace-sim
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-sim
 
 `ace-sim` runs **multi-provider simulation chains** over project tasks and ideas so teams can compare perspectives before deciding on a direction.
