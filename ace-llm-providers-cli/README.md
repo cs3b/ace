@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-llm-providers-cli
-purpose: Documentation for ace-llm-providers-cli/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-llm-providers-cli
 
 CLI-based LLM providers for ace-llm.
