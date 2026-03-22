@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.919] - 2026-03-22
+
+### Fixed
+- **ace-lint v0.24.2**: Fixed orchestrator test `chdir` setup so frontmatter-free path matching resolves correctly.
+
 ## [0.9.918] - 2026-03-22
 
 ### Changed
