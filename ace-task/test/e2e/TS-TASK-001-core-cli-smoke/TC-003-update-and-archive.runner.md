@@ -16,6 +16,6 @@ Save all artifacts to `results/tc/03/`.
 ## Steps
 
 1. Read ref from `results/tc/02/task-ref.txt` when present.
-2. Run `mise exec -- ace-task update <ref> --set status=done --move-to archive` and save `update.*`.
-3. Run `mise exec -- ace-task show <ref>` and save `show-after-update.*`.
+2. Run `ace-task update <ref> --set status=done --move-to archive` and save `update.*`.
+3. Run `ace-task show <ref>` and save `show-after-update.*`.
 4. Capture archived files with `find .ace-tasks/_archive -maxdepth 4 -type f -name '*.s.md' | sort > results/tc/03/archive-files.txt`.

@@ -10,14 +10,14 @@ Save all artifacts to `results/tc/02/`.
 
 ## Constraints
 
-- Use only `mise exec -- ace-task ...` commands.
+- Use only `ace-task ...` commands.
 - Persist the created ref for downstream checks.
 - Capture stdout/stderr/exit for each command.
 
 ## Steps
 
-1. Run `mise exec -- ace-task create "E2E smoke task"` and save `create.*`.
+1. Run `ace-task create "E2E smoke task"` and save `create.*`.
 2. Extract short ref from `create.stdout` into `results/tc/02/task-ref.txt`.
-3. Run `mise exec -- ace-task list --status pending` and save `list.*`.
-4. Run `mise exec -- ace-task show <ref>` using `task-ref.txt` and save `show.*`.
+3. Run `ace-task list --status pending` and save `list.*`.
+4. Run `ace-task show <ref>` using `task-ref.txt` and save `show.*`.
 5. Capture filesystem evidence with `find .ace-tasks -maxdepth 3 -type f -name '*.s.md' | sort > results/tc/02/task-files.txt`.
