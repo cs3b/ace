@@ -1,4 +1,8 @@
 ---
+name: Invalid-Name
+description: Workflow with invalid name pattern
+allowed-tools:
+  - Read
 doc-type: workflow
 title: Invalid Name.wf
 purpose: Workflow with invalid name pattern

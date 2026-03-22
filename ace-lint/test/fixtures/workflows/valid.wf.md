@@ -1,4 +1,9 @@
 ---
+name: test-workflow
+description: A valid test workflow
+allowed-tools:
+  - Read
+  - Bash
 doc-type: workflow
 title: Test Workflow
 purpose: A valid test workflow
