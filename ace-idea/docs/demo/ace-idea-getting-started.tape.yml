@@ -1,0 +1,26 @@
+---
+description: Capture one idea and list it in an isolated demo workspace
+tags:
+- docs
+- idea
+settings:
+  font_size: 16
+  width: 1200
+  height: 560
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: cd $PWD
+    sleep: 1s
+  - type: 'rm -rf /tmp/ace-idea-demo-home && mkdir -p /tmp/ace-idea-demo-home/.ace/idea && printf ''idea:\n  root_dir: /tmp/ace-idea-demo-home/ideas\n'' >/tmp/ace-idea-demo-home/.ace/idea/config.yml'
+    sleep: 2s
+  - type: HOME=/tmp/ace-idea-demo-home ace-idea create 'Dark mode for night coding' --title 'Dark mode'
+    sleep: 2s
+  - type: HOME=/tmp/ace-idea-demo-home ace-idea list
+    sleep: 2s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
