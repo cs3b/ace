@@ -88,6 +88,16 @@ ordering:
     after: create-retro
     note: "Findings report feeds into retrospective as structured input"
 
+  - rule: retro-after-release
+    before: release
+    after: create-retro
+    note: "Retro captures learnings after all implementation and release work is complete"
+
+  - rule: retro-after-apply-feedback
+    before: apply-feedback
+    after: create-retro
+    note: "Retro should follow all feedback application in review cycles"
+
   - rule: e2e-before-release
     before: verify-e2e
     after: release
