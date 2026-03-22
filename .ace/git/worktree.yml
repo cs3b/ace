@@ -28,7 +28,7 @@ git:
       #   "task.{id}"        -> task.081
       #   "{id}"             -> 081
       #   "{task_id}"        -> task.081
-      directory_format: "ace-task.{task_id}"
+      directory_format: "ace-t.{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {slug}
