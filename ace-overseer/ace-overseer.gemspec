@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Project control plane orchestrator for task worktrees"
-  spec.description = "ace-overseer orchestrates task execution across git worktrees, tmux windows, and assignment workflows."
+  spec.summary = "One command to provision a worktree, open tmux, and start an assignment"
+  spec.description = "ace-overseer streamlines focused task execution by provisioning task worktrees, tmux windows, and assignment workflows in one flow."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     lib/**/*
+    docs/**/*
     handbook/**/*
     exe/*
     .ace-defaults/**/*
