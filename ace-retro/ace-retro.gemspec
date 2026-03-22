@@ -8,10 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Standalone retrospective management gem for ACE with b36ts-based IDs"
-  spec.description = "Manages retrospectives in .ace-retros/ using raw 6-char b36ts IDs, " \
-                     "flat directory structure, and 5-command pattern (create, show, list, move, update). " \
-                     "Supports retro types and task linking."
+  spec.summary = "Lightweight retrospective management -- create, tag, and archive retros from the command line"
+  spec.description = "Create, review, and archive retrospectives from the command line with type-aware templates, " \
+                     "task linkage, and health checks for long-running retrospective work."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -24,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md
