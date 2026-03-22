@@ -11,10 +11,10 @@ Type "cd $PWD"
 Enter
 Sleep 2s
 
-Type "mise exec -- ace-git-worktree create --task 8q4.t.uno.1 --dry-run --no-commit --no-push --no-pr --no-auto-navigate"
+Type "ace-git-worktree create --task 8q4.t.uno.1 --dry-run --no-commit --no-push --no-pr --no-auto-navigate"
 Enter
 Sleep 2s
 
-Type "mise exec -- ace-git-worktree list --show-tasks"
+Type "ace-git-worktree list --show-tasks"
 Enter
 Sleep 2s
