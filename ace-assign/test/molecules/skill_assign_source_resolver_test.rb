@@ -182,7 +182,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
           source: wfi://task/plan
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://task/plan`
+        Load and run `ace-bundle wfi://task/plan`
       MD
 
       File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "plan.wf.md"), <<~MD)

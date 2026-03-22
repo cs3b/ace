@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.11] - 2026-03-22
+
+### Fixed
+- Restored the `ace-assign` default fork timeout to `1800` in `ace-assign/.ace-defaults/assign/config.yml`.
+
+### Changed
+- Realigned assignment default provider/timeout guidance in `.ace/assign/config.yml` with package defaults for this release cycle.
+
+## [0.36.10] - 2026-03-22
+
+### Changed
+- Documented assignment config provider/timeout default tuning in release notes for `.ace/assign/config.yml` and `ace-assign/.ace-defaults/assign/config.yml`.
+- Restored missing trailing newline in `handbook/workflow-instructions/assign/run-in-batches.wf.md`.
+
+## [0.36.9] - 2026-03-22
+
+### Changed
+- Remove `mise exec --` wrapper from test fixture strings to match updated command invocation style.
+- Clarified release notes for this version to include shipped assignment default config tuning in `.ace/assign/config.yml` and `ace-assign/.ace-defaults/assign/config.yml` (provider/timeout defaults).
+
 ## [0.36.8] - 2026-03-22
 
 ### Fixed
