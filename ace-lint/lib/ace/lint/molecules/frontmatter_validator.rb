@@ -4,6 +4,10 @@ require_relative "../atoms/frontmatter_extractor"
 require_relative "../atoms/yaml_validator"
 require_relative "../models/lint_result"
 require_relative "../models/validation_error"
+require "ace/core/molecules/frontmatter_free_policy"
+require "yaml"
+require "date"
+require "time"
 
 module Ace
   module Lint
@@ -45,6 +49,15 @@ module Ace
           extraction = Atoms::FrontmatterExtractor.extract(content)
 
           unless extraction[:has_frontmatter]
+            if frontmatter_free_file?(file_path)
+              return Models::LintResult.new(
+                file_path: file_path,
+                success: true,
+                errors: [],
+                warnings: []
+              )
+            end
+
             error_msg = extraction[:error] || "No frontmatter found"
             return Models::LintResult.new(
               file_path: file_path,
@@ -94,6 +107,24 @@ module Ace
             warnings: []
           )
         end
+
+        def self.frontmatter_free_file?(file_path)
+          Ace::Core::Molecules::FrontmatterFreePolicy.match?(
+            file_path,
+            patterns: frontmatter_free_patterns,
+            project_root: Dir.pwd
+          )
+        end
+        private_class_method :frontmatter_free_file?
+
+        def self.frontmatter_free_patterns
+          require "ace/support/config"
+          config = Ace::Support::Config.create.resolve_namespace("docs").to_h
+          Ace::Core::Molecules::FrontmatterFreePolicy.patterns(config: config)
+        rescue StandardError
+          Ace::Core::Molecules::FrontmatterFreePolicy::DEFAULT_PATTERNS
+        end
+        private_class_method :frontmatter_free_patterns
       end
     end
   end
