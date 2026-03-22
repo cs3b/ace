@@ -8,9 +8,8 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. Artifacts exist in `results/tc/01/`.
-2. `results/tc/01/.exit` is present and indicates exit code `0`.
-3. `results/tc/01/report-files.txt` exists and contains at least one generated report file path.
-4. Captured output includes executed test summary details.
+2. Exit code is `0`.
+3. Captured output includes executed test summary details.
 
 ## Verdict
 

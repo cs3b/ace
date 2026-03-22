@@ -1,0 +1,20 @@
+---
+description: Demonstrate ace-test in-progress and group runs
+tags:
+- ace-test-runner
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-test --help
+    sleep: 2s
+  - type: ace-test ace-demo atoms --max-display 3
+    sleep: 2s
+teardown:
+- cleanup
