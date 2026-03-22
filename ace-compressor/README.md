@@ -34,22 +34,22 @@ gem install ace-compressor
 
 ```bash
 # Single file
-mise exec -- ace-compressor docs/vision.md --mode exact
+ace-compressor docs/vision.md --mode exact
 
 # Compact narrative-heavy docs with policy metadata
-mise exec -- ace-compressor docs/vision.md --mode compact --format stdio
+ace-compressor docs/vision.md --mode compact --format stdio
 
 # Directory
-mise exec -- ace-compressor docs/ --mode exact
+ace-compressor docs/ --mode exact
 
 # Multiple files
-mise exec -- ace-compressor docs/vision.md docs/architecture.md --mode exact
+ace-compressor docs/vision.md docs/architecture.md --mode exact
 
 # Print content instead of cache path
-mise exec -- ace-compressor docs/vision.md --format stdio
+ace-compressor docs/vision.md --format stdio
 
 # Save to a specific file
-mise exec -- ace-compressor docs/vision.md --output /tmp/vision.pack
+ace-compressor docs/vision.md --output /tmp/vision.pack
 ```
 
 ## Documentation
