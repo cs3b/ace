@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-opencode will be documented in t
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-03-22
+
+### Technical
+- Refreshed the package README with standardized handbook integration sections, OpenCode-specific provider wording, and ACE/`ace-handbook` linkage.
+
 ## [0.3.0] - 2026-03-12
 
 ### Changed
