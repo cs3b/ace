@@ -12,10 +12,26 @@ argument-hint:
 - target-branch
 last_modified: 2026-01-10
 source: ace-git
+assign:
+  source: wfi://git/rebase
+  steps:
+  - name: rebase-with-main
+    description: Rebase current branch onto origin/main while preserving changelog
+      intent
+    intent:
+      phrases:
+      - rebase with main
+      - rebase with origin main
+      - rebase onto main
+      - sync with main
+    tags:
+    - git
+    - history
+    - rebase
 skill:
   kind: workflow
   execution:
     workflow: wfi://git/rebase
 ---
 
-Load and run `mise exec -- ace-bundle wfi://git/rebase` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://git/rebase` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
