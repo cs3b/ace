@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-prompt-prep
-purpose: Documentation for ace-prompt-prep/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-prompt-prep
 
 Prompt workspace with archiving, LLM enhancement, and context loading -- manage prompts like code.
