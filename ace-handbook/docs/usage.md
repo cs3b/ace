@@ -14,9 +14,9 @@ ace-docs:
 ## Discover workflows with `ace-nav`
 
 ```bash
-mise exec -- ace-nav list 'wfi://handbook/*'
-mise exec -- ace-nav resolve wfi://handbook/manage-guides
-mise exec -- ace-nav resolve wfi://handbook/review-workflows
+ace-nav list 'wfi://handbook/*'
+ace-nav resolve wfi://handbook/manage-guides
+ace-nav resolve wfi://handbook/review-workflows
 
 ```
 
@@ -25,13 +25,13 @@ Use discovery when you need available paths or exact protocol references.
 ## Load workflows with `ace-bundle`
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/init-project
-mise exec -- ace-bundle wfi://handbook/manage-guides
-mise exec -- ace-bundle wfi://handbook/review-guides
-mise exec -- ace-bundle wfi://handbook/manage-workflows
-mise exec -- ace-bundle wfi://handbook/review-workflows
-mise exec -- ace-bundle wfi://handbook/manage-agents
-mise exec -- ace-bundle wfi://handbook/update-docs
+ace-bundle wfi://handbook/init-project
+ace-bundle wfi://handbook/manage-guides
+ace-bundle wfi://handbook/review-guides
+ace-bundle wfi://handbook/manage-workflows
+ace-bundle wfi://handbook/review-workflows
+ace-bundle wfi://handbook/manage-agents
+ace-bundle wfi://handbook/update-docs
 
 ```
 
@@ -57,13 +57,13 @@ Use bundle output as source-of-truth instructions.
 Create and record terminal demo assets:
 
 ```bash
-mise exec -- ace-demo create ace-handbook-getting-started --desc "Show handbook workflow discovery" -- "mise exec -- ace-nav resolve wfi://handbook/manage-guides"
-mise exec -- ace-demo record ace-handbook/docs/demo/ace-handbook-getting-started.tape --output ace-handbook/docs/demo/ace-handbook-getting-started.gif
+ace-demo create ace-handbook-getting-started --desc "Show handbook workflow discovery" -- "ace-nav resolve wfi://handbook/manage-guides"
+ace-demo record ace-handbook/docs/demo/ace-handbook-getting-started.tape --output ace-handbook/docs/demo/ace-handbook-getting-started.gif
 
 ```
 
 ## Notes
 
-- Keep command invocations direct (`mise exec -- ace-*`) without shell post-processing.
+- Keep command invocations direct (`ace-*`) without shell post-processing.
 - Treat loaded workflow bundles as canonical instructions.
 - Keep README concise and move detailed reference content into `ace-handbook/docs/`.

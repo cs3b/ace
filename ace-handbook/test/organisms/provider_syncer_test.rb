@@ -10,7 +10,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     create_provider_manifest("codex", ".codex/skills")
     create_skill_source_registration("ace-demo", "ace-demo/handbook/skills")
     create_skill("as-test-sync", <<~BODY)
-      Load and run `mise exec -- ace-bundle wfi://test/sync` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+      Load and run `ace-bundle wfi://test/sync` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
   end
 
@@ -50,7 +50,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     }
 
     create_skill("as-test-override", <<~BODY, frontmatter: frontmatter)
-      Load and run `mise exec -- ace-bundle wfi://test/override` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+      Load and run `ace-bundle wfi://test/override` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
 
     syncer.sync(provider: "pi")
@@ -103,7 +103,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       ## Execution
 
       - You are working in the current project.
-      - Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions.
+      - Run `ace-bundle wfi://git/commit` in the current project to load the workflow instructions.
       - Read the loaded workflow and execute it end-to-end in this project.
       - Follow the workflow as the source of truth.
       - If `INTENTION` is provided explicitly, use it. Otherwise derive it from recent changes.
@@ -125,7 +125,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes codex_rendered, "- INTENTION"
     assert_includes codex_rendered, "- CHANGED_FILES"
     assert_includes codex_rendered, "## Execution"
-    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://git/commit` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Run `ace-bundle wfi://git/commit` in the current project to load the workflow instructions."
     refute_includes codex_rendered, "context: fork"
     refute_includes codex_rendered, "model: haiku"
     refute_includes claude_rendered, "integration:"
@@ -163,7 +163,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       ## Execution
 
       - You are working in the current project.
-      - Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+      - Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
       - Read the loaded workflow and execute it end-to-end in this project.
       - Follow the workflow as the source of truth.
       - Do the work described by the workflow instead of only summarizing it.
@@ -182,7 +182,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes codex_rendered, "## Variables"
     assert_includes codex_rendered, "None"
     assert_includes codex_rendered, "## Execution"
-    assert_includes codex_rendered, "Run `mise exec -- ace-bundle wfi://release/publish` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions."
     refute_includes claude_rendered, "integration:"
     refute_includes codex_rendered, "integration:"
   end
@@ -218,7 +218,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       ## Execution
 
       - You are working in the current project.
-      - Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+      - Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
       - Read the loaded workflow and execute it end-to-end in this project.
       - Follow the workflow as the source of truth.
       - Do the work described by the workflow instead of only summarizing it.
@@ -234,7 +234,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes claude_rendered, "context: fork"
     assert_includes claude_rendered, "model: haiku"
     assert_includes claude_rendered, "## Execution"
-    assert_includes claude_rendered, "Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
+    assert_includes claude_rendered, "Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
     refute_includes codex_rendered, "context: fork"
     refute_includes codex_rendered, "model: haiku"
     assert_includes codex_rendered, "## Execution"
@@ -244,9 +244,9 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
   def test_sync_preserves_conditional_sandbox_branch_in_skill_body
     create_skill("as-e2e-run", <<~BODY)
       If `$ARGUMENTS` contains `--sandbox`:
-        Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+        Load and run `ace-bundle wfi://e2e/execute` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
       Otherwise:
-        Load and run `mise exec -- ace-bundle wfi://e2e/run` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+        Load and run `ace-bundle wfi://e2e/run` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
     BODY
 
     syncer.sync(provider: "claude")
@@ -256,9 +256,9 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-e2e-run", "SKILL.md"))
 
     assert_includes claude_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
-    assert_includes claude_rendered, "Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project"
+    assert_includes claude_rendered, "Load and run `ace-bundle wfi://e2e/execute` in the current project"
     assert_includes codex_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
-    assert_includes codex_rendered, "Load and run `mise exec -- ace-bundle wfi://e2e/execute` in the current project"
+    assert_includes codex_rendered, "Load and run `ace-bundle wfi://e2e/execute` in the current project"
   end
 
   private

@@ -119,7 +119,7 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     YML
   end
 
-  def create_skill(name, source:, body: "Load and run `mise exec -- ace-bundle wfi://test` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.\n")
+  def create_skill(name, source:, body: "Load and run `ace-bundle wfi://test` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.\n")
     skill_dir = File.join(@tmpdir, source, "handbook", "skills", name)
     FileUtils.mkdir_p(skill_dir)
     File.write(File.join(skill_dir, "SKILL.md"), <<~MD)
