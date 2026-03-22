@@ -1,0 +1,19 @@
+---
+description: Record ace-b36ts encode/decode roundtrip
+tags:
+- ace-b36ts
+- docs
+settings:
+  font_size: 16
+  width: 960
+  height: 700
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-b36ts encode now
+    sleep: 2s
+  - type: ace-b36ts decode i50jj3
+    sleep: 1s
+teardown:
+- cleanup
