@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Base36 compact ID generation for timestamps (formerly ace-support-timestamp)"
+  spec.summary = "Compact, sortable Base36 timestamp IDs"
   spec.description = "ace-b36ts provides 6-character Base36 compact IDs as a replacement for " \
                      "14-character timestamp formats. Encodes timestamps with ~1.85s precision " \
                      "over a 108-year range using hierarchical field encoding."
