@@ -21,7 +21,7 @@ ace-docs:
 `ace-test-runner-e2e` is part of this monorepo. From repo root:
 
 ```bash
-mise exec -- ace-test-e2e --help
+ace-test-e2e --help
 ```
 
 If the command resolves and prints help, your setup is ready.
@@ -31,7 +31,7 @@ If the command resolves and prints help, your setup is ready.
 Run a known scenario:
 
 ```bash
-mise exec -- ace-test-e2e ace-lint TS-LINT-001
+ace-test-e2e ace-lint TS-LINT-001
 ```
 
 What happens:
@@ -55,7 +55,7 @@ target format.
 Use the package workflow to scaffold a scenario:
 
 ```bash
-mise exec -- ace-bundle wfi://e2e/create
+ace-bundle wfi://e2e/create
 ```
 
 Then follow the workflow to create the `TS-*` directory, `scenario.yml`, and `TC-*` files in your package.
@@ -78,16 +78,16 @@ Typical run output includes:
 
 | Command | Purpose |
 |---------|---------|
-| `mise exec -- ace-test-e2e ace-lint TS-LINT-001` | Run one specific TS scenario |
-| `mise exec -- ace-test-e2e ace-lint` | Run all TS scenarios in one package |
-| `mise exec -- ace-test-e2e ace-lint --tags smoke` | Run only matching-tag scenarios |
-| `mise exec -- ace-test-e2e ace-lint TS-LINT-001 --dry-run` | Preview without execution |
-| `mise exec -- ace-test-e2e-suite --affected` | Run suite for changed packages |
-| `mise exec -- ace-test-e2e-suite --only-failures` | Re-run cached failures only |
+| `ace-test-e2e ace-lint TS-LINT-001` | Run one specific TS scenario |
+| `ace-test-e2e ace-lint` | Run all TS scenarios in one package |
+| `ace-test-e2e ace-lint --tags smoke` | Run only matching-tag scenarios |
+| `ace-test-e2e ace-lint TS-LINT-001 --dry-run` | Preview without execution |
+| `ace-test-e2e-suite --affected` | Run suite for changed packages |
+| `ace-test-e2e-suite --only-failures` | Re-run cached failures only |
 
 ## Next steps
 
-- Use `mise exec -- ace-test-e2e --parallel N` for package-level parallelization.
-- Use `mise exec -- ace-test-e2e-suite` for broader regression coverage.
-- Use `mise exec -- ace-bundle wfi://e2e/setup-sandbox` to pre-provision complex sandboxes.
+- Use `ace-test-e2e --parallel N` for package-level parallelization.
+- Use `ace-test-e2e-suite` for broader regression coverage.
+- Use `ace-bundle wfi://e2e/setup-sandbox` to pre-provision complex sandboxes.
 - Continue with [Usage Reference](usage.md) for full flags and options.
