@@ -12,7 +12,7 @@ Type "ASSIGN_ID=$(basename $(readlink .ace-local/assign/.latest))"
 Enter
 Sleep 1s
 
-Type "mise exec -- ace-assign status --assignment $ASSIGN_ID"
+Type "ace-assign status --assignment $ASSIGN_ID"
 Enter
 Sleep 8s
 
@@ -20,6 +20,6 @@ Type "claude --dangerously-skip-permissions -p '/as-assign-drive $ASSIGN_ID'"
 Enter
 Sleep 105s
 
-Type "mise exec -- ace-assign status --assignment $ASSIGN_ID"
+Type "ace-assign status --assignment $ASSIGN_ID"
 Enter
 Sleep 16s
