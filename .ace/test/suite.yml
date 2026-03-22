@@ -119,11 +119,6 @@ test_suite:
       group: tools
       priority: 2
 
-    - name: ace-integration-claude
-      path: ace-integration-claude
-      group: tools
-      priority: 2
-
     - name: ace-prompt-prep
       path: ace-prompt-prep
       group: tools
