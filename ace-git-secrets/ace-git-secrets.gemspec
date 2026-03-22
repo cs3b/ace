@@ -8,11 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Detect, remove, and revoke authentication tokens from Git history"
+  spec.summary = "Detect, revoke, and remove leaked tokens from Git history"
   spec.description = <<~DESC
-    ace-git-secrets provides CLI tools for detecting authentication tokens (GitHub PATs,
-    LLM API keys, AWS credentials) in Git history, removing them via git-filter-repo,
-    and revoking them via provider APIs. Requires gitleaks for detection.
+    ace-git-secrets scans Git history for leaked credentials with gitleaks-backed
+    detection, revokes supported tokens, rewrites compromised history, and blocks
+    releases when secrets are still present.
   DESC
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md

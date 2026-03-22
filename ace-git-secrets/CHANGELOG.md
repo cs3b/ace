@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-03-22
+
+### Technical
+- Replaced HTML-sensitive placeholder paths in getting-started examples with a concrete saved-report example.
+
+## [0.12.0] - 2026-03-22
+
+### Changed
+- Reworked package documentation with a landing-page README, tutorial getting-started guide, refreshed usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+
+### Fixed
+- Corrected remediation examples to reuse the saved JSON report path under `.ace-local/git-secrets/sessions/`.
+- Clarified that JSON reports are reusable for `revoke` and `rewrite-history`, while Markdown reports are for human-readable review.
+- Included `docs/**/*` in gem packaging so linked documentation ships with the gem.
+
 ## [0.11.0] - 2026-03-18
 
 ### Changed
