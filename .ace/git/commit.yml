@@ -36,7 +36,7 @@ git:
       description: "Retrospectives, synthesis reports, and improvement recommendations"
 
     agent-integrations:
-      glob: "{.claude/**,.codex/**,.gemini/**,AGENTS.md,CLAUDE.md}"
+      glob: "{.claude/**,.codex/**,.gemini/**,.opencode/**,.pi/**,AGENTS.md,CLAUDE.md}"
       type_hint: docs
       description: "Agent skills, workflow instructions, and AI assistant integration configs"
 
