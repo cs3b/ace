@@ -1,19 +1,21 @@
 ---
 doc-type: user
-title: ace-config
+title: ace-support-config
 purpose: Documentation for ace-support-config/README.md
 ace-docs:
-  last-updated: 2026-03-05
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# ace-config
+# ace-support-config
 
-Generic configuration cascade management for Ruby applications.
+Generic configuration cascade management with deep merging and priority resolution for Ruby applications.
 
 ## Overview
 
-ace-config provides a reusable configuration cascade system with customizable folder names. It supports:
+`ace-support-config` provides a reusable configuration cascade system with customizable folder names.
+
+It supports:
 
 - **Project-level configuration** - Config files in `.ace/` (or custom folder) directories
 - **User-level configuration** - Config files in `~/.ace/` (or custom folder)
@@ -21,38 +23,46 @@ ace-config provides a reusable configuration cascade system with customizable fo
 - **Deep merging** - Configurations are merged with configurable strategies
 - **Priority resolution** - Nearer config files override farther ones
 
+Use this gem directly in Ruby applications or as shared infrastructure in `ace-support-*` packages.
+
 ## Installation
 
 Add to your Gemfile:
 
 ```ruby
-gem "ace-config"
+gem "ace-support-config"
 ```
 
-## Quick Start
+Or install directly:
+
+```bash
+gem install ace-support-config
+```
+
+## Basic Usage
 
 ```ruby
-require "ace/config"
+require "ace/support/config"
 
 # Create resolver with defaults
-config = Ace::Config.create
+config = Ace::Support::Config.create
 value = config.get("some", "key")
 
 # Create with custom folder names
-config = Ace::Config.create(
+config = Ace::Support::Config.create(
   config_dir: ".my-app",        # User config folder
   defaults_dir: ".my-defaults"  # Gem defaults folder
 )
 
 # With gem defaults
-config = Ace::Config.create(
-  gem_path: __dir__,
+config = Ace::Support::Config.create(
+  gem_path: File.expand_path("..", __dir__),
   defaults_dir: ".ace-defaults"
 )
 
 # Resolve specific file patterns
-config = Ace::Config.create
-result = config.resolve_for(["settings.yml", "config.yml"])
+config = Ace::Support::Config.create
+result = config.resolve_file(["settings.yml", "config.yml"])
 ```
 
 ## Configuration Cascade
@@ -71,7 +81,7 @@ The cascade resolves configuration in this order (highest to lowest priority):
 
 ```ruby
 # Main entry point - create resolver
-Ace::Config.create(
+Ace::Support::Config.create(
   config_dir: ".ace",           # Config folder name
   defaults_dir: ".ace-defaults", # Defaults folder name
   gem_path: nil,                # Gem root for defaults
@@ -79,16 +89,16 @@ Ace::Config.create(
 )
 
 # Lower-level finder
-Ace::Config.finder(config_dir: ".ace", defaults_dir: ".ace-defaults")
+Ace::Support::Config.finder(config_dir: ".ace", defaults_dir: ".ace-defaults")
 
 # Path expander
-Ace::Config.path_expander(source_dir: dir, project_root: root)
+Ace::Support::Config.path_expander(source_dir: dir, project_root: root)
 
 # Find project root
-Ace::Config.find_project_root(start_path: nil, markers: [...])
+Ace::Support::Config.find_project_root(start_path: nil, markers: [...])
 
 # Quick merge helper - merge defaults with overrides, return hash
-Ace::Config::Models::Config.wrap(
+Ace::Support::Config::Models::Config.wrap(
   defaults,             # Base configuration (Hash or nil)
   overrides,            # Override values (Hash)
   source: "wrap",       # Source label for debugging
@@ -99,7 +109,7 @@ Ace::Config::Models::Config.wrap(
 ### Resolver Methods
 
 ```ruby
-resolver = Ace::Config.create
+resolver = Ace::Support::Config.create
 
 resolver.resolve                     # Full cascade resolution (memoized)
 resolver.resolve_file(["file.yml"])  # Specific file patterns (not memoized)
@@ -112,7 +122,7 @@ resolver.get("key", "nested")        # Direct value access
 `resolve_namespace` provides a convenience API for resolving configuration by namespace path:
 
 ```ruby
-resolver = Ace::Config.create
+resolver = Ace::Support::Config.create
 
 # Single namespace - resolves docs/config.yml and docs/config.yaml
 config = resolver.resolve_namespace("docs")
@@ -120,8 +130,8 @@ config = resolver.resolve_namespace("docs")
 # Nested namespaces - resolves git/worktree/config.yml
 config = resolver.resolve_namespace("git", "worktree")
 
-# Custom filename - resolves lint/kramdown.yml
-config = resolver.resolve_namespace("lint", filename: "kramdown")
+# Custom filename - resolves docs/settings.yml and docs/settings.yaml
+config = resolver.resolve_namespace("docs", filename: "settings")
 
 # Root config with custom filename - resolves settings.yml
 config = resolver.resolve_namespace(filename: "settings")
@@ -133,7 +143,7 @@ This is equivalent to calling `resolve_file` with the appropriate patterns, but 
 
 ## Architecture
 
-ace-config follows the ATOM pattern:
+ace-support-config follows the ATOM pattern:
 
 - **Atoms** - Pure functions (DeepMerger, YamlParser, PathExpander)
 - **Molecules** - Focused operations (ConfigFinder, ProjectConfigScanner, ProjectRootFinder, YamlLoader)
@@ -165,6 +175,16 @@ The naming distinction clarifies intent:
 - **Plain config dir** (e.g., `.ace`) indicates user-editable configuration
 
 This differs from the older `.ace.example/` pattern used in some ACE ecosystem gems, which serves a similar purpose but with different semantics (example configs to copy, vs. active defaults that are merged).
+
+## Extended Usage
+
+For deeper examples (merge strategies, test mode, virtual resolver behavior, path expansion, and reset
+patterns), see [docs/usage.md](docs/usage.md).
+
+## Part of ACE
+
+`ace-support-config` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for
+agent-assisted development.
 
 ## License
 

@@ -3,23 +3,34 @@ doc-type: user
 title: ace-support-fs
 purpose: Documentation for ace-support-fs/README.md
 ace-docs:
-  last-updated: 2025-12-29
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-support-fs
 
-Filesystem utilities for ace-* gems. Provides unified path expansion, project root detection, and directory traversal functionality.
+Filesystem utilities for ace-* gems -- unified path expansion, project root detection, and directory traversal.
+
+## Overview
+
+`ace-support-fs` provides reusable filesystem primitives used across `ace-*` gems.
+
+It includes path expansion with context-aware resolution, project root detection from marker files, and
+directory traversal for configuration cascades.
 
 ## Installation
 
 Add to your gemspec:
 
 ```ruby
-spec.add_dependency "ace-support-fs", "~> 0.1"
+spec.add_dependency "ace-support-fs", "~> 0.2"
 ```
 
-## Components
+## Basic Usage
+
+```ruby
+require "ace/support/fs"
+```
 
 ### PathExpander (Atom)
 
@@ -93,6 +104,11 @@ traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(config_dir: ".my
 ## Thread Safety
 
 All components are thread-safe with proper mutex synchronization for shared state (cache, protocol resolver).
+
+## Part of ACE
+
+`ace-support-fs` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for
+agent-assisted development.
 
 ## License
 

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-03-22
+
+### Technical
+- Corrected README integration guidance to reference `ace-idea` clipboard usage instead of `ace-taskflow`.
+
+## [0.2.2] - 2026-03-22
+
+### Technical
+- Refreshed README structure with consistent tagline, overview, basic usage, and ACE project footer
+
 ## [0.2.1] - 2026-02-12
 
 ### Fixed

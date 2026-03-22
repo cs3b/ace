@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-03-22
+
+### Technical
+- Removed trailing blank lines in README code fences for installation and basic usage examples.
+
+## [0.6.1] - 2026-03-22
+
+### Changed
+- Expanded the README with a clear package tagline, installation guidance, runnable basic usage example, API overview, and Part of ACE footer.
+
 ## [0.6.0] - 2026-03-18
 
 ### Added
