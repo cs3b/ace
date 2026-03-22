@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-03-22
+
+### Changed
+- Updated the getting-started demo to create a retro and capture its runtime ID before invoking `ace-retro show`, replacing the hard-coded `001` reference.
+
 ## [0.15.2] - 2026-03-22
 
 ### Changed
