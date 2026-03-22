@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-03-22
+
+### Technical
+- Restored the `VERSION` constant indentation in `lib/ace/b36ts/version.rb` to match the package Ruby style.
+
+## [0.12.0] - 2026-03-22
+
+### Technical
+- Replaced the package README with a landing-page layout for faster onboarding.
+- Added tutorial-style getting-started docs, full CLI usage reference, and handbook catalog docs.
+- Added and shipped demo GIF assets for a round-trip `encode` → `decode` walkthrough.
+
 ## [0.11.3] - 2026-03-18
 
 ### Changed
