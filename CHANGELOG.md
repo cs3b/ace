@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.915] - 2026-03-22
+
+### Changed
+- **ace-assign v0.36.12**: Unified assignment preset naming to `work-on-task`, removed `work-on-tasks` defaults/fixtures, and normalized single-task `--taskref` input to canonical `taskrefs` expansion.
+- **ace-overseer v0.10.2**: Updated `work-on` preset guidance and tmux mapping expectations to the canonical `work-on-task` preset name.
+- **ace-tmux v0.10.1**: Renamed overseer work-on pane/window presets from `work-on-tasks*` to `work-on-task*`.
+- **ace-integration-claude v0.3.10**: Updated install-prompts documentation to reference `work-on-task.md`.
+
 ## [0.9.914] - 2026-03-22
 
 ### Fixed
