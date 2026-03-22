@@ -152,11 +152,6 @@ PATH
       ace-support-items (~> 0.3)
 
 PATH
-  remote: ace-integration-claude
-  specs:
-    ace-integration-claude (0.3.10)
-
-PATH
   remote: ace-lint
   specs:
     ace-lint (0.24.1)
@@ -498,7 +493,6 @@ DEPENDENCIES
   ace-handbook-integration-opencode!
   ace-handbook-integration-pi!
   ace-idea!
-  ace-integration-claude!
   ace-lint!
   ace-llm!
   ace-llm-providers-cli!

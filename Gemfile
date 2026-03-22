@@ -42,7 +42,6 @@ gem 'ace-handbook-integration-pi', path: 'ace-handbook-integration-pi'
 # Shared dev/test tools for all gems
 group :development, :test do
   gem 'ace-handbook', path: 'ace-handbook'
-  gem 'ace-integration-claude', path: 'ace-integration-claude'
   gem 'ace-test', path: 'ace-test'
   gem 'ace-support-test-helpers', path: 'ace-support-test-helpers'
   gem 'ace-test-runner-e2e', path: 'ace-test-runner-e2e'
