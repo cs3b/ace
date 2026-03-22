@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-git-worktree
-purpose: Landing page for ace-git-worktree
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-git-worktree
 
 Task-aware git worktree management -- isolated environments in one command.
