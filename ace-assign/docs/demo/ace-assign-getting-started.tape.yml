@@ -1,0 +1,29 @@
+---
+description: Showcase ace-assign workflow queue with tree status and assignment listing
+tags:
+- ace-assign
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: List all assignments at a glance
+  commands:
+  - type: ace-assign list
+    sleep: 4s
+- name: Show the full workflow tree with step status, nesting, and fork indicators
+  commands:
+  - type: ace-assign status
+    sleep: 8s
+- name: Show flat view for quick scanning of all step files
+  commands:
+  - type: ace-assign status --flat
+    sleep: 5s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
