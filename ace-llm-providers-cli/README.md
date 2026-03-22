@@ -259,13 +259,13 @@ gem "ace-llm", path: "../ace-llm"
 Run the test suite:
 
 ```bash
-mise exec -- ace-test ace-llm-providers-cli
+ace-test ace-llm-providers-cli
 ```
 
 Run markdown lint checks:
 
 ```bash
-mise exec -- ace-lint ace-llm-providers-cli/README.md
+ace-lint ace-llm-providers-cli/README.md
 ```
 
 ## Contributing
