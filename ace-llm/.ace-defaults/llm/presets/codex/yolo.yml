@@ -1,5 +1,4 @@
 timeout: 600
 cli_args:
   - --full-auto
-  - --sandbox
-  - danger-full-access
+  - --dangerously-bypass-approvals-and-sandbox
