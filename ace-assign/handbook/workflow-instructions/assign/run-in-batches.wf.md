@@ -208,5 +208,5 @@ Show:
 
 ```bash
 # Ensure new workflow exists and is discoverable
-mise exec -- ace-bundle wfi://assign/run-in-batches
+ace-bundle wfi://assign/run-in-batches
 ```

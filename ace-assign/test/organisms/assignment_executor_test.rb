@@ -652,7 +652,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             workflow: wfi://onboard
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://onboard`
+        Load and run `ace-bundle wfi://onboard`
       MD
       File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
         ---
@@ -670,7 +670,7 @@ class AssignmentExecutorTest < AceAssignTestCase
           source: wfi://task/plan
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://task/plan`
+        Load and run `ace-bundle wfi://task/plan`
       MD
 
       File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work", "SKILL.md"), <<~MD)
@@ -964,7 +964,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             workflow: wfi://onboard
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://onboard`
+        Load and run `ace-bundle wfi://onboard`
       MD
       File.write(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan", "SKILL.md"), <<~MD)
         ---
@@ -977,7 +977,7 @@ class AssignmentExecutorTest < AceAssignTestCase
           source: wfi://task/plan
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://task/plan`
+        Load and run `ace-bundle wfi://task/plan`
       MD
       File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
         ---
@@ -1074,7 +1074,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             workflow: wfi://onboard
         ---
 
-        Load and run `mise exec -- ace-bundle wfi://onboard`
+        Load and run `ace-bundle wfi://onboard`
       MD
       File.write(File.join(project_root, "ace-bundle", "handbook", "workflow-instructions", "onboard.wf.md"), <<~MD)
         ---
