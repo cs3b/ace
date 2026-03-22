@@ -1,6 +1,6 @@
 ---
 id: 8qljs0
-status: pending
+status: done
 title: "Shorten Worktree Naming to <prefix>-<task-ref>"
 tags: []
 created_at: "2026-03-22 13:11:07"
