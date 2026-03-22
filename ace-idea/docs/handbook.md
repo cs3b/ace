@@ -36,4 +36,4 @@ Reference for package-owned handbook resources in `ace-idea/handbook/`.
 
 * [Getting Started](getting-started.md)
 * [CLI Usage Reference](usage.md)
-* Load workflows directly with `mise exec -- ace-bundle wfi://idea/capture`
+* Load workflows directly with `ace-bundle wfi://idea/capture`
