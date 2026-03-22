@@ -18,17 +18,17 @@ ace-docs:
 
 Install from RubyGems: `gem install ace-tmux`.
 
-Verify command availability: `mise exec -- ace-tmux --help`.
+Verify command availability: `ace-tmux --help`.
 
 ## Start Your First Session
 
-Run: `mise exec -- ace-tmux start`.
+Run: `ace-tmux start`.
 
 `ace-tmux` resolves the default session preset from `defaults.session` in config.
 
 ## Add a Window to a Running Session
 
-From inside tmux, run: `mise exec -- ace-tmux window`.
+From inside tmux, run: `ace-tmux window`.
 
 `ace-tmux` resolves the default window preset from `defaults.window` in config.
 
