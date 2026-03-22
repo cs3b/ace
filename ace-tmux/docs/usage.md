@@ -1,345 +1,197 @@
 ---
 doc-type: user
-title: Usage Guide
-purpose: Documentation for ace-tmux/docs/usage.md
+title: ace-tmux Usage
+purpose: Full CLI and configuration reference for ace-tmux.
 ace-docs:
-  last-updated: 2026-02-14
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# Usage Guide
+# Usage
 
-## Commands
+## Command Surface
 
-### ace-tmux start
+- `ace-tmux start [PRESET] [OPTIONS]`
+- `ace-tmux window [PRESET] [OPTIONS]`
+- `ace-tmux list [TYPE] [OPTIONS]`
 
-Create a tmux session from a preset.
+`PRESET` is optional for `start` and `window` when defaults are configured.
 
-```bash
-ace-tmux start <preset>           # Start and attach
-ace-tmux start <preset> --detach  # Start without attaching
-ace-tmux start <preset> --force   # Kill existing session and recreate
-```
+## `ace-tmux start`
 
-If the session already exists, `start` attaches to it (unless `--force`).
+Create a tmux session from a session preset.
 
-### ace-tmux window
+Examples:
 
-Add a window to a running tmux session.
+- `ace-tmux start` uses `defaults.session`
+- `ace-tmux start dev`
+- `ace-tmux start dev --detach`
+- `ace-tmux start dev --force`
 
-```bash
-ace-tmux window <preset>                # Add to current session
-ace-tmux window <preset> -s my-session  # Add to named session
-ace-tmux window <preset> -r ~/projects  # Override working directory
-```
+Options:
 
-Must be run from inside tmux (or use `-s` to specify target session).
+- `--detach`, `-D`: do not attach after creation
+- `--force`: kill existing session and recreate it
+- `--root`, `-r`: override session working directory
+- `--verbose`, `-v`: verbose output
+- `--quiet`, `-q`: suppress non-essential output
 
-### ace-tmux list
+Behavior notes:
+
+- If session exists, `--force` is not set, and `--detach` is not set, `start` attaches to the existing session.
+- If session exists, `--force` is not set, and `--detach` is set, `start` returns without attaching.
+- If no preset is provided, `defaults.session` is used.
+
+## `ace-tmux window`
+
+Add a window preset to an existing tmux session.
+
+Examples:
+
+- `ace-tmux window` uses `defaults.window`
+- `ace-tmux window cc`
+- `ace-tmux window cc --session dev`
+- `ace-tmux window cc --root ~/work/repo`
+
+Options:
+
+- `--name`, `-n`: override window name (default: basename of `--root`, then preset name)
+- `--root`, `-r`: override window root directory
+- `--session`, `-s`: target session name (required outside tmux)
+- `--verbose`, `-v`: verbose output
+- `--quiet`, `-q`: suppress non-essential output
+
+Behavior notes:
+
+- Inside tmux, current session is auto-detected.
+- Outside tmux, provide `--session` (or set `ACE_TMUX_SESSION`).
+- If no preset is provided, `defaults.window` is used.
+
+## `ace-tmux list`
 
 List available presets.
 
-```bash
-ace-tmux list            # All presets
-ace-tmux list sessions   # Session presets only
-ace-tmux list windows    # Window presets only
-ace-tmux list panes      # Pane presets only
-```
+Examples:
+
+- `ace-tmux list`
+- `ace-tmux list sessions`
+- `ace-tmux list windows`
+- `ace-tmux list panes`
+
+Arguments:
+
+- `TYPE`: one of `sessions`, `windows`, `panes`
+
+Options:
+
+- `--verbose`, `-v`
+- `--quiet`, `-q`
 
 ## Config Cascade
 
-Presets are loaded from three locations, highest priority first:
+Preset/config loading order (highest priority first):
 
-```
-.ace/tmux/          # Project-level (checked into repo)
-~/.ace/tmux/        # User-level (personal defaults)
-.ace-defaults/tmux/ # Gem defaults (shipped with package)
-```
+1. `.ace/tmux/`
+2. `~/.ace/tmux/`
+3. `.ace-defaults/tmux/` (from gem)
 
-Each location has the same structure:
-
-```
-tmux/
-  config.yml
-  sessions/
-    dev.yml
-  windows/
-    code-editor.yml
-  panes/
-    nvim.yml
-```
-
-Higher-priority presets override lower ones with the same name. This means you can override a gem default by placing a file with the same name in `.ace/tmux/` or `~/.ace/tmux/`.
+Matching preset names deep-merge from low to high priority.
 
 ## Configuration
 
-### config.yml
+### `config.yml`
 
-Global settings.
-
-```yaml
-tmux_binary: tmux   # Path to tmux binary
-```
-
-### Session Presets
-
-A session contains one or more windows.
 
 ```yaml
-# sessions/dev.yml
-name: dev
-root: ~/projects/my-app
-startup_window: editor
-attach: true
-tmux_options: "-f ~/.tmux.conf"
-pre_window: "nvm use 18"
-on_project_start:
-  - docker compose up -d
-on_project_exit:
-  - docker compose down
-windows:
-  - name: editor
-    preset: code-editor
-    root: ./src
-  - name: server
-    preset: rails-server
-  - name: logs
-    panes:
-      - tail -f log/development.log
-```
-
-| Key | Type | Description |
-|-----|------|-------------|
-| `name` | String | Session name (required) |
-| `root` | String | Base working directory for all windows |
-| `windows` | Array | Window configurations |
-| `startup_window` | String | Window to focus after creation |
-| `attach` | Boolean | Attach after creation (default: `true`) |
-| `tmux_options` | String | Extra tmux flags (e.g., `-f ~/.tmux.conf`) |
-| `pre_window` | String | Command to run in every pane before its own commands |
-| `on_project_start` | Array | Shell commands to run before session creation |
-| `on_project_exit` | Array | Shell commands to run on session exit |
-
-### Window Presets
-
-A window contains panes arranged in a layout.
-
-#### Flat Layout
-
-Uses tmux's built-in layouts.
-
-```yaml
-# windows/code-editor.yml
-name: code-editor
-layout: even-horizontal
-root: ~/projects
-pre_window: "nvm use 18"
-options:
-  main-pane-width: "40%"
-panes:
-  - preset: claude
-  - commands: []
-  - preset: vim-editor
-```
-
-Built-in layouts: `even-horizontal`, `even-vertical`, `main-horizontal`, `main-vertical`, `tiled`.
-
-#### Nested Layout
-
-Arbitrary split trees. Use `direction` to define how children are arranged.
-
-```yaml
-# windows/cc.yml
-name: cc
-direction: horizontal
-panes:
-  - preset: claude
-    size: "35%"
-  - direction: vertical
-    size: "30%"
-    panes:
-      - preset: nvim
-      - commands:
-          - ace-git status
-  - commands:
-      - ace-taskflow status
-    size: "35%"
-```
-
-- `direction: horizontal` — children are placed side by side (columns)
-- `direction: vertical` — children are stacked (rows)
-- `size` — percentage (`"40%"`) or absolute cells (`"80"`)
-- Children without `size` split remaining space evenly
-
-Nesting is unlimited. A container can hold leaves, other containers, or a mix.
-
-```yaml
-# Deeply nested example
-direction: horizontal
-panes:
-  - direction: vertical
-    size: "50%"
-    panes:
-      - commands: [top-left]
-      - direction: horizontal
-        panes:
-          - commands: [bottom-left-a]
-          - commands: [bottom-left-b]
-  - commands: [right-side]
-```
+tmux_binary: tmux
+defaults:
+  session: default
+  window: cc
 
 ```
-┌──────────────┬──────────────┐
-│   top-left   │              │
-│──────────────│  right-side  │
-│ bl-a  │ bl-b │              │
-└───────┴──────┴──────────────┘
-```
 
-| Key | Type | Description |
-|-----|------|-------------|
-| `name` | String | Window name |
-| `layout` | String | Built-in tmux layout (flat mode only) |
-| `direction` | String | `horizontal` or `vertical` (nested mode) |
-| `root` | String | Working directory |
-| `panes` | Array | Pane entries (leaves or nested containers) |
-| `pre_window` | String | Command to run in every pane |
-| `focus` | Boolean | Focus this window after session creation |
-| `options` | Hash | Raw tmux window options (via `set-window-option`) |
+Keys:
 
-**Flat vs. nested detection:** If the window or any of its panes has a `direction` key, nested mode is used. Otherwise, flat mode applies. Existing flat presets work without changes.
+- `tmux_binary`: tmux executable path
+- `defaults.session`: fallback session preset for `ace-tmux start`
+- `defaults.window`: fallback window preset for `ace-tmux window`
 
-### Pane Presets
+### Session Presets (`sessions/*.yml`)
 
-A pane runs commands in a terminal.
+Common keys:
 
-```yaml
-# panes/nvim.yml
-commands:
-  - nvim .
-focus: true
-```
+- `name` (required): session name
+- `root`: base working directory
+- `windows`: window entries or presets
+- `startup_window`: startup target window name
+- `attach`: preferred attach behavior for preset
+- `tmux_options`: extra flags for `new-session`
+- `pre_window`: command run in every pane before pane commands
+- `on_project_start`: commands run before session creation
+- `on_project_exit`: reserved key (not yet implemented by runtime)
 
-```yaml
-# panes/claude.yml
-commands:
-  - claude
-```
+### Window Presets (`windows/*.yml`)
 
-| Key | Type | Description |
-|-----|------|-------------|
-| `commands` | Array | Commands to run in the pane |
-| `focus` | Boolean | Focus this pane after window creation |
-| `root` | String | Working directory (overrides window root) |
-| `name` | String | Pane name |
-| `options` | Hash | Raw tmux pane options (via `set-option -p`) |
+Common keys:
 
-**String shorthand:** Anywhere a pane is expected, a plain string is expanded to `{ commands: [string] }`:
+- `name`: window name
+- `layout`: built-in layout (`even-horizontal`, `even-vertical`, `main-horizontal`, `main-vertical`, `tiled`)
+- `direction`: nested layout direction (`horizontal` or `vertical`)
+- `root`: window root directory
+- `panes`: pane entries or nested containers
+- `pre_window`: pre-command run in each pane
+- `options`: tmux window options
+
+Nested layout mode is enabled when `direction` exists on the window or any child pane container.
+
+### Pane Presets (`panes/*.yml`)
+
+Common keys:
+
+- `commands`: shell commands to send to pane
+- `focus`: whether pane receives focus
+- `root`: pane-specific root directory
+- `name`: optional pane label
+- `options`: tmux pane options
+
+String shorthand is supported where a pane is expected:
+
 
 ```yaml
 panes:
-  - tail -f log/dev.log    # same as { commands: ["tail -f log/dev.log"] }
+  - tail -f log/development.log
+
 ```
+
+This expands to `commands: ["tail -f log/development.log"]`.
 
 ## Composition
 
-### The preset: Key
+Preset references use `preset:` and deep-merge local overrides on top.
 
-Any pane or window entry can reference a preset by name. The preset is loaded and the remaining keys are deep-merged on top.
-
-```yaml
-# Window referencing a window preset + overriding root
-- name: editor
-  preset: code-editor
-  root: ./src
-
-# Pane referencing a pane preset + overriding focus
-- preset: nvim
-  focus: false
-```
-
-Presets can chain: a preset can itself reference another preset. Resolution depth is capped at 10 to guard against circular references.
-
-### Composition Examples
-
-**Pane preset used across windows:**
+Reuse a pane preset inside a window:
 
 ```yaml
-# panes/nvim.yml
-commands: [nvim .]
-focus: true
-```
-
-```yaml
-# windows/editor.yml
-layout: main-vertical
+# windows/dev.yml
 panes:
-  - preset: nvim          # reuse
-  - commands: [bash]
-
-# windows/review.yml
-layout: even-horizontal
-panes:
-  - preset: nvim          # reuse
-    focus: false           # override
-  - commands: [gh pr view]
+  - preset: nvim
+  - preset: nvim
+    root: ~/other-project    # override merged on top
 ```
 
-**Window presets used across sessions:**
+Reuse a window preset inside a session:
 
 ```yaml
-# sessions/dev.yml
+# sessions/full.yml
 windows:
-  - preset: code-editor
-  - preset: rails-server
-
-# sessions/review.yml
-windows:
-  - preset: code-editor
-    root: ./pr-checkout
-  - name: pr
-    panes:
-      - commands: [gh pr diff]
+  - preset: dev
+  - preset: monitoring
+    root: /var/log
 ```
 
-**Nested layout with pane presets:**
+Chained preset references are supported (depth-limited).
 
-```yaml
-# windows/workspace.yml
-direction: horizontal
-panes:
-  - preset: claude
-    size: "40%"
-  - direction: vertical
-    panes:
-      - preset: nvim
-      - commands: [bash]
-```
+## Related Documentation
 
-## Window Options
-
-Pass any tmux option through to `set-window-option`:
-
-```yaml
-# windows/main.yml
-name: main
-layout: main-vertical
-options:
-  main-pane-width: "40%"
-  automatic-rename: "off"
-panes:
-  - commands: [claude]
-  - commands: [bash]
-  - commands: [nvim .]
-```
-
-## Pane Options
-
-Pass any tmux option through to `set-option -p`:
-
-```yaml
-panes:
-  - commands: [tail -f log/production.log]
-    options:
-      remain-on-exit: "on"
-```
+- [Getting Started](getting-started.md)
+- [Handbook Reference](handbook.md)

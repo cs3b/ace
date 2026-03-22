@@ -8,10 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Composable tmux session management for ACE ecosystem"
-  spec.description = "ace-tmux provides composable tmux session management via YAML presets " \
-                     "with deep-merge composition at every level (session, window, pane), " \
-                     "integrated with the ACE config cascade."
+  spec.summary = "Composable tmux session management via YAML presets"
+  spec.description = "Start tmux sessions from presets and add windows on the fly without restarting. " \
+                     "Compose pane, window, and session presets with deep-merge overrides across the ACE config cascade."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -23,6 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     lib/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md
