@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-22
+
+### Changed
+- Updated `docs/getting-started.md` to remove contradictory `mise exec --` prose and align onboarding guidance with direct `ace-*` command usage.
+- Documented intentional retirement of projected provider `as-idea-capture` and `as-idea-capture-features` skill files after canonical source removal.
+
+## [0.18.1] - 2026-03-22
+
+### Changed
+- Remove `mise exec --` wrapper from test fixture strings and canonical skill docs.
+- Document intentional retirement of projected provider `as-idea-capture` and `as-idea-capture-features` skill files after canonical source removal.
+
 ## [0.18.0] - 2026-03-22
 
 ### Changed
