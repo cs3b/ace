@@ -256,18 +256,18 @@ PATH
 PATH
   remote: ace-support-cli
   specs:
-    ace-support-cli (0.6.0)
+    ace-support-cli (0.6.2)
 
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.8.3)
+    ace-support-config (0.8.5)
       ace-support-fs (~> 0.2)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.28.0)
+    ace-support-core (0.28.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-fs (~> 0.2)
@@ -275,19 +275,19 @@ PATH
 PATH
   remote: ace-support-fs
   specs:
-    ace-support-fs (0.2.1)
+    ace-support-fs (0.2.3)
 
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.1)
+    ace-support-items (0.15.3)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
 PATH
   remote: ace-support-mac-clipboard
   specs:
-    ace-support-mac-clipboard (0.2.1)
+    ace-support-mac-clipboard (0.2.3)
       ffi (~> 1.15)
 
 PATH
