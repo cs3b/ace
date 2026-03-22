@@ -1,0 +1,27 @@
+---
+description: Showcase ace-search DWIM detection, scoped search, and file discovery
+tags:
+- ace-search
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-search "TODO"
+    sleep: 3s
+  - type: ace-search "**/*search*.rb"
+    sleep: 3s
+  - type: ace-search "TODO" --tracked
+    sleep: 3s
+  - type: ace-search "class" --preset my-preset
+    sleep: 3s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
