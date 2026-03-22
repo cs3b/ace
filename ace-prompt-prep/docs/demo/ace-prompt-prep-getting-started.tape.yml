@@ -1,0 +1,23 @@
+---
+description: ace-prompt-prep getting started demonstration
+tags:
+- prompt
+- docs
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: cd ace-prompt-prep
+    sleep: 1s
+  - type: ace-prompt-prep setup
+    sleep: 2s
+  - type: printf 'Review the critical path for this change.\n' > .ace-local/prompt-prep/prompts/the-prompt.md
+    sleep: 1s
+  - type: ace-prompt-prep process --enhance
+    sleep: 3s
+teardown:
+- cleanup
