@@ -8,17 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Task-aware git worktree management for ACE ecosystem'
+  spec.summary = 'Task-aware git worktree management with isolated environments in one command'
   spec.description = <<~DESC
-    Seamless, task-focused development workflows by providing deterministic CLI tools
-    for managing git worktrees integrated with ACE's task management system.
-
-    Features:
-    - Task-aware worktree creation with automatic metadata lookup
-    - Integration with ace-task for task metadata
-    - Configuration-driven naming conventions
-    - Automated environment setup (mise trust)
-    - Support for traditional worktree operations
+    ace-git-worktree creates isolated worktrees for tasks, pull requests, and
+    branches, with task metadata updates, configurable hooks, and cleanup
+    workflows for focused development.
   DESC
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
@@ -32,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md
@@ -55,4 +50,3 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'minitest'
   spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'
 end
-
