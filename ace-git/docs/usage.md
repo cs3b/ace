@@ -1,15 +1,15 @@
 ---
 doc-type: user
-title: ace-git Usage Guide
-purpose: Documentation for ace-git/docs/usage.md
+title: ace-git CLI Usage Reference
+purpose: Command reference for ace-git
 ace-docs:
-  last-updated: 2026-02-26
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# ace-git Usage Guide
+# ace-git CLI Usage Reference
 
-Unified git operations for the ACE toolkit.
+Reference for `ace-git` commands, options, and configuration.
 
 ## Installation
 
@@ -20,6 +20,18 @@ gem 'ace-git'
 # Or install directly
 gem install ace-git
 ```
+
+## Command Overview
+
+`ace-git` ships five commands:
+
+- `diff` for filtered or formatted git diffs
+- `status` for repository context and PR activity
+- `branch` for current branch and tracking state
+- `pr` for PR metadata lookup
+- `version` for the installed package version
+
+`ace-git` with no arguments shows help. Git range shorthand such as `HEAD~5..HEAD` routes to `diff`.
 
 ## Commands
 
@@ -128,7 +140,16 @@ ace-git branch
 # Output: 140-feature-name (tracking: origin/140-feature-name)
 
 ace-git branch --format json
-# Output: {"name":"140-feature-name","tracking":"origin/140-feature-name"}
+# Output:
+# {
+#   "name": "140-feature-name",
+#   "detached": false,
+#   "tracking": "origin/140-feature-name",
+#   "ahead": 2,
+#   "behind": 0,
+#   "up_to_date": false,
+#   "status_description": "2 ahead"
+# }
 ```
 
 **Options:**
@@ -169,6 +190,15 @@ brew install gh
 
 # Authenticate
 gh auth login
+```
+
+### `ace-git version`
+
+Print the installed `ace-git` version.
+
+```bash
+ace-git version
+ace-git --version
 ```
 
 ## Configuration
@@ -225,3 +255,5 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 
 - **ace-git-commit** - Smart git commit generation
 - **ace-git-worktree** - Git worktree management
+- **ace-bundle** - Load ACE workflow instructions directly
+- **ace-nav** - Discover workflow and template protocol paths
