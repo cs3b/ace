@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.pm3
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-22 17:04:33"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [AGENTS.md, CLAUDE.md, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/test/organisms/provider_syncer_test.rb, ace-overseer/lib/ace/overseer/molecules/worktree_provisioner.rb]
   commands: []
 needs_review: false
+worktree:
+  branch: pm3-remove-mise-exec-wrapper-from-all-skills-docs-and-tapes
+  path: ../ace-t.pm3
+  created_at: "2026-03-22 17:09:52"
+  updated_at: "2026-03-22 17:09:52"
+  target_branch: main
 ---
 
 # Remove mise exec Wrapper from All Skills, Docs, and Tapes
