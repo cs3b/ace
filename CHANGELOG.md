@@ -4,9 +4,40 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.882] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.2**: Remove trailing empty lines in documentation code blocks.
+- **ace-overseer v0.8.2**: Align README messaging with actual `work-on` behavior.
+- **ace-retro v0.15.1**: Add ID discovery hints to getting-started tutorial.
+- **ace-tmux v0.9.2**: Restore YAML composition examples in usage docs.
+
+## [0.9.881] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.1**: Include `docs/**/*` in gemspec; remove piped command example from usage guide.
+- **ace-overseer v0.8.1**: Include `docs/**/*` in gemspec so documentation ships with the gem.
+- **ace-tmux v0.9.1**: Include `docs/**/*` in gemspec; fix tape output path; clarify reserved `on_project_exit` key.
+
+## [0.9.880] - 2026-03-22
+
+### Added
+- **ace-overseer v0.8.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+- **ace-tmux v0.9.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+
+## [0.9.879] - 2026-03-22
+
+### Added
+- **ace-retro v0.15.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+
 ### Fixed
 - **ace-sim v0.10.2**: Fixed validate-task chain artifact numbering so plan/work-only flows use absolute phase directories (`02-plan`, `03-work`) and continue to support existing run contracts.
 - **ace-sim v0.10.1**: Enforced explicit `--synthesis-workflow` requirement when `--synthesis-provider` is set, closing an argument validation gap in `ace-sim run`.
+
+## [0.9.878] - 2026-03-22
+
+### Changed
+- **ace-assign v0.36.0**: Reworked documentation experience with a new landing-page README, tutorial-style getting-started guide, updated usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
 
 ## [0.9.877] - 2026-03-21
 
