@@ -1,0 +1,37 @@
+---
+description: Showcase ace-task list, create, show, and archive workflow
+tags:
+- ace-task
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: List tasks and filter by status
+  commands:
+  - type: ace-task list
+    sleep: 3s
+  - type: ace-task list --status pending
+    sleep: 3s
+- name: Create a task with all key options
+  commands:
+  - type: TASK_ID=$(ace-task create "Add health check endpoint" --priority high --tags ops,infra --status pending | grep -Eo '[a-z0-9]+\.t\.[a-z0-9]+' | tail -n 1) && echo "Created ${TASK_ID}"
+    sleep: 3s
+- name: Show task details and tree view
+  commands:
+  - type: ace-task show "$TASK_ID"
+    sleep: 3s
+  - type: ace-task show "$TASK_ID" --tree
+    sleep: 3s
+- name: Archive task
+  commands:
+  - type: ace-task update "$TASK_ID" --set status=done --move-to archive
+    sleep: 3s
+setup:
+- sandbox
+- copy-fixtures
+teardown:
+- cleanup
