@@ -77,9 +77,6 @@ git:
     ace-idea:
       glob: "ace-idea/**"
 
-    ace-integration-claude:
-      glob: "ace-integration-claude/**"
-
     ace-lint:
       glob: "ace-lint/**"
 
