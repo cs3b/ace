@@ -3,7 +3,7 @@
 module Ace
   module Git
     module Worktree
-      VERSION = "0.17.2"
+      VERSION = "0.18.0"
     end
   end
 end

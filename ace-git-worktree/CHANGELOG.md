@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-22
+
+### Changed
+- Shortened default task worktree naming to `t.{task_id}` for all default package behavior.
+- Expanded task worktree ID parsing so short and short-prefixed task IDs (`t.*`, `ace-t.*`) resolve consistently with existing `task.*` and `ace-task.*` formats.
+
 ## [0.17.2] - 2026-03-22
 
 ### Technical

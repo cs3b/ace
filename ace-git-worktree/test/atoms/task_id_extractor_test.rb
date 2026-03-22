@@ -22,6 +22,16 @@ class TaskIDExtractorTest < Minitest::Test
     assert_equal "121.01", @extractor.extract(task_data)
   end
 
+  def test_extract_from_short_task_id
+    task_data = { id: "v.0.9.0+t.121" }
+    assert_equal "121", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_short_ace_task_id
+    task_data = { id: "v.0.9.0+ace-t.121" }
+    assert_equal "121", @extractor.extract(task_data)
+  end
+
   def test_extract_from_orchestrator_id
     task_data = { id: "v.0.9.0+task.121" }
     assert_equal "121", @extractor.extract(task_data)
@@ -79,8 +89,20 @@ class TaskIDExtractorTest < Minitest::Test
     assert_equal "121", @extractor.normalize("task.121")
   end
 
+  def test_normalize_with_short_task_prefix
+    assert_equal "121", @extractor.normalize("t.121")
+  end
+
+  def test_normalize_with_short_ace_task_prefix
+    assert_equal "121", @extractor.normalize("ace-t.121")
+  end
+
   def test_normalize_subtask_with_task_prefix
     assert_equal "121.01", @extractor.normalize("task.121.01")
+  end
+
+  def test_normalize_subtask_with_short_task_prefix
+    assert_equal "121.01", @extractor.normalize("t.121.01")
   end
 
   def test_normalize_fully_qualified_id
@@ -143,6 +165,14 @@ class TaskIDExtractorTest < Minitest::Test
   def test_normalize_from_path_with_ace_task_prefix
     # Should match task.081, not 261 from ace-task.261
     assert_equal "081", @extractor.normalize("/Users/mc/Ps/ace-task.261/worktrees/task.081")
+  end
+
+  def test_normalize_from_path_with_ace_t_prefix
+    assert_equal "081", @extractor.normalize("/Users/mc/Ps/ace-task.261/worktrees/t.081")
+  end
+
+  def test_normalize_from_path_with_short_task_prefix
+    assert_equal "081", @extractor.normalize("/Users/mc/Ps/worktrees/t.081")
   end
 
   # B36TS format tests (regression for ace-overseer work-on failure)

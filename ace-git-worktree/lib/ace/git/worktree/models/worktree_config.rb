@@ -32,7 +32,7 @@ module Ace
             "tmux" => false,
             "mise_trust_auto" => true,
             "task" => {
-              "directory_format" => "task.{task_id}",
+              "directory_format" => "t.{task_id}",
               "branch_format" => "{id}-{slug}",
               "auto_mark_in_progress" => true,
               "auto_commit_task" => true,
@@ -257,8 +257,8 @@ module Ace
           # @return [String] Formatted directory path
           #
           # @example
-          #   config.format_directory(task) # => "task.081"
-          #   config.format_directory(task, 2) # => "task.081-2"
+          #   config.format_directory(task) # => "t.081"
+          #   config.format_directory(task, 2) # => "t.081-2"
           def format_directory(task_data, counter = nil)
             template = directory_format
             formatted = apply_template_variables(template, task_data)

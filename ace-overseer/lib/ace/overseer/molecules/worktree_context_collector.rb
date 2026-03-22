@@ -73,8 +73,12 @@ module Ace
         end
 
         def extract_task_id(worktree_path, branch)
-          # Match "task.NNN" or "ace-task.xxx" in path (numeric or B36TS directory naming)
-          from_path = worktree_path.to_s[/(?:^|\/)(?:ace-)?task\.([0-9a-z]+(?:\.[0-9a-z]+)?)(?:\/|$)/, 1]
+          # Match "task.NNN"/"t.NNN" or "ace-task.xxx"/"ace-t.xxx" in path (numeric or B36TS naming)
+          from_path = worktree_path.to_s[/^(?:.*\/)?(?:ace-)?(?:task|t)\.([0-9a-z]+(?:\.[0-9a-z]+)?)\/?$/, 1]
+          return from_path if from_path
+
+          # Match shorthand prefixes in nested paths while avoiding parent prefixes like "ace-task"
+          from_path = worktree_path.to_s[/\b(?<!ace-)(?:task|t)\.(\d{3})(?:\b|$)/, 1]
           return from_path if from_path
 
           # Try B36TS prefix from branch (e.g., "hy4-description") then numeric
