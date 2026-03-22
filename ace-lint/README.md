@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-lint
-purpose: Documentation for ace-lint/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-lint
 
 Ruby-only linting for markdown, YAML, and Ruby -- no Node.js or Python required.

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-03-22
+
+### Fixed
+- Reused shared `Ace::Core::Molecules::FrontmatterFreePolicy` for frontmatter-free config resolution and glob matching to keep lint behavior aligned with docs discovery.
+
+## [0.24.0] - 2026-03-22
+
+### Added
+- Frontmatter-free file exemption in `FrontmatterValidator` — files matching configured `frontmatter_free` patterns (default: `**/README.md`) pass validation without requiring YAML frontmatter.
+
 ## [0.23.1] - 2026-03-22
 
 ### Changed
