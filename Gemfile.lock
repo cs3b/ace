@@ -13,7 +13,7 @@ PATH
 PATH
   remote: ace-b36ts
   specs:
-    ace-b36ts (0.11.3)
+    ace-b36ts (0.12.1)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -41,7 +41,7 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.12.0)
+    ace-demo (0.14.2)
       ace-b36ts (~> 0.3)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
@@ -201,7 +201,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.21.0)
+    ace-prompt-prep (0.22.2)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -247,7 +247,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.10.2)
+    ace-sim (0.11.1)
       ace-b36ts (~> 0.6)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
