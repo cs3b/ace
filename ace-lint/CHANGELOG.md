@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-03-22
+
+### Fixed
+- Fixed orchestrator test setup to `chdir` into temp directory so frontmatter-free path matching resolves correctly against `Dir.pwd`.
+
 ## [0.24.1] - 2026-03-22
 
 ### Fixed

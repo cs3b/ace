@@ -7,10 +7,13 @@ require "fileutils"
 class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
   def setup
     @temp_dir = Dir.mktmpdir("lint_orchestrator_test")
+    @original_dir = Dir.pwd
+    Dir.chdir(@temp_dir)
     Ace::Lint::Atoms::SkillSchemaLoader.reset_cache!
   end
 
   def teardown
+    Dir.chdir(@original_dir)
     FileUtils.remove_entry(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
