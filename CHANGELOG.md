@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.918] - 2026-03-22
+
+### Changed
+- **ace-docs v0.29.2**: Clarified frontmatter-free usage documentation to match README-focused metadata inference behavior.
+
+## [0.9.917] - 2026-03-22
+
+### Added
+- **ace-support-core v0.28.3**: Added shared `FrontmatterFreePolicy` helper for reusable frontmatter-free defaults and path matching.
+
+### Fixed
+- **ace-lint v0.24.1**: Switched frontmatter-free matching/config resolution to the shared policy so lint behavior stays aligned with docs discovery.
+
+### Changed
+- **ace-docs v0.29.1**: Reused shared frontmatter-free policy, moved git-backed README date lookup to molecule layer, restored configured type precedence over README basename fallback, and narrowed default frontmatter-free README patterns to root/package scopes.
+
+## [0.9.916] - 2026-03-22
+
+### Added
+- **ace-docs v0.29.0**: Frontmatter-free README management with configurable pattern matching, metadata inference from file path/content/git history, and skip-on-update behavior for matched files.
+- **ace-lint v0.24.0**: Frontmatter validation exemption for files matching `frontmatter_free` config patterns.
+
 ## [0.9.915] - 2026-03-22
 
 ### Changed
