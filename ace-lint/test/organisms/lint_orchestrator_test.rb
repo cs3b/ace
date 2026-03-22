@@ -173,4 +173,16 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     assert_equal 0, orchestrator.total_errors
     assert_equal 0, orchestrator.total_warnings
   end
+
+  def test_frontmatter_lint_allows_readme_without_frontmatter
+    readme_file = File.join(@temp_dir, "ace-docs", "README.md")
+    FileUtils.mkdir_p(File.dirname(readme_file))
+    File.write(readme_file, "# README\n")
+
+    orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
+    results = orchestrator.lint_files([readme_file], options: {type: :frontmatter})
+
+    assert_equal 1, results.size
+    assert results.first.success?
+  end
 end
