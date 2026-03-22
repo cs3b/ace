@@ -35,7 +35,7 @@ mise exec -- bundle install
 Run from the project root:
 
 ```bash
-mise exec -- ace-b36ts encode now
+ace-b36ts encode now
 ```
 
 Expect an output like:
@@ -49,7 +49,7 @@ i50jj3
 Round-trip the result using:
 
 ```bash
-mise exec -- ace-b36ts decode i50jj3
+ace-b36ts decode i50jj3
 ```
 
 If the ID is valid, this prints a UTC timestamp.
@@ -66,9 +66,9 @@ Start with these common options:
 Examples:
 
 ```bash
-mise exec -- ace-b36ts encode --format day now
-mise exec -- ace-b36ts encode --format week now
-mise exec -- ace-b36ts encode --format ms now
+ace-b36ts encode --format day now
+ace-b36ts encode --format week now
+ace-b36ts encode --format ms now
 ```
 
 ## Ruby API Basics
