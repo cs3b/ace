@@ -100,7 +100,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 
 **CRITICAL**: `ace-*` output handling is a hard contract, not a suggestion.
 
-- **Required invocation**: run directly as `ace-*` (or `mise exec -- ace-*` where required by local repo rules)
+- **Required invocation**: run directly as `ace-*`
 - **Never use shell manipulation** on `ace-*` invocations:
   - pipes: `|`, `|&`
   - redirects: `>`, `>>`, `2>`, `&>`

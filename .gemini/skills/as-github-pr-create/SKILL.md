@@ -10,6 +10,21 @@ allowed-tools:
 argument-hint: pr-type
 last_modified: 2026-01-10
 source: ace-git
+assign:
+  source: wfi://github/pr/create
+  steps:
+  - name: create-pr
+    description: Create a pull request for the implemented changes
+    intent:
+      phrases:
+      - create pr
+      - create a pr
+      - open pr
+      - open pull request
+    tags:
+    - git
+    - pr
+    - publishing
 skill:
   kind: workflow
   execution:
@@ -27,7 +42,7 @@ None
 ## Execution
 
 - You are working in the current project.
-- Run `mise exec -- ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+- Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
 - Read the loaded workflow and execute it end-to-end in this project.
 - Follow the workflow as the source of truth.
 - Do the work described by the workflow instead of only summarizing it.
