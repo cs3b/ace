@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-03-22
+
+### Changed
+- Replaced placeholder commands in `docs/demo/ace-search-getting-started.tape.yml` with real `ace-search` getting-started command flow.
+
 ## [0.23.0] - 2026-03-22
 
 ### Changed
