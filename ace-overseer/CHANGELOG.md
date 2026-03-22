@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-03-22
+
+### Fixed
+- Updated `work_on` orchestration messaging and preset expectations to use the canonical `work-on-task` preset name for taskref-driven batch flows.
+
+### Changed
+- Aligned default tmux window preset mapping and associated test coverage with singular `work-on-task` preset naming.
+
 ## [0.10.1] - 2026-03-22
 
 ### Changed

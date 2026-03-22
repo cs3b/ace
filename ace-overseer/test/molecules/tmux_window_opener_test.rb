@@ -55,11 +55,11 @@ class TmuxWindowOpenerTest < AceOverseerTestCase
       tmux_window_command: command
     )
 
-    opener.open(worktree_path: "/wt/task.230", preset: "work-on-tasks")
+    opener.open(worktree_path: "/wt/task.230", preset: "work-on-task")
 
     assert_equal 1, command.calls.length
     assert_equal(
-      { root: "/wt/task.230", preset: "work-on-tasks", quiet: true, session: nil },
+      { root: "/wt/task.230", preset: "work-on-task", quiet: true, session: nil },
       command.calls.first
     )
   end

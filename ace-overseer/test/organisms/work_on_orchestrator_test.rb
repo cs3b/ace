@@ -187,7 +187,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   def test_passes_subtask_refs_for_orchestrator_task
     Dir.mktmpdir("task.272") do |worktree|
       task = {
-        metadata: { "assign" => { "preset" => "work-on-tasks" } },
+        metadata: { "assign" => { "preset" => "work-on-task" } },
         is_orchestrator: true,
         subtask_ids: [
           "8pp.t.q7w.a",
@@ -274,17 +274,17 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         config: {
           "default_assign_preset" => "work-on-task",
           "tmux_window_presets" => {
-            "work-on-tasks" => "work-on-tasks"
+            "work-on-task" => "work-on-task"
           }
         },
         assignment_detector: ->(_path) { nil }
       )
 
-      orchestrator.call(task_ref: "235", cli_preset: "work-on-tasks")
+      orchestrator.call(task_ref: "235", cli_preset: "work-on-task")
 
       assert_equal 1, tmux.calls.length
       assert_equal(
-        { worktree_path: worktree, preset: "work-on-tasks" },
+        { worktree_path: worktree, preset: "work-on-task" },
         tmux.calls.first
       )
     end
@@ -336,12 +336,12 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {
-          "default_assign_preset" => "work-on-tasks"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )
 
-      orchestrator.call(task_ref: "288", task_refs: ["288", "287.01", "300"], cli_preset: "work-on-tasks")
+      orchestrator.call(task_ref: "288", task_refs: ["288", "287.01", "300"], cli_preset: "work-on-task")
 
       assert_equal 1, launcher.calls.length
       call = launcher.calls.first
@@ -400,13 +400,13 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: tmux,
         assignment_launcher: launcher,
         config: {
-          "default_assign_preset" => "work-on-tasks"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )
 
       error = assert_raises(Ace::Overseer::Error) do
-        orchestrator.call(task_ref: "288", task_refs: %w[288 999], cli_preset: "work-on-tasks")
+        orchestrator.call(task_ref: "288", task_refs: %w[288 999], cli_preset: "work-on-task")
       end
 
       assert_equal "Task not found: 999", error.message
