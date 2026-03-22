@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.4] - 2026-03-22
+
+### Changed
+- Added an explicit plan retrieval guard in the task work workflow: prefer path-mode `ace-task plan <ref>`, and use a 3-minute fallback strategy when `--content` stalls.
+
+### Technical
+- Documented automation guidance in usage docs to prefer path output over inline `--content` for stable agent execution.
+
 ## [0.30.3] - 2026-03-22
 
 ### Changed

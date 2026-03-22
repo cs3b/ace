@@ -32,6 +32,16 @@ You have context sources already loaded from prior sub-steps:
 
 If the plan is missing or stale: run `ace-task plan <ref> --content` and wait before proceeding.
 
+### Plan Retrieval Guard
+
+To avoid known `--content` stalls in some environments:
+1. Prefer `ace-task plan <ref>` first and read the returned plan path.
+2. Use `ace-task plan <ref> --content` only when inline output is explicitly required.
+3. If `--content` shows no progress after about 3 minutes, stop it and fall back to:
+   - `ace-task plan <ref>` (path mode, reuse cached plan when available)
+   - The most recent plan artifact plus current task spec, documented in the step report
+4. If stalls repeat, add a follow-up fix task and capture evidence in the retrospective.
+
 ## Primary Directive
 
 Work through the plan checklist, step by step:

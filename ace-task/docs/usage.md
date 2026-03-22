@@ -153,6 +153,9 @@ ace-task plan q7w --content
 ace-task plan q7w --model gemini:flash-latest
 ```
 
+For automation, prefer `ace-task plan <ref>` (path output) and read the plan file directly.
+Use `--content` only when inline output is needed. If `--content` appears stalled for ~3 minutes, cancel and rerun path mode.
+
 ### ace-task doctor
 
 Run health checks on tasks. Validates frontmatter, file structure, and scope/status consistency.
