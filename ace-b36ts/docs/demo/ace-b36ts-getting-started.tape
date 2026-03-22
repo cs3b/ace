@@ -7,9 +7,9 @@ Set FontSize 16
 Set Width 960
 Set Height 700
 
-Type "mise exec -- ace-b36ts encode now"
+Type "ace-b36ts encode now"
 Enter
 Sleep 2s
-Type "mise exec -- ace-b36ts decode i50jj3"
+Type "ace-b36ts decode i50jj3"
 Enter
 Sleep 1s

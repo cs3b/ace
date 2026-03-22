@@ -21,7 +21,7 @@ ace-docs:
 ## `ace-b36ts encode`
 
 ```bash
-mise exec -- ace-b36ts encode [timestamp]
+ace-b36ts encode [timestamp]
 ```
 
 - `timestamp` is optional. Use `now` or omit for the current UTC time.
@@ -47,19 +47,19 @@ Options:
 Examples:
 
 ```bash
-mise exec -- ace-b36ts encode now
-mise exec -- ace-b36ts encode now --format day
-mise exec -- ace-b36ts encode "2025-01-06 12:30:00" --format ms
-mise exec -- ace-b36ts encode now --split month,week,day
-mise exec -- ace-b36ts encode now --split month,day --path-only
-mise exec -- ace-b36ts encode now --split month,day --json
-mise exec -- ace-b36ts encode now --count 3 --format ms
+ace-b36ts encode now
+ace-b36ts encode now --format day
+ace-b36ts encode "2025-01-06 12:30:00" --format ms
+ace-b36ts encode now --split month,week,day
+ace-b36ts encode now --split month,day --path-only
+ace-b36ts encode now --split month,day --json
+ace-b36ts encode now --count 3 --format ms
 ```
 
 ## `ace-b36ts decode`
 
 ```bash
-mise exec -- ace-b36ts decode <compact_id>
+ace-b36ts decode <compact_id>
 ```
 
 - `compact_id` is required.
@@ -81,18 +81,18 @@ Options:
 Examples:
 
 ```bash
-mise exec -- ace-b36ts decode i50jj3
-mise exec -- ace-b36ts decode i50jj3 --format iso
-mise exec -- ace-b36ts decode i50jj3 --format timestamp
-mise exec -- ace-b36ts decode i5/1/5/j/j3
-mise exec -- ace-b36ts decode i515jj3 --split
+ace-b36ts decode i50jj3
+ace-b36ts decode i50jj3 --format iso
+ace-b36ts decode i50jj3 --format timestamp
+ace-b36ts decode i5/1/5/j/j3
+ace-b36ts decode i515jj3 --split
 ```
 
 ## `ace-b36ts config`
 
 ```bash
-mise exec -- ace-b36ts config
-mise exec -- ace-b36ts config --verbose
+ace-b36ts config
+ace-b36ts config --verbose
 ```
 
 ### Options
@@ -105,5 +105,5 @@ mise exec -- ace-b36ts config --verbose
 Use full help output for the latest full flag list:
 
 ```bash
-mise exec -- ace-b36ts --help
+ace-b36ts --help
 ```

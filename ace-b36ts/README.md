@@ -40,9 +40,9 @@ Convert timestamps into short IDs you can use for IDs, filenames, and logs. A 6-
 ## Quick Start
 
 ```bash
-mise exec -- ace-b36ts encode now          # generate an ID
-mise exec -- ace-b36ts decode <id>         # decode back to timestamp
-mise exec -- ace-b36ts config              # show resolved configuration
+ace-b36ts encode now          # generate an ID
+ace-b36ts decode <id>         # decode back to timestamp
+ace-b36ts config              # show resolved configuration
 ```
 
 ## Documentation
