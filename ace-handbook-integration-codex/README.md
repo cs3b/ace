@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-handbook-integration-codex
-purpose: Documentation for ace-handbook-integration-codex/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-handbook-integration-codex
 
 Codex-specific provider integration for ACE handbook skills.

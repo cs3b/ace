@@ -50,7 +50,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.28.0)
+    ace-docs (0.29.2)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.26)
@@ -159,7 +159,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.23.1)
+    ace-lint (0.24.1)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -270,7 +270,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.28.2)
+    ace-support-core (0.28.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-fs (~> 0.2)
