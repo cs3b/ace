@@ -47,8 +47,7 @@ Presets are stored in `ace-assign/.ace-defaults/assign/presets/`:
 
 | Preset | Description |
 |--------|-------------|
-| `work-on-task` | Full workflow with PR, review cycles, release, and clean history |
-| `work-on-tasks` | Multi-task batch with consolidated review |
+| `work-on-task` | Unified preset for single-task (`--taskref`) and batch (`--taskrefs`) execution |
 
 List available presets:
 ```bash
@@ -84,7 +83,7 @@ steps:
 For multi-task presets, use the `expansion` section to generate hierarchical steps:
 
 ```yaml
-name: work-on-tasks
+name: work-on-task
 description: Work on multiple tasks with consolidated review
 
 parameters:
@@ -150,7 +149,7 @@ The hierarchical numbering enables:
 ## Parameter Placeholders
 
 Use `{{parameter}}` syntax in preset instructions:
-- `{{taskref}}` - Task reference
+- `{{taskrefs}}` - Task references (single-item or multi-item list)
 - `{{pr_number}}` - PR number (when available)
 
 Parameters are injected when preparing the job.yaml.
@@ -218,13 +217,13 @@ cat ace-assign/.ace-defaults/assign/presets/<preset-name>.yml
 ### 3. Extract Parameters
 
 From command-line flags:
-- `--taskref 123` → `taskref: "123"` (single task)
+- `--taskref 123` → normalize to `taskrefs: ["123"]` (single task shorthand)
 - `--taskrefs 148,149,150` → `taskrefs: ["148", "149", "150"]` (multi-task)
 - `--taskrefs 148-152` → `taskrefs: ["148", "149", "150", "151", "152"]` (range)
 - `--output custom-job.yaml` → output path
 
 From informal instructions:
-- "task 123" → `taskref: "123"`
+- "task 123" → `taskrefs: ["123"]`
 - "tasks 148, 149, 150" → `taskrefs: ["148", "149", "150"]`
 - "PR 45" → `pr_number: "45"`
 
@@ -242,7 +241,7 @@ For presets with `expansion` section, use `Ace::Assign::Atoms::PresetExpander.ex
 ```ruby
 require "ace/assign"
 
-preset = YAML.load_file("work-on-tasks.yml")
+preset = YAML.load_file("work-on-task.yml")
 params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
 steps = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 ```
@@ -411,7 +410,7 @@ Writes configuration to specified path.
 ### Example 4: Multi-Task Batch (Comma-Separated)
 
 ```
-/as-assign-prepare work-on-tasks --taskrefs 148,149,150
+/as-assign-prepare work-on-task --taskrefs 148,149,150
 ```
 
 Creates job with hierarchical structure:
@@ -425,7 +424,7 @@ Creates job with hierarchical structure:
 ### Example 5: Multi-Task Batch (Range)
 
 ```
-/as-assign-prepare work-on-tasks --taskrefs 148-152
+/as-assign-prepare work-on-task --taskrefs 148-152
 ```
 
 Expands range to tasks 148, 149, 150, 151, 152.
@@ -433,7 +432,7 @@ Expands range to tasks 148, 149, 150, 151, 152.
 ### Example 6: Multi-Task Batch (Pattern)
 
 ```
-/as-assign-prepare work-on-tasks --taskrefs "240.*"
+/as-assign-prepare work-on-task --taskrefs "240.*"
 ```
 
 Expands pattern to match subtasks (requires resolution at prepare time).

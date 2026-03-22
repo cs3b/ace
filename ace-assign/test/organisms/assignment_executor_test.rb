@@ -1273,19 +1273,25 @@ class AssignmentExecutorTest < AceAssignTestCase
             result = executor.start(config_path)
             state = result[:state]
 
-            assert_nil state.find_by_number("010").skill
-            assert_nil state.find_by_number("020.04").skill
-            assert_nil state.find_by_number("040").skill
-            assert_nil state.find_by_number("050").skill
-            assert_nil state.find_by_number("070").skill
-            assert_nil state.find_by_number("080").skill
-            assert_nil state.find_by_number("120").skill
-            assert_nil state.find_by_number("140").skill
-            assert_includes File.read(state.find_by_number("010").file_path), "source_skill: as-onboard"
-            assert_includes File.read(state.find_by_number("020.04").file_path), "source_skill: as-task-work"
-            assert_includes state.find_by_number("020.04").instructions, "# Work on Task"
-            assert_includes File.read(state.find_by_number("040").file_path), "source_skill: as-test-verify-suite"
-            assert_includes File.read(state.find_by_number("080").file_path), "source_skill: as-github-pr-create"
+            onboard = state.steps.find { |step| step.name == "onboard" }
+            work_steps = state.steps.select { |step| step.name == "work-on-task" }
+            verify_suite = state.steps.find { |step| step.name == "verify-test-suite" }
+            create_pr = state.steps.find { |step| step.name == "create-pr" }
+
+            refute_nil onboard
+            assert_equal 1, work_steps.length
+            refute_nil verify_suite
+            refute_nil create_pr
+
+            assert_nil onboard.skill
+            assert_nil work_steps.first.skill
+            assert_nil verify_suite.skill
+            assert_nil create_pr.skill
+            assert_includes File.read(onboard.file_path), "source_skill: as-onboard"
+            assert_includes File.read(work_steps.first.file_path), "source_skill: as-task-work"
+            assert_includes work_steps.first.instructions, "# Work on Task"
+            assert_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_project_root
@@ -1296,11 +1302,11 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
-  def test_start_with_work_on_tasks_preset_emits_canonical_skill_backed_batch_steps
+  def test_start_with_work_on_task_batch_emits_canonical_skill_backed_batch_steps
     with_temp_cache do |cache_dir|
       project_root = File.expand_path("../../..", __dir__)
-      steps = materialize_preset_steps(project_root, "work-on-tasks", "taskrefs" => %w[148 149])
-      config_path = create_test_config(cache_dir, steps: steps, name: "work-on-tasks-148-149")
+      steps = materialize_preset_steps(project_root, "work-on-task", "taskrefs" => %w[148 149])
+      config_path = create_test_config(cache_dir, steps: steps, name: "work-on-task-148-149")
 
       with_real_config do
         Dir.chdir(project_root) do
@@ -1315,23 +1321,30 @@ class AssignmentExecutorTest < AceAssignTestCase
             result = executor.start(config_path)
             state = result[:state]
 
-            assert_nil state.find_by_number("000").skill
-            assert_nil state.find_by_number("010.01.04").skill
-            assert_nil state.find_by_number("010.02.04").skill
-            assert_nil state.find_by_number("012").skill
-            assert_nil state.find_by_number("015").skill
-            assert_nil state.find_by_number("025").skill
-            assert_nil state.find_by_number("030").skill
-            assert_nil state.find_by_number("130").skill
-            assert_nil state.find_by_number("150").skill
-            assert_includes File.read(state.find_by_number("000").file_path), "source_skill: as-onboard"
-            assert_includes File.read(state.find_by_number("010.01.04").file_path), "source_skill: as-task-work"
-            assert_includes File.read(state.find_by_number("010.02.04").file_path), "source_skill: as-task-work"
-            assert_includes state.find_by_number("010.01.04").instructions, "# Work on Task"
-            assert_includes File.read(state.find_by_number("012").file_path), "source_skill: as-test-verify-suite"
-            assert_includes File.read(state.find_by_number("030").file_path), "source_skill: as-github-pr-create"
+            onboard = state.steps.find { |step| step.name == "onboard" }
+            work_steps = state.steps.select { |step| step.name == "work-on-task" }
+            verify_suite = state.steps.find { |step| step.name == "verify-test-suite" }
+            create_pr = state.steps.find { |step| step.name == "create-pr" }
+            mark_tasks_done = state.steps.find { |step| step.name == "mark-tasks-done" }
 
-            mark_tasks_done = state.find_by_number("155")
+            refute_nil onboard
+            assert_equal 2, work_steps.length
+            refute_nil verify_suite
+            refute_nil create_pr
+            refute_nil mark_tasks_done
+
+            assert_nil onboard.skill
+            work_steps.each { |step| assert_nil step.skill }
+            assert_nil verify_suite.skill
+            assert_nil create_pr.skill
+            assert_nil mark_tasks_done.skill
+            assert_includes File.read(onboard.file_path), "source_skill: as-onboard"
+            assert_includes File.read(work_steps[0].file_path), "source_skill: as-task-work"
+            assert_includes File.read(work_steps[1].file_path), "source_skill: as-task-work"
+            assert_includes work_steps[0].instructions, "# Work on Task"
+            assert_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
+
             assert_equal "mark-tasks-done", mark_tasks_done.name
             assert_includes File.read(mark_tasks_done.file_path), "source_workflow: wfi://task/update"
             refute_includes File.read(mark_tasks_done.file_path), "<taskref>"
