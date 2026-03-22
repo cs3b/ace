@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-demo
-purpose: Landing page for ace-demo
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-demo
 
 `ace-demo` records terminal demos and attaches them to pull requests.
