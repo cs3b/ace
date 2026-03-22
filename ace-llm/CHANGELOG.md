@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-03-22
+
+### Technical
+- Clarified release notes to document why the Codex `@yolo` preset intentionally omits `--full-auto` for current CLI compatibility.
+
+## [0.29.2] - 2026-03-22
+
+### Fixed
+- Clarified that the Codex `@yolo` preset omits `--full-auto` because the current Codex CLI rejects it alongside `--dangerously-bypass-approvals-and-sandbox`.
+
+## [0.29.1] - 2026-03-22
+
+### Fixed
+- Clarified the Codex `@yolo` preset docs after changelog drift described `--full-auto` as restored when it is intentionally omitted for CLI compatibility.
+
 ## [0.29.0] - 2026-03-22
 
 ### Changed
