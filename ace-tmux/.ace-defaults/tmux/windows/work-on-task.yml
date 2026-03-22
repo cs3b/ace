@@ -4,7 +4,7 @@
 # - Right: status from task and assignment
 direction: horizontal
 panes:
-  - preset: work-on-tasks-cc
+  - preset: work-on-task-cc
     size: "34%"
   - direction: vertical
     size: "32%"
@@ -12,5 +12,5 @@ panes:
       - preset: nvim 
       - commands:
           - ace-git status
-  - preset: work-on-tasks-status
+  - preset: work-on-task-status
     size: "34%"
