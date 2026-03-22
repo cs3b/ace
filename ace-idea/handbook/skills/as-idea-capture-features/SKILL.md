@@ -15,7 +15,7 @@ allowed-tools:
   - TodoWrite
 argument-hint: [app-path]
 last_modified: 2026-01-10
-source: ace-task
+source: ace-idea
 skill:
   kind: workflow
   execution:
@@ -24,4 +24,3 @@ skill:
 ---
 
 Load and run `ace-bundle wfi://idea/capture-features` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
-
