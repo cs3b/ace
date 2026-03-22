@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [0.24.2] - 2026-03-22
 
-### Fixed
-- Fixed orchestrator test setup to `chdir` into temp directory so frontmatter-free path matching resolves correctly against `Dir.pwd`.
+### Changed
+- Replaced placeholder commands in `docs/demo/ace-lint-getting-started.tape.yml` with real `ace-lint` getting-started command flow.
 
 ## [0.24.1] - 2026-03-22
 
