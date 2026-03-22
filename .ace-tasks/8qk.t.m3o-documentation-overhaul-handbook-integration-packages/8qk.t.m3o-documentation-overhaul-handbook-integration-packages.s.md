@@ -1,6 +1,6 @@
 ---
 id: 8qk.t.m3o
-status: pending
+status: in-progress
 priority: low
 created_at: "2026-03-21 14:44:05"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: []
   commands: []
 needs_review: false
+worktree:
+  branch: m3o-documentation-overhaul-handbook-integration-packages-light-refresh
+  path: ../ace-t.m3o
+  created_at: "2026-03-22 14:35:22"
+  updated_at: "2026-03-22 14:35:22"
+  target_branch: main
 ---
 
 # Documentation Overhaul - Handbook Integration Packages (Light Refresh)
