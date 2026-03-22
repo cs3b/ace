@@ -8,7 +8,7 @@ allowed-tools:
 - Read
 - Write
 - AskUserQuestion
-argument-hint: "[preset-name] [--taskref value] [--output path]"
+argument-hint: "[preset-name] [--taskref value | --taskrefs values] [--output path]"
 last_modified: 2026-02-11
 source: ace-assign
 skill:
