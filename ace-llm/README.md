@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-llm
-purpose: Documentation for ace-llm/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-llm
 
 Query any LLM from the terminal -- one interface for every provider.
