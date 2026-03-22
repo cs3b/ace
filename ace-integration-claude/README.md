@@ -44,13 +44,13 @@ gem install ace-integration-claude
 Load the integration workflow directly with `ace-bundle`:
 
 ```bash
-mise exec -- ace-bundle wfi://integration/update-claude
+ace-bundle wfi://integration/update-claude
 ```
 
 Use `ace-nav` only when you need discovery or the resolved path:
 
 ```bash
-mise exec -- ace-nav wfi://integration/update-claude
+ace-nav wfi://integration/update-claude
 ```
 
 ## Integration Assets
@@ -81,7 +81,7 @@ package are intentionally provider-specific.
 For maintenance or migration checks, run the integration workflow:
 
 ```bash
-mise exec -- ace-bundle wfi://integration/update-claude
+ace-bundle wfi://integration/update-claude
 ```
 
 Then prefer the newer provider package docs in `ace-handbook-integration-claude` for current
