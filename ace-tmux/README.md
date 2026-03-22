@@ -1,67 +1,51 @@
 ---
 doc-type: user
 title: ace-tmux
-purpose: Documentation for ace-tmux/README.md
+purpose: Landing page for composable tmux session management in ace-tmux.
 ace-docs:
-  last-updated: 2026-02-14
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-tmux
 
-Composable tmux session management via YAML presets.
+Composable tmux session management via YAML presets -- add windows on the fly.
 
-## Why ace-tmux?
+![ace-tmux demo](docs/demo/ace-tmux-getting-started.gif)
 
-**Dynamic windows.** Add a window preset to a running session without restarting anything. `ace-tmux window code-editor` — done. No other tmux manager does this cleanly.
+## Why ace-tmux
 
-**Composable at every level.** Pane presets compose into window presets. Window presets compose into session presets. Each layer deep-merges on top of the last, so you define once and override where needed.
+- Add a window preset to a running tmux session without restarting the session.
+- Compose panes into windows and windows into sessions with deep-merge overrides.
+- Build nested split trees in YAML beyond tmux built-in layout presets.
+- Use project, user, and gem defaults together through the ACE config cascade.
 
-**Nested layouts.** Go beyond tmux's five built-in layouts. Define arbitrary splits — three columns where the middle one is split into rows — all in YAML.
+## Works With
 
-```yaml
-# .ace/tmux/windows/cc.yml
-name: cc
-direction: horizontal
-panes:
-  - preset: claude
-    size: "35%"
-  - direction: vertical
-    size: "30%"
-    panes:
-      - preset: nvim
-      - commands: [ace-git status]
-  - commands: [ace-taskflow status]
-    size: "35%"
-```
+- `ace-task` for task status and navigation panes.
+- `ace-git` for repository status panes.
+- `ace-overseer` for task-focused worktree + tmux orchestration.
+- `ace-assign` for assignment-driven execution in tmux workspaces.
 
-```
-┌────────────┬──────────┬──────────────┐
-│            │  nvim .  │              │
-│   claude   │──────────│  taskflow    │
-│    35%     │ git stat │   status     │
-│            │   30%    │    35%       │
-└────────────┴──────────┴──────────────┘
-```
+## Agent Skills
 
-## Quick Start
+Package-owned canonical skills: none currently published for `ace-tmux`.
 
-```bash
-# Start a session
-ace-tmux start dev
+## Features
 
-# Add a window to your current session
-ace-tmux window cc [--root $path-to-your-worktree]
-```
+- Dynamic window injection into active sessions
+- Composable preset hierarchy (pane -> window -> session)
+- Arbitrary nested layouts with predictable YAML structure
+- Config cascade support across project, user, and gem defaults
 
-See [docs/usage.md](docs/usage.md) for complete configuration reference.
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [Usage Guide](docs/usage.md)
+- [Handbook Reference](docs/handbook.md)
 
 ## Installation
 
-```bash
-gem install ace-tmux
-```
+Install from RubyGems: `gem install ace-tmux`.
 
-## License
-
-MIT
+Part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
