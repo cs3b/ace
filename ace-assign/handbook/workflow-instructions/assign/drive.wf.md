@@ -332,122 +332,32 @@ ace-assign start --assignment "$ASSIGNMENT_TARGET"
 ```
 This advances the queue to the next pending top-level step.
 
-#### Fork-Run Crash Recovery (Partial Completion)
+#### Fork-Run Recovery
 
-When `fork-run` exits non-zero but has made partial progress (uncommitted files, some steps done, some in-progress):
+When `fork-run` exits non-zero, invoke the fork recovery workflow:
 
-**Detection**: fork-run exit code != 0 AND (`git status --short` shows changes OR some child steps are done while others are still active).
+```bash
+ace-bundle wfi://assign/recover-fork
+```
 
-**Recovery protocol**:
+Or invoke via skill: `/as-assign-recover-fork ${ASSIGNMENT_ID}@${FORK_ROOT}`
 
-1. **Commit partial work** — Stage and commit any uncommitted changes from the crashed fork:
-   ```bash
-   git add -A
-   ace-git-commit -i "partial: save fork progress for {subtree}"
-   ```
+The recovery workflow handles three scenarios:
 
-2. **Write a progress report for the active step** — Document what was accomplished and what remains:
-   ```bash
-   cat > /tmp/partial-report.md << 'EOF'
-   ## Partial Completion (fork crashed)
+| Scenario | Signal | Recovery |
+|----------|--------|----------|
+| **Crash with partial progress** | `exit != 0` + uncommitted files or mixed step status | Commit partial work, inject recovery-onboard + continue-work children, re-fork |
+| **Provider unavailability** | `exit != 0` + timeout/hang error (no code bug) | LLM-tool steps: inline or retry child. Code steps: wait or escalate |
+| **Mixed state after provider failure** | Done + failed + pending children | Inject retry children, re-fork |
 
-   ### Completed
-   - [list of files created/modified]
-   - [tests passing: X tests, Y assertions]
+**Key principles** (enforced by the recovery workflow):
 
-   ### Remaining
-   - [list of components not yet implemented]
-   - [tests not yet written]
-   EOF
-   ace-assign finish --message /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_step}
-   ```
+- Never execute fork work inline (except LLM-tool steps during provider unavailability)
+- Recovery steps are always children inside the subtree, never top-level siblings
+- Recovery-onboard must list explicit report file paths (not semantic references)
+- Continue-work must copy the original failed step's instructions verbatim
 
-3. **Inject recovery steps** — Add new child steps for the remaining work:
-   ```bash
-   # Recovery onboard: re-read the plan and progress reports
-   ace-assign add "recovery-onboard" --after ${last_done_step} --child \
-     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Read reports from plan-task and work-on-task steps to understand progress. Continue implementation from where it stopped."
-
-   # Continue work step
-   ace-assign add "continue-work" --after recovery-onboard --child \
-     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Complete remaining implementation. Check git log and existing files to avoid redoing work."
-  ```
-
-4. **Re-fork** — The injected steps are pending, so fork-run will pick them up:
-   ```bash
-   ace-assign fork-run --assignment ${ASSIGNMENT_ID}@${FORK_ROOT}
-   ```
-
-**Key principle**: Never execute fork work inline — except for LLM-tool steps during provider unavailability (see below). The fork boundary exists for context isolation. If a fork crashes due to a code issue, recover and re-fork — don't absorb the work into the driver.
-
-#### Fork-Run Failure: Provider Unavailability
-
-When `fork-run` fails not because of a code bug but because an LLM provider timed out, hung, or returned no output, re-forking will crash the same way in a loop.
-
-**Detection heuristics**: fork-run exit != 0 AND the failed step error or last fork message indicates a timeout, hang, or empty response — not a code bug (no stack trace, no test failure, no syntax error).
-
-**Recovery protocol**:
-
-1. **Confirm provider failure** — Read the fork's last message and failed step error. Look for: model timeout, API unavailability, empty/truncated response, connection reset, or tool hang with no output.
-
-2. **Classify the failed step**:
-   - **LLM-tool step** — Work that invokes an LLM-backed tool as its primary action (e.g., `ace-review`, `ace-lint`, audit, summarize). The fork existed to isolate the LLM call, not to produce code.
-   - **Code step** — Work that produces or modifies source code (e.g., implement, fix, refactor). The fork existed for context isolation of code-producing work.
-
-3. **Fork-side action** — The fork MUST only fail and exit. It must NEVER inject steps:
-   ```bash
-   # Mark the crashed step as failed with evidence, then exit
-   ace-assign fail --message "Provider unavailable: <error details>" \
-     --assignment ${ASSIGNMENT_ID}@${failed_step}
-   # EXIT — do not add steps, do not retry, do not modify the assignment tree
-   ```
-
-   **Forks NEVER inject steps outside their subtree scope. Recovery decisions belong to the driver.**
-
-4. **Driver-side recovery** — After detecting a fork failure, the driver classifies and recovers:
-
-   **LLM-tool steps** → execute equivalent work inline at driver level:
-   ```bash
-   # Option A: Execute inline (for LLM-tool steps only)
-   # Read changed files, analyze each, write review report directly
-
-   # Option B: Add retry as a child of the failed step's parent
-   ace-assign add "retry-<step-name>" --after <failed_step> --child \
-     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Provider was unavailable for forked <step-name>. Execute equivalent work inline: <specific instructions>"
-   ```
-
-   **Code steps** → do NOT execute inline. Wait for provider recovery or escalate:
-   ```bash
-   # Ask user whether to wait and retry later
-   # Do NOT attempt the code work inline — context isolation is required
-   ```
-
-**Inline execution constraint**: Only LLM-tool steps may go inline during provider unavailability. Code-producing steps always require a fork for context isolation — wait for recovery or ask the user.
-
-#### Re-Fork After Partial Provider Failure
-
-When a fork subtree has a mix of done, failed, and pending children after a provider failure, the driver recovers by re-forking — not by absorbing remaining work inline.
-
-**Protocol**:
-
-1. **Inject retry as a child** of the failed step's parent subtree (never as a top-level sibling):
-   ```bash
-   ace-assign add "retry-review-pr" --after ${failed_child} --child \
-     --assignment ${ASSIGNMENT_ID}@${FORK_ROOT} \
-     -i "Retry review-pr after provider recovery."
-   ```
-
-2. **Re-fork the subtree** — fork-run re-enters and picks up pending/retry children:
-   ```bash
-   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
-   ```
-
-3. **Do NOT inject steps as top-level siblings** — retry steps must be children of the original subtree root, never top-level steps like `101` or `121`.
-
-**Anti-pattern**: Driver sees subtree 110 with 110.01 failed, 110.02 and 110.03 pending. Driver executes 110.02 and 110.03 inline. This defeats context isolation and violates the fork-delegation constraint.
+See `wfi://assign/recover-fork` for the full protocol, detection rules, and recovery step construction templates.
 
 ### 3. Execute Current Step
 
