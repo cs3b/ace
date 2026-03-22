@@ -4,6 +4,7 @@ require "ace/support/cli"
 require "ace/core"
 require_relative "../../organisms/document_registry"
 require_relative "../../molecules/frontmatter_manager"
+require_relative "../../atoms/frontmatter_free_matcher"
 require_relative "scope_options"
 
 module Ace
@@ -137,8 +138,14 @@ module Ace
           def update_documents(documents, options)
             updated_count = 0
             updates = options[:set] || {}
+            project_root = options[:project_root] || Dir.pwd
 
             documents.each do |doc|
+              if frontmatter_free_document?(doc.path, project_root: project_root)
+                puts "Skipped: #{doc.path} (frontmatter-free document, metadata is inferred)"
+                next
+              end
+
               # Initialize required fields if frontmatter is empty
               working_updates = doc.frontmatter.empty? ? initialize_required_fields(doc, updates) : updates
 
@@ -167,13 +174,22 @@ module Ace
 
           def infer_doc_type(path)
             case path
-            when /README\.md$/i then 'reference'
+            when /README\.md$/i then 'user'
             when /\.wf\.md$/ then 'workflow'
             when /\.g\.md$/ then 'guide'
             when /\.template\.md$/ then 'template'
             when /docs\/.*\.md$/ then 'context'
             else 'reference'
             end
+          end
+
+          def frontmatter_free_document?(path, project_root:)
+            patterns = Ace::Docs.config["frontmatter_free"] || []
+            Ace::Docs::Atoms::FrontmatterFreeMatcher.match?(
+              path,
+              patterns: patterns,
+              project_root: project_root
+            )
           end
         end
       end

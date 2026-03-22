@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-docs
-purpose: Documentation for ace-docs/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-docs
 
 Keep documentation current - track freshness, detect drift, and get LLM-powered suggestions.

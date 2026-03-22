@@ -2,6 +2,9 @@
 
 require "ace/support/markdown"
 require_relative "../models/document"
+require_relative "../atoms/frontmatter_free_matcher"
+require_relative "../atoms/readme_metadata_inferrer"
+require_relative "git_date_resolver"
 
 module Ace
   module Docs
@@ -18,8 +21,9 @@ module Ace
           content = File.read(path)
           doc = Ace::Support::Markdown::Models::MarkdownDocument.parse(content, file_path: path)
 
-          # Only create document if it has frontmatter
-          return nil if doc.frontmatter.empty?
+          if doc.frontmatter.empty?
+            return load_frontmatter_free_document(path, content)
+          end
 
           Models::Document.new(
             path: path,
@@ -27,7 +31,9 @@ module Ace
             content: doc.raw_body
           )
         rescue StandardError => e
-          return nil if e.message.include?("No frontmatter found")
+          if e.message.include?("No frontmatter found")
+            return load_frontmatter_free_document(path, content)
+          end
 
           warn "Error loading document #{path}: #{e.message}"
           nil
@@ -72,11 +78,39 @@ module Ace
           content = File.read(path)
           doc = Ace::Support::Markdown::Models::MarkdownDocument.parse(content)
 
+          if doc.frontmatter.empty?
+            return frontmatter_free?(path)
+          end
+
           # Check if has doc-type field (ace-docs requirement)
           !doc.frontmatter.empty? && doc.frontmatter["doc-type"]
         rescue StandardError
-          false
+          frontmatter_free?(path)
         end
+
+        def self.load_frontmatter_free_document(path, content)
+          return nil unless frontmatter_free?(path)
+
+          inferred_frontmatter = Atoms::ReadmeMetadataInferrer.infer(
+            path: path,
+            content: content,
+            last_updated: Molecules::GitDateResolver.last_updated_for(path)
+          )
+          return nil unless inferred_frontmatter
+
+          Models::Document.new(
+            path: path,
+            frontmatter: inferred_frontmatter,
+            content: content
+          )
+        end
+        private_class_method :load_frontmatter_free_document
+
+        def self.frontmatter_free?(path)
+          patterns = Ace::Docs.config["frontmatter_free"] || []
+          Atoms::FrontmatterFreeMatcher.match?(path, patterns: patterns, project_root: Dir.pwd)
+        end
+        private_class_method :frontmatter_free?
 
         # Load document or return error document
         # @param path [String] File path
