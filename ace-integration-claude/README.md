@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-integration-claude
-purpose: Documentation for ace-integration-claude/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-integration-claude
 
 Claude Code integration workflows and templates for ACE.
