@@ -36,7 +36,7 @@ See [cli-support-cli.g.md](../ace-handbook/handbook/guides/cli-support-cli.g.md)
 | `ace-*` | Ready-to-use CLI tools | ace-search, ace-lint, ace-docs |
 | `ace-support-*` | Shared infrastructure | ace-support-core, ace-support-config |
 | `ace-llm-providers-*` | LLM provider extensions | ace-llm-providers-cli |
-| `ace-integration-*` | Integration packages | ace-integration-claude |
+| `ace-handbook-integration-*` | Provider integration packages | ace-handbook-integration-claude |
 
 **ace-support-* naming rules**:
 - Module namespace: `Ace::Support::*` (e.g., `Ace::Support::Nav`)
@@ -277,6 +277,6 @@ spec.add_dependency "ace-support-cli", "~> 1.0"
 | ace-lint | Multi-tool config (flat+nested) |
 | ace-docs | Handbook integration |
 | ace-taskflow | Complete agents+workflows |
-| ace-integration-claude | Integration package reference |
+| ace-handbook-integration-claude | Integration package reference |
 
 *See existing ace-* gems for implementations.*
