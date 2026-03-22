@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/support/fs"
 
 module Ace
   module Task
@@ -41,7 +42,7 @@ module Ace
           if dir.start_with?("/")
             dir
           else
-            File.join(Dir.pwd, dir)
+            File.join(Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current, dir)
           end
         end
 
@@ -58,7 +59,7 @@ module Ace
         end
 
         def load_project_config
-          path = File.join(Dir.pwd, ".ace", "task", "config.yml")
+          path = File.join(Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current, ".ace", "task", "config.yml")
           load_yaml(path) || {}
         end
 
