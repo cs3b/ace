@@ -1,6 +1,6 @@
 ---
 name: as-assign-compose
-description: Compose a tailored assignment from ace-assign catalog phases and composition
+description: Compose a tailored assignment from ace-assign catalog steps and composition
   rules (catalog-only)
 user-invocable: true
 allowed-tools:
@@ -19,4 +19,4 @@ skill:
     workflow: wfi://assign/compose
 ---
 
-Load and run `mise exec -- ace-bundle wfi://assign/compose` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://assign/compose` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

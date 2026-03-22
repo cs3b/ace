@@ -11,10 +11,19 @@ allowed-tools:
 argument-hint: "<package> [--scope <scenario-id>]"
 last_modified: 2026-02-11
 source: ace-test-runner-e2e
+assign:
+  source: wfi://e2e/review
+  steps:
+  - name: verify-e2e
+    description: Review E2E coverage for modified packages and run targeted scenarios
+    tags:
+    - testing
+    - e2e
+    - verification
 skill:
   kind: workflow
   execution:
     workflow: wfi://e2e/review
 ---
 
-Load and run `mise exec -- ace-bundle wfi://e2e/review` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://e2e/review` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

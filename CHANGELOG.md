@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.914] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.11**: Restored assign default fork timeout behavior to `1800` seconds and realigned assignment config defaults for the review-cycle release.
+
+## [0.9.913] - 2026-03-22
+
+### Changed
+- **ace-assign v0.36.10**: Documented assignment config provider/timeout tuning in release notes and restored missing trailing newline in assign workflow docs.
+- **ace-handbook v0.18.2**: Aligned getting-started prose with direct `ace-*` invocation and documented intentional projected `as-idea-capture*` skill retirement.
+
+## [0.9.912] - 2026-03-22
+
+### Changed
+- **ace-assign v0.36.9**: Remove `mise exec --` wrapper from test fixture strings.
+- **ace-assign v0.36.9**: Document assignment config default updates (`.ace/assign/config.yml`, `ace-assign/.ace-defaults/assign/config.yml`) for provider/timeout tuning shipped with this release.
+- **ace-handbook v0.18.1**: Remove `mise exec --` wrapper from test fixtures and canonical skill docs.
+- **ace-handbook v0.18.1**: Document intentional retirement of projected `as-idea-capture*` provider skill files after canonical source removal.
+- **ace-lint v0.23.1**: Remove `mise exec --` wrapper from test fixture strings.
+- **ace-overseer v0.10.1**: Remove `mise exec --` wrapper from error message string in worktree provisioner.
+
 ## [0.9.911] - 2026-03-22
 
 ### Changed
