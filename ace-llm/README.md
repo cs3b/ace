@@ -11,7 +11,7 @@ ace-docs:
 
 Query any LLM from the terminal -- one interface for every provider.
 
-<!-- Demo GIF: render docs/demo/ace-llm-getting-started.tape with VHS to generate the GIF -->
+![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
 ## Why ace-llm
 

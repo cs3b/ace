@@ -15,6 +15,6 @@ Type 'ace-llm --list-providers'
 Enter
 Sleep 4s
 
-Type 'cat .ace/llm/config.yml'
+Type 'ace-llm --list-aliases'
 Enter
 Sleep 3s
