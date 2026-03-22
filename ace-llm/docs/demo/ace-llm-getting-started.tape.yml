@@ -1,0 +1,24 @@
+---
+description: Showcase ace-llm querying a model, listing providers, and saving output
+tags:
+- ace-llm
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 1100
+  height: 680
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-llm --list-providers
+    sleep: 3s
+  - type: ace-llm gflash "Summarize this repository in two bullets"
+    sleep: 3s
+  - type: ace-llm google:gemini-2.5-flash "Explain service objects in Ruby"
+    sleep: 3s
+  - type: ace-llm gflash "Create release notes" --output /tmp/release.md --format markdown
+    sleep: 3s
+teardown:
+- cleanup
