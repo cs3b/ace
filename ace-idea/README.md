@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-idea
-purpose: Landing page for ace-idea
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-idea
 
 Capture and organize ideas from anywhere -- clipboard, terminal, or LLM.
