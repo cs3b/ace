@@ -22,4 +22,4 @@ task:
 
   # Plan command defaults
   plan:
-    model: "gemini:flash-latest@ro"
+    model: "codex:gpt@ro"

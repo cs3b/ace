@@ -25,7 +25,7 @@ defaults:
 # Feedback extraction configuration
 feedback:
   enabled: true
-  synthesis_model: gemini:pro-latest@ro
+  synthesis_model: codex:gpt@ro
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability
