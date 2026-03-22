@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.902] - 2026-03-22
+
+### Fixed
+- **ace-demo v0.14.2**: Corrected the `ace-demo create` usage syntax so options appear before `--`, matching CLI parsing behavior.
+
+## [0.9.901] - 2026-03-22
+
+### Fixed
+- **ace-prompt-prep v0.22.2**: Replaced the broken README CLI help link target with a valid inline command reference.
+
+## [0.9.900] - 2026-03-22
+
+### Fixed
+- **ace-demo v0.14.1**: Removed a duplicated `0.13.0` package changelog section that repeated `0.14.0` notes.
+- **ace-prompt-prep v0.22.1**: Corrected the invalid top-level `--task` command example and fixed handbook link targets in docs.
+- **ace-sim v0.11.1**: Fixed handbook link targets and aligned dry-run documentation with the writeback validation rule.
+
+### Changed
+- **ace-sim v0.11.1**: Re-recorded the package demo GIF from the `ace-sim` tape so the asset matches real command output.
+
+### Technical
+- **ace-b36ts v0.12.1**: Restored `VERSION` constant indentation in `lib/ace/b36ts/version.rb`.
+
+## [0.9.899] - 2026-03-22
+
+### Technical
+- **ace-b36ts v0.12.0**: Reworked package documentation with a landing-page README, added tutorial-style getting-started guide, refreshed CLI usage reference, created a docs handbook catalog, added demo assets, and updated gemspec metadata messaging.
+
+## [0.9.898] - 2026-03-22
+
+### Changed
+- **ace-sim v0.11.0**: Rebuilt package and user documentation, added getting-started and handbook guides, refreshed usage reference, added demo tape and animation assets, and updated package metadata messaging.
+
+## [0.9.897] - 2026-03-22
+
+### Changed
+- **ace-prompt-prep v0.22.0**: Reworked documentation onboarding for prompt preparation with a landing-page README, full getting-started tutorial, refreshed CLI usage reference, handbook catalog, and new demo tape/GIF assets.
+
 ## [0.9.896] - 2026-03-22
 
 ### Added
@@ -12,6 +50,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **ace-overseer v0.10.0**: Updated `ace-tmux` runtime dependency to `~> 0.10`.
+- **ace-demo v0.14.0**: Refreshed package and user documentation for agent-oriented workflows, expanded CLI usage coverage and guides, added new getting-started/handbook content, and introduced an example tape for inline demo creation.
 
 ## [0.9.895] - 2026-03-22
 
