@@ -1,0 +1,33 @@
+---
+description: Showcase ace-retro creation, listing, show, and health checks
+tags:
+- ace-retro
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Create a retro and capture its ID
+  commands:
+  - type: RETRO_ID=$(ace-retro create "Sprint Review" --type standard --tags sprint,team | ruby -ne 'if $_ =~ /\b([a-z0-9]{6})-[a-z0-9-]+\.retro\.md\b/; puts $1; break; end') && echo "Created ${RETRO_ID}"
+    sleep: 4s
+- name: List active retros with tags and task references
+  commands:
+  - type: ace-retro list
+    sleep: 6s
+- name: Show a retro with full content (learnings, action items)
+  commands:
+  - type: ace-retro show "$RETRO_ID"
+    sleep: 8s
+- name: Run health checks across all retros
+  commands:
+  - type: ace-retro doctor
+    sleep: 5s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
