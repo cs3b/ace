@@ -1,0 +1,23 @@
+---
+description: Show ace-git repository context and diff summary
+tags:
+- ace-git
+- git
+- getting-started
+settings:
+  font_size: 16
+  width: 1200
+  height: 700
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-git status
+    sleep: 4s
+  - type: ace-git diff --format summary
+    sleep: 4s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
