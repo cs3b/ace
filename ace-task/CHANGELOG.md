@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.6] - 2026-03-22
+
+### Changed
+- Updated the getting-started demo to capture and reuse runtime task IDs instead of hard-coded `001` references for show/update steps.
+- Removed unconditional `git-init` setup from the demo flow to align with retrospective guidance for fixture-based sandbox setup.
+
+## [0.30.5] - 2026-03-22
+
+### Added
+- Added `docs/demo/ace-task-getting-started.tape.yml` to provide a controlled YAML demo scenario for end-to-end sandboxed recording via `ace-demo`.
+
+### Technical
+- Added task demo fixture config at `docs/demo/fixtures/.ace/task/config.yml` for sandbox setup portability in YAML-driven recordings.
+
 ## [0.30.4] - 2026-03-22
 
 ### Changed
