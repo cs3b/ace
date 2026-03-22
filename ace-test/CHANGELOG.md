@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-22
+
+### Technical
+- Removed obsolete `docs/demo` recording assets (`ace-test-getting-started.tape` and generated GIF) from the non-CLI documentation package.
+
 ## [0.5.0] - 2026-03-22
 
 ### Changed
