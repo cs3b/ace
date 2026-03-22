@@ -2,14 +2,14 @@
 
 Read `CLAUDE.md` first. The only additional guidance here is specific to Codex sandbox execution.
 
-## Codex Sandbox (mise)
-Always run `ace-*` commands via `mise exec --` so the repo PATH/env is applied.
+## Codex Sandbox
+Run `ace-*` commands directly.
 
 ## ACE CLI Command Integrity (Hard Rule)
 
 `ace-*` commands are already optimized for agentic execution. Run them directly and do not wrap or transform their terminal output.
 
-- **MUST** invoke directly: `mise exec -- ace-...`
+- **MUST** invoke directly: `ace-...`
 - **MUST NOT** use shell output manipulation on `ace-*` invocations:
   - pipes: `|`, `|&`
   - redirects: `>`, `>>`, `2>`, `&>`
@@ -22,7 +22,7 @@ Always run `ace-*` commands via `mise exec --` so the repo PATH/env is applied.
 ## Scoped Commits (ace-git-commit)
 When user requests a scoped commit/release:
 - Do not revert unrelated working-tree changes.
-- Use path-scoped commit commands, e.g. `mise exec -- ace-git-commit <path1> <path2> ...`.
+- Use path-scoped commit commands, e.g. `ace-git-commit <path1> <path2> ...`.
 - Treat unrelated modified files as acceptable background state unless user explicitly asks to clean/revert them.
 
 ## Skill-First Planning and Execution (Hard Rule)
@@ -79,4 +79,4 @@ This prevents accidental commits and keeps the repository clean.
 
 ## Test Execution Policy
 
-- `mise exec -- ace-test` and `mise exec -- ace-test-suite` are allowed by default when applicable.
+- `ace-test` and `ace-test-suite` are allowed by default when applicable.

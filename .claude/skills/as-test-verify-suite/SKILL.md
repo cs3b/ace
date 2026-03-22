@@ -15,10 +15,27 @@ argument-hint:
 - package | path | mode:quick|standard|deep
 last_modified: 2026-01-31
 source: ace-test
+assign:
+  source: wfi://test/verify-suite
+  steps:
+  - name: verify-test-suite
+    description: Run package test suites with profiling to verify correctness and
+      performance
+    intent:
+      phrases:
+      - run tests
+      - run test suite
+      - verify tests
+      - test changes
+      - check tests
+    tags:
+    - testing
+    - verification
+    - performance
 skill:
   kind: workflow
   execution:
     workflow: wfi://test/verify-suite
 ---
 
-Load and run `mise exec -- ace-bundle wfi://test/verify-suite` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://test/verify-suite` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.

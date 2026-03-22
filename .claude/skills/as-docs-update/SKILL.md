@@ -11,10 +11,19 @@ argument-hint:
 - files or --options
 last_modified: 2026-01-10
 source: ace-docs
+assign:
+  source: wfi://docs/update
+  steps:
+  - name: update-docs
+    description: Update public-facing documentation when CLI contracts or public APIs
+      change
+    tags:
+    - documentation
+    - quality
 skill:
   kind: workflow
   execution:
     workflow: wfi://docs/update
 ---
 
-Load and run `mise exec -- ace-bundle wfi://docs/update` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://docs/update` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
