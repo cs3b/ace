@@ -1,12 +1,3 @@
----
-doc-type: user
-title: Ace::TestRunner
-purpose: Documentation landing page for ace-test-runner
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # Ace::TestRunner
 
 AI-friendly test runner with smart grouping, failure analysis, and persistent reports.
