@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-03-22
+
+### Changed
+- Remove `mise exec --` wrapper from test fixture strings.
+
 ## [0.23.0] - 2026-03-22
 
 ### Changed
