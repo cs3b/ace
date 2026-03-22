@@ -123,6 +123,19 @@ class PresetExpanderTest < AceAssignTestCase
     assert_match(/taskrefs/, errors.first)
   end
 
+  def test_validate_parameters_taskref_satisfies_required_taskrefs
+    preset = {
+      "parameters" => {
+        "taskrefs" => { "required" => true, "type" => "array" }
+      }
+    }
+    params = { "taskref" => "148" }
+
+    errors = Ace::Assign::Atoms::PresetExpander.validate_parameters(preset, params)
+
+    assert_empty errors
+  end
+
   def test_validate_parameters_empty_array_is_missing
     preset = {
       "parameters" => {
@@ -237,6 +250,27 @@ class PresetExpanderTest < AceAssignTestCase
 
     assert_equal "010.03", result[3]["number"]
     assert_equal "work-on-150", result[3]["name"]
+  end
+
+  def test_expand_foreach_children_with_taskref_alias
+    preset = {
+      "expansion" => {
+        "foreach" => "taskrefs",
+        "child-template" => {
+          "name" => "work-on-{{item}}",
+          "parent" => "010",
+          "instructions" => "Implement task {{item}}"
+        }
+      },
+      "steps" => []
+    }
+    params = { "taskref" => "148" }
+
+    result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
+
+    assert_equal 1, result.length
+    assert_equal "work-on-148", result[0]["name"]
+    assert_equal "Implement task 148", result[0]["instructions"]
   end
 
   def test_expand_with_base_steps_after_expansion

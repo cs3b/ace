@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.12] - 2026-03-22
+
+### Fixed
+- Unified assignment preset naming to `work-on-task` by removing `work-on-tasks` from defaults and fixtures.
+- Restored single-task shorthand support by normalizing `--taskref` inputs to `taskrefs` during preset validation/expansion.
+
+### Changed
+- Updated assign prepare workflow/skill docs and E2E fixture expectations to treat `work-on-task` as the single canonical preset for single-task and batch flows.
+
 ## [0.36.11] - 2026-03-22
 
 ### Fixed

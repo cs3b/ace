@@ -40,6 +40,7 @@ module Ace
         # @param parameters [Hash] Parameter values including arrays for foreach
         # @return [Array<Hash>] Expanded steps ready for job.yaml
         def self.expand(preset, parameters = {})
+          parameters = normalize_taskref_alias(parameters)
           expansion = preset["expansion"]
           base_steps = preset["steps"] || []
 
@@ -118,6 +119,7 @@ module Ace
         # @param parameters [Hash] Provided parameter values
         # @return [Array<String>] List of validation errors (empty if valid)
         def self.validate_parameters(preset, parameters)
+          parameters = normalize_taskref_alias(parameters)
           errors = []
           param_defs = preset["parameters"] || {}
 
@@ -159,6 +161,22 @@ module Ace
           parse_array_parameter(value)
         end
         private_class_method :normalize_array_parameter
+
+        # Normalize single-task shorthand onto batch parameter name.
+        #
+        # Canonical batch presets now use taskrefs; callers may still pass
+        # taskref for single-task usage.
+        def self.normalize_taskref_alias(parameters)
+          params = (parameters || {}).dup
+          return params unless params["taskrefs"].nil? || params["taskrefs"] == ""
+
+          taskref = params["taskref"]
+          return params if taskref.nil? || taskref.to_s.strip.empty?
+
+          params["taskrefs"] = [taskref.to_s]
+          params
+        end
+        private_class_method :normalize_taskref_alias
 
         # Build the batch parent step.
         #
