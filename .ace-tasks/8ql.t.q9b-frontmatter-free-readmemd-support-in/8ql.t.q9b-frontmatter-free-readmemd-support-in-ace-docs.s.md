@@ -6,20 +6,21 @@ created_at: "2026-03-22 17:30:22"
 estimate: TBD
 dependencies: []
 tags: [ace-docs, ace-lint, frontmatter, readme, dx]
+needs_review: true
 bundle:
-  presets: ["project"]
-  files:
-    - ace-docs/lib/ace/docs/molecules/document_loader.rb
-    - ace-docs/lib/ace/docs/atoms/type_inferrer.rb
-    - ace-docs/lib/ace/docs/models/document.rb
-    - ace-docs/lib/ace/docs/organisms/document_registry.rb
-    - ace-docs/lib/ace/docs/molecules/change_detector.rb
-    - ace-docs/lib/ace/docs/cli/commands/update.rb
-    - ace-docs/.ace-defaults/docs/config.yml
-    - ace-lint/lib/ace/lint/molecules/frontmatter_validator.rb
-    - ace-lint/lib/ace/lint/atoms/type_detector.rb
+  presets: [project]
+  files: [ace-docs/lib/ace/docs/molecules/document_loader.rb, ace-docs/lib/ace/docs/atoms/type_inferrer.rb, ace-docs/lib/ace/docs/models/document.rb, ace-docs/lib/ace/docs/organisms/document_registry.rb, ace-docs/lib/ace/docs/molecules/change_detector.rb, ace-docs/lib/ace/docs/cli/commands/update.rb, ace-docs/lib/ace/docs/cli/commands/status.rb, ace-docs/.ace-defaults/docs/config.yml, ace-lint/lib/ace/lint/molecules/frontmatter_validator.rb, ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-lint/lib/ace/lint/atoms/type_detector.rb]
   commands: []
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] ace-docs update behavior for frontmatter-free READMEs
+
+- [ ] When `ace-docs update README.md` is called on a README without frontmatter, should it: (a) skip writing frontmatter entirely (metadata stays inferred-only), (b) still write frontmatter when explicitly requested via `--set`, or (c) refuse with a message like "README.md is managed without frontmatter"?
+- **Research conducted**: `ace-docs/lib/ace/docs/cli/commands/update.rb` lines 114-125 and 137-152 — the update command currently creates minimal frontmatter and writes it to disk via FrontmatterManager. After this task, calling `ace-docs update` on a frontmatter-free README would re-introduce frontmatter, undoing the clean rendering.
+- **Suggested default**: Option (a) — skip writing frontmatter for README.md files. The update command should treat README metadata as read-only inferred values. If someone explicitly wants to override, they can add frontmatter manually.
+- **Why needs human input**: This is a UX/behavioral policy decision — the spec currently marks it "out of scope" but implementers will encounter this behavior during testing.
 
 # Frontmatter-Free README.md Support in ace-docs
 
