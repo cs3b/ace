@@ -25,7 +25,7 @@ class TmuxWindowOpenerTest < AceOverseerTestCase
     opener.open(worktree_path: "/wt/task.230")
 
     assert_equal 1, command.calls.length
-    assert_equal({ root: "/wt/task.230", quiet: true, session: nil }, command.calls.first)
+    assert_equal({ root: "/wt/task.230", preset: nil, quiet: true, session: nil }, command.calls.first)
   end
 
   def test_passes_ace_tmux_session_when_present
@@ -45,6 +45,22 @@ class TmuxWindowOpenerTest < AceOverseerTestCase
     end
 
     assert_equal 1, command.calls.length
-    assert_equal({ root: "/wt/task.230", quiet: true, session: "ace-e2e-test" }, command.calls.first)
+    assert_equal({ root: "/wt/task.230", preset: nil, quiet: true, session: "ace-e2e-test" }, command.calls.first)
+  end
+
+  def test_passes_tmux_preset_to_tmux_command
+    command = FakeTmuxWindowCommand.new
+
+    opener = Ace::Overseer::Molecules::TmuxWindowOpener.new(
+      tmux_window_command: command
+    )
+
+    opener.open(worktree_path: "/wt/task.230", preset: "work-on-tasks")
+
+    assert_equal 1, command.calls.length
+    assert_equal(
+      { root: "/wt/task.230", preset: "work-on-tasks", quiet: true, session: nil },
+      command.calls.first
+    )
   end
 end

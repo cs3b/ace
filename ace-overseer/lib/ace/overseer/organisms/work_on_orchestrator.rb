@@ -37,6 +37,7 @@ module Ace
 
           expanded_taskrefs = expand_task_refs_in_order(resolved_refs)
           primary_subtask_refs = extract_subtask_refs(primary_task)
+          tmux_preset = @config.dig("tmux_window_presets", preset_name)
 
           progress.call("Provisioning worktree...")
           worktree = @worktree_provisioner.provision(primary_ref)
@@ -47,7 +48,10 @@ module Ace
           end
 
           progress.call("Opening tmux window...")
-          @tmux_window_opener.open(worktree_path: worktree[:worktree_path])
+          @tmux_window_opener.open(
+            worktree_path: worktree[:worktree_path],
+            preset: tmux_preset
+          )
 
           progress.call("Checking assignment status...")
           existing = if @assignment_detector

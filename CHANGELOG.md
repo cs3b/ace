@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.896] - 2026-03-22
+
+### Added
+- **ace-overseer v0.10.0**: Added configurable tmux preset support for `work-on --preset work-on-tasks`, including a dedicated `cc /as-assign-drive` pane, active report-folder `nvim` pane, and `ace-task status`/`ace-assign status` pane.
+- **ace-tmux v0.10.0**: Added `work-on-tasks` pane and window presets for overseer-driven assignment execution flows.
+
+### Changed
+- **ace-overseer v0.10.0**: Updated `ace-tmux` runtime dependency to `~> 0.10`.
+
 ## [0.9.895] - 2026-03-22
 
 ### Technical

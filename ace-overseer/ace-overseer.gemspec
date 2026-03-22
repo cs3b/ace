@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-git", "~> 0.10"
   spec.add_dependency "ace-git-worktree", "~> 0.13"
   spec.add_dependency "ace-task", "~> 0.18"
-  spec.add_dependency "ace-tmux", "~> 0.8"
+  spec.add_dependency "ace-tmux", "~> 0.10"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.12"
   spec.add_development_dependency "bundler", "~> 2.0"

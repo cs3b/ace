@@ -1,0 +1,4 @@
+# Task driving pane preset
+commands:
+  - cc /as-assign-drive
+focus: true
