@@ -1,5 +1,5 @@
-# Description: Showcase ace-assign create, status, scoped status, finish, and queue progress
-# Tags: ace-assign,docs,getting-started
+# Description: Showcase ace-assign command surface and assignment management
+# Tags: ace-assign, docs, getting-started
 
 Output docs/demo/ace-assign-getting-started.gif
 
@@ -12,22 +12,17 @@ Type "ace-assign --help"
 Enter
 Sleep 3s
 
-# Scene 2: Show active scoped subtree status in this repo
-Type "ace-assign status --assignment 8ql0mx@010.01"
-Enter
-Sleep 3s
-
-# Scene 3: Show flat status output
-Type "ace-assign status --assignment 8ql0mx@010.01 --flat"
-Enter
-Sleep 3s
-
-# Scene 4: Show listing of assignments
+# Scene 2: List existing assignments
 Type "ace-assign list"
 Enter
 Sleep 3s
 
-# Scene 5: Show assignment selection command
-Type "ace-assign select 8ql0mx"
+# Scene 3: Show status options
+Type "ace-assign status --help"
+Enter
+Sleep 3s
+
+# Scene 4: Show create workflow
+Type "ace-assign create --help"
 Enter
 Sleep 3s
