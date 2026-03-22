@@ -148,6 +148,7 @@ PATH
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
+      ace-support-fs (~> 0.2)
       ace-support-items (~> 0.3)
 
 PATH
@@ -195,6 +196,7 @@ PATH
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
+      ace-support-fs (~> 0.2)
       ace-task (~> 0.18)
       ace-tmux (~> 0.10)
 
@@ -219,6 +221,7 @@ PATH
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
+      ace-support-fs (~> 0.2)
       ace-support-items (~> 0.3)
 
 PATH
@@ -329,6 +332,7 @@ PATH
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
+      ace-support-fs (~> 0.2)
       ace-support-items (~> 0.3)
       ace-support-markdown (~> 0.2)
 
