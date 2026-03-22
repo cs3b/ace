@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.911] - 2026-03-22
+
+### Changed
+- **ace-compressor v0.23.2**: Normalized installation and quick-start README examples to fenced code blocks and aligned command examples to consistent `mise exec --` execution format.
+- **ace-support-nav v0.23.4**: Standardized README usage examples to consistently run `ace-nav` and `ace-test` commands via `mise exec --` for clear execution context.
+
+## [0.9.910] - 2026-03-22
+
+### Changed
+- **ace-compressor v0.23.1**: Refreshed package README structure with dedicated purpose/install sections, preserved quick-start command coverage, and added the canonical ACE footer link.
+
+## [0.9.909] - 2026-03-22
+
+### Changed
+- **ace-llm-providers-cli v0.26.1**: Refreshed package README structure with dedicated purpose framing, ACE-native testing guidance, updated contribution workflow notes, and canonical ACE footer linkage.
+
+## [0.9.908] - 2026-03-22
+
+### Changed
+- **ace-integration-claude v0.3.9**: Refreshed package README structure with explicit purpose/install/usage framing, preserved legacy integration architecture notes, and added canonical ACE footer links.
+
+## [0.9.907] - 2026-03-22
+
+### Changed
+- **ace-support-test-helpers v0.12.6**: Refreshed package README structure, preserved core usage/docs content, and added canonical ACE footer/license sections.
+
+## [0.9.906] - 2026-03-22
+
+### Changed
+- **ace-support-nav v0.23.3**: Refreshed package README structure, added canonical `skill://` examples, and standardized ACE footer/license sections.
+
+## [0.9.905] - 2026-03-22
+
+### Changed
+- **ace-support-models v0.8.1**: Refreshed package README structure with purpose/install/basic-usage framing and added the ACE footer link.
+
+## [0.9.904] - 2026-03-22
+
+### Changed
+- **ace-support-markdown v0.2.2**: Refreshed package README structure, updated testing commands to `ace-test`, and added the ACE project footer link.
+
 ## [0.9.903] - 2026-03-22
 
 ### Technical

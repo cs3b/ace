@@ -33,7 +33,7 @@ PATH
 PATH
   remote: ace-compressor
   specs:
-    ace-compressor (0.23.0)
+    ace-compressor (0.23.2)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -153,7 +153,7 @@ PATH
 PATH
   remote: ace-integration-claude
   specs:
-    ace-integration-claude (0.3.8)
+    ace-integration-claude (0.3.9)
 
 PATH
   remote: ace-lint
@@ -170,7 +170,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.26.0)
+    ace-llm-providers-cli (0.26.1)
       ace-llm (~> 0.26)
 
 PATH
@@ -293,14 +293,14 @@ PATH
 PATH
   remote: ace-support-markdown
   specs:
-    ace-support-markdown (0.2.1)
+    ace-support-markdown (0.2.2)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
 
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.8.0)
+    ace-support-models (0.8.1)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
       faraday (~> 2.0)
@@ -309,7 +309,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.23.2)
+    ace-support-nav (0.23.4)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -318,7 +318,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.12.5)
+    ace-support-test-helpers (0.12.6)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
