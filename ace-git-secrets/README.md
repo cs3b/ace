@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-git-secrets
-purpose: Landing page for ace-git-secrets
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-git-secrets
 
 Detect, revoke, and remove leaked tokens from Git history before they cause damage.
