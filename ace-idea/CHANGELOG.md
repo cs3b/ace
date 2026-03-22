@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-03-22
+
+### Technical
+- Aligned the getting-started demo tape output path with the checked-in asset.
+- Updated prioritize workflow wording to use current queue terminology instead of backlog language.
+
+## [0.17.2] - 2026-03-22
+
+### Fixed
+- Clarified the README, getting-started guide, and usage reference so the `next` queue is documented as the root-scope view rather than a physical `_next` folder.
+
+## [0.17.1] - 2026-03-22
+
+### Fixed
+- Replaced Kramdown-only code block markup with fenced Markdown blocks in the getting-started and usage docs.
+- Added `docs/**/*` to the gemspec file manifest so the packaged gem ships the documentation files linked from the README.
+
+## [0.17.0] - 2026-03-22
+
+### Changed
+- Reworked the package documentation with a landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, refreshed gem metadata messaging, and updated idea workflows to match the current six-command CLI.
+
 ## [0.16.0] - 2026-03-20
 
 ### Changed

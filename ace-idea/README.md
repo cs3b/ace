@@ -1,107 +1,57 @@
 ---
 doc-type: user
 title: ace-idea
-purpose: Documentation for ace-idea/README.md
+purpose: Landing page for ace-idea
 ace-docs:
-  last-updated: 2026-03-01
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-idea
 
-Standalone idea management gem for ACE with b36ts-based IDs.
+Capture and organize ideas from anywhere -- clipboard, terminal, or LLM.
 
-## Overview
+![ace-idea demo](docs/demo/ace-idea-getting-started.gif)
 
-Manages ideas in `.ace-ideas/` using raw 6-char b36ts IDs, flat directory structure, and 5-command pattern.
+## Why
+
+`ace-idea` turns raw notes into structured idea files so nothing gets lost:
+
+* capture an idea as plain text or straight from your clipboard
+* ask for LLM enhancement when a rough note needs more shape
+* move ideas through the root-scope `next` queue plus `_maybe`, `_anytime`, and `_archive`
+* keep the workflow small with six commands: create, show, list, update, doctor, status
+
+## Works With
+
+* `ace-task` when an idea is ready to become a task
+* `ace-bundle` for loading idea workflows directly
+* `ace-git-commit` for scoped commits around idea changes
+
+## Agent Skills
+
+Package-owned canonical skills:
+
+* `as-idea-capture`
+* `as-idea-capture-features`
+* `as-idea-review`
 
 ## Features
 
-- Raw b36ts IDs (no type markers): `8ppq7w`, not `8pp.i.q7w`
-- Folder-based storage: `{id}-{slug}/{id}-{slug}.idea.s.md`
-- 5-command pattern: create, show, list, move, update
-- Clipboard capture (text, rich media, images)
-- LLM enhancement with 3-Question Brief structure
-- Special folder support: `_archive`, `_maybe`, `_anytime`, `_next`
+* text, clipboard, and LLM-enhanced capture
+* short sortable IDs with 3-character shortcut lookup
+* GTD-style folder organization with `--move-to`
+* status views, metadata updates, and doctor checks for idea hygiene
 
-## CLI Usage
+## Documentation
 
-```bash
-# Create ideas
-ace-idea create "Dark mode for night coding" --title "Dark mode" --tags ux,design --move-to next
-ace-idea create --clipboard --llm-enhance --move-to next
-ace-idea create "rough idea" --dry-run
+* [Getting Started](docs/getting-started.md)
+* [CLI Usage Reference](docs/usage.md)
+* [Handbook Catalog](docs/handbook.md)
+* Command help: `ace-idea --help`
 
-# Show an idea
-ace-idea show q7w                  # Formatted display
-ace-idea show 8ppq7w --path        # File path only
-ace-idea show q7w --content        # Raw markdown
+## Part of ACE
 
-# List ideas
-ace-idea list                      # All ideas
-ace-idea list --in maybe           # Ideas in _maybe/
-ace-idea list --tags ux --status pending
+`ace-idea` is part of [ACE][1]: CLI tools designed for developers and ready for agents.
 
-# Move ideas
-ace-idea move q7w --to archive
-ace-idea move q7w --to maybe
-ace-idea move q7w --to root        # Remove from special folder
-
-# Update metadata
-ace-idea update q7w --set status=done
-ace-idea update q7w --add tags=implemented --remove tags=pending-review
-
-# Help and version
-ace-idea help
-ace-idea version
-```
-
-## Ruby API
-
-```ruby
-require "ace/idea"
-
-manager = Ace::Idea::Organisms::IdeaManager.new
-
-# Create
-idea = manager.create("Dark mode would be great for night coding",
-                      title: "Dark mode support",
-                      tags: ["ux", "design"],
-                      move_to: "next")
-
-# Create from clipboard
-idea = manager.create_from_clipboard(llm_enhance: true)
-
-# Show
-idea = manager.show("q7w")  # last 3 chars of ID
-
-# List
-ideas = manager.list(status: "pending", in_folder: "maybe", tags: ["ux"])
-
-# Update
-manager.update("q7w", set: { "status" => "done" }, add: { "tags" => "implemented" })
-
-# Move
-manager.move("q7w", to: "archive")
-```
-
-## Frontmatter Schema
-
-```yaml
----
-id: 8ppq7w
-status: pending          # pending, in-progress, done, obsolete
-title: "Dark mode support"
-tags: [ux, design]
-created_at: 2026-02-26 19:15:00
----
-
-# Dark mode support
-
-## What I Hope to Accomplish
-...
-```
-
-## License
-
-MIT
+[1]: https://github.com/cs3b/ace
