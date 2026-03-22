@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.883] - 2026-03-22
+
+### Fixed
+- **ace-test-runner v0.16.1**: Suite report-dir now includes package subdirectory so result aggregator finds reports correctly.
+
 ## [0.9.882] - 2026-03-22
 
 ### Fixed
