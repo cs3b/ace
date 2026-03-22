@@ -1,27 +1,30 @@
 ---
 doc-type: user
 title: ace-git-secrets Usage Guide
-purpose: Documentation for ace-git-secrets/docs/usage.md
+purpose: CLI reference for ace-git-secrets
 ace-docs:
-  last-updated: 2026-03-04
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-git-secrets Usage Guide
 
-Comprehensive guide for scanning, revoking, and removing authentication tokens from Git history.
+Reference for scanning, revoking, and removing leaked credentials from Git history.
 
 ## Quick Start
 
+Run a scan first and keep the saved JSON report path:
+
 ```bash
-# Scan repository for tokens
 ace-git-secrets scan
+```
 
-# Revoke detected tokens
-ace-git-secrets revoke
+Then use that saved report for the rest of the remediation flow:
 
-# Remove tokens from history (destructive)
-ace-git-secrets rewrite-history --dry-run
+```bash
+ace-git-secrets revoke --scan-file .ace-local/git-secrets/sessions/<id>-report.json
+ace-git-secrets rewrite-history --dry-run --scan-file .ace-local/git-secrets/sessions/<id>-report.json
+ace-git-secrets rewrite-history --scan-file .ace-local/git-secrets/sessions/<id>-report.json
 ```
 
 ## Commands
@@ -31,33 +34,42 @@ ace-git-secrets rewrite-history --dry-run
 Scan Git history for authentication tokens.
 
 ```bash
-ace-git-secrets scan [options]
+ace-git-secrets scan [OPTIONS]
 ```
 
+Behavior:
+
+- Summary output goes to stdout by default
+- A full report is always saved to `.ace-local/git-secrets/sessions/`
+- The saved JSON report includes raw token values needed by `revoke` and `rewrite-history`
+
 Options:
-- `--since DATE` - Start scanning from commit/date (e.g., "30 days ago", commit SHA)
-- `--format, -f FORMAT` - Stdout format when --verbose is used: table, json, yaml (default: table)
-- `--report-format, -r FORMAT` - Format for saved report file: json, markdown (default: json)
-- `--confidence, -c LEVEL` - Minimum confidence: high, medium, low (default: low)
-- `--verbose, -v` - Enable verbose output with full report to stdout
-- `--quiet, -q` - Suppress non-essential output (for CI)
+
+- `--since=VALUE` - Start scanning from a commit or date
+- `--format=VALUE, -f` - Stdout format when `--verbose` is enabled: `table`, `json`, `yaml`
+- `--report-format=VALUE, -r` - Saved report format: `json`, `markdown`
+- `--confidence=VALUE, -c` - Minimum confidence: `high`, `medium`, `low`
+- `--[no-]verbose` - Print the full report to stdout in addition to saving it
+- `--[no-]quiet, -q` - Suppress non-essential output for CI-style usage
+- `--[no-]debug` - Show debug output
 
 Examples:
+
 ```bash
-# Full history scan
+# Scan full history
 ace-git-secrets scan
 
-# Scan last 30 days only
+# Scan recent history only
 ace-git-secrets scan --since "30 days ago"
 
-# High confidence only, verbose JSON output
-ace-git-secrets scan --confidence high --format json --verbose
+# Review only high-confidence findings in verbose JSON
+ace-git-secrets scan --confidence high --verbose --format json
 
-# Scan from merge base (for PR reviews)
-ace-git-secrets scan --since "$(git merge-base main HEAD)"
-
-# Save report in markdown format
+# Save a human-readable report as Markdown instead of JSON
 ace-git-secrets scan --report-format markdown
+
+# Minimal output for automation
+ace-git-secrets scan --quiet
 ```
 
 ### revoke
@@ -65,287 +77,225 @@ ace-git-secrets scan --report-format markdown
 Revoke detected tokens via provider APIs.
 
 ```bash
-ace-git-secrets revoke [options]
+ace-git-secrets revoke [OPTIONS]
 ```
 
 Options:
-- `--service, -s NAME` - Revoke for specific service only
-- `--token, -t TOKEN` - Revoke a specific token value
-- `--scan-file FILE` - Use previous scan results file
+
+- `--service=VALUE, -s` - Revoke for one provider only
+- `--token=VALUE, -t` - Revoke one explicit token value
+- `--scan-file=VALUE` - Load tokens from a saved scan report
+- `--[no-]debug` - Show debug output
 
 Examples:
+
 ```bash
-# Revoke all detected tokens
+# Revoke all high-confidence tokens from a fresh scan
 ace-git-secrets revoke
 
-# Revoke GitHub tokens only
-ace-git-secrets revoke --service github
+# Revoke only GitHub tokens from a saved scan report
+ace-git-secrets revoke --service github --scan-file .ace-local/git-secrets/sessions/<id>-report.json
 
-# Revoke a specific token
-ace-git-secrets revoke --token "ghp_your_token_here"
-
-# Use previous scan results
-ace-git-secrets revoke --scan-file scan-results.json
+# Revoke one token directly
+ace-git-secrets revoke --token "ghp_example_token"
 ```
+
+Notes:
+
+- `--scan-file` expects the saved JSON report produced by `scan`
+- Redirecting verbose stdout to a file is not a supported substitute, because `revoke` requires `raw_value` fields
+- If the scan file is missing `raw_value`, re-run `ace-git-secrets scan` and use the saved report path it prints
 
 ### rewrite-history
 
-Remove detected tokens from Git history using git-filter-repo.
-
-**WARNING**: This is a destructive operation that rewrites Git history.
+Remove detected tokens from Git history.
 
 ```bash
-ace-git-secrets rewrite-history [options]
+ace-git-secrets rewrite-history [OPTIONS]
 ```
+
+`rewrite-history` is destructive. Run it only after revoking the exposed credentials and after previewing the result with
+`--dry-run`.
 
 Options:
-- `--dry-run, -n` - Preview what would be rewritten
-- `--backup` - Create backup before rewrite (default: true)
-- `--force` - Skip confirmation prompt
-- `--scan-file FILE` - Use previous scan results file
+
+- `--[no-]dry-run, -n` - Show what would be rewritten without modifying history
+- `--[no-]backup` - Create a backup before rewriting (enabled by default)
+- `--[no-]force` - Skip the confirmation prompt
+- `--scan-file=VALUE` - Load tokens from a saved scan report
+- `--[no-]debug` - Show debug output
 
 Examples:
+
 ```bash
-# Preview changes (recommended first step)
-ace-git-secrets rewrite-history --dry-run
+# Preview cleanup first
+ace-git-secrets rewrite-history --dry-run --scan-file .ace-local/git-secrets/sessions/<id>-report.json
 
-# Rewrite with confirmation
-ace-git-secrets rewrite-history
+# Rewrite history using the same saved report used for revocation
+ace-git-secrets rewrite-history --scan-file .ace-local/git-secrets/sessions/<id>-report.json
 
-# Rewrite without backup (not recommended)
-ace-git-secrets rewrite-history --no-backup --force
+# Rewrite without a prompt
+ace-git-secrets rewrite-history --force --scan-file .ace-local/git-secrets/sessions/<id>-report.json
 ```
+
+Before running the real rewrite:
+
+- install `git-filter-repo`
+- start from a clean working tree
+- keep a mirror or clone backup for recovery
 
 ### check-release
 
-Pre-release security validation check.
+Run the pre-release security gate.
 
 ```bash
-ace-git-secrets check-release [options]
+ace-git-secrets check-release [OPTIONS]
 ```
 
 Options:
-- `--strict` - Fail on medium confidence matches
-- `--format, -f FORMAT` - Output format: table, json
+
+- `--[no-]strict` - Fail on medium-confidence matches in addition to high-confidence matches
+- `--format=VALUE, -f` - Output format: `table`, `json`
+- `--[no-]debug` - Show debug output
 
 Examples:
+
 ```bash
-# Standard check (fails on high confidence only)
+# Standard release gate
 ace-git-secrets check-release
 
-# Strict mode (fails on medium+ confidence)
+# Stricter release gate for CI
 ace-git-secrets check-release --strict
+
+# Structured review output
+ace-git-secrets check-release --format json
 ```
+
+Prefer exit codes for automation. `check-release --format json` currently includes banner text, so it is better suited to
+inspection than strict machine parsing.
 
 ## Configuration
 
-Configuration uses the ACE config cascade. Create `.ace/git-secrets/config.yml`:
+Configuration follows the ACE cascade. Project overrides live in `.ace/git-secrets/config.yml`.
 
 ```yaml
-# File exclusions (files that never contain secrets)
 exclusions:
-  - "**/package-lock.json"
   - "**/node_modules/**"
+  - "**/vendor/**"
 
-# Whitelist (will not be flagged)
 whitelist:
-  - pattern: 'ghp_example_for_docs'
-    reason: Documentation example
-  - file: 'test/fixtures/*.json'
-    reason: Test fixtures
+  - pattern: "ghp_example_for_docs"
+    reason: "Documentation example"
+  - file: "test/fixtures/*.json"
+    reason: "Test fixtures"
 
-# Output settings
 output:
   format: table
   mask_tokens: true
   directory: .ace-local/git-secrets
 
-# GitHub Enterprise support
 github:
   api_url: https://github.mycompany.com/api/v3
 ```
 
-### Custom Gitleaks Rules
+Use whitelist rules for known safe examples or fixtures. Keep real credentials out of the whitelist and revoke them
+instead.
 
-To add custom detection patterns, create `.ace/git-secrets/gitleaks.toml`:
+## Common Workflows
 
-```toml
-# Extend default gitleaks rules
-[extend]
-useDefault = true
+### Full remediation loop
 
-# Add custom rules
-[[rules]]
-id = "internal-api-key"
-description = "Internal API Key"
-regex = '''INTERNAL_[A-Za-z0-9]{32,}'''
-entropy = 3.5
+1. Scan and note the saved report path:
 
-[[rules]]
-id = "company-live-key"
-description = "Company Production Key"
-regex = '''mycompany_live_[A-Za-z0-9]{32,}'''
-```
+   ```bash
+   ace-git-secrets scan
+   ```
 
-See [gitleaks documentation](https://github.com/gitleaks/gitleaks#configuration) for the complete rule syntax.
+2. Revoke from the saved JSON report:
 
-### Whitelist Configuration
+   ```bash
+   ace-git-secrets revoke --scan-file .ace-local/git-secrets/sessions/<id>-report.json
+   ```
 
-Whitelist entries can match by pattern (exact token value) or file path:
+3. Preview history rewriting:
 
-```yaml
-whitelist:
-  # Match by exact token value
-  - pattern: 'ghp_example123456789012345678901234567890'
-    reason: Documentation example
+   ```bash
+   ace-git-secrets rewrite-history --dry-run --scan-file .ace-local/git-secrets/sessions/<id>-report.json
+   ```
 
-  # Match by file path (glob patterns supported)
-  - file: 'test/fixtures/*.json'
-    reason: Test fixtures
-  - file: 'docs/examples/*'
-    reason: Example code
-```
+4. Rewrite history for real:
 
-## Default Token Patterns
+   ```bash
+   ace-git-secrets rewrite-history --scan-file .ace-local/git-secrets/sessions/<id>-report.json
+   ```
 
-The following patterns are detected by default:
+5. Re-scan or run the release gate:
 
-| Pattern | Prefix | Confidence | Service |
-|---------|--------|------------|---------|
-| GitHub PAT (classic) | `ghp_` | high | github |
-| GitHub OAuth | `gho_` | high | github |
-| GitHub App | `ghs_` | high | github |
-| GitHub Refresh | `ghr_` | high | github |
-| GitHub PAT (fine-grained) | `github_pat_` | high | github |
-| Anthropic API Key | `sk-ant-` | high | anthropic |
-| OpenAI API Key | `sk-` | high | openai |
-| AWS Access Key | `AKIA` | high | aws |
-| AWS Session | `ASIA` | medium | aws |
+   ```bash
+   ace-git-secrets check-release --strict
+   ```
 
-## Token Revocation
+### Human-readable reporting
 
-### Automatic Revocation
-
-GitHub tokens can be revoked automatically via API (no authentication required):
+Generate a Markdown report when you need to share findings with reviewers:
 
 ```bash
-# Revokes all detected GitHub tokens
-ace-git-secrets revoke --service github
+ace-git-secrets scan --report-format markdown
 ```
 
-### Manual Revocation
+### Faster large-repository scans
 
-Other providers require manual revocation:
+Limit the scan scope for triage work:
 
-| Service | Action |
-|---------|--------|
-| Anthropic | Visit https://console.anthropic.com/settings/keys |
-| OpenAI | Visit https://platform.openai.com/api-keys |
-| AWS | Visit https://console.aws.amazon.com/iam/home#/security_credentials |
-
-## History Rewriting
-
-### Prerequisites
-
-1. Install git-filter-repo:
-   ```bash
-   brew install git-filter-repo
-   ```
-
-2. Commit or stash all changes (working directory must be clean)
-
-3. **Revoke tokens first** before rewriting history
-
-### Workflow
-
-1. **Scan and save results**:
-   ```bash
-   ace-git-secrets scan --format json > tokens.json
-   ```
-
-2. **Revoke tokens**:
-   ```bash
-   ace-git-secrets revoke --scan-file tokens.json
-   ```
-
-3. **Preview rewrite**:
-   ```bash
-   ace-git-secrets rewrite-history --dry-run --scan-file tokens.json
-   ```
-
-4. **Execute rewrite**:
-   ```bash
-   ace-git-secrets rewrite-history --scan-file tokens.json
-   ```
-
-5. **Force push**:
-   ```bash
-   git push --force-with-lease origin <branch>
-   ```
-
-6. **Notify collaborators** to re-clone the repository
+```bash
+ace-git-secrets scan --since "6 months ago"
+```
 
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
-| 0 | Success (or no tokens found) |
-| 1 | Tokens found or partial failure |
-| 2 | Error (configuration, I/O, etc.) |
-
-## Integration with CI/CD
-
-### Pre-release Check
-
-```yaml
-# .github/workflows/security.yml
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history for scanning
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Check for secrets
-        run: ace-git-secrets check-release --strict
-```
-
-### PR Review Check
-
-```yaml
-- name: Scan PR changes only
-  run: |
-    ace-git-secrets scan --since "${{ github.event.pull_request.base.sha }}"
-```
-
-## Performance Tips
-
-- Use `--since` to limit history scanning for large repositories
-- gitleaks is highly optimized for scanning large repositories
-- For very large repos, consider scanning only recent history: `--since "6 months ago"`
+| `0` | Success, or no tokens found for scan/check workflows |
+| `1` | Tokens found, or partial revocation success/failure |
+| `2` | Command error such as missing dependencies, invalid input, or I/O failure |
 
 ## Troubleshooting
 
+### "gitleaks is required"
+
+Install the scanner and re-run:
+
+```bash
+brew install gitleaks
+```
+
 ### "git-filter-repo is required"
 
-Install with: `brew install git-filter-repo`
+Install the rewrite tool before using `rewrite-history`:
 
-### "Working directory has uncommitted changes"
-
-Commit or stash changes before running `rewrite-history`.
-
-### Scan is slow on large repositories
-
-Use `--since` to limit the scan scope:
 ```bash
-ace-git-secrets scan --since "6 months ago"
+brew install git-filter-repo
+```
+
+### Scan file missing `raw_value`
+
+Re-run `scan` and use the saved JSON report path that the command prints. Do not build the `--scan-file` input by
+redirecting verbose stdout.
+
+### Scan is slow on a large repository
+
+Limit the scan window:
+
+```bash
+ace-git-secrets scan --since "30 days ago"
 ```
 
 ### False positives
 
-Add patterns or files to the whitelist in configuration.
+Add a whitelist entry for known safe examples or fixtures in `.ace/git-secrets/config.yml`.
+
+## Related Docs
+
+- [Getting Started](getting-started.md)
+- [Handbook Catalog](handbook.md)
+- Runtime help: `ace-git-secrets --help`
