@@ -399,6 +399,30 @@ module Ace
           assert_match(%r{ace-assign/docs/usage\.md$}, docs.first.path)
         end
 
+        def test_discovers_frontmatter_free_readme_without_yaml
+          Ace::Docs.stub :config, Ace::Docs.config.merge("frontmatter_free" => ["**/README.md"]) do
+            FileUtils.mkdir_p("ace-docs")
+            File.write("ace-docs/README.md", "# ace-docs\n\ncontent")
+
+            registry = DocumentRegistry.new(project_root: @temp_dir)
+            doc = registry.find_by_path(File.join(@temp_dir, "ace-docs/README.md"))
+
+            refute_nil doc
+            assert_equal "user", doc.doc_type
+            assert_match(/User-facing introduction/, doc.purpose)
+          end
+        end
+
+        def test_default_frontmatter_free_patterns_ignore_nested_fixture_readme
+          FileUtils.mkdir_p("ace-review/test/e2e/fixture")
+          File.write("ace-review/test/e2e/fixture/README.md", "# Fixture\n")
+
+          registry = DocumentRegistry.new(project_root: @temp_dir)
+          doc = registry.find_by_path(File.join(@temp_dir, "ace-review/test/e2e/fixture/README.md"))
+
+          assert_nil doc
+        end
+
         private
 
         def create_test_documents

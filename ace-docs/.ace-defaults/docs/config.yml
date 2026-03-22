@@ -133,3 +133,8 @@ ignore:
   - "**/coverage/**"
   - "**/_legacy/**"
   - "**/.ace-tasks/done/**"
+
+# Files managed without YAML frontmatter.
+frontmatter_free:
+  - "README.md"
+  - "*/README.md"
