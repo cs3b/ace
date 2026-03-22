@@ -1,18 +1,16 @@
 ---
 id: 8ql.t.pm3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 17:04:33"
 estimate: TBD
 dependencies: []
 tags: [cleanup, mise, skills, docs]
 bundle:
-  presets: ["project"]
-  files:
-    - AGENTS.md
-    - ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb
-    - ace-handbook/test/organisms/provider_syncer_test.rb
+  presets: [project]
+  files: [AGENTS.md, CLAUDE.md, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/test/organisms/provider_syncer_test.rb, ace-overseer/lib/ace/overseer/molecules/worktree_provisioner.rb]
   commands: []
+needs_review: false
 ---
 
 # Remove mise exec Wrapper from All Skills, Docs, and Tapes
@@ -49,7 +47,7 @@ The transformation is purely textual: remove the `mise exec -- ` prefix wherever
 
 | Category | Files | Action |
 |----------|-------|--------|
-| A. Canonical skills | ~91 `handbook/skills/*/SKILL.md` | Replace `mise exec -- ace-*` with `ace-*` |
+| A. Canonical skills | ~89 `handbook/skills/*/SKILL.md` | Replace `mise exec -- ace-*` with `ace-*` |
 | B. Provider projections | ~450 `.claude/`, `.codex/`, `.opencode/`, `.pi/`, `.gemini/` skills | Re-sync via `ace-handbook sync` after fixing canonical |
 | C. Agent config | `AGENTS.md`, `CLAUDE.md` | Remove mise mandate, keep command integrity rules |
 | D. VHS tapes | 8 `.tape` files | Remove `mise exec --` from `Type` commands |
@@ -69,6 +67,7 @@ These files are intentionally left unchanged — they document what was true at 
 - `.ace-retros/` retrospective records
 - `.ace-ideas/` idea files (including archived)
 - `.ace-tasks/_archive/` archived task specs
+- `.ace-local/` ephemeral sandbox/worktree copies
 
 ## Success Criteria
 
