@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ACE Test Gem
-purpose: Documentation landing page for ace-test
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ACE Test Gem
 
 Testing knowledge base for ACE -- guides, patterns, and workflows for fast, reliable tests.
