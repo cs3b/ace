@@ -20,6 +20,6 @@ Type "echo $ASSIGN_ID"
 Enter
 Sleep 2s
 
-Type "mise exec -- ace-assign status --assignment $ASSIGN_ID"
+Type "ace-assign status --assignment $ASSIGN_ID"
 Enter
 Sleep 16s
