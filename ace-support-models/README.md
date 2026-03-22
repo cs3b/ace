@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-models
-purpose: Documentation for ace-support-models/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-models
 
 Model metadata, validation, and cost tracking for ACE via [models.dev](https://models.dev/).

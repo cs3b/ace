@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-config
-purpose: Documentation for ace-support-config/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-config
 
 Generic configuration cascade management with deep merging and priority resolution for Ruby applications.

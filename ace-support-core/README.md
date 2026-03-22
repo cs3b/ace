@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-core
-purpose: Documentation for ace-support-core/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-core
 
 Foundational configuration cascade and shared infrastructure for all ace-* gems.
