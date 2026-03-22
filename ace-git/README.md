@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-git
-purpose: Landing page for ace-git
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-git
 
 Git workflows and context commands for developers and AI agents.
