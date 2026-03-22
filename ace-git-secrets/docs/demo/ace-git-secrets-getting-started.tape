@@ -19,6 +19,6 @@ Type "TOKEN_PREFIX=ghp_ && TOKEN_SUFFIX=123456789012345678901234567890123456 && 
 Enter
 Sleep 1s
 
-Type "mise exec -- ace-git-secrets scan"
+Type "ace-git-secrets scan"
 Enter
 Sleep 4s
