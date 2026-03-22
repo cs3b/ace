@@ -1,0 +1,17 @@
+---
+description: Show handbook workflow discovery
+tags:
+- demo
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-nav resolve wfi://handbook/manage-guides
+    sleep: 2s
+teardown:
+- cleanup
