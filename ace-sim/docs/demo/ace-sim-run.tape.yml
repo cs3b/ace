@@ -1,0 +1,17 @@
+---
+description: Showcase ace-sim-run
+tags:
+- demo
+- getting-started
+settings:
+  font_size: 16
+  width: 900
+  height: 500
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-sim run --preset validate-idea --source idea.md --dry-run
+    sleep: 2s
+teardown:
+- cleanup
