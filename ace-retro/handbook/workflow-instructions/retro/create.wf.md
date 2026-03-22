@@ -85,11 +85,37 @@ Use the template format from `tmpl://retro/retro` to structure content. Fill eac
 - Challenges faced and how they were resolved
 - Successful approaches worth repeating
 
+**When review session data is available** (e.g., after review cycles in an assignment), analyze:
+
+- Review sessions in `.ace-local/review/sessions/` for the current branch/PR
+- Load each session's `feedback-synthesis/feedback-synthesis.cleaned.json` for structured findings
+- Load each session's `metadata.yml` for model performance data (duration, success rate)
+
+Cross-cycle review analysis prompts:
+
+- Which feedback items recurred across cycles? (indicates systematic issues vs. one-off nits)
+- What was the false-positive rate per reviewer model? (findings marked invalid without code changes)
+- How did severity calibration differ across models? (e.g., one model flags high-priority items that others miss)
+- Did later review cycles (code-fit, code-shine) catch qualitatively different issues than early ones (code-valid)?
+- What percentage of feedback items led to actual code changes vs. being dismissed?
+
+Capture these observations in the retro under a **Review Cycle Analysis** subsection within "Key Learnings".
+
 ### 6. Finalize
 
 - Ensure populated sections have meaningful content
 - Remove empty optional sections
 - Verify with `ace-retro list` to confirm the retro appears
+
+### 7. Commit the Retro
+
+Commit the retro file so the artifact is preserved in the branch history:
+
+```bash
+ace-git-commit .ace-retros/ -i "retro for <context>"
+```
+
+This is especially important when running inside a fork subtree, where uncommitted files would be lost when the fork process exits.
 
 ## Best Practices
 
@@ -115,3 +141,4 @@ Use the template format from `tmpl://retro/retro` to structure content. Fill eac
 - Key sections populated with meaningful content
 - Action items clearly defined
 - Insights captured for future reference
+- Retro file committed to the branch
