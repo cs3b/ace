@@ -220,7 +220,6 @@ module Ace
             if @task_data && !@task_data.empty?
               result.gsub!("{task_id}", extract_task_id(@task_data))
               result.gsub!("{task_title}", @task_data[:title].to_s)
-              result.gsub!("{release}", extract_release(@task_data))
               result.gsub!("{slug}", extract_slug(@task_data))
             end
 
@@ -282,7 +281,6 @@ module Ace
             if @task_data && !@task_data.empty?
               env["ACE_TASK_ID"] = extract_task_id(@task_data)
               env["ACE_TASK_TITLE"] = @task_data[:title].to_s
-              env["ACE_RELEASE"] = extract_release(@task_data)
             end
 
             # Add custom environment variables
@@ -308,21 +306,6 @@ module Ace
             end
 
             "unknown"
-          end
-
-          # Extract release from task data
-          #
-          # @param task_data [Hash] Task data
-          # @return [String] Release version
-          def extract_release(task_data)
-            return task_data[:release].to_s if task_data[:release]
-
-            if task_data[:id]
-              match = task_data[:id].match(/^(v\.\d+\.\d+\.\d+)/)
-              return match[1] if match
-            end
-
-            ""
           end
 
           # Extract slug from task data

@@ -150,7 +150,7 @@ class WorktreeCreatorTest < Minitest::Test
       "feature-branch",
       "feature/new-feature",
       "bugfix/issue-123",
-      "release/v1.0.0",
+      "hotfix/v1.0.0",
       "hotfix/security-patch",
       "123-task-number",
       "branch_with_underscores",
@@ -200,7 +200,7 @@ class WorktreeCreatorTest < Minitest::Test
       "feature/login",
       "feature/auth/oauth-flow",
       "bugfix/issue-123/security-patch",
-      "release/v1.0.0/patch",
+      "hotfix/v1.0.0/patch",
       "hotfix/critical/security-update",
       "epic/user-management/permissions",
       "team/frontend/component-library"
@@ -494,7 +494,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_detect_remote_branch_without_remote
-    local_branches = ["main", "feature", "bugfix-123", "release_v1.0"]
+    local_branches = ["main", "feature", "bugfix-123", "candidate_v1.0"]
 
     local_branches.each do |branch|
       result = @creator.send(:detect_remote_branch, branch)
@@ -517,7 +517,7 @@ class WorktreeCreatorTest < Minitest::Test
     local_slash_branches = [
       "feature/login",
       "bugfix/issue-123",
-      "release/v1.0.0",
+      "hotfix/v1.0.0",
       "hotfix/security-patch",
       "epic/user-management",
       "team/frontend/component"
@@ -554,8 +554,8 @@ class WorktreeCreatorTest < Minitest::Test
       feature_result = @creator.send(:detect_remote_branch, "feature/login")
       assert_nil feature_result, "feature/login should be nil when 'feature' is not a remote"
 
-      release_result = @creator.send(:detect_remote_branch, "release/v2.0")
-      assert_nil release_result, "release/v2.0 should be nil when 'release' is not a remote"
+      non_remote_result = @creator.send(:detect_remote_branch, "candidate/v2.0")
+      assert_nil non_remote_result, "candidate/v2.0 should be nil when 'candidate' is not a remote"
     end
   end
 

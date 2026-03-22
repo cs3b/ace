@@ -20,7 +20,7 @@ module Ace
         CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
         # Template variable patterns
-        TEMPLATE_VARIABLES = %w[id task_id release slug].freeze
+        TEMPLATE_VARIABLES = %w[id task_id slug].freeze
 
         # Git branch name restrictions
         FORBIDDEN_BRANCH_CHARS = /[~\^:\*\?\[\]]/

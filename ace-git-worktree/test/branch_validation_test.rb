@@ -13,7 +13,7 @@ class BranchValidationTest < Minitest::Test
       "feature/login",
       "feature/auth/oauth-flow",
       "bugfix/issue-123/security-patch",
-      "release/v1.0.0/patch",
+      "hotfix/v1.0.0/patch",
       "hotfix/critical/security-update",
       "epic/user-management/permissions",
       "team/frontend/component-library"

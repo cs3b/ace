@@ -89,8 +89,7 @@ class WorktreeConfigTest < Minitest::Test
       id: "t.081",
       task_number: "081",
       title: "Fix authentication bug",
-      status: "pending",
-      release: "v.0.9.0"
+      status: "pending"
     }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
@@ -123,8 +122,7 @@ class WorktreeConfigTest < Minitest::Test
       id: "t.081",
       task_number: "081",
       title: "Fix authentication bug",
-      status: "pending",
-      release: "v.0.9.0"
+      status: "pending"
     }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
@@ -144,7 +142,7 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
     formatted = config.format_commit_message(task_data)
 
-    assert_equal "chore(unknown-081): mark as in-progress, creating worktree for fix-authentication-bug", formatted
+    assert_equal "chore(081): mark as in-progress, creating worktree for fix-authentication-bug", formatted
   end
 
   def test_absolute_root_path
@@ -263,7 +261,7 @@ class WorktreeConfigTest < Minitest::Test
     assert_equal true, config.mise_trust_auto?
     assert_equal true, config.auto_mark_in_progress?
     assert_equal true, config.auto_commit_task?
-    assert_equal "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}", config.commit_message_format
+    assert_equal "chore({task_id}): mark as in-progress, creating worktree for {slug}", config.commit_message_format
     assert_equal true, config.add_worktree_metadata?
     assert_equal false, config.cleanup_on_merge?
     assert_equal true, config.cleanup_on_delete?
@@ -273,17 +271,16 @@ class WorktreeConfigTest < Minitest::Test
     task_data = {
       id: "task.123",
       task_number: "123",
-      title: "Test task with release",
-      status: "pending",
-      release: "v.1.0.0"
+      title: "Test task with variables",
+      status: "pending"
     }
 
     custom_config = {
       "git" => {
         "worktree" => {
           "task" => {
-            "directory_format" => "work/{release}/{id}",
-            "branch_format" => "{release}/{id}-{slug}"
+            "directory_format" => "work/{task_id}",
+            "branch_format" => "{task_id}-{slug}"
           }
         }
       }
@@ -291,8 +288,8 @@ class WorktreeConfigTest < Minitest::Test
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(custom_config, @project_root)
 
-    assert_equal "work/v.1.0.0/123", config.format_directory(task_data)
-    assert_equal "v.1.0.0/123-test-task-with-release", config.format_branch(task_data)
+    assert_equal "work/123", config.format_directory(task_data)
+    assert_equal "123-test-task-with-variables", config.format_branch(task_data)
   end
 
   def test_mise_trust_auto_false
@@ -497,13 +494,13 @@ class WorktreeConfigTest < Minitest::Test
       "git" => {
         "worktree" => {
           "task" => {
-            "pr_title_format" => "[{release}] {id}: {slug}"
+            "pr_title_format" => "[{id}] {slug}"
           }
         }
       }
     }
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
-    assert_equal "[{release}] {id}: {slug}", config.pr_title_format
+    assert_equal "[{id}] {slug}", config.pr_title_format
   end
 
   def test_format_pr_title
@@ -511,8 +508,7 @@ class WorktreeConfigTest < Minitest::Test
       id: "v.0.9.0+task.125",
       task_number: "125",
       title: "Upstream Setup and PR Creation",
-      status: "pending",
-      release: "v.0.9.0"
+      status: "pending"
     }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
@@ -543,15 +539,14 @@ class WorktreeConfigTest < Minitest::Test
       id: "v.0.9.0+task.125",
       task_number: "125",
       title: "Fix Bug",
-      status: "pending",
-      release: "v.0.9.0"
+      status: "pending"
     }
 
     config_data = {
       "git" => {
         "worktree" => {
           "task" => {
-            "pr_title_format" => "[{release}] task-{id}: {slug}"
+            "pr_title_format" => "task-{id}: {slug}"
           }
         }
       }
@@ -559,6 +554,6 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
     formatted = config.format_pr_title(task_data)
 
-    assert_equal "[v.0.9.0] task-125: fix-bug", formatted
+    assert_equal "task-125: fix-bug", formatted
   end
 end

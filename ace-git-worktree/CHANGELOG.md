@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-03-22
+
+### Technical
+- Removed `release` template-variable support and references from task configuration runtime paths, aligning package behavior with task ID-based defaults.
+
 ## [0.18.0] - 2026-03-22
 
 ### Changed

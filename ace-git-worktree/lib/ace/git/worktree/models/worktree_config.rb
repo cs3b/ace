@@ -38,7 +38,7 @@ module Ace
               "auto_commit_task" => true,
               "auto_push_task" => true,
               "push_remote" => "origin",
-              "commit_message_format" => "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}",
+              "commit_message_format" => "chore({task_id}): mark as in-progress, creating worktree for {slug}",
               "add_worktree_metadata" => true,
               "auto_setup_upstream" => false,
               "auto_create_pr" => false,
@@ -326,9 +326,9 @@ module Ace
 
             # Validate template variables for task configuration
             task_templates = {
-              "task.directory_format" => { template: directory_format, valid_vars: %w[task_id id slug release] },
-              "task.branch_format" => { template: branch_format, valid_vars: %w[id slug task_id release] },
-              "task.commit_message_format" => { template: commit_message_format, valid_vars: %w[release task_id slug id] }
+              "task.directory_format" => { template: directory_format, valid_vars: %w[task_id id slug] },
+              "task.branch_format" => { template: branch_format, valid_vars: %w[id slug task_id] },
+              "task.commit_message_format" => { template: commit_message_format, valid_vars: %w[task_id slug id] }
             }
 
             task_templates.each do |name, config|
@@ -461,7 +461,6 @@ module Ace
             variables = {
               "id" => task_id,
               "task_id" => task_id,
-              "release" => extract_release(task_data),
               "slug" => create_slug(task_data[:title] || "unknown-task")
             }
 
@@ -480,23 +479,6 @@ module Ace
           def extract_task_number(task_data)
             # Use shared extractor that preserves subtask IDs (e.g., "121.01")
             Atoms::TaskIDExtractor.extract(task_data)
-          end
-
-          # Extract release from task data
-          #
-          # @param task_data [Hash] Task data hash
-          # @return [String] Release (e.g., "v.0.9.0")
-          def extract_release(task_data)
-            # Use release field if available
-            return task_data[:release] if task_data[:release]
-
-            # Extract from id field (e.g., "v.0.9.0+task.094" -> "v.0.9.0")
-            if task_data[:id]
-              match = task_data[:id].match(/^(v\.[\d.]+)\+task\.(\d+)$/)
-              return match[1] if match
-            end
-
-            "unknown"
           end
 
           # Create URL-friendly slug from title
