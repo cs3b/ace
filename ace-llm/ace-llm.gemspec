@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "LLM provider integration for AI-assisted development"
-  spec.description = "Query any LLM provider through a unified CLI interface with cost tracking and output formatting"
+  spec.summary = "Query any LLM from the terminal with one provider-agnostic CLI"
+  spec.description = "Use one CLI for multiple LLM providers with aliases, fallback routing, and structured output options"
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

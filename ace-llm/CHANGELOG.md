@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-03-22
+
+### Changed
+- Rewrote the package README into a concise landing page and added focused documentation pages for getting started, usage, and handbook guidance.
+- Added a getting-started demo tape for the documented onboarding flow.
+- Updated gemspec summary and description to match the refreshed documentation surface.
+
 ## [0.28.0] - 2026-03-21
 
 ### Changed
