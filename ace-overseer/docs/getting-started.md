@@ -17,27 +17,27 @@ ace-docs:
 
 ## Installation
 
-Install as part of the ACE mono-repo toolchain: `mise exec -- ace-overseer --help`.
+Install as part of the ACE mono-repo toolchain: `ace-overseer --help`.
 
 If the command resolves, your environment is ready.
 
 ## Start Work on a Task
 
-Launch a focused task workspace: `mise exec -- ace-overseer work-on --task 8q4.t.umu.1`.
+Launch a focused task workspace: `ace-overseer work-on --task 8q4.t.umu.1`.
 
 This flow provisions or reuses a task worktree, opens a tmux window, and prepares assignment context.
 
 ## Monitor Active Work
 
-Inspect the task dashboard: `mise exec -- ace-overseer status`.
+Inspect the task dashboard: `ace-overseer status`.
 
-Need machine-readable output? Use `mise exec -- ace-overseer status --format json`.
+Need machine-readable output? Use `ace-overseer status --format json`.
 
 ## Prune Completed Worktrees
 
-Preview prune candidates first: `mise exec -- ace-overseer prune --dry-run`.
+Preview prune candidates first: `ace-overseer prune --dry-run`.
 
-When safe to remove, confirm cleanup: `mise exec -- ace-overseer prune --yes`.
+When safe to remove, confirm cleanup: `ace-overseer prune --yes`.
 
 ## Common Commands
 

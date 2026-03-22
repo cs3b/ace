@@ -53,7 +53,7 @@ module Ace
           stale_path = retry_result[:worktree_path] || previous_result[:worktree_path]
           raise Error,
                 "Worktree path is missing after stale metadata recovery for task #{task_ref}: #{stale_path}. " \
-                "Run `mise exec -- ace-git-worktree prune` and retry."
+                "Run `ace-git-worktree prune` and retry."
         rescue StandardError => e
           raise e if e.is_a?(Error)
 
