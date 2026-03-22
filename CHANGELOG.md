@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.893] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.8**: Align task completion marking with archiving behavior in single-task and batch assignment workflows; fix missed parent-archive closure in completed subtask hierarchies.
+
 ## [0.9.892] - 2026-03-22
 
 ### Fixed
