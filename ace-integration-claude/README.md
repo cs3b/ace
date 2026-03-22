@@ -1,15 +1,20 @@
 ---
 doc-type: user
-title: ACE Integration Claude Gem
+title: ace-integration-claude
 purpose: Documentation for ace-integration-claude/README.md
 ace-docs:
-  last-updated: 2026-03-12
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
-# ACE Integration Claude Gem
+# ace-integration-claude
 
-Legacy Claude integration package for ACE. This package remains useful for historical and maintenance contexts, but the active provider-specific replacement is `ace-handbook-integration-claude`.
+Claude Code integration workflows and templates for ACE.
+
+## Purpose
+
+`ace-integration-claude` is a legacy integration package kept for compatibility and maintenance
+history. New provider integration work should target `ace-handbook-integration-claude`.
 
 ## Status
 
@@ -17,27 +22,47 @@ Legacy Claude integration package for ACE. This package remains useful for histo
 - Canonical skill ownership: package-local `handbook/skills/`
 - Shared projection and sync runtime: `ace-handbook`
 
-Use this README as a compatibility reference, not as the primary onboarding surface for new Claude integration work.
+Use this README as a compatibility reference, not as the primary onboarding surface for new Claude
+integration work.
+
+## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem "ace-integration-claude"
+```
+
+Or install directly:
+
+```bash
+gem install ace-integration-claude
+```
 
 ## Usage
 
 Load the integration workflow directly with `ace-bundle`:
 
 ```bash
-ace-bundle wfi://integration/update-claude
+mise exec -- ace-bundle wfi://integration/update-claude
 ```
 
 Use `ace-nav` only when you need discovery or the resolved path:
 
 ```bash
-ace-nav wfi://integration/update-claude
+mise exec -- ace-nav wfi://integration/update-claude
 ```
 
-## What This Package Contains
+## Integration Assets
 
 - Claude-specific workflow instructions under `handbook/workflow-instructions/`
 - Integration assets under `integrations/claude/`
 - Legacy command and template packaging for Claude-facing surfaces
+
+## Architecture
+
+This is a pure integration package with no CLI interface. It provides Claude-facing integration
+assets while relying on shared runtime behavior from other ACE packages.
 
 ## Current Model
 
@@ -48,17 +73,19 @@ ACE now separates the layers this way:
 3. Provider packages project those skills into provider-native folders such as `.claude/skills/`
 4. `ace-assign` may discover assignment-capable skills through that canonical skill inventory
 
-That means generic markdown docs should not route users through skills; skill references in this package are intentionally provider-specific.
+That means generic markdown docs should not route users through skills; skill references in this
+package are intentionally provider-specific.
 
-## Migration Guidance
+## Integration Setup
 
-For new Claude integration work:
+For maintenance or migration checks, run the integration workflow:
 
 ```bash
 mise exec -- ace-bundle wfi://integration/update-claude
 ```
 
-Then prefer the newer provider package docs in `ace-handbook-integration-claude` for current ownership boundaries and runtime behavior.
+Then prefer the newer provider package docs in `ace-handbook-integration-claude` for current
+ownership boundaries and runtime behavior.
 
 ## File Structure
 
@@ -71,6 +98,15 @@ ace-integration-claude/
 ├── README.md
 └── CHANGELOG.md
 ```
+
+## Standards
+
+- [ADR-001: Workflow self-containment](../docs/decisions.md#workflow-self-containment)
+- [ADR-002: XML template embedding](../docs/decisions.md#xml-template-embedding)
+
+## Part of ACE
+
+Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
 
 ## License
 
