@@ -8,10 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Standalone idea management gem for ACE with b36ts-based IDs"
-  spec.description = "Manages ideas in .ace-ideas/ using raw 6-char b36ts IDs, " \
-                     "flat directory structure, and 5-command pattern (create, show, list, move, update). " \
-                     "Supports clipboard capture and LLM enhancement."
+  spec.summary = "Capture and organize ideas from clipboard, terminal, or LLM"
+  spec.description = "Capture rough ideas quickly, store them as structured files, organize them with " \
+                     "GTD-style folders, and manage them through a focused six-command CLI."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -24,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md

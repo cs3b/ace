@@ -11,11 +11,11 @@ ace-docs:
 
 ## Goal
 
-Systematically organize, prioritize, and align backlog ideas with current project architecture to create an actionable implementation roadmap.
+Systematically organize, prioritize, and align queued ideas with current project architecture to create an actionable implementation roadmap.
 
 ## Prerequisites
 
-* Access to project's ideas/backlog directory
+* Access to the project's ideas directory and current queue folders
 * Understanding of project's architecture patterns
 * Access to project documentation in `docs/` directory
 * Knowledge of existing tools and workflows
@@ -27,7 +27,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 ## Process Steps
 
 ### 1. **Analyze Current Ideas:**
-   * List all files in project's ideas/backlog directory
+   * List all files in the project's current idea queues
    * Read each idea file to understand:
      - Problem being solved
      - Proposed solution
@@ -74,33 +74,33 @@ Systematically organize, prioritize, and align backlog ideas with current projec
    * Key architectural patterns identified
    * Existing tools inventory complete
 
-### 4. **Prioritize Ideas Using Move:**
-   * Use `ace-idea move` to place ideas into priority folders
+### 4. **Prioritize Ideas Using Folder Updates:**
+   * Use `ace-idea update --move-to` to place ideas into priority folders
    * Priority levels:
      - **High priority** (Critical impact, low complexity): Move to `_next`
      - **Medium priority** (High impact or medium complexity): Move to `_maybe`
      - **Lower priority** (remaining ideas): Move to `_anytime`
 
-   * Move pattern:
+   * Update pattern:
      ```bash
      # Place highest priority ideas in next queue
-     ace-idea move <idea-1> --to next
+     ace-idea update <idea-1> --move-to next
 
      # Place medium priority ideas in maybe folder
-     ace-idea move <idea-2> --to maybe
+     ace-idea update <idea-2> --move-to maybe
 
      # Place lower priority ideas in anytime folder
-     ace-idea move <low-priority-idea> --to anytime
+     ace-idea update <low-priority-idea> --move-to anytime
      ```
 
    **How it works:**
-   * Moves idea files between folders (`_next`, `_maybe`, `_anytime`)
+   * Updates move idea files between folders (`_next`, `_maybe`, `_anytime`)
    * Ideas are listed per folder when using `ace-idea list --in <folder>`
-   * No frontmatter modifications needed — folder position defines priority
+   * The same command can also update metadata such as `status` when needed
 
    **Validation:**
    * Running `ace-idea list --in next` shows high-priority ideas
-   * Can re-prioritize later by moving ideas between folders
+   * Can re-prioritize later by moving ideas between folders again
 
 ### 5. **Align Ideas with Project Architecture:**
    For each prioritized idea:
@@ -160,24 +160,24 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 
 ### 7. **Clean Up and Finalize:**
    * Remove any temporary files created during process
-   * Verify all ideas have sort metadata updated
-   * Verify idea order with `ace-idea list --backlog`
+   * Verify prioritized ideas are in the expected folders
+   * Verify folder contents with `ace-idea list --in next`, `ace-idea list --in maybe`, and `ace-idea list --in anytime`
    * Create summary of changes for commit message
 
    **Validation:**
    * No temporary files remain
-   * All prioritized ideas have `sort:` field in frontmatter
-   * `ace-idea list --backlog` shows correct priority order
-   * Git status shows modified idea files (not renamed)
+   * Folder listings reflect the intended priorities
+   * `ace-idea list --in next` shows the most actionable ideas
+   * Git status shows the expected renamed or moved idea directories
    * Ready for review and commit
 
 ## Success Criteria
 
-* All selected ideas have sort metadata for priority ordering
+* All selected ideas are placed in the intended priority folders
 * Ideas aligned with current project architecture
 * Implementation roadmap created with clear timeline
 * No broken references or missing dependencies
-* `ace-idea list --backlog` displays ideas in priority order
+* `ace-idea list --in next` displays the highest-priority ideas
 * Changes ready for version control commit
 
 ## Error Handling

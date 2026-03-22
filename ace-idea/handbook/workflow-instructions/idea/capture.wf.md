@@ -18,7 +18,7 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
 * `ace-idea` tool available (from dev-tools Ruby gem)
 * Raw idea text or concept to capture
 * LLM provider configured (Google Gemini recommended)
-* Write access to `.ace-taskflow/backlog/ideas/` directory
+* Write access to the configured ideas directory (default: `.ace-ideas/`)
 
 ## Process Steps
 
@@ -42,27 +42,21 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
      ace-idea create "Main context" --clipboard
      ```
 
-   * **With explicit note text**:
+   * **With explicit title and tags**:
      ```bash
-     ace-idea create --note "Explicit idea text here"
+     ace-idea create "Explicit idea text here" --title "Refined title" --tags ux,ideas
      ```
 
-   * **Scoped ideas**:
+   * **With folder placement**:
      ```bash
-     # For active release (default):
-     ace-idea create "New feature idea"
+     # Put actionable work in _next
+     ace-idea create "New feature idea" --move-to next
 
-     # For backlog:
-     ace-idea create "Future feature" --backlog
+     # Park uncertain work in _maybe
+     ace-idea create "Future experiment" --move-to maybe
 
-     # For specific release:
-     ace-idea create "Bug fix" --release v.0.9.1
-
-     # For uncertain ideas (maybe/ scope):
-     ace-idea create "Uncertain idea" --maybe
-
-     # For low priority (anyday/ scope):
-     ace-idea create "Low priority enhancement" --anyday
+     # Keep low-priority work in _anytime
+     ace-idea create "Nice-to-have polish" --move-to anytime
      ```
 
    * **With Git commit**:
@@ -78,22 +72,22 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
 3. **Execute Idea Capture:**
    * Run the selected `ace-idea create` command
    * The tool will automatically:
-     * Create structured idea file with frontmatter metadata
-     * Generate timestamp-based subdirectory and filename
+     * Create a structured idea file with frontmatter metadata
+     * Generate a folder and spec filename using the raw ID and slug
      * Optionally enhance with LLM (if `--llm-enhance` or configured)
      * Optionally commit to git (if `--git-commit` or configured)
-     * Store in appropriate scope directory based on flags
+     * Store the idea in `.ace-ideas/` or the configured root, with optional folder placement such as `_next`
    * Monitor the output for the created file path
 
 4. **Verify Idea Creation:**
    * Check that the command completed successfully
    * Note the output file path showing:
-     - Release/backlog directory
-     - Scope subdirectory (if using --maybe or --anyday)
-     - Timestamp-based subdirectory (format: `YYYYMMDD-HHMMSS-slug/`)
-     - Idea file (format: `YYYYMMDD-HHMMSS-slug.s.md`)
+     - The configured ideas root (default: `.ace-ideas/`)
+     - Optional special folder such as `_next`, `_maybe`, `_anytime`, or `_archive`
+     - Idea directory (format: `{id}-{slug}/`)
+     - Idea file (format: `{id}-{slug}.idea.s.md`)
    * Verify the file exists and contains:
-     - Frontmatter with `title`, `filename_suggestion`, `enhanced_at`, `location`, `llm_model` (if enhanced)
+     - Frontmatter with `id`, `status`, `title`, `tags`, and `created_at`
      - Content body with your idea details
    * Review the generated content for quality
 
@@ -119,26 +113,26 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
 
 ### Scope Considerations
 
-* **Active release ideas** (default): Immediately actionable, relevant to current release
-* **Backlog ideas** (`--backlog`): Future work not tied to specific release
-* **Maybe scope** (`--maybe`): Uncertain if we should do it, needs evaluation
-* **Anyday scope** (`--anyday`): Good ideas but not urgent, low priority
-* **Done scope**: Completed or skipped ideas (moved via `ace-idea move <id> --to archive` + `ace-idea update <id> --set status=done`)
+* **Root ideas** (default): Fresh captures that have not been sorted into a special folder yet
+* **Next queue** (`--move-to next`): Immediately actionable work
+* **Maybe queue** (`--move-to maybe`): Ideas worth revisiting later
+* **Anytime queue** (`--move-to anytime`): Low-priority work with no immediate deadline
+* **Archive** (`--move-to archive`): Completed or retired ideas
 
 ## Common Usage Patterns
 
-### Pattern 1: Quick Idea Capture (Active Release)
+### Pattern 1: Quick Idea Capture
 ```bash
-# Capture a brief concept immediately for current release
+# Capture a brief concept immediately
 ace-idea create "Add real-time notifications to the dashboard"
-# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143000-real-time-notifications/20251116-143000-real-time-notifications.s.md
+# => Created: .ace-ideas/8ppq7w-real-time-notifications/8ppq7w-real-time-notifications.idea.s.md
 ```
 
-### Pattern 2: Backlog Idea
+### Pattern 2: Place an Idea in _next
 ```bash
-# Capture future idea not tied to current release
-ace-idea create "Migrate to PostgreSQL" --backlog
-# => Created: .ace-taskflow/backlog/ideas/20251116-143200-migrate-postgresql/20251116-143200-migrate-postgresql.s.md
+# Capture an idea and sort it into the next queue
+ace-idea create "Migrate to PostgreSQL" --move-to next
+# => Created: .ace-ideas/_next/8ppq7w-migrate-to-postgresql/8ppq7w-migrate-to-postgresql.idea.s.md
 ```
 
 ### Pattern 3: Clipboard Integration
@@ -147,7 +141,7 @@ ace-idea create "Migrate to PostgreSQL" --backlog
 ace-idea create --clipboard
 # OR combine with main context:
 ace-idea create "Dashboard improvements" --clipboard
-# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143400-dashboard-improvements/20251116-143400-dashboard-improvements.s.md
+# => Created: .ace-ideas/8ppq7w-dashboard-improvements/8ppq7w-dashboard-improvements.idea.s.md
 ```
 
 ### Pattern 4: Enhanced Idea with Git Commit
@@ -155,19 +149,19 @@ ace-idea create "Dashboard improvements" --clipboard
 # Create enhanced idea and automatically commit
 ace-idea create "Complex refactoring task" --llm-enhance --git-commit
 # => LLM enhances idea, creates file, commits to git
-# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143600-complex-refactoring/20251116-143600-complex-refactoring.s.md
+# => Created: .ace-ideas/8ppq7w-complex-refactoring-task/8ppq7w-complex-refactoring-task.idea.s.md
 ```
 
-### Pattern 5: Scoped Ideas (GTD Organization)
+### Pattern 5: GTD-Style Folder Organization
 ```bash
-# Uncertain idea (maybe/ scope)
-ace-idea create "Consider switching to TypeScript" --maybe
+# Uncertain idea
+ace-idea create "Consider switching to TypeScript" --move-to maybe
 
-# Low priority idea (anyday/ scope)
-ace-idea create "Add dark mode theme" --anyday
+# Low priority idea
+ace-idea create "Add dark mode theme" --move-to anytime
 
-# Specific release
-ace-idea create "Critical bug fix" --release v.0.9.1
+# Archive an old idea later
+ace-idea update q7w --move-to archive
 ```
 
 ## Error Handling
@@ -175,18 +169,18 @@ ace-idea create "Critical bug fix" --release v.0.9.1
 ### Common Issues and Solutions
 
 **"No content provided" Error:**
-* **Cause**: Missing idea text argument and no clipboard/note specified
+* **Cause**: Missing idea text argument and no clipboard input
 * **Solution**: Provide idea text: `ace-idea create "your idea"`
-* **Alternative**: Use `--clipboard` or `--note "text"` flag
+* **Alternative**: Use `--clipboard`
 
 **"Could not read from clipboard" Error:**
 * **Cause**: Clipboard tools not available on system (pbpaste/pbcopy on macOS)
 * **Solution**: Use direct text input or ensure clipboard tools are available
 * **Note**: Clipboard functionality requires `ace-support-mac-clipboard` gem
 
-**"Release not found" Error:**
-* **Cause**: Specified release doesn't exist
-* **Solution**: Check available releases with `ace-release list` or use `--backlog`
+**"Invalid target folder" Error:**
+* **Cause**: `--move-to` was given an unsupported destination
+* **Solution**: Use one of `next`, `maybe`, `anytime`, `archive`, or `root`
 
 **LLM Enhancement Failures:**
 * **Cause**: API issues, model unavailability, or `--no-llm-enhance` flag
@@ -202,18 +196,17 @@ ace-idea create "Critical bug fix" --release v.0.9.1
 ## Success Criteria
 
 * Idea successfully captured in appropriate directory:
-  - Active release: `.ace-taskflow/v.X.Y.Z/ideas/`
-  - Backlog: `.ace-taskflow/backlog/ideas/`
-  - Scoped: `.ace-taskflow/v.X.Y.Z/ideas/maybe/` or `.../anyday/`
+  - Root: `.ace-ideas/`
+  - Special folder: `.ace-ideas/_next/`, `.ace-ideas/_maybe/`, `.ace-ideas/_anytime/`, or `.ace-ideas/_archive/`
 * Generated file structure includes:
-  - Timestamp-based subdirectory (e.g., `20251116-143000-slug/`)
-  - Idea file with frontmatter (e.g., `20251116-143000-slug.s.md`)
+  - Idea directory (e.g., `8ppq7w-dark-mode/`)
+  - Idea file with frontmatter (e.g., `8ppq7w-dark-mode.idea.s.md`)
 * Frontmatter contains required metadata:
+  - `id`: Raw idea identifier
+  - `status`: Initial status
   - `title`: Human-readable title
-  - `filename_suggestion`: Slug for file naming
-  - `enhanced_at`: Timestamp (if enhanced)
-  - `location`: Scope location
-  - `llm_model`: Model used (if enhanced)
+  - `tags`: Array of tags
+  - `created_at`: Creation timestamp
 * File content includes idea description and details
 * Tool returns created file path for reference
 * No errors during capture process
@@ -240,7 +233,7 @@ ace-idea create "Critical bug fix" --release v.0.9.1
 # After receiving user feedback: "Users want better mobile experience"
 ace-idea create "Users report difficulties with mobile interface - want better responsive design and touch interactions" --llm-enhance
 # Output: Creates enhanced idea with mobile UX questions and project-specific considerations
-# => .ace-taskflow/v.0.9.0/ideas/20251116-150000-mobile-interface-improvements/...
+# => .ace-ideas/8ppq7w-mobile-interface-improvements/...
 ```
 
 ### Example 2: Technical Improvement Ideas
@@ -248,25 +241,24 @@ ace-idea create "Users report difficulties with mobile interface - want better r
 # During code review, note performance concerns
 ace-idea create "Database queries in user dashboard are slow - consider caching layer and query optimization" --git-commit
 # Output: Creates idea and commits to git automatically
-# => .ace-taskflow/v.0.9.0/ideas/20251116-150200-database-query-optimization/...
+# => .ace-ideas/8ppq7w-database-query-optimization/...
 ```
 
-### Example 3: Backlog Feature Ideas
+### Example 3: Maybe-Later Feature Ideas
 ```bash
-# Capture future feature not for current release
-ace-idea create "Add GraphQL API alongside REST" --backlog --maybe
-# Output: Creates idea in backlog with 'maybe' scope for evaluation
-# => .ace-taskflow/backlog/ideas/maybe/20251116-150400-graphql-api/...
+# Capture future feature for later evaluation
+ace-idea create "Add GraphQL API alongside REST" --move-to maybe
+# Output: Creates idea in the maybe queue for later evaluation
+# => .ace-ideas/_maybe/8ppq7w-graphql-api-alongside-rest/...
 ```
 
 ### Example 4: Configuration for Automatic Enhancement
 ```yaml
-# .ace/taskflow/config.yml
-taskflow:
-  idea:
-    defaults:
-      git_commit: true     # Always commit new ideas
-      llm_enhance: true    # Always enhance with LLM
+# ~/.ace/idea/config.yml
+idea:
+  defaults:
+    git_commit: true     # Always commit new ideas
+    llm_enhance: true    # Always enhance new captures
 ```
 ```bash
 # Now simple command does both
