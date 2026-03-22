@@ -3,6 +3,7 @@
 require "yaml"
 require "fileutils"
 require "tempfile"
+require "ace/support/fs"
 
 module Ace
   module Overseer
@@ -82,7 +83,7 @@ module Ace
             "steps" => steps
           }
 
-          dir = File.join(Dir.pwd, ".ace-local", "overseer")
+          dir = File.join(Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current, ".ace-local", "overseer")
           FileUtils.mkdir_p(dir)
           path = File.join(dir, "#{session_name}-job.yml")
           payload = YAML.dump(job)
