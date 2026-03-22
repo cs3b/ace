@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-22
+
+### Changed
+- Rewrote README into a landing page focused on value, integrations, and doc navigation.
+- Added tutorial and reference docs: `docs/getting-started.md`, `docs/usage.md`, and `docs/handbook.md`.
+- Added demo artifacts under `docs/demo/` and aligned gemspec messaging with the new Ruby-only positioning.
+
 ## [0.22.1] - 2026-03-21
 
 ### Fixed
