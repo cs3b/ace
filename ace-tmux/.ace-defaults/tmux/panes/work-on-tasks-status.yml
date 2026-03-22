@@ -1,0 +1,4 @@
+# Assignment/task status pane preset
+commands:
+  - ace-task status
+  - ace-assign status

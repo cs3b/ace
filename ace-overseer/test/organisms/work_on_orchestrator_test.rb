@@ -258,8 +258,63 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       result = orchestrator.call(task_ref: "231", cli_preset: "quick-implement")
 
-      assert_equal "quick-implement", result[:preset]
+    assert_equal "quick-implement", result[:preset]
+  end
+
+  def test_passes_tmux_preset_from_overseer_config
+    Dir.mktmpdir("task.235") do |worktree|
+      tmux = FakeWindowOpener.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("235" => { metadata: {} }),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "235-feature", created: true }
+        ),
+        tmux_window_opener: tmux,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "tmux_window_presets" => {
+            "work-on-tasks" => "work-on-tasks"
+          }
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "235", cli_preset: "work-on-tasks")
+
+      assert_equal 1, tmux.calls.length
+      assert_equal(
+        { worktree_path: worktree, preset: "work-on-tasks" },
+        tmux.calls.first
+      )
     end
+  end
+
+  def test_passes_no_tmux_preset_when_mapping_missing
+    Dir.mktmpdir("task.236") do |worktree|
+      tmux = FakeWindowOpener.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("236" => { metadata: {} }),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "236-feature", created: true }
+        ),
+        tmux_window_opener: tmux,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "tmux_window_presets" => {
+            "other-preset" => "work-on-task"
+          }
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "236")
+
+      assert_equal 1, tmux.calls.length
+      assert_equal({ worktree_path: worktree, preset: nil }, tmux.calls.first)
+    end
+  end
   end
 
   def test_multi_input_preserves_order_and_expands_orchestrators_in_place

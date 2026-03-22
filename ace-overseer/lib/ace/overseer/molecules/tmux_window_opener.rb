@@ -8,11 +8,12 @@ module Ace
           @tmux_window_command = tmux_window_command || Ace::Tmux::CLI::Commands::Window.new
         end
 
-        def open(worktree_path:)
+        def open(worktree_path:, preset: nil)
           return if window_already_open?(worktree_path)
 
           @tmux_window_command.call(
             root: worktree_path.to_s,
+            preset: preset,
             quiet: true,
             session: ENV["ACE_TMUX_SESSION"]
           )

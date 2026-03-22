@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-22
+
+### Added
+- Added configurable tmux window preset selection for `work-on` when using the `work-on-tasks` assignment preset.
+- Added an overseer-specific `work-on-tasks` layout that launches `cc /as-assign-drive`, opens the active assignment report folder in `nvim`, and runs both `ace-task status` and `ace-assign status`.
+
 ## [0.9.0] - 2026-03-22
 
 ### Changed
