@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-03-22
+
+### Changed
+- Replaced the getting-started demo placeholder command with real `ace-test` workflow commands (`--help` and atoms run) so the recording demonstrates actual package usage.
+
 ## [0.17.0] - 2026-03-22
 
 ### Changed
