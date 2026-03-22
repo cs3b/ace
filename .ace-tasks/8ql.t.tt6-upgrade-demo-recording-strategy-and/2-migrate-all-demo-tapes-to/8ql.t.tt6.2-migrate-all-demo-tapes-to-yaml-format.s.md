@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 19:52:32"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/molecules/tape_resolver.rb, ace-demo/lib/ace/demo/molecules/tape_scanner.rb]
   commands: []
+needs_review: false
 ---
 
 # Migrate All Demo Tapes to YAML Format
@@ -51,7 +52,7 @@ These packages need:
 4. Write `.tape.yml` with settings, setup, scenes, teardown
 5. Record and visually verify GIF output
 6. Remove old `.tape` file
-7. Update any `.ace/demo/tapes/` overrides if they exist
+7. Update project-level `.ace/demo/tapes/` overrides: migrate getting-started overrides (e.g., `ace-task-getting-started.tape`, `ace-review-getting-started.tape`, `ace-bundle-getting-started.tape`) to `.tape.yml`; remove showcase/test tapes that duplicate migrated content (`test-suite.tape`, `test.tape`, `my-demo.tape`); keep or migrate standalone showcase tapes (`assign-prepare-showcase.tape`, `assign-drive-session-showcase.tape`) as appropriate
 
 **Example migration — ace-task:**
 - **Current**: Hardcoded IDs (`8q4.t.ums.2`), runs against 300+ real tasks, flat command sequence

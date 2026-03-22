@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 19:52:31"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/atoms/tape_content_generator.rb, ace-demo/lib/ace/demo/atoms/tape_metadata_parser.rb, ace-demo/lib/ace/demo/molecules/tape_resolver.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/molecules/tape_scanner.rb, ace-demo/lib/ace/demo/molecules/tape_writer.rb, ace-demo/lib/ace/demo/organisms/tape_creator.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/cli/commands/create.rb, ace-demo/lib/ace/demo/cli/commands/list.rb, ace-demo/lib/ace/demo/cli/commands/show.rb, ace-demo/.ace-defaults/demo/config.yml, ace-demo/lib/ace/demo/molecules/inline_recorder.rb]
   commands: []
+needs_review: false
 ---
 
 # Implement Full YAML Demo Engine in ace-demo
@@ -31,14 +32,14 @@ Building on the spike's validated pipeline, implement the full YAML demo engine 
 
 **New components:**
 
-1. **`DemoYamlParser` (atom)**: Parse and validate `.tape.yml` YAML format. Returns structured data: settings hash, setup directive list, scenes array (each with name and commands), teardown directive list. Validates required sections exist, rejects unknown keys.
+1. **`DemoYamlParser` (atom)**: Parse and validate `.tape.yml` YAML format. Returns structured data: settings hash, setup directive list, scenes array (each with name and commands), teardown directive list. Validates `scenes` section is required (at least one scene); `settings`, `setup`, and `teardown` sections are optional (default to empty). Rejects unknown top-level keys.
 
 2. **`VhsTapeCompiler` (atom)**: Compile parsed YAML scenes into VHS tape content string. Generates `Output`, `Set` (font size, width, height), `Type`/`Enter`/`Sleep` per command, with `# Scene: <name>` comments between scenes.
 
 3. **`DemoSandboxBuilder` (molecule)**: Create sandbox in `.ace-local/demo/sandbox/{id}/`. Executes setup directives in order:
    - `sandbox` — create the isolated directory
    - `git-init` — initialize git repo with demo user config
-   - `copy-fixtures` — copy `docs/demo/fixtures/` tree from the package into sandbox
+   - `copy-fixtures` — copy `fixtures/` tree relative to the `.tape.yml` file's directory into sandbox (e.g., `ace-task/docs/demo/fixtures/` for a tape at `ace-task/docs/demo/ace-task-getting-started.tape.yml`). If tape was resolved from project-level `.ace/demo/tapes/`, `copy-fixtures` is a no-op with warning. If fixtures directory doesn't exist, skip with warning (not error)
    - `run: <cmd>` — execute arbitrary bash command in sandbox (working directory set to sandbox)
 
 4. **`DemoTeardownExecutor` (molecule)**: Execute teardown directives after recording:
@@ -65,10 +66,16 @@ Building on the spike's validated pipeline, implement the full YAML demo engine 
 
 11. **CLI `show` command**: Display `.tape.yml` metadata from YAML frontmatter (description, tags, settings) instead of `# Key: Value` header parsing.
 
+**Unchanged components (kept as-is):**
+
+12. **`InlineRecorder` (molecule)**: Inline recording path (`ace-demo record name -- cmd1 cmd2`) remains unchanged. Continues using `TapeContentGenerator` for VHS tape generation from CLI arguments.
+
+13. **`TapeContentGenerator` (atom)**: Kept for `InlineRecorder` and `TapeCreator` backward compatibility. Not used by the new YAML pipeline (which uses `VhsTapeCompiler` instead).
+
 **Setup directive vocabulary:**
 - `sandbox` — create isolated directory at `.ace-local/demo/sandbox/{unique-id}/`
 - `git-init` — initialize git repo with `Demo User <demo@example.com>` committer
-- `copy-fixtures` — copy `docs/demo/fixtures/` from the package containing the `.tape.yml` into sandbox
+- `copy-fixtures` — copy `fixtures/` relative to `.tape.yml` location into sandbox (see DemoSandboxBuilder above for resolution rules)
 - `run: <cmd>` — execute bash command in sandbox working directory
 
 **Teardown directive vocabulary:**
@@ -128,6 +135,10 @@ scenes:
 teardown:
   - cleanup
 ```
+
+Configuration:
+- New `sandbox_dir` key in `.ace-defaults/demo/config.yml` — default: `.ace-local/demo/sandbox`
+- Sandbox instances created at `{sandbox_dir}/{unique-id}/` (using `Ace::B36ts.now` for ID)
 
 Error Handling:
 - Invalid YAML structure: `DemoYamlParseError` with specific validation message

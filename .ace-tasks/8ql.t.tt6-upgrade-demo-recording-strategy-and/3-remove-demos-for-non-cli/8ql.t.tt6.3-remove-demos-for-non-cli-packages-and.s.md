@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 19:52:32"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-demo/lib/ace/demo/molecules/tape_scanner.rb]
   commands: []
+needs_review: false
 ---
 
 # Remove Demos for Non-CLI Packages and Cleanup
