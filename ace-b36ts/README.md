@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-b36ts
-purpose: Landing documentation for ace-b36ts
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-b36ts
 
 **Compact, sortable Base36 timestamp IDs**
