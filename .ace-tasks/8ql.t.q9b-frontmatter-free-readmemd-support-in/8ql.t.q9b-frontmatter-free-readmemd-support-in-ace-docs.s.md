@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.q9b
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-22 17:30:22"
 estimate: TBD
@@ -12,6 +12,12 @@ bundle:
   files: [ace-docs/lib/ace/docs/molecules/document_loader.rb, ace-docs/lib/ace/docs/atoms/type_inferrer.rb, ace-docs/lib/ace/docs/models/document.rb, ace-docs/lib/ace/docs/organisms/document_registry.rb, ace-docs/lib/ace/docs/molecules/change_detector.rb, ace-docs/lib/ace/docs/cli/commands/update.rb, ace-docs/lib/ace/docs/cli/commands/status.rb, ace-docs/.ace-defaults/docs/config.yml, ace-lint/lib/ace/lint/molecules/frontmatter_validator.rb, ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-lint/lib/ace/lint/atoms/type_detector.rb]
   commands: []
 needs_review: false
+worktree:
+  branch: q9b-frontmatter-free-readmemd-support-in-ace-docs
+  path: ../ace-t.q9b
+  created_at: "2026-03-22 19:50:01"
+  updated_at: "2026-03-22 19:50:01"
+  target_branch: main
 ---
 
 ## Review Questions (Resolved)
