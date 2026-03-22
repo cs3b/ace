@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-bundle
-purpose: Documentation for ace-bundle/README.md
-ace-docs:
-  last-updated: 2026-03-21
-  last-checked: 2026-03-21
----
-
 # ace-bundle
 
 Assemble project context for AI agents and developers — in one command.
