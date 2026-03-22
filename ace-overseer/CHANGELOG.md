@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-22
+
+### Changed
+- Updated task context collection to recognize short task worktree naming prefixes (`t.*`, `ace-t.*`) when resolving task IDs from worktree paths.
+
 ## [0.8.2] - 2026-03-22
 
 ### Fixed

@@ -39,10 +39,10 @@ git:
       # Directory naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
       # Examples:
-      #   "task.{task_id}"   -> task.081
-      #   "{id}"             -> 081
-      #   "{release}/{id}"   -> v.0.9.0/081
-      directory_format: "task.{task_id}"
+      #   "t.{task_id}"     -> t.081
+      #   "{id}"            -> 081
+      #   "{release}/{id}"  -> v.0.9.0/081
+      directory_format: "t.{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
@@ -92,7 +92,7 @@ git:
 
       # Create _current symlink inside worktree pointing to task directory
       # When you cd into the worktree, enables quick access: cat _current/*.s.md, ls _current/
-      # Symlink is created at worktree root (e.g., .ace-wt/task.145/_current)
+      # Symlink is created at worktree root (e.g., .ace-wt/t.145/_current)
       # Uses relative paths for portability
       create_current_symlink: true
 
@@ -240,7 +240,7 @@ git:
 
 # Template Variable Reference:
 # {id}        -> Numeric task ID (e.g., 081)
-# {task_id}   -> Full task ID (e.g., task.081)
+# {task_id}   -> Full task ID (e.g., t.081)
 # {release}   -> Release version (e.g., v.0.9.0)
 # {slug}      -> URL-safe slug from title (e.g., fix-authentication-bug)
 # {number}    -> PR number (e.g., 26)

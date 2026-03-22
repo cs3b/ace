@@ -11,7 +11,7 @@ class WorktreeConfigTest < Minitest::Test
       "root_path" => ".ace-wt",
       "mise_trust_auto" => true,
       "task" => {
-        "directory_format" => "task.{id}",
+        "directory_format" => "t.{id}",
         "branch_format" => "{id}-{slug}",
         "auto_mark_in_progress" => true,
         "auto_commit_task" => true,
@@ -37,13 +37,29 @@ class WorktreeConfigTest < Minitest::Test
 
     assert_equal ".ace-wt", config.root_path
     assert_equal true, config.mise_trust_auto?
-    assert_equal "task.{task_id}", config.directory_format
+    assert_equal "t.{task_id}", config.directory_format
     assert_equal "{id}-{slug}", config.branch_format
     assert_equal true, config.auto_mark_in_progress?
     assert_equal true, config.auto_commit_task?
     assert_equal true, config.add_worktree_metadata?
     assert_equal false, config.cleanup_on_merge?
     assert_equal true, config.cleanup_on_delete?
+  end
+
+  def test_initialization_with_shortened_directory_format
+    custom_config = {
+      "git" => {
+        "worktree" => {
+          "task" => {
+            "directory_format" => "t.{task_id}"
+          }
+        }
+      }
+    }
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(custom_config, @project_root)
+
+    assert_equal "t.{task_id}", config.directory_format
   end
 
   def test_initialization_with_custom_config
@@ -70,7 +86,7 @@ class WorktreeConfigTest < Minitest::Test
 
   def test_format_directory_with_task
     task_data = {
-      id: "task.081",
+      id: "t.081",
       task_number: "081",
       title: "Fix authentication bug",
       status: "pending",
@@ -80,7 +96,7 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
     formatted = config.format_directory(task_data)
 
-    assert_equal "task.081", formatted
+    assert_equal "t.081", formatted
   end
 
   def test_format_directory_with_counter
@@ -95,16 +111,16 @@ class WorktreeConfigTest < Minitest::Test
 
     # Without counter
     formatted = config.format_directory(task_data)
-    assert_equal "task.081", formatted
+    assert_equal "t.081", formatted
 
     # With counter
     formatted_with_counter = config.format_directory(task_data, 2)
-    assert_equal "task.081-2", formatted_with_counter
+    assert_equal "t.081-2", formatted_with_counter
   end
 
   def test_format_branch_with_task
     task_data = {
-      id: "task.081",
+      id: "t.081",
       task_number: "081",
       title: "Fix authentication bug",
       status: "pending",
@@ -242,7 +258,7 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
 
     # Test all the convenience methods
-    assert_equal "task.{task_id}", config.directory_format
+    assert_equal "t.{task_id}", config.directory_format
     assert_equal "{id}-{slug}", config.branch_format
     assert_equal true, config.mise_trust_auto?
     assert_equal true, config.auto_mark_in_progress?

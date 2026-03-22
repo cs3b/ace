@@ -28,7 +28,7 @@ module Ace
             config = Models::WorktreeConfig.new
 
             path = config.format_directory(task_data)
-            assert_equal "task.121", path
+            assert_equal "t.121", path
           end
 
           # Tests that subtask ID produces correct worktree path (with suffix)
@@ -37,7 +37,7 @@ module Ace
             config = Models::WorktreeConfig.new
 
             path = config.format_directory(task_data)
-            assert_equal "task.121.01", path
+            assert_equal "t.121.01", path
           end
 
           # Tests that parent and subtask produce different paths (critical!)
@@ -50,8 +50,8 @@ module Ace
             subtask_path = config.format_directory(subtask_data)
 
             refute_equal parent_path, subtask_path, "Parent and subtask must have distinct paths"
-            assert_equal "task.121", parent_path
-            assert_equal "task.121.01", subtask_path
+            assert_equal "t.121", parent_path
+            assert_equal "t.121.01", subtask_path
           end
 
           # Tests multiple subtasks have distinct paths
@@ -63,7 +63,7 @@ module Ace
               config.format_directory(task_data)
             end
 
-            assert_equal %w[task.121.01 task.121.02 task.121.03], paths
+            assert_equal %w[t.121.01 t.121.02 t.121.03], paths
             assert_equal 3, paths.uniq.size, "All subtasks must have unique paths"
           end
 
@@ -156,7 +156,7 @@ module Ace
                   "title" => "Parent Task",
                   "worktree" => {
                     "branch" => "121-parent-feature",
-                    "path" => ".ace-wt/task.121"
+                    "path" => ".ace-wt/t.121"
                   }
                 }
               end

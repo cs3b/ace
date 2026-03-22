@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.894] - 2026-03-22
+
+### Changed
+- **ace-git-worktree v0.18.0**: Shortened default task worktree naming to `t.{task_id}` and added extraction support for `t.*`/`ace-t.*` IDs in task ID parsing paths.
+- **ace-overseer v0.9.0**: Updated worktree context task-ID extraction to recognize `t.*` and `ace-t.*` worktree path naming patterns.
+
 ## [0.9.893] - 2026-03-22
 
 ### Fixed
