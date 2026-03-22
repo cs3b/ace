@@ -8,7 +8,7 @@ prerequisites:
     reason: "Findings report enriches retrospective with architectural observations"
 
 produces: [retrospective]
-consumes: [findings-report]
+consumes: [findings-report, review-sessions]
 
 context:
   default: null

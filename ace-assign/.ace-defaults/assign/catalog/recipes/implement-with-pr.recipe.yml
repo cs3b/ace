@@ -32,7 +32,7 @@ steps:
   - name: review-cycle
     repeat: "{{review_cycles}}"
     context: fork
-    sub_steps: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release, create-retro]
     note: "Each cycle uses preset_progression from composition rules (1: code-valid, 2: code-fit, 3: code-shine)"
   - name: reorganize-commits
     required: false
