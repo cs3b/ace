@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-tmux
-purpose: Landing page for composable tmux session management in ace-tmux.
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-tmux
 
 Composable tmux session management via YAML presets -- add windows on the fly.
