@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.892] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.7**: `mark-task-done` step now closes parent tasks when all children are done.
+
 ## [0.9.891] - 2026-03-22
 
 ### Changed
