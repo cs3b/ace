@@ -17,4 +17,4 @@ skill:
     workflow: wfi://b36ts
 ---
 
-Load and run `mise exec -- ace-bundle wfi://b36ts` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://b36ts` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
