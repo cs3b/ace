@@ -1,12 +1,16 @@
 # Work-on task orchestration workspace:
 # - Left: cc running /as-assign-drive
-# - Middle: nvim on active assignment cache (via .ace-local/assign/.latest)
+# - Middle: nvim on active assignment cache (via .ace-local/assign/.latest) + shell status
 # - Right: status from task and assignment
 direction: horizontal
 panes:
   - preset: work-on-tasks-cc
     size: "34%"
-  - preset: work-on-tasks-nvim
+  - direction: vertical
     size: "32%"
+    panes:
+      - preset: nvim 
+      - commands:
+          - ace-git status
   - preset: work-on-tasks-status
     size: "34%"
