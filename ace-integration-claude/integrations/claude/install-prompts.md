@@ -123,7 +123,7 @@ Hand-crafted commands with special behavior:
 - `load-project-context.md` - Project context loading
 - `plan-tasks.md` - Task planning and breakdown
 - `review-tasks.md` - Task review and validation
-- `work-on-tasks.md` - Sequential task execution
+- `work-on-task.md` - Sequential task execution
 
 ### Generated Commands (_generated/)
 Auto-generated from workflow instructions:
