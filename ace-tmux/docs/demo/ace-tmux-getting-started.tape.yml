@@ -1,0 +1,30 @@
+---
+description: Showcase ace-tmux preset discovery, session start, and window management
+tags:
+- ace-tmux
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Discover available presets (sessions, windows, panes)
+  commands:
+  - type: ace-tmux list
+    sleep: 4s
+- name: Start a session from a preset without attaching
+  commands:
+  - type: ace-tmux start default --detach
+    sleep: 3s
+- name: Add a window to the running session
+  commands:
+  - type: ace-tmux window cc --session default
+    sleep: 3s
+- name: Verify session is running with windows
+  commands:
+  - type: tmux list-windows -t default
+    sleep: 4s
+teardown:
+- cleanup
