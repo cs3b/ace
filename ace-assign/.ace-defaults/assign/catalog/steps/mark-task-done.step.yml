@@ -1,6 +1,7 @@
 name: mark-task-done
 skill: null
 description: Mark task as done in ace-task after successful implementation
+workflow: wfi://task/update
 
 prerequisites:
   - name: work-on-task
@@ -37,7 +38,7 @@ instructions: |
      ```
      If all subtasks show `✓` (done), mark the parent done too:
      ```bash
-     ace-task update {{parent_taskref}} --set status=done
+     ace-task update {{parent_taskref}} --set status=done --move-to archive
      ace-task show {{parent_taskref}}
      ```
      Repeat upward if the parent itself has a parent.

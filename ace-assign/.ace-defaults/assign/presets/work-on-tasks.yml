@@ -124,10 +124,16 @@ steps:
 
   - name: mark-tasks-done
     number: "155"
+    workflow: wfi://task/update
     instructions:
-      - "Mark parent task(s) as done and move to archive."
-      - "For each top-level taskref in {{taskrefs}}, run: `ace-task update <taskref> --set status=done --move-to archive`"
-      - "This marks the parent/umbrella tasks — subtasks were already marked done by their individual fork children."
+      - "Mark each top-level task in {{taskrefs}} as done and archive it."
+      - |
+        Run this loop for each task in the batch:
+        - Parse and normalize:
+          - `TASKREFS="{{taskrefs}}"`
+          - `IFS=',' read -ra refs <<< "${TASKREFS// /}"`
+        - For each `ref`:
+          - `ace-task update "$ref" --set status=done --move-to archive`
 
   - name: create-retro
     number: "160"
