@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.pm3
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-03-22 17:04:33"
 estimate: TBD
@@ -27,7 +27,7 @@ Remove all `mise exec --` wrappers from active project files so that `ace-*` com
 
 ## Current State
 
-The `mise exec -- ace-*` pattern appears ~850+ times across ~600+ files. This was originally required to ensure `ace-*` binaries were on PATH, but provider environments now resolve PATH correctly. The wrapper adds visual noise, confuses onboarding, and creates a false dependency on mise being installed.
+The `mise exec --` wrapper before `ace-*` commands appears ~850+ times across ~600+ files. This was originally required to ensure `ace-*` binaries were on PATH, but provider environments now resolve PATH correctly. The wrapper adds visual noise, confuses onboarding, and creates a false dependency on mise being installed.
 
 ## Behavioral Specification
 
@@ -35,9 +35,9 @@ The `mise exec -- ace-*` pattern appears ~850+ times across ~600+ files. This wa
 
 **Before:**
 ```
-mise exec -- ace-bundle wfi://git/commit
-mise exec -- ace-test atoms
-mise exec -- ace-nav --sources
+ace-bundle wfi://git/commit
+ace-test atoms
+ace-nav --sources
 ```
 
 **After:**
@@ -53,7 +53,7 @@ The transformation is purely textual: remove the `mise exec -- ` prefix wherever
 
 | Category | Files | Action |
 |----------|-------|--------|
-| A. Canonical skills | ~89 `handbook/skills/*/SKILL.md` | Replace `mise exec -- ace-*` with `ace-*` |
+| A. Canonical skills | ~89 `handbook/skills/*/SKILL.md` | Replace `mise exec --` wrappers with direct `ace-*` |
 | B. Provider projections | ~450 `.claude/`, `.codex/`, `.opencode/`, `.pi/`, `.gemini/` skills | Re-sync via `ace-handbook sync` after fixing canonical |
 | C. Agent config | `AGENTS.md`, `CLAUDE.md` | Remove mise mandate, keep command integrity rules |
 | D. VHS tapes | 8 `.tape` files | Remove `mise exec --` from `Type` commands |
