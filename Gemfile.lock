@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.36.2)
+    ace-assign (0.36.5)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-cli (~> 0.3)
@@ -76,7 +76,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.11.0)
+    ace-git-secrets (0.12.1)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -87,7 +87,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.16.1)
+    ace-git-worktree (0.17.2)
       ace-git (~> 0.11)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
@@ -97,7 +97,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.16.1)
+    ace-git (0.17.1)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -144,7 +144,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.16.0)
+    ace-idea (0.17.3)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
@@ -176,7 +176,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.29.0)
+    ace-llm (0.29.3)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
