@@ -135,7 +135,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.17.1)
+    ace-handbook (0.18.0)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -335,7 +335,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.26.1)
+    ace-test-runner-e2e (0.27.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-cli (~> 0.3)
@@ -345,7 +345,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.16.1)
+    ace-test-runner (0.17.0)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
@@ -358,7 +358,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.4.6)
+    ace-test (0.5.0)
 
 PATH
   remote: ace-tmux
