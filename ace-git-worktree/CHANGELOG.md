@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-22
+
+### Changed
+- Updated the getting-started demo to create and reuse a runtime `ace-task` ID for task-aware worktree preview commands instead of hard-coded `001`.
+- Added explicit sandbox git bootstrap setup in the demo scenario to keep dry-run worktree commands reproducible in clean environments.
+
 ## [0.18.1] - 2026-03-22
 
 ### Technical
