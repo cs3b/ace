@@ -1,171 +1,214 @@
 ---
 doc-type: user
 title: ace-assign Usage Guide
-purpose: User-facing usage guide for ace-assign commands, hierarchy behavior, and fork execution workflows.
+purpose: Complete command reference for ace-assign queue orchestration, hierarchy, and fork execution.
 ace-docs:
-  last-updated: 2026-03-18
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-assign Usage Guide
 
-Comprehensive guide to ace-assign commands and features.
+`ace-assign` manages assignment queues with explicit step states and optional hierarchy.
 
-## Hierarchical Step Structure
+## Command Integrity
 
-ace-assign supports nested steps to model complex workflows with parent-child relationships.
+When documenting or automating `ace-*` flows, prefer direct commands and explicit report files.
 
-### Numbering System
+Recommended:
 
-```
-010              # Top-level step (depth 0)
-010.01           # First child of 010 (depth 1)
-010.02           # Second child of 010 (depth 1)
-010.01.01        # First grandchild of 010.01 (depth 2)
-010.01.02        # Second grandchild of 010.01 (depth 2)
-```
-
-**Constraints**:
-- Top-level: 3-digit format (`%03d`), max 999 steps (001-999)
-- Children: 2-digit format (`%02d`), max 99 siblings per parent (01-99)
-- Maximum nesting depth: 3 levels (e.g., `010.01.01` is max)
-
-### Creating Hierarchical Steps
-
-#### Child Steps
-
-Use `--after` with `--child` to create nested steps:
 
 ```bash
-# Create first child of step 010
-ace-assign add setup-db --after 010 --child -i "Set up database"
-# Creates: 010.01-setup-db.st.md
-
-# Create second child of step 010
-ace-assign add setup-cache --after 010 --child -i "Set up cache"
-# Creates: 010.02-setup-cache.st.md
-
-# Create grandchild (child of 010.01)
-ace-assign add create-tables --after 010.01 --child -i "Create tables"
-# Creates: 010.01.01-create-tables.st.md
+ace-assign finish --message report.md
 ```
 
-#### Sibling Steps
+## Core Lifecycle
 
-Use `--after` without `--child` to insert siblings:
 
 ```bash
-# Insert after step 010 (as sibling 011)
-ace-assign add hotfix --after 010 -i "Apply hotfix"
-# Creates: 011-hotfix.st.md
-# If 011 existed, it gets renumbered to 012, etc.
+ace-assign create job.yaml
+ace-assign status
+ace-assign finish --message step-010.md
+ace-assign status
 ```
 
-### Starting Work
+Use scoped targeting when needed:
 
-After an assignment is created, the first workable step is started automatically. In sequential workflows, `finish` auto-advances to the next step — no `start` call is needed between steps:
 
 ```bash
-# Normal sequential flow
-ace-assign finish --message done.md   # completes 010, auto-starts 020
-ace-assign finish --message done.md   # completes 020, auto-starts 030
+ace-assign status --assignment abc123@010.01
+ace-assign finish --message done.md --assignment abc123@010.01
 ```
 
-Use `ace-assign start` explicitly for recovery or subtree entry:
+## Hierarchical Steps
+
+### Numbering
+
+- Top-level: `010`, `020`, `030`
+- Child: `010.01`, `010.02`
+- Grandchild: `010.01.01`
+
+### Rules
+
+- Parents auto-complete when all descendants are done.
+- Queue traversal works deepest actionable step first.
+- Inserted siblings can renumber later siblings (and descendants).
+
+Create child/sibling steps:
+
 
 ```bash
-ace-assign start            # start next workable step (after fail/retry)
-ace-assign start 030        # start a specific pending step
+ace-assign add setup-db --after 010 --child -i "Set up DB"
+ace-assign add hotfix --after 010 -i "Urgent fix"
 ```
 
-Providing report content via piped stdin avoids creating temporary files:
+## Commands
+
+### `ace-assign create CONFIG`
+
+Create a new assignment from a YAML file.
+
+Options:
+
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign status`
+
+Show queue status for active or explicitly targeted assignment.
+
+Options:
+
+- `--flat, -f`
+- `--format table|json`
+- `--assignment <id>`
+- `--all, -a`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign start [STEP]`
+
+Start next workable pending step, or an explicit pending step in the active assignment.
+
+Options:
+
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign finish [STEP] --message VALUE`
+
+Complete current in-progress step (or explicit step in active assignment) with report content.
+
+`--message` accepts:
+
+- Inline text
+- File path
+
+Options:
+
+- `--message, -m` (required)
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign fail --message TEXT`
+
+Mark current step as failed.
+
+Options:
+
+- `--message, -m` (required)
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign add NAME`
+
+Insert a new step dynamically.
+
+Options:
+
+- `--instructions, -i TEXT`
+- `--after, -a NUMBER`
+- `--child, -c`
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign retry STEP_REF`
+
+Create a linked retry step for a failed step.
+
+Options:
+
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign fork-run`
+
+Execute a fork-enabled subtree in an isolated process.
+
+Options:
+
+- `--root <step-number>`
+- `--assignment <id>`
+- `--provider <provider:model>`
+- `--cli-args <args>`
+- `--timeout <seconds>`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign list`
+
+List assignments.
+
+Options:
+
+- `--all, -a`
+- `--task, -t <taskref>`
+- `--tree`
+- `--format table|json`
+- `--quiet, -q`
+- `--debug, -d`
+
+### `ace-assign select [ID]`
+
+Select active assignment or clear selection.
+
+Options:
+
+- `--clear`
+- `--quiet, -q`
+- `--debug, -d`
+
+## Workflow Patterns
+
+### Scoped Subtree Execution
+
 
 ```bash
-printf "Done: implemented feature\n" | ace-assign finish
-cat report.md | ace-assign finish
+ace-assign status --assignment abc123@010.01
+ace-assign fork-run --assignment abc123@010.01
 ```
 
-When both `--message` and stdin are provided, `--message` takes precedence.
+### Recovery from Failure
 
-### Completion Semantics
-
-1. **Leaf steps** (no children): Complete via `ace-assign finish --message <string|file>` or piped stdin
-2. **Parent steps**: Auto-complete when ALL children are done
-3. **Multi-level**: Completion cascades up the tree
-
-Example workflow:
-```
-010 (pending) - parent
-├── 010.01 (done)
-└── 010.02 (pending)
-```
-
-When 010.02 completes → 010 auto-completes.
-
-### Work Order (next_workable)
-
-The queue follows these rules for determining the next step:
-
-1. Skip parents that have incomplete children (work the children first)
-2. Within siblings, work in numerical order
-3. After completing a child, check if siblings remain before returning to parent
-
-Example:
-```
-010 (in_progress) - has children, so...
-├── 010.01 (done)
-└── 010.02 (pending) ← THIS is current
-020 (pending)
-```
-
-### Renumbering
-
-When inserting siblings that conflict with existing numbers, ace-assign automatically renumbers:
 
 ```bash
-# Before: 010, 011, 012
-ace-assign add urgent --after 010
-# After: 010, 011-urgent (NEW), 012 (was 011), 013 (was 012)
+ace-assign fail --message "Lint failed in docs"
+ace-assign retry 040 --assignment abc123
 ```
 
-**Cascade behavior**: Children are renumbered with their parents:
-```
-# Before: 010, 010.01, 011
-ace-assign add fix --after 010
-# After: 010, 010.01, 011-fix (NEW), 012 (was 011), 012.01 (was 011.01 if it existed)
-```
+### Multi-assignment Management
 
-Frontmatter tracks renumbering history:
-```yaml
----
-status: pending
-renumbered_from: "011"
-renumbered_at: "2026-01-30T12:00:00Z"
-parent: "012"  # Updated if parent was also renumbered
----
-```
-
-## Creating Assignments
-
-### From Job File
 
 ```bash
-ace-assign create path/to/job.yaml
+ace-assign list --all
+ace-assign select abc123
+ace-assign select --clear
 ```
-
-Output shows the assignment ID, cache directory, and first step instructions.
-
-### Hidden Spec Provenance
-
-When an assignment is created from a hidden spec (rendered under `.ace-local/assign/jobs/`), the create output includes a provenance line:
-
-```
-Assignment: work-on-task-123 (abc123)
-Created: .ace-local/assign/abc123/
-Created from hidden spec: .ace-local/assign/jobs/1741234567-work-on-task-123.yml
-```
-
-The hidden spec is retained after creation for traceability. Assignment metadata references the spec location for status and debug flows.
 
 ## Exit Codes
 
@@ -173,63 +216,9 @@ The hidden spec is retained after creation for traceability. Assignment metadata
 |------|---------|
 | 0 | Success |
 | 1 | General error |
-| 2 | Assignment error (no active assignment or assignment not found) |
+| 2 | Assignment error |
 | 3 | Configuration not found |
 | 4 | Step not found |
 | 130 | Interrupted (SIGINT) |
 
-See [exit-codes.md](exit-codes.md) for details.
-
-## Advanced Features
-
-### Fork Context
-
-Steps with `context: fork` run in isolated agent contexts. See README.md for details.
-
-### Status Display Modes
-
-```bash
-# Hierarchical view (default)
-ace-assign status
-
-# Flat view (no tree structure)
-ace-assign status --flat
-```
-
-### Quiet Mode
-
-Suppress output for scripting:
-
-```bash
-ace-assign add task -i "..." --quiet
-ace-assign finish --message report.md --quiet
-```
-
-## Workflow Patterns
-
-### Verification Pattern
-
-Parent step with verification children:
-
-```yaml
-steps:
-  - name: implement
-    instructions: |
-      Implement the feature.
-      When done, run: ace-assign finish --message impl.md
-```
-
-Then dynamically add verification:
-```bash
-ace-assign add verify --after 010 --child -i "Run tests and verify"
-ace-assign add review --after 010 --child -i "Code review"
-```
-
-### Hotfix Pattern
-
-Insert urgent work without disrupting order:
-
-```bash
-# Insert after current, renumber rest
-ace-assign add hotfix --after $(ace-assign current --number) -i "Critical fix"
-```
+See [exit-codes.md](exit-codes.md) for complete descriptions.

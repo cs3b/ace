@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Assignment-based work queue management for AI-assisted workflows"
-  spec.description = "ACE Assign manages workflow assignments using a file-based work queue model where steps have states (done, in_progress, pending, failed) and history is preserved"
+  spec.summary = "Phase-based assignment queues that give AI agents structured, resumable work"
+  spec.description = "ACE Assign turns multi-step workflows into durable queues with explicit step states, hierarchical execution, and fork-ready delegation"
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     exe/*
+    docs/**/*
     handbook/**/*
     .ace-defaults/**/*
     *.md
