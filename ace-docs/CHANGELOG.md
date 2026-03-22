@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-03-22
+
+### Changed
+- Rewrote `README.md` into a value-first landing page and split reference material into dedicated `docs/getting-started.md`, `docs/usage.md`, and `docs/handbook.md` documents.
+- Added demo artifacts under `docs/demo/` (`ace-docs-getting-started.tape` and `ace-docs-getting-started.gif`) and aligned gemspec summary/description messaging with the new landing-page tagline.
+
 ## [0.27.1] - 2026-03-21
 
 ### Fixed

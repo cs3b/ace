@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Documentation management with frontmatter, change analysis, and intelligent updates"
-  spec.description = "Comprehensive documentation management system combining deterministic tooling with intelligent workflow orchestration. Discovers documents via frontmatter, analyzes changes, validates against rules, and supports iterative agent/human collaboration."
+  spec.summary = "Keep documentation current with freshness tracking, drift detection, and LLM suggestions"
+  spec.description = "Documentation management for teams and agents: track freshness from frontmatter, detect drift from git history, run LLM-powered analysis, and validate consistency across docs."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
