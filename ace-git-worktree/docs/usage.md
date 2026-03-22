@@ -295,7 +295,7 @@ title formatting.
 **Solution:**
 
 ```bash
-mise exec -- ace-task show 081
+ace-task show 081
 ```
 
 Use a task reference that exists in the current repository, or run the command from the project root where the ACE task
