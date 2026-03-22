@@ -4,21 +4,41 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.900] - 2026-03-22
+
+### Technical
+- **ace-support-cli v0.6.2**: Removed trailing blank lines from README code-fence examples for cleaner rendered snippets.
+- **ace-support-config v0.8.5**: Updated README examples to use `resolve_file` instead of deprecated `resolve_for`.
+- **ace-support-fs v0.2.3**: Updated README dependency example to the current `~> 0.2` constraint.
+- **ace-support-items v0.15.3**: Updated README dependency example to the current `~> 0.15` constraint.
+- **ace-support-mac-clipboard v0.2.3**: Corrected README integration guidance to reference `ace-idea` clipboard usage.
+
 ## [0.9.899] - 2026-03-22
 
 ### Changed
 - **ace-test v0.5.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added demo tape and GIF assets, and aligned gem metadata messaging.
 - **ace-test-runner v0.17.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added demo tape and GIF assets, and aligned gem metadata messaging.
 
+### Technical
+- **ace-support-core v0.28.2**: Corrected README namespace and dependency references to match `ace-support-config` API usage and gemspec version constraints.
+
 ## [0.9.898] - 2026-03-22
 
 ### Changed
 - **ace-handbook v0.18.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added demo tape and GIF assets, and aligned gem metadata messaging.
 
+### Technical
+- **ace-support-core v0.28.1**: Refreshed README structure with consistent tagline, installation, basic usage, API overview, and ACE project footer
+- **ace-support-config v0.8.4**: Refreshed README structure with consistent tagline, corrected package naming, and ACE project footer
+- **ace-support-fs v0.2.2**: Refreshed README structure with consistent tagline, overview, basic usage, and ACE project footer
+- **ace-support-items v0.15.2**: Refreshed README structure with consistent tagline, installation, basic usage, and ACE project footer
+- **ace-support-mac-clipboard v0.2.2**: Refreshed README structure with consistent tagline, overview, basic usage, and ACE project footer
+
 ## [0.9.897] - 2026-03-22
 
 ### Changed
 - **ace-test-runner-e2e v0.27.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added demo tape and GIF assets, and refreshed gemspec messaging.
+- **ace-support-cli v0.6.1**: Expanded README structure with tagline, installation guidance, usage example, API overview, and ACE project footer.
 
 ## [0.9.896] - 2026-03-22
 
