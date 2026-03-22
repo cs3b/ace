@@ -15,10 +15,10 @@ Type "rm -rf /tmp/ace-idea-demo-home && mkdir -p /tmp/ace-idea-demo-home/.ace/id
 Enter
 Sleep 2s
 
-Type "HOME=/tmp/ace-idea-demo-home mise exec -- ace-idea create 'Dark mode for night coding' --title 'Dark mode'"
+Type "HOME=/tmp/ace-idea-demo-home ace-idea create 'Dark mode for night coding' --title 'Dark mode'"
 Enter
 Sleep 2s
 
-Type "HOME=/tmp/ace-idea-demo-home mise exec -- ace-idea list"
+Type "HOME=/tmp/ace-idea-demo-home ace-idea list"
 Enter
 Sleep 2s
