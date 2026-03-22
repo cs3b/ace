@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-mac-clipboard
-purpose: Documentation for ace-support-mac-clipboard/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-mac-clipboard
 
 macOS NSPasteboard integration for ACE -- FFI-based access to rich clipboard content including images,

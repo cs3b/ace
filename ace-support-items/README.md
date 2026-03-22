@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-items
-purpose: Documentation for ace-support-items/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-items
 
 Shared item management infrastructure for ACE gems -- directory scanning, ID resolution, and slug sanitization.
