@@ -28,7 +28,7 @@ steps:
   - name: review-cycle
     repeat: "{{review_cycles}}"
     context: fork
-    sub_steps: [review-pr, apply-feedback, release]
+    sub_steps: [review-pr, apply-feedback, release, create-retro]
     note: "Each cycle includes patch release after applying feedback"
   - name: reorganize-commits
     required: false
