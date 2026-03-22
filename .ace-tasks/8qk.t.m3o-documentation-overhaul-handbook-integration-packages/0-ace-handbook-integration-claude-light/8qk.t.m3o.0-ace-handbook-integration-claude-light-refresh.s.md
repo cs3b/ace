@@ -1,6 +1,6 @@
 ---
 id: 8qk.t.m3o.0
-status: pending
+status: done
 priority: low
 created_at: "2026-03-21 14:44:45"
 estimate: TBD
@@ -8,9 +8,8 @@ dependencies: []
 tags: [docs, readme]
 parent: 8qk.t.m3o
 bundle:
-  presets: ["project"]
-  files:
-    - ace-handbook-integration-claude/README.md
+  presets: [project]
+  files: [ace-handbook-integration-claude/README.md]
   commands: []
 ---
 
@@ -52,11 +51,11 @@ README.md structure:
 - Part of ACE footer
 
 ### Success Criteria
-- [ ] README has clear one-line tagline
-- [ ] Structure is consistent with other handbook integration package READMEs
-- [ ] Existing useful content preserved
-- [ ] Part of ACE footer present
-- [ ] All links resolve
+- [x] README has clear one-line tagline
+- [x] Structure is consistent with other handbook integration package READMEs
+- [x] Existing useful content preserved
+- [x] Part of ACE footer present
+- [x] All links resolve
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 - **Slice Type**: Subtask
@@ -65,5 +64,5 @@ README.md structure:
 
 ### Verification Plan
 #### Unit / Component Validation
-- [ ] README renders correctly on GitHub
-- [ ] All links resolve
+- [x] README renders correctly on GitHub
+- [x] All links resolve
