@@ -151,7 +151,7 @@ module Ace
 
           raise Error,
                 "Preset '#{preset_name}' accepts only single taskref. " \
-                "Use a preset with `taskrefs` (e.g., --preset work-on-tasks)."
+                "Use a preset with `taskrefs` (e.g., --preset work-on-task)."
         end
 
         def existing_assignment(worktree_path)

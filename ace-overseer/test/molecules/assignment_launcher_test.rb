@@ -59,9 +59,9 @@ class AssignmentLauncherTest < AceOverseerTestCase
       preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
-        File.join(preset_dir, "work-on-tasks.yml"),
+        File.join(preset_dir, "work-on-task.yml"),
         {
-          "name" => "work-on-tasks",
+          "name" => "work-on-task",
           "description" => "Multi-task preset",
           "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
           "expansion" => {
@@ -85,7 +85,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
       result = launcher.launch(
         worktree_path: worktree,
-        preset_name: "work-on-tasks",
+        preset_name: "work-on-task",
         task_ref: "272",
         subtask_refs: %w[272.01 272.02 272.03]
       )
@@ -103,9 +103,9 @@ class AssignmentLauncherTest < AceOverseerTestCase
       preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
-        File.join(preset_dir, "work-on-tasks.yml"),
+        File.join(preset_dir, "work-on-task.yml"),
         {
-          "name" => "work-on-tasks",
+          "name" => "work-on-task",
           "description" => "Multi-task preset",
           "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
           "expansion" => {
@@ -129,7 +129,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
       result = launcher.launch(
         worktree_path: worktree,
-        preset_name: "work-on-tasks",
+        preset_name: "work-on-task",
         task_ref: "150"
       )
 
@@ -144,9 +144,9 @@ class AssignmentLauncherTest < AceOverseerTestCase
       preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
-        File.join(preset_dir, "work-on-tasks.yml"),
+        File.join(preset_dir, "work-on-task.yml"),
         {
-          "name" => "work-on-tasks",
+          "name" => "work-on-task",
           "description" => "Multi-task preset",
           "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
           "expansion" => {
@@ -170,7 +170,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
       result = launcher.launch(
         worktree_path: worktree,
-        preset_name: "work-on-tasks",
+        preset_name: "work-on-task",
         task_ref: "288",
         subtask_refs: %w[288.01 288.02],
         task_refs: %w[288.01 288.02 287.01 300]

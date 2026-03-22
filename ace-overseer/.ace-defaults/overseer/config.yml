@@ -1,6 +1,6 @@
 default_assign_preset: "work-on-task"
 tmux_window_presets:
-  "work-on-tasks": "work-on-tasks"
+  "work-on-task": "work-on-task"
 watch:
   refresh_interval: 15
   git_refresh_interval: 300
