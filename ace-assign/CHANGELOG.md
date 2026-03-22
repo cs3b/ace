@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.2] - 2026-03-22
+
+### Fixed
+- Remove trailing empty lines in code blocks across documentation files.
+
+## [0.36.1] - 2026-03-22
+
+### Fixed
+- Include `docs/**/*` in gemspec so documentation ships with the gem.
+- Remove piped command example from usage guide to align with command-integrity contract.
+
+## [0.36.0] - 2026-03-22
+
+### Added
+- Added tutorial-style `docs/getting-started.md` and `docs/handbook.md` for clearer onboarding and package workflow discovery
+- Added `docs/demo/ace-assign-getting-started.tape` and `docs/demo/ace-assign-getting-started.gif` demo artifacts
+
+### Changed
+- Rewrote `README.md` as a concise landing page with value-first messaging and documentation links
+- Refreshed `docs/usage.md` to align with current CLI commands, scoped assignment examples, and command-integrity guidance
+- Updated gemspec summary/description text to match the new README tagline and positioning
+
 ## [0.35.1] - 2026-03-21
 
 ### Added
