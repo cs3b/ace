@@ -1,6 +1,6 @@
 ---
 id: 8qlomd
-status: pending
+status: done
 title: Remove mise Dependency from Codex Execution
 tags: []
 created_at: "2026-03-22 16:24:51"
