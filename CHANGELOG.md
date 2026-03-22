@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.881] - 2026-03-22
 
+### Changed
+- **ace-search v0.23.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added demo tape and GIF, and refreshed gemspec metadata.
+
 ### Fixed
 - **ace-assign v0.36.1**: Include `docs/**/*` in gemspec; remove piped command example from usage guide.
 - **ace-overseer v0.8.1**: Include `docs/**/*` in gemspec so documentation ships with the gem.
@@ -21,11 +24,17 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.880] - 2026-03-22
 
+### Changed
+- **ace-docs v0.28.0**: Rewrote the README as a landing page, added getting-started/usage/handbook docs, added demo artifacts, and refreshed gemspec metadata messaging.
+
 ### Added
 - **ace-overseer v0.8.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
 - **ace-tmux v0.9.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
 
 ## [0.9.879] - 2026-03-22
+
+### Changed
+- **ace-llm v0.29.0**: Rewrote README as a landing page, added getting-started/usage/handbook docs, added a demo tape, and refreshed gemspec description metadata.
 
 ### Added
 - **ace-retro v0.15.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
@@ -37,8 +46,8 @@ All notable changes to this project will be documented in this file.
 ## [0.9.878] - 2026-03-22
 
 ### Changed
+- **ace-lint v0.23.0**: Rewrote the README into a landing page, added getting-started/usage/handbook docs, and introduced demo artifacts for the new docs flow.
 - **ace-assign v0.36.0**: Reworked documentation experience with a new landing-page README, tutorial-style getting-started guide, updated usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
-
 ## [0.9.877] - 2026-03-21
 
 ### Technical
