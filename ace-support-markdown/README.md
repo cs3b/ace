@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-markdown
-purpose: Documentation for ace-support-markdown/README.md
-ace-docs:
-  last-updated: 2025-10-23
-  last-checked: 2026-03-21
----
-
 # ace-support-markdown
 
 Safe markdown editing with frontmatter support for ACE gems. Provides zero-corruption document operations through atomic writes, backup/rollback mechanisms, and Kramdown AST-based section editing.

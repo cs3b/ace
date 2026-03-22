@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-nav
-purpose: Documentation for ace-support-nav/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-nav
 
 Unified navigation and resource discovery for the ACE ecosystem.

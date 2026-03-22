@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-support-cli
-purpose: Documentation for ace-support-cli/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-support-cli
 
 Command metadata DSL, parser, registry, and runner primitives for ace-* CLIs.
