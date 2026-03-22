@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-03-22
+
+### Technical
+- Refreshed the package README with standardized handbook integration sections, Claude-specific provider wording, and ACE/`ace-handbook` linkage.
+
 ## [0.3.1] - 2026-03-13
 
 ### Changed

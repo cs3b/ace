@@ -4,6 +4,16 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-03-22
+
+### Technical
+- Standardized PI provider casing in README terminology (`PI-specific`, `PI-native`) to match package naming and changelog language.
+
+## [0.3.1] - 2026-03-22
+
+### Technical
+- Refreshed the package README with standardized handbook integration sections, PI-specific provider wording, and ACE/`ace-handbook` linkage.
+
 ## [0.3.0] - 2026-03-12
 
 ### Changed

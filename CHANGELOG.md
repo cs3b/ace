@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.903] - 2026-03-22
+
+### Technical
+- **ace-handbook-integration-pi v0.3.2**: Standardized PI provider casing in README terminology to match package naming and changelog language.
+
+## [0.9.902] - 2026-03-22
+
+### Changed
+- **ace-task v0.30.4**: Added task-work guidance to prefer path-mode planning and documented fallback behavior when `ace-task plan --content` stalls.
+
+## [0.9.901] - 2026-03-22
+
+### Technical
+- **ace-handbook-integration-claude v0.3.2**: Refreshed README structure and package overview for Claude provider integration docs.
+- **ace-handbook-integration-codex v0.3.1**: Refreshed README structure and package overview for Codex provider integration docs.
+- **ace-handbook-integration-gemini v0.3.1**: Refreshed README structure and package overview for Gemini provider integration docs.
+- **ace-handbook-integration-opencode v0.3.1**: Refreshed README structure and package overview for OpenCode provider integration docs.
+- **ace-handbook-integration-pi v0.3.1**: Refreshed README structure and package overview for PI provider integration docs.
+
 ## [0.9.900] - 2026-03-22
 
 ### Technical
