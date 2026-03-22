@@ -1,43 +1,54 @@
 ---
 doc-type: user
 title: ace-demo
-purpose: Documentation for ace-demo/README.md
+purpose: Landing page for ace-demo
 ace-docs:
-  last-updated: 2026-03-08
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-demo
 
-`ace-demo` records terminal demos from VHS tape files.
+`ace-demo` records terminal demos and attaches them to pull requests.
 
-## Usage
+![ace-demo getting started](docs/demo/ace-demo-getting-started.gif)
 
-```bash
-# Record from a tape preset or file
-ace-demo record hello
-ace-demo record ./path/to/custom.tape --format mp4
-ace-demo record hello --output /tmp/demo.gif
-ace-demo record hello --pr 123                          # record + attach to PR
-ace-demo record hello --playback-speed 4x              # keep original + create hello-4x.gif
+Record deterministic terminal demos as GIF, MP4, or WebM files and post visual proof directly in code review.
 
-# Record inline (generate tape on-the-fly from shell commands)
-ace-demo record my-demo -- "git status" "make deploy"
-ace-demo record my-demo --dry-run -- "echo hello"       # preview tape, no VHS
-echo "echo hello" | ace-demo record my-demo             # stdin
+## Why
 
-# Post-process an existing recording
-ace-demo retime .ace-local/demo/hello.gif --playback-speed 8x
+`ace-demo` makes reproducible terminal recording simple for teams and agents:
+- It turns command output into stable review artifacts, not flaky screen recordings.
+- It reduces ambiguity by showing exactly what ran and what changed.
+- It brings consistency when human and AI contributors need the same workflow.
 
-# Attach an existing recording to a PR
-ace-demo attach .ace-local/demo/hello.gif --pr 123
-ace-demo attach .ace-local/demo/hello.gif --pr 123 --dry-run
+## Works With
 
-# Discover available tapes
-ace-demo list
-ace-demo show hello
+- `ace-assign` for scoped task workflows
+- `ace-bundle` for workflow and config loading
+- `gh` for authenticated PR attachments
+- `ace-demo` package-owned skills for demos and recordings
 
-# Create a new tape file
-ace-demo create my-demo -- "git status" "make deploy"
-ace-demo create my-demo --desc "Deploy flow" --tags ci -- "git status"
-```
+## Agent Skills
+
+- `as-demo-record`
+- `as-demo-create`
+
+## Features
+
+- Built-in presets and project-level `.ace/demo/tapes` overrides
+- Inline recording from shell commands
+- PR attachment for existing recordings
+- Playback-speed postprocessing (`retime` and `--playback-speed`)
+- Tape discovery (`list`) and inspection (`show`)
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [CLI Usage Reference](docs/usage.md)
+- [Handbook Catalog](docs/handbook.md)
+- Command help: `ace-demo --help`
+
+## Part of ACE
+
+`ace-demo` is part of [ACE](../README.md): CLI tools for practical agent workflows.

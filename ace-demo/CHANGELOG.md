@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-03-22
+
+### Fixed
+- Corrected `ace-demo create` usage syntax to show options before `--`, matching CLI argument parsing behavior.
+
+## [0.14.1] - 2026-03-22
+
+### Fixed
+- Removed the duplicated `0.13.0` changelog section that repeated `0.14.0` release notes.
+
+## [0.14.0] - 2026-03-22
+
+### Changed
+- Refreshed package README and documentation with landing-focused messaging for agent workflows.
+- Expanded command usage coverage in `docs/usage.md` and added new getting-started and handbook guides.
+- Added a reusable example tape asset at `.ace/demo/tapes/my-demo.tape` and updated project docs for inline demo creation.
+
 ## [0.12.0] - 2026-03-21
 
 ### Changed
