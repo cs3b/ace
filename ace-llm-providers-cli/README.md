@@ -3,13 +3,18 @@ doc-type: user
 title: ace-llm-providers-cli
 purpose: Documentation for ace-llm-providers-cli/README.md
 ace-docs:
-  last-updated: 2026-03-05
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-llm-providers-cli
 
-CLI-based LLM providers for ace-llm. This gem extends ace-llm with providers that interact with LLMs through command-line interfaces, including Claude Code, Codex, OpenCode, and Codex OSS.
+CLI-based LLM providers for ace-llm.
+
+## Purpose
+
+`ace-llm-providers-cli` extends `ace-llm` with providers that run through command-line tools,
+including Claude Code, Codex, OpenCode, and Codex OSS.
 
 ## Installation
 
@@ -240,7 +245,7 @@ This gem follows a plugin architecture:
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests.
+After checking out the repo, run `bin/setup` to install dependencies.
 
 To test with a local ace-llm:
 
@@ -254,26 +259,22 @@ gem "ace-llm", path: "../ace-llm"
 Run the test suite:
 
 ```bash
-bundle exec rake test
+mise exec -- ace-test ace-llm-providers-cli
 ```
 
-Run the linter:
+Run markdown lint checks:
 
 ```bash
-bundle exec rubocop
+mise exec -- ace-lint ace-llm-providers-cli/README.md
 ```
 
 ## Contributing
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
-
-## License
-
-MIT License - see LICENSE file for details.
+1. Create or confirm a task specification before implementation.
+2. Make focused changes that follow existing package conventions.
+3. Run verification commands (`ace-test`, `ace-lint`) before committing.
+4. Create scoped commits with `ace-git-commit`.
+5. Open a pull request with task context and verification evidence.
 
 ## Troubleshooting
 
@@ -302,3 +303,11 @@ Or set it in code:
 ```ruby
 client = Ace::LLM::Providers::CLI::ClaudeCodeClient.new(timeout: 300)
 ```
+
+## Part of ACE
+
+Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
+
+## License
+
+MIT License - see LICENSE file for details.
