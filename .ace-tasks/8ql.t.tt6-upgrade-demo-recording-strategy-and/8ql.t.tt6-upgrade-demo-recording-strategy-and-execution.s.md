@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-22 19:52:26"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/atoms/tape_content_generator.rb, ace-demo/lib/ace/demo/atoms/tape_metadata_parser.rb, ace-demo/lib/ace/demo/molecules/tape_resolver.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/molecules/tape_scanner.rb, ace-demo/lib/ace/demo/organisms/tape_creator.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/cli/commands/create.rb, ace-demo/lib/ace/demo/cli/commands/list.rb, ace-demo/lib/ace/demo/cli/commands/show.rb, ace-demo/.ace-defaults/demo/config.yml]
   commands: []
 needs_review: false
+worktree:
+  branch: tt6-upgrade-demo-recording-strategy-and-execution
+  path: ../ace-t.tt6
+  created_at: "2026-03-22 21:35:08"
+  updated_at: "2026-03-22 21:35:08"
+  target_branch: main
 ---
 
 # Upgrade Demo Recording Strategy and Execution
