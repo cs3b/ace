@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-22
+
+### Changed
+- Reworked `ace-handbook` documentation into a landing-page README with package-focused messaging and links to dedicated docs.
+- Added `docs/getting-started.md`, `docs/usage.md`, and `docs/handbook.md` with tutorial and workflow/skill reference coverage.
+- Added demo assets under `docs/demo/` and aligned examples to the current `ace-nav resolve/list` command pattern.
+- Updated gem metadata summary/description to match the new README tagline and documentation positioning.
+
 ## [0.17.1] - 2026-03-21
 
 ### Added
