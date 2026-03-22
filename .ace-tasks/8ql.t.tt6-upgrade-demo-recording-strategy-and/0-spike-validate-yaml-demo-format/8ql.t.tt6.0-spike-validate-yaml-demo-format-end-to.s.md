@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-22 19:52:30"
 estimate: TBD
@@ -103,11 +103,11 @@ Error Handling:
 
 ### Success Criteria
 
-- [ ] ace-task `.tape.yml` records successfully in an isolated sandbox
-- [ ] GIF shows realistic controlled data (seed tasks with different statuses, filtering shows different results)
-- [ ] Sandbox directory is created during recording and cleaned up after
-- [ ] Existing `.tape` files (e.g., `hello.tape`) still record without regression
-- [ ] Concept inventory produced: what survives, what changes, what's new, what's removed
+- [x] ace-task `.tape.yml` records successfully in an isolated sandbox
+- [x] GIF shows realistic controlled data (seed tasks with different statuses, filtering shows different results)
+- [x] Sandbox directory is created during recording and cleaned up after
+- [x] Existing `.tape` files (e.g., `hello.tape`) still record without regression
+- [x] Concept inventory produced: what survives, what changes, what's new, what's removed
 
 ### Validation Questions
 
@@ -124,20 +124,20 @@ Error Handling:
 
 ### Unit/Component Validation
 
-- [ ] YAML file parses correctly into settings, setup, scenes, teardown structures
-- [ ] VHS tape compilation produces valid Type/Enter/Sleep directives from scenes
-- [ ] Sandbox directory is created at expected path and contains initialized git repo after setup
+- [x] YAML file parses correctly into settings, setup, scenes, teardown structures
+- [x] VHS tape compilation produces valid Type/Enter/Sleep directives from scenes
+- [x] Sandbox directory is created at expected path and contains initialized git repo after setup
 
 ### Integration/E2E Validation
 
-- [ ] Full pipeline: `.tape.yml` → sandbox → compile → record → teardown → GIF exists at output path
-- [ ] GIF visual review: shows multiple tasks, filtering shows subset, create adds a task
-- [ ] Backward compat: `ace-demo record hello` still works unchanged
+- [x] Full pipeline: `.tape.yml` → sandbox → compile → record → teardown → GIF exists at output path
+- [x] GIF visual review: shows multiple tasks, filtering shows subset, create adds a task
+- [x] Backward compat: `ace-demo record hello` still works unchanged
 
 ### Failure/Invalid Path Validation
 
-- [ ] Setup command failure triggers teardown (sandbox cleaned up even on error)
-- [ ] Malformed YAML produces helpful error message
+- [x] Setup command failure triggers teardown (sandbox cleaned up even on error)
+- [x] Malformed YAML produces helpful error message
 
 ## Scope of Work
 

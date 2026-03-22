@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-22 19:52:32"
 estimate: TBD
@@ -84,14 +84,14 @@ ace-demo list
 
 ### Success Criteria
 
-- [ ] All 23 packages have `.tape.yml` files in `docs/demo/`
-- [ ] All 23 `.tape.yml` files record successfully producing GIF output
-- [ ] GIFs show realistic, curated data (visual review confirms quality improvement)
-- [ ] All old `.tape` files removed from `docs/demo/` directories
-- [ ] Project-level `.ace/demo/tapes/` overrides migrated or removed
-- [ ] `ace-demo list` shows clean state with only `.tape.yml` entries
-- [ ] Fixture directories exist for packages that need controlled data
-- [ ] No hardcoded IDs from the live environment in any `.tape.yml`
+- [x] All 23 packages have `.tape.yml` files in `docs/demo/`
+- [x] All 23 `.tape.yml` files record successfully producing GIF output
+- [x] GIFs show realistic, curated data (visual review confirms quality improvement)
+- [x] All old `.tape` files removed from `docs/demo/` directories
+- [x] Project-level `.ace/demo/tapes/` overrides migrated or removed
+- [x] `ace-demo list` shows clean state with only `.tape.yml` entries
+- [x] Fixture directories exist for packages that need controlled data
+- [x] No hardcoded IDs from the live environment in any `.tape.yml`
 
 ### Validation Questions
 
@@ -108,19 +108,19 @@ ace-demo list
 
 ### Unit/Component Validation
 
-- [ ] Each `.tape.yml` file parses without error (valid YAML structure)
-- [ ] Each fixtures directory contains appropriate seed data for its package
+- [x] Each `.tape.yml` file parses without error (valid YAML structure)
+- [x] Each fixtures directory contains appropriate seed data for its package
 
 ### Integration/E2E Validation
 
-- [ ] `ace-demo record <package>-getting-started.tape.yml` succeeds for all 23 packages
-- [ ] Visual review: each GIF shows compelling feature demonstration with controlled data
-- [ ] `ace-demo list` shows all 23 tapes in `.tape.yml` format
+- [x] `ace-demo record <package>-getting-started.tape.yml` succeeds for all 23 packages
+- [x] Visual review: each GIF shows compelling feature demonstration with controlled data
+- [x] `ace-demo list` shows all 23 tapes in `.tape.yml` format
 
 ### Failure/Invalid Path Validation
 
-- [ ] No `.tape` files remain in any `docs/demo/` directory (verified by glob search)
-- [ ] No hardcoded live environment IDs in any `.tape.yml` (verified by grep)
+- [x] No `.tape` files remain in any `docs/demo/` directory (verified by glob search)
+- [x] No hardcoded live environment IDs in any `.tape.yml` (verified by grep)
 
 ## Scope of Work
 
