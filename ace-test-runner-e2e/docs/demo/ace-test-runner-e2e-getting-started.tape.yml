@@ -1,0 +1,17 @@
+---
+description: Run ace-test-e2e on TS-LINT-001
+tags:
+- e2e
+- docs
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: ace-test-e2e ace-lint TS-LINT-001
+    sleep: 2s
+teardown:
+- cleanup
