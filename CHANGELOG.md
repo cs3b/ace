@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.890] - 2026-03-22
+
+### Technical
+- **ace-assign v0.36.5**: Clarified release notes so they document the intentional `codex:gpt@yolo` assignment default needed for current Codex CLI compatibility.
+- **ace-git-secrets v0.12.1**: Replaced HTML-sensitive placeholder paths in getting-started examples with a concrete saved-report example.
+- **ace-git-worktree v0.17.2**: Aligned the getting-started demo tape output path with the checked-in `docs/demo` asset.
+- **ace-idea v0.17.3**: Aligned the demo tape output path with the checked-in asset and updated prioritize workflow wording to current queue terminology.
+- **ace-llm v0.29.3**: Clarified release notes so they document why the Codex `@yolo` preset intentionally omits `--full-auto`.
+
+## [0.9.889] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.4**: Clarified that assignment execution remains on `codex:gpt@yolo` because the current Codex CLI cannot combine `--full-auto` with `--dangerously-bypass-approvals-and-sandbox`.
+- **ace-idea v0.17.2**: Clarified docs so the `next` queue is documented as the root-scope view instead of a physical `_next` folder.
+- **ace-llm v0.29.2**: Clarified that the Codex `@yolo` preset omits `--full-auto` because the current Codex CLI rejects it alongside `--dangerously-bypass-approvals-and-sandbox`.
+
+## [0.9.888] - 2026-03-22
+
+### Fixed
+- **ace-assign v0.36.3**: Clarified the documented assignment execution default after docs drift described it as `codex:codex@yolo` instead of the intentional `codex:gpt@yolo`.
+- **ace-git v0.17.1**: Added `docs/**/*` to the gemspec so package docs ship with the gem.
+- **ace-git-worktree v0.17.1**: Fixed doc frontmatter, Markdown rendering, fenced code blocks, gem packaging for docs, and a duplicated usage option entry.
+- **ace-idea v0.17.1**: Fixed fenced code block rendering in docs and shipped package docs with the gem.
+- **ace-llm v0.29.1**: Clarified the Codex `@yolo` preset docs after changelog drift described `--full-auto` as restored when it is intentionally omitted for CLI compatibility.
+
+## [0.9.887] - 2026-03-22
+
+### Changed
+- **ace-idea v0.17.0**: Reworked package documentation with a landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, refreshed gem metadata messaging, and updated idea workflows to match the current six-command CLI.
+
+## [0.9.886] - 2026-03-22
+
+### Changed
+- **ace-git-secrets v0.12.0**: Reworked package documentation with a new landing-page README, tutorial getting-started guide, refreshed usage reference, handbook catalog, demo assets, shipped package docs with the gem, and corrected saved-report remediation guidance.
+
+## [0.9.885] - 2026-03-22
+
+### Changed
+- **ace-git-worktree v0.17.0**: Rewrote the README as a landing page, added getting-started/usage/handbook docs, committed demo assets, and aligned package messaging with the new docs flow.
+
+## [0.9.884] - 2026-03-22
+
+### Changed
+- **ace-git v0.17.0**: Rewrote the README as a landing page, added getting-started/usage/handbook docs, added demo artifacts, and refreshed gemspec metadata messaging.
+
 ## [0.9.883] - 2026-03-22
 
 ### Fixed
