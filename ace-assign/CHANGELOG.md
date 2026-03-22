@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.8] - 2026-03-22
+
+### Fixed
+- Mark task completion flows to archive tasks as well in both single-task and batch presets.
+- Load task-done updates through the canonical `wfi://task/update` workflow and ensure parent-task closure updates are archived.
+
 ## [0.36.7] - 2026-03-22
 
 ### Fixed

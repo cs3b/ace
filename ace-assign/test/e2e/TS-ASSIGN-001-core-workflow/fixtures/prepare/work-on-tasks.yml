@@ -110,4 +110,4 @@ expansion:
     instructions: |
       Use existing base and task context loaded by the batch workflow.
       Implement task {{item}}.
-      When complete, mark the task as done: run `ace-taskflow task done {{item}}`
+      When complete, mark the task as done: run `ace-task update {{item}} --set status=done --move-to archive`

@@ -1319,6 +1319,11 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes state.find_by_number("010.01.04").instructions, "# Work on Task"
             assert_includes File.read(state.find_by_number("012").file_path), "source_skill: as-test-verify-suite"
             assert_includes File.read(state.find_by_number("030").file_path), "source_skill: as-github-pr-create"
+
+            mark_tasks_done = state.find_by_number("155")
+            assert_equal "mark-tasks-done", mark_tasks_done.name
+            assert_includes File.read(mark_tasks_done.file_path), "source_workflow: wfi://task/update"
+            refute_includes File.read(mark_tasks_done.file_path), "<taskref>"
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_project_root

@@ -25,9 +25,9 @@ steps:
       - "Preserve any public contract, docs, test, and release follow-ups required by the resulting diff."
 
   - name: mark-task-done
+    workflow: wfi://task/update
     instructions:
-      - "Mark task {{taskref}} as done."
-      - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
+      - "Mark task {{taskref}} as done and archive it."
 
   - name: verify-test-suite
     workflow: wfi://test/verify-suite
