@@ -1,564 +1,221 @@
 ---
 doc-type: reference
 title: ace-demo Usage Guide
-purpose: CLI usage guide for ace-demo — VHS-based terminal demo recording and PR attachment.
+purpose: Complete CLI reference for recording demos and attaching them to PRs
 ace-docs:
-  last-updated: 2026-03-08
-  last-checked: 2026-03-21
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-demo Usage Guide
 
-## Document Type: How-To Guide + Reference
+`ace-demo` turns terminal sessions into reviewable recordings and can post them to GitHub PRs.
 
-## Overview
+## Command Overview
 
-`ace-demo` records terminal command demos using VHS tape scripts and optionally attaches the resulting GIF to GitHub pull requests. It enables developers and AI agents to provide visual proof of feature functionality directly in PRs.
+- `ace-demo list` — list available demo tapes
+- `ace-demo show` — inspect tape metadata and contents
+- `ace-demo record` — record a tape or inline command session
+- `ace-demo retime` — generate faster playback variants
+- `ace-demo attach` — upload an existing recording and comment on a PR
+- `ace-demo create` — build a tape from commands
+- `ace-demo version` — print installed gem version
 
-**Key Features:**
-- Run VHS `.tape` scripts to produce deterministic GIF/MP4/WebM recordings
-- Post-process existing recordings into faster playback variants with `retime`
-- Resolve tape files via config cascade (built-in presets, user, project, direct path)
-- Upload recordings to GitHub release assets for stable URLs
-- Post PR comments with inline embedded demo GIFs
-- Discover and inspect available tape presets with `list` / `show`
-- Create new tape files from shell commands with `create`
+## Global options
 
-**Prerequisite:** [VHS](https://github.com/charmbracelet/vhs) must be installed for recording. `gh` CLI must be authenticated for PR attachment.
+- `--help`, `-h` — show help
+- `--version` — print version
 
----
+## `ace-demo list`
 
-## Quick Start (5 minutes)
+### Syntax
 
 ```bash
-# Record the built-in hello preset
-ace-demo record hello
-# Output: Recorded: .ace-local/demo/hello.gif
-
-# List available tape presets
 ace-demo list
-# Output:
-#   Available demo tapes:
-#   hello     Built-in echo demo  (built-in)
-#   ace-test  Run ace-test demo   (built-in)
-
-# Record and attach to a PR in one step
-ace-demo record ace-test --pr 42
-# Output:
-#   Recorded: .ace-local/demo/ace-test.gif
-#   Uploaded: ace-test.gif -> https://github.com/.../releases/assets/...
-#   Posted demo comment to PR #42
 ```
 
----
+No arguments.
 
-## Common Scenarios
+### Output
 
-### Scenario 1: Record a demo from a preset tape
+- `No demo tapes found.` when no tapes exist.
+- `Available demo tapes:` with columns: name, description, source.
 
-**Goal**: Record the built-in `hello` tape to a GIF.
+## `ace-demo show <tape>`
+
+### Syntax
 
 ```bash
-ace-demo record hello
-```
-
-**Expected output:**
-```
-Recorded: .ace-local/demo/hello.gif
-```
-
-### Scenario 2: Record a custom tape file
-
-**Goal**: Use your own `.tape` file.
-
-```bash
-ace-demo record ./my-feature.tape
-```
-
-**Expected output:**
-```
-Recorded: .ace-local/demo/my-feature.gif
-```
-
-### Scenario 3: Record with a specific format and output path
-
-**Goal**: Produce an MP4 at a custom location.
-
-```bash
-ace-demo record hello --format mp4 --output /tmp/hello-demo.mp4
-```
-
-**Expected output:**
-```
-Recorded: /tmp/hello-demo.mp4
-```
-
-### Scenario 4: Attach an existing GIF to a PR
-
-**Goal**: Upload a pre-recorded GIF and post it as a PR comment.
-
-```bash
-ace-demo attach .ace-local/demo/hello.gif --pr 99
-```
-
-**Expected output:**
-```
-Uploaded: hello.gif -> https://github.com/.../releases/assets/12345
-Posted demo comment to PR #99
-```
-
-### Scenario 5: Record + attach in one step
-
-**Goal**: Record a demo and immediately post it to a PR.
-
-```bash
-ace-demo record ace-test --pr 123
-```
-
-**Expected output:**
-```
-Recorded: .ace-local/demo/ace-test.gif
-Uploaded: ace-test.gif -> https://github.com/.../releases/assets/12346
-Posted demo comment to PR #123
-```
-
-### Scenario 6: Preview without posting (dry run)
-
-**Goal**: See what would be uploaded without actually posting.
-
-```bash
-ace-demo attach .ace-local/demo/hello.gif --pr 99 --dry-run
-```
-
-**Expected output:**
-```
-[dry-run] Would upload: hello.gif
-[dry-run] Would post comment to PR #99:
-![hello demo](...) ...
-```
-
-### Scenario 7: Create a tape from shell commands
-
-**Goal**: Generate a `.tape` file from a list of commands.
-
-```bash
-ace-demo create my-demo -- "git status" "make deploy"
-```
-
-**Expected output:**
-```
-Created: .ace/demo/tapes/my-demo.tape
-```
-
-### Scenario 8: Create a tape with metadata
-
-**Goal**: Add description and tags to a generated tape.
-
-```bash
-ace-demo create my-demo --desc "Deploy flow" --tags ci -- "git status" "make deploy"
-```
-
-### Scenario 9: Preview a tape without writing
-
-**Goal**: See what would be generated without creating a file.
-
-```bash
-ace-demo create my-demo --dry-run -- "echo hello"
-```
-
-### Scenario 10: Create a tape from stdin
-
-**Goal**: Pipe commands from a file or other command.
-
-```bash
-echo "git status" | ace-demo create stdin-demo
-cat commands.txt | ace-demo create from-file
-```
-
-### Scenario 11: Discover and inspect tapes
-
-**Goal**: Find available presets and see tape contents before recording.
-
-```bash
-# List all tapes
-ace-demo list
-
-# Inspect a specific tape
 ace-demo show hello
+ace-demo show ./path/to/demo.tape
 ```
 
-**Expected output (show):**
-```
-Tape: hello
-Source: .ace/demo/tapes/hello.tape
-Description: Built-in echo demo
+### Arguments
 
---- Contents ---
-Output .ace-local/demo/hello.gif
-...
-```
+- `<tape>` — tape name or `.tape` file path
 
-### Scenario 12: Record inline (without a pre-written tape)
+### Behavior
 
-**Goal**: Generate a tape on-the-fly from shell commands, then record it immediately.
+Prints tape name, source, description/metadata, and full tape content.
 
-```bash
-ace-demo record my-demo -- "git status" "make deploy"
-```
+## `ace-demo create <name> -- <commands...>`
 
-**Expected output:**
-```
-Recorded: .ace-local/demo/i50jj3/my-demo.gif
-Tape: .ace-local/demo/i50jj3/my-demo.tape
-```
+### Syntax
 
-### Scenario 13: Preview inline tape without recording (dry-run)
-
-**Goal**: See what tape would be generated without executing VHS.
-
-```bash
-ace-demo record my-demo --dry-run -- "echo hello"
-```
-
-**Expected output:** tape content printed to stdout, no VHS execution.
-
-### Scenario 14: Pass parameters to a tape via environment variables
-
-**Goal**: Record a tape that uses `$VAR` placeholders, supplying values at runtime.
-
-```bash
-TEST_PATH=ace-bundle ace-demo record test
-```
-
-Environment variables are inherited by the VHS process and its shell session, so `$TEST_PATH` in a `Type` directive expands when the command runs inside the recording:
-
-```
-# .ace/demo/tapes/test.tape
-Type "ace-test $TEST_PATH"
-```
-
-This is the only parameter mechanism — VHS has no native argument system. Any env var set in the calling shell is available inside the tape.
-
----
-
-## Command Reference
-
-### `ace-demo record <tape>`
-
-Record a terminal demo from a VHS tape file.
-
-**Syntax:**
-```bash
-ace-demo record <tape> [--output <path>] [--format gif|mp4|webm] [--pr <number>] [--dry-run]
-ace-demo record <name> -- <command>... [inline options]
-echo "<command>" | ace-demo record <name> [inline options]
-```
-
-**Parameters:**
-- `<tape>`: Tape preset name (e.g. `hello`) or direct file path (e.g. `./my.tape`)
-- `<name>` (inline mode): Base name for generated tape and recording; sanitized to a filesystem-safe slug; output goes to `.ace-local/demo/<b36ts>/<name>.gif`
-
-**Options:**
-
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--output` | `-o` | Output file path | `.ace-local/demo/<name>.<format>` |
-| `--format` | `-f` | Output format: `gif`, `mp4`, `webm` | `gif` |
-| `--pr` | | PR number to attach recording to | (none) |
-| `--dry-run` | `-n` | Preview without recording or posting | `false` |
-| `--timeout` | `-t` | Wait time after each command (inline mode) | `2s` |
-| `--desc` | `-D` | Description metadata (inline mode) | (none) |
-| `--tags` | `-T` | Comma-separated tags (inline mode) | (none) |
-| `--width` | | Terminal width in pixels (inline mode) | `960` |
-| `--height` | | Terminal height in pixels (inline mode) | `480` |
-| `--font-size` | | Font size (inline mode) | `16` |
-| `--playback-speed` | | Postprocess speed: `1x`, `2x`, `4x`, `8x` | (none) |
-
-**Examples:**
-```bash
-ace-demo record hello                                       # → .ace-local/demo/hello.gif
-ace-demo record hello --format mp4                          # → .ace-local/demo/hello.mp4
-ace-demo record hello --output /tmp/demo.gif                # → /tmp/demo.gif
-ace-demo record hello --playback-speed 4x                   # + hello-4x.gif
-ace-demo record ace-test --pr 123                           # record + attach to PR
-ace-demo record ace-test --pr 123 --dry-run                 # preview only
-ace-demo record my-demo -- "git status" "make deploy"       # inline → session dir
-ace-demo record my-demo --dry-run -- "echo hello"           # preview tape content
-echo "echo hello" | ace-demo record my-demo                 # stdin
-TEST_PATH=ace-bundle ace-demo record test                   # pass env var to tape
-ace-demo retime .ace-local/demo/hello.gif --playback-speed 8x
-```
-
-**Environment variables:** all env vars in the calling shell are inherited by VHS and its shell session. Use `$VAR` in `Type` directives within `.tape` files to reference them.
-
-**Inline mode output:**
-```
-Recorded: .ace-local/demo/<session-id>/<name>.gif
-Tape: .ace-local/demo/<session-id>/<name>.tape
-```
-
-When playback postprocess is active (via `--playback-speed` or config), `record` keeps the original output and generates an additional `-<speed>` variant (for example `hello-4x.gif`). If `--pr` is used, the retimed file is attached.
-
-**Exit codes:**
-- `0`: Recording (and attachment) succeeded
-- `1`: VHS not found, tape not found, VHS execution error, or PR/upload error
-
----
-
-### `ace-demo attach <file>`
-
-Attach an existing demo recording to a GitHub PR.
-
-**Syntax:**
-```bash
-ace-demo attach <file> --pr <number> [--dry-run]
-```
-
-**Parameters:**
-- `<file>`: Path to the recording file (GIF, MP4, or WebM)
-
-**Options:**
-
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--pr` | | PR number (required) | — |
-| `--dry-run` | `-n` | Preview comment without posting | `false` |
-
-**Examples:**
-```bash
-ace-demo attach .ace-local/demo/hello.gif --pr 45
-ace-demo attach /tmp/feature-demo.gif --pr 45 --dry-run
-```
-
----
-
-### `ace-demo list`
-
-List all discoverable demo tapes (built-in, user, and project).
-
-**Syntax:**
-```bash
-ace-demo list
-```
-
-**Expected output:**
-```
-Available demo tapes:
-  hello     Built-in echo demo   (.ace/demo/tapes/)
-  ace-test  Run ace-test demo    (.ace/demo/tapes/)
-```
-
----
-
-### `ace-demo show <tape>`
-
-Display metadata and full contents of a tape file.
-
-**Syntax:**
-```bash
-ace-demo show <tape>
-```
-
-**Parameters:**
-- `<tape>`: Tape preset name or direct `.tape` file path
-
-**Expected output:**
-```
-Tape: hello
-Source: .ace/demo/tapes/hello.tape
-Description: Built-in echo demo
-Tags: example, getting-started
-
---- Contents ---
-Output .ace-local/demo/hello.gif
-...
-```
-
----
-
-### `ace-demo create <name>`
-
-Create a new demo tape from shell commands.
-
-**Syntax:**
 ```bash
 ace-demo create <name> [options] -- <command>...
-ace-demo create <name> [options] < commands.txt
+echo "git status" | ace-demo create <name> [options]
 ```
 
-**Parameters:**
-- `<name>`: Tape name (used as filename, saved to `.ace/demo/tapes/<name>.tape`)
+### Arguments
 
-**Options:**
+- `<name>` — tape name (saved as `.ace/demo/tapes/<name>.tape`)
 
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--desc` | `-D` | Description metadata | (none) |
-| `--tags` | `-T` | Comma-separated tags | (none) |
-| `--width` | | Terminal width in pixels | `960` |
-| `--height` | | Terminal height in pixels | `480` |
-| `--font-size` | | Font size | `16` |
-| `--timeout` | `-t` | Wait time after each command | `2s` |
-| `--format` | `-f` | Output format: `gif`, `mp4`, `webm` | `gif` |
-| `--force` | | Overwrite existing tape | `false` |
-| `--dry-run` | `-n` | Preview without writing | `false` |
+### Options
 
-**Examples:**
+| Option | Alias | Default | Purpose |
+|--------|-------|---------|---------|
+| `--desc` | `-D` | — | Set tape `Description` metadata |
+| `--tags` | `-T` | — | Set comma-separated `Tags` metadata |
+| `--width` | — | `960` | VHS terminal width |
+| `--height` | — | `480` | VHS terminal height |
+| `--font-size` | — | `16` | VHS font size |
+| `--timeout` | `-t` | `2s` | Delay after each command |
+| `--format` | `-f` | `gif` | Output format hint for generated metadata |
+| `--force` | — | `false` | Overwrite existing tape |
+| `--dry-run` | `-n` | `false` | Print generated `.tape` content only |
+
+### Examples
+
 ```bash
 ace-demo create my-demo -- "git status" "make deploy"
-ace-demo create my-demo --desc "Deploy flow" --tags ci -- "git status"
+ace-demo create my-demo --desc "Release smoke" --tags smoke,release -- "npm test"
+echo "git status" | ace-demo create my-demo
 ace-demo create my-demo --dry-run -- "echo hello"
-echo "git status" | ace-demo create stdin-demo
 ```
 
-**Exit codes:**
-- `0`: Tape created (or dry-run preview shown)
-- `1`: No commands provided, or tape already exists
+### Output
 
----
+- `Created: .ace/demo/tapes/my-demo.tape`
+- with `--dry-run`: prints tape content and exits
 
-### `ace-demo retime <file>`
+## `ace-demo record <tape|name>`
 
-Create a faster playback variant from an existing recording file.
+### Syntax
 
-**Syntax:**
 ```bash
-ace-demo retime <file> --playback-speed <1x|2x|4x|8x> [--output <path>] [--dry-run]
+ace-demo record hello
+ace-demo record ./local.tape --format mp4 --output /tmp/demo.mp4
+ace-demo record my-demo -- "git status" "make deploy"
+ace-demo record my-demo --timeout 3s --width 1100 -- "git status"
+echo "git status" | ace-demo record my-demo
+ace-demo record hello --pr 42 --dry-run
 ```
 
-**Options:**
+### Arguments
 
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--playback-speed` | | Target speed: `1x`, `2x`, `4x`, `8x` | — |
-| `--output` | `-o` | Output file path | `<input>-<speed>.<ext>` |
-| `--dry-run` | `-n` | Preview without writing | `false` |
+- `<tape|name>`:
+  - preset name (`hello`)
+  - direct `.tape` path (`./local.tape`)
+  - inline session name when commands are passed after `--`
 
-**Examples:**
+### Options
+
+| Option | Alias | Default | Purpose |
+|--------|-------|---------|---------|
+| `--output` | `-o` | `.ace-local/demo/<name>.<format>` | Output file path |
+| `--format` | `-f` | `gif` | `gif`, `mp4`, `webm` |
+| `--pr` | — | — | Attach to PR |
+| `--dry-run` | `-n` | `false` | Preview output without running VHS |
+| `--timeout` | `-t` | `2s` | Delay between inline commands |
+| `--desc` | `-D` | — | Inline tape description metadata |
+| `--tags` | `-T` | — | Inline tape tags |
+| `--width` | — | `960` | Inline terminal width |
+| `--height` | — | `480` | Inline terminal height |
+| `--font-size` | — | `16` | Inline font size |
+| `--playback-speed` | — | configured/default | Postprocess speed `1x|2x|4x|8x` |
+
+### Behavior
+
+- If commands are provided after `--`, `record` runs inline mode.
+- In normal mode, `record` uses tape resolution rules (see below).
+- With `--dry-run`, output shows planned recording and attachment actions only.
+- `--playback-speed` creates a `-<speed>` file and, when `--pr` is set, attaches that variant.
+
+### Examples
+
+```text
+Recorded: .ace-local/demo/hello.gif
+Tape: .ace-local/demo/i50jj3/my-demo.tape
+Retimed: .ace-local/demo/hello-4x.gif (4x)
+Uploaded: hello-1700000000.gif -> https://github.com/OWNER/REPO/releases/download/demo-assets/hello-1700000000.gif
+Posted demo comment to PR #42
+```
+
+## `ace-demo retime <file>`
+
+### Syntax
+
 ```bash
 ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x
-ace-demo retime /tmp/demo.mp4 --playback-speed 8x --output /tmp/demo-fast.mp4
+ace-demo retime /tmp/demo.mp4 --playback-speed 2x --output /tmp/demo-2x.mp4
+ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x --dry-run
 ```
 
----
+### Arguments
 
-## Configuration
+- `<file>` — input media file (`gif`, `mp4`, `webm`)
 
-### Tape Discovery Cascade
+### Options
 
-Tapes are resolved in this order (first match wins):
+| Option | Alias | Required | Purpose |
+|--------|-------|----------|---------|
+| `--playback-speed` | — | Yes | Required speed (`1x|2x|4x|8x`) |
+| `--output` | `-o` | No | Auto `-<speed>` suffix |
+| `--dry-run` | `-n` | No | Show planned output without writing |
 
-1. Direct file path (e.g. `./custom.tape`)
-2. `.ace/demo/tapes/` — project-specific overrides (committed)
-3. `~/.ace/demo/tapes/` — user-wide presets
-4. `.ace-defaults/demo/tapes/` — built-in gem tapes
+## `ace-demo attach <file> --pr <number>`
 
-### Built-in Tapes
+### Syntax
 
-| Name | Description |
-|------|-------------|
-| `hello` | Minimal echo demo |
-| `ace-test` | Demonstrates `ace-test` run |
-
-### Adding Project Tapes
-
-Place `.tape` files in `.ace/demo/tapes/` with optional metadata comments:
-
-```
-# Description: Demo of my-feature command
-# Tags: feature, v2
-
-Output .ace-local/demo/my-feature.gif
-Set FontSize 14
-
-Type "my-command --help"
-Enter
-Sleep 2s
+```bash
+ace-demo attach .ace-local/demo/hello.gif --pr 42
+ace-demo attach /tmp/hello.webm --pr 42 --dry-run
 ```
 
-### Output Directory
+### Arguments
 
-Recordings default to `.ace-local/demo/`. The directory is created automatically if missing.
+- `<file>` — recording file path |
+- `--pr` — required PR number |
 
-### Record Postprocess Defaults
+### Options
 
-Configure automatic retime after `record` in `.ace/demo/config.yml`:
+| Option | Alias | Required | Purpose |
+|--------|-------|----------|---------|
+| `--pr` | — | Yes | PR number |
+| `--dry-run` | `-n` | No | Preview upload/comment only |
 
-```yaml
-record:
-  postprocess:
-    playback_speed: 4x
-```
+### Behavior
 
-CLI `--playback-speed` overrides this value for a single command.
+- Without `--pr`, command raises `PR number is required. Use --pr <number>.`
+- `--dry-run` prints the would-be upload and comment body.
 
----
+## Tape Discovery Order
+
+When a tape name is used (not a direct path), `ace-demo` resolves in this order:
+
+1. `./.ace/demo/tapes`
+2. `~/.ace/demo/tapes`
+3. `<gem_root>/.ace-defaults/demo/tapes`
+
+## Commands to Run Without Full Reference
+
+- `ace-demo --help`
+- `ace-demo list`
+- `ace-demo version`
 
 ## Troubleshooting
 
-### Problem: VHS not found
-
-**Symptom:**
-```
-Error: VHS not found. Install: https://github.com/charmbracelet/vhs
-```
-
-**Solution:** Install VHS following the [official instructions](https://github.com/charmbracelet/vhs).
-
----
-
-### Problem: Tape not found
-
-**Symptom:**
-```
-Error: Tape not found: nonexistent
-Searched: .ace-defaults/demo/tapes/, ~/.ace/demo/tapes/, .ace/demo/tapes/
-```
-
-**Solution:** Run `ace-demo list` to see available preset names, or pass a direct `.tape` file path.
-
----
-
-### Problem: gh CLI not authenticated
-
-**Symptom:**
-```
-Error: gh CLI authentication failed. Run: gh auth login
-```
-
-**Solution:**
-```bash
-gh auth login
-```
-
----
-
-### Problem: PR does not exist
-
-**Symptom:**
-```
-Error: PR #999 not found in this repository.
-```
-
-**Solution:** Verify the PR number with `gh pr list`.
-
----
-
-### Problem: GIF too large for GitHub comment
-
-**Symptom:** Comment renders broken or upload is rejected.
-
-**Solution:** Use `--format webm` for smaller file sizes:
-```bash
-ace-demo record hello --format webm --pr 123
-```
-
----
-
-## Best Practices
-
-1. **Use presets over ad-hoc paths**: Put reusable tapes in `.ace/demo/tapes/` so the team can run them by name.
-2. **Record GIFs for screenshots**: GIFs embed directly in PR comments — prefer over MP4 for visibility.
-3. **Dry-run before posting**: Use `--dry-run` to preview the comment before it appears in the PR.
-4. **Keep tapes short**: Aim for <30s recordings. Longer tapes produce large files and slow CI.
-5. **Add metadata comments**: Use `# Description:` and `# Tags:` in tape files for `ace-demo list` discoverability.
+- **VHS not found**: install VHS (`https://github.com/charmbracelet/vhs`) and keep `chromium`/`ttyd` available for rendering.
+- **gh not authenticated**: run `gh auth login` before `--pr` attachments.
+- **Tape not found**: inspect search paths with `ace-demo list` and use a direct `.tape` path as a fallback.
