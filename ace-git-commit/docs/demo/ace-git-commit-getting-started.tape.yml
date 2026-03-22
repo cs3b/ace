@@ -1,0 +1,37 @@
+---
+description: Showcase ace-git-commit with intention, specific files, and dry-run
+tags:
+- ace-git-commit
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Show current changes
+  commands:
+  - type: git status --short
+    sleep: 3s
+- name: Basic dry-run commit
+  commands:
+  - type: ace-git-commit --dry-run
+    sleep: 3s
+- name: With intention context
+  commands:
+  - type: ace-git-commit -i 'fix auth bug' --dry-run
+    sleep: 3s
+- name: Specific files only
+  commands:
+  - type: ace-git-commit ace-review/README.md --dry-run
+    sleep: 3s
+- name: Only staged files
+  commands:
+  - type: ace-git-commit --only-staged --dry-run
+    sleep: 3s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
