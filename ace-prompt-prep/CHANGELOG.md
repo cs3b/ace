@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-03-22
+
+### Fixed
+- Replaced a broken CLI help markdown link in `README.md` with a valid inline command reference.
+
+## [0.22.1] - 2026-03-22
+
+### Fixed
+- Corrected the task-specific getting-started command to use `ace-prompt-prep process --task <id>` instead of an unsupported top-level `--task` invocation.
+- Fixed handbook documentation links in `docs/handbook.md` so they resolve to the package `handbook/` directory.
+
+## [0.22.0] - 2026-03-22
+
+### Changed
+- Reworked `ace-prompt-prep` documentation surface for user onboarding: landed a value-first README with new demo context, added `docs/getting-started.md`, rebuilt `docs/usage.md` and `docs/handbook.md`, and aligned package messaging to the new README headline.
+- Added/updated demo assets under `docs/demo/` including a VHS tape + GIF showing setup and prompt enhancement flow.
+- Updated gemspec metadata to match the documentation-centric positioning.
+
 ## [0.21.0] - 2026-03-21
 
 ### Changed
