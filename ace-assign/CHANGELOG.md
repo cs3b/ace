@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.5] - 2026-03-22
+
+### Technical
+- Clarified release notes to document the intentional `codex:gpt@yolo` assignment default required for current Codex CLI compatibility.
+
+## [0.36.4] - 2026-03-22
+
+### Fixed
+- Clarified that assignment execution remains on `codex:gpt@yolo` because the current Codex CLI cannot combine `--full-auto` with `--dangerously-bypass-approvals-and-sandbox`.
+
+## [0.36.3] - 2026-03-22
+
+### Fixed
+- Clarified the documented assignment execution default after docs drift described it as `codex:codex@yolo` instead of the intentional `codex:gpt@yolo`.
+
 ## [0.36.2] - 2026-03-22
 
 ### Fixed
