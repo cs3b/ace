@@ -54,31 +54,31 @@ gem install ace-support-nav
 
 ```bash
 # Cascade search (searches all sources in order)
-mise exec -- ace-nav resolve wfi://setup          # Finds first 'setup' workflow
-mise exec -- ace-nav resolve tmpl://minitest      # Finds first matching template
-mise exec -- ace-nav resolve guide://configuration # Finds first matching guide
-mise exec -- ace-nav resolve skill://as-task-plan # Finds first matching skill
+ace-nav resolve wfi://setup          # Finds first 'setup' workflow
+ace-nav resolve tmpl://minitest      # Finds first matching template
+ace-nav resolve guide://configuration # Finds first matching guide
+ace-nav resolve skill://as-task-plan # Finds first matching skill
 
 # Source-specific with @ prefix
-mise exec -- ace-nav resolve wfi://@ace-git/setup     # Only from ace-git gem
-mise exec -- ace-nav resolve tmpl://@project/minitest # Only from project overrides
-mise exec -- ace-nav resolve wfi://@user/setup        # Only from user overrides
+ace-nav resolve wfi://@ace-git/setup     # Only from ace-git gem
+ace-nav resolve tmpl://@project/minitest # Only from project overrides
+ace-nav resolve wfi://@user/setup        # Only from user overrides
 ```
 
 ### Content Retrieval
 
 ```bash
 # Get content directly
-mise exec -- ace-nav resolve wfi://setup --content           # First matching content
-mise exec -- ace-nav resolve wfi://@ace-git/setup --content  # From specific source
+ace-nav resolve wfi://setup --content           # First matching content
+ace-nav resolve wfi://@ace-git/setup --content  # From specific source
 ```
 
 ### Resource Creation
 
 ```bash
 # Create from template
-mise exec -- ace-nav create wfi://bundle                  # Creates in project .ace-handbook
-mise exec -- ace-nav create tmpl://@ace-test/minitest     # Uses ace-test template
+ace-nav create wfi://bundle                  # Creates in project .ace-handbook
+ace-nav create tmpl://@ace-test/minitest     # Uses ace-test template
 ```
 
 ### Resource Discovery
@@ -87,21 +87,21 @@ ace-nav intelligently detects patterns that should return multiple results:
 
 ```bash
 # Automatic list mode (no --list needed!)
-mise exec -- ace-nav resolve prompt://            # All prompts (protocol-only)
-mise exec -- ace-nav resolve prompt://guidelines/ # All files in guidelines/ directory
-mise exec -- ace-nav resolve "prompt://format/*"  # All files matching pattern
-mise exec -- ace-nav resolve "wfi://create*"      # All workflows starting with 'create'
+ace-nav resolve prompt://            # All prompts (protocol-only)
+ace-nav resolve prompt://guidelines/ # All files in guidelines/ directory
+ace-nav resolve "prompt://format/*"  # All files matching pattern
+ace-nav resolve "wfi://create*"      # All workflows starting with 'create'
 
 # Subdirectory and prefix patterns
-mise exec -- ace-nav resolve prompt://focus/         # Lists all focus modules
-mise exec -- ace-nav resolve prompt://focus/quality/ # Lists quality-specific focus modules
-mise exec -- ace-nav resolve wfi://review/           # Lists all review-related workflows
+ace-nav resolve prompt://focus/         # Lists all focus modules
+ace-nav resolve prompt://focus/quality/ # Lists quality-specific focus modules
+ace-nav resolve wfi://review/           # Lists all review-related workflows
 
 # Explicit list mode still works
-mise exec -- ace-nav list 'wfi://*'               # All workflows
-mise exec -- ace-nav list 'skill://*'             # All canonical skills
-mise exec -- ace-nav list 'tmpl://@project/*'     # Project template overrides
-mise exec -- ace-nav list 'wfi://*test*'          # Test-related workflows
+ace-nav list 'wfi://*'               # All workflows
+ace-nav list 'skill://*'             # All canonical skills
+ace-nav list 'tmpl://@project/*'     # Project template overrides
+ace-nav list 'wfi://*test*'          # Test-related workflows
 ```
 
 ### Task Navigation
@@ -110,19 +110,19 @@ The `task://` protocol delegates to `ace-task` commands, providing unified navig
 
 ```bash
 # Basic task navigation
-mise exec -- ace-nav resolve task://083                   # Show task summary
-mise exec -- ace-nav resolve task://083 --path            # Get task file path
-mise exec -- ace-nav resolve task://083 --content         # Show full task content
-mise exec -- ace-nav resolve task://083 --tree            # Show task dependencies
+ace-nav resolve task://083                   # Show task summary
+ace-nav resolve task://083 --path            # Get task file path
+ace-nav resolve task://083 --content         # Show full task content
+ace-nav resolve task://083 --tree            # Show task dependencies
 
 # All ace-taskflow reference formats supported
-mise exec -- ace-nav resolve task://018                   # Task in current context
-mise exec -- ace-nav resolve task://task.018              # Prefixed format
-mise exec -- ace-nav resolve task://v.0.9.0+task.018      # Specific release
-mise exec -- ace-nav resolve task://backlog+025           # Backlog tasks
+ace-nav resolve task://018                   # Task in current context
+ace-nav resolve task://task.018              # Prefixed format
+ace-nav resolve task://v.0.9.0+task.018      # Specific release
+ace-nav resolve task://backlog+025           # Backlog tasks
 
 # Shell integration
-nvim "$(mise exec -- ace-nav resolve task://083 --path)"  # Open task in editor
+nvim "$(ace-nav resolve task://083 --path)"  # Open task in editor
 ```
 
 ## Configuration
@@ -226,7 +226,7 @@ After checking out the repo, run:
 
 ```bash
 bundle install
-mise exec -- ace-test ace-support-nav
+ace-test ace-support-nav
 ```
 
 ## Part of ACE
