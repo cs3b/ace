@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-03-22
+
+### Fixed
+- Suite report-dir now includes the package subdirectory so the result aggregator finds reports at `<root>/<package>/<timestamp>/` instead of flat `<root>/<timestamp>/`.
+
 ## [0.16.0] - 2026-03-20
 
 ### Changed
