@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.891] - 2026-03-22
+
+### Changed
+- **ace-assign v0.36.6**: Add `create-retro` as final child step in review-cycle and batch-task fork subtrees with ordering rules and review-session consumption.
+- **ace-retro v0.15.2**: Add commit step and review-aware reflection prompts to the retro creation workflow.
+- **ace-task v0.30.3**: Add `create-retro` to the work-on-task fork sub-steps.
+
 ## [0.9.890] - 2026-03-22
 
 ### Technical
