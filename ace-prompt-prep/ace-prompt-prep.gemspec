@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Prompt workspace with automatic archiving'
+  spec.summary = 'Prompt workspace with archiving, LLM enhancement, and context loading'
   spec.description = 'Provides a single active prompt file with automatic history archiving. ' \
                      'Write prompts in your editor, run ace-prompt-prep, get automatic archiving ' \
                      'with optional context loading and LLM enhancement.'
