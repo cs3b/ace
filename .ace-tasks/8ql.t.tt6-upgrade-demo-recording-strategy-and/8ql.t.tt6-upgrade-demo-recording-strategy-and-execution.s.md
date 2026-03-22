@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 19:52:26"
 estimate: TBD
@@ -10,6 +10,7 @@ bundle:
   presets: [project]
   files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/atoms/tape_content_generator.rb, ace-demo/lib/ace/demo/atoms/tape_metadata_parser.rb, ace-demo/lib/ace/demo/molecules/tape_resolver.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/molecules/tape_scanner.rb, ace-demo/lib/ace/demo/organisms/tape_creator.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/cli/commands/create.rb, ace-demo/lib/ace/demo/cli/commands/list.rb, ace-demo/lib/ace/demo/cli/commands/show.rb, ace-demo/.ace-defaults/demo/config.yml]
   commands: []
+needs_review: false
 ---
 
 # Upgrade Demo Recording Strategy and Execution
@@ -54,6 +55,7 @@ settings:
 
 setup:
   - sandbox
+  - git-init
   - copy-fixtures
   - run: "git add -A && git commit -qm 'seed'"
   - run: "ace-task create 'Deploy API v2' --status done --tags ops"
@@ -128,9 +130,10 @@ Error Handling:
 | `DemoTeardownExecutor` molecule | Engine (tt6.1) | — | NEW |
 | `TapeResolver` | — | — | MODIFIED (resolve `.tape.yml` too) |
 | `DemoRecorder` | — | — | MODIFIED (compile → sandbox → record → teardown) |
-| `TapeContentGenerator` | — | — | MODIFIED (generates VHS from YAML, not from CLI args) |
+| `TapeContentGenerator` | — | — | KEPT (used by InlineRecorder for inline `--` commands) |
+| `InlineRecorder` | — | — | KEPT (inline recording path unchanged) |
 | `VhsExecutor` | — | — | KEPT (receives generated tape path) |
-| `TapeMetadataParser` | — | Engine (tt6.1) | REPLACED by YAML parsing |
+| `TapeMetadataParser` | — | Engine (tt6.1) | REPLACED by DemoYamlParser for `.tape.yml`; kept for `.tape` backward compat |
 
 ## Verification Plan
 

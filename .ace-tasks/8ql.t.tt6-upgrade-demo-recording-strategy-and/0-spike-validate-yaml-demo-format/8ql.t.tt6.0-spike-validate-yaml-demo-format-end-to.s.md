@@ -1,6 +1,6 @@
 ---
 id: 8ql.t.tt6.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-22 19:52:30"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/atoms/tape_content_generator.rb, ace-demo/lib/ace/demo/atoms/tape_metadata_parser.rb, ace-demo/lib/ace/demo/molecules/tape_resolver.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/molecules/tape_scanner.rb, ace-demo/lib/ace/demo/organisms/tape_creator.rb, ace-demo/.ace-defaults/demo/config.yml, ace-demo/docs/demo/ace-demo-getting-started.tape, ace-test-runner-e2e/lib/ace/test/end_to_end_runner/molecules/setup_executor.rb]
   commands: []
+needs_review: false
 ---
 
 # Spike: Validate YAML Demo Format End-to-End
@@ -32,12 +33,14 @@ Using ace-task as the test subject, the spike should produce a GIF showing reali
 ### Expected Behavior
 
 1. **YAML parsing**: Read `.tape.yml` file, extract settings, setup, scenes, teardown sections
-2. **Sandbox creation**: Create temporary directory, initialize git repo, copy any fixtures
-3. **Setup execution**: Run setup commands in sandbox (e.g., `ace-task create ...` to seed data)
-4. **VHS compilation**: Convert scenes to VHS tape content (Output, Set, Type, Enter, Sleep directives)
-5. **Recording**: Pass compiled tape to VhsExecutor (existing component, kept as-is)
-6. **Teardown**: Remove sandbox directory after recording
-7. **Backward compat**: Existing `.tape` files still record via current pipeline (no regression)
+2. **Sandbox creation**: Create temporary directory via `sandbox` directive
+3. **Git init**: Initialize git repo in sandbox via `git-init` directive (separate from sandbox creation)
+4. **Fixture copy**: Copy fixtures into sandbox via `copy-fixtures` directive
+5. **Setup execution**: Run setup commands in sandbox (e.g., `ace-task create ...` to seed data)
+6. **VHS compilation**: Convert scenes to VHS tape content (Output, Set, Type, Enter, Sleep directives)
+7. **Recording**: Pass compiled tape to VhsExecutor (existing component, kept as-is)
+8. **Teardown**: Remove sandbox directory after recording
+9. **Backward compat**: Existing `.tape` files still record via current pipeline (no regression)
 
 ### Interface Contract
 
@@ -54,6 +57,7 @@ settings:
 
 setup:
   - sandbox
+  - git-init
   - copy-fixtures
   - run: "git add -A && git commit -qm 'seed'"
   - run: "ace-task create 'Deploy API v2' --status done --tags ops"
