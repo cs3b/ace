@@ -197,7 +197,11 @@ module Ace
           cmd_parts << "--no-save" unless options["save_reports"]
           cmd_parts << "--fail-fast" if options["fail_fast"]
           cmd_parts << "--no-color" unless options.fetch("color", true)
-          cmd_parts << "--report-dir" << options["report_dir"] if options["report_dir"]
+          if options["report_dir"]
+            short_name = package["name"].to_s.sub(/\Aace-/, "")
+            pkg_report_dir = File.join(options["report_dir"], short_name)
+            cmd_parts << "--report-dir" << pkg_report_dir
+          end
 
           # Build command string
           # Note: Do NOT set CI=true here - respect the existing environment
