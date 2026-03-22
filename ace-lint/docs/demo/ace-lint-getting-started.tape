@@ -1,23 +1,23 @@
-Output docs/demo/ace-lint-getting-started.gif
+# Description: Showcase ace-lint markdown linting, Ruby auto-fix, and doctor diagnostics
+# Tags: ace-lint,docs,getting-started
 
-Set Shell "bash"
+Output ace-lint/docs/demo/ace-lint-getting-started.gif
+
 Set FontSize 16
 Set Width 1200
 Set Height 700
-Set Theme "Dracula"
-Set TypingSpeed 40ms
 
-Type "cd ace-lint"
+# Scene 1: Lint a markdown file
+Type 'ace-lint ace-lint/README.md'
 Enter
+Sleep 3s
 
-Type "ace-lint README.md"
+# Scene 2: Lint Ruby with auto-fix
+Type 'ace-lint ace-lint/lib/ace/lint/version.rb --type ruby --fix'
 Enter
-Sleep 2s
+Sleep 3s
 
-Type "ace-lint lib/ace/lint/version.rb --type ruby --fix"
+# Scene 3: Run doctor diagnostics
+Type 'ace-lint --doctor'
 Enter
-Sleep 2s
-
-Type "ace-lint --doctor"
-Enter
-Sleep 2s
+Sleep 3s
