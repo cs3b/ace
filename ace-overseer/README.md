@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-overseer
-purpose: Landing page for task-focused worktree orchestration in ace-overseer.
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-overseer
 
 One command to provision a worktree, open a tmux window, and prepare an assignment for execution.
