@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-assign
-purpose: Landing page for phase-based assignment queues in ace-assign.
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-assign
 
 Phase-based assignment queues that give AI agents structured, resumable work.
