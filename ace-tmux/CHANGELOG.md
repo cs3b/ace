@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-03-22
+
+### Fixed
+- Restore YAML composition examples for pane and window preset reuse in usage docs.
+
+## [0.9.1] - 2026-03-22
+
+### Fixed
+- Include `docs/**/*` in gemspec so documentation ships with the gem.
+- Fix VHS tape output path to `docs/demo/` instead of `.ace-local/demo/`.
+- Clarify `on_project_exit` as reserved/not-yet-implemented in usage docs.
+
+## [0.9.0] - 2026-03-22
+
+### Added
+- Reworked package documentation with a new landing-page README, tutorial getting-started guide, full usage reference, handbook catalog, demo assets, and aligned gem metadata messaging.
+
 ## [0.8.0] - 2026-03-21
 
 ### Changed
