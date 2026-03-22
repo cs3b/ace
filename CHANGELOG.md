@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.895] - 2026-03-22
+
+### Technical
+- **ace-git-worktree v0.18.1**: Removed `release` template-variable support and release-based fixture assumptions from task worktree configuration, while preserving task-ID naming behavior.
+
 ## [0.9.894] - 2026-03-22
 
 ### Changed
