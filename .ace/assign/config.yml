@@ -18,11 +18,10 @@ workflow_source_paths:
   - "ace-task/handbook/workflow-instructions"
   - "ace-assign/handbook/workflow-instructions"
 
-# Fork execution defaults
+  # Fork execution defaults: 
 execution:
-  # provider: "codex:spark"
-  provider: "codex"
-  # provider: "claude:sonnet"
+  # format: <provider>:<model>@<preset> 
+  provider: "codex:codex@yolo"
   timeout: 1800
 
 # Provider-level defaults for CLI invocation
