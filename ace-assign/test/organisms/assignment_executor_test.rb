@@ -631,6 +631,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-plan"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-handbook", "handbook", "workflow-instructions", "release"))
 
       File.write(File.join(project_root, "ace-bundle", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-bundle.yml"), <<~YAML)
         name: ace-bundle
@@ -691,6 +692,15 @@ class AssignmentExecutorTest < AceAssignTestCase
         ---
         ---
       MD
+      File.write(File.join(project_root, "ace-handbook", "handbook", "workflow-instructions", "release", "publish.wf.md"), <<~MD)
+        ---
+        ---
+
+        # Release Workflow
+
+        Follow the release workflow.
+      MD
+
       File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
@@ -716,7 +726,8 @@ class AssignmentExecutorTest < AceAssignTestCase
       ]
       workflow_paths = [
         File.join(project_root, "ace-task", "handbook", "workflow-instructions"),
-        File.join(project_root, "ace-bundle", "handbook", "workflow-instructions")
+        File.join(project_root, "ace-bundle", "handbook", "workflow-instructions"),
+        File.join(project_root, "ace-handbook", "handbook", "workflow-instructions")
       ]
       project_assign_config = File.join(project_root, ".ace", "assign", "config.yml")
       FileUtils.mkdir_p(File.dirname(project_assign_config))
