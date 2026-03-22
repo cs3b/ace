@@ -4,7 +4,7 @@ title: t-pm3-drive-recovery-precision
 type: standard
 tags: []
 created_at: "2026-03-22 18:58:51"
-status: active
+status: done
 task_ref: t.pm3
 ---
 
