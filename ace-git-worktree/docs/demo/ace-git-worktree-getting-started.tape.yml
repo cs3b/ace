@@ -1,0 +1,27 @@
+---
+description: Preview task-aware worktree creation and listing
+tags:
+- docs
+- worktree
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+scenes:
+- name: Main flow
+  commands:
+  - type: cd $PWD
+    sleep: 2s
+  - type: TASK_ID=$(ace-task create "Prepare worktree demo task" --status pending --priority low | grep -Eo '[a-z0-9]+\.t\.[a-z0-9]+' | tail -n 1) && echo "Using ${TASK_ID}"
+    sleep: 2s
+  - type: ace-git-worktree create --task "$TASK_ID" --dry-run --no-commit --no-push --no-pr --no-auto-navigate
+    sleep: 2s
+  - type: ace-git-worktree list --show-tasks
+    sleep: 2s
+teardown:
+- cleanup
+setup:
+- sandbox
+- run: git init -b main && git config user.name "Demo User" && git config user.email demo@example.com && git add -A && git commit -qm "seed fixtures"
+- copy-fixtures
