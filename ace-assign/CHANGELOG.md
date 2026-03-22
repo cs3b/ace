@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.7] - 2026-03-22
+
+### Fixed
+- `mark-task-done` step now checks and closes parent tasks when all children are done, preventing status drift in task hierarchies.
+
 ## [0.36.6] - 2026-03-22
 
 ### Changed
