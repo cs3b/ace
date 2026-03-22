@@ -13,7 +13,7 @@ ace-docs:
 
 - ACE repository available locally
 - `mise` installed for managed runtime/tool execution
-- `ace-nav` and `ace-bundle` available through `mise exec --`
+- `ace-nav` and `ace-bundle` available on your PATH
 
 ## Installation
 
@@ -24,10 +24,10 @@ gem install ace-handbook
 
 ```
 
-Inside this repository, use commands through `mise`:
+Inside this repository, run ACE commands directly:
 
 ```bash
-mise exec -- ace-nav list 'wfi://handbook/*'
+ace-nav list 'wfi://handbook/*'
 
 ```
 
@@ -36,14 +36,14 @@ mise exec -- ace-nav list 'wfi://handbook/*'
 Discover the guide-management workflow path:
 
 ```bash
-mise exec -- ace-nav resolve wfi://handbook/manage-guides
+ace-nav resolve wfi://handbook/manage-guides
 
 ```
 
 Load and follow the full workflow:
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/manage-guides
+ace-bundle wfi://handbook/manage-guides
 
 ```
 
@@ -52,14 +52,14 @@ mise exec -- ace-bundle wfi://handbook/manage-guides
 Create or update `.wf.md` files:
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/manage-workflows
+ace-bundle wfi://handbook/manage-workflows
 
 ```
 
 Run the review workflow before finalizing changes:
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/review-workflows
+ace-bundle wfi://handbook/review-workflows
 
 ```
 
@@ -68,7 +68,7 @@ mise exec -- ace-bundle wfi://handbook/review-workflows
 For package-managed agent definitions (`.ag.md`), load:
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/manage-agents
+ace-bundle wfi://handbook/manage-agents
 
 ```
 
@@ -77,7 +77,7 @@ mise exec -- ace-bundle wfi://handbook/manage-agents
 Run the guide review workflow to enforce standards:
 
 ```bash
-mise exec -- ace-bundle wfi://handbook/review-guides
+ace-bundle wfi://handbook/review-guides
 
 ```
 
@@ -85,14 +85,14 @@ mise exec -- ace-bundle wfi://handbook/review-guides
 
 | Command | Purpose |
 | --- | --- |
-| `mise exec -- ace-nav list 'wfi://handbook/*'` | Discover handbook workflows |
-| `mise exec -- ace-nav resolve wfi://handbook/manage-guides` | Resolve workflow path |
-| `mise exec -- ace-bundle wfi://handbook/manage-guides` | Create/update guides |
-| `mise exec -- ace-bundle wfi://handbook/manage-workflows` | Create/update workflow instructions |
-| `mise exec -- ace-bundle wfi://handbook/manage-agents` | Create/update agent definitions |
-| `mise exec -- ace-bundle wfi://handbook/review-guides` | Review guide quality |
-| `mise exec -- ace-bundle wfi://handbook/review-workflows` | Review workflow quality |
-| `mise exec -- ace-bundle wfi://handbook/update-docs` | Refresh package docs |
+| `ace-nav list 'wfi://handbook/*'` | Discover handbook workflows |
+| `ace-nav resolve wfi://handbook/manage-guides` | Resolve workflow path |
+| `ace-bundle wfi://handbook/manage-guides` | Create/update guides |
+| `ace-bundle wfi://handbook/manage-workflows` | Create/update workflow instructions |
+| `ace-bundle wfi://handbook/manage-agents` | Create/update agent definitions |
+| `ace-bundle wfi://handbook/review-guides` | Review guide quality |
+| `ace-bundle wfi://handbook/review-workflows` | Review workflow quality |
+| `ace-bundle wfi://handbook/update-docs` | Refresh package docs |
 
 ## Next steps
 
