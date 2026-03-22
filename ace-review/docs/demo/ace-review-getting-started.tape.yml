@@ -1,0 +1,33 @@
+---
+description: Showcase ace-review presets, diff review, PR review, and feedback
+tags:
+- ace-review
+- docs
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: List available presets
+  commands:
+  - type: ace-review --list-presets
+    sleep: 3s
+- name: Review branch diff with preset
+  commands:
+  - type: ace-review --preset code --subject diff:origin/main..HEAD --dry-run
+    sleep: 3s
+- name: Review a PR
+  commands:
+  - type: ace-review --pr 251 --dry-run
+    sleep: 3s
+- name: List feedback items
+  commands:
+  - type: ace-review-feedback list --status draft
+    sleep: 3s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
