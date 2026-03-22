@@ -1,7 +1,7 @@
 # Project-specific configuration for ace-git-commit
 git:
   # Default model - uses alias from ace-llm configuration
-  model: google:lite-preview
+  # model: google:lite-preview
   model: codex:mini 
 
   # Commit scope definitions - each key is a scope name
