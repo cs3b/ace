@@ -159,7 +159,6 @@ git:
 Available for directory and branch naming:
 - `{id}` - Task numeric ID (e.g., `081`)
 - `{task_id}` - Full task ID (e.g., `task.081`)
-- `{release}` - Release version (e.g., `v.0.9.0`)
 - `{slug}` - URL-safe slug from task title
 
 ## Examples

@@ -215,7 +215,6 @@ module Ace
             puts "Available Template Variables:"
             puts "  {id}        - Task numeric ID (e.g., 081)"
             puts "  {task_id}   - Full task ID (e.g., task.081)"
-            puts "  {release}   - Release version (e.g., v.0.9.0)"
             puts "  {slug}      - URL-safe slug from task title"
             puts
 

@@ -37,19 +37,18 @@ git:
     # Task-based naming and behavior configuration
     task:
       # Directory naming format for task worktrees
-      # Available variables: {id}, {task_id}, {release}, {slug}
+      # Available variables: {id}, {task_id}, {slug}
       # Examples:
       #   "t.{task_id}"     -> t.081
       #   "{id}"            -> 081
-      #   "{release}/{id}"  -> v.0.9.0/081
+      #   "{task_id}"       -> t.081
       directory_format: "t.{task_id}"
 
       # Branch naming format for task worktrees
-      # Available variables: {id}, {task_id}, {release}, {slug}
+      # Available variables: {id}, {task_id}, {slug}
       # Examples:
       #   "{id}-{slug}"       -> 081-fix-authentication-bug
       #   "task-{id}-{slug}"  -> task-081-fix-authentication-bug
-      #   "{release}-{id}"    -> v.0.9.0-081
       branch_format: "{id}-{slug}"
 
       # Automatically mark tasks as in-progress when creating worktrees
@@ -61,8 +60,8 @@ git:
       auto_commit_task: true
 
       # Commit message format for task updates
-      # Available variables: {id}, {task_id}, {release}, {slug}
-      commit_message_format: "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}"
+      # Available variables: {id}, {task_id}, {slug}
+      commit_message_format: "chore({task_id}): mark as in-progress, creating worktree for {slug}"
 
       # Add worktree metadata to task frontmatter
       # If true, adds worktree info (branch, path, created_at) to task file
@@ -87,7 +86,7 @@ git:
       auto_create_pr: false
 
       # PR title format when auto-creating PRs
-      # Available variables: {id}, {task_id}, {release}, {slug}
+      # Available variables: {id}, {task_id}, {slug}
       pr_title_format: "{id} - {slug}"
 
       # Create _current symlink inside worktree pointing to task directory
@@ -148,8 +147,8 @@ git:
 
     # Hooks: Commands to run at specific lifecycle points
     # Commands execute sequentially from the PROJECT ROOT by default
-    # Available variables: {worktree_path}, {task_id}, {task_title}, {release}, {worktree_dir}
-    # Environment variables: ACE_PROJECT_ROOT, ACE_WORKTREE_PATH, ACE_TASK_ID, ACE_TASK_TITLE, ACE_RELEASE
+    # Available variables: {worktree_path}, {task_id}, {task_title}, {worktree_dir}
+    # Environment variables: ACE_PROJECT_ROOT, ACE_WORKTREE_PATH, ACE_TASK_ID, ACE_TASK_TITLE
     hooks:
       # after_create: Commands to run after worktree creation
       # Hook configuration:
@@ -197,7 +196,7 @@ git:
 #   worktree:
 #     root_path: "~/worktrees"
 #     task:
-#       directory_format: "work/{release}/{id}"
+#       directory_format: "work/{task_id}"
 #       branch_format: "work/{id}-{slug}"
 
 # Example 2: Minimal automation
@@ -241,7 +240,6 @@ git:
 # Template Variable Reference:
 # {id}        -> Numeric task ID (e.g., 081)
 # {task_id}   -> Full task ID (e.g., t.081)
-# {release}   -> Release version (e.g., v.0.9.0)
 # {slug}      -> URL-safe slug from title (e.g., fix-authentication-bug)
 # {number}    -> PR number (e.g., 26)
 # {title_slug}-> Alternative slug variable (same as {slug})
