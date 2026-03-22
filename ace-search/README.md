@@ -1,12 +1,3 @@
----
-doc-type: user
-title: ace-search
-purpose: Documentation for ace-search/README.md
-ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
----
-
 # ace-search
 
 Unified codebase search -- one command that auto-detects files or content.
