@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-03-22
+
+### Changed
+- Add commit step (step 7) to the retro creation workflow so retros created inside fork subtrees are preserved in git history.
+- Add review-aware reflection prompts for cross-cycle analysis when review session data is available.
+
 ## [0.15.1] - 2026-03-22
 
 ### Fixed
