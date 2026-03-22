@@ -11,6 +11,7 @@ assign:
   - pre-commit-review
   - verify-test
   - release-minor
+  - create-retro
   context: fork
 doc-type: workflow
 purpose: Execute task implementation from plan with quality gates
