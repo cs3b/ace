@@ -29,7 +29,7 @@ module Ace
             # @return [Integer] Timeout in seconds
             def default_timeout
               Ace::Git::Worktree.default_timeout
-            rescue StandardError
+            rescue
               FALLBACK_TIMEOUT
             end
 
@@ -58,7 +58,7 @@ module Ace
                 error: result[:error].to_s,
                 exit_code: result[:exit_code] || 0
               }
-            rescue StandardError => e
+            rescue => e
               # Handle unexpected exceptions from ace-git to maintain defensive behavior
               {
                 success: false,

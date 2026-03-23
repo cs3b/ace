@@ -38,7 +38,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       result = command.run(["--task", "081"])
       assert_equal 0, result
       mock_worktree_manager.verify
@@ -62,7 +62,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       result = command.run(["--task", "081", "--dry-run"])
       assert_equal 0, result
       mock_worktree_manager.verify
@@ -72,7 +72,7 @@ class CreateCommandTest < Minitest::Test
   def test_run_with_traditional_branch
     # Mock successful traditional worktree creation
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:create, { success: true }, [String, Hash])
+    mock_worktree_manager.expect(:create, {success: true}, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
@@ -84,7 +84,7 @@ class CreateCommandTest < Minitest::Test
   def test_run_with_branch_and_path
     # Mock successful traditional worktree creation with custom path
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:create, { success: true }, [String, Hash])
+    mock_worktree_manager.expect(:create, {success: true}, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
@@ -103,7 +103,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       result = command.run(["--task", "invalid"])
       # Should handle invalid task gracefully
       assert_equal 1, result
@@ -157,7 +157,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       result = command.run(["--task", "081", "--dry-run", "--path", "/custom/path"])
       assert_equal 0, result
       mock_worktree_manager.verify
@@ -209,7 +209,7 @@ class CreateCommandTest < Minitest::Test
 
       command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
         result = command.run(["--task", task_format, "--dry-run"])
         assert_equal 0, result, "Should accept task format: #{task_format}"
         mock_worktree_manager.verify
@@ -260,7 +260,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       result = command.run([
         "--task", "081",
         "--no-mise-trust",
@@ -278,13 +278,13 @@ class CreateCommandTest < Minitest::Test
   def test_cli_override_flags_are_passed_through_traditional_creation
     # Test that CLI override flags work for traditional worktree creation too
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:create, { success: true }) do |branch_name, options|
+    mock_worktree_manager.expect(:create, {success: true}) do |branch_name, options|
       assert_equal "feature-branch", branch_name
       # Test that relevant CLI override flags are properly passed through
       assert_equal true, options[:no_mise_trust], "Should pass through --no-mise-trust"
       assert_equal "/custom/path", options[:path], "Should pass through --path"
       assert_equal true, options[:force], "Should pass through --force"
-      { success: true }
+      {success: true}
     end
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
@@ -327,7 +327,7 @@ class CreateCommandTest < Minitest::Test
 
       command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
         result = command.run(["--task", "081", flag, "--dry-run"])
         assert_equal 0, result, "Should handle #{flag} flag correctly"
         mock_worktree_manager.verify
@@ -363,7 +363,7 @@ class CreateCommandTest < Minitest::Test
 
       command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
         result = command.run([
           "--task", "081",
           "--commit-message", commit_message,
@@ -390,7 +390,7 @@ class CreateCommandTest < Minitest::Test
             "headRefName" => "feature/auth",
             "baseRefName" => "main",
             "isCrossRepository" => false,
-            "headRepositoryOwner" => { "login" => "owner" }
+            "headRepositoryOwner" => {"login" => "owner"}
           }
         }
         Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
@@ -429,7 +429,7 @@ class CreateCommandTest < Minitest::Test
             "headRefName" => "fix/issue",
             "baseRefName" => "main",
             "isCrossRepository" => true,
-            "headRepositoryOwner" => { "login" => "contributor" }
+            "headRepositoryOwner" => {"login" => "contributor"}
           }
         }
         Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
@@ -569,7 +569,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       command.stub(:tmux_enabled?, false) do
         output = capture_io do
           result = command.run(["--task", "081"])
@@ -599,7 +599,7 @@ class CreateCommandTest < Minitest::Test
     exec_called_with = nil
     mock_exec = ->(* args) { exec_called_with = args }
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       command.stub(:tmux_enabled?, true) do
         command.stub(:ace_tmux_available?, true) do
           Kernel.stub(:exec, mock_exec) do
@@ -630,7 +630,7 @@ class CreateCommandTest < Minitest::Test
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
       command.stub(:tmux_enabled?, true) do
         command.stub(:ace_tmux_available?, false) do
           output = capture_io do

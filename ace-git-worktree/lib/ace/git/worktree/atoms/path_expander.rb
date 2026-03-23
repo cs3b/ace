@@ -69,7 +69,7 @@ module Ace
                 true
               rescue Errno::EACCES, Errno::EPERM
                 false
-              rescue StandardError
+              rescue
                 false
               end
             end

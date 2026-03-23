@@ -25,40 +25,38 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              # Default to showing configuration if no action specified
-              options[:show] = true unless options[:validate] || options[:show] || options[:files]
+            # Default to showing configuration if no action specified
+            options[:show] = true unless options[:validate] || options[:show] || options[:files]
 
-              validate_options(options)
+            validate_options(options)
 
-              results = []
+            results = []
 
-              if options[:show]
-                results << show_configuration
-              end
-
-              if options[:validate]
-                results << validate_configuration
-              end
-
-              if options[:files]
-                results << show_configuration_files
-              end
-
-              # Return success if all operations succeeded
-              results.all? { |result| result == 0 } ? 0 : 1
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue StandardError => e
-              puts "Error: #{e.message}"
-              1
+            if options[:show]
+              results << show_configuration
             end
+
+            if options[:validate]
+              results << validate_configuration
+            end
+
+            if options[:files]
+              results << show_configuration_files
+            end
+
+            # Return success if all operations succeeded
+            (results.all? { |result| result == 0 }) ? 0 : 1
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue => e
+            puts "Error: #{e.message}"
+            1
           end
 
           # Show help for the config command
@@ -187,16 +185,16 @@ module Ace
             # Basic settings
             puts "Root Path: #{config.root_path}"
             puts "Absolute Root: #{config.absolute_root_path}"
-            puts "Mise Trust Auto: #{config.mise_trust_auto? ? 'enabled' : 'disabled'}"
+            puts "Mise Trust Auto: #{config.mise_trust_auto? ? "enabled" : "disabled"}"
             puts
 
             # Task settings
             puts "Task Settings:"
             puts "  Directory Format: #{config.directory_format}"
             puts "  Branch Format: #{config.branch_format}"
-            puts "  Auto Mark In Progress: #{config.auto_mark_in_progress? ? 'enabled' : 'disabled'}"
-            puts "  Auto Commit Task: #{config.auto_commit_task? ? 'enabled' : 'disabled'}"
-            puts "  Add Worktree Metadata: #{config.add_worktree_metadata? ? 'enabled' : 'disabled'}"
+            puts "  Auto Mark In Progress: #{config.auto_mark_in_progress? ? "enabled" : "disabled"}"
+            puts "  Auto Commit Task: #{config.auto_commit_task? ? "enabled" : "disabled"}"
+            puts "  Add Worktree Metadata: #{config.add_worktree_metadata? ? "enabled" : "disabled"}"
             puts
 
             if config.auto_commit_task?
@@ -207,8 +205,8 @@ module Ace
 
             # Cleanup settings
             puts "Cleanup Settings:"
-            puts "  On Merge: #{config.cleanup_on_merge? ? 'enabled' : 'disabled'}"
-            puts "  On Delete: #{config.cleanup_on_delete? ? 'enabled' : 'disabled'}"
+            puts "  On Merge: #{config.cleanup_on_merge? ? "enabled" : "disabled"}"
+            puts "  On Delete: #{config.cleanup_on_delete? ? "enabled" : "disabled"}"
             puts
 
             # Template variables
@@ -222,12 +220,12 @@ module Ace
             puts "Example Usage:"
             task_id = "081"
             task_slug = "fix-authentication-bug"
-            puts "  Directory: #{config.directory_format.gsub('{id}', task_id).gsub('{slug}', task_slug)}"
-            puts "  Branch: #{config.branch_format.gsub('{id}', task_id).gsub('{slug}', task_slug)}"
+            puts "  Directory: #{config.directory_format.gsub("{id}", task_id).gsub("{slug}", task_slug)}"
+            puts "  Branch: #{config.branch_format.gsub("{id}", task_id).gsub("{slug}", task_slug)}"
             puts
 
             0
-          rescue StandardError => e
+          rescue => e
             puts "Error showing configuration: #{e.message}"
             1
           end
@@ -270,7 +268,7 @@ module Ace
             puts
 
             0
-          rescue StandardError => e
+          rescue => e
             puts "Error validating configuration: #{e.message}"
             1
           end
@@ -306,7 +304,7 @@ module Ace
                   elsif file.include?("~/.ace/")
                     puts "   👤 User configuration"
                   end
-                rescue StandardError => e
+                rescue => e
                   puts "   ⚠️  Error reading file info: #{e.message}"
                 end
               else
@@ -325,7 +323,7 @@ module Ace
             puts
 
             0
-          rescue StandardError => e
+          rescue => e
             puts "Error showing configuration files: #{e.message}"
             1
           end

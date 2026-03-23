@@ -35,7 +35,7 @@ module Ace
           # @return [Integer] Timeout in seconds
           def config_timeout
             Ace::Git::Worktree.commit_timeout
-          rescue StandardError
+          rescue
             FALLBACK_TIMEOUT
           end
 
@@ -136,7 +136,7 @@ module Ace
             if files.nil? || files.empty?
               # Check all changes
               result = execute_git_command("status", "--porcelain")
-              return result[:success] && !result[:output].strip.empty?
+              result[:success] && !result[:output].strip.empty?
             else
               # Check specific files
               files.any? do |file|
@@ -258,13 +258,11 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Hash] Result with :success, :output, :error, :exit_code
           def execute_git_command(*args)
-            begin
-              require_relative "../atoms/git_command"
-              Atoms::GitCommand.execute(*args, timeout: @timeout)
-            rescue LoadError
-              # Fallback to direct git execution
-              execute_command("git", *args, timeout: @timeout)
-            end
+            require_relative "../atoms/git_command"
+            Atoms::GitCommand.execute(*args, timeout: @timeout)
+          rescue LoadError
+            # Fallback to direct git execution
+            execute_command("git", *args, timeout: @timeout)
           end
 
           # Execute a command safely
@@ -293,7 +291,7 @@ module Ace
               error: "Command timed out after #{timeout} seconds",
               exit_code: 124
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               output: "",

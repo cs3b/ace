@@ -105,7 +105,7 @@ module Ace
             else
               handle_creation_error(stderr)
             end
-          rescue StandardError => e
+          rescue => e
             error_result("Unexpected error: #{e.message}")
           end
 
@@ -124,9 +124,9 @@ module Ace
           def gh_authenticated?
             return @gh_authenticated unless @gh_authenticated.nil?
 
-            stdout, _stderr, status = Open3.capture3("gh", "auth", "status")
+            _, _stderr, status = Open3.capture3("gh", "auth", "status")
             @gh_authenticated = status.success?
-          rescue StandardError
+          rescue
             @gh_authenticated = false
           end
 
@@ -164,7 +164,7 @@ module Ace
             }
           rescue JSON::ParserError
             nil
-          rescue StandardError
+          rescue
             nil
           end
 

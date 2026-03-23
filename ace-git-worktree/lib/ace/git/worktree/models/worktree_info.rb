@@ -33,7 +33,7 @@ module Ace
           # @param bare [Boolean] Whether this is a bare worktree
           # @param detached [Boolean] Whether worktree is in detached HEAD state
           # @param created_at [Time, nil] When the worktree was created
-          def initialize(path:, branch: nil, commit:, task_id: nil, bare: false, detached: false, created_at: nil)
+          def initialize(path:, commit:, branch: nil, task_id: nil, bare: false, detached: false, created_at: nil)
             @path = path
             @branch = branch
             @commit = commit
@@ -189,7 +189,7 @@ module Ace
 
               task_id = extract_task_id(path, branch)
               worktrees << new(path: path, branch: branch, commit: commit,
-                               task_id: task_id, bare: bare, detached: detached)
+                task_id: task_id, bare: bare, detached: detached)
             end
 
             worktrees
@@ -261,7 +261,7 @@ module Ace
               @task_id == other.task_id
           end
 
-          alias eql? ==
+          alias_method :eql?, :==
 
           # Hash for using as hash keys
           #

@@ -51,9 +51,9 @@ module Ace
                 result = manager.show(task_ref)
                 puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
                 return task_to_hash(result) if result
-              rescue StandardError => e
+              rescue => e
                 puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
-                puts "DEBUG: Backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
+                puts "DEBUG: Backtrace: #{e.backtrace.first(3).join(", ")}" if ENV["DEBUG"]
                 # Fall through to CLI approach
               end
             end
@@ -99,7 +99,7 @@ module Ace
               title: task.title,
               status: task.status,
               path: task.file_path,
-              task_number: Atoms::TaskIDExtractor.extract({ id: task.id }),
+              task_number: Atoms::TaskIDExtractor.extract({id: task.id}),
               metadata: task.respond_to?(:metadata) ? (task.metadata || {}) : {}
             }
           end
@@ -117,7 +117,7 @@ module Ace
               /\x00/,           # Null bytes
               /[\r\n]/,         # Newlines
               /[<>]/,           # Redirects
-              /\.\./,           # Directory traversal
+              /\.\./           # Directory traversal
             ]
 
             return false if ref.length > 50
@@ -136,13 +136,13 @@ module Ace
             begin
               # Use ace-task CLI to get task data (runs in current directory)
               cmd = ["bundle", "exec", "ace-task", "show", task_ref.to_s]
-              stdout, stderr, status = Open3.capture3(*cmd)
+              stdout, _, status = Open3.capture3(*cmd)
 
               return nil unless status.success?
 
               # Parse CLI output to extract task information
               parse_cli_output(stdout)
-            rescue StandardError => e
+            rescue => e
               puts "DEBUG: CLI exception: #{e.message}" if ENV["DEBUG"]
               nil
             end
@@ -233,9 +233,9 @@ module Ace
         def check_availability_with_message
           if ace_task_available?
             # API is available - this is the preferred method in mono-repo
-            { available: true, message: "ace-task API is available" }
+            {available: true, message: "ace-task API is available"}
           else
-            { available: false, message: ace_task_unavailable_message }
+            {available: false, message: ace_task_unavailable_message}
           end
         end
       end

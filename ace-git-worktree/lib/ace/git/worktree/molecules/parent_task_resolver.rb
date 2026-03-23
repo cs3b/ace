@@ -24,11 +24,11 @@ module Ace
 
           # Regex pattern for extracting task number from full task ID
           # Pattern: v.0.9.0+task.202.01 -> captures "202.01"
-          TASK_ID_PATTERN = /task\.(\d+(?:\.\d+)?)\z/.freeze
+          TASK_ID_PATTERN = /task\.(\d+(?:\.\d+)?)\z/
 
           # SHA pattern for detecting detached HEAD state
           # Git returns 7-40 hex characters for SHAs (7 for short, 40 for full)
-          SHA_PATTERN = /\A[0-9a-f]{7,40}\z/i.freeze
+          SHA_PATTERN = /\A[0-9a-f]{7,40}\z/i
 
           # Initialize a new ParentTaskResolver
           #
@@ -65,7 +65,7 @@ module Ace
 
             # Extract parent's worktree branch
             extract_parent_branch(parent_task)
-          rescue StandardError => e
+          rescue
             # Silently fall back to default - debugging info available via --verbose flag on CLI
             DEFAULT_TARGET
           end
@@ -175,7 +175,7 @@ module Ace
             end
 
             branch
-          rescue StandardError => e
+          rescue => e
             warn "[DEBUG] current_branch_fallback failed: #{e.message}" if ENV["DEBUG"]
             nil
           end

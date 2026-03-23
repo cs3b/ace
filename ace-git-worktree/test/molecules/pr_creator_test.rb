@@ -84,7 +84,7 @@ class PrCreatorTest < Minitest::Test
   end
 
   def test_create_draft_returns_existing_pr_if_found
-    existing_pr = { number: 123, url: "https://github.com/owner/repo/pull/123" }
+    existing_pr = {number: 123, url: "https://github.com/owner/repo/pull/123"}
 
     # Create fresh instance to avoid cache issues
     creator = Ace::Git::Worktree::Molecules::PrCreator.new(timeout: 5)

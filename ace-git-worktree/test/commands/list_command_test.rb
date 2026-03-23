@@ -52,7 +52,7 @@ class ListCommandTest < Minitest::Test
 
     # Capture output to verify
     result = nil
-    output = capture_io do
+    capture_io do
       result = @command.run([])
     end
 
@@ -62,7 +62,7 @@ class ListCommandTest < Minitest::Test
 
   def test_run_with_search_option
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }, [Hash])
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}, [Hash])
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -73,7 +73,7 @@ class ListCommandTest < Minitest::Test
 
   def test_run_with_task_associated_filter
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       options[:task_associated] == true
     end
 
@@ -86,7 +86,7 @@ class ListCommandTest < Minitest::Test
 
   def test_run_with_no_task_associated_filter
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       options[:task_associated] == false
     end
 
@@ -129,7 +129,7 @@ class ListCommandTest < Minitest::Test
   def test_format_option_converted_to_symbol
     # Mock worktree manager to verify format is passed as symbol
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       # The format should be a symbol after conversion
       options[:format] == :json
     end
@@ -143,7 +143,7 @@ class ListCommandTest < Minitest::Test
 
   def test_format_option_json_converted_to_symbol
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       options[:format] == :json
     end
 
@@ -155,7 +155,7 @@ class ListCommandTest < Minitest::Test
 
   def test_format_option_table_converted_to_symbol
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       options[:format] == :table
     end
 
@@ -167,7 +167,7 @@ class ListCommandTest < Minitest::Test
 
   def test_format_option_simple_converted_to_symbol
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
       options[:format] == :simple
     end
 
@@ -181,7 +181,7 @@ class ListCommandTest < Minitest::Test
     mock_worktree_manager = Minitest::Mock.new
     mock_result = {
       success: true,
-      worktrees: [{ path: "/tmp/wt" }],
+      worktrees: [{path: "/tmp/wt"}],
       formatted_output: "[{\"path\":\"/tmp/wt\"}]",
       statistics: {
         total: 1,

@@ -41,8 +41,8 @@ module Ace
           # @param task_directory [String] Absolute path to task directory
           # @return [Hash] Result with :success, :symlink_path, :target, :relative_target, :error
           def link(task_directory)
-            return { success: false, error: "Task directory is required" } if task_directory.nil? || task_directory.empty?
-            return { success: false, error: "Task directory does not exist: #{task_directory}" } unless Dir.exist?(task_directory)
+            return {success: false, error: "Task directory is required"} if task_directory.nil? || task_directory.empty?
+            return {success: false, error: "Task directory does not exist: #{task_directory}"} unless Dir.exist?(task_directory)
 
             symlink_path = File.join(@project_root, @symlink_name)
 
@@ -61,8 +61,8 @@ module Ace
               target: task_directory,
               relative_target: relative_target
             }
-          rescue StandardError => e
-            { success: false, error: "Failed to create symlink: #{e.message}" }
+          rescue => e
+            {success: false, error: "Failed to create symlink: #{e.message}"}
           end
 
           # Remove the _current symlink
@@ -71,12 +71,12 @@ module Ace
           def unlink
             symlink_path = File.join(@project_root, @symlink_name)
 
-            return { success: true, existed: false } unless File.symlink?(symlink_path)
+            return {success: true, existed: false} unless File.symlink?(symlink_path)
 
             FileUtils.rm_f(symlink_path)
-            { success: true, existed: true }
-          rescue StandardError => e
-            { success: false, error: "Failed to remove symlink: #{e.message}" }
+            {success: true, existed: true}
+          rescue => e
+            {success: false, error: "Failed to remove symlink: #{e.message}"}
           end
 
           # Get the path to the current symlink

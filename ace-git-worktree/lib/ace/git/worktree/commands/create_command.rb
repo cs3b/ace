@@ -19,7 +19,7 @@ module Ace
         #   CreateCommand.new.run(["--task", "081", "--dry-run"])
         class CreateCommand
           # Pattern for validating PR numbers (digits only)
-          PR_NUMBER_PATTERN = /^\d+$/.freeze
+          PR_NUMBER_PATTERN = /^\d+$/
 
           # Initialize a new CreateCommand
           #
@@ -33,41 +33,39 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              # Show help if no arguments provided
-              return show_help if args.empty?
+            # Show help if no arguments provided
+            return show_help if args.empty?
 
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              validate_options(options)
+            validate_options(options)
 
-              if options[:task]
-                create_task_worktree(options)
-              elsif options[:pr]
-                create_pr_worktree(options)
-              elsif options[:branch]
-                create_branch_worktree(options)
-              else
-                create_traditional_worktree(options)
-              end
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue Ace::Git::PrNotFoundError,
-                   Ace::Git::GhAuthenticationError,
-                   Ace::Git::GhNotInstalledError,
-                   Ace::Git::TimeoutError => e
-              puts "Error: #{e.message}"
-              1
-            rescue Ace::Git::Error => e
-              # Catch other ace-git specific errors
-              puts "Error: #{e.message}"
-              puts "Debug: #{e.class}" if ENV["DEBUG"]
-              1
+            if options[:task]
+              create_task_worktree(options)
+            elsif options[:pr]
+              create_pr_worktree(options)
+            elsif options[:branch]
+              create_branch_worktree(options)
+            else
+              create_traditional_worktree(options)
             end
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue Ace::Git::PrNotFoundError,
+            Ace::Git::GhAuthenticationError,
+            Ace::Git::GhNotInstalledError,
+            Ace::Git::TimeoutError => e
+            puts "Error: #{e.message}"
+            1
+          rescue Ace::Git::Error => e
+            # Catch other ace-git specific errors
+            puts "Error: #{e.message}"
+            puts "Debug: #{e.class}" if ENV["DEBUG"]
+            1
           end
 
           # Show help for the create command
@@ -270,7 +268,7 @@ module Ace
 
             # Check for conflicts
             if modes.length > 1
-              raise ArgumentError, "Cannot use multiple creation modes: #{modes.join(', ')}. " \
+              raise ArgumentError, "Cannot use multiple creation modes: #{modes.join(", ")}. " \
                                    "Use only one of --task, --pr, --branch, or <branch-name>"
             end
 
@@ -332,7 +330,7 @@ module Ace
               /\x00/,           # Null bytes
               /[\r\n]/,         # Newlines
               /[<>]/,           # Redirects
-              /\.\./,           # Path traversal
+              /\.\./           # Path traversal
             ]
 
             dangerous_patterns.any? { |pattern| value.match?(pattern) }
@@ -491,7 +489,7 @@ module Ace
                 1
               end
             rescue Ace::Git::PrNotFoundError, Ace::Git::GhAuthenticationError,
-                   Ace::Git::GhNotInstalledError => e
+              Ace::Git::GhNotInstalledError => e
               # Let specific ace-git errors be handled by handle_pr_fetch_error
               # Other errors will bubble up to the top-level rescue in run()
               handle_pr_fetch_error(e, pr_number)
@@ -565,9 +563,9 @@ module Ace
             fetcher = Ace::Git::Worktree::Molecules::TaskFetcher.new
 
             if fetcher.ace_task_available?
-              { available: true, message: "ace-task is available" }
+              {available: true, message: "ace-task is available"}
             else
-              { available: false, message: "ace-task is not available. Install with: gem install ace-task" }
+              {available: false, message: "ace-task is not available. Install with: gem install ace-task"}
             end
           end
 
@@ -623,7 +621,7 @@ module Ace
               end
               puts "\nPlanned steps:"
               result[:steps_planned].each_with_index do |step, i|
-                puts "  #{i + 1}. #{step.gsub('_', ' ')}"
+                puts "  #{i + 1}. #{step.tr("_", " ")}"
               end
             else
               puts "\nWorktree created successfully!"
@@ -643,7 +641,7 @@ module Ace
 
               puts "\nSteps completed:"
               result[:steps_completed].each_with_index do |step, i|
-                puts "  ✓ #{step.gsub('_', ' ')}"
+                puts "  ✓ #{step.tr("_", " ")}"
               end
 
               # Display hooks results if available
@@ -651,7 +649,7 @@ module Ace
                 puts "\nHooks executed:"
                 result[:hooks_results].each do |hook_result|
                   status = hook_result[:success] ? "✓" : "✗"
-                  command = hook_result[:command].length > 60 ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
+                  command = (hook_result[:command].length > 60) ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
                   puts "  #{status} #{command}"
                   unless hook_result[:success]
                     puts "    Error: #{hook_result[:error]}" if hook_result[:error]
@@ -694,7 +692,7 @@ module Ace
                 puts "Hooks executed:"
                 result[:hooks_results].each do |hook_result|
                   status = hook_result[:success] ? "✓" : "✗"
-                  command = hook_result[:command].length > 60 ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
+                  command = (hook_result[:command].length > 60) ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
                   puts "  #{status} #{command}"
                   unless hook_result[:success]
                     puts "    Error: #{hook_result[:error]}" if hook_result[:error]
@@ -742,7 +740,7 @@ module Ace
                 puts "Hooks executed:"
                 result[:hooks_results].each do |hook_result|
                   status = hook_result[:success] ? "✓" : "✗"
-                  command = hook_result[:command].length > 60 ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
+                  command = (hook_result[:command].length > 60) ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
                   puts "  #{status} #{command}"
                   unless hook_result[:success]
                     puts "    Error: #{hook_result[:error]}" if hook_result[:error]
@@ -808,7 +806,7 @@ module Ace
               return false unless config
 
               config.auto_navigate?
-            rescue StandardError
+            rescue
               # If configuration loading fails, default to no auto-navigation
               false
             end
@@ -847,7 +845,7 @@ module Ace
             return false unless config
 
             config.tmux?
-          rescue StandardError
+          rescue
             false
           end
 

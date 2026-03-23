@@ -43,7 +43,7 @@ class ConfigCommandTest < Minitest::Test
 
     # Capture output to verify it displays config
     result = nil
-    output = capture_io do
+    capture_io do
       result = @command.run(["show"])
     end
 
@@ -54,7 +54,7 @@ class ConfigCommandTest < Minitest::Test
   def test_run_validate_config
     # Mock successful config validation
     mock_manager = Minitest::Mock.new
-    validation_result = { success: true, valid: true, errors: [] }
+    validation_result = {success: true, valid: true, errors: []}
     mock_manager.expect(:validate_configuration, validation_result)
 
     @command.instance_variable_set(:@manager, mock_manager)

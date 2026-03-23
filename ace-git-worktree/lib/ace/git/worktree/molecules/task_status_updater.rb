@@ -68,8 +68,8 @@ module Ace
           # @param status [String] New status value
           # @return [Hash] Result with :success and :message keys
           def update_status(task_ref, status)
-            return { success: false, message: "Task reference is required" } if task_ref.nil? || task_ref.empty?
-            return { success: false, message: "Status is required" } if status.nil? || status.empty?
+            return {success: false, message: "Task reference is required"} if task_ref.nil? || task_ref.empty?
+            return {success: false, message: "Status is required"} if status.nil? || status.empty?
 
             puts "DEBUG: TaskStatusUpdater.update_status called with task_ref=#{task_ref}, status=#{status}" if ENV["DEBUG"]
             puts "DEBUG: use_ruby_api? = #{use_ruby_api?}" if ENV["DEBUG"]
@@ -101,7 +101,7 @@ module Ace
             return false unless normalized_ref
 
             if use_ruby_api?
-              return update_fields_via_api(normalized_ref, { "priority" => priority })
+              return update_fields_via_api(normalized_ref, {"priority" => priority})
             end
 
             result = execute_ace_task_command("update", normalized_ref, "--set", "priority=#{priority}")
@@ -120,7 +120,7 @@ module Ace
             return false unless normalized_ref
 
             if use_ruby_api?
-              return update_fields_via_api(normalized_ref, { "estimate" => estimate })
+              return update_fields_via_api(normalized_ref, {"estimate" => estimate})
             end
 
             result = execute_ace_task_command("update", normalized_ref, "--set", "estimate=#{estimate}")
@@ -232,23 +232,21 @@ module Ace
           # @param status [String] New status
           # @return [Hash] Result with :success and :message keys
           def update_status_via_api(task_ref, status)
-            begin
-              task_manager = Ace::Task::Organisms::TaskManager.new
-              result = task_manager.update(task_ref, set: { "status" => status })
+            task_manager = Ace::Task::Organisms::TaskManager.new
+            result = task_manager.update(task_ref, set: {"status" => status})
 
-              puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
+            puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
 
-              if result
-                { success: true, message: "Task status updated to #{status}" }
-              else
-                puts "DEBUG: TaskManager returned nil" if ENV["DEBUG"]
-                { success: false, message: "Failed to update task status" }
-              end
-            rescue StandardError => e
-              puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
-              # Fall back to CLI on API error
-              update_status_via_cli(task_ref, status)
+            if result
+              {success: true, message: "Task status updated to #{status}"}
+            else
+              puts "DEBUG: TaskManager returned nil" if ENV["DEBUG"]
+              {success: false, message: "Failed to update task status"}
             end
+          rescue => e
+            puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
+            # Fall back to CLI on API error
+            update_status_via_cli(task_ref, status)
           end
 
           # Update task status using CLI
@@ -258,13 +256,13 @@ module Ace
           # @return [Hash] Result with :success and :message keys
           def update_status_via_cli(task_ref, status)
             normalized_ref = normalize_task_reference(task_ref)
-            return { success: false, message: "Invalid task reference" } unless normalized_ref
+            return {success: false, message: "Invalid task reference"} unless normalized_ref
 
             result = execute_ace_task_command("update", normalized_ref, "--set", "status=#{status}")
             if result[:success]
-              { success: true, message: "Task status updated to #{status}" }
+              {success: true, message: "Task status updated to #{status}"}
             else
-              { success: false, message: result[:error] || "Failed to update task status" }
+              {success: false, message: result[:error] || "Failed to update task status"}
             end
           end
 
@@ -274,13 +272,11 @@ module Ace
           # @param fields [Hash] Fields to update
           # @return [Boolean] true if successful
           def update_fields_via_api(task_ref, fields)
-            begin
-              task_manager = Ace::Task::Organisms::TaskManager.new
-              result = task_manager.update(task_ref, set: fields)
-              !result.nil?
-            rescue StandardError
-              false
-            end
+            task_manager = Ace::Task::Organisms::TaskManager.new
+            result = task_manager.update(task_ref, set: fields)
+            !result.nil?
+          rescue
+            false
           end
 
           # Add worktree metadata using Ruby API
@@ -289,22 +285,20 @@ module Ace
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
           # @return [Boolean] true if successful
           def add_worktree_metadata_via_api(task_ref, worktree_metadata)
-            begin
-              task_manager = Ace::Task::Organisms::TaskManager.new
+            task_manager = Ace::Task::Organisms::TaskManager.new
 
-              # Convert worktree metadata to field updates
-              metadata_hash = worktree_metadata.to_h
-              field_updates = {}
-              metadata_hash.each do |field, value|
-                field_updates["worktree.#{field}"] = value.to_s
-              end
-
-              result = task_manager.update(task_ref, set: field_updates)
-              !result.nil?
-            rescue StandardError => e
-              # Fall back to CLI on API error
-              add_worktree_metadata_via_cli(task_ref, worktree_metadata)
+            # Convert worktree metadata to field updates
+            metadata_hash = worktree_metadata.to_h
+            field_updates = {}
+            metadata_hash.each do |field, value|
+              field_updates["worktree.#{field}"] = value.to_s
             end
+
+            result = task_manager.update(task_ref, set: field_updates)
+            !result.nil?
+          rescue
+            # Fall back to CLI on API error
+            add_worktree_metadata_via_cli(task_ref, worktree_metadata)
           end
 
           # Add worktree metadata using CLI
@@ -334,21 +328,19 @@ module Ace
           # @param pr_data [Hash] PR data
           # @return [Boolean] true if successful
           def add_pr_metadata_via_api(task_ref, pr_data)
-            begin
-              task_manager = Ace::Task::Organisms::TaskManager.new
+            task_manager = Ace::Task::Organisms::TaskManager.new
 
-              field_updates = {
-                "pr.number" => pr_data[:number].to_s,
-                "pr.url" => pr_data[:url].to_s
-              }
-              field_updates["pr.created_at"] = pr_data[:created_at].iso8601 if pr_data[:created_at]
+            field_updates = {
+              "pr.number" => pr_data[:number].to_s,
+              "pr.url" => pr_data[:url].to_s
+            }
+            field_updates["pr.created_at"] = pr_data[:created_at].iso8601 if pr_data[:created_at]
 
-              result = task_manager.update(task_ref, set: field_updates)
-              !result.nil?
-            rescue StandardError => e
-              # Fall back to CLI on API error
-              add_pr_metadata_via_cli(task_ref, pr_data)
-            end
+            result = task_manager.update(task_ref, set: field_updates)
+            !result.nil?
+          rescue
+            # Fall back to CLI on API error
+            add_pr_metadata_via_cli(task_ref, pr_data)
           end
 
           # Add PR metadata using CLI
@@ -383,17 +375,15 @@ module Ace
           # @param started_at [Time] Start timestamp
           # @return [Boolean] true if successful
           def add_started_at_via_api(task_ref, started_at)
-            begin
-              task_manager = Ace::Task::Organisms::TaskManager.new
+            task_manager = Ace::Task::Organisms::TaskManager.new
 
-              field_updates = { "started_at" => started_at.iso8601 }
+            field_updates = {"started_at" => started_at.iso8601}
 
-              result = task_manager.update(task_ref, set: field_updates)
-              !result.nil?
-            rescue StandardError => e
-              # Fall back to CLI on API error
-              add_started_at_via_cli(task_ref, started_at)
-            end
+            result = task_manager.update(task_ref, set: field_updates)
+            !result.nil?
+          rescue
+            # Fall back to CLI on API error
+            add_started_at_via_cli(task_ref, started_at)
           end
 
           # Add started_at timestamp using CLI
@@ -442,7 +432,7 @@ module Ace
               error: "ace-task command timed out after #{@timeout} seconds",
               exit_code: 124
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               output: "",

@@ -411,7 +411,7 @@ module Ace
           end
 
           def test_current_branch_fallback_rescues_standard_error
-            Atoms::GitCommand.stub(:current_branch, ->{ raise StandardError, "Git error" }) do
+            Atoms::GitCommand.stub(:current_branch, -> { raise StandardError, "Git error" }) do
               resolver = create_resolver({})
               result = resolver.send(:current_branch_fallback)
               assert_nil result
@@ -427,7 +427,7 @@ module Ace
               # No worktree metadata - will trigger fallback
             }
 
-            Atoms::GitCommand.stub(:current_branch, ->{ raise Errno::ENOENT, "git not found" }) do
+            Atoms::GitCommand.stub(:current_branch, -> { raise Errno::ENOENT, "git not found" }) do
               resolver = create_resolver({})
               result = resolver.extract_parent_branch(parent_task)
               assert_equal "main", result
