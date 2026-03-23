@@ -202,7 +202,7 @@ class CompressionRunnerTest < AceCompressorTestCase
         calls = Thread.current[:ace_compressor_bundle_calls]
         Thread.current[:ace_compressor_bundle_calls] = calls + 1
         bundle = calls.zero? ? first_bundle : second_bundle
-        [{ content_path: bundle, source_path: "project", source_kind: "preset" }]
+        [{content_path: bundle, source_path: "project", source_kind: "preset"}]
       end
     end
 

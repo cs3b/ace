@@ -34,7 +34,7 @@ module Ace
             sources = normalize_sources(options[:sources] || [])
             if sources.empty?
               raise Ace::Support::Cli::Error,
-                    "Missing input path. Usage: ace-compressor <file-or-dir> [more-paths...] --mode <exact|compact|agent>"
+                "Missing input path. Usage: ace-compressor <file-or-dir> [more-paths...] --mode <exact|compact|agent>"
             end
 
             mode = (options[:mode] || "exact").to_s
@@ -44,7 +44,7 @@ module Ace
             source_scope = (options[:source_scope] || "merged").to_s
             unless SUPPORTED_SOURCE_SCOPES.include?(source_scope)
               raise Ace::Support::Cli::Error,
-                    "Unsupported source scope '#{source_scope}'. Use --source-scope merged or --source-scope per-source"
+                "Unsupported source scope '#{source_scope}'. Use --source-scope merged or --source-scope per-source"
             end
 
             runner = Ace::Compressor::Organisms::CompressionRunner.new(
@@ -57,7 +57,7 @@ module Ace
             )
             result = runner.call
             if options[:verbose]
-              result[:ignored_paths].each { |path| $stderr.puts "Ignoring unsupported file: #{path}" }
+              result[:ignored_paths].each { |path| warn "Ignoring unsupported file: #{path}" }
             end
             puts result[:console_output]
             if result[:exit_code].to_i.nonzero?

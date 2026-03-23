@@ -28,12 +28,12 @@ class CacheStoreTest < AceCompressorTestCase
     File.write(source2, content)
 
     # Without labels: different paths → different keys
-    manifest_a = store.manifest(mode: "exact", sources: [{ content_path: source1, source_path: source1, source_kind: "file" }])
-    manifest_b = store.manifest(mode: "exact", sources: [{ content_path: source2, source_path: source2, source_kind: "file" }])
+    manifest_a = store.manifest(mode: "exact", sources: [{content_path: source1, source_path: source1, source_kind: "file"}])
+    manifest_b = store.manifest(mode: "exact", sources: [{content_path: source2, source_path: source2, source_kind: "file"}])
     refute_equal manifest_a["key"], manifest_b["key"]
 
-    manifest_logical_a = store.manifest(mode: "exact", sources: [{ content_path: source1, source_path: "project", source_kind: "preset" }])
-    manifest_logical_b = store.manifest(mode: "exact", sources: [{ content_path: source2, source_path: "project", source_kind: "preset" }])
+    manifest_logical_a = store.manifest(mode: "exact", sources: [{content_path: source1, source_path: "project", source_kind: "preset"}])
+    manifest_logical_b = store.manifest(mode: "exact", sources: [{content_path: source2, source_path: "project", source_kind: "preset"}])
     assert_equal manifest_logical_a["key"], manifest_logical_b["key"]
   ensure
     FileUtils.rm_rf(dir1) if dir1
@@ -54,7 +54,7 @@ class CacheStoreTest < AceCompressorTestCase
     source = File.join(@tmp, "file.md")
     File.write(source, "content")
 
-    manifest = store.manifest(mode: "exact", sources: [{ content_path: source, source_path: "project", source_kind: "preset" }])
+    manifest = store.manifest(mode: "exact", sources: [{content_path: source, source_path: "project", source_kind: "preset"}])
     assert_equal "project", manifest["sources"].first["path"]
   end
 
@@ -77,10 +77,10 @@ class CacheStoreTest < AceCompressorTestCase
     bundled = File.join(@tmp, "resolved.md")
     File.write(bundled, "# Bundled")
 
-    manifest = store.manifest(mode: "exact", sources: [{ content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow" }])
+    manifest = store.manifest(mode: "exact", sources: [{content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow"}])
     paths = store.canonical_paths(
       mode: "exact",
-      sources: [{ content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow" }],
+      sources: [{content_path: bundled, source_path: "wfi://task/draft", source_kind: "workflow"}],
       manifest_key: manifest["key"]
     )
 

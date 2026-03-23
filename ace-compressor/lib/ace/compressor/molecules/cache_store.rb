@@ -23,15 +23,15 @@ module Ace
 
         def manifest(mode:, sources:)
           source_entries = Array(sources).map { |source| normalize_source_entry(source) }
-                                       .sort_by { |entry| entry.fetch("path") }
-                                       .map do |entry|
-            content = File.binread(entry.fetch("content_path"))
-            {
-              "path" => entry.fetch("path"),
-              "sha256" => Digest::SHA256.hexdigest(content),
-              "bytes" => content.bytesize,
-              "lines" => line_count(content)
-            }
+            .sort_by { |entry| entry.fetch("path") }
+            .map do |entry|
+              content = File.binread(entry.fetch("content_path"))
+              {
+                "path" => entry.fetch("path"),
+                "sha256" => Digest::SHA256.hexdigest(content),
+                "bytes" => content.bytesize,
+                "lines" => line_count(content)
+              }
           end
 
           payload = {
@@ -56,7 +56,7 @@ module Ace
 
           {
             pack_path: pack_path,
-            metadata_path: pack_path.sub(/#{Regexp.escape(PACK_EXTENSION)}\z/, METADATA_EXTENSION),
+            metadata_path: pack_path.sub(/#{Regexp.escape(PACK_EXTENSION)}\z/o, METADATA_EXTENSION),
             short_key: short_key
           }
         end
@@ -88,7 +88,7 @@ module Ace
             "lines" => line_count(content)
           }
 
-          { "key" => Digest::SHA256.hexdigest(JSON.generate(payload)) }
+          {"key" => Digest::SHA256.hexdigest(JSON.generate(payload))}
         end
 
         def shared_canonical_paths(mode:, sources:, manifest_key:)
@@ -101,7 +101,7 @@ module Ace
 
           {
             pack_path: pack_path,
-            metadata_path: pack_path.sub(/#{Regexp.escape(PACK_EXTENSION)}\z/, METADATA_EXTENSION),
+            metadata_path: pack_path.sub(/#{Regexp.escape(PACK_EXTENSION)}\z/o, METADATA_EXTENSION),
             short_key: short_key
           }
         end
@@ -142,13 +142,13 @@ module Ace
 
         def stats_block(mode:, cache_hit:, output_path:, metadata:)
           [
-            "Cache:    #{cache_hit ? 'hit' : 'miss'}",
+            "Cache:    #{cache_hit ? "hit" : "miss"}",
             "Output:   #{output_path}",
-            "Sources:  #{file_label(metadata.fetch('file_count'))}",
+            "Sources:  #{file_label(metadata.fetch("file_count"))}",
             "Mode:     #{mode}",
-            "Original: #{format_bytes(metadata.fetch('original_bytes'))}, #{line_label(metadata.fetch('original_lines'))}",
-            "Packed:   #{format_bytes(metadata.fetch('packed_bytes'))}, #{line_label(metadata.fetch('packed_lines'))}",
-            "Change:   #{format_change(metadata.fetch('original_bytes'), metadata.fetch('packed_bytes'), 'bytes')}, #{format_change(metadata.fetch('original_lines'), metadata.fetch('packed_lines'), 'lines')}"
+            "Original: #{format_bytes(metadata.fetch("original_bytes"))}, #{line_label(metadata.fetch("original_lines"))}",
+            "Packed:   #{format_bytes(metadata.fetch("packed_bytes"))}, #{line_label(metadata.fetch("packed_lines"))}",
+            "Change:   #{format_change(metadata.fetch("original_bytes"), metadata.fetch("packed_bytes"), "bytes")}, #{format_change(metadata.fetch("original_lines"), metadata.fetch("packed_lines"), "lines")}"
           ].join("\n")
         end
 
@@ -262,8 +262,8 @@ module Ace
 
         def sanitize_logical_source(value)
           value.to_s.sub(%r{\A([a-z][a-z0-9+\-.]*)://}i, "\\1/")
-               .gsub(/[^A-Za-z0-9._\/-]+/, "_")
-               .sub(/\A\/+/, "")
+            .gsub(/[^A-Za-z0-9._\/-]+/, "_")
+            .sub(/\A\/+/, "")
         end
 
         def format_bytes(bytes)
@@ -275,11 +275,11 @@ module Ace
         end
 
         def file_label(count)
-          "#{format_number(count)} #{count == 1 ? 'file' : 'files'}"
+          "#{format_number(count)} #{(count == 1) ? "file" : "files"}"
         end
 
         def line_label(count)
-          "#{format_number(count)} #{count == 1 ? 'line' : 'lines'}"
+          "#{format_number(count)} #{(count == 1) ? "line" : "lines"}"
         end
 
         def format_change(original, packed, label)

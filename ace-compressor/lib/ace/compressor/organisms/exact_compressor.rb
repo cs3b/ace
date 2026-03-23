@@ -2,7 +2,6 @@
 
 require "find"
 require "pathname"
-require "set"
 
 module Ace
   module Compressor
@@ -38,7 +37,7 @@ module Ace
               directory_files = collect_supported_directory_files(expanded)
               if directory_files.empty?
                 raise Ace::Compressor::Error,
-                      "Directory has no supported markdown/text sources: #{path}. Supported extensions: #{SUPPORTED_EXTENSIONS.join(', ')}"
+                  "Directory has no supported markdown/text sources: #{path}. Supported extensions: #{SUPPORTED_EXTENSIONS.join(", ")}"
               end
               directory_files.each do |file|
                 next if explicit_set.include?(file)
@@ -60,7 +59,7 @@ module Ace
           sorted = resolved.sort
           if sorted.empty?
             raise Ace::Compressor::Error,
-                  "No supported markdown/text sources found. Supported extensions: #{SUPPORTED_EXTENSIONS.join(', ')}"
+              "No supported markdown/text sources found. Supported extensions: #{SUPPORTED_EXTENSIONS.join(", ")}"
           end
 
           sorted
@@ -145,7 +144,7 @@ module Ace
             end
 
             raise Ace::Compressor::Error,
-                  "Unsupported explicit file: #{original}. Supported extensions: #{SUPPORTED_EXTENSIONS.join(', ')}"
+              "Unsupported explicit file: #{original}. Supported extensions: #{SUPPORTED_EXTENSIONS.join(", ")}"
           end
 
           return unless binary_file?(expanded)
@@ -160,7 +159,7 @@ module Ace
         def binary_file?(path)
           sample = File.binread(path, BINARY_SNIFF_BYTES) || ""
           sample.include?("\x00")
-        rescue StandardError
+        rescue
           false
         end
 

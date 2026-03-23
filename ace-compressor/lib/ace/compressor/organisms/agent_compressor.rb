@@ -98,14 +98,14 @@ module Ace
             record = rewrite_record_for(line, current_file, current_section, next_id)
             if record
               records << record
-              entries << { rewrite_id: record[:id], original_line: line }
+              entries << {rewrite_id: record[:id], original_line: line}
               next_id += 1
             else
               entries << line
             end
           end
 
-          { entries: entries, records: records }
+          {entries: entries, records: records}
         end
 
         def rewrite_record_for(line, current_file, current_section, next_id)
@@ -217,13 +217,13 @@ module Ace
             payload = normalize_payload_text(candidate["payload"])
             return nil if payload.empty?
 
-            { type: original[:type], payload: payload }
+            {type: original[:type], payload: payload}
           when "LIST"
             items = Array(candidate["items"]).map { |item| normalize_list_item(item) }
             return nil unless items.length == original[:items].length
             return nil if items.any?(&:empty?)
 
-            { type: "LIST", name: original[:name], items: items }
+            {type: "LIST", name: original[:name], items: items}
           end
         end
 

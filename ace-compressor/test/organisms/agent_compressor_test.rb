@@ -22,16 +22,16 @@ class AgentCompressorTest < AceCompressorTestCase
   def test_rewrite_payloads_returns_replacements_for_summary_fact_and_list_records
     rewriter = build_rewriter(agent_output: JSON.generate(
       "records" => [
-        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" },
-        { "id" => "r2", "payload" => "trimmed supporting fact" },
-        { "id" => "r3", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_docs] }
+        {"id" => "r1", "payload" => "shared cli workflows for humans and agents"},
+        {"id" => "r2", "payload" => "trimmed supporting fact"},
+        {"id" => "r3", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_docs]}
       ]
     ))
 
     rewrites = rewriter.send(:rewrite_payloads, [
-      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Agents and developers collaborate through shared command-line workflows." },
-      { id: "r2", type: "FACT", file: "vision.md", section: "overview", payload: "This supporting fact is verbose." },
-      { id: "r3", type: "LIST", file: "vision.md", section: "tools", name: "tools", items: %w[ace_support_core_configuration_management_foundation ace_bundle_project_context_loading ace_docs_documentation_management] }
+      {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Agents and developers collaborate through shared command-line workflows."},
+      {id: "r2", type: "FACT", file: "vision.md", section: "overview", payload: "This supporting fact is verbose."},
+      {id: "r3", type: "LIST", file: "vision.md", section: "tools", name: "tools", items: %w[ace_support_core_configuration_management_foundation ace_bundle_project_context_loading ace_docs_documentation_management]}
     ])
 
     assert_equal "shared cli workflows for humans and agents", rewrites["r1"][:payload]
@@ -47,7 +47,7 @@ class AgentCompressorTest < AceCompressorTestCase
     JSON
 
     rewrites = rewriter.send(:rewrite_payloads, [
-      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+      {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text"}
     ])
 
     assert_equal "compressed", rewrites["r1"][:payload]
@@ -57,7 +57,7 @@ class AgentCompressorTest < AceCompressorTestCase
     rewriter = build_rewriter(agent_output: "not json")
 
     rewrites = rewriter.send(:rewrite_payloads, [
-      { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+      {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text"}
     ])
 
     assert_equal({}, rewrites)
@@ -66,12 +66,12 @@ class AgentCompressorTest < AceCompressorTestCase
   def test_list_rewrite_requires_same_item_count
     rewriter = build_rewriter(agent_output: JSON.generate(
       "records" => [
-        { "id" => "r1", "items" => ["one_short_item"] }
+        {"id" => "r1", "items" => ["one_short_item"]}
       ]
     ))
 
     rewrites = rewriter.send(:rewrite_payloads, [
-      { id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[first_item second_item] }
+      {id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[first_item second_item]}
     ])
 
     assert_equal({}, rewrites)
@@ -80,12 +80,12 @@ class AgentCompressorTest < AceCompressorTestCase
   def test_list_rewrite_applies_deterministic_token_compaction
     rewriter = build_rewriter(agent_output: JSON.generate(
       "records" => [
-        { "id" => "r1", "items" => ["configuration_management_foundation", "documentation_management_with_frontmatter_tracking"] }
+        {"id" => "r1", "items" => ["configuration_management_foundation", "documentation_management_with_frontmatter_tracking"]}
       ]
     ))
 
     rewrites = rewriter.send(:rewrite_payloads, [
-      { id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[configuration_management_foundation documentation_management_with_frontmatter_tracking] }
+      {id: "r1", type: "LIST", file: "architecture.md", section: "tools", name: "tools", items: %w[configuration_management_foundation documentation_management_with_frontmatter_tracking]}
     ])
 
     assert_equal %w[config_mgmt_base docs_mgmt_frontmatter_track], rewrites["r1"][:items]
@@ -98,7 +98,7 @@ class AgentCompressorTest < AceCompressorTestCase
       if command.first == "ace-bundle"
         ["payload rewriter template", "", successful_status]
       else
-        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
+        [JSON.generate("records" => [{"id" => "r1", "payload" => "compact"}]), "", successful_status]
       end
     end
     rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
@@ -108,7 +108,7 @@ class AgentCompressorTest < AceCompressorTestCase
       "agent_template_uri" => "tmpl://agent/custom-minify"
     ) do
       rewriter.send(:rewrite_payloads, [
-        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+        {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text"}
       ])
     end
 
@@ -122,7 +122,7 @@ class AgentCompressorTest < AceCompressorTestCase
       if command.first == "ace-bundle"
         ["payload rewriter template", "", successful_status]
       else
-        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
+        [JSON.generate("records" => [{"id" => "r1", "payload" => "compact"}]), "", successful_status]
       end
     end
     rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
@@ -132,7 +132,7 @@ class AgentCompressorTest < AceCompressorTestCase
       "agent_template_uri" => "tmpl://agent/minify-single-source"
     ) do
       rewriter.send(:rewrite_payloads, [
-        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+        {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text"}
       ])
     end
 
@@ -148,7 +148,7 @@ class AgentCompressorTest < AceCompressorTestCase
       if command.first == "ace-bundle"
         ["payload rewriter template", "", successful_status]
       else
-        [JSON.generate("records" => [{ "id" => "r1", "payload" => "compact" }]), "", successful_status]
+        [JSON.generate("records" => [{"id" => "r1", "payload" => "compact"}]), "", successful_status]
       end
     end
     rewriter = build_rewriter(agent_output: "", shell_override: shell_override)
@@ -158,7 +158,7 @@ class AgentCompressorTest < AceCompressorTestCase
       "agent_template_uri" => "tmpl://agent/minify-single-source"
     ) do
       rewriter.send(:rewrite_payloads, [
-        { id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text" }
+        {id: "r1", type: "SUMMARY", file: "vision.md", section: "overview", payload: "Long narrative text"}
       ])
     end
 
@@ -186,8 +186,8 @@ class AgentCompressorTest < AceCompressorTestCase
 
     output = build_rewriter(agent_output: JSON.generate(
       "records" => [
-        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" },
-        { "id" => "r2", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_tracking ace_review_llm_analysis ace_search_pattern_matching] }
+        {"id" => "r1", "payload" => "shared cli workflows for humans and agents"},
+        {"id" => "r2", "items" => %w[ace_support_core_foundation ace_bundle_protocol_loading ace_docs_frontmatter_tracking ace_review_llm_analysis ace_search_pattern_matching]}
       ]
     )).compress_sources([source])
 
@@ -209,7 +209,7 @@ class AgentCompressorTest < AceCompressorTestCase
 
     output = build_rewriter(agent_output: JSON.generate(
       "records" => [
-        { "id" => "r1", "payload" => "shared cli workflows for humans and agents" }
+        {"id" => "r1", "payload" => "shared cli workflows for humans and agents"}
       ]
     )).compress_sources([source])
 

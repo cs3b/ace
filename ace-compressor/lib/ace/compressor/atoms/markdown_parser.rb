@@ -8,7 +8,7 @@ module Ace
         BULLET_LIST_RE = /\A(?:\s*)[-*+]\s+(.+)\z/
         NUMBERED_LIST_RE = /\A(?:\s*)\d+\.\s+(.+)\z/
         IMAGE_ONLY_RE = /\A!\[[^\]]*\]\([^)]+\)\z/
-        TABLE_SEPARATOR_RE = /\A\|?[\-\s:|]+\|?\z/
+        TABLE_SEPARATOR_RE = /\A\|?[-\s:|]+\|?\z/
         FENCE_START_RE = /\A```/
 
         def call(text)
@@ -83,7 +83,7 @@ module Ace
                 table_rows << candidate.strip
                 index += 1
               end
-              blocks << { type: :table, rows: table_rows }
+              blocks << {type: :table, rows: table_rows}
               next
             end
 
@@ -129,7 +129,7 @@ module Ace
         private
 
         def strip_frontmatter(text)
-          return text unless text.start_with?("---\n") || text.start_with?("---\r\n")
+          return text unless text.start_with?("---\n", "---\r\n")
 
           lines = text.lines
           end_index = nil
@@ -149,7 +149,7 @@ module Ace
         def flush_paragraph(blocks, lines)
           return if lines.empty?
 
-          blocks << { type: :text, text: lines.join(" ") }
+          blocks << {type: :text, text: lines.join(" ")}
           lines.clear
         end
 

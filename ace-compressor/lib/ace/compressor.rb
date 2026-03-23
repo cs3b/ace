@@ -44,7 +44,7 @@ module Ace
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-compressor"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -63,12 +63,12 @@ module Ace
 
     def self.load_gem_defaults_fallback(gem_root = nil)
       root = gem_root || Gem.loaded_specs["ace-compressor"]&.gem_dir ||
-             File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(root, ".ace-defaults", "compressor", "config.yml")
       return {} unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, aliases: true) || {}
-    rescue StandardError
+    rescue
       {}
     end
 
