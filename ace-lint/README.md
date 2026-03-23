@@ -4,6 +4,7 @@
   Ruby-native linting for markdown, YAML, and Ruby with no Node.js or Python runtime required.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <br><br>
 
   <a href="https://rubygems.org/gems/ace-lint"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-lint.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
