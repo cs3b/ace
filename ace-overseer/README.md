@@ -44,4 +44,4 @@ ace-overseer status --watch
 **Customize the workflow** - the full pipeline is defined in two layers: the [assignment preset](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml) controls which steps run and in what order (onboard, implement, test, release, review, PR), while each step references a [workflow instruction](../ace-task/handbook/workflow-instructions/task/work.wf.md) that defines how it executes. Browse [available presets](../ace-assign/.ace-defaults/assign/presets/) or create your own to tailor the pipeline to your project.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
