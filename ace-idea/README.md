@@ -36,4 +36,4 @@ Ideas appear mid-flow: copied from chat, typed in a terminal, or drafted with an
 **Promote to execution** - once an idea is ready, hand it off to [ace-task](../ace-task) and continue with planning and implementation workflows.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
