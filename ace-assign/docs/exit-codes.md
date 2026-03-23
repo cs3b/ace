@@ -57,5 +57,5 @@ The requested step reference does not exist in the target assignment:
 
 ## See Also
 
-- [CLI Reference](../README.md#cli-commands)
-- [Error Handling](../README.md#error-handling)
+- [Usage Guide](usage.md) for full command reference
+- [Getting Started](getting-started.md) for tutorial
