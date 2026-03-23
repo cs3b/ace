@@ -1,65 +1,43 @@
+---
+doc-type: package-readme
+title: ace-support-items
+purpose: Shared item-management infrastructure for ACE task and idea stores
+ace-docs:
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
+---
+
 # ace-support-items
 
-Shared item management infrastructure for ACE gems -- directory scanning, ID resolution, and slug sanitization.
+> Shared primitives for scanning, resolving, and sanitizing ACE item stores.
 
-## Overview
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-items` provides reusable item-management primitives for ACE packages such as `ace-task`
-and `ace-idea`.
+`ace-support-items` standardizes directory scanning, shortcut resolution, and slug handling for ACE item workflows.
 
-It standardizes directory scanning, shortcut resolution, and slug sanitization for b36ts-based item
-stores while keeping CLI field parsing and special-folder detection consistent across tools.
+## How It Works
 
-## Installation
+1. Directory scanners discover item payloads across ACE store conventions.
+2. Resolvers map short IDs to canonical b36ts identifiers.
+3. Parsers and validators keep item metadata safe and deterministic.
 
-Add to your gemspec:
+## Use Cases
 
-```ruby
-spec.add_dependency "ace-support-items", "~> 0.15"
-```
+**Parse and resolve ACE task/idea shortcuts** - map compact IDs to canonical item paths.
 
-## Core Components
+**Handle special item directories consistently** - support shared folder conventions across tools.
 
-- **`DirectoryScanner`** - Recursively scans item directories, returns `ScanResult` objects
-- **`ShortcutResolver`** - Resolves 3-char suffix shortcuts to full 6-char b36ts IDs
-- **`SlugSanitizer`** - Strict kebab-case slug sanitization for filesystem safety
-- **`FieldArgumentParser`** - Parses `key=value` CLI arguments with type inference
-- **`SpecialFolderDetector`** - Recognizes `_archive`, `_maybe`, `_anytime`, `_next` folders
+**Normalize metadata safely** - sanitize slugs and arguments before persistence.
 
-## Item Directory Convention
+## What It Provides
 
-Items follow this convention:
-
-```
-.ace-ideas/
-  8ppq7w-dark-mode-support/
-    8ppq7w-dark-mode-support.idea.s.md
-  _maybe/
-    9xzr1k-some-idea/
-      9xzr1k-some-idea.idea.s.md
-```
-
-## Basic Usage
-
-```ruby
-require "ace/support/items"
-
-# Scan for items
-scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(
-  ".ace-ideas",
-  file_pattern: "*.idea.s.md"
-)
-results = scanner.scan
-
-# Resolve shortcut
-resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results)
-result = resolver.resolve("q7w")  # Matches ID ending in "q7w"
-```
+- Directory scanning and item result modeling.
+- Shortcut resolver for compact ID lookups.
+- Slug sanitization and CLI argument parsing helpers.
 
 ## Part of ACE
 
-`ace-support-items` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit
-for agent-assisted development.
+`ace-support-items` is part of [ACE](../README.md) (Agentic Coding Environment).
 
 ## License
 

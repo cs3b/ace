@@ -1,232 +1,43 @@
+---
+doc-type: package-readme
+title: ace-support-models
+purpose: Shared model metadata and pricing helpers for ACE provider tooling
+ace-docs:
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
+---
+
 # ace-support-models
 
-Model metadata, validation, and cost tracking for ACE via [models.dev](https://models.dev/).
+> Shared model metadata infrastructure used by ACE tools that reason about providers and models.
 
-## Purpose
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-models` provides shared model metadata and pricing helpers used across ACE tooling.
-It keeps provider/model references consistent, supports validation workflows, and offers cost
-calculation primitives backed by the models.dev dataset.
+`ace-support-models` normalizes provider/model metadata and pricing helpers for consistent ACE behavior.
 
-## Installation
+## How It Works
 
-Add to your Gemfile:
+1. Provider and model data is loaded into shared model structures.
+2. Metadata lookups are surfaced through helper APIs and validators.
+3. Tooling uses shared pricing and compatibility insights from one canonical source.
 
-```ruby
-gem "ace-support-models"
-```
+## Use Cases
 
-Or install directly:
+**Resolve model metadata consistently** - avoid duplicated model catalogs across ACE features.
 
-```bash
-gem install ace-support-models
-```
+**Calculate usage expectations** - support stable cost and compatibility assumptions during tool workflows.
 
-### Migration from ace-llm-models-dev
+**Share validation rules** - apply one metadata model for provider and model checks.
 
-If you were using `ace-llm-models-dev`, note that:
-- The cache directory has changed from `~/.cache/ace-llm-models-dev` to `~/.ace-local/models`
-- You will need to run `ace-models cache sync` after upgrading to fetch fresh data
-- You can safely delete the old cache directory: `rm -rf ~/.cache/ace-llm-models-dev`
-- All existing functionality remains identical
+## What It Provides
 
-## Usage
-
-The CLI uses git-style subcommands organized into three groups:
-
-- `cache` - Manage local models.dev cache
-- `providers` - Work with provider configurations
-- `models` - Search, query, and price models
-
-Top-level shortcuts are available for common operations.
-
-### Basic Usage
-
-```bash
-# Refresh local metadata
-ace-models cache sync
-
-# Find and inspect a model
-ace-models models search gpt-4o
-ace-models models info openai:gpt-4o
-
-# Estimate request cost
-ace-models models cost openai:gpt-4o --input 10000 --output 2000
-```
-
-### Cache Commands
-
-```bash
-# Sync from models.dev API
-ace-models cache sync
-ace-models cache sync --force  # Force refresh
-
-# View cache status
-ace-models cache status
-# Cache Status:
-#   Cached: Yes
-#   Fresh: Yes
-#   Last sync: 2024-12-04T00:30:00Z
-#
-# Statistics:
-#   Providers: 69
-#   Models: 847
-
-# Show changes since last sync
-ace-models cache diff
-# New models:
-#   + anthropic:claude-opus-4-5
-# Updated models:
-#   ~ openai:gpt-4o: cost.output: 10.00 → 7.50
-
-# Clear cache
-ace-models cache clear
-```
-
-### Provider Commands
-
-```bash
-# List all providers with model counts
-ace-llm-providers list
-# Providers (69):
-#   openrouter: 127 models
-#   openai: 36 models
-#   ...
-
-# Show provider details
-ace-llm-providers show openai
-# Provider: openai
-# Models (36):
-#   gpt-4o
-#     GPT-4o
-#   gpt-4o-mini
-#     GPT-4o mini
-#   ...
-
-# Sync provider YAML configs with models.dev
-ace-llm-providers sync
-ace-llm-providers sync --apply  # Apply changes
-```
-
-### Model Commands
-
-```bash
-# Search models
-ace-models models search gpt
-# Showing 20 of 207 results:
-#   openai:gpt-4o
-#     GPT-4o
-#   ...
-
-# Search with filters
-ace-models models search --provider openai --limit 10
-ace-models models search --filter "tool_call:true"
-
-# Model info (brief by default)
-ace-models models info openai:gpt-4o
-# GPT-4o (openai:gpt-4o)
-#   Provider: openai
-#   Status: active
-#   Context: 128,000 tokens
-#   Pricing: $2.50/M input, $10.00/M output
-#   Capabilities: tools, structured
-#
-# Use --full for complete details
-
-# Full model info
-ace-models models info openai:gpt-4o --full
-
-# Calculate costs
-ace-models models cost openai:gpt-4o --input 10000 --output 2000
-# Model: GPT-4o (openai:gpt-4o)
-#
-# Input:     10K tokens × $2.50/M = $0.025
-# Output:    2K tokens × $10.00/M = $0.020
-#
-# Total: $0.045
-```
-
-### Top-Level Shortcuts
-
-Common operations available at the top level:
-
-```bash
-ace-models search gpt      # → models search gpt
-ace-models info gpt-4o     # → models info gpt-4o
-ace-models sync            # → cache sync
-```
-
-### JSON Output
-
-All commands support `--json` for machine-readable output:
-
-```bash
-ace-models cache status --json
-ace-llm-providers list --json
-ace-models models search gpt --json
-ace-models models info openai:gpt-4o --json
-```
-
-#### Search JSON Structure
-
-The `search` command returns a paginated result object:
-
-```json
-{
-  "models": [
-    {
-      "provider_id": "openai",
-      "model_id": "gpt-4o",
-      "name": "GPT-4o",
-      "description": "...",
-      "pricing": { "input": 2.5, "output": 10.0 },
-      "capabilities": { ... }
-    }
-  ],
-  "showing": 20,
-  "total": 207
-}
-```
-
-- `models`: Array of model objects (limited by `--limit`)
-- `showing`: Number of models in this response
-- `total`: Total matching models (before limit)
-
-## Ruby API
-
-```ruby
-require "ace/support/models"
-
-# Sync
-Ace::Support::Models.sync
-
-# Validate
-Ace::Support::Models.validate("openai:gpt-4o")  # Returns ModelInfo
-Ace::Support::Models.valid?("openai:gpt-4o")    # Returns boolean
-
-# Cost
-result = Ace::Support::Models.cost(
-  "openai:gpt-4o",
-  input_tokens: 10_000,
-  output_tokens: 2_000
-)
-puts result[:formatted][:total]  # "$0.045"
-
-# Diff
-diff = Ace::Support::Models.diff
-puts diff.summary
-```
-
-## Data Source
-
-This gem uses data from [models.dev](https://models.dev/), an open-source database of AI models maintained by the SST team.
-
-- API: https://models.dev/api.json
-- GitHub: https://github.com/sst/models.dev
+- Canonical model and provider metadata helpers.
+- Validation utilities and compatibility lookup support.
+- Shared pricing/capability primitives for higher-level packages.
 
 ## Part of ACE
 
-Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
+`ace-support-models` is part of [ACE](../README.md) (Agentic Coding Environment).
 
 ## License
 
