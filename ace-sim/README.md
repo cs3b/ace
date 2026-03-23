@@ -1,51 +1,43 @@
 # ace-sim
 
-Run multi-provider simulation chains for ideas and task specs before implementation.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-sim.svg)](https://rubygems.org/gems/ace-sim)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-![ace-sim getting started](docs/demo/ace-sim-run.gif)
+> Run multi-provider simulation chains for ideas and task specs before implementation.
 
-`ace-sim` executes preset-driven simulation steps (`draft`, `plan`, `work`) across one or more providers, then
-optionally synthesizes suggestions and revised source artifacts for follow-up work.
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
+![ace-sim demo](docs/demo/ace-sim-run.gif)
+
+`ace-sim` executes preset-driven simulation steps (draft, plan, work) across one or more providers via [ace-llm](../ace-llm), then optionally synthesizes suggestions and revised source artifacts for follow-up work. Use `/as-sim-run` to launch simulations from inside a coding agent.
+
+## How It Works
+
+1. Select a simulation preset (`validate-idea` or `validate-task`) and provide a source file, with context assembled by [ace-bundle](../ace-bundle).
+2. The simulation engine runs each step across the configured providers and iteration counts through [ace-llm](../ace-llm).
+3. Results are saved as deterministic run artifacts under `.ace-local/sim/simulations/<run-id>/`, with optional synthesis and writeback to source files.
 
 ## Use Cases
 
-**Validate ideas before committing to implementation** - run `validate-idea` to compare model reasoning and stress-test
-assumptions from a single source file.
+**Validate ideas before committing to implementation** - run `validate-idea` to compare model reasoning across providers and stress-test assumptions from a single source file.
 
-**Review task specs before coding starts** - run `validate-task` to inspect plan/work outputs across providers and
-iteration counts.
+**Review task specs before coding starts** - run `validate-task` to inspect plan/work outputs across providers and iteration counts, keeping [ace-task](../ace-task) specs sharp before delivery begins.
 
-**Compare provider behavior under the same workflow** - use repeated `--provider` and `--repeat` options to evaluate
-consistency and convergence in simulation outputs.
+**Compare provider behavior under the same workflow** - use repeated `--provider` and `--repeat` options to evaluate consistency and convergence in [ace-llm](../ace-llm) simulation outputs.
 
-## Works With
-
-- **[ace-bundle](../ace-bundle)** for source collection and context assembly before simulation chains run.
-- **[ace-llm](../ace-llm)** for provider execution across chain steps and final synthesis flows.
-- **[ace-task](../ace-task)** and **[ace-assign](../ace-assign)** for task-centered simulation and validation loops.
-- **[ace-review](../ace-review)** for post-simulation recommendation review workflows.
-
-## Features
-
-- Preset-driven simulation (`validate-idea`, `validate-task`) with configurable step sequences.
-- Multi-provider and repeat-aware execution via `--provider` and `--repeat`.
-- Optional step override support with `--steps` for focused runs.
-- Optional synthesis + writeback controls (`--synthesis-workflow`, `--synthesis-provider`, `--writeback`).
-- Deterministic run artifacts under `.ace-local/sim/simulations/<run-id>/` for traceable review.
+**Synthesize recommendations from simulation runs** - enable `--synthesis-workflow` and `--synthesis-provider` to produce actionable suggestions, then feed results into [ace-review](../ace-review) for follow-up review.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-sim --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-- `as-sim-run`
-
-## Part of ACE
-
-`ace-sim` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
