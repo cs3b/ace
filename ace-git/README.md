@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-git demo](docs/demo/ace-git-getting-started.gif)
 
 `ace-git` gives developers and coding agents focused git context commands and guided workflows that keep history operations traceable, review-friendly, and safe to execute from the terminal. It handles status, diff, branch, PR context, and structured rebase and reorganization flows.
