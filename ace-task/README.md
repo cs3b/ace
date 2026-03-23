@@ -1,10 +1,9 @@
-<h1 align="center">
-  ACE - Task
-  <br />
-  Draft, organize, and tackle tasks (specs) - for you and your agents.
-</h1>
 
 <div align="center">
+  <h1> ACE - Task </h1>
+
+  Draft, organize, and tackle tasks (specs) - for you and your agents.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-task"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-task.svg" /></a>
