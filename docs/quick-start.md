@@ -193,9 +193,9 @@ ace-bundle guide://changelog     # load a guide
 Discover available resources with `ace-nav`:
 
 ```bash
-ace-nav wfi://                   # list all workflows
-ace-nav guide://                 # list all guides
-ace-nav --sources                # list where resources come from
+ace-nav list 'wfi://*'           # list all workflows
+ace-nav list 'guide://*'         # list all guides
+ace-nav sources                  # list where resources come from
 ```
 
 The nav system resolves protocols by scanning registered sources in priority order. When multiple packages provide the same protocol resource, the highest-priority source wins.
@@ -281,4 +281,4 @@ The `ace-handbook-integration-*` gems handle this projection. Run `ace-handbook 
 - Read the [Architecture](architecture.md) doc for how packages fit together
 - Browse [Tools Reference](tools.md) for the full command inventory
 - Run `ace-bundle project` to see the full project context bundle
-- Run `ace-nav --sources` to see all registered content sources
+- Run `ace-nav sources` to see all registered content sources
