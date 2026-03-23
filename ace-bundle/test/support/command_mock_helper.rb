@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ostruct'
+require "ostruct"
 
 # Helper module for mocking shell commands in ace-bundle tests
 # Intercepts CommandExecutor.execute calls to provide deterministic test results
@@ -58,10 +58,10 @@ module CommandMockHelper
 
   # Register a mock command response
   def self.mock_command(command_pattern, response = nil, &block)
-    if block_given?
-      @@command_mocks[command_pattern] = block
+    @@command_mocks[command_pattern] = if block_given?
+      block
     else
-      @@command_mocks[command_pattern] = response
+      response
     end
   end
 
@@ -236,7 +236,7 @@ module CommandMockHelper
     exit_code = result[:exit_code] || result[:status] || 0
     status = Struct.new(:success?, :exitstatus).new(result[:success], exit_code)
 
-    [result[:stdout].to_s, (result[:stderr] || result[:error] || ""), status]
+    [result[:stdout].to_s, result[:stderr] || result[:error] || "", status]
   end
 
   # Find mock response for a command
@@ -299,6 +299,6 @@ end
 
 # Auto-enable mocking only for ace-bundle tests
 # This prevents global leakage into other package test suites
-if defined?(Minitest) && ENV['RAILS_ENV'] != 'production' && ENV['ENABLE_ACE_BUNDLE_MOCKS']
+if defined?(Minitest) && ENV["RAILS_ENV"] != "production" && ENV["ENABLE_ACE_BUNDLE_MOCKS"]
   CommandMockHelper.enable_mocking!
 end

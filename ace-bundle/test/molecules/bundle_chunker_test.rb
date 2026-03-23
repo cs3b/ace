@@ -71,13 +71,13 @@ class BundleChunkerTest < AceTestCase
     # Verify first file element is complete
     first_chunk = chunks[0]
     if first_chunk.include?('<file path="a.rb"')
-      assert first_chunk.include?('</file>'), "First file element should be complete"
+      assert first_chunk.include?("</file>"), "First file element should be complete"
     end
 
     # Verify second file element is complete
     chunks.each do |chunk|
       if chunk.include?('<file path="b.rb"')
-        assert chunk.include?('</file>'), "Second file element should be complete"
+        assert chunk.include?("</file>"), "Second file element should be complete"
       end
     end
   end
@@ -102,10 +102,10 @@ class BundleChunkerTest < AceTestCase
     # Verify each output element is complete
     chunks.each do |chunk|
       if chunk.include?('<output command="cmd1"')
-        assert chunk.include?('</output>'), "First output element should be complete"
+        assert chunk.include?("</output>"), "First output element should be complete"
       end
       if chunk.include?('<output command="cmd2"')
-        assert chunk.include?('</output>'), "Second output element should be complete"
+        assert chunk.include?("</output>"), "Second output element should be complete"
       end
     end
   end
@@ -127,8 +127,8 @@ class BundleChunkerTest < AceTestCase
     # Should be a single chunk - we don't split elements even if they exceed limit
     assert_equal 1, chunks.size
     assert chunks[0].include?('<file path="large.rb"')
-    assert chunks[0].include?('</file>')
-    assert chunks[0].include?('line 20')
+    assert chunks[0].include?("</file>")
+    assert chunks[0].include?("line 20")
   end
 
   def test_mixed_content_with_files_and_outputs
@@ -147,9 +147,9 @@ class BundleChunkerTest < AceTestCase
     # All elements should be complete in their respective chunks
     all_content = chunks.join
     assert all_content.include?('<file path="a.rb"')
-    assert all_content.include?('</file>')
+    assert all_content.include?("</file>")
     assert all_content.include?('<output command="git status"')
-    assert all_content.include?('</output>')
+    assert all_content.include?("</output>")
   end
 
   # chunk_content integration tests

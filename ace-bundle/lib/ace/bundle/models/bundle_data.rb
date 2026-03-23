@@ -28,7 +28,7 @@ module Ace
         end
 
         def add_file(path, content)
-          @files << { path: path, content: content }
+          @files << {path: path, content: content}
         end
 
         def file_count

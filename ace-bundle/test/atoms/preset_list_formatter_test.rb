@@ -33,8 +33,8 @@ class PresetListFormatterTest < AceTestCase
 
   def test_format_multiple_presets
     presets = [
-      { name: "preset-a", description: "First preset" },
-      { name: "preset-b", description: "Second preset" }
+      {name: "preset-a", description: "First preset"},
+      {name: "preset-b", description: "Second preset"}
     ]
 
     result = Ace::Bundle::Atoms::PresetListFormatter.format(presets)
@@ -45,7 +45,7 @@ class PresetListFormatterTest < AceTestCase
   end
 
   def test_format_preset_without_optional_fields
-    presets = [{ name: "minimal" }]
+    presets = [{name: "minimal"}]
 
     result = Ace::Bundle::Atoms::PresetListFormatter.format(presets)
 
@@ -56,7 +56,7 @@ class PresetListFormatterTest < AceTestCase
   end
 
   def test_format_returns_array_of_strings
-    presets = [{ name: "test" }]
+    presets = [{name: "test"}]
 
     result = Ace::Bundle::Atoms::PresetListFormatter.format(presets)
 

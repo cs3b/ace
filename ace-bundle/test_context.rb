@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
 
 # Add the ace-bundle lib directory to load path
-$LOAD_PATH.unshift(File.join(__dir__, 'ace-bundle/lib'))
+$LOAD_PATH.unshift(File.join(__dir__, "ace-bundle/lib"))
 
-require 'ace/bundle'
+require "ace/bundle"
 
 puts "Testing ace-bundle with project-base preset..."
 begin
-  context = Ace::Bundle.load_preset('project-base')
+  context = Ace::Bundle.load_preset("project-base")
   puts "SUCCESS: Context loaded without errors"
   puts "Context metadata: #{context.metadata}"
 rescue => e

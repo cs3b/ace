@@ -89,7 +89,7 @@ class CLIEmbedSourceTest < AceTestCase
 
     # CLI flag should override frontmatter setting
     assert_match(/This is the prompt content with embed disabled/, output,
-                 "Should embed source content despite frontmatter saying false")
+      "Should embed source content despite frontmatter saying false")
     assert_match(/Sample file content/, output, "Should embed referenced files")
   end
 
@@ -98,10 +98,10 @@ class CLIEmbedSourceTest < AceTestCase
 
     # Should NOT embed source when frontmatter says false and no CLI flag
     refute_match(/This is the prompt content with embed disabled/, output,
-                 "Should not embed source content when disabled in frontmatter")
+      "Should not embed source content when disabled in frontmatter")
     # Files should still be included in formatted output
     assert_match(/Sample file content/, output,
-                 "Should still show file content in formatted output")
+      "Should still show file content in formatted output")
   end
 
   def test_flag_works_with_output_mode
@@ -110,7 +110,7 @@ class CLIEmbedSourceTest < AceTestCase
     output = load_context(@prompt_path, embed_source: true)
 
     assert_match(/This is the prompt content/, output,
-                 "Should embed source content with --output stdio")
+      "Should embed source content with --output stdio")
   end
 
   def test_flag_works_with_minimal_frontmatter
@@ -132,8 +132,8 @@ class CLIEmbedSourceTest < AceTestCase
     output = load_context(minimal_path, embed_source: true)
 
     assert_match(/This is content with minimal frontmatter/, output,
-                 "Should embed source content when flag is used")
+      "Should embed source content when flag is used")
     assert_match(/Sample file content/, output,
-                 "Should also include referenced files")
+      "Should also include referenced files")
   end
 end

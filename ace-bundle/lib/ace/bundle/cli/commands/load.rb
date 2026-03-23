@@ -43,11 +43,11 @@ module Ace
           DESC
 
           example [
-            'project                  # Load project preset',
-            'wfi://work-on-task       # Load workflow via protocol',
-            '-p base -p custom        # Merge multiple presets',
-            '-f config.yml            # Load from file',
-            '--inspect-config         # Show resolved configuration'
+            "project                  # Load project preset",
+            "wfi://work-on-task       # Load workflow via protocol",
+            "-p base -p custom        # Merge multiple presets",
+            "-f config.yml            # Load from file",
+            "--inspect-config         # Show resolved configuration"
           ]
 
           # Define positional argument
@@ -70,11 +70,11 @@ module Ace
 
           # Compression
           option :compressor, type: :string, default: nil,
-                 desc: "Enable/disable compression: on, off"
+            desc: "Enable/disable compression: on, off"
           option :compressor_mode, type: :string, default: nil,
-                 desc: "Compressor engine: exact, agent (default: exact)"
+            desc: "Compressor engine: exact, agent (default: exact)"
           option :compressor_source_scope, type: :string, default: nil,
-                 desc: "Source handling: off, per-source, merged (default: off)"
+            desc: "Source handling: off, per-source, merged (default: off)"
 
           # Resource limits
           option :max_size, type: :integer, desc: "Maximum file size in bytes"
@@ -130,20 +130,20 @@ module Ace
             if options.key?(:compressor) && options[:compressor]
               val = options[:compressor].to_s.downcase
               options[:compressor] = case val
-                                     when "true", "yes", "on", "1" then "on"
-                                     when "false", "no", "off", "0" then "off"
-                                     else val
-                                     end
+              when "true", "yes", "on", "1" then "on"
+              when "false", "no", "off", "0" then "off"
+              else val
+              end
             end
 
             # Normalize compressor_source_scope option
             if options.key?(:compressor_source_scope) && options[:compressor_source_scope]
               val = options[:compressor_source_scope].to_s.downcase
               options[:compressor_source_scope] = case val
-                                                  when "true", "yes", "on", "" then "per-source"
-                                                  when "false", "no", "off" then "off"
-                                                  else val
-                                                  end
+              when "true", "yes", "on", "" then "per-source"
+              when "false", "no", "off" then "off"
+              else val
+              end
             end
 
             execute(input, options)
@@ -157,14 +157,14 @@ module Ace
             presets, files = process_options(options)
 
             # Determine input source and load context
-            if options[:inspect_config]
-              result = inspect_config_mode(presets, files, input, options)
+            result = if options[:inspect_config]
+              inspect_config_mode(presets, files, input, options)
             elsif @multi_input_mode
-              result = load_multiple_inputs(presets, files, options)
+              load_multiple_inputs(presets, files, options)
             elsif input
-              result = load_auto(input, options)
+              load_auto(input, options)
             else
-              result = load_auto("default", options)
+              load_auto("default", options)
             end
 
             # Handle errors
@@ -201,7 +201,7 @@ module Ace
             inputs << "default" if inputs.empty?
 
             context = Ace::Bundle.inspect_config(inputs, options)
-            { context: context, input: inputs.join("-") }
+            {context: context, input: inputs.join("-")}
           end
 
           def load_multiple_inputs(presets, files, options)
@@ -211,12 +211,12 @@ module Ace
             all_inputs = presets + files.map { |f| File.basename(f, ".*") }
             input = all_inputs.join("-")
 
-            { context: context, input: input }
+            {context: context, input: input}
           end
 
           def load_auto(input, options)
             context = Ace::Bundle.load_auto(input, options)
-            { context: context, input: input }
+            {context: context, input: input}
           end
 
           def handle_output(context, input, options)
@@ -227,8 +227,8 @@ module Ace
             if explicit_output
               # Explicit output mode specified - honor it
               output_mode = explicit_output
-          else
-            # Auto-format: decide based on line count vs threshold
+            else
+              # Auto-format: decide based on line count vs threshold
               size_key = :raw_content_for_auto_format
               size_source = context.metadata[size_key] ||
                 context.metadata[size_key.to_s] ||
@@ -236,7 +236,7 @@ module Ace
               line_count = Atoms::LineCounter.count(size_source)
               threshold = Ace::Bundle.auto_format_threshold
 
-              output_mode = line_count >= threshold ? "cache" : "stdio"
+              output_mode = (line_count >= threshold) ? "cache" : "stdio"
             end
 
             # Handle output based on mode
@@ -254,10 +254,10 @@ module Ace
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
             configured_cache_dir = Ace::Bundle.cache_dir
             cache_dir = if configured_cache_dir.start_with?("/")
-                          configured_cache_dir
-                        else
-                          File.join(project_root, configured_cache_dir)
-                        end
+              configured_cache_dir
+            else
+              File.join(project_root, configured_cache_dir)
+            end
             FileUtils.mkdir_p(cache_dir)
 
             # Generate cache filename from input (preset name, protocol, or sanitized file path)
@@ -267,7 +267,7 @@ module Ace
 
             if result[:success]
               if result[:chunked]
-                chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
+                chunks = result[:results].select { |r| r[:file_type] == "chunk" }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
                 total_size = chunks.sum { |r| r[:size] || 0 }
                 puts "Bundle saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
@@ -289,7 +289,7 @@ module Ace
 
             if result[:success]
               if result[:chunked]
-                chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
+                chunks = result[:results].select { |r| r[:file_type] == "chunk" }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
                 total_size = chunks.sum { |r| r[:size] || 0 }
                 puts "Bundle saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
@@ -304,7 +304,7 @@ module Ace
           end
 
           def format_size(bytes)
-            units = ['B', 'KB', 'MB', 'GB']
+            units = ["B", "KB", "MB", "GB"]
             size = bytes.to_f
             unit_index = 0
             while size >= 1024 && unit_index < units.size - 1
@@ -329,7 +329,7 @@ module Ace
 
           def load_gem_defaults
             gem_root = Gem.loaded_specs["ace-bundle"]&.gem_dir ||
-                       File.expand_path("../../../../..", __dir__)
+              File.expand_path("../../../../..", __dir__)
             defaults_path = File.join(gem_root, ".ace-defaults", "bundle", "config.yml")
 
             if File.exist?(defaults_path)

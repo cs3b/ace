@@ -20,7 +20,7 @@ unless ENV["ACE_BUNDLE_ALLOW_AGENT_COMPRESSION"] == "1"
             def initialize(default_mode: "off", compressor_mode: "exact", cache_store: nil, **kwargs)
               super(
                 default_mode: default_mode,
-                compressor_mode: compressor_mode.to_s == "agent" ? "exact" : compressor_mode,
+                compressor_mode: (compressor_mode.to_s == "agent") ? "exact" : compressor_mode,
                 cache_store: cache_store,
                 **kwargs
               )

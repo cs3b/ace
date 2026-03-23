@@ -32,8 +32,8 @@ class SectionCompressorTest < AceTestCase
   def test_merged_combines_files_into_one
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "merged")
     bundle = make_bundle_with_files([
-      { path: "a.md", content: "# File A\n\nContent A.\n" },
-      { path: "b.md", content: "# File B\n\nContent B.\n" }
+      {path: "a.md", content: "# File A\n\nContent A.\n"},
+      {path: "b.md", content: "# File B\n\nContent B.\n"}
     ])
 
     compressor.call(bundle)
@@ -47,8 +47,8 @@ class SectionCompressorTest < AceTestCase
 
   def test_non_markdown_files_pass_through
     bundle = make_bundle_with_files([
-      { path: "lib/app.rb", content: "def hello; end" },
-      { path: "docs/guide.md", content: "# Guide\n\nContent.\n" }
+      {path: "lib/app.rb", content: "def hello; end"},
+      {path: "docs/guide.md", content: "# Guide\n\nContent.\n"}
     ])
 
     @compressor.call(bundle)
@@ -66,9 +66,9 @@ class SectionCompressorTest < AceTestCase
 
   def test_per_source_preserves_original_file_order_for_mixed_sections
     bundle = make_bundle_with_files([
-      { path: "a.md", content: "# File A\n\nContent A.\n" },
-      { path: "lib/app.rb", content: "def hello; end" },
-      { path: "c.md", content: "# File C\n\nContent C.\n" }
+      {path: "a.md", content: "# File A\n\nContent A.\n"},
+      {path: "lib/app.rb", content: "def hello; end"},
+      {path: "c.md", content: "# File C\n\nContent C.\n"}
     ])
 
     @compressor.call(bundle)
@@ -83,10 +83,10 @@ class SectionCompressorTest < AceTestCase
   def test_merged_preserves_passthrough_file_positions
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "merged")
     bundle = make_bundle_with_files([
-      { path: "lib/pre.rb", content: "PRE = true" },
-      { path: "a.md", content: "# File A\n\nContent A.\n" },
-      { path: "b.md", content: "# File B\n\nContent B.\n" },
-      { path: "lib/post.rb", content: "POST = true" }
+      {path: "lib/pre.rb", content: "PRE = true"},
+      {path: "a.md", content: "# File A\n\nContent A.\n"},
+      {path: "b.md", content: "# File B\n\nContent B.\n"},
+      {path: "lib/post.rb", content: "POST = true"}
     ])
 
     compressor.call(bundle)
@@ -103,7 +103,7 @@ class SectionCompressorTest < AceTestCase
   def test_section_level_override
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source")
     bundle = make_bundle_with_md_section("# Title\n\nText.\n")
-    bundle.sections["docs"][:params] = { "compress" => "off" }
+    bundle.sections["docs"][:params] = {"compress" => "off"}
 
     compressor.call(bundle)
 
@@ -219,8 +219,8 @@ class SectionCompressorTest < AceTestCase
 
   def test_compressing_frontmatter_only_files_with_other_files
     bundle = make_bundle_with_files([
-      { path: "test-context.md", content: "---\ntitle: Frontmatter Only\n---\n" },
-      { path: "docs/readme.md", content: "# Title\n\nA summary line.\n" }
+      {path: "test-context.md", content: "---\ntitle: Frontmatter Only\n---\n"},
+      {path: "docs/readme.md", content: "# Title\n\nA summary line.\n"}
     ])
 
     @compressor.call(bundle)
@@ -276,7 +276,7 @@ class SectionCompressorTest < AceTestCase
   def test_section_level_compressor_source_scope_override
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "per-source")
     bundle = make_bundle_with_md_section("# Title\n\nText.\n")
-    bundle.sections["docs"][:params] = { "compressor_source_scope" => "off" }
+    bundle.sections["docs"][:params] = {"compressor_source_scope" => "off"}
 
     compressor.call(bundle)
 
@@ -288,7 +288,7 @@ class SectionCompressorTest < AceTestCase
   def test_backward_compat_section_compress_param
     compressor = Ace::Bundle::Molecules::SectionCompressor.new(default_mode: "off")
     bundle = make_bundle_with_md_section("# Title\n\nText.\n")
-    bundle.sections["docs"][:params] = { "compress" => "per-source" }
+    bundle.sections["docs"][:params] = {"compress" => "per-source"}
 
     compressor.call(bundle)
 
@@ -343,8 +343,8 @@ class SectionCompressorTest < AceTestCase
       default_mode: "merged", compressor_mode: "exact", cache_store: cache_store
     )
     files = [
-      { path: "a.md", content: "# File A\n\nContent A.\n" },
-      { path: "b.md", content: "# File B\n\nContent B.\n" }
+      {path: "a.md", content: "# File A\n\nContent A.\n"},
+      {path: "b.md", content: "# File B\n\nContent B.\n"}
     ]
     bundle1 = make_bundle_with_files(files)
     bundle2 = make_bundle_with_files(files)
@@ -401,14 +401,14 @@ class SectionCompressorTest < AceTestCase
   private
 
   def make_bundle_with_md_section(content)
-    make_bundle_with_files([{ path: "docs/readme.md", content: content }])
+    make_bundle_with_files([{path: "docs/readme.md", content: content}])
   end
 
   def make_bundle_with_files(files)
     bundle = Ace::Bundle::Models::BundleData.new
     bundle.add_section("docs", {
       title: "Documentation",
-      _processed_files: files.map { |f| { path: f[:path], content: f[:content] } }
+      _processed_files: files.map { |f| {path: f[:path], content: f[:content]} }
     })
     bundle
   end

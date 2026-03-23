@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'ace/bundle/atoms/boundary_finder'
+require "test_helper"
+require "ace/bundle/atoms/boundary_finder"
 
 class BoundaryFinderTest < AceTestCase
   # parse_blocks tests

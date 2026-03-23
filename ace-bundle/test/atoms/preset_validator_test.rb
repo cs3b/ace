@@ -35,19 +35,19 @@ class PresetValidatorTest < AceTestCase
   def test_extract_preset_references_from_config
     preset_data = {
       bundle: {
-        'presets' => ['base', 'development']
+        "presets" => ["base", "development"]
       }
     }
 
     refs = Ace::Bundle::Atoms::PresetValidator.extract_preset_references(preset_data)
 
-    assert_equal ['base', 'development'], refs
+    assert_equal ["base", "development"], refs
   end
 
   def test_extract_preset_references_returns_empty_for_no_presets
     preset_data = {
       bundle: {
-        'files' => ['README.md']
+        "files" => ["README.md"]
       }
     }
 

@@ -66,7 +66,7 @@ class BundleLoaderTest < AceTestCase
         if diff_config["ranges"]
           moved_ranges = diff_config["ranges"]
         elsif diff_config["since"]
-          moved_ranges = ["#{diff_config['since']}...HEAD"]
+          moved_ranges = ["#{diff_config["since"]}...HEAD"]
         end
         moved["ranges"] = moved_ranges if moved_ranges.any?
       when String, Array
@@ -324,7 +324,7 @@ class BundleLoaderTest < AceTestCase
       context = loader.load_preset("format_test")
 
       # Should be formatted as YAML
-      puts "DEBUG: Content format: #{context.content[0..200]}" if ENV['DEBUG']
+      puts "DEBUG: Content format: #{context.content[0..200]}" if ENV["DEBUG"]
 
       # Check if it's actually YAML formatted
       assert_match(/format_test/, context.content, "Content should include preset name")
@@ -550,7 +550,7 @@ class BundleLoaderTest < AceTestCase
       # Current preset params should win (last wins)
       # The metadata contains merged params
       assert context.metadata[:timeout].nil? || context.metadata[:timeout] == 60,
-             "Current preset timeout should override base (or be merged correctly)"
+        "Current preset timeout should override base (or be merged correctly)"
 
       # Should still have files from base
       assert_equal 1, context.file_count, "Should have files from base preset"
@@ -717,11 +717,11 @@ class BundleLoaderTest < AceTestCase
 
         # Verify PR diff was integrated into context sections
         assert context.sections, "Should have sections"
-        assert context.sections['diffs'], "Should have diffs section"
-        assert context.sections['diffs'][:_processed_diffs], "Should have processed diffs"
-        assert_equal 1, context.sections['diffs'][:_processed_diffs].size
-        assert context.sections['diffs'][:_processed_diffs][0][:success], "PR fetch should succeed"
-        assert_includes context.sections['diffs'][:_processed_diffs][0][:output], "def bar", "Should include PR diff content"
+        assert context.sections["diffs"], "Should have diffs section"
+        assert context.sections["diffs"][:_processed_diffs], "Should have processed diffs"
+        assert_equal 1, context.sections["diffs"][:_processed_diffs].size
+        assert context.sections["diffs"][:_processed_diffs][0][:success], "PR fetch should succeed"
+        assert_includes context.sections["diffs"][:_processed_diffs][0][:output], "def bar", "Should include PR diff content"
       end
     end
   end
@@ -741,9 +741,9 @@ class BundleLoaderTest < AceTestCase
 
       # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
       mock_fetch = lambda do |id, **_opts|
-        diff = call_count == 0 ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
+        diff = (call_count == 0) ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
         call_count += 1
-        { success: true, diff: diff, identifier: id, source: "pr:#{id}" }
+        {success: true, diff: diff, identifier: id, source: "pr:#{id}"}
       end
 
       Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
@@ -752,8 +752,8 @@ class BundleLoaderTest < AceTestCase
 
         # Verify both PR diffs were integrated into sections
         assert context.sections, "Should have sections"
-        assert context.sections['diffs'], "Should have diffs section"
-        processed = context.sections['diffs'][:_processed_diffs]
+        assert context.sections["diffs"], "Should have diffs section"
+        processed = context.sections["diffs"][:_processed_diffs]
         assert_equal 2, processed.size, "Should have 2 processed PR diffs"
         assert_includes processed[0][:output], "PR 123", "Should include first PR diff"
         assert_includes processed[1][:output], "PR 456", "Should include second PR diff"
@@ -809,9 +809,9 @@ class BundleLoaderTest < AceTestCase
 
     Ace::Git::Models::DiffResult.new(
       content: mock_diff_content,
-      stats: { additions: 2, deletions: 1, files: 1, total_changes: 3 },
+      stats: {additions: 2, deletions: 1, files: 1, total_changes: 3},
       files: [filename],
-      metadata: { range: range }
+      metadata: {range: range}
     )
   end
 
@@ -916,13 +916,13 @@ class BundleLoaderTest < AceTestCase
 
       # Manually add _processed_diffs to simulate PR processing
       # This simulates what happens when PRs are fetched and processed
-      if context.sections && context.sections.key?('pr_diffs')
-        context.sections['pr_diffs'][:_processed_diffs] = ['diff content from PR']
+      if context.sections && context.sections.key?("pr_diffs")
+        context.sections["pr_diffs"][:_processed_diffs] = ["diff content from PR"]
       end
 
       # Now test the helper method
       assert loader.send(:has_processed_section_content?, context),
-             "Should return true when sections have _processed_diffs"
+        "Should return true when sections have _processed_diffs"
     end
   end
 
@@ -946,12 +946,12 @@ class BundleLoaderTest < AceTestCase
       context = loader.load_preset("test-preset")
 
       # Manually add _processed_files
-      if context.sections && context.sections.key?('files_section')
-        context.sections['files_section'][:_processed_files] = [{ path: 'test.rb', content: 'content' }]
+      if context.sections && context.sections.key?("files_section")
+        context.sections["files_section"][:_processed_files] = [{path: "test.rb", content: "content"}]
       end
 
       assert loader.send(:has_processed_section_content?, context),
-             "Should return true when sections have _processed_files"
+        "Should return true when sections have _processed_files"
     end
   end
 
@@ -975,7 +975,7 @@ class BundleLoaderTest < AceTestCase
       context = loader.load_preset("empty-preset")
 
       refute loader.send(:has_processed_section_content?, context),
-             "Should return false when sections have no processed content"
+        "Should return false when sections have no processed content"
     end
   end
 
@@ -1000,7 +1000,7 @@ class BundleLoaderTest < AceTestCase
         # Should capture error in formatted content, not crash
         # Errors appear in <errors> section or "## Errors" heading
         assert context.content.include?("Git diff failed"),
-               "Content should include git error message: #{context.content[0..500]}"
+          "Content should include git error message: #{context.content[0..500]}"
       end
     end
   end
@@ -1022,7 +1022,7 @@ class BundleLoaderTest < AceTestCase
 
         # Should capture timeout error in content (TimeoutError inherits from Error)
         assert context.content.include?("timed out"),
-               "Content should include timeout error message: #{context.content[0..500]}"
+          "Content should include timeout error message: #{context.content[0..500]}"
       end
     end
   end
@@ -1044,7 +1044,7 @@ class BundleLoaderTest < AceTestCase
 
         # Should capture argument error with "Invalid diff range" prefix
         assert context.content.include?("Invalid diff range"),
-               "Content should include invalid range error message: #{context.content[0..500]}"
+          "Content should include invalid range error message: #{context.content[0..500]}"
       end
     end
   end
@@ -1176,7 +1176,7 @@ class BundleLoaderTest < AceTestCase
         assert context, "Should return a context"
         assert context.content, "Should have content"
         assert context.content.include?("git diff command failed"),
-               "Content should include the error message"
+          "Content should include the error message"
       end
     end
   end
@@ -1210,7 +1210,10 @@ class BundleLoaderTest < AceTestCase
 
       called = false
       original_new = Ace::Bundle::Molecules::SectionCompressor.method(:new)
-      Ace::Bundle::Molecules::SectionCompressor.stub(:new, ->(**_kw) { called = true; original_new.call(**_kw) }) do
+      Ace::Bundle::Molecules::SectionCompressor.stub(:new, ->(**_kw) {
+        called = true
+        original_new.call(**_kw)
+      }) do
         loader.load_preset("compress-test")
       end
 
@@ -1295,9 +1298,9 @@ class BundleLoaderTest < AceTestCase
       end
 
       assert_equal "per-source", captured_kwargs[:default_mode],
-                   "Should use config source_scope when no CLI/preset value"
+        "Should use config source_scope when no CLI/preset value"
       assert_equal "exact", captured_kwargs[:compressor_mode],
-                   "Should use config mode when no CLI/preset value"
+        "Should use config mode when no CLI/preset value"
     end
   end
 
@@ -1340,9 +1343,9 @@ class BundleLoaderTest < AceTestCase
       end
 
       assert_equal "per-source", captured_kwargs[:default_mode],
-                   "CLI source_scope should override preset"
+        "CLI source_scope should override preset"
       assert_equal "exact", captured_kwargs[:compressor_mode],
-                   "CLI mode should override preset"
+        "CLI mode should override preset"
     end
   end
 
@@ -1382,7 +1385,7 @@ class BundleLoaderTest < AceTestCase
         compressor_source_scope: "per-source",
         compressor_mode: "exact"
       )
-      bundle = loader.send(:load_plain_markdown, md_content, { "description" => "A workflow" }, File.expand_path("wf.md"))
+      bundle = loader.send(:load_plain_markdown, md_content, {"description" => "A workflow"}, File.expand_path("wf.md"))
 
       assert_includes bundle.content, "FILE|"
       assert bundle.metadata[:compressed]
@@ -1513,5 +1516,4 @@ class BundleLoaderTest < AceTestCase
         "--compressor off should prevent post-format compression"
     end
   end
-
 end

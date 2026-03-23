@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'fileutils'
-require_relative 'bundle_chunker'
-require_relative 'section_formatter'
+require "pathname"
+require "fileutils"
+require_relative "bundle_chunker"
+require_relative "section_formatter"
 
 module Ace
   module Bundle
@@ -40,42 +40,40 @@ module Ace
 
         # Write single file
         def write(content, path, options = {})
-          begin
-            # Ensure directory exists
-            dir = File.dirname(path)
+          # Ensure directory exists
+          dir = File.dirname(path)
+          unless File.directory?(dir)
+            FileUtils.mkdir_p(dir)
+            # Validate that directory was created successfully
             unless File.directory?(dir)
-              FileUtils.mkdir_p(dir)
-              # Validate that directory was created successfully
-              unless File.directory?(dir)
-                return {
-                  success: false,
-                  error: "Failed to create directory: #{dir}",
-                  path: path
-                }
-              end
+              return {
+                success: false,
+                error: "Failed to create directory: #{dir}",
+                path: path
+              }
             end
-
-            # Write file
-            File.write(path, content)
-
-            # Calculate statistics
-            lines = content.lines.size
-            size = content.bytesize
-
-            {
-              success: true,
-              path: path,
-              lines: lines,
-              size: size,
-              size_formatted: format_bytes(size)
-            }
-          rescue => e
-            {
-              success: false,
-              error: e.message,
-              path: path
-            }
           end
+
+          # Write file
+          File.write(path, content)
+
+          # Calculate statistics
+          lines = content.lines.size
+          size = content.bytesize
+
+          {
+            success: true,
+            path: path,
+            lines: lines,
+            size: size,
+            size_formatted: format_bytes(size)
+          }
+        rescue => e
+          {
+            success: false,
+            error: e.message,
+            path: path
+          }
         end
 
         private
@@ -85,7 +83,7 @@ module Ace
           if bundle.respond_to?(:content)
             bundle.content
           elsif bundle.is_a?(Hash)
-            formatter = Ace::Core::Molecules::OutputFormatter.new(format || 'markdown-xml')
+            formatter = Ace::Core::Molecules::OutputFormatter.new(format || "markdown-xml")
             formatter.format(bundle)
           else
             bundle.to_s
@@ -95,7 +93,7 @@ module Ace
         # Write bundle organized by sections
         def write_sections_organized(bundle, output_path, options = {})
           base_path = resolve_output_path(output_path)
-          format = options[:format] || 'markdown-xml'
+          format = options[:format] || "markdown-xml"
 
           # Create section formatter
           section_formatter = SectionFormatter.new(format)
@@ -132,7 +130,7 @@ module Ace
 
           # Add section links
           bundle.sorted_sections.each do |section_name, section_data|
-            title = section_data[:title] || section_data['title'] || section_name.to_s.humanize
+            title = section_data[:title] || section_data["title"] || section_name.to_s.humanize
             content << "- [#{title}](#{section_name}.md)"
           end
 
@@ -152,7 +150,7 @@ module Ace
         def write_individual_sections(bundle, base_path, section_formatter, options)
           section_files = []
           base_dir = File.dirname(base_path)
-          base_name = File.basename(base_path, '.*')
+          base_name = File.basename(base_path, ".*")
 
           bundle.sorted_sections.each do |section_name, section_data|
             # Create section filename
@@ -167,7 +165,7 @@ module Ace
             if result[:success]
               section_files << {
                 section: section_name,
-                title: section_data[:title] || section_data['title'] || section_name.to_s.humanize,
+                title: section_data[:title] || section_data["title"] || section_name.to_s.humanize,
                 file: section_filename,
                 lines: result[:lines],
                 size: result[:size]
@@ -182,21 +180,21 @@ module Ace
         def create_section_content(section_name, section_data, bundle, section_formatter)
           content = []
 
-          title = section_data[:title] || section_data['title'] || section_name.to_s.humanize
+          title = section_data[:title] || section_data["title"] || section_name.to_s.humanize
 
           content << "# #{title}"
           content << ""
 
           # Add section metadata
           content << "**Section:** #{section_name}"
-          content << "**Content Type:** #{section_data[:content_type] || section_data['content_type']}"
-          content << "**Priority:** #{section_data[:priority] || section_data['priority'] || 'N/A'}"
+          content << "**Content Type:** #{section_data[:content_type] || section_data["content_type"]}"
+          content << "**Priority:** #{section_data[:priority] || section_data["priority"] || "N/A"}"
           content << ""
 
           # Add section description if available
-          if section_data[:description] || section_data['description']
+          if section_data[:description] || section_data["description"]
             content << "## Description"
-            content << section_data[:description] || section_data['description']
+            content << section_data[:description] || section_data["description"]
             content << ""
           end
 
@@ -205,14 +203,14 @@ module Ace
           content << ""
 
           # Format just this section
-          single_section = { section_name => section_data }
+          single_section = {section_name => section_data}
           content << section_formatter.format_sections_only(single_section)
 
           # Add navigation back to index
           content << ""
           content << "---"
           content << ""
-          content << "[← Back to Index](#{File.basename(bundle.metadata[:output_file] || 'bundle.md')})"
+          content << "[← Back to Index](#{File.basename(bundle.metadata[:output_file] || "bundle.md")})"
 
           content.join("\n")
         end
@@ -226,7 +224,7 @@ module Ace
         # Write content in chunks
         def write_chunked_content(content, base_path, options)
           # Remove extension from base path for chunking
-          base_path_no_ext = base_path.sub(/\.[^.]+$/, '')
+          base_path_no_ext = base_path.sub(/\.[^.]+$/, "")
 
           # Chunk and write content
           result = @chunker.chunk_and_write(content, base_path_no_ext, self, options)
@@ -254,7 +252,7 @@ module Ace
 
         # Format bytes for human readability
         def format_bytes(bytes)
-          units = ['B', 'KB', 'MB', 'GB']
+          units = ["B", "KB", "MB", "GB"]
           size = bytes.to_f
           unit_index = 0
 

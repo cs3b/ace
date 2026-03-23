@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
-require 'ace/core'
-require 'ace/git'
-require_relative 'bundle/version'
+require "ace/support/config"
+require "ace/core"
+require "ace/git"
+require_relative "bundle/version"
 
 # Define error hierarchy before loading components (they reference these classes)
 module Ace
@@ -20,12 +20,12 @@ module Ace
 end
 
 # Main API
-require_relative 'bundle/organisms/bundle_loader'
-require_relative 'bundle/molecules/preset_manager'
-require_relative 'bundle/molecules/bundle_file_writer'
+require_relative "bundle/organisms/bundle_loader"
+require_relative "bundle/molecules/preset_manager"
+require_relative "bundle/molecules/bundle_file_writer"
 
 # CLI and commands
-require_relative 'bundle/cli'
+require_relative "bundle/cli"
 
 module Ace
   module Bundle
@@ -198,7 +198,7 @@ module Ace
       # @return [Hash] Merged and transformed configuration
       def load_config
         gem_root = Gem.loaded_specs["ace-bundle"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -217,7 +217,7 @@ module Ace
         warn "  #{e.message}"
         # Fall back to gem defaults
         load_gem_defaults_fallback
-      rescue StandardError => e
+      rescue => e
         warn "ace-bundle: Failed to load configuration: #{e.message}"
         # Fall back to gem defaults
         load_gem_defaults_fallback
@@ -227,14 +227,14 @@ module Ace
       # @return [Hash] Defaults hash or empty hash if defaults also fail
       def load_gem_defaults_fallback
         gem_root = Gem.loaded_specs["ace-bundle"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
         defaults_path = File.join(gem_root, ".ace-defaults", "bundle", "config.yml")
 
         return {} unless File.exist?(defaults_path)
 
         data = YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
         normalize_keys(data["bundle"] || data)
-      rescue StandardError
+      rescue
         {} # Only return empty hash if even defaults fail to load
       end
 

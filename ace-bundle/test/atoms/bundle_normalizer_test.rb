@@ -12,18 +12,18 @@ class BundleNormalizerTest < AceTestCase
   def test_normalize_string_input
     result = @normalizer.normalize_config("project")
 
-    assert_equal({ "bundle" => { "presets" => ["project"] } }, result)
+    assert_equal({"bundle" => {"presets" => ["project"]}}, result)
   end
 
   def test_normalize_string_input_staged
     result = @normalizer.normalize_config("staged")
 
-    assert_equal({ "bundle" => { "presets" => ["staged"] } }, result)
+    assert_equal({"bundle" => {"presets" => ["staged"]}}, result)
   end
 
   # Test Case 2: Hash with top-level base (no context key)
   def test_normalize_hash_with_base_no_context
-    input = { "base" => "custom content", "files" => ["README.md"] }
+    input = {"base" => "custom content", "files" => ["README.md"]}
     result = @normalizer.normalize_config(input)
 
     expected = {
@@ -36,7 +36,7 @@ class BundleNormalizerTest < AceTestCase
   end
 
   def test_normalize_hash_with_symbol_base_no_context
-    input = { base: "custom content", files: ["README.md"] }
+    input = {base: "custom content", files: ["README.md"]}
     result = @normalizer.normalize_config(input)
 
     expected = {
@@ -72,7 +72,7 @@ class BundleNormalizerTest < AceTestCase
   def test_normalize_hash_with_both_base_and_context
     input = {
       "base" => "custom content",
-      "bundle" => { "presets" => ["project"] }
+      "bundle" => {"presets" => ["project"]}
     }
     result = @normalizer.normalize_config(input)
 
@@ -91,7 +91,7 @@ class BundleNormalizerTest < AceTestCase
       "bundle" => {
         "presets" => ["project"],
         "sections" => {
-          "code" => { "files" => ["lib/**/*.rb"] }
+          "code" => {"files" => ["lib/**/*.rb"]}
         }
       },
       "other_key" => "other_value"
@@ -103,7 +103,7 @@ class BundleNormalizerTest < AceTestCase
         "base" => "custom content",
         "presets" => ["project"],
         "sections" => {
-          "code" => { "files" => ["lib/**/*.rb"] }
+          "code" => {"files" => ["lib/**/*.rb"]}
         }
       },
       "other_key" => "other_value"
@@ -150,7 +150,7 @@ class BundleNormalizerTest < AceTestCase
   end
 
   def test_normalize_hash_with_only_context_key
-    input = { "bundle" => {} }
+    input = {"bundle" => {}}
     result = @normalizer.normalize_config(input)
 
     assert_equal input, result
@@ -196,7 +196,7 @@ class BundleNormalizerTest < AceTestCase
   def test_normalize_mixed_keys
     input = {
       :base => "content",
-      "bundle" => { :presets => ["project"], "files" => ["README.md"] }
+      "bundle" => {:presets => ["project"], "files" => ["README.md"]}
     }
     result = @normalizer.normalize_config(input)
 

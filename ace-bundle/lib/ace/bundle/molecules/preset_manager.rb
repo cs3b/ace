@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
-require 'yaml'
-require 'set'
-require_relative '../atoms/preset_validator'
-require_relative '../atoms/section_validator'
+require "ace/support/config"
+require "yaml"
+require_relative "../atoms/preset_validator"
+require_relative "../atoms/section_validator"
 
 module Ace
   module Bundle
@@ -48,7 +47,7 @@ module Ace
           preset = get_preset(name)
           unless preset
             return {
-              error: "Preset '#{name}' not found. Available presets: #{@presets.keys.join(', ')}",
+              error: "Preset '#{name}' not found. Available presets: #{@presets.keys.join(", ")}",
               success: false
             }
           end
@@ -81,7 +80,7 @@ module Ace
           # If there were errors loading dependencies, return error
           if errors.any?
             return {
-              error: "Failed to load preset dependencies: #{errors.join(', ')}",
+              error: "Failed to load preset dependencies: #{errors.join(", ")}",
               success: false,
               partial_presets: composed_presets
             }
@@ -107,7 +106,7 @@ module Ace
             description: nil,
             params: {},
             bundle: {},
-            body: '',
+            body: "",
             # Don't set format here - let BundleLoader determine the default
             output: nil,
             cache: false,
@@ -123,26 +122,26 @@ module Ace
               bundle_config = preset[:bundle]
 
               # Merge params (scalar override)
-              if bundle_config['params']
-                merged[:bundle]['params'] ||= {}
-                merged[:bundle]['params'].merge!(bundle_config['params'])
+              if bundle_config["params"]
+                merged[:bundle]["params"] ||= {}
+                merged[:bundle]["params"].merge!(bundle_config["params"])
               end
 
               # Merge files array (deduplicate)
-              if bundle_config['files']
-                merged[:bundle]['files'] ||= []
-                merged[:bundle]['files'].concat(bundle_config['files'])
+              if bundle_config["files"]
+                merged[:bundle]["files"] ||= []
+                merged[:bundle]["files"].concat(bundle_config["files"])
               end
 
               # Merge commands array (deduplicate)
-              if bundle_config['commands']
-                merged[:bundle]['commands'] ||= []
-                merged[:bundle]['commands'].concat(bundle_config['commands'])
+              if bundle_config["commands"]
+                merged[:bundle]["commands"] ||= []
+                merged[:bundle]["commands"].concat(bundle_config["commands"])
               end
 
               # Collect sections for separate processing
-              if bundle_config['sections']
-                all_sections << bundle_config['sections']
+              if bundle_config["sections"]
+                all_sections << bundle_config["sections"]
               end
 
               # Copy other bundle keys
@@ -179,25 +178,25 @@ module Ace
 
           # Merge sections using SectionProcessor if any exist
           if all_sections.any?
-            require_relative 'section_processor'
+            require_relative "section_processor"
             section_processor = Molecules::SectionProcessor.new
             merged_sections = section_processor.merge_sections(*all_sections)
-            merged[:bundle]['sections'] = merged_sections
+            merged[:bundle]["sections"] = merged_sections
           end
 
           # Deduplicate arrays
-          if merged[:bundle]['files']
-            merged[:bundle]['files'].uniq!
+          if merged[:bundle]["files"]
+            merged[:bundle]["files"].uniq!
           end
 
-          if merged[:bundle]['commands']
-            merged[:bundle]['commands'].uniq!
+          if merged[:bundle]["commands"]
+            merged[:bundle]["commands"].uniq!
           end
 
           # Extract all merged params to root level
           # This ensures params like output, format, timeout, max_size are accessible at root
-          if merged[:bundle]['params']
-            merged_params = merged[:bundle]['params']
+          if merged[:bundle]["params"]
+            merged_params = merged[:bundle]["params"]
 
             # Store params hash at root level
             merged[:params] = merged_params
@@ -208,7 +207,7 @@ module Ace
             end
 
             # Derive cache boolean from output param
-            merged[:cache] = (merged_params['output'] == 'cache')
+            merged[:cache] = (merged_params["output"] == "cache")
           end
 
           merged
@@ -224,12 +223,12 @@ module Ace
             if merged.key?(key)
               value1 = merged[key]
               merged[key] = if value1.is_a?(Hash) && value2.is_a?(Hash)
-                              deep_merge_hash(value1, value2)
-                            elsif value1.is_a?(Array) && value2.is_a?(Array)
-                              (value1 + value2).uniq
-                            else
-                              value2  # Last wins
-                            end
+                deep_merge_hash(value1, value2)
+              elsif value1.is_a?(Array) && value2.is_a?(Array)
+                (value1 + value2).uniq
+              else
+                value2  # Last wins
+              end
             else
               merged[key] = value2
             end
@@ -246,7 +245,7 @@ module Ace
 
           # Get all bundle/presets/*.md files from virtual map
           resolver.glob("bundle/presets/*.md").each do |relative_path, absolute_path|
-            name = File.basename(absolute_path, '.md')
+            name = File.basename(absolute_path, ".md")
             preset_data = load_preset_from_file(absolute_path)
 
             if preset_data
@@ -266,12 +265,12 @@ module Ace
           return nil unless frontmatter
 
           # Use 'bundle' key for preset configuration
-          bundle_config = frontmatter['bundle'] || {}
-          params = bundle_config['params'] || {}
+          bundle_config = frontmatter["bundle"] || {}
+          params = bundle_config["params"] || {}
 
           # Validate sections if present
-          if bundle_config['sections']
-            unless @section_validator.validate_sections(bundle_config['sections'])
+          if bundle_config["sections"]
+            unless @section_validator.validate_sections(bundle_config["sections"])
               errors = @section_validator.errors
               warn "Warning: Section validation failed in #{file}:\n  #{errors.join("\n  ")}\n\nPlease review the sections configuration in this file. The preset will continue to load, but section functionality may be limited."
               # Don't fail loading, just warn - allow users to fix configuration
@@ -279,18 +278,18 @@ module Ace
           end
 
           preset_data = {
-            description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
+            description: frontmatter["description"] || "#{File.basename(file, ".md")} preset",
             params: params,
             bundle: bundle_config,
             body: body.strip,
-            format: params['format'], # Don't set default here - let BundleLoader handle defaults
-            output: params['output'],  # nil allows auto-format to determine output mode
-            cache: params['output'] == 'cache',
-            metadata: frontmatter['metadata'] || {}
+            format: params["format"], # Don't set default here - let BundleLoader handle defaults
+            output: params["output"],  # nil allows auto-format to determine output mode
+            cache: params["output"] == "cache",
+            metadata: frontmatter["metadata"] || {}
           }
 
           # Add section validation metadata if sections were validated
-          if bundle_config['sections']
+          if bundle_config["sections"]
             preset_data[:metadata][:sections_validated] = true
             preset_data[:metadata][:section_validation_errors] = @section_validator.errors unless @section_validator.errors.empty?
           end
@@ -301,7 +300,7 @@ module Ace
           end
 
           # Re-derive cache from output param (in case it was set via params extraction)
-          preset_data[:cache] = (params['output'] == 'cache')
+          preset_data[:cache] = (params["output"] == "cache")
 
           preset_data
         rescue => e

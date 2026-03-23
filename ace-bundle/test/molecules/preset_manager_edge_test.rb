@@ -43,7 +43,7 @@ class PresetManagerEdgeTest < AceTestCase
       manager = Ace::Bundle::Molecules::PresetManager.new
 
       # Should either return nil or handle gracefully without raising
-      preset = manager.get_preset("invalid")
+      manager.get_preset("invalid")
       # Test passes if we get here without exception
       assert true
     end
@@ -236,7 +236,7 @@ class PresetManagerEdgeTest < AceTestCase
       assert preset_exact if File.exist?(".ace/bundle/presets/CaseSensitive.md")
 
       # Test different case (behavior may vary by filesystem)
-      preset_lower = manager.get_preset("casesensitive")
+      manager.get_preset("casesensitive")
       # On case-insensitive filesystems, this might work
     end
   end

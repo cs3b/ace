@@ -38,7 +38,7 @@ class BundleLoaderBaseTest < AceTestCase
 
       # Sections should be processed and present
       refute_empty context.sections
-      assert context.sections.key?(:test_section) || context.sections.key?('test_section')
+      assert context.sections.key?(:test_section) || context.sections.key?("test_section")
 
       # Full formatted output should have section title
       assert context.content.include?("Test Section"), "Output should include section title. Got: #{context.content[0..500]}"
@@ -123,11 +123,11 @@ class BundleLoaderBaseTest < AceTestCase
 
       # Should load file content, not treat filename as inline content
       assert context.content.include?("This file has no extension but should be resolved as a file, not inline content."),
-             "Should include README file content"
+        "Should include README file content"
 
       # Verify it was loaded as file, not inline
-      assert_equal 'file', context.metadata[:base_type],
-                   "Should be loaded as file type, not inline"
+      assert_equal "file", context.metadata[:base_type],
+        "Should be loaded as file type, not inline"
       assert context.metadata[:base_path], "Should have base_path metadata"
       assert_equal "README", context.metadata[:base_ref]
     end
@@ -142,7 +142,7 @@ class BundleLoaderBaseTest < AceTestCase
       assert_match(/SEC\|main|#\s*Main/, context.content)
 
       # Verify it was treated as inline
-      assert_equal 'inline', context.metadata[:base_type]
+      assert_equal "inline", context.metadata[:base_type]
       assert_equal "This is inline base content", context.metadata[:base_ref]
       refute context.metadata[:base_path], "Inline content should not have base_path"
     end

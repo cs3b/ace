@@ -44,7 +44,7 @@ module Ace
 
         def test_normalize_pr_refs_handles_hash_format
           loader = PrBundleLoader.new
-          result = loader.send(:normalize_pr_refs, [{ number: 123 }, { "number" => 456 }])
+          result = loader.send(:normalize_pr_refs, [{number: 123}, {"number" => 456}])
           assert_equal ["123", "456"], result
         end
 
@@ -101,9 +101,9 @@ module Ace
 
           # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
           mock_fetch = lambda do |id, **_opts|
-            diff = call_count == 0 ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
+            diff = (call_count == 0) ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
             call_count += 1
-            { success: true, diff: diff, identifier: id, source: "pr:#{id}" }
+            {success: true, diff: diff, identifier: id, source: "pr:#{id}"}
           end
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
