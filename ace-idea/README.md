@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-idea demo](docs/demo/ace-idea-getting-started.gif)
 
 Ideas appear mid-flow: copied from chat, typed in a terminal, or drafted with an LLM. `ace-idea` gives them a stable home in git with sortable IDs and lightweight status updates, so ideas stay actionable instead of scattered across notes and tabs.
