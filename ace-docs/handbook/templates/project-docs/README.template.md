@@ -24,7 +24,6 @@ ace-docs:
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 
-
 <!-- Nav row: pipe-separated links above the demo. Always use "Handbook - Skills, Agents, Templates"
      as the expanded label so readers know what the handbook contains.
      Place above the demo so readers find docs before scrolling. -->
