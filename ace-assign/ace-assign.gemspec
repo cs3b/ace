@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Phase-based assignment queues that give AI agents structured, resumable work"
-  spec.description = "ACE Assign turns multi-step workflows into durable queues with explicit step states, hierarchical execution, and fork-ready delegation"
+  spec.summary = "Multi-step assignment execution with nesting, fork delegation, and inspectable traces"
+  spec.description = "Turns work into multi-step assignments with nested substeps, fork delegation to long-running agent subprocesses, and inspectable session traces. Steps are defined from a catalog, assembled via presets, and driven through a restartable queue."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
