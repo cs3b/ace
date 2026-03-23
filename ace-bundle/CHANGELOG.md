@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.40.1] - 2026-03-23
+
+### Added
+- Display compression statistics line above "Bundle saved" output when compression is active, showing original vs compressed size and line count with percentage reduction.
+
 ## [0.40.0] - 2026-03-23
 
 ### Changed

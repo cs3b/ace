@@ -30,8 +30,11 @@ module Ace
         # @param bundle_data [Models::BundleData] bundle with sections
         # @return [Models::BundleData] same bundle with compressed file content
         def call(bundle_data)
+          original_bytes, original_lines = measure_compressible_content(bundle_data)
+
           unless bundle_data.has_sections?
             compress_content(bundle_data) if @default_mode != "off"
+            store_compression_stats(bundle_data, original_bytes, original_lines)
             return bundle_data
           end
 
@@ -42,6 +45,7 @@ module Ace
             compress_section_files(section_data, section_mode)
           end
 
+          store_compression_stats(bundle_data, original_bytes, original_lines)
           bundle_data
         end
 
@@ -241,6 +245,39 @@ module Ace
             content_path: content_path,
             source_path: source_path,
             source_kind: source_kind
+          }
+        end
+
+        def measure_compressible_content(bundle_data)
+          if bundle_data.has_sections?
+            bytes = 0
+            lines = 0
+            bundle_data.sections.each do |_, section_data|
+              (section_data[:_processed_files] || []).each do |f|
+                next unless compressible?(f[:path])
+
+                content = f[:content].to_s
+                bytes += content.bytesize
+                lines += content.lines.count
+              end
+            end
+            [bytes, lines]
+          else
+            content = bundle_data.content.to_s
+            [content.bytesize, content.lines.count]
+          end
+        end
+
+        def store_compression_stats(bundle_data, original_bytes, original_lines)
+          compressed_bytes, compressed_lines = measure_compressible_content(bundle_data)
+          return if original_bytes.zero?
+          return if original_bytes == compressed_bytes && original_lines == compressed_lines
+
+          bundle_data.metadata[:compression_stats] = {
+            original_bytes: original_bytes,
+            compressed_bytes: compressed_bytes,
+            original_lines: original_lines,
+            compressed_lines: compressed_lines
           }
         end
       end

@@ -1087,11 +1087,23 @@ module Ace
           content = bundle.content.to_s
           return if content.strip.empty?
 
+          original_bytes = content.bytesize
+          original_lines = content.lines.count
+
           require "ace/compressor"
           label = bundle.metadata[:source]&.to_s || "bundle.md"
           compressed = Ace::Compressor.compress_text(content, label: label, mode: compressor_mode)
           bundle.content = compressed
           bundle.metadata[:compressed] = true
+
+          if original_bytes > 0 && compressed.bytesize != original_bytes
+            bundle.metadata[:compression_stats] = {
+              original_bytes: original_bytes,
+              compressed_bytes: compressed.bytesize,
+              original_lines: original_lines,
+              compressed_lines: compressed.lines.count
+            }
+          end
         end
 
         def sections_have_processed_files?(bundle)
