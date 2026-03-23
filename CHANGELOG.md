@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.957] - 2026-03-23
+
+### Added
+- **ace-bundle v0.40.1**: Display compression statistics in CLI output when compression is active.
+
 ## [0.9.956] - 2026-03-23
 
 ### Changed
