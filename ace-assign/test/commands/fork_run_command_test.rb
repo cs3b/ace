@@ -29,7 +29,8 @@ class ForkRunCommandTest < AceAssignTestCase
   end
 
   class NoopLauncher
-    def launch(**_kwargs); end
+    def launch(**_kwargs)
+    end
   end
 
   class DirectSubtreeCompletingLauncher
@@ -160,7 +161,7 @@ class ForkRunCommandTest < AceAssignTestCase
       # Two top-level steps: first non-fork, second fork with sub_steps.
       # start() marks 010 as in_progress, so 020.01 stays pending.
       steps = [
-        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
@@ -215,8 +216,8 @@ class ForkRunCommandTest < AceAssignTestCase
   def test_fork_run_marks_leaf_root_as_in_progress_before_launch
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "pre-step", "instructions" => "Run pre-step" },
-        { "name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork" }
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {"name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -260,7 +261,7 @@ class ForkRunCommandTest < AceAssignTestCase
   def test_fork_run_reuses_existing_active_step_in_subtree
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
@@ -321,7 +322,7 @@ class ForkRunCommandTest < AceAssignTestCase
   def test_fork_run_fails_when_multiple_steps_are_already_in_progress_in_subtree
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
@@ -357,13 +358,13 @@ class ForkRunCommandTest < AceAssignTestCase
   def test_fork_run_accepts_assignment_scope_without_root_and_without_current_in_scope
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork"
         },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -444,7 +445,7 @@ class ForkRunCommandTest < AceAssignTestCase
       assignment = result[:assignment]
       sessions_dir = File.join(assignment.cache_dir, "sessions")
       FileUtils.mkdir_p(sessions_dir)
-      File.write(File.join(sessions_dir, "010-session.yml"), { "session_id" => "sess-xyz789", "provider" => "claude" }.to_yaml)
+      File.write(File.join(sessions_dir, "010-session.yml"), {"session_id" => "sess-xyz789", "provider" => "claude"}.to_yaml)
 
       error = assert_raises(Ace::Support::Cli::Error) do
         Ace::Assign::CLI::Commands::ForkRun.new(
@@ -583,7 +584,7 @@ class ForkRunCommandTest < AceAssignTestCase
       assert_includes error.message, "... (truncated)"
       last_msg_section = error.message.split("Agent's last message:\n").last
       assert_equal Ace::Assign::CLI::Commands::ForkRun::STALL_REASON_MAX + "... (truncated)".length,
-                   last_msg_section.length
+        last_msg_section.length
 
       Ace::Assign.reset_config!
     end
@@ -631,7 +632,7 @@ class ForkRunCommandTest < AceAssignTestCase
       state2 = scanner.scan(assignment.steps_dir, assignment: assignment)
       state2.subtree_steps("010").each do |step|
         assert_nil step.stall_reason,
-                   "expected stall_reason to be nil on step #{step.number} after successful rerun"
+          "expected stall_reason to be nil on step #{step.number} after successful rerun"
       end
 
       Ace::Assign.reset_config!

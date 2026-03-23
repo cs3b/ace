@@ -50,17 +50,17 @@ class NumberGeneratorTest < AceAssignTestCase
 
   def test_parse_main_number
     result = Ace::Assign::Atoms::NumberGenerator.parse("030")
-    assert_equal({ main: 30, parts: [30], depth: 1 }, result)
+    assert_equal({main: 30, parts: [30], depth: 1}, result)
   end
 
   def test_parse_subtask_number
     result = Ace::Assign::Atoms::NumberGenerator.parse("030.01")
-    assert_equal({ main: 30, parts: [30, 1], depth: 2 }, result)
+    assert_equal({main: 30, parts: [30, 1], depth: 2}, result)
   end
 
   def test_parse_sub_subtask_number
     result = Ace::Assign::Atoms::NumberGenerator.parse("030.01.02")
-    assert_equal({ main: 30, parts: [30, 1, 2], depth: 3 }, result)
+    assert_equal({main: 30, parts: [30, 1, 2], depth: 3}, result)
   end
 
   def test_subtask_of_true

@@ -26,16 +26,16 @@ module Ace
         # @param frontmatter [Hash] Full frontmatter hash from any .s.md or .wf.md file
         # @return [Hash] { config: Hash|nil, valid: Boolean, errors: Array<String> }
         def self.parse(frontmatter)
-          return { config: nil, valid: true, errors: [] } if frontmatter.nil? || !frontmatter.is_a?(Hash)
+          return {config: nil, valid: true, errors: []} if frontmatter.nil? || !frontmatter.is_a?(Hash)
 
           assign_block = frontmatter["assign"]
-          return { config: nil, valid: true, errors: [] } if assign_block.nil?
+          return {config: nil, valid: true, errors: []} if assign_block.nil?
 
           errors = validate(assign_block)
-          return { config: nil, valid: false, errors: errors } if errors.any?
+          return {config: nil, valid: false, errors: errors} if errors.any?
 
           config = extract_config(assign_block)
-          { config: config, valid: true, errors: [] }
+          {config: config, valid: true, errors: []}
         end
 
         # Validate the assign block fields.
@@ -52,7 +52,7 @@ module Ace
 
           # Check for unknown fields
           unknown = assign_block.keys - VALID_FIELDS
-          errors << "Unknown assign fields: #{unknown.join(', ')}" if unknown.any?
+          errors << "Unknown assign fields: #{unknown.join(", ")}" if unknown.any?
 
           # Validate goal (string)
           if assign_block.key?("goal") && !assign_block["goal"].is_a?(String)
@@ -84,7 +84,7 @@ module Ace
             if !ctx.is_a?(String)
               errors << "assign.context must be a string"
             elsif !VALID_CONTEXTS.include?(ctx)
-              errors << "assign.context must be one of: #{VALID_CONTEXTS.join(', ')}"
+              errors << "assign.context must be one of: #{VALID_CONTEXTS.join(", ")}"
             end
           end
 
@@ -145,7 +145,7 @@ module Ace
 
             unknown_keys = hint.keys - VALID_HINT_ACTIONS
             if unknown_keys.any?
-              errors << "assign.hints[#{idx}] has unknown keys: #{unknown_keys.join(', ')}"
+              errors << "assign.hints[#{idx}] has unknown keys: #{unknown_keys.join(", ")}"
             end
           end
 
@@ -160,9 +160,9 @@ module Ace
         def self.normalize_hints(hints)
           hints.map do |hint|
             if hint.key?("include")
-              { action: :include, step: hint["include"] }
+              {action: :include, step: hint["include"]}
             elsif hint.key?("skip")
-              { action: :skip, step: hint["skip"] }
+              {action: :skip, step: hint["skip"]}
             end
           end.compact
         end

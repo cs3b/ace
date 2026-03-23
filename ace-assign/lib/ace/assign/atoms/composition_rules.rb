@@ -27,7 +27,7 @@ module Ace
           return default_rules unless File.exist?(rules_path)
 
           YAML.safe_load_file(rules_path, permitted_classes: [Date]) || default_rules
-        rescue StandardError
+        rescue
           default_rules
         end
 
@@ -101,7 +101,7 @@ module Ace
             step = rule["step"]
             idx = find_step_index(step_names, step)
             if idx && idx != 0
-              return { rule: rule["rule"], message: "'#{step}' must be first" }
+              return {rule: rule["rule"], message: "'#{step}' must be first"}
             end
           end
 

@@ -41,9 +41,9 @@ class AceAssignTestCase < AceTestCase
   # Create a test assignment config
   def create_test_config(dir, steps: nil, name: "test-session")
     steps ||= [
-      { "name" => "init", "instructions" => "Initialize project" },
-      { "name" => "build", "instructions" => "Build the project" },
-      { "name" => "test", "instructions" => "Run tests" }
+      {"name" => "init", "instructions" => "Initialize project"},
+      {"name" => "build", "instructions" => "Build the project"},
+      {"name" => "test", "instructions" => "Run tests"}
     ]
 
     config = {

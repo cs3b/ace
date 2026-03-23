@@ -8,7 +8,7 @@ module Ace
     module Molecules
       # Launches a forked assignment-driving session via CLI LLM providers.
       class ForkSessionLauncher
-        DEFAULT_PROVIDER = "claude:sonnet".freeze
+        DEFAULT_PROVIDER = "claude:sonnet"
         DEFAULT_TIMEOUT = 1800
 
         def initialize(config: nil, query_interface: Ace::LLM::QueryInterface)

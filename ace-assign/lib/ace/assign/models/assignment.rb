@@ -29,7 +29,7 @@ module Ace
         # @param source_config [String] Path to source configuration file
         # @param cache_dir [String, nil] Assignment cache directory
         # @param parent [String, nil] Parent assignment ID for hierarchy linking
-        def initialize(id:, name:, description: nil, created_at:, updated_at: nil, source_config:, cache_dir: nil, parent: nil)
+        def initialize(id:, name:, created_at:, source_config:, description: nil, updated_at: nil, cache_dir: nil, parent: nil)
           @id = id.freeze
           @name = name.freeze
           @description = description&.freeze

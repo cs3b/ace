@@ -19,7 +19,7 @@ module Ace
     # Subclasses should call super with appropriate exit_code.
     class Error < Ace::Support::Cli::Error
       def initialize(message, exit_code: 1)
-        super(message, exit_code: exit_code)
+        super
       end
     end
 
@@ -73,7 +73,7 @@ module Ace
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -84,7 +84,7 @@ module Ace
         # Resolve config for assign namespace
         config = resolver.resolve_namespace("assign")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "ace-assign: Could not load config: #{e.class} - #{e.message}" if debug?
         load_gem_defaults_fallback
       end
@@ -121,7 +121,7 @@ module Ace
     # @return [Hash] Gem defaults hash
     def self.load_gem_defaults
       gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "assign", "config.yml")
 
       return {} unless File.exist?(defaults_path)
@@ -133,7 +133,7 @@ module Ace
     # @return [Hash] Defaults hash or empty hash if defaults also fail
     def self.load_gem_defaults_fallback
       load_gem_defaults
-    rescue StandardError
+    rescue
       {}
     end
     private_class_method :load_gem_defaults_fallback

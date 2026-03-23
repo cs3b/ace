@@ -27,8 +27,8 @@ module Ace
         # @return [Array<Models::AssignmentInfo>] Enriched assignments
         def find_all(include_completed: false)
           @assignment_manager.list
-                             .map { |a| enrich_assignment(a) }
-                             .select { |ai| include_completed || !ai.completed? }
+            .map { |a| enrich_assignment(a) }
+            .select { |ai| include_completed || !ai.completed? }
         end
 
         # Find assignments by task reference (assignment name)

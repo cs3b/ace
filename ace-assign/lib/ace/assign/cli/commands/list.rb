@@ -55,13 +55,13 @@ module Ace
 
             all_assignments = discoverer.find_all(include_completed: true)
             assignments = if options[:task]
-                            all_assignments.select { |ai| ai.assignment.name == options[:task] }
-                              .then { |filtered| options[:all] ? filtered : filtered.reject(&:completed?) }
-                          elsif options[:all]
-                            all_assignments
-                          else
-                            all_assignments.reject(&:completed?)
-                          end
+              all_assignments.select { |ai| ai.assignment.name == options[:task] }
+                .then { |filtered| options[:all] ? filtered : filtered.reject(&:completed?) }
+            elsif options[:all]
+              all_assignments
+            else
+              all_assignments.reject(&:completed?)
+            end
 
             hidden_completed = options[:all] ? 0 : all_assignments.count(&:completed?)
 
@@ -99,7 +99,7 @@ module Ace
 
             # Rows
             assignments.each do |info|
-              marker = info.id == current_id ? "*" : " "
+              marker = (info.id == current_id) ? "*" : " "
               id_display = "#{marker}#{info.id}"
 
               name_display = truncate(info.name.to_s, COL_NAME - 1)

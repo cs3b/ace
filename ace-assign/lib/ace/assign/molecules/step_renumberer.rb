@@ -30,7 +30,7 @@ module Ace
         # @param numbers_to_shift [Array<String>] Step numbers to shift
         # @return [Hash] Result with :renamed (count) and :rollback_needed (bool)
         def renumber(steps_dir, numbers_to_shift)
-          return { renamed: 0, rollback_needed: false } if numbers_to_shift.empty?
+          return {renamed: 0, rollback_needed: false} if numbers_to_shift.empty?
 
           all_numbers = queue_scanner.step_numbers(steps_dir)
           sorted_steps = build_shift_list(numbers_to_shift, all_numbers)
@@ -54,15 +54,15 @@ module Ace
                 new_parent: new_parent
               )
 
-              completed_renames << { old: old_number, new: new_number, files: rename_result[:files] }
+              completed_renames << {old: old_number, new: new_number, files: rename_result[:files]}
             end
-          rescue StandardError => e
+          rescue => e
             rollback_needed = true
             rollback_renames(completed_renames)
             raise e
           end
 
-          { renamed: completed_renames.size, rollback_needed: rollback_needed }
+          {renamed: completed_renames.size, rollback_needed: rollback_needed}
         end
 
         private
@@ -100,8 +100,8 @@ module Ace
             # This is a descendant - cascade parent shift
             parent_old = Atoms::StepNumbering.parse(old_number)[:parent]
             parent_new = if parent_old && numbers_to_shift.include?(parent_old)
-                           Atoms::StepNumbering.shift_number(parent_old, 1)
-                         end
+              Atoms::StepNumbering.shift_number(parent_old, 1)
+            end
 
             # Replace old parent prefix with new parent prefix
             if parent_new
@@ -157,7 +157,7 @@ module Ace
             new_path = File.join(steps_dir, new_filename)
 
             FileUtils.mv(old_path, new_path)
-            renamed_files << { old_path: old_path, new_path: new_path, type: :step }
+            renamed_files << {old_path: old_path, new_path: new_path, type: :step}
 
             # Add audit trail metadata to track renumbering history
             metadata = {
@@ -181,11 +181,11 @@ module Ace
               new_path = File.join(reports_dir, new_filename)
 
               FileUtils.mv(old_path, new_path)
-              renamed_files << { old_path: old_path, new_path: new_path, type: :report }
+              renamed_files << {old_path: old_path, new_path: new_path, type: :report}
             end
           end
 
-          { files: renamed_files }
+          {files: renamed_files}
         end
 
         # Rollback completed renames on failure.
@@ -201,7 +201,7 @@ module Ace
               next unless File.exist?(file_info[:new_path])
 
               FileUtils.mv(file_info[:new_path], file_info[:old_path])
-            rescue StandardError => e
+            rescue => e
               # Capture rollback errors but continue attempting remaining rollbacks
               rollback_errors << {
                 file: file_info[:new_path],

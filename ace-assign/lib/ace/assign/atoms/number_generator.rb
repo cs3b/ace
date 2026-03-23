@@ -45,7 +45,7 @@ module Ace
 
           # Find existing numbers in the range base+1 to base+9
           range_numbers = existing.map { |n| n.split(".").first.to_i }
-                                  .select { |n| n > main_part && n < main_part + 10 }
+            .select { |n| n > main_part && n < main_part + 10 }
 
           # Find next available
           next_num = main_part + 1
@@ -62,7 +62,7 @@ module Ace
         # @param sequence [Integer] Sub-step sequence (1, 2, 3...)
         # @return [String] Sub-step number (e.g., "030.01")
         def self.subtask(parent, sequence)
-          "#{parent}.#{format('%02d', sequence)}"
+          "#{parent}.#{format("%02d", sequence)}"
         end
 
         # Generate a sub-sub-step number
@@ -71,7 +71,7 @@ module Ace
         # @param sequence [Integer] Sub-sub-step sequence
         # @return [String] Sub-sub-step number (e.g., "030.01.01")
         def self.sub_subtask(parent, sequence)
-          "#{parent}.#{format('%02d', sequence)}"
+          "#{parent}.#{format("%02d", sequence)}"
         end
 
         # Parse a step number into its components

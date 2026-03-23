@@ -8,29 +8,29 @@ class AssignmentExecutorStepCatalogTest < AceAssignTestCase
 
     resolver = Minitest::Mock.new
     resolver.expect(:assign_step_catalog, [
-                      {
-                        "name" => "plan-task",
-                        "skill" => "as-task-plan",
-                        "description" => "Canonical description",
-                        "context" => { "default" => "fork" }
-                      }
-                    ])
+      {
+        "name" => "plan-task",
+        "skill" => "as-task-plan",
+        "description" => "Canonical description",
+        "context" => {"default" => "fork"}
+      }
+    ])
     executor.instance_variable_set(:@skill_source_resolver, resolver)
     executor.instance_variable_set(:@step_catalog, nil)
 
     executor.stub(:merge_step_catalog, [
-                    {
-                      "name" => "plan-task",
-                      "skill" => "as-task-plan",
-                      "description" => "Canonical description",
-                      "context" => { "default" => "fork" }
-                    }
-                  ]) do
+      {
+        "name" => "plan-task",
+        "skill" => "as-task-plan",
+        "description" => "Canonical description",
+        "context" => {"default" => "fork"}
+      }
+    ]) do
       catalog = executor.send(:step_catalog)
       definition = catalog.first
 
       assert_equal "Canonical description", definition["description"]
-      assert_equal({ "default" => "fork" }, definition["context"])
+      assert_equal({"default" => "fork"}, definition["context"])
     end
 
     resolver.verify
@@ -44,18 +44,18 @@ class AssignmentExecutorStepCatalogTest < AceAssignTestCase
         "name" => "plan-task",
         "skill" => "as-task-plan",
         "description" => "Legacy YAML",
-        "steps" => [{ "description" => "Local step" }]
+        "steps" => [{"description" => "Local step"}]
       },
-      { "name" => "task-load", "description" => "Internal helper" }
+      {"name" => "task-load", "description" => "Internal helper"}
     ]
     canonical_catalog = [
       {
         "name" => "plan-task",
         "skill" => "as-task-plan",
         "description" => "Canonical skill",
-        "context" => { "default" => "fork" }
+        "context" => {"default" => "fork"}
       },
-      { "name" => "verify-test-suite", "skill" => "as-test-verify-suite", "description" => "Canonical suite" }
+      {"name" => "verify-test-suite", "skill" => "as-test-verify-suite", "description" => "Canonical suite"}
     ]
 
     merged = executor.send(:merge_step_catalog, base_catalog, canonical_catalog)
@@ -64,8 +64,8 @@ class AssignmentExecutorStepCatalogTest < AceAssignTestCase
     plan_task = merged.find { |step| step["name"] == "plan-task" }
 
     assert_equal "Canonical skill", plan_task["description"]
-    assert_equal({ "default" => "fork" }, plan_task["context"])
-    assert_equal [{ "description" => "Local step" }], plan_task["steps"]
+    assert_equal({"default" => "fork"}, plan_task["context"])
+    assert_equal [{"description" => "Local step"}], plan_task["steps"]
     assert_equal "Internal helper", merged.find { |step| step["name"] == "task-load" }["description"]
   end
 end

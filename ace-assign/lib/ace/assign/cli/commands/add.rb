@@ -47,8 +47,8 @@ module Ace
               max_depth = Atoms::StepNumbering::MAX_DEPTH
               if parsed[:depth] >= max_depth
                 raise Ace::Support::Cli::Error,
-                      "Cannot add child: would exceed maximum nesting depth of #{max_depth + 1} levels " \
-                      "(parent '#{options[:after]}' is at depth #{parsed[:depth]})"
+                  "Cannot add child: would exceed maximum nesting depth of #{max_depth + 1} levels " \
+                  "(parent '#{options[:after]}' is at depth #{parsed[:depth]})"
               end
             end
 
