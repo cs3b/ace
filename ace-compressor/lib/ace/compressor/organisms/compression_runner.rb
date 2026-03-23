@@ -46,6 +46,15 @@ module Ace
           sources = compressor.resolve_sources
           source_metadata = build_source_metadata(sources, resolved_inputs)
           manifest = @cache_store.manifest(mode: @mode, sources: source_metadata)
+
+          # If ace-bundle already compressed this content, override original sizes with
+          # the true uncompressed values and pass through without re-compression.
+          bundle_stats = extract_bundle_compression_stats(resolved_inputs)
+          if bundle_stats
+            manifest["original_bytes"] = bundle_stats["original_bytes"]
+            manifest["original_lines"] = bundle_stats["original_lines"]
+          end
+
           canonical = @cache_store.canonical_paths(mode: @mode, sources: source_metadata, manifest_key: manifest["key"])
           shared_manifest = @cache_store.shared_manifest(mode: @mode, sources: source_metadata)
           shared_canonical = if shared_manifest
@@ -64,6 +73,8 @@ module Ace
                                 [content, metadata]
                               elsif shared_cache_hit?(shared_canonical)
                                 hydrate_from_shared_cache(manifest, canonical, shared_canonical)
+                              elsif bundle_stats
+                                build_passthrough_entry(sources, manifest, canonical, shared_canonical)
                               else
                                 build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical)
                               end
@@ -130,6 +141,37 @@ module Ace
           return false if @output.end_with?(File::SEPARATOR)
 
           !Dir.exist?(File.expand_path(@output))
+        end
+
+        def build_passthrough_entry(sources, manifest, canonical, shared_canonical = nil)
+          raw = sources.map { |s| File.read(s) }.join("\n")
+          header = Ace::Compressor::Models::ContextPack.header(@mode)
+          content = "#{header}\n#{raw}"
+          metadata = cache_metadata(manifest, canonical[:short_key], content)
+          @cache_store.write_cache(
+            pack_path: canonical[:pack_path],
+            metadata_path: canonical[:metadata_path],
+            content: content,
+            metadata: metadata
+          )
+          if shared_canonical
+            shared_metadata = cache_metadata(manifest, shared_canonical[:short_key], content, metadata.merge("cache_scope" => "shared"))
+            @cache_store.write_cache(
+              pack_path: shared_canonical[:pack_path],
+              metadata_path: shared_canonical[:metadata_path],
+              content: content,
+              metadata: shared_metadata
+            )
+          end
+          [content, metadata]
+        end
+
+        def extract_bundle_compression_stats(resolved_inputs)
+          Array(resolved_inputs).each do |entry|
+            stats = entry[:bundle_compression_stats]
+            return stats if stats
+          end
+          nil
         end
 
         def build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical = nil)

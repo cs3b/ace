@@ -1,0 +1,25 @@
+---
+description: Record ace-compressor compression modes with stats output
+tags:
+- ace-compressor
+- docs
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+scenes:
+- name: Exact mode on single file
+  commands:
+  - type: ace-compressor compress docs/architecture.md --mode exact --format stats 
+    sleep: 8s
+- name: Compact mode on single file
+  commands:
+  - type: ace-compressor compress docs/architecture.md --mode compact --format stats
+    sleep: 8s
+- name: Agent mode on single file
+  commands:
+  - type: ace-compressor compress docs/architecture.md --mode agent --format stats
+    sleep: 16s
+teardown:
+- cleanup

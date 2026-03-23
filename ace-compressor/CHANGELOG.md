@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-03-23
+
+### Fixed
+- Report true compression gains for ace-bundle inputs by reading the `.meta.json` sidecar instead of comparing against already-compressed content.
+- Skip re-compression when ace-bundle has already compressed the content, preventing output size inflation.
+
 ## [0.24.0] - 2026-03-23
 
 ### Changed
