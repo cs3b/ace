@@ -1,55 +1,43 @@
 # ace-git-commit
 
-Intention-aware conventional commit generation from diffs.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md) | [Comparison Notes](COMPARISON.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-git-commit.svg)](https://rubygems.org/gems/ace-git-commit)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Intention-aware conventional commit generation from diffs.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-git-commit demo](docs/demo/ace-git-commit-getting-started.gif)
 
-`ace-git-commit` helps developers and coding agents turn repository changes into clear, scoped commit messages while staying inside the terminal workflow.
+`ace-git-commit` helps developers and coding agents turn repository changes into clear, scoped conventional commit messages while staying inside the terminal workflow. It analyzes diffs, supports intention hints, and handles monorepo scope-based splitting automatically.
+
+## How It Works
+
+1. Stage changes (by default) and analyze the diff to determine scope, type, and purpose.
+2. Generate a conventional commit message using LLM analysis via [ace-llm](../ace-llm), optionally guided by an intention hint.
+3. Create the commit, or split into multiple scope-based commits for monorepo change sets.
 
 ## Use Cases
 
-**Generate high-quality commits from staged or unstaged changes** - run `ace-git-commit` to stage (by default), analyze the diff, and produce a conventional commit message.
+**Generate high-quality commits from staged or unstaged changes** - run [`ace-git-commit`](docs/usage.md) to stage, analyze the diff, and produce a conventional commit message. Use `/as-git-commit` for the full agent-driven workflow.
 
 **Guide message intent when diff context is not enough** - pass `-i "fix auth bug"` so the generated message reflects purpose, not only file deltas.
 
-**Handle monorepo work without manual commit slicing** - commit path-scoped changes directly or rely on scope-aware splitting across packages.
+**Handle monorepo work without manual commit slicing** - commit path-scoped changes directly or rely on scope-aware splitting across packages with `--no-split` to override when needed.
 
-**Preview and control commit behavior safely** - use `--dry-run`, `--only-staged`, `--no-split`, or `-m` depending on whether you want preview, strict staging, split control, or explicit messages.
-
-## Works With
-
-- **[ace-git](../ace-git)** for repository context, diff analysis, and status operations.
-- **[ace-llm](../ace-llm)** for provider abstraction and model execution.
-- **[ace-support-config](../ace-support-config)** for configuration cascade and project/user overrides.
-
-## Features
-
-- LLM-backed conventional commit generation from repository diffs.
-- Intention-guided messages via `--intention` / `-i`.
-- Optional direct message mode via `--message` / `-m`.
-- Path-scoped commits by passing explicit files or directories.
-- Scope-based split commits for multi-package change sets.
-- Dry-run previews with `--dry-run`.
-- Staged-only execution with `--only-staged`.
-- Split control with `--no-split`.
-- Configuration cascade: gem defaults -> project `.ace/` -> user `~/.ace/`.
+**Preview and control commit behavior safely** - use `--dry-run` to preview, `--only-staged` for strict staging, or `-m` for explicit messages, with configuration cascade from [ace-support-config](../ace-support-config) for project and user overrides.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- [Comparison Notes](COMPARISON.md)
-- Command help: `ace-git-commit --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-Package-owned canonical skills:
-
-- `as-git-commit`
-
-## Part of ACE
-
-`ace-git-commit` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
