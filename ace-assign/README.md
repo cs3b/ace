@@ -11,9 +11,9 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-assign demo](docs/demo/ace-assign-getting-started.gif)
 
@@ -44,4 +44,3 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
-
