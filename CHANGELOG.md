@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.958] - 2026-03-23
+
+### Added
+- **ace-bundle v0.40.2**: Write `.meta.json` compression sidecar for downstream tool integration.
+
+### Fixed
+- **ace-compressor v0.24.1**: Report true compression gains by reading ace-bundle sidecar stats; skip re-compression of pre-compressed content.
+
 ## [0.9.957] - 2026-03-23
 
 ### Added
