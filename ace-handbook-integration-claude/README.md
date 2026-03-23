@@ -25,4 +25,5 @@
 **Standardize cross-provider behavior** - preserve shared conventions while adapting to Claude Code's command surface, ensuring the same skill intent works across all supported providers.
 
 ---
-[ace-handbook](../ace-handbook) | Part of [ACE](https://github.com/cs3b/ace)
+
+Part of [ACE](https://github.com/cs3b/ace)

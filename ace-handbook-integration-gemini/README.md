@@ -25,4 +25,5 @@
 **Ship lean provider packs** - support only the provider shims and manifests needed for Gemini compatibility, keeping integration scope minimal.
 
 ---
-[ace-handbook](../ace-handbook) | Part of [ACE](https://github.com/cs3b/ace)
+
+Part of [ACE](https://github.com/cs3b/ace)

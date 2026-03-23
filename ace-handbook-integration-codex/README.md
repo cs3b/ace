@@ -25,4 +25,5 @@
 **Keep integration delivery minimal** - maintain a focused provider shim layer with only the manifests and projection assets needed for Codex compatibility.
 
 ---
-[ace-handbook](../ace-handbook) | Part of [ACE](https://github.com/cs3b/ace)
+
+Part of [ACE](https://github.com/cs3b/ace)
