@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-03-23
+
+### Added
+- Documented thinking levels (`low`, `medium`, `high`, `xhigh`) for CLI providers (`claude`, `codex`) in README and usage guide.
+- Documented built-in execution presets (`@ro`, `@rw`, `@yolo`) with supported CLI providers in README and usage guide.
+- Added `opus` and `haiku` aliases to the usage guide alias table.
+
+### Fixed
+- Updated stale Anthropic model aliases in `.ace-defaults/llm/providers/anthropic.yml` from Claude 3 IDs to Claude 4.5 (`claude-sonnet-4-5`, `claude-opus-4-5`, `claude-haiku-4-5`).
+
+### Changed
+- Rewrote README intro and Use Cases to highlight aliases, thinking levels, presets, and file-based prompts without repetition.
+- Replaced demo tape with focused queries showing `provider:model`, alias, thinking level, and preset calling patterns.
+- Updated gemspec description to include Gemini CLI and pi-agent.
+- Removed obsolete `docs/migration-from-llm-query.md` (internal-only migration guide for legacy `llm-query` tool).
+
 ## [0.29.5] - 2026-03-23
 
 ### Changed
