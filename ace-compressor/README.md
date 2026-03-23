@@ -1,20 +1,17 @@
-# ace-compressor
+<h1 align="center">ace-compressor</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+<a href="https://rubygems.org/gems/ace-compressor"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-compressor.svg" /></a>
+<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  Compress Markdown and text into ContextPack/3 artifacts for efficient LLM context loading.
 </p>
-
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-compressor.svg)](https://rubygems.org/gems/ace-compressor)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
-
-> Compress Markdown and text into ContextPack/3 artifacts for efficient LLM context loading.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 [Usage Guide](docs/usage.md)
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-compressor` provides deterministic context compression for one or more sources, with exact extraction, policy-driven compact output, and agent-assisted payload rewriting while preserving record structure. It integrates with [ace-bundle](../ace-bundle) for input resolution and [ace-llm](../ace-llm) for agent-mode rewriting.
 
