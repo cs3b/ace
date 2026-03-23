@@ -1,43 +1,34 @@
 # ace-assign
 
-Phase-based assignment queues that give AI agents structured, resumable work.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-assign.svg)](https://rubygems.org/gems/ace-assign)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Drive phase-based assignment queues so agents can execute complex work safely and resumably.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-assign demo](docs/demo/ace-assign-getting-started.gif)
 
-## Why ace-assign
+`ace-assign` turns broad goals into explicit step queues with tracked state transitions, scoped execution, and durable reports. It is designed for long-running or multi-agent workflows where retries, audits, and deterministic progression matter as much as implementation speed.
 
-- Turn multi-step workflows into an explicit queue with status tracking.
-- Keep execution deterministic with step states: `pending`, `in_progress`, `done`, `failed`.
-- Preserve failed-step history so retries and recovery stay auditable.
-- Scale complex work using hierarchical steps and scoped subtree execution.
-- Delegate deep work safely with fork context while keeping orchestrator visibility.
+## Use Cases
 
-## Works With
+**Run structured delivery loops** - convert multi-step work into a queue and drive it from `pending` to `done` with clear state transitions (`pending`, `in_progress`, `done`, `failed`) and report-backed advancement.
 
-- `ace-task` for task lifecycle and behavioral specs.
-- `ace-bundle` for loading project/task/workflow context.
-- `ace-review` and `ace-test` for quality gates before release.
-- `ace-demo` for reproducible docs demos.
+**Delegate deep subtrees safely** - mark fork-capable subtrees and run them through `fork-run` while preserving orchestrator visibility, scoped status checks, and post-subtree guard review.
 
-## Agent Skills
+**Recover from failure without losing history** - keep failed-step lineage intact, inject targeted retries or fix steps, and continue execution with auditable failure evidence.
 
-Package-owned canonical skills:
+**Manage concurrent assignments** - pin or switch active assignments with explicit targeting (`--assignment <id>` and `--assignment <id>@<step>`) so parallel work does not cross streams.
 
-- `as-assign-compose`
-- `as-assign-create`
-- `as-assign-drive`
-- `as-assign-prepare`
-- `as-assign-run-in-batches`
-- `as-assign-start`
-
-## Features
-
-- Assignment creation from YAML specs
-- Dynamic step injection during execution
-- Hierarchical queue orchestration with parent/child completion
-- Scoped execution with `--assignment <id>@<step>`
-- Fork subtree orchestration via `fork-run`
-- Explicit assignment selection and multi-assignment management
+**Coordinate with adjacent ACE tools** - pair with [ace-task](../ace-task) for task lifecycle, [ace-bundle](../ace-bundle) for context loading, [ace-review](../ace-review) and [ace-test](../ace-test) for quality checks, and [ace-demo](../ace-demo) for reproducible demos.
 
 ## Documentation
 
@@ -47,4 +38,18 @@ Package-owned canonical skills:
 - [Exit Codes](docs/exit-codes.md)
 - [Fork Context Guide](handbook/guides/fork-context.g.md)
 
-Part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+## Agent Skills
+
+Package-owned canonical skills:
+
+- `as-assign-compose`
+- `as-assign-create`
+- `as-assign-drive`
+- `as-assign-prepare`
+- `as-assign-recover-fork`
+- `as-assign-run-in-batches`
+- `as-assign-start`
+
+---
+
+Part of [ACE](../README.md) (Agentic Coding Environment)
