@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Capture and organize ideas from clipboard, terminal, or LLM"
+  spec.summary = "Capture ideas quickly, then shape and organize them for execution"
   spec.description = "Capture rough ideas quickly, store them as structured files, organize them with " \
                      "GTD-style folders, and manage them through a focused six-command CLI."
   spec.homepage = "https://github.com/cs3b/ace"

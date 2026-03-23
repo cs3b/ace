@@ -1,26 +1,44 @@
 ---
-description: Capture one idea and list it in an isolated demo workspace
+description: List ideas, create one, mark it done, and archive it
 tags:
+- ace-idea
 - docs
-- idea
+- getting-started
 settings:
   font_size: 16
-  width: 1200
+  width: 960
   height: 560
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
-- name: Main flow
+- name: Browse existing ideas
   commands:
-  - type: cd $PWD
+  - type: cd $PROJECT_ROOT_PATH
     sleep: 1s
-  - type: 'rm -rf /tmp/ace-idea-demo-home && mkdir -p /tmp/ace-idea-demo-home/.ace/idea && printf ''idea:\n  root_dir: /tmp/ace-idea-demo-home/ideas\n'' >/tmp/ace-idea-demo-home/.ace/idea/config.yml'
-    sleep: 2s
-  - type: HOME=/tmp/ace-idea-demo-home ace-idea create 'Dark mode for night coding' --title 'Dark mode'
-    sleep: 2s
-  - type: HOME=/tmp/ace-idea-demo-home ace-idea list
-    sleep: 2s
+  - type: ace-idea list
+    sleep: 3s
+  - type: ace-idea list --in maybe
+    sleep: 3s
+- name: Capture a new idea
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-idea create 'Nightly regression suite for LLM providers' --tags testing,llm
+    sleep: 3s
+- name: Complete and archive the idea
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-idea list
+    sleep: 3s
+  - type: "DEMO_ID=$(ace-idea list --in next | grep 'LLM provider' | cut -d' ' -f2) && ace-idea update $DEMO_ID --set status=done --move-to archive"
+    sleep: 3s
+- name: Check overall status
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-idea status
+    sleep: 5s
 teardown:
-- cleanup
-setup:
-- sandbox
-- copy-fixtures
+- run: cd /home/mc/ace-t.5nx && find .ace-ideas -type d -name '*nightly-regression-suite*' -exec rm -rf {} + 2>/dev/null || true
