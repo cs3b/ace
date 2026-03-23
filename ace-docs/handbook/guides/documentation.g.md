@@ -173,7 +173,8 @@ write from plan notes or spec documents alone.
 | Use Cases | 4-6 entries | 2-4 entries | 2-3 entries | 3-5 entries |
 
 **Root README differs**: The monorepo root uses "What ACE Does" (value bullets) and
-a "Tools" table instead of Use Cases. See the root README for the pattern.
+a "Tools" table instead of Use Cases. In `ace-docs` classification this file uses
+`doc-type: root_readme` (not package `readme`). See the root README for the pattern.
 
 **Anti-patterns** (never include in a README):
 

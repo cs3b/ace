@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "timeout"
 require "yaml"
 
 module Ace
@@ -8,6 +9,8 @@ module Ace
     module Prompts
       # Builds prompts for analyzing changes relevant to a specific document
       class DocumentAnalysisPrompt
+        NAV_RESOLVE_TIMEOUT_SECONDS = 10
+
         # Build prompts for analyzing changes for a specific document
         # @param document [Document] The document to analyze changes for
         # @param diff [String, Hash] Either single diff string or hash of {subject_name => diff_string}
@@ -310,7 +313,9 @@ module Ace
             protocol_url = type_config[ref_key]
             next unless protocol_url
 
-            stdout, _stderr, status = Open3.capture3("ace-nav", "resolve", protocol_url)
+            stdout, _stderr, status = with_nav_resolve_timeout do
+              Open3.capture3("ace-nav", "resolve", protocol_url)
+            end
             if status.success?
               path = stdout.strip
               files << path if path && !path.empty? && File.exist?(path)
@@ -320,6 +325,12 @@ module Ace
           files
         rescue StandardError
           []
+        end
+
+        def self.with_nav_resolve_timeout
+          Timeout.timeout(NAV_RESOLVE_TIMEOUT_SECONDS) { yield }
+        rescue Timeout::Error
+          ["", "ace-nav resolve timed out after #{NAV_RESOLVE_TIMEOUT_SECONDS}s", Struct.new(:success?).new(false)]
         end
 
         # Build a reference section describing template/guide for this doc type
@@ -376,6 +387,7 @@ module Ace
         private_class_method :create_context_markdown
         private_class_method :build_analysis_scope_section
         private_class_method :resolve_type_references
+        private_class_method :with_nav_resolve_timeout
         private_class_method :build_type_references_section
         private_class_method :load_context_md
       end

@@ -102,10 +102,18 @@ document_types:
       auto_generate:
         - template-refs: from-embedded
 
+  # Monorepo root README
+  root_readme:
+    paths:
+      - "README.md"
+    guide: "guide://documentation"
+    defaults:
+      update_frequency: on-change
+      max_lines: 2000
+
   # Package READMEs
   readme:
     paths:
-      - "README.md"
       - "*/README.md"
     template: "tmpl://project-docs/README"
     guide: "guide://documentation"

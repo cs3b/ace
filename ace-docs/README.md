@@ -1,6 +1,16 @@
 # ace-docs
 
-Keep documentation current by tracking freshness, detecting drift, and generating actionable update guidance.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-docs.svg)](https://rubygems.org/gems/ace-docs)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Keep documentation current by tracking freshness, detecting drift, and generating actionable updates.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 [Getting Started](docs/getting-started.md) | [Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
 
@@ -12,15 +22,11 @@ Keep documentation current by tracking freshness, detecting drift, and generatin
 
 **Prioritize documentation updates based on real drift** - identify which files are stale, what changed since last update, and where to focus first.
 
-**Generate targeted update guidance for specific documents** - run LLM-assisted analysis to propose concrete doc revisions from current repository context.
+**Generate targeted update guidance for specific documents** - run LLM-assisted analysis with [ace-bundle](../ace-bundle) and [ace-llm](../ace-llm) context to propose concrete doc revisions.
 
-**Catch cross-document inconsistencies before release** - validate metadata and compare documents to find conflicts across package documentation sets.
+**Catch cross-document inconsistencies before release** - validate metadata and compare documents to find conflicts across package documentation sets before publishing.
 
-## Works With
-
-- `ace-bundle` for context assembly and workflow loading.
-- `ace-llm` for analysis and consistency checks.
-- `ace-lint` for markdown validation and fix workflows.
+**Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
 ## Features
 
@@ -37,21 +43,6 @@ Keep documentation current by tracking freshness, detecting drift, and generatin
 - [Usage Reference](docs/usage.md)
 - [Handbook Reference](docs/handbook.md)
 - Command help: `ace-docs --help`
-
-## Agent Skills
-
-Package-owned canonical skills:
-
-- `as-docs-update`
-- `as-docs-update-usage`
-- `as-docs-create-user`
-- `as-docs-create-api`
-- `as-docs-create-adr`
-- `as-docs-maintain-adrs`
-- `as-docs-update-blueprint`
-- `as-docs-update-roadmap`
-- `as-docs-update-tools`
-- `as-docs-squash-changelog`
 
 ## Part of ACE
 
