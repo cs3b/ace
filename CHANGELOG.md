@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.970] - 2026-03-23
+
+### Changed
+- **ace-overseer v0.11.0**: Clarified README intro and How It Works to describe assignment expansion and agent-driven orchestration; re-recorded demo GIF with live dashboard.
+
 ## [0.9.969] - 2026-03-23
 
 ### Fixed
