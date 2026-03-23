@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.969] - 2026-03-23
+
+### Fixed
+- **ace-lint v0.25.0**: Aligned gemspec summary to "Ruby-native" matching README tagline.
+
+### Changed
+- **ace-lint v0.25.0**: Added example output to usage docs, rewrote demo tape with real files and separate scenes, re-recorded demo GIF.
+
 ## [0.9.968] - 2026-03-23
 
 ### Fixed
