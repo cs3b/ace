@@ -82,7 +82,7 @@ module Ace
         def self.empty(metadata: {})
           new(
             content: "",
-            stats: { additions: 0, deletions: 0, files: 0, total_changes: 0, line_count: 0 },
+            stats: {additions: 0, deletions: 0, files: 0, total_changes: 0, line_count: 0},
             files: [],
             metadata: metadata,
             filtered: false

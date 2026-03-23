@@ -38,7 +38,7 @@ module Ace
             result = executor.execute("git", "rev-list", "--left-right", "--count", "@{upstream}...HEAD")
 
             unless result[:success]
-              return { ahead: 0, behind: 0, error: "No tracking branch or not in git repo" }
+              return {ahead: 0, behind: 0, error: "No tracking branch or not in git repo"}
             end
 
             parts = result[:output].strip.split(/\s+/)
@@ -54,7 +54,7 @@ module Ace
           def full_info(executor: Atoms::CommandExecutor)
             branch = current_branch(executor: executor)
 
-            return { error: "Not in git repository or no branch" } if branch.nil?
+            return {error: "Not in git repository or no branch"} if branch.nil?
 
             tracking = tracking_branch(executor: executor)
             status = tracking_status(executor: executor)

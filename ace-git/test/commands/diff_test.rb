@@ -16,7 +16,7 @@ class DiffTest < AceGitTestCase
       mock_result = Ace::Git::Models::DiffResult.new(
         content: "diff content",
         files: ["lib/test.rb"],
-        stats: { additions: 10, deletions: 5 }
+        stats: {additions: 10, deletions: 5}
       )
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
@@ -43,7 +43,7 @@ class DiffTest < AceGitTestCase
       mock_result = Ace::Git::Models::DiffResult.new(
         content: "",
         files: [],
-        stats: { additions: 0, deletions: 0 }
+        stats: {additions: 0, deletions: 0}
       )
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
@@ -181,9 +181,9 @@ class DiffTest < AceGitTestCase
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, true do
       # Test various git error scenarios that should NOT be masked as "(no changes)"
       error_scenarios = [
-        { error: Ace::Git::GitError.new("fatal: bad revision 'nonexistent'"), pattern: /bad revision/ },
-        { error: Ace::Git::GitError.new("fatal: Not a valid object name"), pattern: /Not a valid object/ },
-        { error: Ace::Git::GitError.new("fatal: ambiguous argument"), pattern: /ambiguous argument/ }
+        {error: Ace::Git::GitError.new("fatal: bad revision 'nonexistent'"), pattern: /bad revision/},
+        {error: Ace::Git::GitError.new("fatal: Not a valid object name"), pattern: /Not a valid object/},
+        {error: Ace::Git::GitError.new("fatal: ambiguous argument"), pattern: /ambiguous argument/}
       ]
 
       error_scenarios.each do |scenario|
@@ -231,20 +231,20 @@ class DiffTest < AceGitTestCase
                 additions: 5,
                 deletions: 2,
                 file_count: 1,
-                files: [{ display_path: "cli/commands/diff.rb", additions: 5, deletions: 2, binary: false }]
+                files: [{display_path: "cli/commands/diff.rb", additions: 5, deletions: 2, binary: false}]
               }
             ]
           }
         ],
-        total: { additions: 5, deletions: 2, files: 1 },
+        total: {additions: 5, deletions: 2, files: 1},
         collapse_above: 5
       }
 
       mock_result = Ace::Git::Models::DiffResult.new(
         content: "placeholder",
         files: ["ace-git/lib/ace/git/cli/commands/diff.rb"],
-        stats: { additions: 5, deletions: 2, total_changes: 7 },
-        metadata: { grouped_stats: grouped_data }
+        stats: {additions: 5, deletions: 2, total_changes: 7},
+        metadata: {grouped_stats: grouped_data}
       )
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do

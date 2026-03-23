@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class WorkflowValidationTest < Minitest::Test
-  WORKFLOW_DIR = File.join(__dir__, '..', 'handbook', 'workflow-instructions')
+  WORKFLOW_DIR = File.join(__dir__, "..", "handbook", "workflow-instructions")
   REQUIRED_FIELDS = %w[name description doc-type].freeze
 
   def test_all_workflows_have_valid_frontmatter
-    Dir.glob(File.join(WORKFLOW_DIR, '*.wf.md')).each do |file|
+    Dir.glob(File.join(WORKFLOW_DIR, "*.wf.md")).each do |file|
       assert File.exist?(file), "Workflow file exists: #{file}"
 
       content = File.read(file)
@@ -24,7 +24,7 @@ class WorkflowValidationTest < Minitest::Test
   end
 
   def test_all_workflows_have_required_fields
-    Dir.glob(File.join(WORKFLOW_DIR, '*.wf.md')).each do |file|
+    Dir.glob(File.join(WORKFLOW_DIR, "*.wf.md")).each do |file|
       content = File.read(file)
       frontmatter_match = content.match(/---\s*\n(.*?)\n---/m)
       next if frontmatter_match.nil?
@@ -40,11 +40,11 @@ class WorkflowValidationTest < Minitest::Test
   end
 
   def test_workflow_files_have_proper_formatting
-    Dir.glob(File.join(WORKFLOW_DIR, '*.wf.md')).each do |file|
+    Dir.glob(File.join(WORKFLOW_DIR, "*.wf.md")).each do |file|
       content = File.read(file)
 
       # Check for proper YAML delimiters
-      assert content.start_with?('---'), "File must start with ---: #{file}"
+      assert content.start_with?("---"), "File must start with ---: #{file}"
 
       # Simple check for YAML frontmatter pattern
       frontmatter_pattern = /^---\s*\n.*?\n---\s*\n/m

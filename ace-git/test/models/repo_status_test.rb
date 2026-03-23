@@ -11,7 +11,7 @@ class RepoStatusTest < AceGitTestCase
       ahead: 2,
       behind: 1,
       task_pattern: "140",
-      pr_metadata: { "number" => 75, "title" => "Add feature", "state" => "open" },
+      pr_metadata: {"number" => 75, "title" => "Add feature", "state" => "open"},
       repository_type: :normal,
       repository_state: :clean
     )
@@ -156,7 +156,7 @@ class RepoStatusTest < AceGitTestCase
 
   def test_from_data_creates_instance
     context = Ace::Git::Models::RepoStatus.from_data(
-      branch_info: { name: "main", tracking: nil, ahead: 0, behind: 0 },
+      branch_info: {name: "main", tracking: nil, ahead: 0, behind: 0},
       task_pattern: nil,
       pr_metadata: nil,
       repo_type: :normal,
@@ -174,7 +174,7 @@ class RepoStatusTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       pr_activity: {
-        merged: [{ "number" => 84, "title" => "Test PR" }],
+        merged: [{"number" => 84, "title" => "Test PR"}],
         open: []
       }
     )
@@ -186,7 +186,7 @@ class RepoStatusTest < AceGitTestCase
       branch: "main",
       pr_activity: {
         merged: [],
-        open: [{ "number" => 85, "title" => "Open PR" }]
+        open: [{"number" => 85, "title" => "Open PR"}]
       }
     )
     assert context.has_pr_activity?
@@ -195,7 +195,7 @@ class RepoStatusTest < AceGitTestCase
   def test_has_pr_activity_returns_false_when_both_empty
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
-      pr_activity: { merged: [], open: [] }
+      pr_activity: {merged: [], open: []}
     )
     refute context.has_pr_activity?
   end
@@ -209,7 +209,7 @@ class RepoStatusTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       pr_activity: {
-        "merged" => [{ "number" => 84 }],
+        "merged" => [{"number" => 84}],
         "open" => []
       }
     )
@@ -219,7 +219,7 @@ class RepoStatusTest < AceGitTestCase
   def test_to_h_includes_pr_activity
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
-      pr_activity: { merged: [{ "number" => 84 }], open: [] }
+      pr_activity: {merged: [{"number" => 84}], open: []}
     )
     result = context.to_h
 
@@ -230,10 +230,10 @@ class RepoStatusTest < AceGitTestCase
 
   def test_from_data_accepts_pr_activity
     context = Ace::Git::Models::RepoStatus.from_data(
-      branch_info: { name: "main", tracking: nil, ahead: 0, behind: 0 },
+      branch_info: {name: "main", tracking: nil, ahead: 0, behind: 0},
       pr_activity: {
-        merged: [{ "number" => 84 }],
-        open: [{ "number" => 85 }]
+        merged: [{"number" => 84}],
+        open: [{"number" => 85}]
       }
     )
 
@@ -247,7 +247,7 @@ class RepoStatusTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       recent_commits: [
-        { hash: "a7404e9", subject: "feat: Add feature" }
+        {hash: "a7404e9", subject: "feat: Add feature"}
       ]
     )
     assert context.has_recent_commits?
@@ -293,7 +293,7 @@ class RepoStatusTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       git_status_sb: "## main",
-      recent_commits: [{ hash: "abc123", subject: "test" }]
+      recent_commits: [{hash: "abc123", subject: "test"}]
     )
     result = context.to_h
 
@@ -307,9 +307,9 @@ class RepoStatusTest < AceGitTestCase
 
   def test_from_data_accepts_git_status_and_commits
     context = Ace::Git::Models::RepoStatus.from_data(
-      branch_info: { name: "main", tracking: nil, ahead: 0, behind: 0 },
+      branch_info: {name: "main", tracking: nil, ahead: 0, behind: 0},
       git_status_sb: "## main...origin/main",
-      recent_commits: [{ hash: "abc123", subject: "test" }]
+      recent_commits: [{hash: "abc123", subject: "test"}]
     )
 
     assert context.has_git_status?

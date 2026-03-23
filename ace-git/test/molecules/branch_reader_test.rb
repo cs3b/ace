@@ -27,7 +27,7 @@ class BranchReaderTest < AceGitTestCase
   def test_detached_returns_true_when_abbrev_ref_is_head
     executor = Object.new
     def executor.execute(*_args)
-      { success: true, output: "HEAD\n" }
+      {success: true, output: "HEAD\n"}
     end
 
     result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
@@ -37,7 +37,7 @@ class BranchReaderTest < AceGitTestCase
   def test_detached_returns_false_when_on_branch
     executor = Object.new
     def executor.execute(*_args)
-      { success: true, output: "main\n" }
+      {success: true, output: "main\n"}
     end
 
     result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
@@ -47,7 +47,7 @@ class BranchReaderTest < AceGitTestCase
   def test_detached_returns_false_on_failure
     executor = Object.new
     def executor.execute(*_args)
-      { success: false, output: "", error: "not a git repo" }
+      {success: false, output: "", error: "not a git repo"}
     end
 
     result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
@@ -67,7 +67,7 @@ class BranchReaderTest < AceGitTestCase
   def test_tracking_status_returns_ahead_behind_counts
     executor = Object.new
     def executor.execute(*_args)
-      { success: true, output: "3\t5\n" }  # behind\tahead format
+      {success: true, output: "3\t5\n"}  # behind\tahead format
     end
 
     result = Ace::Git::Molecules::BranchReader.tracking_status(executor: executor)
@@ -78,7 +78,7 @@ class BranchReaderTest < AceGitTestCase
   def test_tracking_status_returns_zeros_on_failure
     executor = Object.new
     def executor.execute(*_args)
-      { success: false, output: "", error: "no upstream" }
+      {success: false, output: "", error: "no upstream"}
     end
 
     result = Ace::Git::Molecules::BranchReader.tracking_status(executor: executor)
@@ -95,11 +95,11 @@ class BranchReaderTest < AceGitTestCase
 
     def executor.execute(cmd, *args)
       if args.include?("--abbrev-ref")
-        { success: true, output: "main\n" }
+        {success: true, output: "main\n"}
       elsif args.include?("--left-right")
-        { success: true, output: "0\t0\n" }
+        {success: true, output: "0\t0\n"}
       else
-        { success: false, output: "" }
+        {success: false, output: ""}
       end
     end
 
@@ -137,11 +137,11 @@ class BranchReaderTest < AceGitTestCase
 
     def executor.execute(cmd, *args)
       if args.include?("--abbrev-ref")
-        { success: true, output: "HEAD\n" }  # Detached HEAD
+        {success: true, output: "HEAD\n"}  # Detached HEAD
       elsif args.include?("--left-right")
-        { success: true, output: "0\t0\n" }
+        {success: true, output: "0\t0\n"}
       else
-        { success: false, output: "" }
+        {success: false, output: ""}
       end
     end
 

@@ -11,8 +11,7 @@ class DiffGeneratorTest < AceGitTestCase
   end
 
   def mock_executor
-    mock = Minitest::Mock.new
-    mock
+    Minitest::Mock.new
   end
 
   def test_generate_returns_diff_output_on_success
@@ -21,7 +20,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "diff content" }
+      {success: true, output: "diff content"}
     end
 
     def executor.last_args
@@ -38,7 +37,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     executor = Object.new
     def executor.execute(*args)
-      { success: false, output: "", error: "fatal: invalid ref" }
+      {success: false, output: "", error: "fatal: invalid ref"}
     end
 
     error = assert_raises(Ace::Git::GitError) do
@@ -78,7 +77,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "range diff" }
+      {success: true, output: "range diff"}
     end
 
     def executor.last_args
@@ -96,7 +95,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "staged diff content" }
+      {success: true, output: "staged diff content"}
     end
 
     def executor.last_args
@@ -114,7 +113,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "working diff content" }
+      {success: true, output: "working diff content"}
     end
 
     result = Ace::Git::Molecules::DiffGenerator.working(config, executor: executor)
@@ -130,7 +129,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "filtered diff" }
+      {success: true, output: "filtered diff"}
     end
 
     def executor.last_args
@@ -153,7 +152,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "no whitespace diff" }
+      {success: true, output: "no whitespace diff"}
     end
 
     def executor.last_args
@@ -186,7 +185,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "diff output" }
+      {success: true, output: "diff output"}
     end
 
     def executor.last_args
@@ -220,7 +219,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "diff output" }
+      {success: true, output: "diff output"}
     end
 
     def executor.last_args
@@ -254,7 +253,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "diff output" }
+      {success: true, output: "diff output"}
     end
 
     def executor.last_args
@@ -276,7 +275,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args)
       @last_args = args
-      { success: true, output: "unstaged diff" }
+      {success: true, output: "unstaged diff"}
     end
 
     def executor.last_args
@@ -298,7 +297,7 @@ class DiffGeneratorTest < AceGitTestCase
     def executor.execute(*args, timeout: nil)
       @timeout = timeout
       @args = args
-      { success: true, output: "diff output" }
+      {success: true, output: "diff output"}
     end
 
     def executor.timeout
@@ -319,7 +318,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @timeout = timeout
-      { success: true, output: "diff output" }
+      {success: true, output: "diff output"}
     end
 
     def executor.timeout
@@ -342,7 +341,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "working diff" }
+      {success: true, output: "working diff"}
     end
 
     def executor.last_args
@@ -366,7 +365,7 @@ class DiffGeneratorTest < AceGitTestCase
 
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "working diff" }
+      {success: true, output: "working diff"}
     end
 
     def executor.last_args
@@ -384,7 +383,7 @@ class DiffGeneratorTest < AceGitTestCase
     executor = Object.new
     def executor.execute(*args, timeout: nil)
       @last_args = args
-      { success: true, output: "range diff" }
+      {success: true, output: "range diff"}
     end
 
     def executor.last_args
@@ -406,7 +405,7 @@ class DiffGeneratorTest < AceGitTestCase
     def executor.execute(*args, timeout: nil)
       @last_args = args
       @timeout = timeout
-      { success: true, output: "7\t2\tace-git/lib/ace/git/cli/commands/diff.rb\n" }
+      {success: true, output: "7\t2\tace-git/lib/ace/git/cli/commands/diff.rb\n"}
     end
 
     def executor.last_args

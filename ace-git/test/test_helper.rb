@@ -25,14 +25,14 @@ class AceGitTestCase < AceTestCase
     prs << current_pr.merge("state" => "OPEN") if current_pr
     merged_prs.each { |pr| prs << pr.merge("state" => "MERGED") }
     open_prs.each { |pr| prs << pr.merge("state" => "OPEN") }
-    { success: true, prs: prs }
+    {success: true, prs: prs}
   end
 
   # Helper to safely modify lock_retry config within a block
   # Ensures config is restored even if test fails
   def with_lock_retry_config(enabled:)
     original_config = Ace::Git.config.dup
-    Ace::Git.instance_variable_set(:@config, { "lock_retry" => { "enabled" => enabled } })
+    Ace::Git.instance_variable_set(:@config, {"lock_retry" => {"enabled" => enabled}})
     yield
   ensure
     Ace::Git.instance_variable_set(:@config, original_config)

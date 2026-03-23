@@ -11,7 +11,7 @@ class RecentCommitsFetcherTest < AceGitTestCase
       dd7c557 chore(retros): Document semantic collision
     LOG
 
-    mock_result = { success: true, output: log_output }
+    mock_result = {success: true, output: log_output}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "log", "-3", "--format=%h %s"]
@@ -27,7 +27,7 @@ class RecentCommitsFetcherTest < AceGitTestCase
 
   def test_fetch_respects_limit
     log_output = "a7404e9 Single commit\n"
-    mock_result = { success: true, output: log_output }
+    mock_result = {success: true, output: log_output}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "log", "-1", "--format=%h %s"]
@@ -47,7 +47,7 @@ class RecentCommitsFetcherTest < AceGitTestCase
   end
 
   def test_fetch_returns_empty_on_failure
-    mock_result = { success: false, output: "", error: "fatal: not a git repository" }
+    mock_result = {success: false, output: "", error: "fatal: not a git repository"}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "log", "-3", "--format=%h %s"]
@@ -61,7 +61,7 @@ class RecentCommitsFetcherTest < AceGitTestCase
   end
 
   def test_fetch_handles_empty_output
-    mock_result = { success: true, output: "" }
+    mock_result = {success: true, output: ""}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "log", "-3", "--format=%h %s"]
@@ -75,7 +75,7 @@ class RecentCommitsFetcherTest < AceGitTestCase
 
   def test_fetch_handles_commit_with_spaces_in_subject
     log_output = "abc1234 fix: handle spaces in commit messages properly\n"
-    mock_result = { success: true, output: log_output }
+    mock_result = {success: true, output: log_output}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "log", "-1", "--format=%h %s"]

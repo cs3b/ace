@@ -27,10 +27,10 @@ module Ace
           def lock_pid(lock_path)
             content = File.read(lock_path)
             pid = content.to_s.split.first.to_i
-            pid > 0 ? pid : nil
+            (pid > 0) ? pid : nil
           rescue Errno::ENOENT
             nil
-          rescue StandardError
+          rescue
             nil
           end
 
@@ -127,7 +127,7 @@ module Ace
             # Return path to index.lock
             lock_path = File.join(git_dir, "index.lock")
             File.exist?(lock_path) ? lock_path : nil
-          rescue StandardError
+          rescue
             nil
           end
 
@@ -158,27 +158,29 @@ module Ace
           def clean(repo_path, threshold_seconds = 10)
             lock_path = find_lock_file(repo_path)
 
-            return { success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
-                     message: "No lock file found" } if lock_path.nil?
+            if lock_path.nil?
+              return {success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
+                      message: "No lock file found"}
+            end
 
             # Security check: ensure lock file is a regular file, not a symlink
             # This prevents accidental deletion of symlink targets, which could be
             # exploited to cause data loss or security issues.
             if File.symlink?(lock_path)
-              return { success: false, cleaned: false, status: :symlink, pid: nil, age_seconds: nil,
-                       message: "Lock file is a symlink, refusing to delete: #{lock_path}" }
+              return {success: false, cleaned: false, status: :symlink, pid: nil, age_seconds: nil,
+                      message: "Lock file is a symlink, refusing to delete: #{lock_path}"}
             end
 
             # Safety check: ensure it's a regular file (not directory or device)
             unless File.file?(lock_path)
-              return { success: false, cleaned: false, status: :invalid, pid: nil, age_seconds: nil,
-                       message: "Lock path is not a regular file: #{lock_path}" }
+              return {success: false, cleaned: false, status: :invalid, pid: nil, age_seconds: nil,
+                      message: "Lock path is not a regular file: #{lock_path}"}
             end
 
             pid = lock_pid(lock_path)
             age_seconds = begin
               Time.now - File.mtime(lock_path)
-            rescue StandardError
+            rescue
               nil
             end
 
@@ -232,11 +234,11 @@ module Ace
             }
           rescue Errno::ENOENT
             # Handle TOCTOU race: lock file was deleted between check and delete
-            { success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
-              message: "Lock file already removed" }
-          rescue StandardError => e
-            { success: false, cleaned: false, status: :error, pid: nil, age_seconds: nil,
-              message: "Failed to clean lock: #{e.message}" }
+            {success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
+             message: "Lock file already removed"}
+          rescue => e
+            {success: false, cleaned: false, status: :error, pid: nil, age_seconds: nil,
+             message: "Failed to clean lock: #{e.message}"}
           end
         end
       end

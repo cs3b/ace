@@ -74,8 +74,8 @@ class StatusFormatterTest < AceGitTestCase
       branch: "main",
       repository_state: :clean,
       recent_commits: [
-        { hash: "a7404e9", subject: "feat: Add feature" },
-        { hash: "74e8f77", subject: "chore: Update config" }
+        {hash: "a7404e9", subject: "feat: Add feature"},
+        {hash: "74e8f77", subject: "chore: Update config"}
       ]
     )
 
@@ -97,7 +97,7 @@ class StatusFormatterTest < AceGitTestCase
         "isDraft" => false,
         "baseRefName" => "main",
         "headRefName" => "feature-123",
-        "author" => { "login" => "dev1" },
+        "author" => {"login" => "dev1"},
         "url" => "https://github.com/owner/repo/pull/82"
       }
     )
@@ -133,10 +133,10 @@ class StatusFormatterTest < AceGitTestCase
       repository_state: :clean,
       pr_activity: {
         merged: [
-          { "number" => 84, "title" => "Update docs", "mergedAt" => Time.now.iso8601 }
+          {"number" => 84, "title" => "Update docs", "mergedAt" => Time.now.iso8601}
         ],
         open: [
-          { "number" => 85, "title" => "New feature", "author" => { "login" => "user1" } }
+          {"number" => 85, "title" => "New feature", "author" => {"login" => "user1"}}
         ]
       }
     )
@@ -156,7 +156,7 @@ class StatusFormatterTest < AceGitTestCase
       branch: "feature-123",
       repository_state: :clean,
       pr_activity: {
-        merged: [{ "number" => 84, "title" => "Fix bug", "mergedAt" => merged_at }],
+        merged: [{"number" => 84, "title" => "Fix bug", "mergedAt" => merged_at}],
         open: []
       }
     )
@@ -184,7 +184,7 @@ class StatusFormatterTest < AceGitTestCase
 
   def test_format_pr_activity_section_with_only_merged
     activity = {
-      merged: [{ "number" => 84, "title" => "PR One" }],
+      merged: [{"number" => 84, "title" => "PR One"}],
       open: []
     }
 
@@ -199,7 +199,7 @@ class StatusFormatterTest < AceGitTestCase
   def test_format_pr_activity_section_with_only_open
     activity = {
       merged: [],
-      open: [{ "number" => 85, "title" => "PR Two", "author" => { "login" => "dev" } }]
+      open: [{"number" => 85, "title" => "PR Two", "author" => {"login" => "dev"}}]
     }
 
     lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
@@ -213,7 +213,7 @@ class StatusFormatterTest < AceGitTestCase
   def test_format_pr_activity_section_handles_missing_author
     activity = {
       merged: [],
-      open: [{ "number" => 85, "title" => "PR Without Author" }]
+      open: [{"number" => 85, "title" => "PR Without Author"}]
     }
 
     lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
@@ -227,7 +227,7 @@ class StatusFormatterTest < AceGitTestCase
     # RepoStatusLoader uses symbol keys for the structure (:merged, :open)
     # PR data within uses string keys from JSON parsing ("number", "title")
     activity = {
-      merged: [{ "number" => 84, "title" => "Symbol Keys" }],
+      merged: [{"number" => 84, "title" => "Symbol Keys"}],
       open: []
     }
 
@@ -282,8 +282,8 @@ class StatusFormatterTest < AceGitTestCase
 
   def test_format_recent_commits_section
     commits = [
-      { hash: "abc1234", subject: "First commit" },
-      { hash: "def5678", subject: "Second commit" }
+      {hash: "abc1234", subject: "First commit"},
+      {hash: "def5678", subject: "Second commit"}
     ]
 
     lines = Ace::Git::Atoms::StatusFormatter.format_recent_commits_section(commits)
@@ -301,7 +301,7 @@ class StatusFormatterTest < AceGitTestCase
       "state" => "OPEN",
       "baseRefName" => "main",
       "headRefName" => "feature",
-      "author" => { "login" => "dev" },
+      "author" => {"login" => "dev"},
       "isDraft" => false,
       "url" => "https://github.com/o/r/pull/85"
     }
@@ -318,7 +318,7 @@ class StatusFormatterTest < AceGitTestCase
 
   def test_format_recent_commits_handles_string_keys
     commits = [
-      { "hash" => "abc1234", "subject" => "String keys" }
+      {"hash" => "abc1234", "subject" => "String keys"}
     ]
 
     lines = Ace::Git::Atoms::StatusFormatter.format_recent_commits_section(commits)

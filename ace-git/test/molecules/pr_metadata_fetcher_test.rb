@@ -5,31 +5,31 @@ require "ace/git/molecules/pr_metadata_fetcher"
 
 class PrMetadataFetcherTest < AceGitTestCase
   def test_gh_installed_returns_true_when_gh_available
-    Ace::Git::Atoms::CommandExecutor.stub :execute, { success: true, output: "gh version 2.0.0" } do
+    Ace::Git::Atoms::CommandExecutor.stub :execute, {success: true, output: "gh version 2.0.0"} do
       assert Ace::Git::Molecules::PrMetadataFetcher.gh_installed?
     end
   end
 
   def test_gh_installed_returns_false_when_gh_not_found
-    Ace::Git::Atoms::CommandExecutor.stub :execute, { success: false, output: "" } do
+    Ace::Git::Atoms::CommandExecutor.stub :execute, {success: false, output: ""} do
       refute Ace::Git::Molecules::PrMetadataFetcher.gh_installed?
     end
   end
 
   def test_gh_authenticated_returns_true_when_logged_in
-    Ace::Git::Atoms::CommandExecutor.stub :execute, { success: true, output: "Logged in" } do
+    Ace::Git::Atoms::CommandExecutor.stub :execute, {success: true, output: "Logged in"} do
       assert Ace::Git::Molecules::PrMetadataFetcher.gh_authenticated?
     end
   end
 
   def test_gh_authenticated_returns_false_when_not_logged_in
-    Ace::Git::Atoms::CommandExecutor.stub :execute, { success: false, output: "" } do
+    Ace::Git::Atoms::CommandExecutor.stub :execute, {success: false, output: ""} do
       refute Ace::Git::Molecules::PrMetadataFetcher.gh_authenticated?
     end
   end
 
   def test_fetch_diff_returns_diff_content_on_success
-    mock_output = { success: true, output: "+added line\n-removed line", error: "", exit_code: 0 }
+    mock_output = {success: true, output: "+added line\n-removed line", error: "", exit_code: 0}
 
     Open3.stub :capture3, ["#{mock_output[:output]}", "", stub_status(true)] do
       result = Ace::Git::Molecules::PrMetadataFetcher.fetch_diff("42", timeout: 5)
@@ -61,7 +61,7 @@ class PrMetadataFetcherTest < AceGitTestCase
   end
 
   def test_fetch_metadata_returns_parsed_json
-    mock_json = { "number" => 42, "title" => "Test PR", "state" => "OPEN" }.to_json
+    mock_json = {"number" => 42, "title" => "Test PR", "state" => "OPEN"}.to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
       result = Ace::Git::Molecules::PrMetadataFetcher.fetch_metadata("42", timeout: 5)
@@ -87,7 +87,7 @@ class PrMetadataFetcherTest < AceGitTestCase
 
   def test_fetch_pr_returns_both_diff_and_metadata
     mock_diff = "+added\n-removed"
-    mock_json = { "number" => 42, "title" => "Test PR" }.to_json
+    mock_json = {"number" => 42, "title" => "Test PR"}.to_json
 
     call_count = 0
     Open3.stub :capture3, ->(*_args) {
@@ -106,7 +106,7 @@ class PrMetadataFetcherTest < AceGitTestCase
   end
 
   def test_find_pr_for_branch_returns_number_string
-    mock_json = { "number" => 123 }.to_json
+    mock_json = {"number" => 123}.to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
       result = Ace::Git::Molecules::PrMetadataFetcher.find_pr_for_branch(timeout: 5)
@@ -152,8 +152,8 @@ class PrMetadataFetcherTest < AceGitTestCase
 
   def test_fetch_recently_merged_returns_prs_on_success
     mock_json = [
-      { "number" => 84, "title" => "Test PR", "mergedAt" => "2025-12-23T12:00:00Z" },
-      { "number" => 82, "title" => "Other PR", "mergedAt" => "2025-12-22T12:00:00Z" }
+      {"number" => 84, "title" => "Test PR", "mergedAt" => "2025-12-23T12:00:00Z"},
+      {"number" => 82, "title" => "Other PR", "mergedAt" => "2025-12-22T12:00:00Z"}
     ].to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
@@ -182,7 +182,7 @@ class PrMetadataFetcherTest < AceGitTestCase
   end
 
   def test_fetch_recently_merged_respects_limit
-    mock_json = [{ "number" => 1 }].to_json
+    mock_json = [{"number" => 1}].to_json
 
     # Capture the args to verify limit is passed
     captured_cmd = nil
@@ -200,8 +200,8 @@ class PrMetadataFetcherTest < AceGitTestCase
 
   def test_fetch_open_prs_returns_prs_on_success
     mock_json = [
-      { "number" => 85, "title" => "Open PR", "author" => { "login" => "user1" }, "headRefName" => "feature-1" },
-      { "number" => 86, "title" => "Other PR", "author" => { "login" => "user2" }, "headRefName" => "feature-2" }
+      {"number" => 85, "title" => "Open PR", "author" => {"login" => "user1"}, "headRefName" => "feature-1"},
+      {"number" => 86, "title" => "Other PR", "author" => {"login" => "user2"}, "headRefName" => "feature-2"}
     ].to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
@@ -213,8 +213,8 @@ class PrMetadataFetcherTest < AceGitTestCase
 
   def test_fetch_open_prs_excludes_specified_branch
     mock_json = [
-      { "number" => 85, "title" => "Open PR", "headRefName" => "feature-1" },
-      { "number" => 86, "title" => "Current PR", "headRefName" => "current-branch" }
+      {"number" => 85, "title" => "Open PR", "headRefName" => "feature-1"},
+      {"number" => 86, "title" => "Current PR", "headRefName" => "current-branch"}
     ].to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
@@ -230,8 +230,8 @@ class PrMetadataFetcherTest < AceGitTestCase
 
   def test_fetch_open_prs_with_nil_exclude_branch_returns_all
     mock_json = [
-      { "number" => 85, "title" => "Open PR", "headRefName" => "feature-1" },
-      { "number" => 86, "title" => "Other PR", "headRefName" => "feature-2" }
+      {"number" => 85, "title" => "Open PR", "headRefName" => "feature-1"},
+      {"number" => 86, "title" => "Other PR", "headRefName" => "feature-2"}
     ].to_json
 
     Open3.stub :capture3, [mock_json, "", stub_status(true)] do
@@ -262,7 +262,7 @@ class PrMetadataFetcherTest < AceGitTestCase
   end
 
   def test_fetch_open_prs_respects_limit
-    mock_json = [{ "number" => 1 }].to_json
+    mock_json = [{"number" => 1}].to_json
 
     # Capture the args to verify limit is passed
     captured_cmd = nil

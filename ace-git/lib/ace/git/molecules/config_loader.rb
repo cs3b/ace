@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module Git
@@ -65,7 +65,7 @@ module Ace
 
             # First, collect any top-level diff keys (flattened defaults)
             diff_keys = %w[exclude_patterns exclude_whitespace exclude_renames
-                           exclude_moves max_lines ranges paths since format timeout grouped_stats]
+              exclude_moves max_lines ranges paths since format timeout grouped_stats]
             diff_sym_keys = diff_keys.map(&:to_sym)
 
             top_level_diff = {}
@@ -78,8 +78,8 @@ module Ace
               if diff_config.is_a?(Hash)
                 # Merge nested diff over top-level using Config.merge()
                 return Ace::Support::Config::Models::Config.new(top_level_diff, source: "git_diff_extract")
-                  .merge(diff_config)
-                  .to_h
+                    .merge(diff_config)
+                    .to_h
               end
             end
 
@@ -89,13 +89,13 @@ module Ace
             # Check for legacy diffs: array format
             if config.key?("diffs") || config.key?(:diffs)
               diffs = config["diffs"] || config[:diffs]
-              return { "ranges" => Array(diffs) } if diffs
+              return {"ranges" => Array(diffs)} if diffs
             end
 
             # Check for legacy filters format (ace-docs)
             if config.key?("filters") || config.key?(:filters)
               filters = config["filters"] || config[:filters]
-              return { "paths" => Array(filters) } if filters
+              return {"paths" => Array(filters)} if filters
             end
 
             # No diff config found

@@ -18,12 +18,12 @@ module Ace
             result = executor.execute("git", "-c", "color.status=false", "status", "-sb")
 
             if result[:success]
-              { success: true, output: result[:output].strip }
+              {success: true, output: result[:output].strip}
             else
-              { success: false, output: "", error: result[:error] }
+              {success: false, output: "", error: result[:error]}
             end
-          rescue StandardError => e
-            { success: false, output: "", error: e.message }
+          rescue => e
+            {success: false, output: "", error: e.message}
           end
         end
       end
