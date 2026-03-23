@@ -223,7 +223,7 @@ class TemplateManagerTest < Minitest::Test
     File.write(@target_file, "Content")
 
     # Stub archive_file to fail
-    Ace::PromptPrep::Molecules::TemplateManager.stub(:archive_file, ->(**_) { { success: false, error: "Archive failed" } }) do
+    Ace::PromptPrep::Molecules::TemplateManager.stub(:archive_file, ->(**_) { {success: false, error: "Archive failed"} }) do
       result = Ace::PromptPrep::Molecules::TemplateManager.restore_template(
         template_path: @template_file,
         target_path: @target_file,

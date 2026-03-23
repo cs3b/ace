@@ -40,7 +40,7 @@ module Ace
         # @param symlink_path [String, nil] Optional custom symlink path
         # @return [Hash] Hash with :archive_path, :symlink_path, :success, :error keys
         def self.call(content:, timestamp: nil, archive_dir: nil, symlink_path: nil)
-          return { success: false, error: "Error: Content to archive cannot be nil" } if content.nil?
+          return {success: false, error: "Error: Content to archive cannot be nil"} if content.nil?
 
           project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           archive_dir ||= File.join(project_root, archive_dir_from_config)
@@ -73,7 +73,7 @@ module Ace
             success: true,
             error: nil
           }
-        rescue StandardError => e
+        rescue => e
           {
             archive_path: nil,
             symlink_path: nil,
@@ -99,9 +99,9 @@ module Ace
           # Create new symlink
           File.symlink(relative_target, symlink_path)
 
-          { success: true, error: nil }
-        rescue StandardError => e
-          { success: false, error: "Error: Failed to update symlink: #{e.message}" }
+          {success: true, error: nil}
+        rescue => e
+          {success: false, error: "Error: Failed to update symlink: #{e.message}"}
         end
       end
     end

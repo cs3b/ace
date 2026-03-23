@@ -27,7 +27,7 @@ class TemplateResolverTest < Minitest::Test
     end
 
     begin
-      result = resolver.call(uri: "bug")
+      resolver.call(uri: "bug")
       assert_equal "tmpl://the-prompt-bug", received_uri
     ensure
       # Restore original method
@@ -48,7 +48,7 @@ class TemplateResolverTest < Minitest::Test
     end
 
     begin
-      result = resolver.call(uri: "tmpl://custom/template")
+      resolver.call(uri: "tmpl://custom/template")
       assert_equal "tmpl://custom/template", received_uri
     ensure
       resolver.define_singleton_method(:resolve_via_ace_nav, original_method)

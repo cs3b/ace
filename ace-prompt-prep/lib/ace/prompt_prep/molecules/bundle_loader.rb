@@ -8,7 +8,7 @@ module Ace
       # This module calls Ace::Bundle.load_file and returns the result.
       class BundleLoader
         # Valid bundle format options
-        VALID_FORMATS = ['markdown-xml', 'markdown', 'xml'].freeze
+        VALID_FORMATS = ["markdown-xml", "markdown", "xml"].freeze
 
         # Load bundle from prompt file with validation
         #
@@ -25,7 +25,7 @@ module Ace
           debug_log("Loading bundle from: #{prompt_path}", :bundle_loading)
 
           begin
-            require 'ace/bundle'
+            require "ace/bundle"
           rescue LoadError
             warn "Error: ace-bundle gem not available"
             return ""
@@ -44,7 +44,11 @@ module Ace
             end
 
             # Resolve symlinks and validate project boundaries
-            real_path = File.realpath(prompt_path) rescue prompt_path
+            real_path = begin
+              File.realpath(prompt_path)
+            rescue
+              prompt_path
+            end
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
 
             unless real_path.start_with?(project_root)
@@ -63,8 +67,8 @@ module Ace
 
             bundle_data = Ace::Bundle.load_file(
               prompt_path,
-              format: options[:format] || 'markdown-xml',
-              embed_source: options[:embed_source].nil? ? true : options[:embed_source]
+              format: options[:format] || "markdown-xml",
+              embed_source: options[:embed_source].nil? || options[:embed_source]
             )
 
             # Validate bundle data structure
@@ -94,7 +98,7 @@ module Ace
 
             debug_log("Bundle loaded successfully, content length: #{content.length} characters", :bundle_loading)
             content
-          rescue StandardError => e
+          rescue => e
             warn "Error: Failed to load bundle: #{e.message}"
             ""
           end
@@ -124,20 +128,20 @@ module Ace
           path_str = prompt_path.to_s
 
           # Check for various path traversal patterns
-          return false if path_str.include?('../')
-          return false if path_str.include?('..\\')
-          return false if path_str.include?('%2e%2e')  # URL encoded
-          return false if path_str.include?('..%2f')
-          return false if path_str.include?('%2e%2e%2f')
+          return false if path_str.include?("../")
+          return false if path_str.include?("..\\")
+          return false if path_str.include?("%2e%2e")  # URL encoded
+          return false if path_str.include?("..%2f")
+          return false if path_str.include?("%2e%2e%2f")
 
           # Reject absolute paths (should be relative to project)
-          return false if File.absolute_path?(path_str) && !path_str.start_with?('/')
+          return false if File.absolute_path?(path_str) && !path_str.start_with?("/")
 
           # Check for shell escape patterns
-          return false if path_str.include?(';')
-          return false if path_str.include?('&')
-          return false if path_str.include?('|')
-          return false if path_str.include?('`')
+          return false if path_str.include?(";")
+          return false if path_str.include?("&")
+          return false if path_str.include?("|")
+          return false if path_str.include?("`")
 
           true
         end
@@ -154,7 +158,7 @@ module Ace
             format = options[:format]
             unless format.is_a?(String) && VALID_FORMATS.include?(format)
               warn "Warning: Invalid format '#{format}', using default 'markdown-xml'"
-              options[:format] = 'markdown-xml'
+              options[:format] = "markdown-xml"
             end
           end
 

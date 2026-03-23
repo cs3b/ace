@@ -21,7 +21,7 @@ class CLIIntegrationTest < Minitest::Test
     # Store a mock default config for test isolation
     # This represents the gem defaults without loading project config
     @default_config = {
-      "bundle" => { "enabled" => false },
+      "bundle" => {"enabled" => false},
       "enhance" => {
         "enabled" => false,
         "model" => "glite",
@@ -32,8 +32,8 @@ class CLIIntegrationTest < Minitest::Test
         "detection" => false,
         "branch_patterns" => ['^(\d+(?:\.\d+)?)-']
       },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => false, "bundle_loading" => false }
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => false, "bundle_loading" => false}
     }
   end
 
@@ -124,7 +124,7 @@ class CLIIntegrationTest < Minitest::Test
     output_file = File.join(@tmpdir, "nested/dir/output.md")
 
     # Run CLI with --output to non-existent directory
-    output, _error = run_cli_isolated(["process", "--output", output_file])
+    _, _error = run_cli_isolated(["process", "--output", output_file])
 
     # Verify file created with parent directories
     assert File.exist?(output_file)
@@ -346,9 +346,9 @@ class CLIIntegrationTest < Minitest::Test
     File.write(template_file, template_content)
 
     # Mock TemplateResolver to return our template file path
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: template_file} }) do
       # Run setup command
-      output, _error = run_cli_isolated(["setup"])
+      _, _error = run_cli_isolated(["setup"])
 
       # Should create prompt file
       assert File.exist?(@prompt_file)
@@ -387,7 +387,7 @@ class CLIIntegrationTest < Minitest::Test
     enhanced_content = "Enhanced: Review this code for security issues with detailed analysis"
 
     # Mock the LLM call
-    mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
+    mock_query = ->(_model, _prompt, **_opts) { {text: enhanced_content} }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
       # Run CLI with --enhance and specify system prompt file
@@ -434,7 +434,7 @@ class CLIIntegrationTest < Minitest::Test
     # Mock LLM to capture model parameter
     mock_query = lambda { |model, _prompt, **_opts|
       model_used = model
-      { text: enhanced_content }
+      {text: enhanced_content}
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
@@ -458,7 +458,7 @@ class CLIIntegrationTest < Minitest::Test
     end
 
     enhanced_content = "Enhanced prompt"
-    mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
+    mock_query = ->(_model, _prompt, **_opts) { {text: enhanced_content} }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
       output, _error = run_cli_isolated(["process", "-e", "--system-prompt", system_prompt_file])
@@ -547,7 +547,7 @@ class CLIIntegrationTest < Minitest::Test
     File.write(template_file, template_content)
 
     Ace::PromptPrep::Atoms::TaskPathResolver.stub :resolve, mock_result do
-      Ace::PromptPrep::Molecules::TemplateResolver.stub :call, ->(**_) { { success: true, path: template_file } } do
+      Ace::PromptPrep::Molecules::TemplateResolver.stub :call, ->(**_) { {success: true, path: template_file} } do
         output, _error = run_cli_isolated(["setup", "--task", "118"])
 
         # Verify prompt created in task directory
@@ -583,7 +583,7 @@ class CLIIntegrationTest < Minitest::Test
 
     # Enable task detection in config (merge with test's default config)
     config_with_detection = @default_config.merge(
-      "task" => { "detection" => true }
+      "task" => {"detection" => true}
     )
 
     tmpdir = @tmpdir
@@ -609,7 +609,7 @@ class CLIIntegrationTest < Minitest::Test
 
     # Enable task detection in config (merge with test's default config)
     config_with_detection = @default_config.merge(
-      "task" => { "detection" => true }
+      "task" => {"detection" => true}
     )
 
     tmpdir = @tmpdir
@@ -641,7 +641,7 @@ class CLIIntegrationTest < Minitest::Test
     }
 
     config_with_detection = @default_config.merge(
-      "task" => { "detection" => true }
+      "task" => {"detection" => true}
     )
 
     tmpdir = @tmpdir

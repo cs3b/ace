@@ -8,14 +8,12 @@ class PromptCliRoutingTest < Minitest::Test
   # Helper to invoke CLI using the CLI runner pattern
   def invoke_cli(args)
     stdout, stderr = capture_io do
-      begin
-        @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
-      rescue SystemExit => e
-        @_cli_result = e.status
-      rescue Ace::Support::Cli::Error => e
-        @_cli_result = e.exit_code
-        $stderr.puts e.message
-      end
+      @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
+    rescue SystemExit => e
+      @_cli_result = e.status
+    rescue Ace::Support::Cli::Error => e
+      @_cli_result = e.exit_code
+      warn e.message
     end
 
     {
@@ -32,7 +30,7 @@ class PromptCliRoutingTest < Minitest::Test
 
   # Mock result for PromptProcessor - avoids filesystem/git dependencies
   def mock_processor_result
-    { success: true, content: "mocked content", archive_path: "/tmp/archive.md" }
+    {success: true, content: "mocked content", archive_path: "/tmp/archive.md"}
   end
 
   # Helper to invoke CLI with stubbed PromptProcessor

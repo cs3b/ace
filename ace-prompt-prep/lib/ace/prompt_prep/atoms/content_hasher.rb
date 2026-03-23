@@ -13,9 +13,9 @@ module Ace
         # @return [Hash] Hash with :hash key
         def self.call(content:)
           if content.nil? || content.empty?
-            { hash: "" }
+            {hash: ""}
           else
-            { hash: Digest::SHA256.hexdigest(content) }
+            {hash: Digest::SHA256.hexdigest(content)}
           end
         end
       end

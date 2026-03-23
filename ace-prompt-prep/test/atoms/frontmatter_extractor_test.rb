@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'ace/prompt_prep/atoms/frontmatter_extractor'
+require "test_helper"
+require "ace/prompt_prep/atoms/frontmatter_extractor"
 
 class FrontmatterExtractorTest < Minitest::Test
   def test_extract_valid_frontmatter

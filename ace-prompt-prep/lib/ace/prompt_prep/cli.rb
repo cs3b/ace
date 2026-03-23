@@ -68,7 +68,6 @@ module Ace
         # @param task_option [String, nil] Explicit task ID from --task flag
         # @return [String, nil] Path to the-prompt.md in task's prompts directory, or nil for default
         def self.resolve_task_prompt_path(task_option)
-
           # If task ID is explicitly provided, use it
           if task_option
             result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve(task_option)
@@ -102,7 +101,7 @@ module Ace
 
           FileUtils.mkdir_p(prompts_dir)
           File.join(prompts_dir, "the-prompt.md")
-        rescue StandardError => e
+        rescue => e
           # For explicit --task, re-raise the error
           raise if task_option
 

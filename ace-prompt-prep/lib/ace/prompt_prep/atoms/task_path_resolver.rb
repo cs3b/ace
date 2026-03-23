@@ -38,7 +38,7 @@ module Ace
             found: true,
             error: nil
           }
-        rescue StandardError => e
+        rescue => e
           {
             path: nil,
             prompts_path: nil,

@@ -16,7 +16,7 @@ class PromptInitializerTest < Minitest::Test
   # setup tests
   def test_setup_creates_prompt_from_template
     # Stub template resolver to return our test template
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.setup(
         target_dir: @tmpdir,
         force: false
@@ -36,7 +36,7 @@ class PromptInitializerTest < Minitest::Test
     FileUtils.mkdir_p(File.dirname(target_file))
     File.write(target_file, "Existing content")
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.setup(
         target_dir: @tmpdir,
         force: false
@@ -55,7 +55,7 @@ class PromptInitializerTest < Minitest::Test
     FileUtils.mkdir_p(File.dirname(target_file))
     File.write(target_file, "Existing content")
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.setup(
         target_dir: @tmpdir,
         force: true
@@ -68,7 +68,7 @@ class PromptInitializerTest < Minitest::Test
   end
 
   def test_setup_handles_template_resolution_failure
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: false, error: "Template not found" } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: false, error: "Template not found"} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.setup(
         target_dir: @tmpdir,
         force: false
@@ -87,7 +87,7 @@ class PromptInitializerTest < Minitest::Test
     resolver_called_with = nil
     stub_resolver = lambda do |uri:, **_|
       resolver_called_with = uri
-      { success: true, path: @template_file }
+      {success: true, path: @template_file}
     end
 
     Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, stub_resolver) do
@@ -105,7 +105,7 @@ class PromptInitializerTest < Minitest::Test
   def test_setup_creates_directory_structure
     nested_dir = File.join(@tmpdir, "nested", "path")
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.setup(
         target_dir: nested_dir,
         force: false
@@ -124,7 +124,7 @@ class PromptInitializerTest < Minitest::Test
     FileUtils.mkdir_p(File.dirname(target_file))
     File.write(target_file, "Old content")
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.reset(
         target_dir: @tmpdir,
         force: false
@@ -144,7 +144,7 @@ class PromptInitializerTest < Minitest::Test
     FileUtils.mkdir_p(File.dirname(target_file))
     File.write(target_file, "Old content")
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.reset(
         target_dir: @tmpdir,
         force: true
@@ -158,7 +158,7 @@ class PromptInitializerTest < Minitest::Test
   end
 
   def test_reset_creates_new_file_if_none_exists
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.reset(
         target_dir: @tmpdir,
         force: false
@@ -172,7 +172,7 @@ class PromptInitializerTest < Minitest::Test
   end
 
   def test_reset_handles_template_resolution_failure
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: false, error: "Template not found" } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: false, error: "Template not found"} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.reset(
         target_dir: @tmpdir,
         force: false
@@ -191,7 +191,7 @@ class PromptInitializerTest < Minitest::Test
     resolver_called_with = nil
     stub_resolver = lambda do |uri:, **_|
       resolver_called_with = uri
-      { success: true, path: @template_file }
+      {success: true, path: @template_file}
     end
 
     Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, stub_resolver) do
@@ -214,7 +214,7 @@ class PromptInitializerTest < Minitest::Test
     File.write(real_file, "Symlinked content")
     File.symlink(real_file, symlink_file)
 
-    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: @template_file } }) do
+    Ace::PromptPrep::Molecules::TemplateResolver.stub(:call, ->(**_) { {success: true, path: @template_file} }) do
       result = Ace::PromptPrep::Organisms::PromptInitializer.reset(
         target_dir: @tmpdir,
         force: false
@@ -228,9 +228,9 @@ class PromptInitializerTest < Minitest::Test
 
   def test_default_constants
     assert_equal "tmpl://the-prompt-base",
-                 Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
+      Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
     assert_equal "the-prompt.md",
-                 Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_PROMPT_FILE
+      Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_PROMPT_FILE
   end
 
   def test_default_prompt_dir_uses_project_root
