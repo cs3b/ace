@@ -25,6 +25,8 @@ Agents can run CLI commands and read files, but they struggle with:
 
 ACE applies Unix philosophy to solve these: files as interchange (not just APIs), tools that do one thing well, composable workflows. Plus a distribution model to share them.
 
+Coding agent harnesses - Claude Code, Codex CLI, Gemini CLI - handle the LLM loop: tool dispatch, context windows, safety. But they need structured workflows, managed context, and developer operations to be effective. ACE provides that layer.
+
 ---
 
 ## Core Principles

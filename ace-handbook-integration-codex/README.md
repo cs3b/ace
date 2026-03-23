@@ -1,27 +1,29 @@
-# ace-handbook-integration-codex
+<div align="center">
+  <h1> ACE - Handbook Integration Codex </h1>
 
-Codex-specific provider integration for ACE handbook skills.
+  Codex CLI provider integration for ACE handbook skills and workflows.
 
-## Purpose
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-This package provides Codex-native provider manifests for ACE handbook integrations.
+  <a href="https://rubygems.org/gems/ace-handbook-integration-codex"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook-integration-codex.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It projects canonical skill definitions from package-owned `handbook/skills` into Codex assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`gem install ace-handbook-integration-codex`
+[ace-handbook](../ace-handbook)
+`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets so that skill invocations from Codex CLI resolve correctly while keeping semantics unchanged from the definitions in [ace-handbook](../ace-handbook).
 
-## What It Provides
+## Use Cases
 
-- Codex provider manifests for handbook integrations.
-- Codex-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+**Run handbook workflows in Codex contexts** - keep the same behavior while using Codex-native execution entrypoints, so agents running under Codex CLI get the same skill intent as any other provider.
 
-## Part of ACE
+**Avoid duplication across providers** - update canonical skill definitions once in [ace-handbook](../ace-handbook) and generate Codex-specific projections automatically from shared contracts.
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+**Keep integration delivery minimal** - maintain a focused provider shim layer with only the manifests and projection assets needed for Codex compatibility.
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+---
+
+Part of [ACE](https://github.com/cs3b/ace)
