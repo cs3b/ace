@@ -34,4 +34,4 @@
 **Provide demo evidence for assignments** - pair with [ace-assign](../ace-assign) for scoped task workflows that require demo evidence, using [ace-bundle](../ace-bundle) for loading workflow context that drives repeatable demo scenarios.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
