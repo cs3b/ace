@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-bundle preset loading, listing, and protocol usage
+description: Showcase ace-bundle preset loading, protocol resolution, and task bundling
 tags:
 - ace-bundle
 - docs
@@ -10,21 +10,17 @@ settings:
   height: 540
   format: gif
 scenes:
-- name: Load project context
+- name: Bundle project context to cache
   commands:
-  - type: ace-bundle project
-    sleep: 3s
-- name: List available presets
-  commands:
-  - type: ace-bundle --list
-    sleep: 3s
+  - type: ace-bundle project --output cache
+    sleep: 6s
 - name: Load workflow via protocol
   commands:
-  - type: ace-bundle wfi://task/plan
-    sleep: 3s
-- name: Inspect resolved config
+  - type: ace-bundle wfi://task/finder
+    sleep: 6s
+- name: Bundle task context to cache
   commands:
-  - type: ace-bundle project --inspect-config
-    sleep: 3s
+  - type: ace-bundle task://t.0or --output cache
+    sleep: 6s
 teardown:
 - cleanup
