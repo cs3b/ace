@@ -1,55 +1,45 @@
 # ace-retro
 
-Structured retrospective management for ACE workflows, from capture to archive.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-retro.svg)](https://rubygems.org/gems/ace-retro)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Structured retrospective management for ACE workflows, from capture to archive.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
-`ace-retro` helps teams capture learning while context is still fresh, keep retros connected to tasks, and maintain a searchable archive for follow-up improvements.
+`ace-retro` helps teams capture learning while context is still fresh, keep retros connected to tasks, and maintain a searchable archive for follow-up improvements. Use `/as-retro-create` to start a retro from inside a coding agent, or `/as-retro-synthesize` to distill patterns across multiple retros.
+
+## How It Works
+
+1. Create a retrospective from type-aware templates (standard, conversation-analysis, or self-review) with [`ace-retro create`](docs/usage.md).
+2. Link retros to [ace-task](../ace-task) references and enrich metadata with tags and status updates.
+3. Archive completed retros to preserve history while keeping the active workspace clean.
 
 ## Use Cases
 
-**Capture retros quickly** - Create a new retrospective from templates for standard, conversation-analysis, or self-review flows.
+**Capture retros quickly after delivery** - use `/as-retro-create` or [`ace-retro create`](docs/usage.md) to initialize a retro from templates while the work is still fresh.
 
-**Keep retros connected to delivery work** - Link retros to task references so findings stay tied to concrete changes.
+**Keep retros connected to delivery work** - link retros to [ace-task](../ace-task) references and [ace-assign](../ace-assign) follow-up actions so findings stay tied to concrete changes.
 
-**Review and maintain retro metadata** - List, show, and update retros with tags and status metadata.
+**Synthesize patterns across retros** - use `/as-retro-synthesize` to distill recurring themes and improvement opportunities from multiple retrospectives.
 
-**Archive completed retros without losing history** - Move completed retros into archive locations while preserving searchability.
+**Review and maintain retro metadata** - list, show, and update retros with tags and status, then archive completed entries without losing searchability.
 
-**Run health checks before sharing** - Use `ace-retro doctor` to validate environment and workflow readiness.
-
-## Works With
-
-- `ace-task` for linking retros to task references.
-- `ace-assign` for assignment retros and follow-up actions.
-- `ace-b36ts` for compact, sortable IDs.
-
-## Agent Skills
-
-Package-owned canonical skills:
-
-- `as-retro-create`
-- `as-retro-synthesize`
-- `as-handbook-selfimprove`
-
-## Features
-
-- Fast create, show, list, and update workflow for daily retrospective work.
-- Type-aware templates for different reflection styles.
-- Metadata updates with tags, status, and folder moves.
-- Health checks via `ace-retro doctor`.
+**Improve agent workflows over time** - use `/as-handbook-selfimprove` to feed retro insights back into handbook guidance for better future performance.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-retro --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Part of ACE
+---
 
-`ace-retro` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
