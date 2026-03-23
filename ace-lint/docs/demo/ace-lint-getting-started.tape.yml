@@ -9,19 +9,30 @@ settings:
   width: 1200
   height: 700
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx/ace-lint
 scenes:
-- name: Main flow
+- name: Lint a markdown file
   commands:
+  - type: cd $PROJECT_ROOT_PATH
+    sleep: 1s
   - type: ace-lint README.md
     sleep: 3s
-  - type: ace-lint .ace/config.yml --type yaml
+- name: Lint YAML config
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-lint .ace-defaults/lint/config.yml --type yaml
     sleep: 3s
+- name: Auto-fix markdown
+  commands:
+  - type: clear
+    sleep: 1s
   - type: ace-lint docs/getting-started.md --fix
     sleep: 3s
+- name: Check environment health
+  commands:
+  - type: clear
+    sleep: 1s
   - type: ace-lint --doctor
-    sleep: 3s
-teardown:
-- cleanup
-setup:
-- sandbox
-- copy-fixtures
+    sleep: 5s

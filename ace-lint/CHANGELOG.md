@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-23
+
+### Fixed
+- Aligned gemspec summary to "Ruby-native" matching README tagline (was "Ruby-only").
+
+### Changed
+- Added example output section to `docs/usage.md` showing pass, fail, and doctor diagnostics.
+- Rewrote demo tape with separate named scenes and real package files instead of sandbox fixtures.
+- Re-recorded getting-started demo GIF.
+
 ## [0.24.3] - 2026-03-23
 
 ### Changed

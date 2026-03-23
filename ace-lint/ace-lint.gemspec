@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Ruby-only linting for markdown, YAML, and Ruby with no Node.js or Python"
+  spec.summary = "Ruby-native linting for markdown, YAML, and Ruby with no Node.js or Python"
   spec.description = "ace-lint provides Ruby-native linting for markdown (kramdown), YAML (Psych), Ruby files (StandardRB/RuboCop), and frontmatter without Node.js or Python dependencies."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"

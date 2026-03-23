@@ -86,6 +86,47 @@ ace-lint --doctor
 ace-lint --doctor-verbose
 ```
 
+## Example Output
+
+**All files pass:**
+
+```text
+============================================================
+Validated: 2 files
+✓ All files passed
+
+Reports: .ace-local/lint/8qmy35/
+  ok.md        (2 files)
+```
+
+**Lint errors found:**
+
+```text
+============================================================
+Validated: 1 file
+✗ 1 failed
+  1 error
+
+Reports: .ace-local/lint/8qmy3i/
+  pending.md   (1 issues)
+```
+
+**Doctor diagnostics:**
+
+```text
+Validators:
+----------------------------------------
+
+Configuration Files:
+----------------------------------------
+
+Pattern Groups:
+----------------------------------------
+
+Summary: Configuration looks healthy
+         5 OK
+```
+
 ## Runtime Help
 
 ```bash
