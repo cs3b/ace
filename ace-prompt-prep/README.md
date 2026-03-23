@@ -1,51 +1,43 @@
 # ace-prompt-prep
 
-Prepare prompts in a structured workspace with optional LLM enhancement and bundled project context.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-prompt-prep.svg)](https://rubygems.org/gems/ace-prompt-prep)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Prepare prompts in a structured workspace with optional LLM enhancement and bundled project context.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-prompt-prep demo](docs/demo/ace-prompt-prep-getting-started.gif)
 
-`ace-prompt-prep` helps developers and coding agents keep prompt authoring repeatable: initialize templates,
-archive every revision, enrich prompt context with `ace-bundle`, and optionally run enhancement through `ace-llm`.
+`ace-prompt-prep` helps developers and coding agents keep prompt authoring repeatable: initialize templates, archive every revision, enrich prompt context with [ace-bundle](../ace-bundle), and optionally run enhancement through [ace-llm](../ace-llm). Use `/as-prompt-prep` to drive the full workflow from inside a coding agent.
+
+## How It Works
+
+1. Initialize a prompt workspace from templates with `ace-prompt-prep setup`, optionally scoping to a task via `--task` and [ace-task](../ace-task).
+2. Process the prompt to inject bundled context from [ace-bundle](../ace-bundle) sources, archive the previous version, and write output.
+3. Optionally enhance the prompt through [ace-llm](../ace-llm) with `--enhance` and model selection before handing it to an agent or API.
 
 ## Use Cases
 
-**Keep prompt history without manual bookkeeping** - initialize and process prompts in a stable workspace where
-archives and `_previous.md` are maintained automatically.
+**Keep prompt history without manual bookkeeping** - initialize and process prompts in a stable workspace where archives and `_previous.md` are maintained automatically.
 
-**Improve prompt quality before execution** - run `--enhance` with model selection to rewrite prompts for clarity and
-completeness before handing them to an agent or API.
+**Improve prompt quality before execution** - run `--enhance` with model selection via [ace-llm](../ace-llm) to rewrite prompts for clarity and completeness before handing them to an agent.
 
-**Inject project context directly into prompts** - use `bundle` frontmatter sources so prompts include selected files,
-presets, and command output at processing time.
+**Inject project context directly into prompts** - use `bundle` frontmatter sources so prompts include selected files, presets, and command output from [ace-bundle](../ace-bundle) at processing time.
 
-## Works With
-
-- **[ace-task](../ace-task)** for task-scoped prompt directories via `--task`.
-- **[ace-bundle](../ace-bundle)** for context loading from files, presets, and commands.
-- **[ace-llm](../ace-llm)** for optional LLM-based prompt enhancement.
-- **[ace-git](../ace-git)** for branch-aware task workflow usage patterns.
-
-## Features
-
-- Workspace setup with package templates (`setup`, `--template`, `--task`).
-- Prompt processing with archive management and output controls (`process`, `--output`).
-- Optional context loading via `--bundle` / `--no-bundle` and prompt frontmatter sources.
-- Optional enhancement flow via `--enhance`, `--model`, and custom system prompts.
-- Task-aware prompt routing for task and subtask IDs.
+**Scope prompts to tasks** - use `--task` to route prompt workspaces into [ace-task](../ace-task) directories, keeping prompts connected to delivery work alongside [ace-git](../ace-git) branch workflows.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-prompt-prep --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-- `as-prompt-prep` (package-owned canonical skill)
-
-## Part of ACE
-
-`ace-prompt-prep` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
