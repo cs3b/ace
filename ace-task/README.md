@@ -1,6 +1,6 @@
 <h1 align="center">ace-task</h1>
 
-<p align="center">
+<div align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-task"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-task.svg" /></a>
@@ -8,9 +8,11 @@
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
   Draft, organize, and tackle tasks - for you and your agents.
-</p>
+</div>
 
+<p align="left">
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+</p>
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 ![ace-task demo](docs/demo/ace-task-getting-started.gif)
