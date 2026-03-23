@@ -33,11 +33,5 @@
 
 **Load resolved content into agent workflows** - pair with [ace-bundle](../ace-bundle) to fetch and embed resources discovered through `ace-nav` into agent context for skills and workflows.
 
-## Documentation
-
-Command help: `ace-nav --help`
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

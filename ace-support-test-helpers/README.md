@@ -23,11 +23,5 @@
 
 **Improve CI stability** - reduce flaky test behavior with shared deterministic helpers for directory management, configuration, and environment cleanup.
 
-## Documentation
-
-API usage is documented inline; see tests and source for integration examples.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

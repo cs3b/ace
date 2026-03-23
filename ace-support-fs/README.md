@@ -23,11 +23,5 @@
 
 **Build config scans** - discover and rank candidate configuration directories during resolution, supporting the cascade logic in [ace-support-config](../ace-support-config).
 
-## Documentation
-
-API reference in source: `lib/ace/support/fs`
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

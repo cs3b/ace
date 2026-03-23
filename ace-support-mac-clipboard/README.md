@@ -23,11 +23,5 @@
 
 **Keep platform details isolated** - encapsulate macOS-specific clipboard behavior in one package so the rest of ACE stays platform-neutral.
 
-## Documentation
-
-API reference in source: `lib/ace/support/mac_clipboard`
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

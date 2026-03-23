@@ -23,11 +23,5 @@
 
 **Preserve history during edits** - maintain backup and rollback safety for write-heavy operations so that tools like [`ace-task`](../ace-task) can update specs confidently in batch workflows.
 
-## Documentation
-
-Command help: `ace-support-markdown` is a library package; see inline API docs and tests for usage.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

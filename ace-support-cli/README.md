@@ -29,11 +29,5 @@
 
 **Keep agent invocations safe** - preserve a stable CLI contract so coding agents can call `ace-*` tools reliably in mixed human/agent workflows.
 
-## Documentation
-
-API reference in source: `lib/ace/support/cli`
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

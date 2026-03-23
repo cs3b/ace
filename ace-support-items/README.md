@@ -23,11 +23,5 @@
 
 **Normalize metadata safely** - sanitize slugs and arguments before persistence, preventing malformed entries in item stores.
 
-## Documentation
-
-API reference in source: `lib/ace/support/items`
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

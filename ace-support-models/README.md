@@ -23,11 +23,5 @@
 
 **Share validation rules** - apply one metadata model for provider and model checks so that [ace-llm-providers-cli](../ace-llm-providers-cli) and other provider-aware packages stay aligned.
 
-## Documentation
-
-API usage is documented inline; see tests and source for integration examples.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Documentation](#documentation) | Part of ACE

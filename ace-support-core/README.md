@@ -23,11 +23,5 @@
 
 **Keep support libraries composable** - build package-specific features on top of stable core contracts that provide predictable runtime behavior.
 
-## Documentation
-
-[Configuration overview](docs/config.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Configuration overview](docs/config.md) | Part of ACE
