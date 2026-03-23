@@ -33,6 +33,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace"
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-support-config/"
   spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-support-config/CHANGELOG.md"
 end

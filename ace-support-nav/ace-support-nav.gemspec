@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-support-nav/"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-support-nav/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
