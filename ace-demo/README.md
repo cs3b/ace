@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-demo demo](docs/demo/ace-demo-getting-started.gif)
 
 `ace-demo` turns terminal sessions into reproducible GIF/MP4/WebM artifacts, supports inline and tape-driven recordings, and can post the resulting media directly to GitHub pull requests. It relies on `vhs`, `chromium`, and `ttyd` for deterministic terminal rendering (see [setup requirements](docs/setup.md)).
