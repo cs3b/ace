@@ -1,27 +1,29 @@
-# ace-handbook-integration-gemini
+<div align="center">
+  <h1> ACE - Handbook Integration Gemini </h1>
 
-Gemini-specific provider integration for ACE handbook skills.
+  Gemini CLI provider integration for ACE handbook skills and workflows.
 
-## Purpose
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-This package provides Gemini-native provider manifests for ACE handbook integrations.
+  <a href="https://rubygems.org/gems/ace-handbook-integration-gemini"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook-integration-gemini.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It projects canonical skill definitions from package-owned `handbook/skills` into Gemini assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`gem install ace-handbook-integration-gemini`
+[ace-handbook](../ace-handbook)
+`ace-handbook-integration-gemini` projects canonical ACE handbook skills into Gemini-native manifest assets so that skill invocations from Gemini CLI resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
-## What It Provides
+## Use Cases
 
-- Gemini provider manifests for handbook integrations.
-- Gemini-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+**Run ACE skill workflows in Gemini-native stacks** - preserve canonical behavior while using Gemini-native projection format, so agents running under Gemini CLI get the same skill intent as any other provider.
 
-## Part of ACE
+**Centralize skill updates** - keep shared definitions in [ace-handbook](../ace-handbook) and avoid provider-specific drift by generating Gemini projections from one canonical source.
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+**Ship lean provider packs** - support only the provider shims and manifests needed for Gemini compatibility, keeping integration scope minimal.
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+---
+
+Part of [ACE](https://github.com/cs3b/ace)

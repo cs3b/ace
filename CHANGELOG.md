@@ -4,6 +4,163 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.953] - 2026-03-23
+
+### Changed
+- **ace-test-runner-e2e v0.28.0**: Refreshed package README layout, navigation links, and section flow to align with the current package pattern.
+
+## [0.9.952] - 2026-03-23
+
+### Changed
+- **ace-llm-providers-cli v0.26.2**: Refreshed package README to align with the current package layout pattern and concise package-level guidance.
+
+## [0.9.951] - 2026-03-23
+
+### Added
+- **ace-docs v0.30.3**: Classify root README as `root_readme` doc-type and add timeout guard for nav resolution in document analysis.
+
+### Changed
+- **ace-bundle v0.39.1**: Polish README presentation after shine review.
+
+## [0.9.950] - 2026-03-23
+
+### Fixed
+- **ace-support-models v0.8.2**: Normalize provider/model data shapes in cache manager to handle wrapped, array, and flat hash formats.
+
+## [0.9.949] - 2026-03-23
+
+### Fixed
+- **ace-docs v0.30.2**: Fixed README type inference and template/guide protocol resolution (`ace-nav resolve`) so README-specific analysis and update behavior works as configured.
+
+### Changed
+- **ace-docs v0.30.2**: Limited package README matching to `*/README.md`, excluding the repository root README from package README rules.
+
+## [0.9.948] - 2026-03-23
+
+### Changed
+- **ace-overseer v0.10.3**: Refreshed package README layout and navigation to align with the current package pattern.
+- **ace-task v0.30.7**: Refreshed package README layout and navigation to align with the current package pattern.
+- **ace-tmux v0.10.2**: Refreshed package README layout and navigation to align with the current package pattern.
+
+## [0.9.947] - 2026-03-23
+
+### Changed
+- **ace-b36ts v0.12.2**: Refreshed package README layout, quick-link navigation, use-case framing, and section flow to align with the current package pattern.
+
+## [0.9.946] - 2026-03-23
+
+### Changed
+- **ace-demo v0.17.4**: Refreshed package README layout, top-level docs navigation, use-case framing, and quick-start flow to align with the current package pattern.
+
+## [0.9.945] - 2026-03-23
+
+### Changed
+- **ace-sim v0.12.0**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+
+## [0.9.944] - 2026-03-23
+
+### Changed
+- **ace-compressor v0.24.0**: Refreshed package README layout, integration links, feature framing, and quick-start flow to align with the current package pattern.
+
+## [0.9.943] - 2026-03-23
+
+### Changed
+- **ace-prompt-prep v0.22.3**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+
+## [0.9.942] - 2026-03-23
+
+### Changed
+- **ace-llm v0.29.5**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+
+## [0.9.941] - 2026-03-23
+
+### Changed
+- **ace-git-secrets v0.12.2**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+
+## [0.9.940] - 2026-03-23
+
+### Changed
+- **ace-git v0.17.2**: Refreshed package README layout, quick-link navigation, and section structure to align with the current package pattern.
+
+## [0.9.939] - 2026-03-23
+
+### Changed
+- **ace-lint v0.24.3**: Refreshed package README layout, quick-link navigation, and canonical skill section formatting to match the current package pattern.
+
+## [0.9.938] - 2026-03-23
+
+### Changed
+- **ace-docs v0.30.1**: Refreshed package README structure, quick-link navigation, and use-case-led section flow to align with the current package layout pattern.
+
+## [0.9.937] - 2026-03-23
+
+### Changed
+- **ace-handbook v0.18.3**: Refreshed package README structure and navigation to align with the current package layout pattern.
+
+## [0.9.936] - 2026-03-23
+
+### Changed
+- **ace-test-runner v0.17.2**: Refreshed package README structure and navigation links to align with the current package layout pattern.
+
+## [0.9.935] - 2026-03-23
+
+### Changed
+- **ace-test v0.5.2**: Refreshed package README structure and navigation to align with the current package layout pattern.
+
+## [0.9.934] - 2026-03-23
+
+### Changed
+- **ace-search v0.23.2**: Refreshed package README overview, navigation links, and use-case-led section flow to align with the current package layout pattern.
+
+## [0.9.933] - 2026-03-23
+
+### Changed
+- **ace-support-nav v0.24.0**: Refreshed package README structure, quick-link navigation, and usage/configuration flow for `ace-nav`.
+
+## [0.9.932] - 2026-03-23
+
+### Changed
+- **ace-bundle v0.39.0**: Refreshed package README structure, quick-link navigation, and section flow to align with the current package layout pattern.
+
+## [0.9.931] - 2026-03-23
+
+### Changed
+- **ace-git-commit v0.22.1**: Refreshed package README structure and navigation links to align with the current package layout pattern.
+
+## [0.9.930] - 2026-03-23
+
+### Changed
+- **ace-review v0.48.1**: Refreshed package README overview, quick-link navigation, and section flow to match the current package layout pattern.
+
+## [0.9.929] - 2026-03-23
+
+### Changed
+- **ace-retro v0.15.4**: Refreshed package README overview and navigation to align with the current package layout pattern.
+
+## [0.9.928] - 2026-03-23
+
+### Changed
+- **ace-git-worktree v0.18.3**: Refreshed package README wording and section labels to match the current package layout pattern.
+
+## [0.9.927] - 2026-03-23
+
+### Changed
+- **ace-assign v0.36.13**: Refreshed package README to the current layout pattern and synchronized canonical skill/footer references.
+
+## [0.9.926] - 2026-03-23
+
+### Changed
+- **ace-idea v0.17.4**: Refreshed package README structure to the new layout pattern with logo/badges header, quick links, and use-case-led content.
+
+## [0.9.925] - 2026-03-23
+
+### Added
+- **ace-docs v0.30.0**: Template/guide embedding in document analysis - `ace-docs analyze` now resolves and injects the correct template and guide for each document type, and the LLM verifies compliance.
+- **ace-docs v0.30.0**: Dedicated `readme` document type split from `user` to apply README-specific template/guide without affecting other doc types.
+
+### Changed
+- **ace-docs v0.30.0**: Rewrote README template and documentation guide to match the proven ace-task pattern (logo, nav row, intro paragraph, Use Cases with inline skill/CLI refs).
+
 ## [0.9.924] - 2026-03-22
 
 ### Fixed

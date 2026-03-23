@@ -1,27 +1,29 @@
-# ace-handbook-integration-opencode
+<div align="center">
+  <h1> ACE - Handbook Integration OpenCode </h1>
 
-OpenCode-specific provider integration for ACE handbook skills.
+  OpenCode provider integration for ACE handbook skills and workflows.
 
-## Purpose
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-This package provides OpenCode-native provider manifests for ACE handbook integrations.
+  <a href="https://rubygems.org/gems/ace-handbook-integration-opencode"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook-integration-opencode.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It projects canonical skill definitions from package-owned `handbook/skills` into OpenCode assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`gem install ace-handbook-integration-opencode`
+[ace-handbook](../ace-handbook)
+`ace-handbook-integration-opencode` provides OpenCode-focused handbook manifests and projection artifacts so that canonical ACE skills invoked from OpenCode resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
-## What It Provides
+## Use Cases
 
-- OpenCode provider manifests for handbook integrations.
-- OpenCode-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+**Run ACE workflows from OpenCode integrations** - keep canonical skill intent while targeting OpenCode entrypoints, so agents running under OpenCode get the same behavior as any other provider.
 
-## Part of ACE
+**Adapt quickly to provider-specific layouts** - update projection assets inside this package instead of rewriting handbook logic, keeping changes isolated from [ace-handbook](../ace-handbook) canonical definitions.
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+**Keep provider layers small** - isolate integration glue from core handbook behavior with a focused set of manifests and projection assets.
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+---
+
+Part of [ACE](https://github.com/cs3b/ace)

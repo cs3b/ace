@@ -1,27 +1,29 @@
-# ace-handbook-integration-pi
+<div align="center">
+  <h1> ACE - Handbook Integration PI </h1>
 
-PI-specific provider integration for ACE handbook skills.
+  pi-agent provider integration for ACE handbook skills and workflows.
 
-## Purpose
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-This package provides PI-native provider manifests for ACE handbook integrations.
+  <a href="https://rubygems.org/gems/ace-handbook-integration-pi"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook-integration-pi.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It projects canonical skill definitions from package-owned `handbook/skills` into PI assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`gem install ace-handbook-integration-pi`
+[ace-handbook](../ace-handbook)
+`ace-handbook-integration-pi` translates canonical ACE handbook skills into PI provider assets so that skill invocations from pi-agent resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
-## What It Provides
+## Use Cases
 
-- PI provider manifests for handbook integrations.
-- PI-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+**Consume canonical skills from PI tooling** - keep provider-specific behavior while preserving shared semantics, so agents running under pi-agent get the same skill intent as any other provider.
 
-## Part of ACE
+**Keep provider updates constrained** - update projection assets inside this package instead of canonical definitions, keeping changes isolated from [ace-handbook](../ace-handbook).
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+**Enable incremental provider onboarding** - add or update PI support independently of core ACE changes, maintaining a focused provider shim layer.
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+---
+
+Part of [ACE](https://github.com/cs3b/ace)

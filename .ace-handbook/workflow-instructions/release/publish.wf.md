@@ -48,14 +48,20 @@ Rules:
 
 ### 2. Detect Target Packages
 
-When auto-detecting, inspect all current changes:
+When auto-detecting, inspect all current changes **and** recent commits on the branch:
 
 ```bash
+# Working-tree changes (uncommitted)
 git status --short
 git diff --name-only
 git diff --cached --name-only
 git ls-files --others --exclude-standard
+
+# Recent commits since divergence from main (catches already-committed changes)
+git diff origin/main...HEAD --name-only
 ```
+
+Use the union of all sources. Working-tree checks catch uncommitted edits; the `origin/main...HEAD` diff catches changes already committed by a prior step (e.g., `work-on-task` in a fork subtree).
 
 Include packages using these rules:
 
