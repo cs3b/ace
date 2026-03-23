@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-prompt-prep demo](docs/demo/ace-prompt-prep-getting-started.gif)
 
 `ace-prompt-prep` helps developers and coding agents keep prompt authoring repeatable: initialize templates, archive every revision, enrich prompt context with [ace-bundle](../ace-bundle), and optionally run enhancement through [ace-llm](../ace-llm). Use `/as-prompt-prep` to drive the full workflow from inside a coding agent.
