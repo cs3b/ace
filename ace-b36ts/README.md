@@ -1,47 +1,39 @@
-# ace-b36ts
+<div align="center">
+  <h1> ACE - B36TS </h1>
 
-**Compact, sortable Base36 timestamp IDs**
+  Compact, sortable Base36 timestamp IDs for scripts, logs, and path-friendly artifacts.
 
-![Demo](docs/demo/ace-b36ts-getting-started.gif)
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-## Why
+  <a href="https://rubygems.org/gems/ace-b36ts"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-b36ts.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-Convert timestamps into short IDs you can use for IDs, filenames, and logs. A 6-character value keeps data compact while preserving chronological order in normal string sorting.
+</div>
 
-## Works With
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-- Ruby scripts and task automation
-- CLI and shell-based workflows
-- CI and release pipelines
-- Agent and bot integrations
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+![ace-b36ts demo](docs/demo/ace-b36ts-getting-started.gif)
 
-- `as-b36ts` (`wfi://b36ts`)
+`ace-b36ts` encodes UTC timestamps into short Base36 IDs that preserve chronological order in plain string sorting, and decodes them back when you need readable time output. Seven encode formats range from `month` granularity down to `ms`, with a configurable `year_zero` epoch baseline.
 
-## Features
+## How It Works
 
-- **6-character Base36 IDs** as a compact default format
-- **7 format options** from 2-char monthly to 8-char millisecond precision
-- **Chronologically sortable** IDs (`string` order equals time order)
-- Default 108-year coverage with configurable `year_zero`
-- Built-in `encode` and `decode` operations
-- Split output support for hierarchical paths
+1. Encode a timestamp (or `now`) into a compact 6-character Base36 ID using a chosen format (`month`, `week`, `day`, `40min`, `2sec`, `50ms`, `ms`).
+2. Use the ID directly in file names, directory paths (with `--split`), log entries, or automation artifacts.
+3. Decode the ID back into a human-readable UTC timestamp for debugging, audits, or incident review.
 
-## Quick Start
+## Use Cases
 
-```bash
-ace-b36ts encode now          # generate an ID
-ace-b36ts decode <id>         # decode back to timestamp
-ace-b36ts config              # show resolved configuration
-```
+**Create sortable IDs for automation output** - generate compact IDs for build artifacts, log entries, and task files without long timestamp strings. Use [`ace-b36ts encode now`](docs/usage.md) for quick generation or `/as-b36ts` in agent workflows.
 
-## Documentation
+**Map IDs to directory paths** - use split output (`--split`) to create hierarchical paths for storage and archival workflows across [ace-assign](../ace-assign) and [ace-task](../ace-task) pipelines.
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
+**Round-trip between compact IDs and timestamps** - decode IDs during debugging, audits, and incident review flows with [`ace-b36ts decode`](docs/usage.md).
+
+**Embed in shell and CI pipelines** - use deterministic, timestamp-derived IDs in scripts and Ruby automation through the `Ace::B36ts` API for encode/decode helpers.
 
 ---
-
-Part of ACE (Agentic Coding Environment)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
