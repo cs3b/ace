@@ -2,42 +2,52 @@
 
 Unified codebase search -- one command that auto-detects files or content.
 
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
-## Why ace-search
+`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically, keeps search scope predictable from any directory, and exposes fast output modes for workflow automation.
 
-Searching code should not require picking tools first. `ace-search` uses DWIM detection to choose file or content search automatically, defaults to project-root scope so results are consistent from any directory, and combines fast backends for both modes.
+## Use Cases
+
+**Find code patterns quickly without deciding tooling first** - run `ace-search "TODO"` or `ace-search "*.rb"` and let DWIM detection pick content vs file search.
+
+**Constrain investigations to meaningful working sets** - combine `--staged`, `--tracked`, or `--changed` to inspect only Git-relevant files during reviews and refactors.
+
+**Feed downstream tooling and automation** - use `--json`, `--yaml`, `--count`, or `--files-with-matches` for machine-readable pipelines and scripted checks.
+
+**Standardize repeat searches across teams** - apply named presets with `--preset` for consistent daily scans and focused research queries.
 
 ## Works With
 
-- **[ace-git](../ace-git)** - staged/tracked/changed scope filters for Git-aware search
-- **[ace-support-config](../ace-support-config)** - configuration cascade for user and project defaults
-- **[ace-support-nav](../ace-support-nav)** - protocol-backed navigation used by search workflows
-
-## Agent Skills
-
-- **`as-search-run`** - single-shot search execution
-- **`as-search-research`** - multi-search research workflow
-- **`as-search-feature-research`** - feature-gap and implementation-pattern research
-
-See [Handbook Reference](docs/handbook.md) for the complete catalog.
+- **[ace-git](../ace-git)** for staged/tracked/changed scope filters in Git-aware search flows.
+- **[ace-support-config](../ace-support-config)** for configuration cascade and user/project defaults.
+- **[ace-support-nav](../ace-support-nav)** for protocol-backed navigation used by search workflows.
 
 ## Features
 
-- **DWIM mode by default** - auto-detects file globs vs content patterns
-- **Project-wide search** - resolves search root consistently across directories
-- **Dual backend speed** - ripgrep for content, fd for files
-- **Preset system** - reusable named search configurations
-- **Git-aware filters** - restrict scope to staged, tracked, or changed files
-- **Flexible output** - text, JSON, YAML, count, and files-with-matches modes
+- DWIM mode by default for automatic file-vs-content detection.
+- Project-wide search root resolution for consistent results from subdirectories.
+- Dual backend execution using ripgrep for content and fd for files.
+- Preset system for reusable named search configurations.
+- Git-aware filters for staged, tracked, and changed file scopes.
+- Flexible output modes: text, JSON, YAML, count, and files-with-matches.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) - tutorial workflow
-- [Usage Guide](docs/usage.md) - full CLI reference
-- [Handbook Reference](docs/handbook.md) - skills and workflows
-- Runtime help: `ace-search --help`
+- [Getting Started](docs/getting-started.md)
+- [CLI Usage Reference](docs/usage.md)
+- [Handbook Reference](docs/handbook.md)
+- Command help: `ace-search --help`
+
+## Agent Skills
+
+Package-owned canonical skills:
+
+- `as-search-run`
+- `as-search-research`
+- `as-search-feature-research`
 
 ## Part of ACE
 
-`ace-search` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+`ace-search` is part of [ACE](../README.md) (Agentic Coding Environment).
