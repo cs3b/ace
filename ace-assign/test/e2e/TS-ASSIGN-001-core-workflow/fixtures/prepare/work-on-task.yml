@@ -135,6 +135,11 @@ steps:
           - `IFS=',' read -ra refs <<< "${TASKREFS// /}"`
         - For each `ref`:
           - `ace-task update "$ref" --set status=done --move-to archive`
+      - |
+        After all tasks are archived, commit the file moves:
+        ```bash
+        ace-git-commit .ace-tasks/ -i "archive completed tasks"
+        ```
 
   - name: create-retro
     number: "160"
@@ -164,4 +169,11 @@ expansion:
     instructions: |
       Use existing base and task context loaded by the batch workflow.
       Implement task {{item}}.
+
+      **Prior sibling context** (for sequential batches):
+      If this task has dependencies on earlier tasks in the batch, load their context before planning:
+      1. Read completed sibling task specs: `ace-bundle task://<dependency-ref>` for each ref in the task's `dependencies` field
+      2. Read completed sibling reports from `.ace-local/assign/<assignment-id>/reports/<sibling-step>.*` — especially `work-on-task` and `plan-task` reports
+      3. Use this context during planning to identify existing implementations to refactor rather than reimplement
+
       When complete, mark the task as done: run `ace-task update {{item}} --set status=done --move-to archive`
