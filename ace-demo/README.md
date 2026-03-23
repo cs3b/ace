@@ -4,15 +4,18 @@
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/ace-demo.svg)](https://rubygems.org/gems/ace-demo)
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-> Record deterministic terminal demos and attach review-ready media to pull requests.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+</p>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+<p align="center">
+  Record deterministic terminal demos and attach review-ready media to pull requests.
+</p>
+
 
 ![ace-demo demo](docs/demo/ace-demo-getting-started.gif)
 
