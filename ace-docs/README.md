@@ -22,9 +22,9 @@
 
 ## How It Works
 
-1. Discover and scan markdown documentation across package roots, tracking freshness through frontmatter metadata.
-2. Analyze per-document changes since last update to identify stale files and prioritize update targets.
-3. Generate targeted update guidance or validate cross-document consistency before release.
+1. **Track freshness** — `ace-docs status` scans markdown files for frontmatter metadata and reports which documents are current, stale, or outdated based on git history.
+2. **Analyze drift** — `ace-docs analyze FILE` compares a document against code changes since its last update and produces LLM-assisted revision guidance.
+3. **Validate consistency** — `ace-docs analyze-consistency` checks terminology, duplicates, and version mismatches across a documentation set before release.
 
 ## Use Cases
 

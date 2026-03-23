@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-03-23
+
+### Changed
+- Sharpened README "How It Works" steps with bold labels and inline command names matching the current package layout pattern.
+- Removed negative claim about non-existent `diff` command from usage guide.
+- Normalized frontmatter date quoting in usage guide for consistency.
+
 ## [0.30.3] - 2026-03-23
 
 ### Added
