@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.956] - 2026-03-23
+
+### Changed
+- **ace-bundle v0.40.0**: Rewrote README and gemspec to describe ace-bundle as a general-purpose source bundler. Updated demo tape with preset caching, protocol loading, and task bundling scenes.
+
 ## [0.9.955] - 2026-03-23
 
 ### Changed
