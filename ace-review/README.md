@@ -31,7 +31,7 @@
 
 **Run multi-model analysis in parallel** - execute the same review prompt across multiple [ace-llm](../ace-llm) providers, then synthesize overlapping and conflicting findings.
 
-**Manage feedback as tracked work** - use `/as-review-verify-feedback` and `/as-review-apply-feedback` to move findings through draft, verified, pending, resolved, and skipped states.
+**Manage feedback as tracked work** - use `/as-review-verify-feedback` and `/as-review-apply-feedback` to move findings through draft, verified, pending, resolved, and skipped states, or use [`ace-review-feedback`](docs/usage.md) from the CLI to list, verify, apply, and resolve feedback items directly.
 
 **Scope reviews to packages or tasks** - use `/as-review-package` for package-level analysis or connect reviews to [ace-task](../ace-task) workflows for task-scoped quality checks.
 
