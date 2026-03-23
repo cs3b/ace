@@ -1,42 +1,41 @@
-# ace-tmux
+<div align="center">
+  <h1> ACE - TMUX </h1>
 
-Composable tmux session management via YAML presets -- add windows on the fly.
+  Composable tmux sessions from YAML presets, with window injection into active sessions.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-tmux"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-tmux.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-tmux demo](docs/demo/ace-tmux-getting-started.gif)
 
-## Why ace-tmux
+`ace-tmux` helps you standardize terminal workspaces with preset-driven sessions, reusable windows, and nested pane layouts. You can spin up a full workspace from a session preset or inject a focused window into an already-running tmux session, with config cascade across project, user, and gem defaults.
 
-- Add a window preset to a running tmux session without restarting the session.
-- Compose panes into windows and windows into sessions with deep-merge overrides.
-- Build nested split trees in YAML beyond tmux built-in layout presets.
-- Use project, user, and gem defaults together through the ACE config cascade.
+## How It Works
 
-## Works With
+1. Define session and window layouts in YAML presets stored in `.ace/tmux/` (project), `~/.ace/tmux/` (user), or gem defaults.
+2. Run `ace-tmux start [PRESET]` to create a full session or `ace-tmux window [PRESET]` to inject a window into the current session.
+3. Presets are deep-merged through the config cascade, so project-level overrides layer cleanly on top of shared defaults.
 
-- `ace-task` for task status and navigation panes.
-- `ace-git` for repository status panes.
-- `ace-overseer` for task-focused worktree + tmux orchestration.
-- `ace-assign` for assignment-driven execution in tmux workspaces.
+## Use Cases
 
-## Agent Skills
+**Start or attach to a preset-backed session** - run `ace-tmux start [PRESET]` to create a session from YAML presets, or attach to an existing session with the same name, integrating panes for [ace-task](../ace-task) status, [ace-git](../ace-git) info, and editor windows.
 
-Package-owned canonical skills: none currently published for `ace-tmux`.
+**Inject windows into running sessions** - run `ace-tmux window [PRESET]` to add a new window from presets without recreating the current session, useful for spinning up focused tool or test panes on the fly.
 
-## Features
+**Compose nested pane layouts in YAML** - use `direction` and nested pane containers to model custom split trees beyond tmux built-in layouts, keeping workspace structure version-controlled alongside your project.
 
-- Dynamic window injection into active sessions
-- Composable preset hierarchy (pane -> window -> session)
-- Arbitrary nested layouts with predictable YAML structure
-- Config cascade support across project, user, and gem defaults
+**Reuse presets through config cascade** - load project presets from `.ace/tmux/`, personal presets from `~/.ace/tmux/`, and gem defaults via `.ace-defaults/tmux/` with deep-merge behavior so teams share a baseline while individuals customize.
 
-## Documentation
+**Orchestrate task-focused workspaces** - pair with [ace-overseer](../ace-overseer) and [ace-assign](../ace-assign) for assignment-driven worktree and tmux orchestration that spins up isolated workspaces per task.
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-
-## Installation
-
-Install from RubyGems: `gem install ace-tmux`.
-
-Part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
