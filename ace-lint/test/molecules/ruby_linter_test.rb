@@ -458,5 +458,4 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
       end
     end
   end
-
 end

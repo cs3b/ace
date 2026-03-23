@@ -213,7 +213,7 @@ module Ace
             # Remove inline code spans (handles both single and double backticks)
             # Then remove link markup but keep link text for checking
             line_without_code = line.gsub(INLINE_CODE_PATTERN, "")
-                                    .gsub(LINK_PATTERN, '\1')
+              .gsub(LINK_PATTERN, '\1')
 
             # Check for em-dashes
             if em_dash_severity != "off" && line_without_code.include?(EM_DASH)
