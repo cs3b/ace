@@ -1,18 +1,18 @@
-# ace-support-test-helpers
+<h1 align="center">ace-support-test-helpers</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+<a href="https://rubygems.org/gems/ace-support-test-helpers"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-test-helpers.svg" /></a>
+<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  Shared test harness and environment helpers for ACE packages.
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-support-test-helpers.svg)](https://rubygems.org/gems/ace-support-test-helpers)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
+[Documentation](#documentation)
 
-> Shared test harness and environment helpers for ACE packages.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-support-test-helpers` provides reusable helpers for temporary environment setup, assertions, and integration-friendly test scaffolding so that ACE packages share consistent test patterns without duplicating boilerplate.
 

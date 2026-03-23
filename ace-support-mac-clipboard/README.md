@@ -1,18 +1,18 @@
-# ace-support-mac-clipboard
+<h1 align="center">ace-support-mac-clipboard</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+<a href="https://rubygems.org/gems/ace-support-mac-clipboard"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-mac-clipboard.svg" /></a>
+<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  macOS clipboard support for text, files, and image payloads used by ACE tools.
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-support-mac-clipboard.svg)](https://rubygems.org/gems/ace-support-mac-clipboard)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
+[Documentation](#documentation)
 
-> macOS clipboard support for text, files, and image payloads used by ACE tools.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-support-mac-clipboard` integrates with macOS `NSPasteboard` so ACE tools can consume richer clipboard inputs than plain text. It handles screenshots, Finder file selections, and formatted content, presenting normalized Ruby structures to downstream packages.
 

@@ -1,18 +1,18 @@
-# ace-support-models
+<h1 align="center">ace-support-models</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+<a href="https://rubygems.org/gems/ace-support-models"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-models.svg" /></a>
+<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  Shared model metadata and pricing helpers for ACE provider tooling.
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-support-models.svg)](https://rubygems.org/gems/ace-support-models)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
+[Documentation](#documentation)
 
-> Shared model metadata and pricing helpers for ACE provider tooling.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-support-models` normalizes provider and model metadata into a single canonical source so ACE tools that reason about LLM capabilities, pricing, and compatibility do not duplicate catalogs or drift out of sync.
 
