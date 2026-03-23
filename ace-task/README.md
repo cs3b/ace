@@ -46,4 +46,4 @@ Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated bra
 **Organize** - move a task to a folder and it is created automatically. Special folders like `_maybe` and `_anytime` group tasks by intent. `_archive` partitions completed tasks by date so they stay browsable as the project grows. Sort by priority, creation date, or pin position manually.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
