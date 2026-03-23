@@ -1,18 +1,18 @@
-# ace-llm-providers-cli
+<h1 align="center">ace-llm-providers-cli</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-llm-providers-cli"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-llm-providers-cli.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  CLI-backed provider adapters that extend ace-llm with local tool execution.
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-llm-providers-cli.svg)](https://rubygems.org/gems/ace-llm-providers-cli)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
+[ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md)
 
-> CLI-backed provider adapters that extend ace-llm with local tool execution.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-llm-providers-cli` extends [ace-llm](../ace-llm) with provider clients that execute through installed CLI tools (Claude, Codex, OpenCode, Gemini, pi, Codex OSS) while preserving the shared command interface. Provider defaults live in versioned YAML, and a health-check command verifies local readiness.
 
