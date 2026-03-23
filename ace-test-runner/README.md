@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-test-runner demo](docs/demo/ace-test-runner-getting-started.gif)
 
 `ace-test-runner` streamlines test execution so both developers and coding agents can run focused checks quickly, diagnose failures with context, and retain searchable execution history. It handles the execution side of testing; use [ace-test](../ace-test) for planning, review, and suite improvement workflows.
