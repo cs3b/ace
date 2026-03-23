@@ -1,21 +1,17 @@
-# ace-lint
+<h1 align="center">ace-lint</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
-</p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-lint.svg)](https://rubygems.org/gems/ace-lint)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  <a href="https://rubygems.org/gems/ace-lint"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-lint.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  Ruby-native linting for markdown, YAML, and Ruby with no Node.js or Python runtime required.
 </p>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-<p align="center">
-  Ruby-native linting for markdown, YAML, and Ruby with no Node.js or Python runtime required.
-</p>
-
 
 ![ace-lint demo](docs/demo/ace-lint-getting-started.gif)
 
