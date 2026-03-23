@@ -49,14 +49,14 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
 
    * **With folder placement**:
      ```bash
-     # Put actionable work in _next
-     ace-idea create "New feature idea" --move-to next
-
      # Park uncertain work in _maybe
      ace-idea create "Future experiment" --move-to maybe
 
      # Keep low-priority work in _anytime
      ace-idea create "Nice-to-have polish" --move-to anytime
+
+     # Fresh captures go to root by default (no --move-to needed)
+     ace-idea create "New feature idea"
      ```
 
    * **With Git commit**:
@@ -76,14 +76,14 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
      * Generate a folder and spec filename using the raw ID and slug
      * Optionally enhance with LLM (if `--llm-enhance` or configured)
      * Optionally commit to git (if `--git-commit` or configured)
-     * Store the idea in `.ace-ideas/` or the configured root, with optional folder placement such as `_next`
+     * Store the idea in `.ace-ideas/` or the configured root, with optional folder placement (e.g., `_maybe`, `_anytime`)
    * Monitor the output for the created file path
 
 4. **Verify Idea Creation:**
    * Check that the command completed successfully
    * Note the output file path showing:
      - The configured ideas root (default: `.ace-ideas/`)
-     - Optional special folder such as `_next`, `_maybe`, `_anytime`, or `_archive`
+     - Optional special folder such as `_maybe`, `_anytime`, or `_archive`
      - Idea directory (format: `{id}-{slug}/`)
      - Idea file (format: `{id}-{slug}.idea.s.md`)
    * Verify the file exists and contains:
@@ -113,8 +113,7 @@ Use the ace-idea tool to capture and enhance raw ideas within project context, t
 
 ### Scope Considerations
 
-* **Root ideas** (default): Fresh captures that have not been sorted into a special folder yet
-* **Next queue** (`--move-to next`): Immediately actionable work
+* **Root ideas** (default): Fresh captures — no `--move-to` needed
 * **Maybe queue** (`--move-to maybe`): Ideas worth revisiting later
 * **Anytime queue** (`--move-to anytime`): Low-priority work with no immediate deadline
 * **Archive** (`--move-to archive`): Completed or retired ideas
@@ -128,11 +127,11 @@ ace-idea create "Add real-time notifications to the dashboard"
 # => Created: .ace-ideas/8ppq7w-real-time-notifications/8ppq7w-real-time-notifications.idea.s.md
 ```
 
-### Pattern 2: Place an Idea in _next
+### Pattern 2: Place an Idea in _maybe
 ```bash
-# Capture an idea and sort it into the next queue
-ace-idea create "Migrate to PostgreSQL" --move-to next
-# => Created: .ace-ideas/_next/8ppq7w-migrate-to-postgresql/8ppq7w-migrate-to-postgresql.idea.s.md
+# Park an idea for later evaluation
+ace-idea create "Migrate to PostgreSQL" --move-to maybe
+# => Created: .ace-ideas/_maybe/8ppq7w-migrate-to-postgresql/8ppq7w-migrate-to-postgresql.idea.s.md
 ```
 
 ### Pattern 3: Clipboard Integration
@@ -179,8 +178,8 @@ ace-idea update q7w --move-to archive
 * **Note**: Clipboard functionality requires `ace-support-mac-clipboard` gem
 
 **"Invalid target folder" Error:**
-* **Cause**: `--move-to` was given an unsupported destination
-* **Solution**: Use one of `next`, `maybe`, `anytime`, `archive`, or `root`
+* **Cause**: `--move-to` was given a virtual filter (e.g., `next`) instead of a physical folder
+* **Solution**: Use a physical folder: `maybe`, `anytime`, `archive`, or any custom name. Note: `next` is a virtual filter for listing, not a physical folder — omit `--move-to` to place ideas in root
 
 **LLM Enhancement Failures:**
 * **Cause**: API issues, model unavailability, or `--no-llm-enhance` flag
@@ -197,7 +196,7 @@ ace-idea update q7w --move-to archive
 
 * Idea successfully captured in appropriate directory:
   - Root: `.ace-ideas/`
-  - Special folder: `.ace-ideas/_next/`, `.ace-ideas/_maybe/`, `.ace-ideas/_anytime/`, or `.ace-ideas/_archive/`
+  - Special folder: `.ace-ideas/_maybe/`, `.ace-ideas/_anytime/`, or `.ace-ideas/_archive/`
 * Generated file structure includes:
   - Idea directory (e.g., `8ppq7w-dark-mode/`)
   - Idea file with frontmatter (e.g., `8ppq7w-dark-mode.idea.s.md`)
