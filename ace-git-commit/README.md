@@ -1,16 +1,18 @@
-<h1 align="center">ace-git-commit</h1>
+<div align="center">
+  <h1> ACE - Git Commit </h1>
 
-<p align="center">
+  Intention-aware conventional commit generation from diffs.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-git-commit"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-git-commit.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  Intention-aware conventional commit generation from diffs.
-</p>
+</div>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 ![ace-git-commit demo](docs/demo/ace-git-commit-getting-started.gif)
@@ -40,3 +42,4 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+
