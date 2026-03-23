@@ -266,6 +266,7 @@ module Ace
             result = Ace::Bundle.write_output(context, cache_file, options)
 
             if result[:success]
+              display_compression_stats(context, result)
               if result[:chunked]
                 chunks = result[:results].select { |r| r[:file_type] == "chunk" }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
@@ -288,6 +289,7 @@ module Ace
             result = Ace::Bundle.write_output(context, file_path, options)
 
             if result[:success]
+              display_compression_stats(context, result)
               if result[:chunked]
                 chunks = result[:results].select { |r| r[:file_type] == "chunk" }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
@@ -301,6 +303,29 @@ module Ace
             else
               raise Ace::Support::Cli::Error.new("Error writing file: #{result[:error]}")
             end
+          end
+
+          def display_compression_stats(context, result)
+            stats = context&.metadata&.dig(:compression_stats)
+            return unless stats
+
+            orig_b = stats[:original_bytes]
+            comp_b = stats[:compressed_bytes]
+            return if orig_b.zero? || orig_b == comp_b
+
+            # Use actual bundle size and compute what uncompressed bundle would have been
+            bundle_bytes = context.content.to_s.bytesize
+            bundle_lines = result[:lines] || context.content.to_s.lines.count
+            overhead_bytes = bundle_bytes - comp_b
+            overhead_lines = bundle_lines - stats[:compressed_lines]
+            total_orig_bytes = orig_b + overhead_bytes
+            total_orig_lines = stats[:original_lines] + overhead_lines
+
+            byte_pct = ((bundle_bytes - total_orig_bytes) * 100.0 / total_orig_bytes).round(1)
+            line_pct = ((bundle_lines - total_orig_lines) * 100.0 / total_orig_lines).round(1)
+
+            puts "Compressed: #{format_size(total_orig_bytes)} → #{format_size(bundle_bytes)} (#{byte_pct}%), " \
+                 "#{total_orig_lines} → #{bundle_lines} lines (#{line_pct}%)"
           end
 
           def format_size(bytes)
