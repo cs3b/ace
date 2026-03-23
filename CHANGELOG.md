@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.952] - 2026-03-23
+
+### Changed
+- **ace-llm-providers-cli v0.26.2**: Refreshed package README to align with the current package layout pattern and concise package-level guidance.
+
 ## [0.9.951] - 2026-03-23
 
 ### Added
