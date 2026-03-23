@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.24.3] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` to align with the standardized package README layout (quick links, use cases, and canonical skill listing).
+
 ## [0.24.2] - 2026-03-22
 
 ### Changed
