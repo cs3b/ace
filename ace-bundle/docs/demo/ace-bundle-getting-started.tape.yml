@@ -16,8 +16,8 @@ scenes:
     sleep: 28s
 - name: Load workflow via protocol
   commands:
-  - type: ace-bundle wfi://task/finder
-    sleep: 16s
+  - type: ace-bundle project-base --inspect-config
+    sleep: 8s
 - name: Bundle task context to cache
   commands:
   - type: ace-bundle task://t.0or --output cache
