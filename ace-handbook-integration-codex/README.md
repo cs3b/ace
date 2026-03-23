@@ -1,27 +1,44 @@
+---
+doc-type: package-readme
+title: ace-handbook-integration-codex
+purpose: Codex-specific provider integration for ACE handbook skills
+ace-docs:
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
+---
+
 # ace-handbook-integration-codex
 
-Codex-specific provider integration for ACE handbook skills.
+> Provider manifest package for Codex-native handbook workflow integration.
 
-## Purpose
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-This package provides Codex-native provider manifests for ACE handbook integrations.
+`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets.
 
-It projects canonical skill definitions from package-owned `handbook/skills` into Codex assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+## How It Works
 
-## Installation
+1. Canonical skill definitions stay in the canonical ACE handbook sources.
+2. This package produces Codex-focused manifests and skill wiring.
+3. Codex agents consume those assets while keeping semantics unchanged.
 
-`gem install ace-handbook-integration-codex`
+## Use Cases
+
+**Run handbook workflows in Codex contexts** - keep same behavior while using Codex-native execution entrypoints.
+
+**Avoid duplication across providers** - update canonical skill definitions once and generate provider-specific projections.
+
+**Keep integration delivery minimal** - maintain a tiny provider shim layer with focused assets.
 
 ## What It Provides
 
-- Codex provider manifests for handbook integrations.
-- Codex-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+- Codex-specific provider manifests for ACE handbook skills.
+- Projection assets that keep canonical behavior portable.
+- Alignment with canonical skill contracts managed by `ace-handbook`.
 
 ## Part of ACE
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+`ace-handbook-integration-codex` is part of [ACE](../README.md) (Agentic Coding Environment).
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+## License
+
+MIT

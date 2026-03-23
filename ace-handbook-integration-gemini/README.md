@@ -1,27 +1,44 @@
+---
+doc-type: package-readme
+title: ace-handbook-integration-gemini
+purpose: Gemini-specific provider integration for ACE handbook skills
+ace-docs:
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
+---
+
 # ace-handbook-integration-gemini
 
-Gemini-specific provider integration for ACE handbook skills.
+> Provider manifest package for Gemini-native handbook workflow integration.
 
-## Purpose
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-This package provides Gemini-native provider manifests for ACE handbook integrations.
+`ace-handbook-integration-gemini` projects canonical ACE handbook skills into Gemini-native manifest assets.
 
-It projects canonical skill definitions from package-owned `handbook/skills` into Gemini assets,
-while shared sync/runtime behavior remains in `ace-handbook`.
+## How It Works
 
-## Installation
+1. Canonical skill definitions stay in shared handbook sources.
+2. This package turns those definitions into Gemini-specific integration artifacts.
+3. Gemini-compatible workflows run using the same project-level skill semantics.
 
-`gem install ace-handbook-integration-gemini`
+## Use Cases
+
+**Run ACE skill workflows in Gemini-native stacks** - preserve behavior while using Gemini-native projection format.
+
+**Centralize skill updates** - keep shared definitions and avoid provider-specific drift.
+
+**Ship lean provider packs** - support only provider shims and manifests in this package.
 
 ## What It Provides
 
-- Gemini provider manifests for handbook integrations.
-- Gemini-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by owning packages.
+- Gemini provider manifests for ACE handbook skills.
+- Gemini-native projection assets for ACE workflows.
+- Alignment with canonical skill contracts managed by `ace-handbook`.
 
 ## Part of ACE
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+`ace-handbook-integration-gemini` is part of [ACE](../README.md) (Agentic Coding Environment).
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+## License
+
+MIT

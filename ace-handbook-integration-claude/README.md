@@ -1,28 +1,44 @@
+---
+doc-type: package-readme
+title: ace-handbook-integration-claude
+purpose: Claude-specific provider integration for ACE handbook skills
+ace-docs:
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
+---
+
 # ace-handbook-integration-claude
 
-Claude-specific provider integration for ACE handbook skills.
+> Provider manifest package for Claude-native handbook workflow integration.
 
-## Purpose
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-This package is the replacement target for the legacy `ace-integration-claude` package.
+`ace-handbook-integration-claude` hosts Claude-specific manifests that let ACE route canonical handbook skills to Claude-native runtime assets.
 
-It owns Claude-native workflows and provider manifests, while canonical skill definitions remain in
-the owning package `handbook/skills` directories and shared sync/runtime behavior lives in
-`ace-handbook`.
+## How It Works
 
-## Installation
+1. Canonical ACE skills stay owned in canonical `handbook/skills` trees.
+2. This package projects those definitions into Claude-specific provider formats.
+3. Claude-specific integrations consume those projections during skill invocation.
 
-`gem install ace-handbook-integration-claude`
+## Use Cases
+
+**Run ACE workflows from Claude-native entrypoints** - load canonical skill semantics with Claude-specific packaging.
+
+**Keep provider integration changes isolated** - update manifests and projections without altering canonical handbook definitions.
+
+**Standardize cross-provider behavior** - preserve shared conventions while adapting to provider-specific command surfaces.
 
 ## What It Provides
 
-- Claude provider manifests for handbook integrations.
-- Claude-native workflow/projection assets for ACE tooling.
-- Alignment with canonical skill definitions managed by the owning package `handbook/skills`.
+- Claude manifest generation and projection assets for ACE handbook skills.
+- Provider-specific runtime glue that preserves canonical intent.
+- Alignment with canonical skill contracts managed by `ace-handbook`.
 
 ## Part of ACE
 
-This package is part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+`ace-handbook-integration-claude` is part of [ACE](../README.md) (Agentic Coding Environment).
 
-Shared handbook sync/runtime behavior is provided by
-[ace-handbook](https://github.com/cs3b/ace/tree/main/ace-handbook).
+## License
+
+MIT
