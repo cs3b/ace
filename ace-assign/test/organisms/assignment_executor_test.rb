@@ -126,9 +126,9 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_skill_in_step_files
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "onboard", "skill" => "as-onboard", "instructions" => "Load context" },
-        { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
-        { "name" => "review", "instructions" => "Review changes" }
+        {"name" => "onboard", "skill" => "as-onboard", "instructions" => "Load context"},
+        {"name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work"},
+        {"name" => "review", "instructions" => "Review changes"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -154,8 +154,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_skill_readable_by_queue_scanner
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
-        { "name" => "review", "instructions" => "Review" }
+        {"name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work"},
+        {"name" => "review", "instructions" => "Review"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -170,8 +170,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_handles_array_instructions
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "array-step", "instructions" => ["Line one.", "Line two.", "Line three."] },
-        { "name" => "string-step", "instructions" => "Single string instructions." }
+        {"name" => "array-step", "instructions" => ["Line one.", "Line two.", "Line three."]},
+        {"name" => "string-step", "instructions" => "Single string instructions."}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -303,9 +303,9 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_context_in_step_files
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "prepare", "instructions" => "Load context" },
-        { "name" => "implement", "context" => "fork", "instructions" => "Do the work" },
-        { "name" => "verify", "instructions" => "Run tests" }
+        {"name" => "prepare", "instructions" => "Load context"},
+        {"name" => "implement", "context" => "fork", "instructions" => "Do the work"},
+        {"name" => "verify", "instructions" => "Run tests"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -333,8 +333,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_context_readable_by_queue_scanner
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "prepare", "instructions" => "Load context" },
-        { "name" => "implement", "context" => "fork", "instructions" => "Do the work" }
+        {"name" => "prepare", "instructions" => "Load context"},
+        {"name" => "implement", "context" => "fork", "instructions" => "Do the work"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -376,7 +376,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-      result = executor.start(config_path)
+      executor.start(config_path)
 
       # Add a step after 010 - should create 011
       # Existing 020 and 030 should remain unchanged (they're not siblings of 010.xx)
@@ -412,8 +412,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_add_child_under_active_step_rebalances_to_child
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [
-        { "name" => "parent-job", "instructions" => "Parent work" },
-        { "name" => "final-step", "instructions" => "Final work" }
+        {"name" => "parent-job", "instructions" => "Parent work"},
+        {"name" => "final-step", "instructions" => "Final work"}
       ])
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -433,8 +433,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_add_grandchild_under_active_child_rebalances_to_grandchild
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [
-        { "name" => "grandparent", "instructions" => "Top level" },
-        { "name" => "next-task", "instructions" => "Next task" }
+        {"name" => "grandparent", "instructions" => "Top level"},
+        {"name" => "next-task", "instructions" => "Next task"}
       ])
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
@@ -556,13 +556,13 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_with_sub_steps_creates_batch_parent_and_children
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "onboard", "instructions" => "Load context" },
+        {"name" => "onboard", "instructions" => "Load context"},
         {
           "name" => "work-on-task",
           "instructions" => "Container for sub-steps",
           "sub_steps" => %w[onboard implement verify-tests]
         },
-        { "name" => "review", "instructions" => "Review changes" }
+        {"name" => "review", "instructions" => "Review changes"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -721,8 +721,8 @@ class AssignmentExecutorTest < AceAssignTestCase
       MD
 
       steps = [
-        { "name" => "work-on-task", "skill" => "as-task-work", "instructions" => "Do work" },
-        { "name" => "review", "instructions" => "Review changes" }
+        {"name" => "work-on-task", "skill" => "as-task-work", "instructions" => "Do work"},
+        {"name" => "review", "instructions" => "Review changes"}
       ]
       workflow_paths = [
         File.join(project_root, "ace-task", "handbook", "workflow-instructions"),
@@ -894,8 +894,8 @@ class AssignmentExecutorTest < AceAssignTestCase
         "render" => "step_template",
         "description" => "Run package test suites with profiling to verify correctness and performance",
         "steps" => [
-          { "description" => "Run ace-test --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep." },
-          { "description" => "Run ace-test-suite to verify no cross-package regressions" }
+          {"description" => "Run ace-test --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep."},
+          {"description" => "Run ace-test-suite to verify no cross-package regressions"}
         ],
         "when_to_skip" => [
           "No code changes that could affect tests (documentation-only)"
@@ -928,9 +928,9 @@ class AssignmentExecutorTest < AceAssignTestCase
         "render" => "step_template",
         "description" => "Review E2E coverage for modified packages and run targeted scenarios",
         "steps" => [
-          { "description" => "Review coverage for heavily modified packages" },
-          { "description" => "If coverage matrix shows gaps or stale TCs, update or create E2E tests", "conditional" => "coverage gaps were found" },
-          { "description" => "Run targeted E2E scenarios for heavily modified packages" }
+          {"description" => "Review coverage for heavily modified packages"},
+          {"description" => "If coverage matrix shows gaps or stale TCs, update or create E2E tests", "conditional" => "coverage gaps were found"},
+          {"description" => "Run targeted E2E scenarios for heavily modified packages"}
         ],
         "when_to_skip" => [
           "No public CLI API changes (internal-only refactoring)"
@@ -1174,7 +1174,7 @@ class AssignmentExecutorTest < AceAssignTestCase
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "review", "instructions" => "Review changes" }
+        {"name" => "review", "instructions" => "Review changes"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -1196,14 +1196,14 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_advance_with_fork_root_uses_subtree_step_when_global_current_is_outside_scope
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "precheck", "instructions" => "Run precheck" },
+        {"name" => "precheck", "instructions" => "Run precheck"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "postcheck", "instructions" => "Run postcheck" }
+        {"name" => "postcheck", "instructions" => "Run postcheck"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -1225,7 +1225,7 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_advance_with_fork_root_raises_when_multiple_subtree_steps_are_in_progress
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "precheck", "instructions" => "Run precheck" },
+        {"name" => "precheck", "instructions" => "Run precheck"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",

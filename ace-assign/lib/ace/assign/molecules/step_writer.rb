@@ -22,7 +22,7 @@ module Ace
         # @param parent [String, nil] Parent step number
         # @return [String] Path to created file
         def create(steps_dir:, number:, name:, instructions:, status: :pending,
-                   added_by: nil, parent: nil, extra: {})
+          added_by: nil, parent: nil, extra: {})
           filename = Atoms::StepFileParser.generate_filename(number, name)
           file_path = File.join(steps_dir, filename)
 

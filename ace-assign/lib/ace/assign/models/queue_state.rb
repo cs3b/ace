@@ -308,10 +308,10 @@ module Ace
 
         def build_hierarchy(parent_number)
           parent_steps = if parent_number.nil?
-                            top_level
-                          else
-                            children_of(parent_number)
-                          end
+            top_level
+          else
+            children_of(parent_number)
+          end
 
           parent_steps.map do |step|
             {

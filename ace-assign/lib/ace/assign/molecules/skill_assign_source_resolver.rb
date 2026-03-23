@@ -59,7 +59,7 @@ module Ace
           parsed = Atoms::AssignFrontmatterParser.parse(workflow_frontmatter)
 
           unless parsed[:valid]
-            raise Error, "Invalid assign frontmatter in '#{workflow_path}' for skill '#{skill_name}': #{parsed[:errors].join('; ')}"
+            raise Error, "Invalid assign frontmatter in '#{workflow_path}' for skill '#{skill_name}': #{parsed[:errors].join("; ")}"
           end
 
           parsed[:config]
@@ -210,7 +210,7 @@ module Ace
                 frontmatter = parse_frontmatter(File.read(path))
                 name = frontmatter["name"]&.to_s
                 index[name] ||= path if name && !name.empty?
-              rescue StandardError
+              rescue
                 next
               end
             end
@@ -307,7 +307,7 @@ module Ace
 
               candidate = resolve_source_directory(source)
               File.directory?(candidate) ? candidate : nil
-            rescue StandardError
+            rescue
               nil
             end
           end
@@ -339,7 +339,7 @@ module Ace
             package_root = File.expand_path("../../../../..", source_file)
             candidate = File.expand_path(relative_path, package_root)
             File.directory?(candidate) ? candidate : nil
-          rescue StandardError
+          rescue
             nil
           end
         end

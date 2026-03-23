@@ -68,13 +68,13 @@ class PresetExpanderTest < AceAssignTestCase
   # has_expansion? tests
 
   def test_has_expansion_true
-    preset = { "expansion" => { "foreach" => "taskrefs" } }
+    preset = {"expansion" => {"foreach" => "taskrefs"}}
 
     assert Ace::Assign::Atoms::PresetExpander.has_expansion?(preset)
   end
 
   def test_has_expansion_false
-    preset = { "steps" => [] }
+    preset = {"steps" => []}
 
     refute Ace::Assign::Atoms::PresetExpander.has_expansion?(preset)
   end
@@ -82,13 +82,13 @@ class PresetExpanderTest < AceAssignTestCase
   # foreach_parameter tests
 
   def test_foreach_parameter_present
-    preset = { "expansion" => { "foreach" => "taskrefs" } }
+    preset = {"expansion" => {"foreach" => "taskrefs"}}
 
     assert_equal "taskrefs", Ace::Assign::Atoms::PresetExpander.foreach_parameter(preset)
   end
 
   def test_foreach_parameter_absent
-    preset = { "steps" => [] }
+    preset = {"steps" => []}
 
     assert_nil Ace::Assign::Atoms::PresetExpander.foreach_parameter(preset)
   end
@@ -98,11 +98,11 @@ class PresetExpanderTest < AceAssignTestCase
   def test_validate_parameters_all_present
     preset = {
       "parameters" => {
-        "taskrefs" => { "required" => true },
-        "review_preset" => { "required" => false }
+        "taskrefs" => {"required" => true},
+        "review_preset" => {"required" => false}
       }
     }
-    params = { "taskrefs" => ["148", "149"] }
+    params = {"taskrefs" => ["148", "149"]}
 
     errors = Ace::Assign::Atoms::PresetExpander.validate_parameters(preset, params)
 
@@ -112,7 +112,7 @@ class PresetExpanderTest < AceAssignTestCase
   def test_validate_parameters_missing_required
     preset = {
       "parameters" => {
-        "taskrefs" => { "required" => true }
+        "taskrefs" => {"required" => true}
       }
     }
     params = {}
@@ -126,10 +126,10 @@ class PresetExpanderTest < AceAssignTestCase
   def test_validate_parameters_taskref_satisfies_required_taskrefs
     preset = {
       "parameters" => {
-        "taskrefs" => { "required" => true, "type" => "array" }
+        "taskrefs" => {"required" => true, "type" => "array"}
       }
     }
-    params = { "taskref" => "148" }
+    params = {"taskref" => "148"}
 
     errors = Ace::Assign::Atoms::PresetExpander.validate_parameters(preset, params)
 
@@ -139,10 +139,10 @@ class PresetExpanderTest < AceAssignTestCase
   def test_validate_parameters_empty_array_is_missing
     preset = {
       "parameters" => {
-        "taskrefs" => { "required" => true }
+        "taskrefs" => {"required" => true}
       }
     }
-    params = { "taskrefs" => [] }
+    params = {"taskrefs" => []}
 
     errors = Ace::Assign::Atoms::PresetExpander.validate_parameters(preset, params)
 
@@ -150,8 +150,8 @@ class PresetExpanderTest < AceAssignTestCase
   end
 
   def test_validate_parameters_no_parameters_section
-    preset = { "steps" => [] }
-    params = { "anything" => "value" }
+    preset = {"steps" => []}
+    params = {"anything" => "value"}
 
     errors = Ace::Assign::Atoms::PresetExpander.validate_parameters(preset, params)
 
@@ -163,11 +163,11 @@ class PresetExpanderTest < AceAssignTestCase
   def test_expand_without_expansion_section
     preset = {
       "steps" => [
-        { "name" => "step1", "instructions" => "Do {{taskref}}" },
-        { "name" => "step2", "instructions" => "More work" }
+        {"name" => "step1", "instructions" => "Do {{taskref}}"},
+        {"name" => "step2", "instructions" => "More work"}
       ]
     }
-    params = { "taskref" => "123" }
+    params = {"taskref" => "123"}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -179,7 +179,7 @@ class PresetExpanderTest < AceAssignTestCase
   def test_expand_without_expansion_preserves_other_fields
     preset = {
       "steps" => [
-        { "name" => "step1", "skill" => "as-git-commit", "instructions" => "Commit" }
+        {"name" => "step1", "skill" => "as-git-commit", "instructions" => "Commit"}
       ]
     }
 
@@ -228,7 +228,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "taskrefs" => ["148", "149", "150"] }
+    params = {"taskrefs" => ["148", "149", "150"]}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -264,7 +264,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "taskref" => "148" }
+    params = {"taskref" => "148"}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -289,11 +289,11 @@ class PresetExpanderTest < AceAssignTestCase
         }
       },
       "steps" => [
-        { "name" => "review", "number" => "020", "instructions" => "Review all: {{taskrefs}}" },
-        { "name" => "finalize", "number" => "030", "instructions" => "Commit changes" }
+        {"name" => "review", "number" => "020", "instructions" => "Review all: {{taskrefs}}"},
+        {"name" => "finalize", "number" => "030", "instructions" => "Commit changes"}
       ]
     }
-    params = { "taskrefs" => ["148", "149"] }
+    params = {"taskrefs" => ["148", "149"]}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -328,7 +328,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "taskrefs" => [] }
+    params = {"taskrefs" => []}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -350,7 +350,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "taskrefs" => ["148"] }
+    params = {"taskrefs" => ["148"]}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -378,7 +378,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "taskrefs" => ["235.01"] }
+    params = {"taskrefs" => ["235.01"]}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -400,7 +400,7 @@ class PresetExpanderTest < AceAssignTestCase
         }
       ]
     }
-    params = { "taskref" => "123" }
+    params = {"taskref" => "123"}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -420,7 +420,7 @@ class PresetExpanderTest < AceAssignTestCase
       "steps" => []
     }
     # Test with many items to verify numbering format
-    params = { "items" => (1..12).map(&:to_s) }
+    params = {"items" => (1..12).map(&:to_s)}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
@@ -448,7 +448,7 @@ class PresetExpanderTest < AceAssignTestCase
       },
       "steps" => []
     }
-    params = { "project" => "ace", "taskrefs" => ["1", "2"] }
+    params = {"project" => "ace", "taskrefs" => ["1", "2"]}
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 

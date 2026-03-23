@@ -17,7 +17,7 @@ class StepFileParserTest < AceAssignTestCase
 
     result = Ace::Assign::Atoms::StepFileParser.parse(content)
 
-    assert_equal({ "name" => "init-project", "status" => "pending" }, result[:frontmatter])
+    assert_equal({"name" => "init-project", "status" => "pending"}, result[:frontmatter])
     assert_equal "# Instructions\n\nDo the thing.", result[:body]
   end
 
@@ -132,27 +132,27 @@ class StepFileParserTest < AceAssignTestCase
 
   def test_parse_filename_main
     result = Ace::Assign::Atoms::StepFileParser.parse_filename("010-init-project.st.md")
-    assert_equal({ number: "010", name: "init-project", parent: nil }, result)
+    assert_equal({number: "010", name: "init-project", parent: nil}, result)
   end
 
   def test_parse_filename_subtask
     result = Ace::Assign::Atoms::StepFileParser.parse_filename("010.01-setup-dirs.st.md")
-    assert_equal({ number: "010.01", name: "setup-dirs", parent: "010" }, result)
+    assert_equal({number: "010.01", name: "setup-dirs", parent: "010"}, result)
   end
 
   def test_parse_filename_deeply_nested
     result = Ace::Assign::Atoms::StepFileParser.parse_filename("010.01.02-verify.st.md")
-    assert_equal({ number: "010.01.02", name: "verify", parent: "010.01" }, result)
+    assert_equal({number: "010.01.02", name: "verify", parent: "010.01"}, result)
   end
 
   def test_parse_filename_report
     result = Ace::Assign::Atoms::StepFileParser.parse_filename("010-init-project.r.md")
-    assert_equal({ number: "010", name: "init-project", parent: nil }, result)
+    assert_equal({number: "010", name: "init-project", parent: nil}, result)
   end
 
   def test_parse_filename_nested_report
     result = Ace::Assign::Atoms::StepFileParser.parse_filename("010.01-setup-dirs.r.md")
-    assert_equal({ number: "010.01", name: "setup-dirs", parent: "010" }, result)
+    assert_equal({number: "010.01", name: "setup-dirs", parent: "010"}, result)
   end
 
   def test_generate_filename

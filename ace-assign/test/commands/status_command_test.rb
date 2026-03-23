@@ -131,7 +131,7 @@ class StatusCommandTest < AceAssignTestCase
   def test_status_with_scoped_done_fork_step_omits_fork_execution_guidance
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork" }
+        {"name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
@@ -184,9 +184,9 @@ class StatusCommandTest < AceAssignTestCase
   def test_status_with_assignment_scope_shows_scoped_step_when_global_current_is_elsewhere
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "subtree-a-step", "instructions" => "Work on A" },
-        { "name" => "midcheck", "instructions" => "Run midcheck" },
-        { "name" => "subtree-b-step", "instructions" => "Work on B" }
+        {"name" => "subtree-a-step", "instructions" => "Work on A"},
+        {"name" => "midcheck", "instructions" => "Run midcheck"},
+        {"name" => "subtree-b-step", "instructions" => "Work on B"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -218,7 +218,7 @@ class StatusCommandTest < AceAssignTestCase
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -246,7 +246,7 @@ class StatusCommandTest < AceAssignTestCase
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -277,7 +277,7 @@ class StatusCommandTest < AceAssignTestCase
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -302,8 +302,8 @@ class StatusCommandTest < AceAssignTestCase
   def test_status_with_nested_scope_renders_subtree_hierarchy
     with_temp_cache do |cache_dir|
       steps = [
-        { "name" => "root-step", "instructions" => "Start root" },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "root-step", "instructions" => "Start root"},
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -326,7 +326,6 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
-
   def test_status_prefers_assignment_target_over_filter
     with_temp_cache do |cache_dir|
       steps = [
@@ -336,7 +335,7 @@ class StatusCommandTest < AceAssignTestCase
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "post-step", "instructions" => "Run post-step" }
+        {"name" => "post-step", "instructions" => "Run post-step"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -404,7 +403,7 @@ class StatusCommandTest < AceAssignTestCase
           "parallel" => true,
           "max_parallel" => 3
         },
-        { "name" => "fork-leaf", "instructions" => "Run leaf in fork", "context" => "fork" }
+        {"name" => "fork-leaf", "instructions" => "Run leaf in fork", "context" => "fork"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 
@@ -433,5 +432,4 @@ class StatusCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
-
 end

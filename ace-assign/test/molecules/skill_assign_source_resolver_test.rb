@@ -154,7 +154,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       assert_equal "plan-task", steps.first["name"]
       assert_equal "as-task-plan", steps.first["skill"]
       assert_equal "Canonical step description", steps.first["description"]
-      assert_equal({ "default" => "fork" }, steps.first["context"])
+      assert_equal({"default" => "fork"}, steps.first["context"])
     end
   end
 

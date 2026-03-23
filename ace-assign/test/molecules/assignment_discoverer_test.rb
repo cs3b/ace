@@ -28,7 +28,7 @@ class AssignmentDiscovererTest < AceAssignTestCase
 
       # Create and complete an assignment
       config_path = create_test_config(cache_dir, steps: [
-        { "name" => "only-step", "instructions" => "Do it" }
+        {"name" => "only-step", "instructions" => "Do it"}
       ])
       executor.start(config_path)
       report_path = create_report(cache_dir, "Done!")

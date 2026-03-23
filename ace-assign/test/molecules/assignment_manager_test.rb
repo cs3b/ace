@@ -111,7 +111,7 @@ class AssignmentManagerTest < AceAssignTestCase
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
 
       first = manager.create(name: "first", source_config: "job.yaml")
-      second = manager.create(name: "second", source_config: "job.yaml")
+      manager.create(name: "second", source_config: "job.yaml")
 
       result = manager.set_current(first.id)
 
@@ -138,7 +138,7 @@ class AssignmentManagerTest < AceAssignTestCase
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
 
       first = manager.create(name: "first", source_config: "job.yaml")
-      second = manager.create(name: "second", source_config: "job.yaml")
+      manager.create(name: "second", source_config: "job.yaml")
 
       # .latest points to second (most recent), but set .current to first
       manager.set_current(first.id)

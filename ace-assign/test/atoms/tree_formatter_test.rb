@@ -79,7 +79,7 @@ class TreeFormatterTest < AceAssignTestCase
     lines = result.split("\n")
 
     # Both should appear as roots (no indentation beyond root level)
-    root_lines = lines.select { |l| !l.start_with?(" ") && !l.start_with?("|") && !l.start_with?("+") && !l.start_with?("\\") }
+    root_lines = lines.select { |l| !l.start_with?(" ", "|", "+", "\\") }
     assert root_lines.size >= 2
   end
 
@@ -108,9 +108,9 @@ class TreeFormatterTest < AceAssignTestCase
     # Parent should be root, child should be nested under it
     assert_includes lines[0], "main-task"
     assert(result.include?("\\-- onboard") || result.include?("+-- onboard"),
-           "Child should appear as nested under parent, got:\n#{result}")
+      "Child should appear as nested under parent, got:\n#{result}")
     # Child should NOT appear as a root
-    root_lines = lines.select { |l| !l.start_with?(" ") && !l.start_with?("|") && !l.start_with?("+") && !l.start_with?("\\") }
+    root_lines = lines.select { |l| !l.start_with?(" ", "|", "+", "\\") }
     assert_equal 1, root_lines.size, "Only one root expected, got:\n#{result}"
   end
 

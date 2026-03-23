@@ -23,11 +23,11 @@ module Ace
         VALID_CONTEXTS = %w[fork].freeze
 
         attr_reader :number, :name, :status, :instructions, :report, :error,
-                    :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
-                    :workflow,
-                    :batch_parent, :parallel, :max_parallel, :fork_retry_limit,
-                    :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
-                    :stall_reason
+          :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
+          :workflow,
+          :batch_parent, :parallel, :max_parallel, :fork_retry_limit,
+          :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
+          :stall_reason
 
         # @param number [String] Step number (e.g., "010", "010.01")
         # @param name [String] Step name
@@ -52,11 +52,11 @@ module Ace
         # @param fork_pid_file [String, nil] Path to fork PID metadata file
         # @param stall_reason [String, nil] Last agent message captured when fork stalled
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
-                       started_at: nil, completed_at: nil, added_by: nil, parent: nil,
-                       file_path: nil, skill: nil, workflow: nil, context: nil,
-                       batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
-                       fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
-                       fork_pid_file: nil, stall_reason: nil)
+          started_at: nil, completed_at: nil, added_by: nil, parent: nil,
+          file_path: nil, skill: nil, workflow: nil, context: nil,
+          batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
+          fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
+          fork_pid_file: nil, stall_reason: nil)
           validate_status!(status)
           validate_context!(context) if context
           validate_boolean!(:batch_parent, batch_parent)
@@ -163,13 +163,13 @@ module Ace
         def validate_status!(status)
           return if STATUSES.include?(status)
 
-          raise ArgumentError, "Invalid status: #{status}. Must be one of: #{STATUSES.join(', ')}"
+          raise ArgumentError, "Invalid status: #{status}. Must be one of: #{STATUSES.join(", ")}"
         end
 
         def validate_context!(context)
           return if VALID_CONTEXTS.include?(context)
 
-          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{VALID_CONTEXTS.join(', ')}"
+          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{VALID_CONTEXTS.join(", ")}"
         end
 
         def validate_boolean!(field_name, value)

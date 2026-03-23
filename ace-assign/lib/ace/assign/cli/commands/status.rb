@@ -161,7 +161,7 @@ module Ace
           end
 
           def scoped_status_view(state, scope)
-            return { state: state, current: state.current, root: nil } if scope.nil? || scope.strip.empty?
+            return {state: state, current: state.current, root: nil} if scope.nil? || scope.strip.empty?
 
             root = state.find_by_number(scope.strip)
             raise StepErrors::NotFound, "Step #{scope} not found in queue" unless root
@@ -170,7 +170,7 @@ module Ace
             scoped_state = Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
             current = scoped_state.current || scoped_state.next_workable
 
-            { state: scoped_state, current: current, root: root.number }
+            {state: scoped_state, current: current, root: root.number}
           end
 
           def print_queue_status(assignment, state, flat: false, root_number: nil)
@@ -238,7 +238,7 @@ module Ace
               build_hierarchy_node(state, child)
             end
 
-            { step: step, children: children }
+            {step: step, children: children}
           end
 
           def print_hierarchy_level(nodes, state, depth:)
@@ -249,12 +249,12 @@ module Ace
 
               # Build tree prefix
               prefix = if depth == 0
-                         ""
-                       else
-                         indent = "  " * (depth - 1)
-                         connector = is_last ? "\\-- " : "|-- "
-                         indent + connector
-                       end
+                ""
+              else
+                indent = "  " * (depth - 1)
+                connector = is_last ? "\\-- " : "|-- "
+                indent + connector
+              end
 
               # Format number with hierarchy indicator
               number_display = prefix + step.number
@@ -267,27 +267,27 @@ module Ace
 
               # Children count (progress visibility)
               child_info = if children.any?
-                             incomplete = children.count { |c| c[:step].status != :done }
-                             if incomplete > 0
-                               "(#{children.size - incomplete}/#{children.size} done)"
-                             else
-                               "(#{children.size}/#{children.size} done)"
-                             end
-                           else
-                             ""
-                           end
+                incomplete = children.count { |c| c[:step].status != :done }
+                if incomplete > 0
+                  "(#{children.size - incomplete}/#{children.size} done)"
+                else
+                  "(#{children.size}/#{children.size} done)"
+                end
+              else
+                ""
+              end
 
               # Error info for failed steps
-              error_suffix = step.status == :failed && step.error ? " - #{step.error}" : ""
+              error_suffix = (step.status == :failed && step.error) ? " - #{step.error}" : ""
 
               # Truncate name with ellipsis if too long
               display_name = if step.name.length > COL_NAME
-                               step.name[0..COL_NAME - 4] + "..."
-                             else
-                               step.name
-                             end
+                step.name[0..COL_NAME - 4] + "..."
+              else
+                step.name
+              end
               puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s%s",
-                          number_display, status_icon, display_name, fork_info, child_info, error_suffix)
+                number_display, status_icon, display_name, fork_info, child_info, error_suffix)
 
               # Recurse for children
               print_hierarchy_level(children, state, depth: depth + 1) if children.any?
@@ -351,7 +351,7 @@ module Ace
             return unless has_pid || has_tree || has_file
 
             puts "Scoped Fork PID: #{step.fork_launch_pid}" if has_pid
-            puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(', ')}" if has_tree
+            puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(", ")}" if has_tree
             puts "Scoped Fork PID File: #{step.fork_pid_file}" if has_file
             puts
           end
@@ -374,15 +374,15 @@ module Ace
             col_progress = 10
             col_step = 20
             puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
-                        "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT STEP", "UPDATED")
+              "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT STEP", "UPDATED")
 
             others.each do |info|
               state_label = STATE_LABELS[info.state] || info.state.to_s
               updated = format_relative_time(info.updated_at)
-              step = info.current_step.length > col_step ? info.current_step[0..col_step - 4] + "..." : info.current_step
+              step = (info.current_step.length > col_step) ? info.current_step[0..col_step - 4] + "..." : info.current_step
 
               puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
-                          info.id, state_label, info.progress, step, updated)
+                info.id, state_label, info.progress, step, updated)
             end
           end
 

@@ -49,8 +49,8 @@ module Ace
               next_step = state.next_workable_in_subtree(root_step.number)
               puts "Starting fork subtree execution: #{root_step.number} - #{root_step.name}"
               puts "Assignment: #{assignment.id}"
-              puts "Provider: #{options[:provider] || Ace::Assign.config.dig('execution', 'provider') || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER}"
-              puts "Timeout: #{options[:timeout] || Ace::Assign.config.dig('execution', 'timeout') || Molecules::ForkSessionLauncher::DEFAULT_TIMEOUT}s"
+              puts "Provider: #{options[:provider] || Ace::Assign.config.dig("execution", "provider") || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER}"
+              puts "Timeout: #{options[:timeout] || Ace::Assign.config.dig("execution", "timeout") || Molecules::ForkSessionLauncher::DEFAULT_TIMEOUT}s"
               puts "Next step: #{next_step.number} - #{next_step.name}" if next_step
             end
 
@@ -98,7 +98,7 @@ module Ace
 
               if stall_reason && active
                 step_writer = Molecules::StepWriter.new
-                step_writer.update_frontmatter(active.file_path, { "stall_reason" => stall_reason })
+                step_writer.update_frontmatter(active.file_path, {"stall_reason" => stall_reason})
               end
 
               session_info = session_meta&.dig("session_id") ? " Session: #{session_meta["session_id"]}" : ""
@@ -112,7 +112,7 @@ module Ace
             if stale_steps.any?
               step_writer = Molecules::StepWriter.new
               stale_steps.each do |step|
-                step_writer.update_frontmatter(step.file_path, { "stall_reason" => nil })
+                step_writer.update_frontmatter(step.file_path, {"stall_reason" => nil})
               end
             end
 
@@ -198,7 +198,7 @@ module Ace
               tracked_pids: pid_info[:tracked_pids] || [],
               pid_file: pid_file
             )
-          rescue StandardError
+          rescue
             # Keep fork-run resilient even if telemetry persistence fails.
             nil
           end

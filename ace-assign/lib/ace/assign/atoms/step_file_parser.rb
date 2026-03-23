@@ -29,9 +29,9 @@ module Ace
             body = content[match.end(0)..]
 
             frontmatter = YAML.safe_load(frontmatter_yaml, permitted_classes: [Time, Date]) || {}
-            { frontmatter: frontmatter, body: body.strip }
+            {frontmatter: frontmatter, body: body.strip}
           else
-            { frontmatter: {}, body: content.strip }
+            {frontmatter: {}, body: content.strip}
           end
         end
 
@@ -95,9 +95,9 @@ module Ace
             number = match[1]
             name = match[2]
             parent = extract_parent_from_number(number)
-            { number: number, name: name, parent: parent }
+            {number: number, name: name, parent: parent}
           else
-            { number: nil, name: base, parent: nil }
+            {number: nil, name: base, parent: nil}
           end
         end
 
@@ -144,7 +144,7 @@ module Ace
           valid_contexts = Ace::Assign::Models::Step::VALID_CONTEXTS
           return if valid_contexts.include?(context)
 
-          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{valid_contexts.join(', ')}"
+          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{valid_contexts.join(", ")}"
         end
         private_class_method :validate_context!
 

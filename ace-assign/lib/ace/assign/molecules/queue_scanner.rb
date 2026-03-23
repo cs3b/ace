@@ -21,7 +21,7 @@ module Ace
 
           # Sort files
           sorted_files = Atoms::StepSorter.sort(files.map { |f| File.basename(f) })
-                                           .map { |f| File.join(steps_dir, f) }
+            .map { |f| File.join(steps_dir, f) }
 
           # Parse each file into a Step
           steps = sorted_files.map { |file| parse_step_file(file) }.compact
@@ -96,7 +96,7 @@ module Ace
           # Surface these errors visibly to help users fix configuration
           warn "Invalid step file #{file_path}: #{e.message}"
           nil
-        rescue StandardError => e
+        rescue => e
           warn "Failed to parse step file #{file_path}: #{e.message}" if Ace::Assign.debug?
           nil
         end

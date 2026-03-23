@@ -90,8 +90,8 @@ module Ace
         # @return [Hash, nil] Parsed step definition or nil on error
         def self.parse_step_file(path)
           YAML.safe_load_file(path, permitted_classes: [Date])
-        rescue StandardError => e
-          $stderr.puts "Warning: Failed to parse step file #{path}: #{e.message}"
+        rescue => e
+          warn "Warning: Failed to parse step file #{path}: #{e.message}"
           nil
         end
         private_class_method :parse_step_file

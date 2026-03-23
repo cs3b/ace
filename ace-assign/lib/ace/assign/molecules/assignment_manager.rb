@@ -24,7 +24,7 @@ module Ace
         # @param source_config [String] Path to source config file
         # @param parent [String, nil] Parent assignment ID for hierarchy linking
         # @return [Models::Assignment] Created assignment
-        def create(name:, description: nil, source_config:, parent: nil)
+        def create(name:, source_config:, description: nil, parent: nil)
           # Ensure cache base directory exists before generate_assignment_id
           FileUtils.mkdir_p(@cache_base)
 
@@ -101,10 +101,10 @@ module Ace
 
           # Fallback: find all assignment directories
           assignments = Dir.glob(File.join(@cache_base, "*", "assignment.yaml"))
-                           .map { |f| load_from_file(f) }
-                           .compact
-                           .sort_by(&:updated_at)
-                           .reverse
+            .map { |f| load_from_file(f) }
+            .compact
+            .sort_by(&:updated_at)
+            .reverse
 
           assignments.first
         end
@@ -193,10 +193,10 @@ module Ace
           return [] unless File.directory?(@cache_base)
 
           Dir.glob(File.join(@cache_base, "*", "assignment.yaml"))
-             .map { |f| load_from_file(f) }
-             .compact
-             .sort_by(&:updated_at)
-             .reverse
+            .map { |f| load_from_file(f) }
+            .compact
+            .sort_by(&:updated_at)
+            .reverse
         end
 
         private
@@ -234,7 +234,7 @@ module Ace
           cache_dir = File.dirname(assignment_file)
           data = YAML.safe_load_file(assignment_file, permitted_classes: [Time, Date])
           Models::Assignment.from_h(data, cache_dir: cache_dir)
-        rescue StandardError => e
+        rescue => e
           warn "Failed to load assignment from #{assignment_file}: #{e.message}" if Ace::Assign.debug?
           nil
         end
@@ -249,7 +249,7 @@ module Ace
 
           target = File.basename(File.readlink(symlink_path))
           File.delete(symlink_path) if target == assignment_id
-        rescue StandardError
+        rescue
           # Non-fatal: continue without cleanup
         end
 
@@ -266,7 +266,7 @@ module Ace
 
           # Create new symlink
           File.symlink(target_dir, latest_symlink)
-        rescue StandardError => e
+        rescue => e
           warn "Failed to update .latest symlink: #{e.message}" if Ace::Assign.debug?
           # Non-fatal: continue without symlink
         end

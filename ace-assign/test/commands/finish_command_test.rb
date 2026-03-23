@@ -128,14 +128,14 @@ class FinishCommandTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       report_path = create_report(cache_dir, "Scoped progress")
       steps = [
-        { "name" => "precheck", "instructions" => "Run precheck" },
+        {"name" => "precheck", "instructions" => "Run precheck"},
         {
           "name" => "work-on-task",
           "instructions" => "Implement task 235.01",
           "context" => "fork",
           "sub_steps" => %w[onboard plan-task]
         },
-        { "name" => "postcheck", "instructions" => "Run postcheck" }
+        {"name" => "postcheck", "instructions" => "Run postcheck"}
       ]
       config_path = create_test_config(cache_dir, steps: steps)
 

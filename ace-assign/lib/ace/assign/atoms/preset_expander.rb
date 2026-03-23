@@ -209,7 +209,7 @@ module Ace
 
           items.each_with_index do |item, index|
             # Build child number: parent.01, parent.02, etc.
-            child_number = "#{parent_number}.#{format('%02d', index + 1)}"
+            child_number = "#{parent_number}.#{format("%02d", index + 1)}"
 
             # Create merged parameters with {{item}} available
             item_params = parameters.merge("item" => item)

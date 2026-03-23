@@ -50,7 +50,7 @@ module Ace
           parts = number.to_s.split(".")
 
           {
-            parent: parts.length > 1 ? parts[0..-2].join(".") : nil,
+            parent: (parts.length > 1) ? parts[0..-2].join(".") : nil,
             index: parts.last.to_i,
             depth: parts.length - 1,
             full: number.to_s
@@ -72,7 +72,7 @@ module Ace
           end
 
           if parsed[:parent]
-            "#{parsed[:parent]}.#{format('%02d', new_index)}"
+            "#{parsed[:parent]}.#{format("%02d", new_index)}"
           else
             # Top-level numbers use 3-digit padding
             format("%03d", new_index)
@@ -112,11 +112,11 @@ module Ace
 
           # Find highest existing child index
           max_index = existing_children
-                      .select { |n| child_of?(n, parent) && direct_child_of?(n, parent) }
-                      .map { |n| parse(n)[:index] }
-                      .max || 0
+            .select { |n| child_of?(n, parent) && direct_child_of?(n, parent) }
+            .map { |n| parse(n)[:index] }
+            .max || 0
 
-          "#{parent}.#{format('%02d', max_index + 1)}"
+          "#{parent}.#{format("%02d", max_index + 1)}"
         end
 
         # Check if a step number is a child (direct or nested) of another.
@@ -216,7 +216,7 @@ module Ace
           end
 
           if parsed[:parent]
-            "#{parsed[:parent]}.#{format('%02d', new_index)}"
+            "#{parsed[:parent]}.#{format("%02d", new_index)}"
           else
             format("%03d", new_index)
           end

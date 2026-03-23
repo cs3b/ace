@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "set"
 require "yaml"
 
 module Ace
@@ -135,13 +134,13 @@ module Ace
 
           fork_root = fork_root&.strip
           target_step = if step_number && !step_number.to_s.strip.empty?
-                           find_target_step_for_start(state, step_number, fork_root)
-                         elsif fork_root && !fork_root.empty?
-                           raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
-                           state.next_workable_in_subtree(fork_root)
-                         else
-                           state.next_workable
-                         end
+            find_target_step_for_start(state, step_number, fork_root)
+          elsif fork_root && !fork_root.empty?
+            raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            state.next_workable_in_subtree(fork_root)
+          else
+            state.next_workable
+          end
 
           unless target_step
             if fork_root && !fork_root.empty?
@@ -199,10 +198,10 @@ module Ace
           # Find next step to work on using hierarchical rules.
           # When fork_root is provided, keep advancement inside that subtree.
           next_step = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
-                         find_next_step_in_subtree(state, current.number, fork_root)
-                       else
-                         find_next_step(state, current.number)
-                       end
+            find_next_step_in_subtree(state, current.number, fork_root)
+          else
+            find_next_step(state, current.number)
+          end
           if next_step
             step_writer.mark_in_progress(next_step.file_path)
           end
@@ -298,7 +297,7 @@ module Ace
 
           # Validate --after step exists
           if after && !existing_numbers.include?(after)
-            raise StepErrors::NotFound, "Step #{after} not found. Available steps: #{existing_numbers.join(', ')}"
+            raise StepErrors::NotFound, "Step #{after} not found. Available steps: #{existing_numbers.join(", ")}"
           end
 
           new_number, renumbered = calculate_insertion_point(
@@ -312,7 +311,7 @@ module Ace
           if renumbered.any?
             step_renumberer.renumber(assignment.steps_dir, renumbered)
             # Refresh existing numbers after renumbering
-            existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
+            queue_scanner.step_numbers(assignment.steps_dir)
           end
 
           # Determine initial status upfront to avoid redundant I/O
@@ -320,15 +319,15 @@ module Ace
 
           # Build added_by metadata for audit trail
           added_by = if after && as_child
-                       "child_of:#{after}"
-                     elsif after
-                       "injected_after:#{after}"
-                     else
-                       "dynamic"
-                     end
+            "child_of:#{after}"
+          elsif after
+            "injected_after:#{after}"
+          else
+            "dynamic"
+          end
 
           # Create new step file with correct status
-          file_path = step_writer.create(
+          step_writer.create(
             steps_dir: assignment.steps_dir,
             number: new_number,
             name: name,
@@ -375,17 +374,17 @@ module Ace
           # Insert after all current steps (at end of queue before pending)
           # Find last done or failed step
           base_number = if state.current
-                          state.current.number
-                        elsif state.last_done
-                          state.last_done.number
-                        else
-                          original.number
-                        end
+            state.current.number
+          elsif state.last_done
+            state.last_done.number
+          else
+            original.number
+          end
 
           new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
 
           # Create retry step with link to original
-          file_path = step_writer.create(
+          step_writer.create(
             steps_dir: assignment.steps_dir,
             number: new_number,
             name: original.name,
@@ -553,7 +552,7 @@ module Ace
         # @return [Array<String>] Rendered instruction lines
         def split_parent_instruction_lines(definition:, parent_number:, parent_context:, source_skill:, sub_steps:)
           instructions = definition["instructions"].is_a?(Hash) ? definition["instructions"] : {}
-          context_key = parent_context == "fork" ? "fork" : "inline"
+          context_key = (parent_context == "fork") ? "fork" : "inline"
           template_lines = Array(instructions["common"]) + Array(instructions[context_key])
           template_lines = default_split_parent_instruction_lines(parent_context) if template_lines.empty?
 
@@ -630,10 +629,10 @@ module Ace
           step_def = find_step_definition(sub_name)
           parent_task_ref = extract_parent_taskref(parent_step, parent_instructions)
           instructions = if step_def&.dig("skill")
-                           build_skill_backed_child_notes(sub_name, parent_instructions, task_ref: parent_task_ref)
-                         else
-                           build_child_instructions(sub_name, parent_instructions, step_def, task_ref: parent_task_ref)
-                         end
+            build_skill_backed_child_notes(sub_name, parent_instructions, task_ref: parent_task_ref)
+          else
+            build_child_instructions(sub_name, parent_instructions, step_def, task_ref: parent_task_ref)
+          end
           child = {
             "number" => child_number,
             "name" => sub_name,
@@ -662,7 +661,7 @@ module Ace
         # @return [String] Rendered instructions
         def build_child_instructions(sub_name, parent_instructions, step_def, task_ref: nil)
           parent_text = normalize_instructions(parent_instructions).strip
-          focus = step_def && step_def["description"] ? step_def["description"] : "Execute #{sub_name} sub-step."
+          focus = (step_def && step_def["description"]) ? step_def["description"] : "Execute #{sub_name} sub-step."
           focus = focus.gsub("<taskref>", task_ref) if task_ref && !task_ref.empty?
           context = compact_task_context(parent_text, task_ref: task_ref)
           action = child_action_instructions(sub_name, parent_text, task_ref: task_ref)
@@ -699,7 +698,7 @@ module Ace
           return "" if parent_text.nil? || parent_text.empty?
 
           task_refs = parent_text.scan(/\b\d+\.\d+\b/).uniq
-          return "Task reference: #{task_refs.join(', ')}" if task_refs.any?
+          return "Task reference: #{task_refs.join(", ")}" if task_refs.any?
 
           relevant_lines = parent_text.lines.map(&:strip).reject(&:empty?).reject do |line|
             line == "Task context:" || line == "Assignment-specific context:"
@@ -720,11 +719,11 @@ module Ace
         # @return [String]
         def child_action_instructions(sub_name, parent_text, task_ref: nil)
           task_refs = if task_ref && !task_ref.to_s.strip.empty?
-                        [task_ref.to_s]
-                      else
-                        parent_text.to_s.scan(/\b\d+\.\d+\b/).uniq
-                      end
-          task_hint = task_refs.any? ? " for task #{task_refs.join(', ')}" : ""
+            [task_ref.to_s]
+          else
+            parent_text.to_s.scan(/\b\d+\.\d+\b/).uniq
+          end
+          task_hint = task_refs.any? ? " for task #{task_refs.join(", ")}" : ""
 
           case sub_name
           when "onboard"
@@ -822,7 +821,7 @@ module Ace
           sections = []
 
           task_ref = extract_parent_taskref(step, step["instructions"])
-          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
+          task_context = (task_ref && !task_ref.empty?) ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
           sections << "Task context:\n#{task_context}" unless task_context.empty?
 
           body = rendering["body"].to_s.strip
@@ -841,7 +840,7 @@ module Ace
           sections = []
 
           task_ref = extract_parent_taskref(step, step["instructions"])
-          task_context = task_ref && !task_ref.empty? ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
+          task_context = (task_ref && !task_ref.empty?) ? "Task reference: #{task_ref}" : compact_task_context(normalize_instructions(step["instructions"]), task_ref: task_ref)
           sections << "Task context:\n#{task_context}" unless task_context.empty?
 
           description = rendering["description"].to_s.strip
@@ -908,7 +907,7 @@ module Ace
 
           if step_name == "work-on-task"
             filtered = filtered.reject do |line|
-              line.start_with?("Implement task ") || line.start_with?("When complete, mark the task as done:")
+              line.start_with?("Implement task ", "When complete, mark the task as done:")
             end
           end
 
@@ -1020,11 +1019,11 @@ module Ace
 
             default_steps = Atoms::CatalogLoader.load_all(default_catalog)
             base_catalog = if File.directory?(project_catalog)
-                             project_steps = Atoms::CatalogLoader.load_all(project_catalog)
-                             merge_step_catalog(default_steps, project_steps)
-                           else
-                             default_steps
-                           end
+              project_steps = Atoms::CatalogLoader.load_all(project_catalog)
+              merge_step_catalog(default_steps, project_steps)
+            else
+              default_steps
+            end
 
             canonical_steps = skill_source_resolver.assign_step_catalog
             merge_step_catalog(base_catalog, canonical_steps)
@@ -1283,12 +1282,12 @@ module Ace
           else
             # Default behavior: insert after current or last done
             base_number = if state.current
-                            state.current.number
-                          elsif state.last_done
-                            state.last_done.number
-                          else
-                            "000" # Will generate 001
-                          end
+              state.current.number
+            elsif state.last_done
+              state.last_done.number
+            else
+              "000" # Will generate 001
+            end
 
             new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
             [new_number, []]

@@ -13,10 +13,10 @@ class AssignFrontmatterParserTest < AceAssignTestCase
       "status" => "in-progress",
       "assign" => {
         "goal" => "implement-with-pr",
-        "variables" => { "taskref" => "148", "review_cycles" => 2 },
+        "variables" => {"taskref" => "148", "review_cycles" => 2},
         "hints" => [
-          { "include" => "security-audit" },
-          { "skip" => "lint" }
+          {"include" => "security-audit"},
+          {"skip" => "lint"}
         ]
       }
     }
@@ -26,10 +26,10 @@ class AssignFrontmatterParserTest < AceAssignTestCase
     assert result[:valid]
     assert_empty result[:errors]
     assert_equal "implement-with-pr", result[:config][:goal]
-    assert_equal({ "taskref" => "148", "review_cycles" => 2 }, result[:config][:variables])
+    assert_equal({"taskref" => "148", "review_cycles" => 2}, result[:config][:variables])
     assert_equal 2, result[:config][:hints].size
-    assert_equal({ action: :include, step: "security-audit" }, result[:config][:hints][0])
-    assert_equal({ action: :skip, step: "lint" }, result[:config][:hints][1])
+    assert_equal({action: :include, step: "security-audit"}, result[:config][:hints][0])
+    assert_equal({action: :skip, step: "lint"}, result[:config][:hints][1])
   end
 
   def test_parse_workflow_frontmatter_with_sub_steps
@@ -123,7 +123,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   # === Validation errors ===
 
   def test_parse_assign_not_hash_returns_error
-    frontmatter = { "assign" => "not a hash" }
+    frontmatter = {"assign" => "not a hash"}
 
     result = Parser.parse(frontmatter)
 
@@ -149,7 +149,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_goal_not_string_returns_error
-    frontmatter = { "assign" => { "goal" => 123 } }
+    frontmatter = {"assign" => {"goal" => 123}}
 
     result = Parser.parse(frontmatter)
 
@@ -158,7 +158,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_variables_not_hash_returns_error
-    frontmatter = { "assign" => { "variables" => "not a hash" } }
+    frontmatter = {"assign" => {"variables" => "not a hash"}}
 
     result = Parser.parse(frontmatter)
 
@@ -167,7 +167,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_hints_not_array_returns_error
-    frontmatter = { "assign" => { "hints" => "not an array" } }
+    frontmatter = {"assign" => {"hints" => "not an array"}}
 
     result = Parser.parse(frontmatter)
 
@@ -176,7 +176,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_hints_entry_not_hash_returns_error
-    frontmatter = { "assign" => { "hints" => ["not a hash"] } }
+    frontmatter = {"assign" => {"hints" => ["not a hash"]}}
 
     result = Parser.parse(frontmatter)
 
@@ -185,7 +185,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_hints_missing_action_returns_error
-    frontmatter = { "assign" => { "hints" => [{ "bad_key" => "value" }] } }
+    frontmatter = {"assign" => {"hints" => [{"bad_key" => "value"}]}}
 
     result = Parser.parse(frontmatter)
 
@@ -194,7 +194,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_hints_mutually_exclusive_actions_returns_error
-    frontmatter = { "assign" => { "hints" => [{ "include" => "security", "skip" => "lint" }] } }
+    frontmatter = {"assign" => {"hints" => [{"include" => "security", "skip" => "lint"}]}}
 
     result = Parser.parse(frontmatter)
 
@@ -203,7 +203,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_sub_steps_not_array_returns_error
-    frontmatter = { "assign" => { "sub-steps" => "not an array" } }
+    frontmatter = {"assign" => {"sub-steps" => "not an array"}}
 
     result = Parser.parse(frontmatter)
 
@@ -212,7 +212,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_sub_steps_entries_not_strings_returns_error
-    frontmatter = { "assign" => { "sub-steps" => [123, "valid"] } }
+    frontmatter = {"assign" => {"sub-steps" => [123, "valid"]}}
 
     result = Parser.parse(frontmatter)
 
@@ -221,7 +221,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_context_not_string_returns_error
-    frontmatter = { "assign" => { "context" => 123 } }
+    frontmatter = {"assign" => {"context" => 123}}
 
     result = Parser.parse(frontmatter)
 
@@ -230,7 +230,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_context_invalid_value_returns_error
-    frontmatter = { "assign" => { "context" => "invalid" } }
+    frontmatter = {"assign" => {"context" => "invalid"}}
 
     result = Parser.parse(frontmatter)
 
@@ -239,7 +239,7 @@ class AssignFrontmatterParserTest < AceAssignTestCase
   end
 
   def test_parse_parent_not_string_returns_error
-    frontmatter = { "assign" => { "parent" => 123 } }
+    frontmatter = {"assign" => {"parent" => 123}}
 
     result = Parser.parse(frontmatter)
 
