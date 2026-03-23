@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-test-runner-e2e demo](docs/demo/ace-test-runner-e2e-getting-started.gif)
 
 `ace-test-runner-e2e` runs realistic workflow scenarios through coding agents so teams can validate behavior beyond unit and integration coverage while keeping execution reproducible and isolated from the working tree.
