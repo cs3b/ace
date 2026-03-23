@@ -24,4 +24,5 @@ teardown:
 - cleanup
 setup:
 - sandbox
+- git-init
 - copy-fixtures
