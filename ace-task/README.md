@@ -1,4 +1,3 @@
-
 <div align="center">
   <h1> ACE - Task </h1>
 
@@ -12,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-task demo](docs/demo/ace-task-getting-started.gif)
 
 Tasks are markdown specs living in git - attached to branches and worktrees, not trapped in a SaaS dashboard. A task can contain subtasks, prototypes, research notes, and UX specs. Compact B36TS IDs like `8q4` are timestamp-derived, so they stay unique across branches without a central sequence - parallel worktrees rarely conflict.
