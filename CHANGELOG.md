@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.951] - 2026-03-23
+
+### Added
+- **ace-docs v0.30.3**: Classify root README as `root_readme` doc-type and add timeout guard for nav resolution in document analysis.
+
+### Changed
+- **ace-bundle v0.39.1**: Polish README presentation after shine review.
+
 ## [0.9.950] - 2026-03-23
 
 ### Fixed

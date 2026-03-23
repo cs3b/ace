@@ -21,7 +21,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.39.0)
+    ace-bundle (0.39.1)
       ace-compressor (~> 0.21)
       ace-git (~> 0.11)
       ace-support-cli (~> 0.3)
@@ -50,7 +50,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.30.2)
+    ace-docs (0.30.3)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.26)
