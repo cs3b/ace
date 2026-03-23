@@ -34,4 +34,4 @@
 **Coordinate with git workflow tools** - pair with [ace-bundle](../ace-bundle) for loading remediation workflows, [ace-git](../ace-git) for repository context before cleanup, and [ace-git-commit](../ace-git-commit) for follow-up commits after remediation work.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
