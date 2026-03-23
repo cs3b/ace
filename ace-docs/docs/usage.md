@@ -3,8 +3,8 @@ doc-type: user
 title: ace-docs Usage Guide
 purpose: CLI reference for ace-docs commands and options
 ace-docs:
-  last-updated: '2026-03-22'
-  last-checked: '2026-03-22'
+  last-updated: 2026-03-22
+  last-checked: 2026-03-22
 ---
 
 # ace-docs Usage Guide
@@ -214,5 +214,4 @@ frontmatter_free:
 ## Notes
 
 - `analyze` requires a `FILE` argument.
-- `diff` is not a current `ace-docs` command.
 - For large repos, use `--package` and `--glob` to limit analysis scope.
