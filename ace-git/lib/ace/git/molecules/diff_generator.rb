@@ -97,7 +97,7 @@ module Ace
               error_msg = result[:error].to_s.strip
               error_msg = "Unknown git error" if error_msg.empty?
               # Include the failed command for easier debugging
-              cmd_str = cmd_parts ? " (#{cmd_parts.join(' ')})" : ""
+              cmd_str = cmd_parts ? " (#{cmd_parts.join(" ")})" : ""
               raise Ace::Git::GitError, "Git command failed#{cmd_str}: #{error_msg}"
             end
           end

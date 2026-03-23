@@ -12,7 +12,7 @@ module Ace
           # @param executor [CommandExecutor] Command executor
           # @return [Hash] Result with :success, :commits array, :error
           def fetch(limit: 3, executor: Atoms::CommandExecutor)
-            return { success: true, commits: [] } if limit <= 0
+            return {success: true, commits: []} if limit <= 0
 
             result = executor.execute(
               "git", "log",
@@ -22,12 +22,12 @@ module Ace
 
             if result[:success]
               commits = parse_commits(result[:output])
-              { success: true, commits: commits }
+              {success: true, commits: commits}
             else
-              { success: false, commits: [], error: result[:error] }
+              {success: false, commits: [], error: result[:error]}
             end
-          rescue StandardError => e
-            { success: false, commits: [], error: e.message }
+          rescue => e
+            {success: false, commits: [], error: e.message}
           end
 
           private

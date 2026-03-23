@@ -73,7 +73,7 @@ module Ace
           end
 
           def build_renamed_path(prefix, inner, suffix)
-            "#{prefix}#{inner}#{suffix}".gsub(%r{/+}, "/")
+            "#{prefix}#{inner}#{suffix}".squeeze("/")
           end
         end
       end

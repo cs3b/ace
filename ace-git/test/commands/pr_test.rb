@@ -126,7 +126,7 @@ class PrTest < AceGitTestCase
   end
 
   def test_execute_returns_error_on_fetch_failure
-    mock_result = { success: false, error: "PR not found" }
+    mock_result = {success: false, error: "PR not found"}
 
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
@@ -140,7 +140,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_handles_gh_not_installed_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhNotInstalledError, "gh not found" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_) { raise Ace::Git::GhNotInstalledError, "gh not found" } do
         error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
@@ -151,7 +151,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_handles_authentication_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhAuthenticationError, "Not authenticated" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_) { raise Ace::Git::GhAuthenticationError, "Not authenticated" } do
         error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
@@ -162,7 +162,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_handles_pr_not_found_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::PrNotFoundError, "PR #999 not found" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_) { raise Ace::Git::PrNotFoundError, "PR #999 not found" } do
         error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 999, format: nil, with_diff: false)
         end
@@ -173,7 +173,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_handles_timeout_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::TimeoutError, "Request timed out" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_) { raise Ace::Git::TimeoutError, "Request timed out" } do
         error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: 42, format: nil, with_diff: false)
         end
@@ -184,7 +184,7 @@ class PrTest < AceGitTestCase
 
   def test_execute_handles_argument_error
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise ArgumentError, "Invalid PR identifier" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_) { raise ArgumentError, "Invalid PR identifier" } do
         error = assert_raises(Ace::Support::Cli::Error) do
           @command.call(number: "invalid", format: nil, with_diff: false)
         end
@@ -200,7 +200,7 @@ class PrTest < AceGitTestCase
         "number" => 42,
         "title" => "Test PR",
         "state" => "OPEN",
-        "author" => { "login" => "testuser" }
+        "author" => {"login" => "testuser"}
       }
     }
 

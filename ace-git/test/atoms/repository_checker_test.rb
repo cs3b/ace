@@ -10,8 +10,6 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_in_git_repo_returns_true
-    mock_result = { success: true, output: ".git\n", error: "", exit_code: 0 }
-
     @executor.stub :in_git_repo?, true do
       result = @checker.in_git_repo?
       assert result, "Should return true when in git repo"
@@ -27,7 +25,7 @@ class RepositoryCheckerTest < AceGitTestCase
 
   def test_detached_head_returns_true
     # symbolic-ref fails when HEAD is detached
-    mock_result = { success: false, output: "", error: "", exit_code: 1 }
+    mock_result = {success: false, output: "", error: "", exit_code: 1}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -39,7 +37,7 @@ class RepositoryCheckerTest < AceGitTestCase
 
   def test_detached_head_returns_false
     # symbolic-ref succeeds when HEAD is not detached
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -50,7 +48,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_bare_repository_returns_true
-    mock_result = { success: true, output: "true\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "true\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -61,7 +59,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_bare_repository_returns_false
-    mock_result = { success: true, output: "false\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "false\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -72,7 +70,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_in_worktree_returns_true
-    mock_result = { success: true, output: "/path/to/.git/worktrees/my-worktree\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git/worktrees/my-worktree\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -83,7 +81,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_in_worktree_returns_false
-    mock_result = { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -94,7 +92,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_repository_type_returns_normal
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -106,7 +104,7 @@ class RepositoryCheckerTest < AceGitTestCase
 
   def test_repository_type_returns_detached
     # symbolic-ref fails (detached)
-    mock_result = { success: false, output: "", error: "", exit_code: 1 }
+    mock_result = {success: false, output: "", error: "", exit_code: 1}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -120,9 +118,9 @@ class RepositoryCheckerTest < AceGitTestCase
     # Stub based on command arguments
     mock_proc = ->(*args) {
       if args.include?("--is-bare-repository")
-        { success: true, output: "true\n", error: "", exit_code: 0 }
+        {success: true, output: "true\n", error: "", exit_code: 0}
       else
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       end
     }
 
@@ -140,11 +138,11 @@ class RepositoryCheckerTest < AceGitTestCase
     mock_proc = ->(*args) {
       call_count += 1
       if args.include?("--is-bare-repository")
-        { success: true, output: "false\n", error: "", exit_code: 0 }
+        {success: true, output: "false\n", error: "", exit_code: 0}
       elsif args.include?("--git-dir")
-        { success: true, output: "/path/to/.git/worktrees/my-worktree\n", error: "", exit_code: 0 }
+        {success: true, output: "/path/to/.git/worktrees/my-worktree\n", error: "", exit_code: 0}
       else
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       end
     }
 
@@ -164,7 +162,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_status_description_returns_string_for_normal
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -175,7 +173,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_status_description_returns_string_for_detached
-    mock_result = { success: false, output: "", error: "", exit_code: 1 }
+    mock_result = {success: false, output: "", error: "", exit_code: 1}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -188,9 +186,9 @@ class RepositoryCheckerTest < AceGitTestCase
   def test_status_description_returns_string_for_bare
     mock_proc = ->(*args) {
       if args.include?("--is-bare-repository")
-        { success: true, output: "true\n", error: "", exit_code: 0 }
+        {success: true, output: "true\n", error: "", exit_code: 0}
       else
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       end
     }
 
@@ -210,7 +208,7 @@ class RepositoryCheckerTest < AceGitTestCase
   end
 
   def test_usable_returns_true_for_normal_repo
-    mock_result = { success: true, output: "false\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "false\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -223,9 +221,9 @@ class RepositoryCheckerTest < AceGitTestCase
   def test_usable_returns_false_for_bare_repo
     mock_proc = ->(*args) {
       if args.include?("--is-bare-repository")
-        { success: true, output: "true\n", error: "", exit_code: 0 }
+        {success: true, output: "true\n", error: "", exit_code: 0}
       else
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       end
     }
 

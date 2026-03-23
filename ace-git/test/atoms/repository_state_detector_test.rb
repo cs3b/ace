@@ -10,7 +10,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_detect_returns_clean
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -23,7 +23,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_detect_returns_dirty
-    mock_result = { success: true, output: "M file.rb\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "M file.rb\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -40,9 +40,9 @@ class RepositoryStateDetectorTest < AceGitTestCase
     mock_proc = ->(*args) {
       call_count += 1
       if call_count == 1
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+        {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
       end
     }
 
@@ -62,9 +62,9 @@ class RepositoryStateDetectorTest < AceGitTestCase
     mock_proc = ->(*args) {
       call_count += 1
       if call_count == 1
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+        {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
       end
     }
 
@@ -87,7 +87,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_clean_check_returns_true
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -100,7 +100,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_clean_check_returns_false
-    mock_result = { success: true, output: "M file.rb\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "M file.rb\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -113,7 +113,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_dirty_check_returns_true
-    mock_result = { success: true, output: "M file.rb\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "M file.rb\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -124,7 +124,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_dirty_check_returns_false
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -135,7 +135,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_rebasing_check_returns_true
-    mock_result = { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -148,7 +148,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_rebasing_check_returns_false
-    mock_result = { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -161,7 +161,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_merging_check_returns_true
-    mock_result = { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -174,7 +174,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_merging_check_returns_false
-    mock_result = { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -187,7 +187,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_state_description_returns_string_for_clean
-    mock_result = { success: true, output: "", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -200,7 +200,7 @@ class RepositoryStateDetectorTest < AceGitTestCase
   end
 
   def test_state_description_returns_string_for_dirty
-    mock_result = { success: true, output: "M file.rb\n", error: "", exit_code: 0 }
+    mock_result = {success: true, output: "M file.rb\n", error: "", exit_code: 0}
 
     @executor.stub :in_git_repo?, true do
       @executor.stub :execute, mock_result do
@@ -217,9 +217,9 @@ class RepositoryStateDetectorTest < AceGitTestCase
     mock_proc = ->(*args) {
       call_count += 1
       if call_count == 1
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+        {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
       end
     }
 
@@ -238,9 +238,9 @@ class RepositoryStateDetectorTest < AceGitTestCase
     mock_proc = ->(*args) {
       call_count += 1
       if call_count == 1
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: true, output: "/path/to/.git\n", error: "", exit_code: 0 }
+        {success: true, output: "/path/to/.git\n", error: "", exit_code: 0}
       end
     }
 

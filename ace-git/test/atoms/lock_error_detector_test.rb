@@ -42,17 +42,17 @@ class LockErrorDetectorTest < AceGitTestCase
   end
 
   def test_lock_error_result_returns_true_for_lock_error
-    result = { success: false, error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+    result = {success: false, error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128}
     assert @detector.lock_error_result?(result), "Should detect lock error from result hash"
   end
 
   def test_lock_error_result_returns_false_for_success
-    result = { success: true, output: "test\n", error: "", exit_code: 0 }
+    result = {success: true, output: "test\n", error: "", exit_code: 0}
     refute @detector.lock_error_result?(result), "Should return false for successful result"
   end
 
   def test_lock_error_result_returns_false_for_non_lock_error
-    result = { success: false, error: "error: pathspec unknown", exit_code: 128 }
+    result = {success: false, error: "error: pathspec unknown", exit_code: 128}
     refute @detector.lock_error_result?(result), "Should not detect non-lock errors from result hash"
   end
 
@@ -61,12 +61,12 @@ class LockErrorDetectorTest < AceGitTestCase
   end
 
   def test_lock_error_result_returns_false_for_empty_error
-    result = { success: false, error: "", exit_code: 1 }
+    result = {success: false, error: "", exit_code: 1}
     refute @detector.lock_error_result?(result), "Should return false when error is empty"
   end
 
   def test_lock_error_result_returns_false_for_nil_error
-    result = { success: false, error: nil, exit_code: 1 }
+    result = {success: false, error: nil, exit_code: 1}
     refute @detector.lock_error_result?(result), "Should return false when error is nil"
   end
 

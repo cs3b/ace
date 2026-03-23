@@ -14,7 +14,7 @@ module Ace
         class << self
           def format(grouped_data, markdown: false, collapse_above: 5)
             groups = grouped_data[:groups] || []
-            total = grouped_data[:total] || { additions: 0, deletions: 0, files: 0 }
+            total = grouped_data[:total] || {additions: 0, deletions: 0, files: 0}
             return "" if total[:files].to_i.zero?
 
             markdown ? format_markdown(groups, total, collapse_above) : format_plain(groups, total)
@@ -127,11 +127,11 @@ module Ace
           def squashed_rename_path(path, prev_path)
             return path unless prev_path.include?(" -> ")
 
-            from,      to      = path.split(" -> ", 2)
+            from, to = path.split(" -> ", 2)
             prev_from, prev_to = prev_path.split(" -> ", 2)
 
             from_dir = File.dirname(from)
-            to_dir   = File.dirname(to)
+            to_dir = File.dirname(to)
 
             return path unless from_dir == File.dirname(prev_from) && to_dir == File.dirname(prev_to)
             return path if from_dir == "." || to_dir == "."
@@ -197,7 +197,7 @@ module Ace
 
           def layer_header_parts(name, group_name:)
             layer = name.to_s
-            label = layer == "other/" && group_name.to_s != "./" ? "" : layer
+            label = (layer == "other/" && group_name.to_s != "./") ? "" : layer
             [LAYER_ICONS[layer], label]
           end
 

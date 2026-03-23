@@ -7,8 +7,8 @@ module Ace
       # Includes branch info, task pattern, PR metadata, and repository state
       class RepoStatus
         attr_reader :branch, :tracking, :ahead, :behind, :task_pattern,
-                    :pr_metadata, :pr_activity, :git_status_sb, :recent_commits,
-                    :repository_type, :repository_state
+          :pr_metadata, :pr_activity, :git_status_sb, :recent_commits,
+          :repository_type, :repository_state
 
         # @param branch [String] Current branch name
         # @param tracking [String, nil] Remote tracking branch
@@ -180,8 +180,8 @@ module Ace
         # @param repo_state [Symbol] Repository state
         # @return [RepoStatus] New instance
         def self.from_data(branch_info:, task_pattern: nil, pr_metadata: nil,
-                           pr_activity: nil, git_status_sb: nil, recent_commits: nil,
-                           repo_type: :normal, repo_state: :clean)
+          pr_activity: nil, git_status_sb: nil, recent_commits: nil,
+          repo_type: :normal, repo_state: :clean)
           new(
             branch: branch_info[:name] || branch_info["name"],
             tracking: branch_info[:tracking] || branch_info["tracking"],

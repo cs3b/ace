@@ -136,7 +136,7 @@ module Ace
           def fetch_git_status
             result = Molecules::GitStatusFetcher.fetch_status_sb
             result[:success] ? result[:output] : nil
-          rescue StandardError
+          rescue
             nil
           end
 
@@ -146,7 +146,7 @@ module Ace
           def fetch_recent_commits(limit:)
             result = Molecules::RecentCommitsFetcher.fetch(limit: limit)
             result[:success] ? result[:commits] : nil
-          rescue StandardError
+          rescue
             nil
           end
 
@@ -170,7 +170,7 @@ module Ace
           rescue Ace::Git::TimeoutError
             # Timeout, skip PR metadata
             nil
-          rescue StandardError
+          rescue
             # Any other error, skip PR metadata
             nil
           end
@@ -200,7 +200,7 @@ module Ace
               merged: merged_result[:success] ? merged_result[:prs] : [],
               open: open_result[:success] ? open_result[:prs] : []
             }
-          rescue StandardError
+          rescue
             # Any error, skip PR activity
             nil
           end
@@ -217,7 +217,7 @@ module Ace
               timeout: timeout
             )
 
-            return { pr_metadata: nil, pr_activity: nil } unless result[:success]
+            return {pr_metadata: nil, pr_activity: nil} unless result[:success]
 
             prs = result[:prs]
 
@@ -247,15 +247,15 @@ module Ace
             # Build activity hash (nil if no activity to show)
             pr_activity = nil
             if merged_prs.any? || open_prs.any?
-              pr_activity = { merged: merged_prs, open: open_prs }
+              pr_activity = {merged: merged_prs, open: open_prs}
             end
 
             {
               pr_metadata: current_pr,
               pr_activity: pr_activity
             }
-          rescue StandardError
-            { pr_metadata: nil, pr_activity: nil }
+          rescue
+            {pr_metadata: nil, pr_activity: nil}
           end
         end
       end

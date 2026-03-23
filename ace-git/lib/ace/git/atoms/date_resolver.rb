@@ -119,7 +119,7 @@ module Ace
           def get_parent_commit(commit, executor)
             result = executor.execute("git", "rev-parse", "#{commit}~1")
             result[:success] ? result[:output].strip : nil
-          rescue StandardError
+          rescue
             nil
           end
         end

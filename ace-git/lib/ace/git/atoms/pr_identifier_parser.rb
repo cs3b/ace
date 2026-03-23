@@ -67,13 +67,13 @@ module Ace
             canonical_number = number.to_i.to_s
             ParseResult.new(number: canonical_number, repo: nil, gh_format: canonical_number)
 
-          when /^(?<repo>[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+)#(?<number>\d+)$/
+          when /^(?<repo>[a-zA-Z0-9_\-.]+\/[a-zA-Z0-9_\-.]+)#(?<number>\d+)$/
             # Qualified reference: "owner/repo#456"
             # GitHub owner/repo names: alphanumeric, hyphens, underscores, dots only
             match = ::Regexp.last_match
             ParseResult.new(number: match[:number], repo: match[:repo], gh_format: "#{match[:repo]}##{match[:number]}")
 
-          when %r{github\.com/(?<repo>[^\/]+/[^\/]+)/pull/(?<number>\d+)}
+          when %r{github\.com/(?<repo>[^/]+/[^/]+)/pull/(?<number>\d+)}
             # GitHub URL: "https://github.com/owner/repo/pull/789"
             match = ::Regexp.last_match
             ParseResult.new(number: match[:number], repo: match[:repo], gh_format: "#{match[:repo]}##{match[:number]}")

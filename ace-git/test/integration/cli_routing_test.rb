@@ -75,7 +75,10 @@ class CliRoutingTest < AceGitTestCase
   def test_cli_passes_range_to_orchestrator
     captured_options = nil
     mock_result = build_mock_result
-    spy = ->(opts) { captured_options = opts; mock_result }
+    spy = ->(opts) {
+      captured_options = opts
+      mock_result
+    }
 
     Ace::Git::Organisms::DiffOrchestrator.stub(:generate, spy) do
       Ace::Git::Organisms::DiffOrchestrator.stub(:raw, mock_result) do

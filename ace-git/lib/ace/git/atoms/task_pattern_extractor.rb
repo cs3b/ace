@@ -27,14 +27,12 @@ module Ace
           patterns ||= ['^(\d+(?:\.\d+)?)-']
 
           patterns.each do |pattern|
-            begin
-              regex = Regexp.new(pattern)
-              match = branch_name.match(regex)
-              return match[1] if match && match[1]
-            rescue RegexpError => e
-              warn "Warning: Invalid task pattern '#{pattern}': #{e.message}"
-              next
-            end
+            regex = Regexp.new(pattern)
+            match = branch_name.match(regex)
+            return match[1] if match && match[1]
+          rescue RegexpError => e
+            warn "Warning: Invalid task pattern '#{pattern}': #{e.message}"
+            next
           end
 
           nil

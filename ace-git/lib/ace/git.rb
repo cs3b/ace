@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
+require "ace/support/config"
 require_relative "git/version"
 
 module Ace
@@ -49,7 +49,7 @@ module Ace
     # @return [Hash] Merged and transformed configuration
     def self.load_config
       gem_root = Gem.loaded_specs["ace-git"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
 
       resolver = Ace::Support::Config.create(
         config_dir: ".ace",
@@ -68,11 +68,11 @@ module Ace
       warn "  #{e.message}"
       # Fall back to gem defaults instead of empty hash to prevent silent config erasure
       extract_git_config(load_gem_defaults_fallback(gem_root))
-    rescue StandardError => e
+    rescue => e
       warn "ace-git: Failed to load configuration: #{e.message}"
       # Fall back to gem defaults instead of empty hash to prevent silent config erasure
       gem_root = Gem.loaded_specs["ace-git"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       extract_git_config(load_gem_defaults_fallback(gem_root))
     end
     private_class_method :load_config
@@ -89,7 +89,7 @@ module Ace
 
       data = YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
       data["git"] || data
-    rescue StandardError
+    rescue
       {} # Only return empty hash if even defaults fail to load
     end
     private_class_method :load_gem_defaults_fallback

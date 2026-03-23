@@ -5,7 +5,7 @@ require "ace/git/molecules/git_status_fetcher"
 
 class GitStatusFetcherTest < AceGitTestCase
   def test_fetch_status_sb_returns_output_on_success
-    mock_result = { success: true, output: "## main...origin/main\n M file.rb\n" }
+    mock_result = {success: true, output: "## main...origin/main\n M file.rb\n"}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "-c", "color.status=false", "status", "-sb"]
@@ -18,7 +18,7 @@ class GitStatusFetcherTest < AceGitTestCase
   end
 
   def test_fetch_status_sb_returns_empty_on_failure
-    mock_result = { success: false, output: "", error: "not a git repo" }
+    mock_result = {success: false, output: "", error: "not a git repo"}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "-c", "color.status=false", "status", "-sb"]
@@ -32,7 +32,7 @@ class GitStatusFetcherTest < AceGitTestCase
   end
 
   def test_fetch_status_sb_handles_clean_repo
-    mock_result = { success: true, output: "## main...origin/main\n" }
+    mock_result = {success: true, output: "## main...origin/main\n"}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "-c", "color.status=false", "status", "-sb"]
@@ -52,7 +52,7 @@ class GitStatusFetcherTest < AceGitTestCase
       ?? new_file.rb
     STATUS
 
-    mock_result = { success: true, output: status_output }
+    mock_result = {success: true, output: status_output}
 
     mock_executor = Minitest::Mock.new
     mock_executor.expect :execute, mock_result, ["git", "-c", "color.status=false", "status", "-sb"]

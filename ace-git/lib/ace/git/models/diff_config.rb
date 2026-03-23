@@ -7,9 +7,9 @@ module Ace
       # Migrated from ace-git-diff
       class DiffConfig
         attr_reader :exclude_patterns, :exclude_whitespace, :exclude_renames,
-                    :exclude_moves, :max_lines, :ranges, :paths, :since, :format, :timeout,
-                    :grouped_stats_layers, :grouped_stats_collapse_above,
-                    :grouped_stats_show_full_tree, :grouped_stats_dotfile_groups
+          :exclude_moves, :max_lines, :ranges, :paths, :since, :format, :timeout,
+          :grouped_stats_layers, :grouped_stats_collapse_above,
+          :grouped_stats_show_full_tree, :grouped_stats_dotfile_groups
 
         # @param exclude_patterns [Array<String>] Glob patterns to exclude
         # @param exclude_whitespace [Boolean] Whether to exclude whitespace changes
@@ -167,7 +167,7 @@ module Ace
             # Skip nested sections that may be passed through
             next if %w[diff rebase pr squash default_branch remote verbose].include?(key_str)
 
-            warn "[ace-git] Unknown config key '#{key_str}' in DiffConfig - did you mean one of: #{KNOWN_KEYS.join(', ')}?"
+            warn "[ace-git] Unknown config key '#{key_str}' in DiffConfig - did you mean one of: #{KNOWN_KEYS.join(", ")}?"
           end
         end
 

@@ -53,7 +53,7 @@ module Ace
               lines << status.git_status_sb
             elsif status.branch
               # Fallback if no git status available
-              lines << "Branch: #{status.branch}#{status.detached? ? ' (detached HEAD)' : ''}"
+              lines << "Branch: #{status.branch}#{" (detached HEAD)" if status.detached?}"
             end
 
             lines
@@ -85,23 +85,23 @@ module Ace
             lines << ""
 
             # Main line: #85 [OPEN] Title
-            main_line = "##{pr_metadata['number']}"
-            main_line += " [#{pr_metadata['state']}]" if pr_metadata['state']
-            main_line += " #{pr_metadata['title']}" if pr_metadata['title']
+            main_line = "##{pr_metadata["number"]}"
+            main_line += " [#{pr_metadata["state"]}]" if pr_metadata["state"]
+            main_line += " #{pr_metadata["title"]}" if pr_metadata["title"]
             lines << main_line
 
             # Details line: Target: main | Author: @username | Draft/Not draft
             details = []
-            details << "Target: #{pr_metadata['baseRefName']}" if pr_metadata['baseRefName']
-            if pr_metadata['author']
-              author = pr_metadata.dig('author', 'login') || pr_metadata['author']
+            details << "Target: #{pr_metadata["baseRefName"]}" if pr_metadata["baseRefName"]
+            if pr_metadata["author"]
+              author = pr_metadata.dig("author", "login") || pr_metadata["author"]
               details << "Author: @#{author}"
             end
-            details << (pr_metadata['isDraft'] ? "Draft" : "Not draft") if pr_metadata.key?('isDraft')
-            lines << "  #{details.join(' | ')}" unless details.empty?
+            details << (pr_metadata["isDraft"] ? "Draft" : "Not draft") if pr_metadata.key?("isDraft")
+            lines << "  #{details.join(" | ")}" unless details.empty?
 
             # URL line
-            lines << "  #{pr_metadata['url']}" if pr_metadata['url']
+            lines << "  #{pr_metadata["url"]}" if pr_metadata["url"]
 
             lines
           end
@@ -129,7 +129,7 @@ module Ace
               merged.each do |pr|
                 title = pr["title"] || "(no title)"
                 merged_ago = format_merged_time_compact(pr["mergedAt"])
-                lines << "  ##{pr['number']} #{title}#{merged_ago}"
+                lines << "  ##{pr["number"]} #{title}#{merged_ago}"
               end
             end
 
@@ -139,7 +139,7 @@ module Ace
               open_prs.each do |pr|
                 title = pr["title"] || "(no title)"
                 author = format_author(pr["author"])
-                lines << "  ##{pr['number']} #{title}#{author}"
+                lines << "  ##{pr["number"]} #{title}#{author}"
               end
             end
 

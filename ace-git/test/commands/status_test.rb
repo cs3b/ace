@@ -76,7 +76,7 @@ class StatusTest < AceGitTestCase
   end
 
   def test_execute_handles_ace_git_error
-    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(_opts){ raise Ace::Git::Error, "Context loading failed" } do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(_opts) { raise Ace::Git::Error, "Context loading failed" } do
       error = assert_raises(Ace::Support::Cli::Error) do
         @command.call(format: nil)
       end
@@ -89,10 +89,10 @@ class StatusTest < AceGitTestCase
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
-      pr_metadata: { "number" => 123, "title" => "Test PR" }
+      pr_metadata: {"number" => 123, "title" => "Test PR"}
     )
 
-    mock_diff_result = { success: true, diff: "+added line\n-removed line" }
+    mock_diff_result = {success: true, diff: "+added line\n-removed line"}
 
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, mock_diff_result do
@@ -111,11 +111,11 @@ class StatusTest < AceGitTestCase
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
-      pr_metadata: { "number" => 123, "title" => "Test PR" }
+      pr_metadata: {"number" => 123, "title" => "Test PR"}
     )
 
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, ->(_pr){ raise Ace::Git::Error, "Diff failed" } do
+      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, ->(_pr) { raise Ace::Git::Error, "Diff failed" } do
         output = capture_io do
           result = @command.call(format: nil, with_diff: true)
           # Should still succeed - diff errors are silently skipped
@@ -179,8 +179,8 @@ class StatusTest < AceGitTestCase
       repository_type: :normal,
       repository_state: :clean,
       pr_activity: {
-        merged: [{ "number" => 84, "title" => "Merged PR" }],
-        open: [{ "number" => 85, "title" => "Open PR", "author" => { "login" => "dev" } }]
+        merged: [{"number" => 84, "title" => "Merged PR"}],
+        open: [{"number" => 85, "title" => "Open PR", "author" => {"login" => "dev"}}]
       }
     )
 
@@ -202,7 +202,7 @@ class StatusTest < AceGitTestCase
       repository_type: :normal,
       repository_state: :clean,
       pr_activity: {
-        merged: [{ "number" => 84 }],
+        merged: [{"number" => 84}],
         open: []
       }
     )
@@ -287,7 +287,7 @@ class StatusTest < AceGitTestCase
       repository_type: :normal,
       repository_state: :clean,
       recent_commits: [
-        { hash: "a7404e9", subject: "feat: Add feature" }
+        {hash: "a7404e9", subject: "feat: Add feature"}
       ]
     )
 

@@ -96,7 +96,7 @@ module Ace
                 success: true,
                 metadata: metadata,
                 identifier: parsed.gh_format,
-                parsed: { number: parsed.number, repo: parsed.repo }
+                parsed: {number: parsed.number, repo: parsed.repo}
               }
             else
               handle_error(result[:error], parsed.gh_format)
@@ -154,20 +154,20 @@ module Ace
           def fetch_recently_merged(limit: Ace::Git.merged_prs_limit, timeout: Ace::Git.network_timeout)
             result = execute_gh_command(
               ["gh", "pr", "list", "--state", "merged", "--limit", limit.to_s,
-               "--json", "number,title,mergedAt,author"],
+                "--json", "number,title,mergedAt,author"],
               timeout: timeout
             )
 
             if result[:success]
               prs = JSON.parse(result[:output])
-              { success: true, prs: prs }
+              {success: true, prs: prs}
             else
-              { success: false, error: result[:error], prs: [] }
+              {success: false, error: result[:error], prs: []}
             end
           rescue JSON::ParserError => e
-            { success: false, error: "Failed to parse merged PRs: #{e.message}", prs: [] }
+            {success: false, error: "Failed to parse merged PRs: #{e.message}", prs: []}
           rescue Errno::ENOENT
-            { success: false, error: "GitHub CLI (gh) not installed", prs: [] }
+            {success: false, error: "GitHub CLI (gh) not installed", prs: []}
           end
 
           # Fetch open PRs
@@ -178,7 +178,7 @@ module Ace
           def fetch_open_prs(exclude_branch: nil, limit: Ace::Git.open_prs_limit, timeout: Ace::Git.network_timeout)
             result = execute_gh_command(
               ["gh", "pr", "list", "--state", "open", "--limit", limit.to_s,
-               "--json", "number,title,author,headRefName"],
+                "--json", "number,title,author,headRefName"],
               timeout: timeout
             )
 
@@ -188,14 +188,14 @@ module Ace
               if exclude_branch
                 prs = prs.reject { |pr| pr["headRefName"] == exclude_branch }
               end
-              { success: true, prs: prs }
+              {success: true, prs: prs}
             else
-              { success: false, error: result[:error], prs: [] }
+              {success: false, error: result[:error], prs: []}
             end
           rescue JSON::ParserError => e
-            { success: false, error: "Failed to parse open PRs: #{e.message}", prs: [] }
+            {success: false, error: "Failed to parse open PRs: #{e.message}", prs: []}
           rescue Errno::ENOENT
-            { success: false, error: "GitHub CLI (gh) not installed", prs: [] }
+            {success: false, error: "GitHub CLI (gh) not installed", prs: []}
           end
 
           # Fetch all recent PRs in a single call for optimal performance
@@ -206,26 +206,26 @@ module Ace
           def fetch_all_prs(limit: 15, timeout: Ace::Git.network_timeout)
             result = execute_gh_command(
               ["gh", "pr", "list", "--state", "all", "--limit", limit.to_s,
-               "--json", "number,title,state,mergedAt,author,headRefName,isDraft,baseRefName,url"],
+                "--json", "number,title,state,mergedAt,author,headRefName,isDraft,baseRefName,url"],
               timeout: timeout
             )
 
             if result[:success]
               prs = JSON.parse(result[:output])
-              { success: true, prs: prs }
+              {success: true, prs: prs}
             else
-              { success: false, error: result[:error], prs: [] }
+              {success: false, error: result[:error], prs: []}
             end
           rescue JSON::ParserError => e
-            { success: false, error: "Failed to parse PR list: #{e.message}", prs: [] }
+            {success: false, error: "Failed to parse PR list: #{e.message}", prs: []}
           rescue Errno::ENOENT
-            { success: false, error: "GitHub CLI (gh) not installed", prs: [] }
+            {success: false, error: "GitHub CLI (gh) not installed", prs: []}
           end
 
           private
 
           # Environment variables for consistent gh CLI output across all locales
-          GH_ENV = { "LC_ALL" => "C" }.freeze
+          GH_ENV = {"LC_ALL" => "C"}.freeze
 
           # Execute gh command with timeout via CommandExecutor
           # @param args [Array<String>] Command arguments
@@ -238,7 +238,7 @@ module Ace
 
             # Check for timeout (CommandExecutor returns exit_code: -1 with timeout message)
             if result[:exit_code] == -1 && result[:error]&.include?("timed out")
-              raise Ace::Git::TimeoutError, "gh command timed out after #{timeout}s: #{args.join(' ')}"
+              raise Ace::Git::TimeoutError, "gh command timed out after #{timeout}s: #{args.join(" ")}"
             end
 
             result

@@ -23,14 +23,14 @@ class GroupedStatsFormatterTest < AceGitTestCase
               deletions: 3,
               file_count: 2,
               files: [
-                { display_path: "cli/diff.rb", additions: 7, deletions: 1, binary: false },
-                { display_path: "assets/logo.bin", additions: nil, deletions: nil, binary: true }
+                {display_path: "cli/diff.rb", additions: 7, deletions: 1, binary: false},
+                {display_path: "assets/logo.bin", additions: nil, deletions: nil, binary: true}
               ]
             }
           ]
         }
       ],
-      total: { additions: 10, deletions: 3, files: 2 }
+      total: {additions: 10, deletions: 3, files: 2}
     }
   end
 
@@ -53,7 +53,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
 
     # No blank line immediately after group header
     refute_equal "", lines[group_header_idx + 1],
-                 "expected no blank line after group header"
+      "expected no blank line after group header"
   end
 
   def test_format_markdown_wraps_large_groups_in_details
@@ -71,10 +71,10 @@ class GroupedStatsFormatterTest < AceGitTestCase
         name: "pkg/", additions: 2, deletions: 1, file_count: 1,
         layers: [{
           name: "other/", additions: 2, deletions: 1, file_count: 1,
-          files: [{ display_path: "pkg/docs/readme.md", additions: 2, deletions: 1, binary: false }]
+          files: [{display_path: "pkg/docs/readme.md", additions: 2, deletions: 1, binary: false}]
         }]
       }],
-      total: { additions: 2, deletions: 1, files: 1 }
+      total: {additions: 2, deletions: 1, files: 1}
     }
 
     output = @formatter.format(data)
@@ -91,13 +91,13 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "lib/", additions: 10, deletions: 5, file_count: 3,
           files: [
-            { display_path: "pkg/atoms/old_parser.rb -> pkg/atoms/new_parser.rb",   additions: 5, deletions: 3, binary: false },
-            { display_path: "pkg/atoms/old_grouper.rb -> pkg/atoms/new_grouper.rb", additions: 5, deletions: 2, binary: false },
-            { display_path: "pkg/cli/old_cmd.rb -> pkg/cli/new_cmd.rb",             additions: 0, deletions: 0, binary: false }
+            {display_path: "pkg/atoms/old_parser.rb -> pkg/atoms/new_parser.rb", additions: 5, deletions: 3, binary: false},
+            {display_path: "pkg/atoms/old_grouper.rb -> pkg/atoms/new_grouper.rb", additions: 5, deletions: 2, binary: false},
+            {display_path: "pkg/cli/old_cmd.rb -> pkg/cli/new_cmd.rb", additions: 0, deletions: 0, binary: false}
           ]
         }]
       }],
-      total: { additions: 10, deletions: 5, files: 3 }
+      total: {additions: 10, deletions: 5, files: 3}
     }
     output = @formatter.format(data)
 
@@ -122,7 +122,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
           }]
         }]
       }],
-      total: { additions: 1, deletions: 1, files: 1 }
+      total: {additions: 1, deletions: 1, files: 1}
     }
 
     output = @formatter.format(data)
@@ -136,12 +136,12 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "lib/", additions: 8, deletions: 2, file_count: 2,
           files: [
-            { display_path: "pkg/atoms/old.rb -> pkg/atoms/new.rb", additions: 5, deletions: 2, binary: false },
-            { display_path: "pkg/atoms/other.rb",                   additions: 3, deletions: 0, binary: false }
+            {display_path: "pkg/atoms/old.rb -> pkg/atoms/new.rb", additions: 5, deletions: 2, binary: false},
+            {display_path: "pkg/atoms/other.rb", additions: 3, deletions: 0, binary: false}
           ]
         }]
       }],
-      total: { additions: 8, deletions: 2, files: 2 }
+      total: {additions: 8, deletions: 2, files: 2}
     }
     output = @formatter.format(data)
 
@@ -155,13 +155,13 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "lib/", additions: 10, deletions: 0, file_count: 3,
           files: [
-            { display_path: "pkg/atoms/parser.rb",  additions: 3, deletions: 0, binary: false },
-            { display_path: "pkg/atoms/grouper.rb", additions: 4, deletions: 0, binary: false },
-            { display_path: "pkg/cli/command.rb",   additions: 3, deletions: 0, binary: false }
+            {display_path: "pkg/atoms/parser.rb", additions: 3, deletions: 0, binary: false},
+            {display_path: "pkg/atoms/grouper.rb", additions: 4, deletions: 0, binary: false},
+            {display_path: "pkg/cli/command.rb", additions: 3, deletions: 0, binary: false}
           ]
         }]
       }],
-      total: { additions: 10, deletions: 0, files: 3 }
+      total: {additions: 10, deletions: 0, files: 3}
     }
     output = @formatter.format(data)
 
@@ -178,12 +178,12 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "root/", additions: 6, deletions: 1, file_count: 2,
           files: [
-            { display_path: "CHANGELOG.md", additions: 5, deletions: 1, binary: false },
-            { display_path: "README.md", additions: 1, deletions: 0, binary: false }
+            {display_path: "CHANGELOG.md", additions: 5, deletions: 1, binary: false},
+            {display_path: "README.md", additions: 1, deletions: 0, binary: false}
           ]
         }]
       }],
-      total: { additions: 6, deletions: 1, files: 2 }
+      total: {additions: 6, deletions: 1, files: 2}
     }
 
     output = @formatter.format(data)
@@ -197,10 +197,10 @@ class GroupedStatsFormatterTest < AceGitTestCase
         name: ".ace/", additions: 5, deletions: 0, file_count: 1,
         layers: [{
           name: "test/", additions: 5, deletions: 0, file_count: 1,
-          files: [{ display_path: "suite.yml", additions: 5, deletions: 0, binary: false }]
+          files: [{display_path: "suite.yml", additions: 5, deletions: 0, binary: false}]
         }]
       }],
-      total: { additions: 5, deletions: 0, files: 1 }
+      total: {additions: 5, deletions: 0, files: 1}
     }
 
     output = @formatter.format(data)
@@ -216,12 +216,12 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "test/", additions: 3, deletions: 3, file_count: 2,
           files: [
-            { display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false },
-            { display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false }
+            {display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false},
+            {display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false}
           ]
         }]
       }],
-      total: { additions: 4, deletions: 4, files: 3 }
+      total: {additions: 4, deletions: 4, files: 3}
     }
 
     output = @formatter.format(data)
@@ -242,12 +242,12 @@ class GroupedStatsFormatterTest < AceGitTestCase
         layers: [{
           name: "test/", additions: 3, deletions: 3, file_count: 2,
           files: [
-            { display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false },
-            { display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false }
+            {display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false},
+            {display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false}
           ]
         }]
       }],
-      total: { additions: 4, deletions: 4, files: 3 }
+      total: {additions: 4, deletions: 4, files: 3}
     }
 
     output = @formatter.format(data)

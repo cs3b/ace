@@ -29,7 +29,7 @@ module Ace
           def execute(*command_parts, timeout: Ace::Git.git_timeout, env: nil)
             # Check if lock retry is enabled (default: true)
             lock_retry_config = Ace::Git.config["lock_retry"]
-            lock_retry_enabled = lock_retry_config.nil? ? true : lock_retry_config["enabled"] != false
+            lock_retry_enabled = lock_retry_config.nil? || lock_retry_config["enabled"] != false
 
             if lock_retry_enabled && !command_parts.empty? && command_parts.first == "git"
               execute_with_lock_retry(command_parts, timeout: timeout, env: env, config: lock_retry_config)
@@ -122,10 +122,10 @@ module Ace
             {
               success: false,
               output: "",
-              error: "Command timed out after #{timeout} seconds: #{command_parts.join(' ')}",
+              error: "Command timed out after #{timeout} seconds: #{command_parts.join(" ")}",
               exit_code: -1
             }
-          rescue StandardError => e
+          rescue => e
             # Log backtrace for debugging when DEBUG environment variable is set
             # This helps diagnose implementation bugs vs command failures
             warn e.backtrace.join("\n") if ENV["DEBUG"]

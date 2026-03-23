@@ -141,10 +141,10 @@ module Ace
 
             # Convert escaped glob patterns to regex
             regex_str = regex_str
-              .gsub('\\*\\*/', '.*')     # **/ → .* (zero or more segments)
-              .gsub('\\*\\*', '.*')       # ** → .* (zero or more segments)
-              .gsub('\\*', '[^/]*')       # * → [^/]* (within segment)
-              .gsub('\\?', '.')           # ? → . (single char)
+              .gsub('\\*\\*/', ".*")     # **/ → .* (zero or more segments)
+              .gsub('\\*\\*', ".*")       # ** → .* (zero or more segments)
+              .gsub('\\*', "[^/]*")       # * → [^/]* (within segment)
+              .gsub('\\?', ".")           # ? → . (single char)
 
             # Anchor to start of path
             Regexp.new("^#{regex_str}")
