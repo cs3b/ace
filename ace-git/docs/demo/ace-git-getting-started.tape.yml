@@ -16,8 +16,3 @@ scenes:
     sleep: 4s
   - type: ace-git diff --format summary
     sleep: 4s
-teardown:
-- cleanup
-setup:
-- sandbox
-- copy-fixtures

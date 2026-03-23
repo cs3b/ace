@@ -30,11 +30,19 @@
 
 **Check repo and PR context without leaving the CLI** - inspect branch, change, and pull request state quickly with [`ace-git`](docs/usage.md) before running higher-risk history operations.
 
-**Rebase with changelog-safe workflow guardrails** - use `/as-git-rebase` to run structured rebase flows that preserve package release metadata and reduce manual conflict-prone steps.
+**Rebase with changelog-safe workflow guardrails** - use the `as-git-rebase` agent workflow to run structured rebase flows that preserve package release metadata and reduce manual conflict-prone steps.
 
-**Prepare clean review history before publishing** - run `/as-git-reorganize-commits` to reorganize commit stacks, then use `/as-github-pr-create` or `/as-github-pr-update` to manage PR metadata in a predictable workflow sequence.
+**Prepare clean review history before publishing** - run the `as-git-reorganize-commits` workflow to reorganize commit stacks, then use `as-github-pr-create` or `as-github-pr-update` to manage PR metadata in a predictable workflow sequence. See [Handbook](docs/handbook.md) for the full skill and workflow catalog.
 
 **Coordinate with commit and worktree tools** - pair with [ace-git-commit](../ace-git-commit) for scoped commit authoring, [ace-git-worktree](../ace-git-worktree) for task-oriented worktree management, and [ace-bundle](../ace-bundle) for loading workflow instructions.
+
+## Installation
+
+```bash
+gem install ace-git
+```
+
+See [Getting Started](docs/getting-started.md) for setup and first steps.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

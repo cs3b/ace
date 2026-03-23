@@ -40,7 +40,7 @@ Reference for package-owned handbook resources in `ace-git/handbook/`.
 
 ## Templates
 
-- PR templates: `handbook/templates/pr/default.template.md`, `feature.template.md`, `bugfix.template.md`
+- PR templates: `handbook/templates/pr/default.template.md`, `handbook/templates/pr/feature.template.md`, `handbook/templates/pr/bugfix.template.md`
 - Commit templates: `handbook/templates/commit/squash.template.md`
 
 ## Related Docs

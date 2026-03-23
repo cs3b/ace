@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-23
+
+### Added
+- Installation section in README for quick onboarding.
+
+### Changed
+- Aligned gemspec description with README intro messaging.
+- Clarified agent workflow references in Use Cases (removed raw `/as-` prefix, linked to Handbook catalog).
+- Expanded template paths in handbook catalog to use full `handbook/templates/pr/` prefix.
+- Re-recorded getting-started demo GIF against live repo (removed sandbox/fixture setup from tape).
+
 ## [0.17.2] - 2026-03-23
 
 ### Changed
