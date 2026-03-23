@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-23
+
+### Changed
+- Added format examples table to README showing all 7 encode formats with real IDs, character lengths, and precision.
+- Fixed misleading "6-character" claim in How It Works -- formats range from 2 to 8 characters.
+- Added day/week disambiguation note explaining 3rd-character value ranges.
+- Expanded demo tape with multiple-ID generation (`-n 3`) and split path (`--split month,week --path-only`) scenarios.
+- Re-recorded getting-started GIF with the expanded demo flow.
+
 ## [0.12.2] - 2026-03-23
 
 ### Changed

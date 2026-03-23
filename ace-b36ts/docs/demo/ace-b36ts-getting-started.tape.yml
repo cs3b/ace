@@ -6,14 +6,18 @@ tags:
 settings:
   font_size: 16
   width: 960
-  height: 700
+  height: 480
   format: gif
 scenes:
 - name: Main flow
   commands:
   - type: ace-b36ts encode now
     sleep: 2s
-  - type: ace-b36ts decode i50jj3
-    sleep: 1s
+  - type: ace-b36ts decode 8qmi00
+    sleep: 2s
+  - type: ace-b36ts encode -n 3 now
+    sleep: 2s
+  - type: ace-b36ts encode --split month,week now --path-only
+    sleep: 2s
 teardown:
 - cleanup
