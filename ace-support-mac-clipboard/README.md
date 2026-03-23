@@ -1,14 +1,15 @@
-<h1 align="center">ace-support-mac-clipboard</h1>
-
-<p align="center">
-  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
-
-<a href="https://rubygems.org/gems/ace-support-mac-clipboard"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-mac-clipboard.svg" /></a>
-<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
-<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+<div align="center">
+  <h1> ACE - Support Mac Clipboard </h1>
 
   macOS clipboard support for text, files, and image payloads used by ACE tools.
-</p>
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-support-mac-clipboard"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-mac-clipboard.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
 
 [Documentation](#documentation)
 
@@ -31,3 +32,4 @@ API reference in source: `lib/ace/support/mac_clipboard`
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+

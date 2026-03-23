@@ -1,14 +1,15 @@
-<h1 align="center">ace-support-config</h1>
+<div align="center">
+  <h1> ACE - Support Config </h1>
 
-<p align="center">
+  Shared configuration cascade primitives for ACE libraries and tools.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-support-config"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-config.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  Shared configuration cascade primitives for ACE libraries and tools.
-</p>
+</div>
 
 [Usage Guide](docs/usage.md)
 
@@ -37,3 +38,4 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+
