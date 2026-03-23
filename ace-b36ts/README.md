@@ -38,7 +38,7 @@ All examples below encode **2026-03-23 12:00:00 UTC**:
 | `50ms` | 7 | ~50 ms | `8qmi000` |
 | `ms` | 8 | ~1.4 ms | `8qmi0000` |
 
-`day` and `week` both produce 3-character IDs. The 3rd character distinguishes them: values 0--30 in base36 encode days 1--31, while values 31--35 encode ISO weeks (Thursday determines which week a date belongs to).
+> `day` and `week` both produce 3-character IDs. The 3rd character distinguishes them: values 0--30 in base36 encode days 1--31, while values 31--35 encode ISO weeks (Thursday determines which week a date belongs to).
 
 ## Use Cases
 
