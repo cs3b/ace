@@ -12,6 +12,7 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md)
 `ace-llm-providers-cli` extends [ace-llm](../ace-llm) with provider clients that execute through installed CLI tools (Claude, Codex, OpenCode, Gemini, pi, Codex OSS) while preserving the shared command interface. Provider defaults live in versioned YAML, and a health-check command verifies local readiness.
 
