@@ -27,14 +27,14 @@ class StatusCommandTest < AceOverseerTestCase
     end
 
     def to_h(_snapshot)
-      { worktrees: [] }
+      {worktrees: []}
     end
   end
 
   def make_assignment(id:, state:)
     {
-      "assignment" => { "state" => state, "id" => id, "name" => "work-on-task" },
-      "step_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
+      "assignment" => {"state" => state, "id" => id, "name" => "work-on-task"},
+      "step_summary" => {"total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2}
     }
   end
 
@@ -44,9 +44,9 @@ class StatusCommandTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
-    collector = FakeCollector.new({ contexts: [context] })
+    collector = FakeCollector.new({contexts: [context]})
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "table") }.first
@@ -61,9 +61,9 @@ class StatusCommandTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
-    collector = FakeCollector.new({ contexts: [context] })
+    collector = FakeCollector.new({contexts: [context]})
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "json") }.first
@@ -73,7 +73,7 @@ class StatusCommandTest < AceOverseerTestCase
   end
 
   def test_quiet_suppresses_output
-    collector = FakeCollector.new({ contexts: [] })
+    collector = FakeCollector.new({contexts: []})
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "table", quiet: true) }.first
@@ -83,7 +83,7 @@ class StatusCommandTest < AceOverseerTestCase
   end
 
   def test_watch_option_with_json_format_runs_once
-    collector = FakeCollector.new({ contexts: [] })
+    collector = FakeCollector.new({contexts: []})
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "json", watch: true) }.first

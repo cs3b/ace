@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class PresetResolverTest < AceOverseerTestCase
   def test_prefers_task_frontmatter_preset
     value = Ace::Overseer::Atoms::PresetResolver.resolve(
-      task_frontmatter: { "assign" => { "preset" => "task-preset" } },
+      task_frontmatter: {"assign" => {"preset" => "task-preset"}},
       cli_preset: "cli-preset",
       default: "default-preset"
     )
@@ -31,7 +31,7 @@ class PresetResolverTest < AceOverseerTestCase
 
   def test_supports_symbol_keys
     value = Ace::Overseer::Atoms::PresetResolver.resolve(
-      task_frontmatter: { assign: { preset: "symbol-preset" } },
+      task_frontmatter: {assign: {preset: "symbol-preset"}},
       cli_preset: nil,
       default: "default"
     )

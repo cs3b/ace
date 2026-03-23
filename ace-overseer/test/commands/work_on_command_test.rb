@@ -12,8 +12,8 @@ class WorkOnCommandTest < AceOverseerTestCase
       @calls = []
     end
 
-    def call(task_ref:, task_refs: nil, cli_preset:, on_progress: nil)
-      @calls << { task_ref: task_ref, task_refs: task_refs, cli_preset: cli_preset }
+    def call(task_ref:, cli_preset:, task_refs: nil, on_progress: nil)
+      @calls << {task_ref: task_ref, task_refs: task_refs, cli_preset: cli_preset}
       raise @error if @error
 
       @result

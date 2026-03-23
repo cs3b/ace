@@ -6,7 +6,7 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
   FakeAssignment = Struct.new(:id, :name, :cache_dir)
   FakeQueueState = Struct.new(:assignment_state) do
     def summary
-      { total: 3, done: 3, failed: 0, in_progress: 0, pending: 0 }
+      {total: 3, done: 3, failed: 0, in_progress: 0, pending: 0}
     end
   end
   FakeAssignmentInfo = Struct.new(:assignment, :queue_state) do

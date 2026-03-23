@@ -5,10 +5,10 @@ module Ace
     module Models
       class WorkContext
         attr_reader :task_id, :worktree_path, :branch, :assignments, :git_status, :tmux_window,
-                    :location_type
+          :location_type
 
         def initialize(task_id:, worktree_path:, branch:, assignments: [], git_status: nil,
-                       tmux_window: nil, location_type: :worktree)
+          tmux_window: nil, location_type: :worktree)
           @task_id = task_id.to_s.freeze
           @worktree_path = worktree_path.to_s.freeze
           @branch = branch.to_s.freeze

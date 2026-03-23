@@ -5,7 +5,7 @@ module Ace
     module Organisms
       class PruneOrchestrator
         def initialize(worktree_manager: nil, prune_checker: nil, tmux_executor: nil, config: nil,
-                       assignment_prune_checker: nil, assignment_manager: nil)
+          assignment_prune_checker: nil, assignment_manager: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @prune_checker = prune_checker || Molecules::PruneSafetyChecker.new
           @tmux_executor = tmux_executor || Ace::Tmux::Molecules::TmuxExecutor.new
@@ -15,11 +15,11 @@ module Ace
         end
 
         def call(dry_run:, yes:, force: false, targets: [], assignment_id: nil,
-                 input: $stdin, output: $stdout, on_progress: nil)
+          input: $stdin, output: $stdout, on_progress: nil)
           if assignment_id
             return prune_assignment(assignment_id: assignment_id, dry_run: dry_run,
-                                    yes: yes, force: force, input: input, output: output,
-                                    on_progress: on_progress)
+              yes: yes, force: force, input: input, output: output,
+              on_progress: on_progress)
           end
 
           progress = on_progress || ->(_msg) {}
@@ -31,10 +31,10 @@ module Ace
 
           all_worktrees = Array(result[:worktrees]).reject(&:bare)
           worktrees = if targets.any?
-                        filter_by_targets(all_worktrees, targets)
-                      else
-                        all_worktrees.select(&:task_associated?)
-                      end
+            filter_by_targets(all_worktrees, targets)
+          else
+            all_worktrees.select(&:task_associated?)
+          end
 
           progress.call("Checking #{worktrees.length} worktree(s)...")
           checked = worktrees.map { |worktree| check_candidate(worktree) }
@@ -44,7 +44,7 @@ module Ace
           forced = force ? unsafe : []
 
           if dry_run
-            return { dry_run: true, safe: safe, unsafe: unsafe, forced: forced, pruned: [], failed: [] }
+            return {dry_run: true, safe: safe, unsafe: unsafe, forced: forced, pruned: [], failed: []}
           end
 
           print_candidates(safe, unsafe, force, output)
@@ -54,7 +54,7 @@ module Ace
             output.print("Continue? [y/N] ")
             answer = input.gets.to_s.strip.downcase
             unless %w[y yes].include?(answer)
-              return { dry_run: false, safe: safe, unsafe: unsafe, forced: forced, pruned: [], failed: [], aborted: true }
+              return {dry_run: false, safe: safe, unsafe: unsafe, forced: forced, pruned: [], failed: [], aborted: true}
             end
           end
 
@@ -72,7 +72,7 @@ module Ace
               close_tmux_window(candidate.worktree_path)
               pruned << candidate
             else
-              failed << { candidate: candidate, error: remove_result[:error] }
+              failed << {candidate: candidate, error: remove_result[:error]}
             end
           end
 
@@ -96,12 +96,12 @@ module Ace
           candidate = @assignment_prune_checker.check(assignment_id: assignment_id)
 
           if dry_run
-            return { dry_run: true, assignment_candidate: candidate, pruned_assignments: [] }
+            return {dry_run: true, assignment_candidate: candidate, pruned_assignments: []}
           end
 
           unless candidate.safe_to_prune? || force
             output.puts("Cannot prune assignment #{assignment_id}: #{candidate.reasons.join(", ")}")
-            return { dry_run: false, assignment_candidate: candidate, pruned_assignments: [], blocked: true }
+            return {dry_run: false, assignment_candidate: candidate, pruned_assignments: [], blocked: true}
           end
 
           print_assignment_candidate(candidate, force, output)
@@ -110,18 +110,22 @@ module Ace
             output.print("Continue? [y/N] ")
             answer = input.gets.to_s.strip.downcase
             unless %w[y yes].include?(answer)
-              return { dry_run: false, assignment_candidate: candidate, pruned_assignments: [], aborted: true }
+              return {dry_run: false, assignment_candidate: candidate, pruned_assignments: [], aborted: true}
             end
           end
 
           deleted = @assignment_manager.delete(assignment_id)
           pruned = deleted ? [candidate] : []
 
-          { dry_run: false, assignment_candidate: candidate, pruned_assignments: pruned }
+          {dry_run: false, assignment_candidate: candidate, pruned_assignments: pruned}
         end
 
         def print_assignment_candidate(candidate, force, output)
-          label = candidate.safe_to_prune? ? "Safe to prune" : (force ? "Force removing" : "Blocked")
+          label = if candidate.safe_to_prune?
+            "Safe to prune"
+          else
+            (force ? "Force removing" : "Blocked")
+          end
           output.puts("#{label}: assignment #{candidate.assignment_id} (#{candidate.assignment_name})")
           output.puts("  State: #{candidate.assignment_state}")
           output.puts("  Reasons: #{candidate.reasons.join(", ")}") if candidate.reasons.any?
@@ -155,7 +159,7 @@ module Ace
           @prune_checker.check(worktree_path: worktree.path, task_ref: worktree.task_id)
         rescue Errno::ENOENT, Errno::ENOTDIR
           unsafe_candidate(worktree, "worktree directory missing")
-        rescue StandardError => e
+        rescue => e
           unsafe_candidate(worktree, "prune safety check failed: #{e.message}")
         end
 
@@ -175,7 +179,7 @@ module Ace
           return if result.nil? || result[:success]
 
           progress.call("Warning: failed to prune stale worktree metadata: #{result[:error]}")
-        rescue StandardError => e
+        rescue => e
           progress.call("Warning: failed to prune stale worktree metadata: #{e.message}")
         end
 
@@ -186,7 +190,7 @@ module Ace
           return false if session_name.empty?
 
           @tmux_executor.run([tmux_bin, "kill-window", "-t", "#{session_name}:#{window_name}"])
-        rescue StandardError
+        rescue
           false
         end
       end

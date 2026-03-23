@@ -32,7 +32,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
         {
           "name" => "work-on-task",
           "description" => "Test preset",
-          "parameters" => { "taskref" => { "required" => true } },
+          "parameters" => {"taskref" => {"required" => true}},
           "steps" => [
             {
               "name" => "work-on-task",
@@ -63,7 +63,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
         {
           "name" => "work-on-task",
           "description" => "Multi-task preset",
-          "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
+          "parameters" => {"taskrefs" => {"required" => true, "type" => "array"}},
           "expansion" => {
             "batch-parent" => {
               "name" => "batch-tasks",
@@ -107,7 +107,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
         {
           "name" => "work-on-task",
           "description" => "Multi-task preset",
-          "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
+          "parameters" => {"taskrefs" => {"required" => true, "type" => "array"}},
           "expansion" => {
             "batch-parent" => {
               "name" => "batch-tasks",
@@ -148,7 +148,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
         {
           "name" => "work-on-task",
           "description" => "Multi-task preset",
-          "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
+          "parameters" => {"taskrefs" => {"required" => true, "type" => "array"}},
           "expansion" => {
             "batch-parent" => {
               "name" => "batch-tasks",
@@ -194,7 +194,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
         {
           "name" => "work-on-task",
           "description" => "Project preset",
-          "parameters" => { "taskref" => { "required" => true } },
+          "parameters" => {"taskref" => {"required" => true}},
           "steps" => [
             {
               "name" => "work-on-task",

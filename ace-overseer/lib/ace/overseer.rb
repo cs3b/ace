@@ -67,7 +67,7 @@ module Ace
 
       config = resolver.resolve_namespace("overseer")
       config.data
-    rescue StandardError => e
+    rescue => e
       warn "ace-overseer: Could not load config: #{e.class} - #{e.message}" if debug?
       load_gem_defaults_fallback
     end
@@ -78,7 +78,7 @@ module Ace
       return {} unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue StandardError
+    rescue
       {}
     end
     private_class_method :load_gem_defaults_fallback

@@ -37,7 +37,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
   end
 
   def make_info(id:, name:, state:, total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
-    queue_state = FakeQueueState.new({ total: total, done: done, failed: failed, in_progress: in_progress, pending: pending })
+    queue_state = FakeQueueState.new({total: total, done: done, failed: failed, in_progress: in_progress, pending: pending})
     FakeAssignmentInfo.new(id, name, state, queue_state)
   end
 
@@ -46,7 +46,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
     Dir.mktmpdir("task.230") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("230-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("230-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
       )
 
@@ -69,7 +69,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
     Dir.mktmpdir("task.266") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("266-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("266-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new(infos) }
       )
 
@@ -87,7 +87,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
   def test_collect_handles_no_assignments
     Dir.mktmpdir("task.231") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("231-feature", { "clean" => false }) },
+        repo_status_loader: -> { FakeRepoStatus.new("231-feature", {"clean" => false}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -102,7 +102,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
   def test_collect_handles_discoverer_error
     Dir.mktmpdir("task.235") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("235-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("235-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { ErrorDiscoverer.new }
       )
 
@@ -121,7 +121,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
         repo_status_loader: -> {
           captured_root = ENV["PROJECT_ROOT_PATH"]
-          FakeRepoStatus.new("232-feature", { "clean" => true })
+          FakeRepoStatus.new("232-feature", {"clean" => true})
         },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
@@ -152,7 +152,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       worktree = File.join(root, "ace-task.266")
       Dir.mkdir(worktree)
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("267-rename-something", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("267-rename-something", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -167,7 +167,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       worktree = File.join(root, "ace-t.266")
       Dir.mkdir(worktree)
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("266-rename-something", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("266-rename-something", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -180,7 +180,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
   def test_collect_passes_location_type
     Dir.mktmpdir("main-branch") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("main", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("main", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -192,14 +192,14 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
   def test_collect_includes_current_step_when_running
     queue_state = FakeQueueState.new(
-      { total: 5, done: 2, failed: 0, in_progress: 1, pending: 2 },
+      {total: 5, done: 2, failed: 0, in_progress: 1, pending: 2},
       FakeStep.new("implement")
     )
     info = FakeAssignmentInfo.new("8run1", "work-on-task-280", :running, queue_state)
 
     Dir.mktmpdir("task.280") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("280-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("280-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
       )
 
@@ -214,7 +214,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
     Dir.mktmpdir("task.281") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("281-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("281-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
       )
 
@@ -226,7 +226,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
   def test_collect_assignments_only_returns_fresh_assignments_with_cached_git_data
     info = make_info(id: "9new1x", name: "work-on-task-300", state: :running)
-    cached_git = { "clean" => true, "pr_metadata" => { "number" => 42 } }
+    cached_git = {"clean" => true, "pr_metadata" => {"number" => 42}}
 
     Dir.mktmpdir("task.300") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
@@ -259,7 +259,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       context = collector.collect_assignments_only(
         worktree,
         cached_branch: "main",
-        cached_git_status: { "clean" => true },
+        cached_git_status: {"clean" => true},
         location_type: :main
       )
 
@@ -272,7 +272,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       worktree = File.join(root, "ace-task.hy4")
       Dir.mkdir(worktree)
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -285,7 +285,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
   def test_collect_extracts_b36ts_task_id_from_branch
     Dir.mktmpdir("some-worktree") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 
@@ -300,7 +300,7 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       worktree = File.join(root, "task.1234")
       Dir.mkdir(worktree)
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
-        repo_status_loader: -> { FakeRepoStatus.new("1234-feature", { "clean" => true }) },
+        repo_status_loader: -> { FakeRepoStatus.new("1234-feature", {"clean" => true}) },
         assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
       )
 

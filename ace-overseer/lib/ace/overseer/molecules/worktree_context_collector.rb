@@ -49,7 +49,7 @@ module Ace
         def load_all_assignments
           infos = @assignment_discoverer_factory.call.find_all(include_completed: true)
           infos.map { |info| assignment_info_to_h(info) }
-        rescue StandardError
+        rescue
           []
         end
 

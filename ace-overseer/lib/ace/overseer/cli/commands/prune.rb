@@ -57,7 +57,7 @@ module Ace
             end
 
             print_apply(result)
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
 

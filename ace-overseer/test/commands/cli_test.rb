@@ -7,14 +7,12 @@ class CliTest < AceOverseerTestCase
   # Helper to invoke CLI using the CLI runner pattern
   def invoke_cli(args)
     stdout, stderr = capture_io do
-      begin
-        @_cli_result = Ace::Support::Cli::Runner.new(Ace::Overseer::CLI).call(args: args)
-      rescue SystemExit => e
-        @_cli_result = e.status
-      rescue Ace::Support::Cli::Error => e
-        $stderr.puts e.message
-        @_cli_result = e.exit_code
-      end
+      @_cli_result = Ace::Support::Cli::Runner.new(Ace::Overseer::CLI).call(args: args)
+    rescue SystemExit => e
+      @_cli_result = e.status
+    rescue Ace::Support::Cli::Error => e
+      warn e.message
+      @_cli_result = e.exit_code
     end
 
     {
