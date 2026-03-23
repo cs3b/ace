@@ -4,15 +4,18 @@
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/ace-search.svg)](https://rubygems.org/gems/ace-search)
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-> Unified codebase search -- one command that auto-detects files or content.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+</p>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+<p align="center">
+  Unified codebase search -- one command that auto-detects files or content.
+</p>
+
 
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
