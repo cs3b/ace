@@ -109,32 +109,10 @@ class WorktreeManagerContractTest < Minitest::Test
     # This test serves as documentation of the expected API contract
 
     # Success result structure:
-    expected_success_api = {
-      success: true,              # Boolean - operation succeeded
-      task_id: "String",          # String - task identifier
-      task_title: "String",       # String - task title/description
-      worktree_path: "String",    # String - absolute path to worktree
-      branch: "String",           # String - branch name created
-      steps_completed: []         # Array<String> - steps that were executed
-    }
 
     # Dry-run result structure:
-    expected_dry_run_api = {
-      success: true,              # Boolean - operation would succeed
-      task_id: "String",          # String - task identifier
-      task_title: "String",       # String - task title/description
-      would_create: {             # Hash - what would be created
-        worktree_path: "String",  # String - path that would be used
-        branch: "String"          # String - branch that would be created
-      },
-      steps_planned: []           # Array<String> - steps that would execute
-    }
 
     # Error result structure:
-    expected_error_api = {
-      success: false,             # Boolean - operation failed
-      error: "String"             # String - error message
-    }
 
     # This test always passes - it exists purely for documentation
     assert true, "API contract documented"

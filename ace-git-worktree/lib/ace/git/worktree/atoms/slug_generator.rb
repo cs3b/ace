@@ -24,13 +24,13 @@ module Ace
           MIN_LENGTH = 3
 
           # Characters that are not allowed in git branch names
-          FORBIDDEN_CHARS = /[~\^*\?\[\]:]/
+          FORBIDDEN_CHARS = /[~\^*?\[\]:]/
 
           # Characters to replace with hyphens
-          SEPARATORS = /[ \._\/\\()]+/
+          SEPARATORS = /[ ._\/\\()]+/
 
           # Multiple consecutive non-word characters (but allow single hyphens)
-          MULTIPLE_SEPARATORS = /-{2,}|[^a-zA-Z0-9\-]+/
+          MULTIPLE_SEPARATORS = /-{2,}|[^a-zA-Z0-9-]+/
 
           # Leading/trailing separators and hyphens
           TRIM_SEPARATORS = /^[-_]+|[-_]+$/
@@ -178,7 +178,7 @@ module Ace
               return "worktree" if branch_name.nil? || branch_name.empty?
 
               # Replace slashes and any non-alphanumeric/hyphen/underscore with hyphens
-              branch_name.to_s.gsub("/", "-").gsub(/[^a-zA-Z0-9\-_]/, "-")
+              branch_name.to_s.tr("/", "-").gsub(/[^a-zA-Z0-9\-_]/, "-")
             end
 
             # Check if a slug is valid for git branch names

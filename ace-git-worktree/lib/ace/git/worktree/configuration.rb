@@ -23,8 +23,8 @@ module Ace
         TEMPLATE_VARIABLES = %w[id task_id slug].freeze
 
         # Git branch name restrictions
-        FORBIDDEN_BRANCH_CHARS = /[~\^:\*\?\[\]]/
-        SEPARATOR_CHARS = /[ \._\/\\]+/
+        FORBIDDEN_BRANCH_CHARS = /[~\^:*?\[\]]/
+        SEPARATOR_CHARS = /[ ._\/\\]+/
 
         # Task status values
         TASK_STATUSES = %w[pending in-progress done blocked].freeze
@@ -92,9 +92,7 @@ module Ace
           return [] unless template.is_a?(String)
 
           used_variables = template.scan(/\{([^}]+)\}/).flatten
-          missing_variables = TEMPLATE_VARIABLES - used_variables
-
-          missing_variables
+          TEMPLATE_VARIABLES - used_variables
         end
 
         # Validate configuration hash
@@ -126,7 +124,7 @@ module Ace
 
             missing = validate_template_variables(template)
             if missing.any?
-              errors << "#{template} should include variables: #{missing.join(', ')}"
+              errors << "#{template} should include variables: #{missing.join(", ")}"
             end
           end
 

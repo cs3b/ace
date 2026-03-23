@@ -28,33 +28,31 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              validate_options(options)
+            validate_options(options)
 
-              # Convert format to symbol for WorktreeLister compatibility
-              options[:format] = options[:format].to_sym if options[:format]
+            # Convert format to symbol for WorktreeLister compatibility
+            options[:format] = options[:format].to_sym if options[:format]
 
-              result = @manager.list_all(options)
+            result = @manager.list_all(options)
 
-              if result[:success]
-                display_list_result(result, options)
-                0
-              else
-                puts "Failed to list worktrees: #{result[:error]}"
-                1
-              end
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue StandardError => e
-              puts "Error: #{e.message}"
+            if result[:success]
+              display_list_result(result, options)
+              0
+            else
+              puts "Failed to list worktrees: #{result[:error]}"
               1
             end
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue => e
+            puts "Error: #{e.message}"
+            1
           end
 
           # Show help for the list command
@@ -231,11 +229,11 @@ module Ace
             puts "  Usable: #{stats[:usable]}"
 
             if options[:show_tasks] && stats[:task_ids].any?
-              puts "  Tasks with worktrees: #{stats[:task_ids].join(', ')}"
+              puts "  Tasks with worktrees: #{stats[:task_ids].join(", ")}"
             end
 
             if stats[:branches].any?
-              puts "  Branches: #{stats[:branches].join(', ')}"
+              puts "  Branches: #{stats[:branches].join(", ")}"
             end
 
             # Show active worktrees count

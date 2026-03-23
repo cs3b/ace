@@ -30,46 +30,44 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              validate_options(options)
+            validate_options(options)
 
-              # Handle list option
-              if options[:list]
-                result = @manager.list_all(format: :simple)
-                if result[:success] && result[:worktrees].any?
-                  result[:worktrees].each do |worktree|
-                    prefix = worktree.task_associated? ? "Task #{worktree.task_id}: " : ""
-                    puts "  #{prefix}#{worktree.branch || 'detached'} (#{worktree.path})"
-                  end
-                  return 0
-                else
-                  puts "No worktrees found. Use 'ace-git-worktree create' to create one."
-                  return 0
+            # Handle list option
+            if options[:list]
+              result = @manager.list_all(format: :simple)
+              if result[:success] && result[:worktrees].any?
+                result[:worktrees].each do |worktree|
+                  prefix = worktree.task_associated? ? "Task #{worktree.task_id}: " : ""
+                  puts "  #{prefix}#{worktree.branch || "detached"} (#{worktree.path})"
                 end
-              end
-
-              result = @manager.switch(options[:identifier])
-
-              if result[:success]
-                display_switch_result(result, options)
-                0
+                return 0
               else
-                puts "Failed to switch worktree: #{result[:error]}"
-                display_alternatives(options[:identifier]) unless result[:error].include?("not found")
-                1
+                puts "No worktrees found. Use 'ace-git-worktree create' to create one."
+                return 0
               end
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue StandardError => e
-              puts "Error: #{e.message}"
+            end
+
+            result = @manager.switch(options[:identifier])
+
+            if result[:success]
+              display_switch_result(result, options)
+              0
+            else
+              puts "Failed to switch worktree: #{result[:error]}"
+              display_alternatives(options[:identifier]) unless result[:error].include?("not found")
               1
             end
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue => e
+            puts "Error: #{e.message}"
+            1
           end
 
           # Show help for the switch command
@@ -201,7 +199,7 @@ module Ace
               /\x00/,           # Null bytes
               /[\r\n]/,         # Newlines
               /[<>]/,           # Redirects
-              /\.\./,           # Path traversal
+              /\.\./           # Path traversal
             ]
 
             dangerous_patterns.any? { |pattern| value.match?(pattern) }
@@ -233,7 +231,7 @@ module Ace
             if result[:success] && result[:worktrees].any?
               result[:worktrees].each do |worktree|
                 prefix = worktree.task_associated? ? "Task #{worktree.task_id}: " : ""
-                puts "  #{prefix}#{worktree.branch || 'detached'} (#{worktree.path})"
+                puts "  #{prefix}#{worktree.branch || "detached"} (#{worktree.path})"
               end
             else
               puts "  No worktrees found. Use 'ace-git-worktree create' to create one."

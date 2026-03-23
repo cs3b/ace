@@ -11,7 +11,7 @@ end
 
 # Core ace-git dependency for Git operations
 require "ace/git"
-require 'ace/support/config'
+require "ace/support/config"
 
 require_relative "worktree/version"
 
@@ -120,7 +120,7 @@ module Ace
         # @return [Hash] Merged and transformed configuration
         def load_config
           gem_root = Gem.loaded_specs["ace-git-worktree"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           resolver = Ace::Support::Config.create(
             config_dir: ".ace",
@@ -139,7 +139,7 @@ module Ace
           warn "  #{e.message}"
           # Fall back to gem defaults
           load_gem_defaults_fallback
-        rescue StandardError => e
+        rescue => e
           warn "ace-git-worktree: Failed to load configuration: #{e.message}"
           load_gem_defaults_fallback
         end
@@ -148,7 +148,7 @@ module Ace
         # @return [Hash] Defaults hash or empty hash if defaults also fail
         def load_gem_defaults_fallback
           gem_root = Gem.loaded_specs["ace-git-worktree"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           defaults_path = File.join(gem_root, ".ace-defaults", "git", "worktree.yml")
 
@@ -156,7 +156,7 @@ module Ace
 
           data = YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
           extract_worktree_config(data)
-        rescue StandardError
+        rescue
           {} # Only return empty hash if even defaults fail to load
         end
 

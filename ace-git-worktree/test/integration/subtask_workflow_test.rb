@@ -24,7 +24,7 @@ module Ace
         class SubtaskWorkflowTest < Minitest::Test
           # Tests that parent task ID produces correct worktree path
           def test_worktree_path_for_parent_task
-            task_data = { id: "v.0.9.0+task.121", title: "Parent task" }
+            task_data = {id: "v.0.9.0+task.121", title: "Parent task"}
             config = Models::WorktreeConfig.new
 
             path = config.format_directory(task_data)
@@ -33,7 +33,7 @@ module Ace
 
           # Tests that subtask ID produces correct worktree path (with suffix)
           def test_worktree_path_for_subtask
-            task_data = { id: "v.0.9.0+task.121.01", title: "Subtask" }
+            task_data = {id: "v.0.9.0+task.121.01", title: "Subtask"}
             config = Models::WorktreeConfig.new
 
             path = config.format_directory(task_data)
@@ -42,8 +42,8 @@ module Ace
 
           # Tests that parent and subtask produce different paths (critical!)
           def test_parent_and_subtask_have_distinct_paths
-            parent_data = { id: "v.0.9.0+task.121", title: "Parent" }
-            subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask" }
+            parent_data = {id: "v.0.9.0+task.121", title: "Parent"}
+            subtask_data = {id: "v.0.9.0+task.121.01", title: "Subtask"}
             config = Models::WorktreeConfig.new
 
             parent_path = config.format_directory(parent_data)
@@ -59,7 +59,7 @@ module Ace
             config = Models::WorktreeConfig.new
 
             paths = (1..3).map do |i|
-              task_data = { id: "v.0.9.0+task.121.0#{i}", title: "Subtask #{i}" }
+              task_data = {id: "v.0.9.0+task.121.0#{i}", title: "Subtask #{i}"}
               config.format_directory(task_data)
             end
 
@@ -96,16 +96,16 @@ module Ace
           # Tests TaskIDExtractor.extract handles various input formats
           def test_extractor_handles_all_id_formats
             # Standard task ID
-            assert_equal "121", Atoms::TaskIDExtractor.extract({ id: "v.0.9.0+task.121" })
+            assert_equal "121", Atoms::TaskIDExtractor.extract({id: "v.0.9.0+task.121"})
 
             # Subtask ID
-            assert_equal "121.01", Atoms::TaskIDExtractor.extract({ id: "v.0.9.0+task.121.01" })
+            assert_equal "121.01", Atoms::TaskIDExtractor.extract({id: "v.0.9.0+task.121.01"})
 
             # Backlog task
-            assert_equal "042", Atoms::TaskIDExtractor.extract({ id: "backlog+task.042" })
+            assert_equal "042", Atoms::TaskIDExtractor.extract({id: "backlog+task.042"})
 
             # Backlog subtask
-            assert_equal "042.01", Atoms::TaskIDExtractor.extract({ id: "backlog+task.042.01" })
+            assert_equal "042.01", Atoms::TaskIDExtractor.extract({id: "backlog+task.042.01"})
           end
 
           # Tests TaskIDExtractor.normalize handles various reference formats
@@ -127,7 +127,7 @@ module Ace
 
           # Tests branch format includes subtask suffix
           def test_branch_format_includes_subtask
-            subtask_data = { id: "v.0.9.0+task.121.01", title: "Fix subtask bug" }
+            subtask_data = {id: "v.0.9.0+task.121.01", title: "Fix subtask bug"}
             config = Models::WorktreeConfig.new
 
             branch = config.format_branch(subtask_data)
@@ -137,7 +137,7 @@ module Ace
 
           # Tests commit message format includes subtask suffix
           def test_commit_message_format_includes_subtask
-            subtask_data = { id: "v.0.9.0+task.121.01", title: "Fix subtask bug" }
+            subtask_data = {id: "v.0.9.0+task.121.01", title: "Fix subtask bug"}
             config = Models::WorktreeConfig.new
 
             message = config.format_commit_message(subtask_data)
@@ -163,7 +163,7 @@ module Ace
             end
 
             resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
-            subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
+            subtask_data = {id: "v.0.9.0+task.121.01", title: "Subtask 01"}
 
             target = resolver.resolve_target_branch(subtask_data)
             assert_equal "121-parent-feature", target
@@ -174,13 +174,13 @@ module Ace
             mock_fetcher = Object.new
             mock_fetcher.define_singleton_method(:fetch) do |task_ref|
               if task_ref == "121"
-                { "id" => "v.0.9.0+task.121", "title" => "Parent Task" }
+                {"id" => "v.0.9.0+task.121", "title" => "Parent Task"}
               end
             end
 
             Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
               resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
-              subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
+              subtask_data = {id: "v.0.9.0+task.121.01", title: "Subtask 01"}
 
               target = resolver.resolve_target_branch(subtask_data)
               assert_equal "main", target
@@ -194,7 +194,7 @@ module Ace
 
             Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
               resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
-              orchestrator_data = { id: "v.0.9.0+task.121", title: "Orchestrator Task" }
+              orchestrator_data = {id: "v.0.9.0+task.121", title: "Orchestrator Task"}
 
               target = resolver.resolve_target_branch(orchestrator_data)
               assert_equal "main", target

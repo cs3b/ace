@@ -33,7 +33,7 @@ module Ace
           # @return [Integer] Timeout in seconds
           def config_timeout
             Ace::Git::Worktree.remove_timeout
-          rescue StandardError
+          rescue
             FALLBACK_TIMEOUT
           end
 
@@ -102,7 +102,7 @@ module Ace
                 branch_deleted: branch_deleted,
                 error: nil
               }
-            rescue StandardError => e
+            rescue => e
               error_result("Unexpected error: #{e.message}")
             end
           end
@@ -184,24 +184,22 @@ module Ace
           #   result = remover.prune
           #   # => { success: true, message: "Pruned 2 worktrees", pruned_count: 2 }
           def prune
-            begin
-              result = execute_git_worktree_prune
-              if result[:success]
-                # Parse output to count pruned worktrees
-                pruned_count = parse_prune_output(result[:output])
+            result = execute_git_worktree_prune
+            if result[:success]
+              # Parse output to count pruned worktrees
+              pruned_count = parse_prune_output(result[:output])
 
-                {
-                  success: true,
-                  message: "Pruned #{pruned_count} worktree(s)",
-                  pruned_count: pruned_count,
-                  error: nil
-                }
-              else
-                error_result("Failed to prune worktrees: #{result[:error]}")
-              end
-            rescue StandardError => e
-              error_result("Unexpected error during prune: #{e.message}")
+              {
+                success: true,
+                message: "Pruned #{pruned_count} worktree(s)",
+                pruned_count: pruned_count,
+                error: nil
+              }
+            else
+              error_result("Failed to prune worktrees: #{result[:error]}")
             end
+          rescue => e
+            error_result("Unexpected error during prune: #{e.message}")
           end
 
           # Check if a worktree can be safely removed
@@ -297,7 +295,7 @@ module Ace
             result = Atoms::GitCommand.worktree(*args, timeout: @timeout)
 
             if result[:success]
-              { success: true, message: "Git worktree removed successfully" }
+              {success: true, message: "Git worktree removed successfully"}
             else
               error_result("Failed to remove git worktree: #{result[:error]}")
             end
@@ -310,7 +308,7 @@ module Ace
             if File.exist?(worktree_path)
               FileUtils.rm_rf(worktree_path)
             end
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Failed to remove worktree directory: #{e.message}"
           end
 
@@ -392,11 +390,11 @@ module Ace
               # Check if branch is merged into current branch
               result = Atoms::GitCommand.execute("branch", "--merged", timeout: @timeout)
               if result[:success]
-                merged_branches = result[:output].split("\n").map(&:strip).map { |b| b.gsub(/^\*?\s*/, '') }
+                merged_branches = result[:output].split("\n").map(&:strip).map { |b| b.gsub(/^\*?\s*/, "") }
                 unless merged_branches.include?(branch_name)
                   # Branch is not merged, don't delete unless forced
                   warn "Warning: Branch #{branch_name} is not merged. Skipping deletion. Use --force to delete anyway."
-                  return { success: false, message: "Branch not merged", error: nil }
+                  return {success: false, message: "Branch not merged", error: nil}
                 end
               end
             end
@@ -406,9 +404,9 @@ module Ace
             result = Atoms::GitCommand.execute("branch", delete_flag, branch_name, timeout: @timeout)
 
             if result[:success]
-              { success: true, message: "Branch #{branch_name} deleted", error: nil }
+              {success: true, message: "Branch #{branch_name} deleted", error: nil}
             else
-              { success: false, message: nil, error: "Failed to delete branch: #{result[:error]}" }
+              {success: false, message: nil, error: "Failed to delete branch: #{result[:error]}"}
             end
           end
         end

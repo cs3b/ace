@@ -98,7 +98,7 @@ module Ace
                 target_branch: target_branch,
                 error: nil
               }
-            rescue StandardError => e
+            rescue => e
               error_result("Unexpected error: #{e.message}")
             end
           end
@@ -167,7 +167,7 @@ module Ace
                 git_root: git_root,
                 error: nil
               }
-            rescue StandardError => e
+            rescue => e
               error_result("Unexpected error: #{e.message}")
             end
           end
@@ -205,7 +205,7 @@ module Ace
                 # Local branch - create without tracking
                 create_for_local_branch(branch_name, config, git_root)
               end
-            rescue StandardError => e
+            rescue => e
               error_result("Unexpected error: #{e.message}")
             end
           end
@@ -252,7 +252,7 @@ module Ace
                 # Branch doesn't exist - create new branch with worktree
                 create_worktree(worktree_path, branch_name, git_root, start_point: source)
               end
-            rescue StandardError => e
+            rescue => e
               error_result("Unexpected error: #{e.message}")
             end
           end
@@ -308,7 +308,7 @@ module Ace
           def generate_unique_path(task_data, config, git_root)
             counter = 1
             loop do
-              directory_name = config.format_directory(task_data, counter > 1 ? counter : nil)
+              directory_name = config.format_directory(task_data, (counter > 1) ? counter : nil)
               worktree_path = File.join(config.absolute_root_path, directory_name)
 
               # Check if path already exists
@@ -491,7 +491,7 @@ module Ace
 
             # Additional validation: branch name cannot contain sequences that would be invalid
             # in file system paths (since git stores branches as files)
-            return false if branch_name.include?('.git')
+            return false if branch_name.include?(".git")
 
             true
           end
@@ -558,7 +558,7 @@ module Ace
             remote_check = validate_remote_exists(potential_remote, Dir.pwd)
             return nil unless remote_check[:exists]
 
-            { remote: potential_remote, branch: branch }
+            {remote: potential_remote, branch: branch}
           end
 
           # Validate that a git remote exists
@@ -578,10 +578,10 @@ module Ace
             if result[:success]
               remotes = result[:output].strip.split("\n")
               exists = remotes.include?(remote)
-              { exists: exists, remotes: remotes }
+              {exists: exists, remotes: remotes}
             else
               # If we can't list remotes, assume it doesn't exist
-              { exists: false, remotes: [] }
+              {exists: false, remotes: []}
             end
           end
 
@@ -610,9 +610,9 @@ module Ace
             )
 
             if result[:success]
-              { success: true, error: nil }
+              {success: true, error: nil}
             else
-              { success: false, error: "Failed to fetch #{remote}/#{branch}: #{result[:error]}" }
+              {success: false, error: "Failed to fetch #{remote}/#{branch}: #{result[:error]}"}
             end
           end
 
@@ -691,12 +691,12 @@ module Ace
             # Create worktree with tracking
             # Check if we should configure push for branch name mismatches
             configure_push = if config.respond_to?(:configure_push_for_mismatch?)
-                              config.configure_push_for_mismatch?
-                            else
-                              # For backward compatibility or when config is not available
-                              # Default to true for branch creation
-                              true
-                            end
+              config.configure_push_for_mismatch?
+            else
+              # For backward compatibility or when config is not available
+              # Default to true for branch creation
+              true
+            end
 
             result = create_worktree_with_tracking(
               worktree_path,

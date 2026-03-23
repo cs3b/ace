@@ -25,7 +25,7 @@ class WorktreeRemoverTest < Minitest::Test
       # Mock: no uncommitted changes
       @remover.stub(:has_uncommitted_changes?, false) do
         # Mock: git worktree remove succeeds
-        git_result = { success: true, output: "", error: nil }
+        git_result = {success: true, output: "", error: nil}
         Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
           result = @remover.remove(worktree_path, delete_branch: false)
 
@@ -46,12 +46,12 @@ class WorktreeRemoverTest < Minitest::Test
     @remover.stub(:find_worktree_info, worktree_info) do
       @remover.stub(:has_uncommitted_changes?, false) do
         # Mock: git worktree remove succeeds
-        git_remove_result = { success: true, output: "", error: nil }
+        git_remove_result = {success: true, output: "", error: nil}
         Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_remove_result) do
           # Mock: branch is merged (found in --merged output)
-          merged_result = { success: true, output: "  #{branch_name}\n  main\n", error: nil }
+          merged_result = {success: true, output: "  #{branch_name}\n  main\n", error: nil}
           # Mock: branch deletion succeeds
-          delete_result = { success: true, output: "", error: nil }
+          delete_result = {success: true, output: "", error: nil}
 
           Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, lambda { |*args|
             if args.include?("--merged")
@@ -78,10 +78,10 @@ class WorktreeRemoverTest < Minitest::Test
     @remover.stub(:find_worktree_info, worktree_info) do
       @remover.stub(:has_uncommitted_changes?, false) do
         # Mock: git worktree remove succeeds
-        git_remove_result = { success: true, output: "", error: nil }
+        git_remove_result = {success: true, output: "", error: nil}
         Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_remove_result) do
           # Mock: branch is NOT in --merged output
-          merged_result = { success: true, output: "  main\n", error: nil }
+          merged_result = {success: true, output: "  main\n", error: nil}
 
           # Capture stderr output
           original_stderr = $stderr
@@ -114,10 +114,10 @@ class WorktreeRemoverTest < Minitest::Test
     @remover.stub(:find_worktree_info, worktree_info) do
       @remover.stub(:has_uncommitted_changes?, false) do
         # Mock: git worktree remove succeeds
-        git_remove_result = { success: true, output: "", error: nil }
+        git_remove_result = {success: true, output: "", error: nil}
         Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_remove_result) do
           # Mock: branch deletion with -D succeeds
-          delete_result = { success: true, output: "Deleted branch #{branch_name}\n", error: nil }
+          delete_result = {success: true, output: "Deleted branch #{branch_name}\n", error: nil}
 
           Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, delete_result) do
             result = @remover.remove(worktree_path, delete_branch: true, force: true)
@@ -173,7 +173,7 @@ class WorktreeRemoverTest < Minitest::Test
         received_ignore_untracked = ignore_untracked
         false
       }) do
-        git_result = { success: true, output: "", error: nil }
+        git_result = {success: true, output: "", error: nil}
         Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
           result = @remover.remove(worktree_path, ignore_untracked: true)
 
@@ -212,8 +212,8 @@ class WorktreeRemoverTest < Minitest::Test
     branch_name = "merged-feature"
 
     # Mock: branch is in --merged output
-    merged_result = { success: true, output: "  #{branch_name}\n  main\n", error: nil }
-    delete_result = { success: true, output: "Deleted branch #{branch_name}\n", error: nil }
+    merged_result = {success: true, output: "  #{branch_name}\n  main\n", error: nil}
+    delete_result = {success: true, output: "Deleted branch #{branch_name}\n", error: nil}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, lambda { |*args|
       if args.include?("--merged")
@@ -233,7 +233,7 @@ class WorktreeRemoverTest < Minitest::Test
     branch_name = "unmerged-feature"
 
     # Mock: branch is NOT in --merged output
-    merged_result = { success: true, output: "  main\n", error: nil }
+    merged_result = {success: true, output: "  main\n", error: nil}
 
     # Capture stderr output
     original_stderr = $stderr
@@ -255,7 +255,7 @@ class WorktreeRemoverTest < Minitest::Test
     branch_name = "feature-to-force-delete"
 
     # Mock: successful force delete
-    delete_result = { success: true, output: "Deleted branch #{branch_name}\n", error: nil }
+    delete_result = {success: true, output: "Deleted branch #{branch_name}\n", error: nil}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, delete_result) do
       result = @remover.send(:delete_branch_if_safe, branch_name, true)
@@ -273,7 +273,7 @@ class WorktreeRemoverTest < Minitest::Test
     @remover.stub(:find_worktree_by_branch, worktree_info) do
       @remover.stub(:find_worktree_info, worktree_info) do
         @remover.stub(:has_uncommitted_changes?, false) do
-          git_result = { success: true, output: "", error: nil }
+          git_result = {success: true, output: "", error: nil}
           Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
             result = @remover.remove_by_branch(branch_name)
 
@@ -294,7 +294,7 @@ class WorktreeRemoverTest < Minitest::Test
     @remover.stub(:find_worktree_by_task_id, worktree_info) do
       @remover.stub(:find_worktree_info, worktree_info) do
         @remover.stub(:has_uncommitted_changes?, false) do
-          git_result = { success: true, output: "", error: nil }
+          git_result = {success: true, output: "", error: nil}
           Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
             result = @remover.remove_by_task_id(task_id)
 

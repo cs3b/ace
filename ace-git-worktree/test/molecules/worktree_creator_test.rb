@@ -165,7 +165,7 @@ class WorktreeCreatorTest < Minitest::Test
     }
 
     valid_branches.each do |valid_branch|
-      worktree_path = File.join(@temp_dir, "worktree-#{valid_branch.gsub('/', '-')}")
+      worktree_path = File.join(@temp_dir, "worktree-#{valid_branch.tr("/", "-")}")
 
       with_git_stubs(worktree_result: mock_result) do
         result = @creator.create_traditional(valid_branch, worktree_path)
@@ -214,7 +214,7 @@ class WorktreeCreatorTest < Minitest::Test
     }
 
     slash_branches.each do |slash_branch|
-      worktree_path = File.join(@temp_dir, "worktree-#{slash_branch.gsub('/', '-')}")
+      worktree_path = File.join(@temp_dir, "worktree-#{slash_branch.tr("/", "-")}")
 
       with_git_stubs(worktree_result: mock_result) do
         result = @creator.create_traditional(slash_branch, worktree_path)
@@ -311,7 +311,7 @@ class WorktreeCreatorTest < Minitest::Test
     FileUtils.mkdir_p(File.join(@temp_dir, "custom-worktrees"))
 
     # Mock git command success
-    git_result = { success: true, output: "", error: nil }
+    git_result = {success: true, output: "", error: nil}
     with_git_stubs(worktree_result: git_result) do
       result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
 
@@ -334,9 +334,9 @@ class WorktreeCreatorTest < Minitest::Test
     # Mock git root detection
     @creator.stub(:detect_git_root, @temp_dir) do
       # Mock path validation
-      @creator.stub(:validate_worktree_path, { valid: true, error: nil }) do
+      @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
         # Mock fetch
-        @creator.stub(:fetch_remote_branch, { success: true, error: nil }) do
+        @creator.stub(:fetch_remote_branch, {success: true, error: nil}) do
           # Mock worktree creation
           @creator.stub(:create_worktree_with_tracking, {
             success: true,
@@ -364,15 +364,15 @@ class WorktreeCreatorTest < Minitest::Test
     result = @creator.create_for_pr(nil, config)
 
     refute result[:success]
-    assert_match /PR data is required/, result[:error]
+    assert_match(/PR data is required/, result[:error])
   end
 
   def test_create_for_pr_without_config
-    pr_data = { number: 26, title: "Test", head_branch: "test", base_branch: "main" }
+    pr_data = {number: 26, title: "Test", head_branch: "test", base_branch: "main"}
     result = @creator.create_for_pr(pr_data, nil)
 
     refute result[:success]
-    assert_match /Configuration is required/, result[:error]
+    assert_match(/Configuration is required/, result[:error])
   end
 
   def test_create_for_pr_fetch_failure
@@ -386,13 +386,13 @@ class WorktreeCreatorTest < Minitest::Test
     config = mock_pr_config(@temp_dir)
 
     @creator.stub(:detect_git_root, @temp_dir) do
-      @creator.stub(:validate_worktree_path, { valid: true, error: nil }) do
+      @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
         # Mock fetch failure
-        @creator.stub(:fetch_remote_branch, { success: false, error: "Network error" }) do
+        @creator.stub(:fetch_remote_branch, {success: false, error: "Network error"}) do
           result = @creator.create_for_pr(pr_data, config)
 
           refute result[:success]
-          assert_match /Network error/, result[:error]
+          assert_match(/Network error/, result[:error])
         end
       end
     end
@@ -404,7 +404,7 @@ class WorktreeCreatorTest < Minitest::Test
 
     @creator.stub(:detect_git_root, @temp_dir) do
       # Mock remote branch detection
-      @creator.stub(:detect_remote_branch, { remote: "origin", branch: "feature/auth" }) do
+      @creator.stub(:detect_remote_branch, {remote: "origin", branch: "feature/auth"}) do
         # Mock create_for_remote_branch
         @creator.stub(:create_for_remote_branch, {
           success: true,
@@ -456,7 +456,7 @@ class WorktreeCreatorTest < Minitest::Test
     result = @creator.create_for_branch(nil, config)
 
     refute result[:success]
-    assert_match /Branch name is required/, result[:error]
+    assert_match(/Branch name is required/, result[:error])
   end
 
   def test_create_for_branch_empty_branch_name
@@ -464,28 +464,28 @@ class WorktreeCreatorTest < Minitest::Test
     result = @creator.create_for_branch("", config)
 
     refute result[:success]
-    assert_match /Branch name is required/, result[:error]
+    assert_match(/Branch name is required/, result[:error])
   end
 
   def test_create_for_branch_without_config
     result = @creator.create_for_branch("feature", nil)
 
     refute result[:success]
-    assert_match /Configuration is required/, result[:error]
+    assert_match(/Configuration is required/, result[:error])
   end
 
   def test_detect_remote_branch_with_remote
     remote_branches = {
-      "origin/feature" => { remote: "origin", branch: "feature" },
-      "upstream/main" => { remote: "upstream", branch: "main" },
-      "origin/feature/auth" => { remote: "origin", branch: "feature/auth" },
-      "fork/bugfix/123" => { remote: "fork", branch: "bugfix/123" }
+      "origin/feature" => {remote: "origin", branch: "feature"},
+      "upstream/main" => {remote: "upstream", branch: "main"},
+      "origin/feature/auth" => {remote: "origin", branch: "feature/auth"},
+      "fork/bugfix/123" => {remote: "fork", branch: "bugfix/123"}
     }
 
     remote_branches.each do |input, expected|
       # Stub validate_remote_exists to return true for the expected remote
       @creator.stub(:validate_remote_exists, ->(remote, _path) {
-        { exists: remote == expected[:remote], remotes: [expected[:remote]] }
+        {exists: remote == expected[:remote], remotes: [expected[:remote]]}
       }) do
         result = @creator.send(:detect_remote_branch, input)
         assert_equal expected, result, "Failed for #{input}"
@@ -525,7 +525,7 @@ class WorktreeCreatorTest < Minitest::Test
 
     # Stub validate_remote_exists to return false (these aren't real remotes)
     @creator.stub(:validate_remote_exists, ->(remote, _path) {
-      { exists: false, remotes: ["origin", "upstream"] }
+      {exists: false, remotes: ["origin", "upstream"]}
     }) do
       local_slash_branches.each do |branch|
         result = @creator.send(:detect_remote_branch, branch)
@@ -541,14 +541,14 @@ class WorktreeCreatorTest < Minitest::Test
     @creator.stub(:validate_remote_exists, ->(remote, _path) {
       # Only "origin" and "upstream" are real remotes
       real_remotes = %w[origin upstream]
-      { exists: real_remotes.include?(remote), remotes: real_remotes }
+      {exists: real_remotes.include?(remote), remotes: real_remotes}
     }) do
       # Real remote branches should be detected
       origin_result = @creator.send(:detect_remote_branch, "origin/feature")
-      assert_equal({ remote: "origin", branch: "feature" }, origin_result)
+      assert_equal({remote: "origin", branch: "feature"}, origin_result)
 
       upstream_result = @creator.send(:detect_remote_branch, "upstream/main")
-      assert_equal({ remote: "upstream", branch: "main" }, upstream_result)
+      assert_equal({remote: "upstream", branch: "main"}, upstream_result)
 
       # Local branches with slash prefixes should NOT be detected as remote
       feature_result = @creator.send(:detect_remote_branch, "feature/login")
@@ -560,7 +560,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_format_pr_name_with_number
-    pr_data = { number: 26, title: "Add Feature" }
+    pr_data = {number: 26, title: "Add Feature"}
     template = "pr-{number}"
 
     result = @creator.send(:format_pr_name, template, pr_data)
@@ -568,7 +568,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_format_pr_name_with_slug
-    pr_data = { number: 26, title: "Add Authentication Feature" }
+    pr_data = {number: 26, title: "Add Authentication Feature"}
     template = "pr-{number}-{slug}"
 
     # Mock slug generator
@@ -579,7 +579,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_format_pr_name_with_multiple_variables
-    pr_data = { number: 26, title: "Test Feature", base_branch: "main" }
+    pr_data = {number: 26, title: "Test Feature", base_branch: "main"}
     template = "{base_branch}-pr-{number}"
 
     result = @creator.send(:format_pr_name, template, pr_data)
@@ -612,7 +612,7 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock git remote command to return "origin"
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "origin\nupstream\n" }) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, {success: true, output: "origin\nupstream\n"}) do
         result = creator.send(:validate_remote_exists, "origin", root_path)
 
         assert result[:exists]
@@ -626,7 +626,7 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock git remote command to return only "origin"
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "origin\n" }) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, {success: true, output: "origin\n"}) do
         result = creator.send(:validate_remote_exists, "invalid", root_path)
 
         refute result[:exists]
@@ -640,7 +640,7 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock git remote command to return empty
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "" }) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, {success: true, output: ""}) do
         result = creator.send(:validate_remote_exists, "origin", root_path)
 
         refute result[:exists]
@@ -654,7 +654,7 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock validation to return invalid remote
-      creator.stub(:validate_remote_exists, { exists: false, remotes: ["origin", "upstream"] }) do
+      creator.stub(:validate_remote_exists, {exists: false, remotes: ["origin", "upstream"]}) do
         result = creator.send(:fetch_remote_branch, "invalid", "main", root_path)
 
         refute result[:success]
@@ -669,7 +669,7 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock validation to return no remotes
-      creator.stub(:validate_remote_exists, { exists: false, remotes: [] }) do
+      creator.stub(:validate_remote_exists, {exists: false, remotes: []}) do
         result = creator.send(:fetch_remote_branch, "origin", "main", root_path)
 
         refute result[:success]
@@ -684,9 +684,9 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock validation to return valid remote
-      creator.stub(:validate_remote_exists, { exists: true, remotes: ["origin"] }) do
+      creator.stub(:validate_remote_exists, {exists: true, remotes: ["origin"]}) do
         # Mock fetch command to succeed
-        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "" }) do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, {success: true, output: ""}) do
           result = creator.send(:fetch_remote_branch, "origin", "main", root_path)
 
           assert result[:success]
@@ -701,20 +701,20 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock successful worktree creation
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, {success: true, output: "", error: nil}) do
         # Mock git config commands
         config_calls = []
         Ace::Git::Worktree::Atoms::GitCommand.stub(:execute) do |*args|
           config_calls << args
-          { success: true, output: "", error: nil }
+          {success: true, output: "", error: nil}
         end
 
         result = creator.send(:create_worktree_with_tracking,
-                              worktree_path,
-                              "local-branch",
-                              "origin/remote-branch",
-                              "/tmp",
-                              configure_push: true)
+          worktree_path,
+          "local-branch",
+          "origin/remote-branch",
+          "/tmp",
+          configure_push: true)
 
         assert result[:success]
         assert_equal "local-branch", result[:branch]
@@ -732,20 +732,20 @@ class WorktreeCreatorTest < Minitest::Test
       creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
       # Mock successful worktree creation
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, {success: true, output: "", error: nil}) do
         # Mock git config commands
         config_calls = []
         Ace::Git::Worktree::Atoms::GitCommand.stub(:execute) do |*args|
           config_calls << args
-          { success: true, output: "", error: nil }
+          {success: true, output: "", error: nil}
         end
 
         result = creator.send(:create_worktree_with_tracking,
-                              worktree_path,
-                              "feature-branch",
-                              "origin/feature-branch",
-                              "/tmp",
-                              configure_push: true)
+          worktree_path,
+          "feature-branch",
+          "origin/feature-branch",
+          "/tmp",
+          configure_push: true)
 
         assert result[:success]
         assert_equal "feature-branch", result[:branch]
@@ -786,7 +786,7 @@ class WorktreeCreatorTest < Minitest::Test
     captured_args = nil
     worktree_stub = lambda do |*args, **opts|
       captured_args = args
-      { success: true, output: "", error: nil }
+      {success: true, output: "", error: nil}
     end
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
@@ -813,7 +813,7 @@ class WorktreeCreatorTest < Minitest::Test
     captured_args = nil
     worktree_stub = lambda do |*args, **opts|
       captured_args = args
-      { success: true, output: "", error: nil }
+      {success: true, output: "", error: nil}
     end
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
@@ -838,7 +838,7 @@ class WorktreeCreatorTest < Minitest::Test
 
     FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
 
-    git_result = { success: true, output: "", error: nil }
+    git_result = {success: true, output: "", error: nil}
     Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
       Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
         Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "develop") do
@@ -890,7 +890,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_create_for_task_with_source_parameter
-    task_data = { id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending" }
+    task_data = {id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending"}
     config = mock_task_config(@temp_dir)
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
@@ -899,7 +899,7 @@ class WorktreeCreatorTest < Minitest::Test
           captured_args = nil
           worktree_stub = lambda do |*args, **opts|
             captured_args = args
-            { success: true, output: "", error: nil }
+            {success: true, output: "", error: nil}
           end
 
           Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
@@ -915,7 +915,7 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_create_for_task_uses_current_branch_by_default
-    task_data = { id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending" }
+    task_data = {id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending"}
     config = mock_task_config(@temp_dir)
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
@@ -924,7 +924,7 @@ class WorktreeCreatorTest < Minitest::Test
           captured_args = nil
           worktree_stub = lambda do |*args, **opts|
             captured_args = args
-            { success: true, output: "", error: nil }
+            {success: true, output: "", error: nil}
           end
 
           Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
@@ -946,9 +946,9 @@ class WorktreeCreatorTest < Minitest::Test
     # Mock show-ref to return success for local branch
     execute_stub = lambda do |*args, **opts|
       if args.include?("refs/heads/existing-branch")
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "", exit_code: 1 }
+        {success: false, output: "", error: "", exit_code: 1}
       end
     end
 
@@ -964,9 +964,9 @@ class WorktreeCreatorTest < Minitest::Test
     # Mock show-ref to return failure for local but success for remote tracking branch
     execute_stub = lambda do |*args, **opts|
       if args.include?("refs/remotes/origin/remote-branch")
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "", exit_code: 1 }
+        {success: false, output: "", error: "", exit_code: 1}
       end
     end
 
@@ -983,9 +983,9 @@ class WorktreeCreatorTest < Minitest::Test
     execute_stub = lambda do |*args, **opts|
       call_count += 1
       if args.include?("refs/heads/local-only-branch")
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "", exit_code: 1 }
+        {success: false, output: "", error: "", exit_code: 1}
       end
     end
 
@@ -1003,9 +1003,9 @@ class WorktreeCreatorTest < Minitest::Test
     # Mock: local branch doesn't exist, but remote tracking does
     execute_stub = lambda do |*args, **opts|
       if args.include?("refs/remotes/origin/remote-only-branch")
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "", exit_code: 1 }
+        {success: false, output: "", error: "", exit_code: 1}
       end
     end
 
@@ -1019,7 +1019,7 @@ class WorktreeCreatorTest < Minitest::Test
     creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
 
     execute_stub = lambda do |*args, **opts|
-      { success: false, output: "", error: "", exit_code: 1 }
+      {success: false, output: "", error: "", exit_code: 1}
     end
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
@@ -1037,9 +1037,9 @@ class WorktreeCreatorTest < Minitest::Test
       ref = args.find { |a| a.start_with?("refs/") }
       checked_refs << ref if ref
       if args.include?("refs/heads/test-branch")
-        { success: true, output: "", error: "", exit_code: 0 }
+        {success: true, output: "", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "", exit_code: 1 }
+        {success: false, output: "", error: "", exit_code: 1}
       end
     end
 
@@ -1066,8 +1066,8 @@ class WorktreeCreatorTest < Minitest::Test
       # Mock create_worktree_for_existing_branch
       creator.stub(:create_worktree_for_existing_branch) do |path, branch, root|
         captured_method = :create_worktree_for_existing_branch
-        captured_args = { path: path, branch: branch, root: root }
-        { success: true, worktree_path: path, branch: branch, start_point: nil, git_root: root, error: nil }
+        captured_args = {path: path, branch: branch, root: root}
+        {success: true, worktree_path: path, branch: branch, start_point: nil, git_root: root, error: nil}
       end
 
       Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
@@ -1095,7 +1095,7 @@ class WorktreeCreatorTest < Minitest::Test
             captured_args = nil
             worktree_stub = lambda do |*args, **opts|
               captured_args = args
-              { success: true, output: "", error: nil }
+              {success: true, output: "", error: nil}
             end
 
             Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
@@ -1118,14 +1118,14 @@ class WorktreeCreatorTest < Minitest::Test
     captured_args = nil
     worktree_stub = lambda do |*args, **opts|
       captured_args = args
-      { success: true, output: "", error: nil }
+      {success: true, output: "", error: nil}
     end
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
       result = creator.send(:create_worktree_for_existing_branch,
-                            "/tmp/worktree-path",
-                            "existing-branch",
-                            "/repo")
+        "/tmp/worktree-path",
+        "existing-branch",
+        "/repo")
 
       assert result[:success]
       refute_includes captured_args, "-b", "Should NOT use -b flag for existing branch"
@@ -1147,11 +1147,11 @@ class WorktreeCreatorTest < Minitest::Test
         execute_stub = lambda do |*args, **opts|
           captured_execute_args << args
           # Return success for show-ref check
-          { success: true, output: "", error: "", exit_code: 0 }
+          {success: true, output: "", error: "", exit_code: 0}
         end
 
         Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
-          Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, {success: true, output: "", error: nil}) do
             @creator.create_for_local_branch("my-feature", config, @temp_dir)
           end
         end

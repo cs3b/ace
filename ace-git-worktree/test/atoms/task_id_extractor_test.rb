@@ -13,48 +13,48 @@ class TaskIDExtractorTest < Minitest::Test
   # Tests for .extract method
 
   def test_extract_from_simple_task_id
-    task_data = { id: "v.0.9.0+task.121" }
+    task_data = {id: "v.0.9.0+task.121"}
     assert_equal "121", @extractor.extract(task_data)
   end
 
   def test_extract_from_subtask_id
-    task_data = { id: "v.0.9.0+task.121.01" }
+    task_data = {id: "v.0.9.0+task.121.01"}
     assert_equal "121.01", @extractor.extract(task_data)
   end
 
   def test_extract_from_short_task_id
-    task_data = { id: "v.0.9.0+t.121" }
+    task_data = {id: "v.0.9.0+t.121"}
     assert_equal "121", @extractor.extract(task_data)
   end
 
   def test_extract_from_short_ace_task_id
-    task_data = { id: "v.0.9.0+ace-t.121" }
+    task_data = {id: "v.0.9.0+ace-t.121"}
     assert_equal "121", @extractor.extract(task_data)
   end
 
   def test_extract_from_orchestrator_id
-    task_data = { id: "v.0.9.0+task.121" }
+    task_data = {id: "v.0.9.0+task.121"}
     assert_equal "121", @extractor.extract(task_data)
   end
 
   def test_extract_from_backlog_task
-    task_data = { id: "backlog+task.005" }
+    task_data = {id: "backlog+task.005"}
     assert_equal "005", @extractor.extract(task_data)
   end
 
   def test_extract_from_backlog_subtask
-    task_data = { id: "backlog+task.005.02" }
+    task_data = {id: "backlog+task.005.02"}
     assert_equal "005.02", @extractor.extract(task_data)
   end
 
   def test_extract_with_task_number_fallback
-    task_data = { task_number: "081" }
+    task_data = {task_number: "081"}
     assert_equal "081", @extractor.extract(task_data)
   end
 
   def test_extract_prefers_id_over_task_number
     # When both are present, :id should be used (it has subtask info)
-    task_data = { id: "v.0.9.0+task.121.01", task_number: "121" }
+    task_data = {id: "v.0.9.0+task.121.01", task_number: "121"}
     assert_equal "121.01", @extractor.extract(task_data)
   end
 
@@ -67,7 +67,7 @@ class TaskIDExtractorTest < Minitest::Test
   end
 
   def test_extract_with_invalid_id
-    task_data = { id: "invalid-id-format" }
+    task_data = {id: "invalid-id-format"}
     assert_equal "unknown", @extractor.extract(task_data)
   end
 
@@ -140,7 +140,7 @@ class TaskIDExtractorTest < Minitest::Test
   # Edge cases
 
   def test_extract_with_three_digit_task_number
-    task_data = { id: "v.0.9.0+task.001" }
+    task_data = {id: "v.0.9.0+task.001"}
     assert_equal "001", @extractor.extract(task_data)
   end
 
@@ -150,7 +150,7 @@ class TaskIDExtractorTest < Minitest::Test
 
   def test_extract_does_not_match_partial_patterns
     # Should not match "121.1" (subtask must be 2 digits)
-    task_data = { id: "v.0.9.0+task.121.1" }
+    task_data = {id: "v.0.9.0+task.121.1"}
     # Falls back to simple pattern since .1 doesn't match .XX
     assert_equal "121", @extractor.extract(task_data)
   end
@@ -178,12 +178,12 @@ class TaskIDExtractorTest < Minitest::Test
   # B36TS format tests (regression for ace-overseer work-on failure)
 
   def test_extract_from_b36ts_full_id
-    task_data = { id: "8pp.t.hy4" }
+    task_data = {id: "8pp.t.hy4"}
     assert_equal "hy4", @extractor.extract(task_data)
   end
 
   def test_extract_from_b36ts_subtask_full_id
-    task_data = { id: "8pp.t.hy4.a" }
+    task_data = {id: "8pp.t.hy4.a"}
     assert_equal "hy4.a", @extractor.extract(task_data)
   end
 

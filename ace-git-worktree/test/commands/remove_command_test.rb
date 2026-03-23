@@ -25,7 +25,7 @@ class RemoveCommandTest < Minitest::Test
   def test_run_with_path_argument
     # Mock successful worktree removal
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:remove, { success: true }, [String, Hash])
+    mock_worktree_manager.expect(:remove, {success: true}, [String, Hash])
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -43,7 +43,7 @@ class RemoveCommandTest < Minitest::Test
   def test_run_with_force_flag
     # Mock successful force removal
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:remove, { success: true }, [String, Hash])
+    mock_worktree_manager.expect(:remove, {success: true}, [String, Hash])
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -57,8 +57,8 @@ class RemoveCommandTest < Minitest::Test
 
     # Mock successful removal of multiple worktrees
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:remove, { success: true }, [String, Hash])
-    mock_worktree_manager.expect(:remove, { success: true }, [String, Hash])
+    mock_worktree_manager.expect(:remove, {success: true}, [String, Hash])
+    mock_worktree_manager.expect(:remove, {success: true}, [String, Hash])
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -120,7 +120,7 @@ class RemoveCommandTest < Minitest::Test
 
     valid_paths.each do |valid_path|
       mock_worktree_manager = Minitest::Mock.new
-      mock_worktree_manager.expect(:remove, { success: true }, [String, Hash])
+      mock_worktree_manager.expect(:remove, {success: true}, [String, Hash])
 
       @command.instance_variable_set(:@manager, mock_worktree_manager)
 

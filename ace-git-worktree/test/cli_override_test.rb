@@ -8,7 +8,7 @@ class CliOverrideTest < Minitest::Test
 
     # Test Case 1: no_mise_trust override should disable mise trust
     config_mise_trust_auto = true  # Config setting
-    options = { no_mise_trust: true }
+    options = {no_mise_trust: true}
 
     # This is what our fix does:
     should_trust_mise = options[:no_mise_trust] ? false : config_mise_trust_auto
@@ -30,7 +30,7 @@ class CliOverrideTest < Minitest::Test
     mock_config.expect(:mise_trust_auto?, true)
 
     # Test Case 1: All overrides set to true (disable actions)
-    options = { no_status_update: true, no_commit: true, no_mise_trust: true }
+    options = {no_status_update: true, no_commit: true, no_mise_trust: true}
 
     # This is what our fix does:
     should_update_status = options[:no_status_update] ? false : mock_config.auto_mark_in_progress?
@@ -57,7 +57,7 @@ class CliOverrideTest < Minitest::Test
 
   def test_custom_commit_message_override
     # Test custom commit message logic
-    options = { commit_message: "Custom commit message" }
+    options = {commit_message: "Custom commit message"}
 
     # This is what our fix does:
     commit_message = options[:commit_message] || "in-progress"

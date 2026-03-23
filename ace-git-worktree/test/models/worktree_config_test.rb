@@ -207,7 +207,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["task"]["directory_format"] = ""
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -220,7 +220,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["task"]["branch_format"] = ""
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -233,7 +233,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["task"]["branch_format"] = "just-text"  # No template variables
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -355,7 +355,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["task"]["branch_format"] = "{id}-{invalid_var}-{slug}"
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -369,7 +369,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["pr"]["directory_format"] = "pr-{number}-{invalid_var}"
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -384,7 +384,7 @@ class WorktreeConfigTest < Minitest::Test
     valid_config["pr"]["branch_format"] = "pr/{number}-{title}"
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => valid_config } },
+      {"git" => {"worktree" => valid_config}},
       @project_root
     )
     errors = config.validate
@@ -399,7 +399,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["pr"]["directory_format"] = ""
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate
@@ -412,7 +412,7 @@ class WorktreeConfigTest < Minitest::Test
     invalid_config["pr"]["branch_format"] = ""
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
+      {"git" => {"worktree" => invalid_config}},
       @project_root
     )
     errors = config.validate

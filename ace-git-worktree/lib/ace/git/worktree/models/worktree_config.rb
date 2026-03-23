@@ -326,35 +326,35 @@ module Ace
 
             # Validate template variables for task configuration
             task_templates = {
-              "task.directory_format" => { template: directory_format, valid_vars: %w[task_id id slug] },
-              "task.branch_format" => { template: branch_format, valid_vars: %w[id slug task_id] },
-              "task.commit_message_format" => { template: commit_message_format, valid_vars: %w[task_id slug id] }
+              "task.directory_format" => {template: directory_format, valid_vars: %w[task_id id slug]},
+              "task.branch_format" => {template: branch_format, valid_vars: %w[id slug task_id]},
+              "task.commit_message_format" => {template: commit_message_format, valid_vars: %w[task_id slug id]}
             }
 
             task_templates.each do |name, config|
               invalid_vars = find_invalid_template_variables(config[:template], config[:valid_vars])
               if invalid_vars.any?
-                errors << "#{name} contains invalid variables: #{invalid_vars.join(', ')}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
+                errors << "#{name} contains invalid variables: #{invalid_vars.join(", ")}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(", ")}"
               end
 
               # Warn if template has no variables (except for commit_message_format which is optional)
               unless name == "task.commit_message_format"
                 if config[:template] && !config[:template].match?(/\{[^}]+\}/)
-                  errors << "#{name} should include at least one template variable from: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
+                  errors << "#{name} should include at least one template variable from: #{config[:valid_vars].map { |v| "{#{v}}" }.join(", ")}"
                 end
               end
             end
 
             # Validate template variables for PR configuration
             pr_templates = {
-              "pr.directory_format" => { template: pr_dir_format, valid_vars: %w[number slug title base_branch] },
-              "pr.branch_format" => { template: pr_branch_format, valid_vars: %w[number slug title base_branch] }
+              "pr.directory_format" => {template: pr_dir_format, valid_vars: %w[number slug title base_branch]},
+              "pr.branch_format" => {template: pr_branch_format, valid_vars: %w[number slug title base_branch]}
             }
 
             pr_templates.each do |name, config|
               invalid_vars = find_invalid_template_variables(config[:template], config[:valid_vars])
               if invalid_vars.any?
-                errors << "#{name} contains invalid variables: #{invalid_vars.join(', ')}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
+                errors << "#{name} contains invalid variables: #{invalid_vars.join(", ")}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(", ")}"
               end
             end
 
@@ -490,11 +490,10 @@ module Ace
 
             # Convert to lowercase, replace spaces and special chars with hyphens
             title.downcase
-                 .gsub(/[^a-z0-9\s-]/, '') # Remove special chars except spaces and hyphens
-                 .gsub(/\s+/, '-')          # Replace spaces with hyphens
-                 .gsub(/-+/, '-')            # Replace multiple hyphens with single
-                 .gsub(/^-|-$/, '')          # Remove leading/trailing hyphens
-                 .tap { |slug| slug.empty? ? "unknown-task" : slug }
+              .gsub(/[^a-z0-9\s-]/, "") # Remove special chars except spaces and hyphens
+              .gsub(/\s+/, "-").squeeze("-")            # Replace multiple hyphens with single
+              .gsub(/^-|-$/, "")          # Remove leading/trailing hyphens
+              .tap { |slug| slug.empty? ? "unknown-task" : slug }
           end
         end
       end

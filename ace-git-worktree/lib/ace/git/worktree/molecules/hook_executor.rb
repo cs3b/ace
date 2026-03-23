@@ -48,7 +48,7 @@ module Ace
           # @return [Integer] Default timeout in seconds
           def default_timeout
             Ace::Git::Worktree.hook_timeout
-          rescue StandardError
+          rescue
             FALLBACK_DEFAULT_TIMEOUT
           end
 
@@ -56,7 +56,7 @@ module Ace
           # @return [Integer] Maximum timeout in seconds
           def max_timeout
             Ace::Git::Worktree.max_timeout
-          rescue StandardError
+          rescue
             FALLBACK_MAX_TIMEOUT
           end
 
@@ -101,7 +101,7 @@ module Ace
               results: @results,
               errors: errors
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               results: @results,
@@ -146,7 +146,7 @@ module Ace
               timeout: timeout,
               env: env
             )
-          rescue StandardError => e
+          rescue => e
             error_result(
               command: command,
               error: e.message
@@ -198,7 +198,7 @@ module Ace
               error: "Command timed out after #{timeout} seconds",
               timeout: timeout
             )
-          rescue StandardError => e
+          rescue => e
             error_result(
               command: command,
               error: "Execution error: #{e.message}"

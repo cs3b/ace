@@ -158,7 +158,7 @@ module Ace
             parts = upstream.split("/", 2)
             return nil if parts.length < 2
 
-            { remote: parts[0], branch: parts[1] }
+            {remote: parts[0], branch: parts[1]}
           end
 
           private

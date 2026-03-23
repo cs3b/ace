@@ -237,7 +237,7 @@ class CliTest < Minitest::Test
       # Check for error message indicating rejection
       combined_output = output.join
       assert_match(/Error:|dangerous|invalid/i, combined_output,
-                   "Dangerous ID should be rejected: #{dangerous_id.inspect}")
+        "Dangerous ID should be rejected: #{dangerous_id.inspect}")
     end
   end
 

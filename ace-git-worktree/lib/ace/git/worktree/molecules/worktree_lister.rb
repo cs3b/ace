@@ -36,7 +36,7 @@ module Ace
           # @return [Integer] Timeout in seconds
           def config_timeout
             Ace::Git::Worktree.list_timeout
-          rescue StandardError
+          rescue
             FALLBACK_TIMEOUT
           end
 
@@ -281,26 +281,26 @@ module Ace
 
             # Build header
             header = sprintf("%-#{max_task_width}s %-#{max_branch_width}s %-#{max_path_width}s %s",
-                            "Task", "Branch", "Path", "Status")
+              "Task", "Branch", "Path", "Status")
             separator = "-" * header.length
 
             # Build table rows
             rows = worktrees.map do |wt|
               status = if wt.bare
-                        "bare"
-                      elsif wt.detached
-                        "detached"
-                      elsif wt.task_associated?
-                        "task"
-                      else
-                        "normal"
-                      end
+                "bare"
+              elsif wt.detached
+                "detached"
+              elsif wt.task_associated?
+                "task"
+              else
+                "normal"
+              end
 
               sprintf("%-#{max_task_width}s %-#{max_branch_width}s %-#{max_path_width}s %s",
-                      wt.task_id || "-",
-                      wt.branch || "detached",
-                      wt.path,
-                      status)
+                wt.task_id || "-",
+                wt.branch || "detached",
+                wt.path,
+                status)
             end
 
             [header, separator, *rows].join("\n") + "\n"
@@ -326,7 +326,7 @@ module Ace
               if wt.task_associated?
                 "Task #{wt.task_id}: #{wt.branch} at #{wt.path}"
               else
-                "#{wt.branch || 'detached'} at #{wt.path}"
+                "#{wt.branch || "detached"} at #{wt.path}"
               end
             end.join("\n") + "\n"
           end

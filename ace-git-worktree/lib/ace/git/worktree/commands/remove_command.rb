@@ -31,26 +31,24 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              validate_options(options)
+            validate_options(options)
 
-              if options[:task]
-                remove_task_worktree(options)
-              else
-                remove_traditional_worktree(options)
-              end
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue StandardError => e
-              puts "Error: #{e.message}"
-              1
+            if options[:task]
+              remove_task_worktree(options)
+            else
+              remove_traditional_worktree(options)
             end
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue => e
+            puts "Error: #{e.message}"
+            1
           end
 
           # Show help for the remove command
@@ -274,13 +272,13 @@ module Ace
               puts "DRY RUN - No changes will be made"
               puts "This would:"
               puts "  • Remove worktree and its metadata from task #{options[:task]}"
-              puts "  • #{task_found ? 'Clean up task file metadata' : 'Skip task metadata cleanup (no worktree metadata found)'}"
-              puts "  • #{options[:keep_directory] ? 'Keep' : 'Remove'} the worktree directory"
+              puts "  • #{task_found ? "Clean up task file metadata" : "Skip task metadata cleanup (no worktree metadata found)"}"
+              puts "  • #{options[:keep_directory] ? "Keep" : "Remove"} the worktree directory"
               return 0
             end
 
             # Prepare removal options
-            removal_options = {
+            {
               force: options[:force],
               remove_directory: !options[:keep_directory]
             }.compact
@@ -289,8 +287,8 @@ module Ace
               puts "DRY RUN - No changes will be made"
               puts "This would:"
               puts "  • Remove worktree and its metadata from task #{options[:task]}"
-              puts "  • #{task_found ? 'Clean up task file metadata' : 'Skip task metadata cleanup (task not found)'}"
-              puts "  • #{options[:keep_directory] ? 'Keep' : 'Remove'} the worktree directory"
+              puts "  • #{task_found ? "Clean up task file metadata" : "Skip task metadata cleanup (task not found)"}"
+              puts "  • #{options[:keep_directory] ? "Keep" : "Remove"} the worktree directory"
               return 0
             end
 
@@ -308,14 +306,12 @@ module Ace
                 puts "Branch: #{worktree_info.branch}"
 
                 # Delete the branch if requested and it exists (using safe deletion method)
-                branch_deleted = false
                 if options[:delete_branch] && worktree_info.branch && !worktree_info.branch.empty?
                   # Use WorktreeRemover's safe deletion method for consistency
                   remover = Ace::Git::Worktree::Molecules::WorktreeRemover.new
                   delete_result = remover.send(:delete_branch_if_safe, worktree_info.branch, options[:force])
 
                   if delete_result[:success]
-                    branch_deleted = true
                     puts "Deleted branch: #{worktree_info.branch}"
                   else
                     # Branch deletion failed (likely unmerged without --force)
@@ -340,7 +336,7 @@ module Ace
                 puts "Failed to remove worktree: #{git_result[:error]}"
                 1
               end
-            rescue StandardError => e
+            rescue => e
               puts "Error removing worktree: #{e.message}"
               1
             end
@@ -355,7 +351,7 @@ module Ace
 
             if options[:dry_run]
               puts "DRY RUN - No changes will be made"
-              puts "This would remove the worktree and #{options[:keep_directory] ? 'keep' : 'remove'} its directory"
+              puts "This would remove the worktree and #{options[:keep_directory] ? "keep" : "remove"} its directory"
               return 0
             end
 
@@ -389,7 +385,7 @@ module Ace
             puts "Branch: #{result[:branch]}" if result[:branch]
             puts "\nSteps completed:"
             result[:steps_completed].each_with_index do |step, i|
-              puts "  ✓ #{step.gsub('_', ' ')}"
+              puts "  ✓ #{step.tr("_", " ")}"
             end
 
             puts "\nNote: Task metadata has been cleaned up."
@@ -425,7 +421,7 @@ module Ace
               if list_result[:success] && list_result[:worktrees].any?
                 list_result[:worktrees].each do |worktree|
                   prefix = worktree.task_associated? ? "Task #{worktree.task_id}: " : ""
-                  puts "  #{prefix}#{worktree.branch || 'detached'} (#{worktree.path})"
+                  puts "  #{prefix}#{worktree.branch || "detached"} (#{worktree.path})"
                 end
               else
                 puts "  No worktrees found."
@@ -514,8 +510,7 @@ module Ace
             # Pattern 2: task-052
             # Pattern 3: v.0.9.0-052
             branches.find do |branch|
-              branch.start_with?("#{task_number}-") ||
-                branch.start_with?("task-#{task_number}") ||
+              branch.start_with?("#{task_number}-", "task-#{task_number}") ||
                 branch =~ /\d+-#{task_number}-/ ||
                 branch.include?("-#{task_number}-")
             end

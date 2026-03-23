@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module Git
@@ -90,7 +90,7 @@ module Ace
             return @config_hash if @config_hash
 
             gem_root = Gem.loaded_specs["ace-git-worktree"]&.gem_dir ||
-                       File.expand_path("../../../../..", __dir__)
+              File.expand_path("../../../../..", __dir__)
 
             resolver = Ace::Support::Config.create(
               config_dir: ".ace",
@@ -102,7 +102,7 @@ module Ace
             config = resolver.resolve_namespace("git", filename: "worktree")
 
             @config_hash = config.data
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Error loading worktree configuration: #{e.message}"
             @config_hash = {}
           end

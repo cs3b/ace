@@ -25,7 +25,7 @@ class SwitchCommandTest < Minitest::Test
   def test_run_with_worktree_path
     # Mock successful worktree switch
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:switch, { success: true }, [String])
+    mock_worktree_manager.expect(:switch, {success: true}, [String])
 
     command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
@@ -77,10 +77,10 @@ class SwitchCommandTest < Minitest::Test
     # Mock successful listing of available worktrees
     mock_worktree_manager = Minitest::Mock.new
     mock_worktrees = [
-      { path: "/path/to/main", branch: "main" },
-      { path: "/path/to/feature", branch: "feature-branch" }
+      {path: "/path/to/main", branch: "main"},
+      {path: "/path/to/feature", branch: "feature-branch"}
     ]
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: mock_worktrees }, [Hash])
+    mock_worktree_manager.expect(:list_all, {success: true, worktrees: mock_worktrees}, [Hash])
 
     command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 

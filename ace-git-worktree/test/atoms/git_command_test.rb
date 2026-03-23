@@ -36,9 +36,9 @@ class GitCommandTest < Minitest::Test
   def test_ref_exists_returns_true_for_valid_ref
     @git_command.stub :execute, ->(*args, **opts) {
       if args.include?("--verify")
-        { success: true, output: "abc123\n", error: "", exit_code: 0 }
+        {success: true, output: "abc123\n", error: "", exit_code: 0}
       else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
+        {success: false, output: "", error: "unexpected", exit_code: 1}
       end
     } do
       result = @git_command.ref_exists?("main")
@@ -49,9 +49,9 @@ class GitCommandTest < Minitest::Test
   def test_ref_exists_returns_false_for_invalid_ref
     @git_command.stub :execute, ->(*args, **opts) {
       if args.include?("--verify")
-        { success: false, output: "", error: "not a valid ref", exit_code: 128 }
+        {success: false, output: "", error: "not a valid ref", exit_code: 128}
       else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
+        {success: false, output: "", error: "unexpected", exit_code: 1}
       end
     } do
       result = @git_command.ref_exists?("nonexistent-branch")
@@ -79,7 +79,7 @@ class GitCommandTest < Minitest::Test
     executed_args = nil
     @git_command.stub :execute, ->(*args, **opts) {
       executed_args = args
-      { success: true, output: "worktree output\n", error: "", exit_code: 0 }
+      {success: true, output: "worktree output\n", error: "", exit_code: 0}
     } do
       @git_command.worktree("add", "/path", "-b", "branch")
       assert_equal ["worktree", "add", "/path", "-b", "branch"], executed_args
@@ -89,7 +89,7 @@ class GitCommandTest < Minitest::Test
   def test_execute_delegates_to_ace_git_command_executor
     # Verify execute properly delegates to ace-git's CommandExecutor
     @ace_git_executor.stub :execute, ->(*args, **opts) {
-      { success: true, output: "test output", error: "", exit_code: 0 }
+      {success: true, output: "test output", error: "", exit_code: 0}
     } do
       result = @git_command.execute("status")
       assert result[:success]
@@ -102,7 +102,7 @@ class GitCommandTest < Minitest::Test
     captured_opts = nil
     @ace_git_executor.stub :execute, ->(*args, **opts) {
       captured_opts = opts
-      { success: true, output: "", error: "", exit_code: 0 }
+      {success: true, output: "", error: "", exit_code: 0}
     } do
       @git_command.execute("status", timeout: 60)
       assert_equal 60, captured_opts[:timeout], "Timeout should be passed to CommandExecutor"
@@ -115,13 +115,13 @@ class GitCommandTest < Minitest::Test
     captured_opts = nil
     @ace_git_executor.stub :execute, ->(*args, **opts) {
       captured_opts = opts
-      { success: true, output: "", error: "", exit_code: 0 }
+      {success: true, output: "", error: "", exit_code: 0}
     } do
       @git_command.execute("status")
       # Default timeout should be either from config or fallback (30)
       expected_timeout = @git_command.default_timeout
       assert_equal expected_timeout, captured_opts[:timeout],
-                   "Default timeout from config should be used"
+        "Default timeout from config should be used"
     end
   end
 
@@ -130,7 +130,7 @@ class GitCommandTest < Minitest::Test
     captured_opts = nil
     @ace_git_executor.stub :execute, ->(*args, **opts) {
       captured_opts = opts
-      { success: true, output: "", error: "", exit_code: 0 }
+      {success: true, output: "", error: "", exit_code: 0}
     } do
       @git_command.worktree("list", timeout: 45)
       assert_equal 45, captured_opts[:timeout], "Timeout should be passed through worktree method"

@@ -25,36 +25,34 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            begin
-              options = parse_arguments(args)
-              return show_help if options[:help]
+            options = parse_arguments(args)
+            return show_help if options[:help]
 
-              validate_options(options)
+            validate_options(options)
 
-              result = @manager.prune
+            result = @manager.prune
 
-              if result[:success]
-                display_prune_result(result, options)
+            if result[:success]
+              display_prune_result(result, options)
 
-                # Additional directory cleanup if requested
-                if options[:cleanup_directories]
-                  cleanup_orphaned_directories(options)
-                end
-
-                0
-              else
-                puts "Failed to prune worktrees: #{result[:error]}"
-                1
+              # Additional directory cleanup if requested
+              if options[:cleanup_directories]
+                cleanup_orphaned_directories(options)
               end
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts
-              show_help
-              1
-            rescue StandardError => e
-              puts "Error: #{e.message}"
+
+              0
+            else
+              puts "Failed to prune worktrees: #{result[:error]}"
               1
             end
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts
+            show_help
+            1
+          rescue => e
+            puts "Error: #{e.message}"
+            1
           end
 
           # Show help for the prune command
@@ -220,7 +218,7 @@ module Ace
                   begin
                     FileUtils.rm_rf(path)
                     orphaned_count += 1
-                  rescue StandardError => e
+                  rescue => e
                     puts "  Failed to remove #{path}: #{e.message}"
                   end
                 end
@@ -252,7 +250,7 @@ module Ace
 
             # Check if any indicators exist
             indicators.any? { |indicator| File.exist?(indicator) }
-          rescue StandardError
+          rescue
             false
           end
         end

@@ -9,7 +9,7 @@ class TaskPusherTest < Minitest::Test
 
   def test_push_returns_success_on_successful_push
     # Mock successful push
-    mock_result = { success: true, output: "Everything up-to-date", error: "" }
+    mock_result = {success: true, output: "Everything up-to-date", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "feature-branch") do
@@ -23,7 +23,7 @@ class TaskPusherTest < Minitest::Test
 
   def test_push_returns_failure_on_failed_push
     # Mock failed push
-    mock_result = { success: false, output: "", error: "rejected" }
+    mock_result = {success: false, output: "", error: "rejected"}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "feature-branch") do
@@ -42,7 +42,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_push_uses_provided_branch
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       result = @pusher.push(remote: "origin", branch: "custom-branch")
@@ -52,7 +52,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_push_uses_provided_remote
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "main") do
@@ -64,7 +64,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_remote_exists_returns_true_when_remote_exists
-    mock_result = { success: true, output: "git@github.com:user/repo.git", error: "" }
+    mock_result = {success: true, output: "git@github.com:user/repo.git", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       assert @pusher.remote_exists?("origin")
@@ -72,7 +72,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_remote_exists_returns_false_when_remote_missing
-    mock_result = { success: false, output: "", error: "No such remote" }
+    mock_result = {success: false, output: "", error: "No such remote"}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       refute @pusher.remote_exists?("nonexistent")
@@ -80,7 +80,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_current_branch_returns_branch_name
-    mock_result = { success: true, output: "feature-branch\n", error: "" }
+    mock_result = {success: true, output: "feature-branch\n", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       assert_equal "feature-branch", @pusher.current_branch
@@ -88,7 +88,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_current_branch_returns_nil_for_detached_head
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       assert_nil @pusher.current_branch
@@ -96,7 +96,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_has_upstream_returns_true_when_tracking
-    mock_result = { success: true, output: "origin/main", error: "" }
+    mock_result = {success: true, output: "origin/main", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "main") do
@@ -106,7 +106,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_has_upstream_returns_false_when_not_tracking
-    mock_result = { success: false, output: "", error: "no upstream" }
+    mock_result = {success: false, output: "", error: "no upstream"}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "local-only") do
@@ -116,7 +116,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_get_upstream_parses_remote_and_branch
-    mock_result = { success: true, output: "origin/main\n", error: "" }
+    mock_result = {success: true, output: "origin/main\n", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "main") do
@@ -128,7 +128,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_get_upstream_returns_nil_when_no_upstream
-    mock_result = { success: false, output: "", error: "no upstream" }
+    mock_result = {success: false, output: "", error: "no upstream"}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "local-only") do
@@ -149,7 +149,7 @@ class TaskPusherTest < Minitest::Test
   # set_upstream tests
 
   def test_set_upstream_returns_success_when_tracking_set
-    mock_result = { success: true, output: "Branch 'feature' set up to track 'origin/feature'.", error: "" }
+    mock_result = {success: true, output: "Branch 'feature' set up to track 'origin/feature'.", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "feature") do
@@ -162,7 +162,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_set_upstream_returns_failure_when_remote_branch_missing
-    mock_result = { success: false, output: "", error: "error: the requested upstream branch 'origin/nonexistent' does not exist" }
+    mock_result = {success: false, output: "", error: "error: the requested upstream branch 'origin/nonexistent' does not exist"}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "nonexistent") do
@@ -182,7 +182,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_set_upstream_uses_provided_branch
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       result = @pusher.set_upstream(branch: "custom-branch", remote: "origin")
@@ -192,7 +192,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_set_upstream_uses_provided_remote
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "main") do
@@ -204,7 +204,7 @@ class TaskPusherTest < Minitest::Test
   end
 
   def test_set_upstream_defaults_to_origin_remote
-    mock_result = { success: true, output: "", error: "" }
+    mock_result = {success: true, output: "", error: ""}
 
     Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
       @pusher.stub(:current_branch, "feature") do

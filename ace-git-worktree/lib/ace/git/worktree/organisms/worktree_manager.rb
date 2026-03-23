@@ -52,58 +52,56 @@ module Ace
           #   result = manager.create("feature-branch", path: "/tmp/worktree")
           #   # => { success: true, worktree_path: "/tmp/worktree", branch: "feature-branch" }
           def create(branch_name, options = {})
-            begin
-              # Validate inputs
-              return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
+            # Validate inputs
+            return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
 
-              # Check if worktree already exists
-              existing = @worktree_lister.find_by_branch(branch_name)
-              if existing
-                return error_result("Worktree already exists for branch: #{branch_name}")
-              end
+            # Check if worktree already exists
+            existing = @worktree_lister.find_by_branch(branch_name)
+            if existing
+              return error_result("Worktree already exists for branch: #{branch_name}")
+            end
 
-              # Handle dry run
-              if options[:dry_run]
-                return dry_run_traditional_creation(branch_name, options)
-              end
+            # Handle dry run
+            if options[:dry_run]
+              return dry_run_traditional_creation(branch_name, options)
+            end
 
-              # Create the worktree
-              result = @worktree_creator.create_traditional(
-                branch_name,
-                options[:path],
-                git_root: @project_root,
-                source: options[:source]
-              )
+            # Create the worktree
+            result = @worktree_creator.create_traditional(
+              branch_name,
+              options[:path],
+              git_root: @project_root,
+              source: options[:source]
+            )
 
-              if result[:success]
-                result[:message] = "Worktree created successfully"
+            if result[:success]
+              result[:message] = "Worktree created successfully"
 
-                # Execute after-create hooks if configured
-                hooks = @config.after_create_hooks
-                if hooks && hooks.any?
-                  require_relative "../molecules/hook_executor"
-                  hook_executor = Molecules::HookExecutor.new
-                  hook_result = hook_executor.execute_hooks(
-                    hooks,
-                    worktree_path: result[:worktree_path],
-                    project_root: @project_root,
-                    task_data: nil  # No task data for traditional worktrees
-                  )
+              # Execute after-create hooks if configured
+              hooks = @config.after_create_hooks
+              if hooks && hooks.any?
+                require_relative "../molecules/hook_executor"
+                hook_executor = Molecules::HookExecutor.new
+                hook_result = hook_executor.execute_hooks(
+                  hooks,
+                  worktree_path: result[:worktree_path],
+                  project_root: @project_root,
+                  task_data: nil  # No task data for traditional worktrees
+                )
 
-                  if hook_result[:success]
-                    result[:hooks_results] = hook_result[:results]
-                  else
-                    # Hooks are non-blocking - failures become warnings
-                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
-                    result[:hooks_results] = hook_result[:results]
-                  end
+                if hook_result[:success]
+                  result[:hooks_results] = hook_result[:results]
+                else
+                  # Hooks are non-blocking - failures become warnings
+                  result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                  result[:hooks_results] = hook_result[:results]
                 end
               end
-
-              result
-            rescue StandardError => e
-              error_result("Unexpected error: #{e.message}")
             end
+
+            result
+          rescue => e
+            error_result("Unexpected error: #{e.message}")
           end
 
           # Create a task-aware worktree
@@ -135,61 +133,59 @@ module Ace
           #   pr_data = { number: 26, title: "Add feature", head_branch: "feature/auth" }
           #   result = manager.create_pr(26, pr_data)
           def create_pr(pr_number, pr_data, options = {})
-            begin
-              return error_result("PR number is required") if pr_number.nil?
-              return error_result("PR data is required") if pr_data.nil?
+            return error_result("PR number is required") if pr_number.nil?
+            return error_result("PR data is required") if pr_data.nil?
 
-              # Check if worktree already exists for this PR's branch
-              head_branch = pr_data[:head_branch]
-              existing = @worktree_lister.find_by_branch("pr-#{pr_number}") ||
-                        @worktree_lister.find_by_branch(head_branch)
+            # Check if worktree already exists for this PR's branch
+            head_branch = pr_data[:head_branch]
+            existing = @worktree_lister.find_by_branch("pr-#{pr_number}") ||
+              @worktree_lister.find_by_branch(head_branch)
 
-              if existing && !options[:force]
-                return error_result("Worktree already exists at: #{existing.path}")
-              end
+            if existing && !options[:force]
+              return error_result("Worktree already exists at: #{existing.path}")
+            end
 
-              # Handle dry run
-              if options[:dry_run]
-                return dry_run_pr_creation(pr_number, pr_data, options)
-              end
+            # Handle dry run
+            if options[:dry_run]
+              return dry_run_pr_creation(pr_number, pr_data, options)
+            end
 
-              # Create the worktree
-              result = @worktree_creator.create_for_pr(
-                pr_data,
-                @config,
-                git_root: @project_root
-              )
+            # Create the worktree
+            result = @worktree_creator.create_for_pr(
+              pr_data,
+              @config,
+              git_root: @project_root
+            )
 
-              if result[:success]
-                result[:pr_number] = pr_number
-                result[:pr_title] = pr_data[:title]
-                result[:message] = "PR worktree created successfully"
+            if result[:success]
+              result[:pr_number] = pr_number
+              result[:pr_title] = pr_data[:title]
+              result[:message] = "PR worktree created successfully"
 
-                # Execute after-create hooks if configured
-                hooks = @config.after_create_hooks
-                if hooks && hooks.any?
-                  require_relative "../molecules/hook_executor"
-                  hook_executor = Molecules::HookExecutor.new
-                  hook_result = hook_executor.execute_hooks(
-                    hooks,
-                    worktree_path: result[:worktree_path],
-                    project_root: @project_root,
-                    task_data: pr_data
-                  )
+              # Execute after-create hooks if configured
+              hooks = @config.after_create_hooks
+              if hooks && hooks.any?
+                require_relative "../molecules/hook_executor"
+                hook_executor = Molecules::HookExecutor.new
+                hook_result = hook_executor.execute_hooks(
+                  hooks,
+                  worktree_path: result[:worktree_path],
+                  project_root: @project_root,
+                  task_data: pr_data
+                )
 
-                  if hook_result[:success]
-                    result[:hooks_results] = hook_result[:results]
-                  else
-                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
-                    result[:hooks_results] = hook_result[:results]
-                  end
+                if hook_result[:success]
+                  result[:hooks_results] = hook_result[:results]
+                else
+                  result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                  result[:hooks_results] = hook_result[:results]
                 end
               end
-
-              result
-            rescue StandardError => e
-              error_result("Unexpected error: #{e.message}")
             end
+
+            result
+          rescue => e
+            error_result("Unexpected error: #{e.message}")
           end
 
           # Create a worktree for a branch (local or remote)
@@ -204,59 +200,57 @@ module Ace
           # @example Local branch
           #   result = manager.create_branch("my-feature")
           def create_branch(branch_name, options = {})
-            begin
-              return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
+            return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
 
-              # Check if worktree already exists for this branch
-              # Extract just the branch name (remove remote prefix if present)
-              local_branch_name = branch_name.include?("/") ? branch_name.split("/").last : branch_name
-              existing = @worktree_lister.find_by_branch(local_branch_name) ||
-                        @worktree_lister.find_by_branch(branch_name)
+            # Check if worktree already exists for this branch
+            # Extract just the branch name (remove remote prefix if present)
+            local_branch_name = branch_name.include?("/") ? branch_name.split("/").last : branch_name
+            existing = @worktree_lister.find_by_branch(local_branch_name) ||
+              @worktree_lister.find_by_branch(branch_name)
 
-              if existing && !options[:force]
-                return error_result("Worktree already exists at: #{existing.path}")
-              end
+            if existing && !options[:force]
+              return error_result("Worktree already exists at: #{existing.path}")
+            end
 
-              # Handle dry run
-              if options[:dry_run]
-                return dry_run_branch_creation(branch_name, options)
-              end
+            # Handle dry run
+            if options[:dry_run]
+              return dry_run_branch_creation(branch_name, options)
+            end
 
-              # Create the worktree
-              result = @worktree_creator.create_for_branch(
-                branch_name,
-                @config,
-                git_root: @project_root
-              )
+            # Create the worktree
+            result = @worktree_creator.create_for_branch(
+              branch_name,
+              @config,
+              git_root: @project_root
+            )
 
-              if result[:success]
-                result[:message] = "Branch worktree created successfully"
+            if result[:success]
+              result[:message] = "Branch worktree created successfully"
 
-                # Execute after-create hooks if configured
-                hooks = @config.after_create_hooks
-                if hooks && hooks.any?
-                  require_relative "../molecules/hook_executor"
-                  hook_executor = Molecules::HookExecutor.new
-                  hook_result = hook_executor.execute_hooks(
-                    hooks,
-                    worktree_path: result[:worktree_path],
-                    project_root: @project_root,
-                    task_data: nil
-                  )
+              # Execute after-create hooks if configured
+              hooks = @config.after_create_hooks
+              if hooks && hooks.any?
+                require_relative "../molecules/hook_executor"
+                hook_executor = Molecules::HookExecutor.new
+                hook_result = hook_executor.execute_hooks(
+                  hooks,
+                  worktree_path: result[:worktree_path],
+                  project_root: @project_root,
+                  task_data: nil
+                )
 
-                  if hook_result[:success]
-                    result[:hooks_results] = hook_result[:results]
-                  else
-                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
-                    result[:hooks_results] = hook_result[:results]
-                  end
+                if hook_result[:success]
+                  result[:hooks_results] = hook_result[:results]
+                else
+                  result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                  result[:hooks_results] = hook_result[:results]
                 end
               end
-
-              result
-            rescue StandardError => e
-              error_result("Unexpected error: #{e.message}")
             end
+
+            result
+          rescue => e
+            error_result("Unexpected error: #{e.message}")
           end
 
           # List all worktrees
@@ -274,45 +268,43 @@ module Ace
           # @option options [Boolean] :usable Filter by usability
           # @option options [String] :search Filter by search pattern
           def list_all(options = {})
-            begin
-              task_filter_requested = !options[:task_associated].nil?
+            task_filter_requested = !options[:task_associated].nil?
 
-              # Get worktrees
-              worktrees = if options[:show_tasks] || task_filter_requested
-                          @worktree_lister.list_with_tasks
-                        else
-                          @worktree_lister.list_all
-                        end
-
-              # Apply filters
-              if !options[:task_associated].nil? || !options[:usable].nil? || options[:search]
-                worktrees = @worktree_lister.filter(
-                  worktrees,
-                  task_associated: options[:task_associated],
-                  usable: options[:usable],
-                  branch_pattern: options[:search]
-                )
-              end
-
-              # Format output
-              formatted_output = @worktree_lister.format_for_display(
-                worktrees,
-                options[:format] || :table
-              )
-
-              # Get statistics
-              stats = @worktree_lister.get_statistics(worktrees)
-
-              {
-                success: true,
-                worktrees: worktrees,
-                formatted_output: formatted_output,
-                statistics: stats,
-                count: worktrees.length
-              }
-            rescue StandardError => e
-              error_result("Failed to list worktrees: #{e.message}")
+            # Get worktrees
+            worktrees = if options[:show_tasks] || task_filter_requested
+              @worktree_lister.list_with_tasks
+            else
+              @worktree_lister.list_all
             end
+
+            # Apply filters
+            if !options[:task_associated].nil? || !options[:usable].nil? || options[:search]
+              worktrees = @worktree_lister.filter(
+                worktrees,
+                task_associated: options[:task_associated],
+                usable: options[:usable],
+                branch_pattern: options[:search]
+              )
+            end
+
+            # Format output
+            formatted_output = @worktree_lister.format_for_display(
+              worktrees,
+              options[:format] || :table
+            )
+
+            # Get statistics
+            stats = @worktree_lister.get_statistics(worktrees)
+
+            {
+              success: true,
+              worktrees: worktrees,
+              formatted_output: formatted_output,
+              statistics: stats,
+              count: worktrees.length
+            }
+          rescue => e
+            error_result("Failed to list worktrees: #{e.message}")
           end
 
           # Switch to a worktree
@@ -326,34 +318,32 @@ module Ace
           #   result = manager.switch("task.081")  # By directory name
           #   result = manager.switch("/path/to/worktree")  # By path
           def switch(identifier)
-            begin
-              return error_result("Worktree identifier is required") if identifier.nil? || identifier.empty?
+            return error_result("Worktree identifier is required") if identifier.nil? || identifier.empty?
 
-              # Try different ways to find the worktree
-              worktree = find_worktree_by_identifier(identifier)
-              return error_result("Worktree not found: #{identifier}") unless worktree
+            # Try different ways to find the worktree
+            worktree = find_worktree_by_identifier(identifier)
+            return error_result("Worktree not found: #{identifier}") unless worktree
 
-              # Check if worktree exists and is usable
-              unless worktree.exists?
-                return error_result("Worktree directory does not exist: #{worktree.path}")
-              end
-
-              unless worktree.usable?
-                return error_result("Worktree is not usable: #{worktree.description}")
-              end
-
-              # Return the path for the caller to use
-              {
-                success: true,
-                message: "Found worktree: #{worktree.description}",
-                worktree_path: worktree.path,
-                branch: worktree.branch,
-                task_id: worktree.task_id,
-                description: worktree.description
-              }
-            rescue StandardError => e
-              error_result("Unexpected error: #{e.message}")
+            # Check if worktree exists and is usable
+            unless worktree.exists?
+              return error_result("Worktree directory does not exist: #{worktree.path}")
             end
+
+            unless worktree.usable?
+              return error_result("Worktree is not usable: #{worktree.description}")
+            end
+
+            # Return the path for the caller to use
+            {
+              success: true,
+              message: "Found worktree: #{worktree.description}",
+              worktree_path: worktree.path,
+              branch: worktree.branch,
+              task_id: worktree.task_id,
+              description: worktree.description
+            }
+          rescue => e
+            error_result("Unexpected error: #{e.message}")
           end
 
           # Remove a worktree
@@ -371,39 +361,37 @@ module Ace
           # @option options [Boolean] :remove_directory Also remove the directory
           # @option options [Boolean] :ignore_untracked Ignore untracked files when checking changes
           def remove(identifier, options = {})
-            begin
-              return error_result("Worktree identifier is required") if identifier.nil? || identifier.empty?
+            return error_result("Worktree identifier is required") if identifier.nil? || identifier.empty?
 
-              # Find the worktree
-              worktree = find_worktree_by_identifier(identifier)
+            # Find the worktree
+            worktree = find_worktree_by_identifier(identifier)
 
-              unless worktree
-                # Worktree not found - check if we should try branch-only deletion
-                if options[:delete_branch]
-                  result = attempt_branch_only_deletion(identifier, options[:force])
-                  return result if result[:success]
-                end
-
-                return error_result("Worktree not found: #{identifier}")
+            unless worktree
+              # Worktree not found - check if we should try branch-only deletion
+              if options[:delete_branch]
+                result = attempt_branch_only_deletion(identifier, options[:force])
+                return result if result[:success]
               end
 
-              # Remove the worktree
-              result = @worktree_remover.remove(
-                worktree.path,
-                force: options[:force],
-                remove_directory: options[:remove_directory] != false,
-                delete_branch: options[:delete_branch] == true,
-                ignore_untracked: options[:ignore_untracked] == true
-              )
-
-              if result[:success]
-                result[:message] = "Worktree removed successfully: #{worktree.description}"
-              end
-
-              result
-            rescue StandardError => e
-              error_result("Unexpected error: #{e.message}")
+              return error_result("Worktree not found: #{identifier}")
             end
+
+            # Remove the worktree
+            result = @worktree_remover.remove(
+              worktree.path,
+              force: options[:force],
+              remove_directory: options[:remove_directory] != false,
+              delete_branch: options[:delete_branch] == true,
+              ignore_untracked: options[:ignore_untracked] == true
+            )
+
+            if result[:success]
+              result[:message] = "Worktree removed successfully: #{worktree.description}"
+            end
+
+            result
+          rescue => e
+            error_result("Unexpected error: #{e.message}")
           end
 
           # Remove a task worktree with full cleanup
@@ -426,13 +414,11 @@ module Ace
           #   result = manager.prune
           #   # => { success: true, message: "Pruned 2 worktrees", pruned_count: 2 }
           def prune
-            begin
-              result = @worktree_remover.prune
-              result[:message] = "Worktree pruning completed successfully" if result[:success]
-              result
-            rescue StandardError => e
-              error_result("Failed to prune worktrees: #{e.message}")
-            end
+            result = @worktree_remover.prune
+            result[:message] = "Worktree pruning completed successfully" if result[:success]
+            result
+          rescue => e
+            error_result("Failed to prune worktrees: #{e.message}")
           end
 
           # Get worktree status and statistics
@@ -443,25 +429,23 @@ module Ace
           #   status = manager.get_status
           #   puts "Total worktrees: #{status[:statistics][:total]}"
           def get_status
-            begin
-              # Get all worktrees with task associations
-              worktrees = @worktree_lister.list_with_tasks
-              stats = @worktree_lister.get_statistics
+            # Get all worktrees with task associations
+            worktrees = @worktree_lister.list_with_tasks
+            stats = @worktree_lister.get_statistics
 
-              # Get task worktree status
-              task_status = @task_orchestrator.get_task_worktree_status
+            # Get task worktree status
+            task_status = @task_orchestrator.get_task_worktree_status
 
-              result = {
-                success: true,
-                worktrees: worktrees,
-                statistics: stats,
-                configuration: @config.to_h
-              }
-              result[:task_status] = task_status[:status] if task_status[:success]
-              result
-            rescue StandardError => e
-              error_result("Failed to get worktree status: #{e.message}")
-            end
+            result = {
+              success: true,
+              worktrees: worktrees,
+              statistics: stats,
+              configuration: @config.to_h
+            }
+            result[:task_status] = task_status[:status] if task_status[:success]
+            result
+          rescue => e
+            error_result("Failed to get worktree status: #{e.message}")
           end
 
           # Search for worktrees
@@ -473,22 +457,20 @@ module Ace
           # @example
           #   result = manager.search("auth", search_in: [:branch, :task_id])
           def search(query, options = {})
-            begin
-              return error_result("Search query is required") if query.nil? || query.empty?
+            return error_result("Search query is required") if query.nil? || query.empty?
 
-              search_in = options[:search_in] || [:branch, :path, :task_id]
-              worktrees = @worktree_lister.search(query, search_in: search_in)
+            search_in = options[:search_in] || [:branch, :path, :task_id]
+            worktrees = @worktree_lister.search(query, search_in: search_in)
 
-              {
-                success: true,
-                query: query,
-                search_in: search_in,
-                results: worktrees,
-                count: worktrees.length
-              }
-            rescue StandardError => e
-              error_result("Search failed: #{e.message}")
-            end
+            {
+              success: true,
+              query: query,
+              search_in: search_in,
+              results: worktrees,
+              count: worktrees.length
+            }
+          rescue => e
+            error_result("Search failed: #{e.message}")
           end
 
           # Validate worktree configuration
@@ -503,18 +485,16 @@ module Ace
           #     puts "Errors: #{validation[:errors].join(', ')}"
           #   end
           def validate_configuration
-            begin
-              errors = @config.validate
+            errors = @config.validate
 
-              {
-                success: errors.empty?,
-                valid: errors.empty?,
-                errors: errors,
-                configuration: @config.to_h
-              }
-            rescue StandardError => e
-              error_result("Configuration validation failed: #{e.message}")
-            end
+            {
+              success: errors.empty?,
+              valid: errors.empty?,
+              errors: errors,
+              configuration: @config.to_h
+            }
+          rescue => e
+            error_result("Configuration validation failed: #{e.message}")
           end
 
           # Get configuration
@@ -631,10 +611,10 @@ module Ace
             remote_info = @worktree_creator.send(:detect_remote_branch, branch_name)
 
             local_branch = if remote_info
-                            remote_info[:branch].split("/").last
-                          else
-                            branch_name
-                          end
+              remote_info[:branch].split("/").last
+            else
+              branch_name
+            end
 
             require_relative "../atoms/slug_generator"
             directory_name = Atoms::SlugGenerator.to_directory_name(local_branch)
@@ -663,12 +643,12 @@ module Ace
 
             # Determine worktree path
             worktree_path = if options[:path]
-                              options[:path]
-                            else
-                              require_relative "../atoms/slug_generator"
-                              directory_name = Atoms::SlugGenerator.to_directory_name(branch_name)
-                              File.join(@config.absolute_root_path, directory_name)
-                            end
+              options[:path]
+            else
+              require_relative "../atoms/slug_generator"
+              directory_name = Atoms::SlugGenerator.to_directory_name(branch_name)
+              File.join(@config.absolute_root_path, directory_name)
+            end
 
             {
               success: true,

@@ -47,14 +47,13 @@ class PathExpanderTest < Minitest::Test
   def test_expand_with_user_name
     # This test might fail if the user doesn't exist
     # We'll skip it if the user lookup fails
-    begin
-      Dir.home("root")
-      slug = @expander.expand("~root")
-      # Don't assert exact value since it depends on system
-      assert slug.is_a?(String)
-    rescue ArgumentError
-      skip "User ~root not found on this system"
-    end
+
+    Dir.home("root")
+    slug = @expander.expand("~root")
+    # Don't assert exact value since it depends on system
+    assert slug.is_a?(String)
+  rescue ArgumentError
+    skip "User ~root not found on this system"
   end
 
   def test_resolve_relative_to_base
@@ -104,7 +103,7 @@ class PathExpanderTest < Minitest::Test
 
     # Make directory read-only (this might not work on all systems)
     begin
-      File.chmod(0555, test_dir)
+      File.chmod(0o555, test_dir)
 
       # Test should fail due to permissions
       refute @expander.writable?(File.join(test_dir, "subdir"), create_if_missing: true)
@@ -112,7 +111,11 @@ class PathExpanderTest < Minitest::Test
       # Expected on some systems
     ensure
       # Restore permissions for cleanup
-      File.chmod(0755, test_dir) rescue nil
+      begin
+        File.chmod(0o755, test_dir)
+      rescue
+        nil
+      end
     end
   end
 
@@ -134,7 +137,6 @@ class PathExpanderTest < Minitest::Test
     refute validation[:valid]
     assert_match(/Parent directory does not exist/, validation[:error])
   end
-
 
   def test_validate_for_worktree_long_path
     # Create a very long path in .ace-wt

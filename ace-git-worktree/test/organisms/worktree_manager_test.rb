@@ -67,8 +67,8 @@ class WorktreeManagerTest < Minitest::Test
     captured = nil
     fake_remover = Object.new
     fake_remover.define_singleton_method(:remove) do |path, **options|
-      captured = { path: path, options: options }
-      { success: true }
+      captured = {path: path, options: options}
+      {success: true}
     end
     @manager.instance_variable_set(:@worktree_remover, fake_remover)
 

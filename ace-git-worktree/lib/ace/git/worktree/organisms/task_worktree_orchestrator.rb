@@ -249,7 +249,7 @@ module Ace
 
               # Success!
               success_workflow_result("Task worktree created successfully", workflow_result)
-            rescue StandardError => e
+            rescue => e
               error_workflow_result("Unexpected error: #{e.message}", workflow_result)
             end
           end
@@ -280,7 +280,7 @@ module Ace
               directory_name = @config.format_directory(task_data)
               branch_name = @config.format_branch(task_data)
               worktree_path = File.join(@config.absolute_root_path, directory_name)
-              base_branch = options[:source] || "main"
+              options[:source] || "main"
 
               # Determine target branch for PR (parent's branch for subtasks, or main)
               target_branch = resolve_target_branch(task_data, options)
@@ -341,7 +341,7 @@ module Ace
               ].compact
 
               success_workflow_result("Dry run completed", workflow_result)
-            rescue StandardError => e
+            rescue => e
               error_workflow_result("Dry run error: #{e.message}", workflow_result)
             end
           end
@@ -388,7 +388,7 @@ module Ace
               worktree_remover = Molecules::WorktreeRemover.new
               safety_check = worktree_remover.check_removal_safety(worktree_info.path)
               unless options[:force] || safety_check[:safe]
-                return error_workflow_result("Cannot remove worktree: #{safety_check[:errors].join(', ')}", workflow_result)
+                return error_workflow_result("Cannot remove worktree: #{safety_check[:errors].join(", ")}", workflow_result)
               end
 
               # Step 4: Remove worktree metadata from task (only if task was found)
@@ -405,7 +405,7 @@ module Ace
               workflow_result[:steps_completed] << "worktree_removed"
 
               success_workflow_result("Task worktree removed successfully", workflow_result)
-            rescue StandardError => e
+            rescue => e
               error_workflow_result("Unexpected error: #{e.message}", workflow_result)
             end
           end
@@ -418,46 +418,44 @@ module Ace
           # @example
           #   status = orchestrator.get_task_worktree_status(["081", "082"])
           def get_task_worktree_status(task_refs = nil)
-            begin
-              if task_refs.nil?
-                # Get all task-associated worktrees
-                worktree_lister = Molecules::WorktreeLister.new
-                worktrees = worktree_lister.list_all.select(&:task_associated?)
-                task_ids = worktrees.map(&:task_id).compact.uniq
-              else
-                task_ids = Array(task_refs).map { |ref| Atoms::TaskIDExtractor.normalize(ref) }.compact
-              end
+            if task_refs.nil?
+              # Get all task-associated worktrees
+              worktree_lister = Molecules::WorktreeLister.new
+              worktrees = worktree_lister.list_all.select(&:task_associated?)
+              task_ids = worktrees.map(&:task_id).compact.uniq
+            else
+              task_ids = Array(task_refs).map { |ref| Atoms::TaskIDExtractor.normalize(ref) }.compact
+            end
 
-              status_info = {
-                total_tasks: task_ids.length,
-                worktrees: []
+            status_info = {
+              total_tasks: task_ids.length,
+              worktrees: []
+            }
+
+            task_ids.each do |task_id|
+              worktree_info = @worktree_creator.find_by_task_id(task_id)
+              task_metadata = @task_fetcher.fetch(task_id)
+
+              worktree_status = {
+                task_id: task_id,
+                task_title: task_metadata&.title,
+                task_status: task_metadata&.status,
+                has_worktree: !worktree_info.nil?,
+                worktree_path: worktree_info&.path,
+                worktree_branch: worktree_info&.branch,
+                worktree_exists: worktree_info&.exists?,
+                worktree_usable: worktree_info&.usable?
               }
 
-              task_ids.each do |task_id|
-                worktree_info = @worktree_creator.find_by_task_id(task_id)
-                task_metadata = @task_fetcher.fetch(task_id)
-
-                worktree_status = {
-                  task_id: task_id,
-                  task_title: task_metadata&.title,
-                  task_status: task_metadata&.status,
-                  has_worktree: !worktree_info.nil?,
-                  worktree_path: worktree_info&.path,
-                  worktree_branch: worktree_info&.branch,
-                  worktree_exists: worktree_info&.exists?,
-                  worktree_usable: worktree_info&.usable?
-                }
-
-                status_info[:worktrees] << worktree_status
-              end
-
-              status_info[:worktrees_with_worktrees] = status_info[:worktrees].count { |w| w[:has_worktree] }
-              status_info[:active_worktrees] = status_info[:worktrees].count { |w| w[:worktree_exists] && w[:worktree_usable] }
-
-              { success: true, status: status_info }
-            rescue StandardError => e
-              error_result("Failed to get task worktree status: #{e.message}")
+              status_info[:worktrees] << worktree_status
             end
+
+            status_info[:worktrees_with_worktrees] = status_info[:worktrees].count { |w| w[:has_worktree] }
+            status_info[:active_worktrees] = status_info[:worktrees].count { |w| w[:worktree_exists] && w[:worktree_usable] }
+
+            {success: true, status: status_info}
+          rescue => e
+            error_result("Failed to get task worktree status: #{e.message}")
           end
 
           private
@@ -562,7 +560,7 @@ module Ace
             # Generate worktree path and branch names
             directory_name = @config.format_directory(task_data)
             branch_name = @config.format_branch(task_data)
-            worktree_path = File.join(@config.absolute_root_path, directory_name)
+            File.join(@config.absolute_root_path, directory_name)
 
             Models::WorktreeMetadata.new(
               branch: branch_name,
@@ -694,7 +692,7 @@ module Ace
                   error: result[:error] || "Failed to setup upstream"
                 }
               end
-            rescue StandardError => e
+            rescue => e
               {
                 success: false,
                 branch: branch,
@@ -827,10 +825,10 @@ module Ace
                     result = @task_pusher.push(remote: remote)
                     return result
                   else
-                    return { success: false, error: "Failed to commit started_at change" }
+                    return {success: false, error: "Failed to commit started_at change"}
                   end
                 else
-                  return { success: false, error: "Failed to update task file with started_at" }
+                  return {success: false, error: "Failed to update task file with started_at"}
                 end
               ensure
                 # Restore original PROJECT_ROOT_PATH
@@ -841,8 +839,8 @@ module Ace
                 end
               end
             end
-          rescue StandardError => e
-            { success: false, error: e.message }
+          rescue => e
+            {success: false, error: e.message}
           end
 
           # Create success workflow result
