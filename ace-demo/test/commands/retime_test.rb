@@ -23,17 +23,15 @@ class RetimeTest < AceDemoTestCase
 
   def invoke(args)
     stdout, stderr = capture_io do
-      begin
-        @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
-      rescue SystemExit => e
-        @result = e.status
-      rescue Ace::Support::Cli::Error => e
-        $stderr.puts e.message
-        @result = e.exit_code
-      end
+      @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
+    rescue SystemExit => e
+      @result = e.status
+    rescue Ace::Support::Cli::Error => e
+      warn e.message
+      @result = e.exit_code
     end
 
-    { stdout: stdout, stderr: stderr, result: @result }
+    {stdout: stdout, stderr: stderr, result: @result}
   end
 
   def test_retime_calls_processor

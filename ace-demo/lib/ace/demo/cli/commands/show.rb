@@ -47,7 +47,7 @@ module Ace
 
           def print_yaml_metadata(metadata)
             tags = Array(metadata["tags"])
-            puts "Tags: #{tags.join(', ')}" unless tags.empty?
+            puts "Tags: #{tags.join(", ")}" unless tags.empty?
 
             settings = metadata["settings"] || {}
             unless settings.empty?

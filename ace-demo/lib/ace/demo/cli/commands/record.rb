@@ -42,8 +42,8 @@ module Ace
               record_tape(tape: tape, format: explicit_format, **options)
             end
           rescue TapeNotFoundError, VhsNotFoundError, VhsExecutionError, FfmpegNotFoundError, MediaRetimeError,
-                 PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError,
-                 ArgumentError, DemoYamlParseError => e
+            PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError,
+            ArgumentError, DemoYamlParseError => e
             raise Ace::Support::Cli::Error, e.message
           end
 
@@ -171,9 +171,9 @@ module Ace
 
           def default_output_for_tape(tape, format)
             basename = File.basename(tape)
-                           .sub(/\.tape\.ya?ml\z/, "")
-                           .sub(/\.tape\z/, "")
-                           .sub(/\.ya?ml\z/, "")
+              .sub(/\.tape\.ya?ml\z/, "")
+              .sub(/\.tape\z/, "")
+              .sub(/\.ya?ml\z/, "")
             File.expand_path(File.join(".ace-local/demo", "#{basename}.#{format}"), Dir.pwd)
           end
 
@@ -207,7 +207,6 @@ module Ace
             base = output_path.sub(/#{Regexp.escape(ext)}\z/, "")
             "#{base}-#{speed[:label]}#{ext}"
           end
-
         end
       end
     end

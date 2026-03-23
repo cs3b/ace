@@ -9,7 +9,7 @@ class DemoAttacherTest < AceDemoTestCase
     attr_reader :args
 
     def upload(file_path:, dry_run:)
-      @args = { file_path: file_path, dry_run: dry_run }
+      @args = {file_path: file_path, dry_run: dry_run}
       {
         asset_name: "hello-1700.gif",
         asset_url: "https://github.com/org/repo/releases/download/demo-assets/hello-1700.gif"
@@ -21,8 +21,8 @@ class DemoAttacherTest < AceDemoTestCase
     attr_reader :args
 
     def post(pr:, comment_body:, dry_run:)
-      @args = { pr: pr, comment_body: comment_body, dry_run: dry_run }
-      { posted: !dry_run, dry_run: dry_run }
+      @args = {pr: pr, comment_body: comment_body, dry_run: dry_run}
+      {posted: !dry_run, dry_run: dry_run}
     end
   end
 

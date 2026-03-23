@@ -81,16 +81,16 @@ module Ace
             "scene_names" => spec.fetch("scenes", []).map { |scene| scene["name"] }.compact
           }
         rescue DemoYamlParseError => e
-          { "description" => nil, "parse_error" => e.message }
+          {"description" => nil, "parse_error" => e.message}
         end
 
         def find_in_search_dirs(name, tape_ref)
           explicit = explicit_filename?(tape_ref)
           candidates = if explicit
-                         [tape_ref]
-                       else
-                         ["#{name}.tape.yml", "#{name}.tape.yaml", "#{name}.tape"]
-                       end
+            [tape_ref]
+          else
+            ["#{name}.tape.yml", "#{name}.tape.yaml", "#{name}.tape"]
+          end
 
           search_dirs.each do |dir|
             candidates.each do |filename|

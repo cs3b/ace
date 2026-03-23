@@ -27,12 +27,12 @@ module Ace
             run = step["run"] || step[:run]
             unless run
               raise ArgumentError,
-                    "Unknown teardown directive #{step.inspect}. Valid: #{VALID_TEARDOWN_DIRECTIVES.join(', ')}"
+                "Unknown teardown directive #{step.inspect}. Valid: #{VALID_TEARDOWN_DIRECTIVES.join(", ")}"
             end
             run_shell(run.to_s, chdir: sandbox_path)
           else
             raise ArgumentError,
-                  "Unknown teardown directive #{step.inspect}. Valid: #{VALID_TEARDOWN_DIRECTIVES.join(', ')}"
+              "Unknown teardown directive #{step.inspect}. Valid: #{VALID_TEARDOWN_DIRECTIVES.join(", ")}"
           end
         end
 
@@ -40,7 +40,7 @@ module Ace
           _stdout, stderr, status = Open3.capture3("bash", "-lc", command, chdir: chdir)
           return if status.success?
 
-          raise RuntimeError, "Teardown command failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
+          raise "Teardown command failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
         end
       end
     end

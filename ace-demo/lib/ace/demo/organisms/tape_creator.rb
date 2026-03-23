@@ -11,8 +11,8 @@ module Ace
         end
 
         def create(name:, commands:, description: nil, tags: nil,
-                   font_size: 16, width: 960, height: 480, timeout: "2s",
-                   format: "gif", force: false, dry_run: false)
+          font_size: 16, width: 960, height: 480, timeout: "2s",
+          format: "gif", force: false, dry_run: false)
           safe_name = Atoms::DemoNameSanitizer.sanitize(name)
           scene_commands = Array(commands).reject { |command| command.to_s.strip.empty? }
           scene_commands = ["echo 'Hello from #{safe_name}'"] if scene_commands.empty?
@@ -34,7 +34,7 @@ module Ace
             path = @writer.write(name: safe_name, content: content, force: force, extension: ".tape.yml")
           end
 
-          { content: content, path: path, dry_run: dry_run }
+          {content: content, path: path, dry_run: dry_run}
         end
 
         private
@@ -54,7 +54,7 @@ module Ace
             "scenes" => [
               {
                 "name" => "Example scene",
-                "commands" => commands.map { |command| { "type" => command.to_s, "sleep" => timeout } }
+                "commands" => commands.map { |command| {"type" => command.to_s, "sleep" => timeout} }
               }
             ],
             "teardown" => ["cleanup"]

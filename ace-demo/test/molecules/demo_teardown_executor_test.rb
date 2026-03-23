@@ -26,7 +26,7 @@ class DemoTeardownExecutorTest < AceDemoTestCase
   def test_run_directive_executes_inside_sandbox
     executor = Ace::Demo::Molecules::DemoTeardownExecutor.new
     executor.execute(
-      steps: [{ "run" => "echo cleaned > teardown.txt" }],
+      steps: [{"run" => "echo cleaned > teardown.txt"}],
       sandbox_path: @sandbox
     )
 

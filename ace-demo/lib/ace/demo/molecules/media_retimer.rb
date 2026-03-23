@@ -19,7 +19,7 @@ module Ace
           raise ArgumentError, "Playback speed is required." unless parsed
 
           target_path = output_path || default_output_path(input_path, parsed[:label])
-          return { input_path: input_path, output_path: target_path, speed: parsed[:label], dry_run: true } if dry_run
+          return {input_path: input_path, output_path: target_path, speed: parsed[:label], dry_run: true} if dry_run
 
           ensure_ffmpeg_available!
           FileUtils.mkdir_p(File.dirname(target_path))
@@ -32,7 +32,7 @@ module Ace
           _stdout, stderr, status = Open3.capture3(*cmd)
           raise MediaRetimeError, "FFmpeg retime failed: #{stderr.strip}" unless status.success?
 
-          { input_path: input_path, output_path: target_path, speed: parsed[:label], dry_run: false }
+          {input_path: input_path, output_path: target_path, speed: parsed[:label], dry_run: false}
         rescue Errno::ENOENT
           raise FfmpegNotFoundError, "FFmpeg not found. Install ffmpeg to use retime."
         end
