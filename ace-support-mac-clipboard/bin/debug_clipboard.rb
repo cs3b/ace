@@ -5,6 +5,7 @@ require "ffi"
 
 module Debug
   extend FFI::Library
+
   ffi_lib "/usr/lib/libobjc.dylib"
 
   attach_function :objc_getClass, [:string], :pointer

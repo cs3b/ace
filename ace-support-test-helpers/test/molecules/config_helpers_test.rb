@@ -11,7 +11,7 @@ class ConfigHelpersTest < Minitest::Test
   def test_with_config_creates_and_removes_yaml_file_from_hash
     with_temp_dir do
       config_path = "config/test.yml"
-      config_hash = { "key" => "value", "nested" => { "item" => "data" } }
+      config_hash = {"key" => "value", "nested" => {"item" => "data"}}
 
       refute File.exist?(config_path)
 
@@ -41,7 +41,7 @@ class ConfigHelpersTest < Minitest::Test
 
   def test_with_config_raises_on_invalid_content_type
     assert_raises(ArgumentError, "Content must be Hash or String") do
-      with_config("test.yml", 123) { }
+      with_config("test.yml", 123) {}
     end
   end
 
@@ -49,7 +49,7 @@ class ConfigHelpersTest < Minitest::Test
     with_temp_dir do
       deep_path = "deeply/nested/config/file.yml"
 
-      with_config(deep_path, { "test" => "data" }) do
+      with_config(deep_path, {"test" => "data"}) do
         assert File.exist?(deep_path)
       end
     end
@@ -97,8 +97,8 @@ class ConfigHelpersTest < Minitest::Test
   def test_with_cascade_configs_creates_multiple_config_levels
     with_temp_dir do
       configs = {
-        project: { "level" => "project", "value" => 1 },
-        home: { "level" => "home", "value" => 2 }
+        project: {"level" => "project", "value" => 1},
+        home: {"level" => "home", "value" => 2}
       }
 
       with_cascade_configs("test-gem", configs) do
@@ -170,8 +170,8 @@ class ConfigHelpersTest < Minitest::Test
   end
 
   def test_assert_config_structure_fails_on_missing_key
-    config = { "ace" => { "level" => "test" } }
-    expected = { "ace" => { "level" => "test", "missing" => "key" } }
+    config = {"ace" => {"level" => "test"}}
+    expected = {"ace" => {"level" => "test", "missing" => "key"}}
 
     assert_raises(Minitest::Assertion) do
       assert_config_structure(config, expected)
@@ -179,8 +179,8 @@ class ConfigHelpersTest < Minitest::Test
   end
 
   def test_assert_config_structure_fails_on_value_mismatch
-    config = { "ace" => { "level" => "test" } }
-    expected = { "ace" => { "level" => "production" } }
+    config = {"ace" => {"level" => "test"}}
+    expected = {"ace" => {"level" => "production"}}
 
     assert_raises(Minitest::Assertion) do
       assert_config_structure(config, expected)
@@ -229,8 +229,8 @@ class ConfigHelpersTest < Minitest::Test
 
   def test_deep_merge_helper
     # Test private method through sample_config
-    base = { "a" => { "b" => "base", "c" => "keep" } }
-    overlay = { "a" => { "b" => "overlay", "d" => "new" } }
+    base = {"a" => {"b" => "base", "c" => "keep"}}
+    overlay = {"a" => {"b" => "overlay", "d" => "new"}}
 
     # Use sample_config which uses deep_merge internally
     sample_config(custom: base)

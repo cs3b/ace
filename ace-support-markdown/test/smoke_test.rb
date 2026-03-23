@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'bundler/setup'
-require_relative '../lib/ace/support/markdown'
-require 'tempfile'
+require "bundler/setup"
+require_relative "../lib/ace/support/markdown"
+require "tempfile"
 
 puts "=" * 80
 puts "SMOKE TEST: ace-support-markdown"
@@ -34,7 +34,7 @@ MARKDOWN
 puts "\n[TEST 1] Frontmatter Extraction"
 result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(sample_md)
 puts "  Valid: #{result[:valid]}"
-puts "  Frontmatter keys: #{result[:frontmatter].keys.join(', ')}"
+puts "  Frontmatter keys: #{result[:frontmatter].keys.join(", ")}"
 puts "  Body length: #{result[:body].length} chars"
 puts "  ✓ PASS" if result[:valid]
 
@@ -57,13 +57,13 @@ puts "  ✓ PASS"
 # Test 4: Frontmatter Editor
 puts "\n[TEST 4] Frontmatter Editor"
 updated_doc = Ace::Support::Markdown::Molecules::FrontmatterEditor.update(doc, {"status" => "done"})
-puts "  Original status: #{doc.get_frontmatter('status')}"
-puts "  Updated status: #{updated_doc.get_frontmatter('status')}"
-puts "  ✓ PASS" if updated_doc.get_frontmatter('status') == 'done'
+puts "  Original status: #{doc.get_frontmatter("status")}"
+puts "  Updated status: #{updated_doc.get_frontmatter("status")}"
+puts "  ✓ PASS" if updated_doc.get_frontmatter("status") == "done"
 
 # Test 5: Safe File Writer
 puts "\n[TEST 5] Safe File Writer"
-temp_file = Tempfile.new(['test', '.md'])
+temp_file = Tempfile.new(["test", ".md"])
 begin
   temp_file.write(sample_md)
   temp_file.close
@@ -80,7 +80,7 @@ begin
 
   # Verify content
   saved_content = File.read(temp_file.path)
-  puts "  Status in file: #{saved_content.include?('status: in-progress')}"
+  puts "  Status in file: #{saved_content.include?("status: in-progress")}"
   puts "  ✓ PASS" if save_result[:success]
 ensure
   temp_file.close
@@ -100,9 +100,9 @@ doc = builder
   .build
 
 markdown = doc.to_markdown
-puts "  Has frontmatter: #{markdown.include?('id: task.079')}"
-puts "  Has title: #{markdown.include?('# My Task')}"
-puts "  Has sections: #{markdown.include?('## Description')}"
+puts "  Has frontmatter: #{markdown.include?("id: task.079")}"
+puts "  Has title: #{markdown.include?("# My Task")}"
+puts "  Has sections: #{markdown.include?("## Description")}"
 puts "  ✓ PASS" if doc.has_frontmatter?
 
 puts "\n" + "=" * 80

@@ -31,7 +31,7 @@ module Ace
           # @param status [Integer] HTTP status code
           # @param message [String] Error message
           def set_error_response(status, message)
-            @error_response = { status: status, message: message }
+            @error_response = {status: status, message: message}
             @response = nil
           end
 
@@ -41,14 +41,14 @@ module Ace
           # @param headers [Hash] Request headers
           # @return [MockResponse] Mock response object
           def post(url, body, headers: {})
-            @last_request = { url: url, body: body, headers: headers }
+            @last_request = {url: url, body: body, headers: headers}
             @request_history << @last_request
 
             if @error_response
               MockResponse.new(
                 success: false,
                 status: @error_response[:status],
-                body: { "error" => { "message" => @error_response[:message], "type" => "api_error" } }
+                body: {"error" => {"message" => @error_response[:message], "type" => "api_error"}}
               )
             else
               MockResponse.new(success: true, status: 200, body: @response)
@@ -191,7 +191,7 @@ module Ace
           def self.nil_content(model: "test-model")
             {
               "id" => "chatcmpl-test",
-              "choices" => [{ "message" => { "content" => nil }, "finish_reason" => "stop" }],
+              "choices" => [{"message" => {"content" => nil}, "finish_reason" => "stop"}],
               "model" => model
             }
           end

@@ -63,7 +63,7 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
       assert result[:applied]
 
       # Verify file was updated
-      config = YAML.safe_load(File.read(File.join(config_dir, "anthropic.yml")), permitted_classes: [Date])
+      config = YAML.safe_load_file(File.join(config_dir, "anthropic.yml"), permitted_classes: [Date])
       assert_includes config["models"], "claude-4-opus"
     end
   end
@@ -88,7 +88,7 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
           deprecated: []
         }
       },
-      summary: { added: 1, removed: 0, unchanged: 1, deprecated: 0, providers_synced: 1, providers_skipped: 0 },
+      summary: {added: 1, removed: 0, unchanged: 1, deprecated: 0, providers_synced: 1, providers_skipped: 0},
       changes_detected: true,
       applied: false,
       committed: false
@@ -112,7 +112,7 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
           deprecated: []
         }
       },
-      summary: { added: 0, removed: 1, unchanged: 1, deprecated: 0, providers_synced: 1, providers_skipped: 0 },
+      summary: {added: 0, removed: 1, unchanged: 1, deprecated: 0, providers_synced: 1, providers_skipped: 0},
       changes_detected: true,
       applied: false,
       committed: false
@@ -134,7 +134,7 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
           deprecated: ["deprecated-model"]
         }
       },
-      summary: { added: 0, removed: 0, unchanged: 0, deprecated: 1, providers_synced: 1, providers_skipped: 0 },
+      summary: {added: 0, removed: 0, unchanged: 0, deprecated: 1, providers_synced: 1, providers_skipped: 0},
       changes_detected: false,
       applied: false,
       committed: false
@@ -154,7 +154,7 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
           message: "Not found"
         }
       },
-      summary: { added: 0, removed: 0, unchanged: 0, deprecated: 0, providers_synced: 0, providers_skipped: 1 },
+      summary: {added: 0, removed: 0, unchanged: 0, deprecated: 0, providers_synced: 0, providers_skipped: 1},
       changes_detected: false,
       applied: false,
       committed: false
@@ -182,8 +182,8 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
         "anthropic" => {
           "id" => "anthropic",
           "models" => {
-            "claude-3-sonnet" => { "name" => "Claude 3 Sonnet" },
-            "claude-4-opus" => { "name" => "Claude 4 Opus" }
+            "claude-3-sonnet" => {"name" => "Claude 3 Sonnet"},
+            "claude-4-opus" => {"name" => "Claude 4 Opus"}
           }
         }
       }

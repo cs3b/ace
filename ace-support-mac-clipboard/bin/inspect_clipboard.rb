@@ -73,6 +73,6 @@ puts
 puts "Summary:"
 puts "-" * 60
 puts "  Types found: #{raw_result[:types].length}"
-puts "  Text present: #{parsed[:text] ? 'Yes' : 'No'}"
+puts "  Text present: #{parsed[:text] ? "Yes" : "No"}"
 puts "  Attachments: #{parsed[:attachments].length}"
 puts

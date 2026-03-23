@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'tempfile'
+require "fileutils"
+require "tempfile"
 
 module Ace
   module Support
@@ -51,13 +51,13 @@ module Ace
                 backup_path: backup_path,
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               # Rollback from backup if available
               if backup_path && File.exist?(backup_path)
                 begin
                   FileUtils.cp(backup_path, file_path)
                   errors << "Write failed, restored from backup: #{e.message}"
-                rescue StandardError => rollback_error
+                rescue => rollback_error
                   errors << "Write failed and rollback failed: #{e.message} | #{rollback_error.message}"
                 end
               else
@@ -117,7 +117,7 @@ module Ace
                 success: true,
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               {
                 success: false,
                 errors: ["Restore failed: #{e.message}"]
@@ -144,7 +144,7 @@ module Ace
             to_delete.each do |backup|
               File.delete(backup)
               deleted += 1
-            rescue StandardError
+            rescue
               # Skip files that can't be deleted
               next
             end
@@ -161,7 +161,7 @@ module Ace
             FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
 
             # Create temp file in same directory (same filesystem for atomic move)
-            temp = Tempfile.new([File.basename(file_path, '.*'), File.extname(file_path)], dir)
+            temp = Tempfile.new([File.basename(file_path, ".*"), File.extname(file_path)], dir)
 
             begin
               # Write content to temp file

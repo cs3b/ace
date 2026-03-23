@@ -27,7 +27,7 @@ module Ace
           def test_traverse_from_very_deep_directory
             # Create 10-level deep directory structure
             project_dir = File.join(@test_dir, "project")
-            deep_path = File.join(project_dir, *Array.new(10) { "level" })
+            deep_path = File.join(project_dir, Array.new(10) { "level" })
 
             FileUtils.mkdir_p(deep_path)
             FileUtils.mkdir_p(File.join(project_dir, ".git"))
@@ -50,7 +50,7 @@ module Ace
           def test_directory_hierarchy_for_deep_nesting
             # Create 5-level deep directory
             project_dir = File.join(@test_dir, "project")
-            deep_path = File.join(project_dir, *Array.new(5) { "level" })
+            deep_path = File.join(project_dir, Array.new(5) { "level" })
 
             FileUtils.mkdir_p(deep_path)
             FileUtils.mkdir_p(File.join(project_dir, ".git"))
@@ -216,7 +216,7 @@ module Ace
 
             # Try to make restricted (may not work on all systems)
             begin
-              File.chmod(0000, restricted_dir)
+              File.chmod(0o000, restricted_dir)
 
               Dir.chdir(project_dir)
               traverser = DirectoryTraverser.new
@@ -228,7 +228,11 @@ module Ace
               # Expected - test passed
             ensure
               # Restore permissions for cleanup
-              File.chmod(0755, restricted_dir) rescue nil
+              begin
+                File.chmod(0o755, restricted_dir)
+              rescue
+                nil
+              end
             end
           end
 

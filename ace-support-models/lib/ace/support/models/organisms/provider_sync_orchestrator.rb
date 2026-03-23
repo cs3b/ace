@@ -121,10 +121,10 @@ module Ace
             if result[:changes_detected]
               if result[:applied]
                 lines << "Changes applied to config files."
-                if result[:committed]
-                  lines << "Changes committed."
+                lines << if result[:committed]
+                  "Changes committed."
                 else
-                  lines << "Run with --commit to commit changes."
+                  "Run with --commit to commit changes."
                 end
               else
                 lines << "Run with --apply to update config files."
@@ -150,8 +150,6 @@ module Ace
               value
             when String
               Date.parse(value)
-            else
-              nil
             end
           rescue ArgumentError
             nil
@@ -198,13 +196,13 @@ module Ace
               rescue ConfigError => e
                 errors << "#{provider_name}: #{e.message}"
                 success = false
-              rescue StandardError => e
+              rescue => e
                 errors << "#{provider_name}: Unexpected error: #{e.message}"
                 success = false
               end
             end
 
-            { success: success, errors: errors }
+            {success: success, errors: errors}
           end
 
           def commit_changes(summary)
@@ -226,10 +224,10 @@ module Ace
             lines = []
 
             # Show models_dev_id mapping if different from provider name
-            if diff[:models_dev_id]
-              lines << "#{provider_name}: (mapped to #{diff[:models_dev_id]})"
+            lines << if diff[:models_dev_id]
+              "#{provider_name}: (mapped to #{diff[:models_dev_id]})"
             else
-              lines << "#{provider_name}:"
+              "#{provider_name}:"
             end
 
             if diff[:status] == :not_found
@@ -250,10 +248,10 @@ module Ace
 
             diff[:added].each do |model|
               release_date = diff[:added_with_dates]&.[](model)
-              if release_date
-                lines << "  + #{model.ljust(35)} (new, released: #{release_date})"
+              lines << if release_date
+                "  + #{model.ljust(35)} (new, released: #{release_date})"
               else
-                lines << "  + #{model.ljust(35)} (new)"
+                "  + #{model.ljust(35)} (new)"
               end
             end
 

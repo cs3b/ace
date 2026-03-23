@@ -85,7 +85,7 @@ class FrontmatterSerializerTest < AceSupportItemsTestCase
   # --- rebuild ---
 
   def test_rebuild_combines_frontmatter_and_body
-    frontmatter = { "id" => "8ppq7w", "status" => "pending" }
+    frontmatter = {"id" => "8ppq7w", "status" => "pending"}
     body = "# My Idea\n\nSome content."
 
     result = FS.rebuild(frontmatter, body)

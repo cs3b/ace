@@ -126,13 +126,13 @@ module Ace
         puts "Coverage Summary for #{result.command_name}"
         puts "=" * 80
 
-        puts "\nOverall: #{format('%.2f', result.covered_percent)}% covered"
+        puts "\nOverall: #{format("%.2f", result.covered_percent)}% covered"
 
         if result.respond_to?(:groups)
           puts "\nBy Group:"
           result.groups.each do |name, files|
             coverage = (files.covered_lines.to_f / files.lines_of_code * 100)
-            puts "  #{name.ljust(20)} #{format('%6.2f', coverage)}%  (#{files.covered_lines}/#{files.lines_of_code} lines)"
+            puts "  #{name.ljust(20)} #{format("%6.2f", coverage)}%  (#{files.covered_lines}/#{files.lines_of_code} lines)"
           end
         end
 
@@ -147,7 +147,7 @@ module Ace
       #
       # @api private
       def self.gem_path(gem_name)
-        gem_name.gsub("-", "/")
+        gem_name.tr("-", "/")
       end
 
       private_class_method :gem_path

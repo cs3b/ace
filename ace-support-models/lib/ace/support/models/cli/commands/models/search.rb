@@ -58,7 +58,7 @@ module Ace
                     puts "[]"
                   else
                     message = query ? "No models found matching '#{query}'" : "No models found"
-                    message += " with filters: #{options[:filter].join(', ')}" if options[:filter]&.any?
+                    message += " with filters: #{options[:filter].join(", ")}" if options[:filter]&.any?
                     puts message
                   end
                   return

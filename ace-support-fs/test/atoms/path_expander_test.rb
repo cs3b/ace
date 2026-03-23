@@ -159,7 +159,7 @@ module Ace
             expander = PathExpander.new(source_dir: "/dir", project_root: "/root")
 
             # Stub get_env to return custom value without modifying global ENV
-            expander.stub :get_env, ->(name) { name == "CUSTOM_VAR" ? "/custom/path" : nil } do
+            expander.stub :get_env, ->(name) { (name == "CUSTOM_VAR") ? "/custom/path" : nil } do
               result = expander.resolve("$CUSTOM_VAR/subdir")
               assert_equal "/custom/path/subdir", result
             end
@@ -168,7 +168,7 @@ module Ace
           def test_env_expansion_with_braces
             expander = PathExpander.new(source_dir: "/dir", project_root: "/root")
 
-            expander.stub :get_env, ->(name) { name == "MY_VAR" ? "/my/path" : nil } do
+            expander.stub :get_env, ->(name) { (name == "MY_VAR") ? "/my/path" : nil } do
               result = expander.resolve("${MY_VAR}/subdir")
               assert_equal "/my/path/subdir", result
             end
@@ -187,7 +187,7 @@ module Ace
 
           def test_class_get_env_for_testability
             # Stub class method for testing
-            PathExpander.stub :class_get_env, ->(name) { name == "TEST_VAR" ? "/test/path" : nil } do
+            PathExpander.stub :class_get_env, ->(name) { (name == "TEST_VAR") ? "/test/path" : nil } do
               result = PathExpander.expand("$TEST_VAR/file")
               assert_equal "/test/path/file", result
             end

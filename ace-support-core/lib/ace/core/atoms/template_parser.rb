@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'yaml'
+require "yaml"
 
 module Ace
   module Core
@@ -19,8 +19,8 @@ module Ace
         # @param content [String] Template content (YAML or markdown with embedded YAML)
         # @return [Hash] {success: Boolean, config: Hash, error: String}
         def parse(content)
-          return { success: false, error: "Content cannot be nil" } if content.nil?
-          return { success: false, error: "Content cannot be empty" } if content.strip.empty?
+          return {success: false, error: "Content cannot be nil"} if content.nil?
+          return {success: false, error: "Content cannot be empty"} if content.strip.empty?
 
           # Try to extract from markdown with tags first
           config = extract_from_markdown(content)
@@ -29,12 +29,12 @@ module Ace
           config ||= parse_yaml(content)
 
           if config.nil?
-            return { success: false, error: "No valid configuration found" }
+            return {success: false, error: "No valid configuration found"}
           end
 
           validate_config(config)
         rescue => e
-          { success: false, error: "Failed to parse template: #{e.message}" }
+          {success: false, error: "Failed to parse template: #{e.message}"}
         end
 
         # Extract configuration from markdown with <context-tool-config> tags
@@ -83,7 +83,7 @@ module Ace
 
           # Ensure it's a hash
           result.is_a?(Hash) ? stringify_keys(result) : nil
-        rescue Psych::SyntaxError => e
+        rescue Psych::SyntaxError
           nil
         end
 
@@ -91,14 +91,14 @@ module Ace
         # @param config [Hash] Configuration to validate
         # @return [Hash] {success: Boolean, config: Hash, error: String}
         def validate_config(config)
-          return { success: false, error: "Config must be a Hash" } unless config.is_a?(Hash)
+          return {success: false, error: "Config must be a Hash"} unless config.is_a?(Hash)
 
           # Check for unknown keys
           unknown_keys = config.keys - VALID_KEYS
           unless unknown_keys.empty?
             return {
               success: false,
-              error: "Unknown configuration keys: #{unknown_keys.join(', ')}"
+              error: "Unknown configuration keys: #{unknown_keys.join(", ")}"
             }
           end
 
@@ -106,15 +106,15 @@ module Ace
           normalized = normalize_config(config)
 
           # Validate required content
-          if normalized['files'].empty? && normalized['commands'].empty? &&
-             normalized['include'].empty?
+          if normalized["files"].empty? && normalized["commands"].empty? &&
+              normalized["include"].empty?
             return {
               success: false,
               error: "Configuration must specify 'files', 'commands', or 'include'"
             }
           end
 
-          { success: true, config: normalized }
+          {success: true, config: normalized}
         end
 
         # Normalize configuration values
@@ -122,16 +122,16 @@ module Ace
         # @return [Hash] Normalized configuration
         def normalize_config(config)
           {
-            'files' => to_array(config['files']),
-            'commands' => to_array(config['commands']),
-            'include' => to_array(config['include']),
-            'exclude' => to_array(config['exclude']),
-            'format' => config['format'],
-            'embed_document_source' => config['embed_document_source'],
-            'output' => config['output'],
-            'max_lines' => config['max_lines'],
-            'max_size' => config['max_size'],
-            'timeout' => config['timeout']
+            "files" => to_array(config["files"]),
+            "commands" => to_array(config["commands"]),
+            "include" => to_array(config["include"]),
+            "exclude" => to_array(config["exclude"]),
+            "format" => config["format"],
+            "embed_document_source" => config["embed_document_source"],
+            "output" => config["output"],
+            "max_lines" => config["max_lines"],
+            "max_size" => config["max_size"],
+            "timeout" => config["timeout"]
           }.compact
         end
 
@@ -160,10 +160,10 @@ module Ace
           return {} if configs.empty?
 
           result = {
-            'files' => [],
-            'commands' => [],
-            'include' => [],
-            'exclude' => []
+            "files" => [],
+            "commands" => [],
+            "include" => [],
+            "exclude" => []
           }
 
           configs.each do |config|
@@ -195,7 +195,7 @@ module Ace
           return false if content.nil?
 
           # Check for various template indicators
-          content.include?('<context-tool-config>') ||
+          content.include?("<context-tool-config>") ||
             content.match?(/^files:\s*$/m) ||
             content.match?(/^commands:\s*$/m) ||
             content.match?(/^include:\s*$/m) ||
@@ -208,6 +208,7 @@ module Ace
         # @param hash [Hash] Hash with potentially mixed keys
         # @return [Hash] Hash with string keys
         module_function
+
         def stringify_keys(hash)
           return hash unless hash.is_a?(Hash)
 

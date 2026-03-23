@@ -37,7 +37,7 @@ module Ace
         result = Benchmark.measure { yield }
         actual_duration = result.real
 
-        message ||= "Expected block to complete in under #{max_duration}s, but took #{format('%.3f', actual_duration)}s"
+        message ||= "Expected block to complete in under #{max_duration}s, but took #{format("%.3f", actual_duration)}s"
 
         assert actual_duration <= max_duration, message
 
@@ -128,9 +128,9 @@ module Ace
         actual = benchmark_block { yield }[:real]
         max_allowed = baseline_duration * tolerance
 
-        message ||= "Performance regression detected: expected ≤ #{format('%.3f', max_allowed)}s " \
-                    "(baseline #{format('%.3f', baseline_duration)}s × #{tolerance}), " \
-                    "but took #{format('%.3f', actual)}s (#{format('%.1f', actual / baseline_duration)}x baseline)"
+        message ||= "Performance regression detected: expected ≤ #{format("%.3f", max_allowed)}s " \
+                    "(baseline #{format("%.3f", baseline_duration)}s × #{tolerance}), " \
+                    "but took #{format("%.3f", actual)}s (#{format("%.1f", actual / baseline_duration)}x baseline)"
 
         assert actual <= max_allowed, message
       end
@@ -160,8 +160,8 @@ module Ace
           result_a = Benchmark.measure { @block_a.call }
           result_b = Benchmark.measure { @block_b.call }
 
-          faster_label = result_a.real < result_b.real ? label_a : label_b
-          slower_label = result_a.real < result_b.real ? label_b : label_a
+          faster_label = (result_a.real < result_b.real) ? label_a : label_b
+          slower_label = (result_a.real < result_b.real) ? label_b : label_a
           speedup = [result_a.real, result_b.real].max / [result_a.real, result_b.real].min
 
           {

@@ -76,7 +76,7 @@ class BundleContractTest < AceTestCase
 
       # Verify restoration works (if real method existed)
       if original_method
-        current_method = Ace::Bundle.method(:load_file)
+        Ace::Bundle.method(:load_file)
         # Methods should be restored (may not be same object due to stubbing mechanism)
         assert Ace::Bundle.respond_to?(:load_file), "Method should still exist after unstubbing"
       end
@@ -90,19 +90,19 @@ class BundleContractTest < AceTestCase
   def test_git_extractor_mock_constants_are_valid_diffs
     # Verify mock constants are valid git diff format
     assert Ace::TestSupport::Fixtures::BundleMocks::MOCK_STAGED_DIFF.include?("diff --git"),
-           "MOCK_STAGED_DIFF should be valid git diff format"
+      "MOCK_STAGED_DIFF should be valid git diff format"
 
     assert Ace::TestSupport::Fixtures::BundleMocks::MOCK_WORKING_DIFF.include?("diff --git"),
-           "MOCK_WORKING_DIFF should be valid git diff format"
+      "MOCK_WORKING_DIFF should be valid git diff format"
 
     assert Ace::TestSupport::Fixtures::BundleMocks::MOCK_GIT_DIFF.include?("diff --git"),
-           "MOCK_GIT_DIFF should be valid git diff format"
+      "MOCK_GIT_DIFF should be valid git diff format"
 
     # Verify diffs have hunks
     assert Ace::TestSupport::Fixtures::BundleMocks::MOCK_STAGED_DIFF.include?("@@"),
-           "MOCK_STAGED_DIFF should include hunk markers"
+      "MOCK_STAGED_DIFF should include hunk markers"
 
     assert Ace::TestSupport::Fixtures::BundleMocks::MOCK_WORKING_DIFF.include?("@@"),
-           "MOCK_WORKING_DIFF should include hunk markers"
+      "MOCK_WORKING_DIFF should include hunk markers"
   end
 end

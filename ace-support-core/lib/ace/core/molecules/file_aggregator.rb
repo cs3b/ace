@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/file_reader'
-require_relative '../atoms/glob_expander'
+require_relative "../atoms/file_reader"
+require_relative "../atoms/glob_expander"
 require "ace/support/fs"
 
 module Ace

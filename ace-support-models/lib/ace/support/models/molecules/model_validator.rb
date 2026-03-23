@@ -159,7 +159,7 @@ module Ace
 
             (1..m).each do |i|
               (1..n).each do |j|
-                cost = s1[i - 1] == s2[j - 1] ? 0 : 1
+                cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1
                 d[i][j] = [
                   d[i - 1][j] + 1,
                   d[i][j - 1] + 1,

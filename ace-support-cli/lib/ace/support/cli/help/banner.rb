@@ -101,7 +101,7 @@ module Ace
             desc = option_desc(option)
             details << desc unless desc.to_s.empty?
             values = option_values(option)
-            details << "(values: #{Array(values).join(', ')})" if values && !Array(values).empty?
+            details << "(values: #{Array(values).join(", ")})" if values && !Array(values).empty?
             default = option_default(option)
             details << "(default: #{default.inspect})" unless default.nil?
             details << "(required)" if option_required?(option)

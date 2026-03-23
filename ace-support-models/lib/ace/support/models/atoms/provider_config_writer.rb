@@ -115,13 +115,13 @@ module Ace
             # @raise [ConfigError] if unsupported YAML styles are detected
             def replace_models_section(content, models)
               # Check for flow-style arrays which are not supported
-              if content =~ /^\s*models:\s*\[/m
+              if /^\s*models:\s*\[/m.match?(content)
                 raise ConfigError, "Flow-style arrays (models: [...]) are not supported for auto-update. " \
                                    "Please convert to block style (models: followed by list items)."
               end
 
               # Check for inline comments on models: line which are not preserved
-              if content =~ /^\s*models:\s*#/m
+              if /^\s*models:\s*#/m.match?(content)
                 raise ConfigError, "Inline comments on 'models:' line (e.g., 'models: # comment') are not supported. " \
                                    "Please move the comment to a separate line above 'models:'."
               end
@@ -140,7 +140,7 @@ module Ace
 
                   # Add new models with standard YAML indent
                   models.each do |model|
-                    result << "#{' ' * (models_base_indent + 2)}- #{model}\n"
+                    result << "#{" " * (models_base_indent + 2)}- #{model}\n"
                   end
                   next
                 end
@@ -203,7 +203,7 @@ module Ace
               unless field_found
                 insert_index = 0
                 result.each_with_index do |line, idx|
-                  if line =~ /^name:/
+                  if /^name:/.match?(line)
                     insert_index = idx + 1
                     break
                   end

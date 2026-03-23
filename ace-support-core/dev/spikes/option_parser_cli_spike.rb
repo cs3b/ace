@@ -129,7 +129,7 @@ class OptionParserCliSpike
       next unless definition.required
       next unless blank?(@values[definition.name])
 
-      raise ParseError, "Missing required option: --#{definition.name.to_s.tr('_', '-')}"
+      raise ParseError, "Missing required option: --#{definition.name.to_s.tr("_", "-")}"
     end
   end
 
@@ -154,7 +154,7 @@ class OptionParserCliSpike
     end
   end
 
-  def call(input:, output: nil, timeout:, rate:, verbose:, tags:, format:, header:, extra: nil)
+  def call(input:, timeout:, rate:, verbose:, tags:, format:, header:, output: nil, extra: nil)
     {
       input: input,
       output: output,

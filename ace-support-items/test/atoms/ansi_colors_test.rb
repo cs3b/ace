@@ -22,8 +22,8 @@ class AnsiColorsTest < AceSupportItemsTestCase
     assert_equal "\e[32m", Ace::Support::Items::Atoms::AnsiColors::GREEN
     assert_equal "\e[33m", Ace::Support::Items::Atoms::AnsiColors::YELLOW
     assert_equal "\e[36m", Ace::Support::Items::Atoms::AnsiColors::CYAN
-    assert_equal "\e[2m",  Ace::Support::Items::Atoms::AnsiColors::DIM
-    assert_equal "\e[1m",  Ace::Support::Items::Atoms::AnsiColors::BOLD
-    assert_equal "\e[0m",  Ace::Support::Items::Atoms::AnsiColors::RESET
+    assert_equal "\e[2m", Ace::Support::Items::Atoms::AnsiColors::DIM
+    assert_equal "\e[1m", Ace::Support::Items::Atoms::AnsiColors::BOLD
+    assert_equal "\e[0m", Ace::Support::Items::Atoms::AnsiColors::RESET
   end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module Ace
   module Core
@@ -21,7 +21,7 @@ module Ace
           base_dir = File.expand_path(base_dir)
 
           # Handle absolute patterns
-          if pattern.start_with?('/')
+          if pattern.start_with?("/")
             Dir.glob(pattern, flags).sort
           else
             # Make pattern relative to base_dir
@@ -34,7 +34,7 @@ module Ace
               path
             end.sort
           end
-        rescue => e
+        rescue
           []
         end
 
@@ -108,11 +108,11 @@ module Ace
 
           # Build the glob pattern based on depth
           if max_depth.nil?
-            glob_pattern = File.join(base_dir, '**', pattern)
+            glob_pattern = File.join(base_dir, "**", pattern)
           else
             # Build pattern with limited depth
             depth_pattern = (0..max_depth).map do |depth|
-              parts = ['*'] * depth
+              parts = ["*"] * depth
               File.join(base_dir, *parts, pattern)
             end
 
@@ -140,7 +140,7 @@ module Ace
         def glob_pattern?(pattern)
           return false if pattern.nil?
 
-          pattern.match?(/[\*\?\[\{]/)
+          pattern.match?(/[*?\[{]/)
         end
 
         # Normalize path separators for current OS
@@ -163,9 +163,9 @@ module Ace
 
           # Convert glob patterns to regex
           regex_pattern = escaped
-            .gsub('**/', '.*/')      # ** matches any depth
-            .gsub('*', '[^/]*')       # * matches within directory
-            .gsub('?', '.')           # ? matches single character
+            .gsub("**/", ".*/")      # ** matches any depth
+            .gsub("*", "[^/]*")       # * matches within directory
+            .tr("?", ".")           # ? matches single character
 
           Regexp.new("^#{regex_pattern}$")
         end

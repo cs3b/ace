@@ -3,7 +3,7 @@
 require "test_helper"
 
 # Only run tests on macOS
-if RUBY_PLATFORM.include?('darwin')
+if RUBY_PLATFORM.include?("darwin")
   class Ace::TestMacClipboard < Minitest::Test
     def test_that_it_has_a_version_number
       refute_nil ::Ace::Support::MacClipboard::VERSION

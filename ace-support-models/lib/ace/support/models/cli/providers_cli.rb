@@ -32,7 +32,7 @@ module Ace
           "ace-llm-providers",
           "ace-llm-providers show openai",
           "ace-llm-providers sync --apply",
-          "ace-llm-providers sync -p anthropic",
+          "ace-llm-providers sync -p anthropic"
         ].freeze
 
         # Register flat commands (reusing existing command classes)

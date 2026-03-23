@@ -22,7 +22,7 @@ module Ace
           end
 
           def long_switch
-            "--#{name.to_s.tr('_', '-')}"
+            "--#{name.to_s.tr("_", "-")}"
           end
 
           private
@@ -41,7 +41,7 @@ module Ace
               elsif alias_name.length == 1
                 "-#{alias_name}"
               else
-                "--#{alias_name.tr('_', '-')}"
+                "--#{alias_name.tr("_", "-")}"
               end
             end
           end

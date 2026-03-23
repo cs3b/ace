@@ -37,7 +37,7 @@ module Ace
       #
       class ConfigSummary
         # Match keys ENDING with sensitive words (not containing them)
-        SENSITIVE_REGEX = /(_|^)(token|password|secret|credential|key|api_key)$/i.freeze
+        SENSITIVE_REGEX = /(_|^)(token|password|secret|credential|key|api_key)$/i
 
         # Display configuration summary to stderr
         #
@@ -86,7 +86,7 @@ module Ace
           return unless options[:verbose]
 
           summary = new(command, config, defaults, options, summary_keys).build
-          $stderr.puts "Config: #{summary}" unless summary.empty?
+          warn "Config: #{summary}" unless summary.empty?
         end
 
         # Display configuration summary only if help was NOT requested.
@@ -200,10 +200,10 @@ module Ace
         # @return [String] Formatted "key=value" string
         def format_pair(key, value)
           value_str = case value
-                      when true then "true"
-                      when Array then value.join(",")
-                      else value.to_s
-                      end
+          when true then "true"
+          when Array then value.join(",")
+          else value.to_s
+          end
           "#{key}=#{value_str}"
         end
 

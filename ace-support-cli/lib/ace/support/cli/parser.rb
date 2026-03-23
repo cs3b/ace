@@ -68,7 +68,7 @@ module Ace
 
           program = File.basename($PROGRAM_NAME)
           label = command_label
-          label == "command" ? program : "#{program} #{label}"
+          (label == "command") ? program : "#{program} #{label}"
         end
 
         def build_defaults
@@ -91,7 +91,7 @@ module Ace
 
             case option.type
             when :boolean
-              parser.on(*option.aliases, "--[no-]#{option.name.to_s.tr('_', '-')}", desc) do |value|
+              parser.on(*option.aliases, "--[no-]#{option.name.to_s.tr("_", "-")}", desc) do |value|
                 options[option.name] = value
               end
             when :integer
@@ -255,7 +255,7 @@ module Ace
 
           (1..m).each do |i|
             (1..n).each do |j|
-              cost = source[i - 1] == target[j - 1] ? 0 : 1
+              cost = (source[i - 1] == target[j - 1]) ? 0 : 1
               matrix[i][j] = [
                 matrix[i - 1][j] + 1,
                 matrix[i][j - 1] + 1,

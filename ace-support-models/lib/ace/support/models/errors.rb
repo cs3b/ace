@@ -33,7 +33,7 @@ module Ace
           @model_id = model_id
           @suggestions = suggestions
           message = "Model '#{model_id}' not found"
-          message += ". Did you mean: #{suggestions.join(', ')}?" if suggestions.any?
+          message += ". Did you mean: #{suggestions.join(", ")}?" if suggestions.any?
           super(message)
         end
       end

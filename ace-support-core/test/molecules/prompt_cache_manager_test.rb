@@ -78,7 +78,7 @@ class PromptCacheManagerTest < Minitest::Test
       "gem" => "ace-test",
       "operation" => "test-operation",
       "model" => "test-model",
-      "prompt_sizes" => { "system" => 1234, "user" => 5678 }
+      "prompt_sizes" => {"system" => 1234, "user" => 5678}
     }
 
     file_path = Ace::Core::Molecules::PromptCacheManager.save_metadata(metadata, session_dir)
@@ -133,7 +133,7 @@ class PromptCacheManagerTest < Minitest::Test
 
   def test_base_cache_path_created_once
     # First call creates the base path
-    session1 = Ace::Core::Molecules::PromptCacheManager.create_session(
+    Ace::Core::Molecules::PromptCacheManager.create_session(
       "ace-test",
       "op1",
       project_root: @test_dir
@@ -141,7 +141,7 @@ class PromptCacheManagerTest < Minitest::Test
     base_path = File.join(@test_dir, ".ace-local", "test", "sessions")
 
     # Second call should reuse existing base path
-    session2 = Ace::Core::Molecules::PromptCacheManager.create_session(
+    Ace::Core::Molecules::PromptCacheManager.create_session(
       "ace-test",
       "op2",
       project_root: @test_dir
@@ -249,7 +249,7 @@ class PromptCacheManagerTest < Minitest::Test
     )
 
     # Should work even with invalid metadata when validation is disabled
-    metadata = { "custom" => "data" }
+    metadata = {"custom" => "data"}
     file_path = Ace::Core::Molecules::PromptCacheManager.save_metadata(
       metadata,
       session_dir,

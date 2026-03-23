@@ -210,11 +210,11 @@ module Ace
 
               # Look for scopes/paths in both git section and root
               paths = data.dig("git", "scopes") || data.dig("git", :scopes) ||
-                      data.dig("git", "paths") || data.dig("git", :paths) ||
-                      data["scopes"] || data[:scopes] ||
-                      data["paths"] || data[:paths] ||
-                      data.dig("git", "path_rules") || data.dig("git", :path_rules) ||
-                      data["path_rules"] || data[:path_rules]
+                data.dig("git", "paths") || data.dig("git", :paths) ||
+                data["scopes"] || data[:scopes] ||
+                data["paths"] || data[:paths] ||
+                data.dig("git", "path_rules") || data.dig("git", :path_rules) ||
+                data["path_rules"] || data[:path_rules]
 
               next unless paths.is_a?(Hash)
 
@@ -248,7 +248,7 @@ module Ace
               normalize_path(parts.first)
             else
               # Fallback: go up from config file
-              normalize_path(File.dirname(File.dirname(File.dirname(config_path))))
+              normalize_path(File.dirname(config_path, 3))
             end
           end
 
@@ -267,8 +267,8 @@ module Ace
 
           def match_path_rule(base_data, relative_path, project_root)
             rules = base_data["scopes"] || base_data[:scopes] ||
-                    base_data["paths"] || base_data[:paths] ||
-                    base_data["path_rules"] || base_data[:path_rules]
+              base_data["paths"] || base_data[:paths] ||
+              base_data["path_rules"] || base_data[:path_rules]
             matcher = Atoms::PathRuleMatcher.new(normalize_path_rules(rules), project_root: project_root)
             matcher.match(relative_path)
           end

@@ -14,7 +14,7 @@ module Ace
           DEFAULT_PREFIX = "_"
 
           # Virtual filters — not physical folders, used for list filtering
-          VIRTUAL_FILTERS = { "next" => :next, "all" => :all }.freeze
+          VIRTUAL_FILTERS = {"next" => :next, "all" => :all}.freeze
 
           # Aliases that mean "move back to root" (no special folder).
           # "next" is the primary label; "root" and "/" are convenience aliases.

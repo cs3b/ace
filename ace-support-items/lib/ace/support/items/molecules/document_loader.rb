@@ -30,7 +30,7 @@ module Ace
           # @param file_pattern [String] Glob pattern (unused when file_path present, kept for API consistency)
           # @param spec_extension [String] Extension to exclude from attachments
           # @return [LoadedDocument, nil] Loaded document or nil
-          def self.from_scan_result(scan_result, file_pattern: nil, spec_extension:)
+          def self.from_scan_result(scan_result, spec_extension:, file_pattern: nil)
             return nil unless scan_result&.dir_path && Dir.exist?(scan_result.dir_path)
 
             spec_file = scan_result.file_path || Dir.glob(File.join(scan_result.dir_path, file_pattern)).first

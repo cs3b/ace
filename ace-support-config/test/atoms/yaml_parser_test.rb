@@ -15,7 +15,7 @@ module Ace
 
             result = YamlParser.parse(yaml)
 
-            assert_equal({ "key" => "value", "number" => 42 }, result)
+            assert_equal({"key" => "value", "number" => 42}, result)
           end
 
           def test_parse_nested_yaml
@@ -31,7 +31,7 @@ module Ace
             expected = {
               "parent" => {
                 "child" => "value",
-                "nested" => { "deep" => true }
+                "nested" => {"deep" => true}
               }
             }
             assert_equal(expected, result)
@@ -52,7 +52,7 @@ module Ace
           end
 
           def test_dump_hash
-            data = { "key" => "value", "number" => 42 }
+            data = {"key" => "value", "number" => 42}
 
             result = YamlParser.dump(data)
 

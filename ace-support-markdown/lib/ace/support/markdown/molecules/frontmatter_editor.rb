@@ -28,7 +28,7 @@ module Ace
           # @param value [Object] The new value
           # @return [MarkdownDocument] New document with updated field
           def self.update_field(document, key, value)
-            update(document, { key => value })
+            update(document, {key => value})
           end
 
           # Delete a field from frontmatter

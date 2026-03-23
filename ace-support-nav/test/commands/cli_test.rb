@@ -20,31 +20,31 @@ module Ace
         def test_auto_list_with_trailing_slash
           # Test the pattern detection logic
           assert @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://guidelines/"),
-                 "Trailing slash should trigger wildcard pattern"
+            "Trailing slash should trigger wildcard pattern"
         end
 
         def test_auto_list_with_wildcard
           # Test the pattern detection logic
           assert @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://format/*"),
-                 "Wildcard pattern should trigger wildcard pattern"
+            "Wildcard pattern should trigger wildcard pattern"
         end
 
         def test_auto_list_with_question_mark
           # Test the pattern detection logic
           assert @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://format/standar?"),
-                 "Question mark pattern should trigger wildcard pattern"
+            "Question mark pattern should trigger wildcard pattern"
         end
 
         def test_no_auto_list_for_specific_file
           # Test the pattern detection logic
           refute @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://guidelines/tone.md"),
-                 "Specific file path should not trigger wildcard pattern"
+            "Specific file path should not trigger wildcard pattern"
         end
 
         def test_protocol_only_auto_list
           # Test the pattern detection logic
           assert @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://"),
-                 "Protocol-only URI should trigger wildcard pattern"
+            "Protocol-only URI should trigger wildcard pattern"
         end
 
         def test_cli_raises_error_when_resource_not_found
@@ -121,7 +121,7 @@ module Ace
             config_dir = File.join(@test_dir, ".ace", "nav")
             FileUtils.mkdir_p(config_dir)
             File.write(File.join(config_dir, "config.yml"), {
-              "extension_inference" => { "enabled" => false }
+              "extension_inference" => {"enabled" => false}
             }.to_yaml)
 
             Dir.chdir(@test_dir) do

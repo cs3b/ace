@@ -62,7 +62,7 @@ class EnvLoaderTest < AceTestCase
 
       assert_equal "new_value", ENV["TEST_LOAD_SET"]
       assert_equal "added", ENV["NEW_VAR"]
-      assert_equal({ "TEST_LOAD_SET" => "new_value", "NEW_VAR" => "added" }, set_vars)
+      assert_equal({"TEST_LOAD_SET" => "new_value", "NEW_VAR" => "added"}, set_vars)
     end
   end
 
@@ -122,7 +122,7 @@ class EnvLoaderTest < AceTestCase
 
   def test_save_creates_directory
     with_temp_dir do
-      vars = { "TEST" => "value" }
+      vars = {"TEST" => "value"}
 
       Ace::Core::Molecules::EnvLoader.save_file(vars, "deep/path/.env")
 

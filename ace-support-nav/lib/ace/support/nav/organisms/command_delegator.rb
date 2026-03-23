@@ -80,7 +80,7 @@ module Ace
             pass_through_options = protocol_config["pass_through_options"] || []
 
             options.each do |key, value|
-              option_flag = "--#{key.to_s.tr('_', '-')}"
+              option_flag = "--#{key.to_s.tr("_", "-")}"
 
               # Only add if it's in pass_through list or if we don't have a list
               if pass_through_options.empty? || pass_through_options.include?(option_flag)

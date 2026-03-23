@@ -118,7 +118,7 @@ class TestHelperTest < Minitest::Test
   def test_capture_subprocess_io_captures_stdout_and_stderr
     stdout, stderr = capture_subprocess_io do
       $stdout.puts "stdout message"
-      $stderr.puts "stderr message"
+      warn "stderr message"
     end
 
     assert_equal "stdout message\n", stdout

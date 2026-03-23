@@ -9,13 +9,13 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_identifies_added_models
-    config = { "models" => ["model-1", "model-2"] }
+    config = {"models" => ["model-1", "model-2"]}
     provider_data = {
       "models" => {
-        "model-1" => { "name" => "Model 1" },
-        "model-2" => { "name" => "Model 2" },
-        "model-3" => { "name" => "Model 3" },
-        "model-4" => { "name" => "Model 4" }
+        "model-1" => {"name" => "Model 1"},
+        "model-2" => {"name" => "Model 2"},
+        "model-3" => {"name" => "Model 3"},
+        "model-4" => {"name" => "Model 4"}
       }
     }
 
@@ -26,11 +26,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_identifies_removed_models
-    config = { "models" => ["model-1", "model-2", "old-model"] }
+    config = {"models" => ["model-1", "model-2", "old-model"]}
     provider_data = {
       "models" => {
-        "model-1" => { "name" => "Model 1" },
-        "model-2" => { "name" => "Model 2" }
+        "model-1" => {"name" => "Model 1"},
+        "model-2" => {"name" => "Model 2"}
       }
     }
 
@@ -41,11 +41,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_identifies_unchanged_models
-    config = { "models" => ["model-1", "model-2"] }
+    config = {"models" => ["model-1", "model-2"]}
     provider_data = {
       "models" => {
-        "model-1" => { "name" => "Model 1" },
-        "model-2" => { "name" => "Model 2" }
+        "model-1" => {"name" => "Model 1"},
+        "model-2" => {"name" => "Model 2"}
       }
     }
 
@@ -58,11 +58,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_identifies_deprecated_models
-    config = { "models" => ["model-1", "deprecated-model"] }
+    config = {"models" => ["model-1", "deprecated-model"]}
     provider_data = {
       "models" => {
-        "model-1" => { "name" => "Model 1" },
-        "deprecated-model" => { "name" => "Deprecated", "status" => "deprecated" }
+        "model-1" => {"name" => "Model 1"},
+        "deprecated-model" => {"name" => "Deprecated", "status" => "deprecated"}
       }
     }
 
@@ -74,11 +74,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_does_not_suggest_adding_deprecated_models
-    config = { "models" => ["model-1"] }
+    config = {"models" => ["model-1"]}
     provider_data = {
       "models" => {
-        "model-1" => { "name" => "Model 1" },
-        "deprecated-model" => { "name" => "Deprecated", "status" => "deprecated" }
+        "model-1" => {"name" => "Model 1"},
+        "deprecated-model" => {"name" => "Deprecated", "status" => "deprecated"}
       }
     }
 
@@ -91,17 +91,17 @@ class ProviderSyncDiffTest < AceModelsTestCase
   def test_generate_with_provider_filter
     models_dev_data = {
       "anthropic" => {
-        "models" => { "claude-1" => {} }
+        "models" => {"claude-1" => {}}
       },
       "openai" => {
-        "models" => { "gpt-4" => {} }
+        "models" => {"gpt-4" => {}}
       }
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "anthropic" => { "models" => [] },
-      "openai" => { "models" => [] }
+      "anthropic" => {"models" => []},
+      "openai" => {"models" => []}
     }
 
     result = @diff.generate(current_configs, provider_filter: "anthropic")
@@ -113,12 +113,12 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_generate_marks_unknown_provider_as_not_found
     models_dev_data = {
-      "anthropic" => { "models" => {} }
+      "anthropic" => {"models" => {}}
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "unknown-provider" => { "models" => ["model-1"] }
+      "unknown-provider" => {"models" => ["model-1"]}
     }
 
     result = @diff.generate(current_configs)
@@ -211,11 +211,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   # Date filtering tests
   def test_diff_provider_filters_by_release_date
-    config = { "models" => [] }
+    config = {"models" => []}
     provider_data = {
       "models" => {
-        "old-model" => { "name" => "Old", "release_date" => "2025-10-01" },
-        "new-model" => { "name" => "New", "release_date" => "2025-12-01" }
+        "old-model" => {"name" => "Old", "release_date" => "2025-10-01"},
+        "new-model" => {"name" => "New", "release_date" => "2025-12-01"}
       }
     }
 
@@ -226,11 +226,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_includes_all_models_when_no_date_filter
-    config = { "models" => [] }
+    config = {"models" => []}
     provider_data = {
       "models" => {
-        "old-model" => { "name" => "Old", "release_date" => "2025-10-01" },
-        "new-model" => { "name" => "New", "release_date" => "2025-12-01" }
+        "old-model" => {"name" => "Old", "release_date" => "2025-10-01"},
+        "new-model" => {"name" => "New", "release_date" => "2025-12-01"}
       }
     }
 
@@ -241,10 +241,10 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_includes_release_dates_in_result
-    config = { "models" => [] }
+    config = {"models" => []}
     provider_data = {
       "models" => {
-        "new-model" => { "name" => "New", "release_date" => "2025-12-01" }
+        "new-model" => {"name" => "New", "release_date" => "2025-12-01"}
       }
     }
 
@@ -257,13 +257,13 @@ class ProviderSyncDiffTest < AceModelsTestCase
   def test_generate_uses_models_dev_id_for_lookup
     models_dev_data = {
       "anthropic" => {
-        "models" => { "claude-4" => { "name" => "Claude 4" } }
+        "models" => {"claude-4" => {"name" => "Claude 4"}}
       }
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "claude" => { "name" => "claude", "models_dev_id" => "anthropic", "models" => [] }
+      "claude" => {"name" => "claude", "models_dev_id" => "anthropic", "models" => []}
     }
 
     result = @diff.generate(current_configs, show_all: true)
@@ -275,12 +275,12 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_generate_provides_hint_for_unmapped_providers
     models_dev_data = {
-      "anthropic" => { "models" => {} }
+      "anthropic" => {"models" => {}}
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "claude" => { "name" => "claude", "models" => [] }
+      "claude" => {"name" => "claude", "models" => []}
     }
 
     result = @diff.generate(current_configs)
@@ -292,12 +292,12 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_generate_includes_last_synced_in_result
     models_dev_data = {
-      "anthropic" => { "models" => {} }
+      "anthropic" => {"models" => {}}
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "anthropic" => { "name" => "anthropic", "last_synced" => "2025-12-01", "models" => [] }
+      "anthropic" => {"name" => "anthropic", "last_synced" => "2025-12-01", "models" => []}
     }
 
     result = @diff.generate(current_configs, show_all: true)
@@ -310,15 +310,15 @@ class ProviderSyncDiffTest < AceModelsTestCase
     models_dev_data = {
       "anthropic" => {
         "models" => {
-          "old-model" => { "release_date" => "2025-01-01" },
-          "new-model" => { "release_date" => "2025-12-01" }
+          "old-model" => {"release_date" => "2025-01-01"},
+          "new-model" => {"release_date" => "2025-12-01"}
         }
       }
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "anthropic" => { "name" => "anthropic", "last_synced" => "2025-11-01", "models" => [] }
+      "anthropic" => {"name" => "anthropic", "last_synced" => "2025-11-01", "models" => []}
     }
 
     result = @diff.generate(current_configs, show_all: true)
@@ -332,15 +332,15 @@ class ProviderSyncDiffTest < AceModelsTestCase
     models_dev_data = {
       "anthropic" => {
         "models" => {
-          "old-model" => { "release_date" => "2025-10-01" },
-          "new-model" => { "release_date" => "2025-12-01" }
+          "old-model" => {"release_date" => "2025-10-01"},
+          "new-model" => {"release_date" => "2025-12-01"}
         }
       }
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "anthropic" => { "name" => "anthropic", "models" => [] }
+      "anthropic" => {"name" => "anthropic", "models" => []}
     }
 
     result = @diff.generate(current_configs, since_date: Date.new(2025, 11, 1))
@@ -353,11 +353,11 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_diff_provider_does_not_report_nitro_suffix_as_removed_for_openrouter
     # Config has model:nitro, models.dev has model (canonical)
-    config = { "models" => ["openai/gpt-4:nitro", "anthropic/claude-3"] }
+    config = {"models" => ["openai/gpt-4:nitro", "anthropic/claude-3"]}
     provider_data = {
       "models" => {
-        "openai/gpt-4" => { "name" => "GPT-4" },
-        "anthropic/claude-3" => { "name" => "Claude 3" }
+        "openai/gpt-4" => {"name" => "GPT-4"},
+        "anthropic/claude-3" => {"name" => "Claude 3"}
       }
     }
 
@@ -370,18 +370,18 @@ class ProviderSyncDiffTest < AceModelsTestCase
   end
 
   def test_diff_provider_handles_multiple_openrouter_suffixes
-    config = { "models" => [
+    config = {"models" => [
       "openai/gpt-4:nitro",
       "meta/llama-3:free",
       "anthropic/claude-3:floor",
       "deepseek/deepseek-r1:online"
-    ] }
+    ]}
     provider_data = {
       "models" => {
-        "openai/gpt-4" => { "name" => "GPT-4" },
-        "meta/llama-3" => { "name" => "Llama 3" },
-        "anthropic/claude-3" => { "name" => "Claude 3" },
-        "deepseek/deepseek-r1" => { "name" => "DeepSeek R1" }
+        "openai/gpt-4" => {"name" => "GPT-4"},
+        "meta/llama-3" => {"name" => "Llama 3"},
+        "anthropic/claude-3" => {"name" => "Claude 3"},
+        "deepseek/deepseek-r1" => {"name" => "DeepSeek R1"}
       }
     }
 
@@ -393,10 +393,10 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_diff_provider_reports_truly_removed_models_for_openrouter
     # Model that doesn't exist in models.dev even without suffix
-    config = { "models" => ["nonexistent/model:nitro", "openai/gpt-4"] }
+    config = {"models" => ["nonexistent/model:nitro", "openai/gpt-4"]}
     provider_data = {
       "models" => {
-        "openai/gpt-4" => { "name" => "GPT-4" }
+        "openai/gpt-4" => {"name" => "GPT-4"}
       }
     }
 
@@ -409,10 +409,10 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_diff_provider_matches_suffixed_model_as_unchanged
     # When config has model:nitro and models.dev has model, it should be unchanged
-    config = { "models" => ["moonshotai/kimi-k2-0905:nitro"] }
+    config = {"models" => ["moonshotai/kimi-k2-0905:nitro"]}
     provider_data = {
       "models" => {
-        "moonshotai/kimi-k2-0905" => { "name" => "Kimi K2" }
+        "moonshotai/kimi-k2-0905" => {"name" => "Kimi K2"}
       }
     }
 
@@ -425,20 +425,20 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_diff_provider_real_openrouter_scenario
     # Real-world scenario from the issue
-    config = { "models" => [
+    config = {"models" => [
       "openai/gpt-oss-120b:nitro",
       "openai/gpt-oss-20b:nitro",
       "moonshotai/kimi-k2-0905:nitro",
       "qwen/qwen3-235b-a22b-2507:nitro",
       "deepseek/deepseek-v3.2"  # No suffix
-    ] }
+    ]}
     provider_data = {
       "models" => {
-        "openai/gpt-oss-120b" => { "name" => "GPT-OSS 120B" },
-        "openai/gpt-oss-20b" => { "name" => "GPT-OSS 20B" },
-        "moonshotai/kimi-k2-0905" => { "name" => "Kimi K2" },
-        "qwen/qwen3-235b-a22b-2507" => { "name" => "Qwen3 235B" },
-        "deepseek/deepseek-v3.2" => { "name" => "DeepSeek V3.2" }
+        "openai/gpt-oss-120b" => {"name" => "GPT-OSS 120B"},
+        "openai/gpt-oss-20b" => {"name" => "GPT-OSS 20B"},
+        "moonshotai/kimi-k2-0905" => {"name" => "Kimi K2"},
+        "qwen/qwen3-235b-a22b-2507" => {"name" => "Qwen3 235B"},
+        "deepseek/deepseek-v3.2" => {"name" => "DeepSeek V3.2"}
       }
     }
 
@@ -451,10 +451,10 @@ class ProviderSyncDiffTest < AceModelsTestCase
 
   def test_diff_provider_non_openrouter_ignores_canonicalization
     # Non-OpenRouter provider should NOT strip suffixes
-    config = { "models" => ["model:nitro"] }
+    config = {"models" => ["model:nitro"]}
     provider_data = {
       "models" => {
-        "model" => { "name" => "Model" }
+        "model" => {"name" => "Model"}
       }
     }
 
@@ -468,14 +468,14 @@ class ProviderSyncDiffTest < AceModelsTestCase
     models_dev_data = {
       "openrouter" => {
         "models" => {
-          "openai/gpt-4" => { "name" => "GPT-4" }
+          "openai/gpt-4" => {"name" => "GPT-4"}
         }
       }
     }
     @cache_manager.expect :read, models_dev_data
 
     current_configs = {
-      "openrouter" => { "name" => "openrouter", "models" => ["openai/gpt-4:nitro"] }
+      "openrouter" => {"name" => "openrouter", "models" => ["openai/gpt-4:nitro"]}
     }
 
     result = @diff.generate(current_configs, show_all: true)

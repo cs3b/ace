@@ -48,11 +48,11 @@ module Ace
           def create(uri_string, target_path = nil)
             # Resolve the template
             template = @resource_resolver.resolve(uri_string)
-            return { error: "Template not found: #{uri_string}" } unless template
+            return {error: "Template not found: #{uri_string}"} unless template
 
             # Determine target path
             target = determine_target_path(template, target_path)
-            return { error: "Could not determine target path" } unless target
+            return {error: "Could not determine target path"} unless target
 
             # Create directory if needed
             target_dir = File.dirname(target)
@@ -61,9 +61,9 @@ module Ace
             # Copy template content
             if template.content
               File.write(target, template.content)
-              { created: target, from: template.path }
+              {created: target, from: template.path}
             else
-              { error: "Template has no content: #{template.path}" }
+              {error: "Template has no content: #{template.path}"}
             end
           end
 
@@ -156,12 +156,12 @@ module Ace
 
             # Determine subdirectory based on protocol
             subdir = case template.protocol
-                     when "wfi" then "workflow-instructions"
-                     when "tmpl" then "templates"
-                     when "guide" then "guides"
-                     when "sample" then "samples"
-                     else template.protocol
-                     end
+            when "wfi" then "workflow-instructions"
+            when "tmpl" then "templates"
+            when "guide" then "guides"
+            when "sample" then "samples"
+            else template.protocol
+            end
 
             # Build target path
             filename = File.basename(template.path)

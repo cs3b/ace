@@ -87,14 +87,14 @@ class ModelValidatorTest < AceModelsTestCase
           "test-model" => {
             "id" => "test-model",
             "name" => "Test Model",
-            "cost" => { "input" => 2.5, "output" => 10.0 },
-            "limit" => { "context" => 128_000, "output" => 4096 }
+            "cost" => {"input" => 2.5, "output" => 10.0},
+            "limit" => {"context" => 128_000, "output" => 4096}
           },
           "another-model" => {
             "id" => "another-model",
             "name" => "Another Model",
-            "cost" => { "input" => 1.0, "output" => 5.0 },
-            "limit" => { "context" => 32_000, "output" => 2048 }
+            "cost" => {"input" => 1.0, "output" => 5.0},
+            "limit" => {"context" => 32_000, "output" => 2048}
           }
         }
       }

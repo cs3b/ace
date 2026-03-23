@@ -17,9 +17,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_outputs_to_stderr
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -30,9 +30,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_with_nested_config
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { llm: { provider: "google", model: "gemini" } },
+      config: {llm: {provider: "google", model: "gemini"}},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -43,7 +43,7 @@ class ConfigSummaryTest < Minitest::Test
   def test_quiet_suppresses_output
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
       options: {},
       quiet: true
@@ -55,9 +55,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_only_non_default_values_shown
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "gflash", format: "markdown", timeout: 30 },
-      defaults: { "model" => "glite", "format" => "markdown", "timeout" => 30 },
-      options: { verbose: true }
+      config: {model: "gflash", format: "markdown", timeout: 30},
+      defaults: {"model" => "glite", "format" => "markdown", "timeout" => 30},
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -70,9 +70,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_allowlist_filtering
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "gflash", format: "markdown", verbose: true },
+      config: {model: "gflash", format: "markdown", verbose: true},
       defaults: {},
-      options: { verbose: true },
+      options: {verbose: true},
       summary_keys: %w[model format]
     )
 
@@ -92,7 +92,7 @@ class ConfigSummaryTest < Minitest::Test
         auth_token: "token123"
       },
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -109,9 +109,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_sensitive_key_with_underscore_prefix
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { _secret: "hidden", public_key: "visible" },
+      config: {_secret: "hidden", public_key: "visible"},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -126,7 +126,7 @@ class ConfigSummaryTest < Minitest::Test
       command: "test",
       config: {},
       defaults: {},
-      options: { verbose: true, dry_run: true }
+      options: {verbose: true, dry_run: true}
     )
 
     output = $stderr.string
@@ -137,9 +137,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_array_values_joined
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { files: ["file1.rb", "file2.rb", "file3.rb"] },
+      config: {files: ["file1.rb", "file2.rb", "file3.rb"]},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -149,9 +149,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_keys_are_sorted
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { zebra: 1, apple: 2, model: "gflash" },
+      config: {zebra: 1, apple: 2, model: "gflash"},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -166,8 +166,8 @@ class ConfigSummaryTest < Minitest::Test
   def test_empty_summary_produces_no_output
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { value: 1 },
-      defaults: { "value" => 1 },
+      config: {value: 1},
+      defaults: {"value" => 1},
       options: {}
     )
 
@@ -178,9 +178,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_cli_options_take_precedence_over_config
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "glite" },
-      defaults: { "model" => "glite" },
-      options: { model: "gflash", verbose: true }
+      config: {model: "glite"},
+      defaults: {"model" => "glite"},
+      options: {model: "gflash", verbose: true}
     )
 
     output = $stderr.string
@@ -193,7 +193,7 @@ class ConfigSummaryTest < Minitest::Test
       command: "test",
       config: {},
       defaults: {},
-      options: { verbose: false, debug: nil, quiet: false }
+      options: {verbose: false, debug: nil, quiet: false}
     )
 
     output = $stderr.string
@@ -208,7 +208,7 @@ class ConfigSummaryTest < Minitest::Test
       command: "test",
       config: {},
       defaults: {},
-      options: { verbose: true }
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -218,9 +218,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_config_and_options_combined
     Ace::Core::Atoms::ConfigSummary.display(
       command: "test",
-      config: { model: "gflash", preset: "code-review" },
-      defaults: { "model" => "glite" },
-      options: { verbose: true }
+      config: {model: "gflash", preset: "code-review"},
+      defaults: {"model" => "glite"},
+      options: {verbose: true}
     )
 
     output = $stderr.string
@@ -232,7 +232,7 @@ class ConfigSummaryTest < Minitest::Test
   def test_nested_keys_flattened_with_dots
     result = Ace::Core::Atoms::ConfigSummary.new(
       "test",
-      { llm: { provider: "google", settings: { temperature: 0.7 } } },
+      {llm: {provider: "google", settings: {temperature: 0.7}}},
       {},
       {},
       nil
@@ -257,9 +257,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_shows_when_verbose_and_no_help
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: true },
+      options: {verbose: true},
       args: []
     )
 
@@ -271,9 +271,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_skips_when_verbose_false
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: false },
+      options: {verbose: false},
       args: []
     )
 
@@ -283,9 +283,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_skips_when_help_requested_via_options
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { help: true, verbose: true },
+      options: {help: true, verbose: true},
       args: []
     )
 
@@ -296,9 +296,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_skips_when_help_requested_via_args
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: true },
+      options: {verbose: true},
       args: ["--help"]
     )
 
@@ -309,9 +309,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_skips_when_short_help_in_args
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: true },
+      options: {verbose: true},
       args: ["-h"]
     )
 
@@ -322,9 +322,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_skips_when_h_option_true
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { h: true, verbose: true },
+      options: {h: true, verbose: true},
       args: []
     )
 
@@ -335,9 +335,9 @@ class ConfigSummaryTest < Minitest::Test
   def test_display_if_needed_respects_quiet_flag
     Ace::Core::Atoms::ConfigSummary.display_if_needed(
       command: "test",
-      config: { model: "gflash" },
+      config: {model: "gflash"},
       defaults: {},
-      options: { verbose: true },
+      options: {verbose: true},
       args: [],
       quiet: true
     )
@@ -348,11 +348,11 @@ class ConfigSummaryTest < Minitest::Test
 
   # Tests for help_requested? method
   def test_help_requested_with_help_option
-    assert Ace::Core::Atoms::ConfigSummary.help_requested?({ help: true }, [])
+    assert Ace::Core::Atoms::ConfigSummary.help_requested?({help: true}, [])
   end
 
   def test_help_requested_with_h_option
-    assert Ace::Core::Atoms::ConfigSummary.help_requested?({ h: true }, [])
+    assert Ace::Core::Atoms::ConfigSummary.help_requested?({h: true}, [])
   end
 
   def test_help_requested_with_long_help_arg
@@ -369,7 +369,7 @@ class ConfigSummaryTest < Minitest::Test
 
   def test_help_requested_returns_false_when_no_help
     refute Ace::Core::Atoms::ConfigSummary.help_requested?({}, [])
-    refute Ace::Core::Atoms::ConfigSummary.help_requested?({ verbose: true }, ["command", "arg1"])
+    refute Ace::Core::Atoms::ConfigSummary.help_requested?({verbose: true}, ["command", "arg1"])
   end
 
   def test_help_requested_defaults_to_argv

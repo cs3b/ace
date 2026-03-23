@@ -37,7 +37,7 @@ module Ace
             # Then validate against allowed pattern (lowercase, numbers, hyphens only)
             cleaned = slug.to_s.gsub(/[.\\\/]/, "").strip
             # Further sanitize to only allowed characters (lowercase letters, numbers, hyphens)
-            result = cleaned.downcase.gsub(/[^a-z0-9-]/, "-").gsub(/-+/, "-").gsub(/^-|-$/, "")
+            result = cleaned.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-").gsub(/^-|-$/, "")
             truncate_at_word_boundary(result, max_length)
           end
 

@@ -60,10 +60,10 @@ module TestHelper
       source_config["path"] = config["path"] if config.key?("path")
     else
       source_config["path"] = if config.key?("path")
-                                config["path"]
-                              else
-                                File.join(dir, "test-resources", protocol_name)
-                              end
+        config["path"]
+      else
+        File.join(dir, "test-resources", protocol_name)
+      end
     end
 
     # Only add priority if explicitly provided
@@ -151,7 +151,7 @@ module TestHelper
     assert_file_exists(path)
     file_content = File.read(path)
     assert file_content.include?(content),
-           message || "Expected #{path} to contain '#{content}'"
+      message || "Expected #{path} to contain '#{content}'"
   end
 end
 

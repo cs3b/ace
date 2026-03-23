@@ -30,7 +30,7 @@ module Ace
 
                 puts "Cache Status:"
                 puts "  Cached: Yes"
-                puts "  Fresh: #{status_data[:fresh] ? 'Yes' : 'No (stale)'}"
+                puts "  Fresh: #{status_data[:fresh] ? "Yes" : "No (stale)"}"
                 puts "  Last sync: #{status_data[:last_sync_at]}"
                 puts
 

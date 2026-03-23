@@ -42,8 +42,8 @@ class ProviderConfigReaderTest < AceModelsTestCase
 
   def test_read_directory_returns_all_configs
     with_temp_config_dir do |dir|
-      write_config(dir, "provider1.yml", { "name" => "provider1", "models" => ["m1"] })
-      write_config(dir, "provider2.yml", { "name" => "provider2", "models" => ["m2"] })
+      write_config(dir, "provider1.yml", {"name" => "provider1", "models" => ["m1"]})
+      write_config(dir, "provider2.yml", {"name" => "provider2", "models" => ["m2"]})
 
       result = @reader.read_directory(dir)
 
@@ -57,9 +57,9 @@ class ProviderConfigReaderTest < AceModelsTestCase
 
   def test_read_directory_skips_template_files
     with_temp_config_dir do |dir|
-      write_config(dir, "provider.yml", { "name" => "provider" })
-      write_config(dir, "template.yml", { "name" => "template" })
-      write_config(dir, "example.yml.example", { "name" => "example" })
+      write_config(dir, "provider.yml", {"name" => "provider"})
+      write_config(dir, "template.yml", {"name" => "template"})
+      write_config(dir, "example.yml.example", {"name" => "example"})
 
       result = @reader.read_directory(dir)
 
@@ -71,7 +71,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
 
   def test_read_directory_adds_source_file_metadata
     with_temp_config_dir do |dir|
-      write_config(dir, "provider.yml", { "name" => "provider" })
+      write_config(dir, "provider.yml", {"name" => "provider"})
 
       result = @reader.read_directory(dir)
 
@@ -80,7 +80,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_models_from_array
-    config = { "models" => ["model-1", "model-2", "model-3"] }
+    config = {"models" => ["model-1", "model-2", "model-3"]}
 
     result = @reader.extract_models(config)
 
@@ -88,7 +88,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_models_from_hash
-    config = { "models" => { "model-1" => {}, "model-2" => {} } }
+    config = {"models" => {"model-1" => {}, "model-2" => {}}}
 
     result = @reader.extract_models(config)
 
@@ -96,7 +96,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_models_returns_empty_for_nil
-    config = { "name" => "provider" }
+    config = {"name" => "provider"}
 
     result = @reader.extract_models(config)
 
@@ -104,7 +104,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_models_returns_empty_for_invalid_type
-    config = { "models" => "invalid" }
+    config = {"models" => "invalid"}
 
     result = @reader.extract_models(config)
 
@@ -128,8 +128,8 @@ class ProviderConfigReaderTest < AceModelsTestCase
   def test_read_all_merges_configs
     with_temp_config_dir do |dir1|
       with_temp_config_dir do |dir2|
-        write_config(dir1, "provider.yml", { "name" => "provider", "version" => "1" })
-        write_config(dir2, "provider.yml", { "name" => "provider", "version" => "2" })
+        write_config(dir1, "provider.yml", {"name" => "provider", "version" => "1"})
+        write_config(dir2, "provider.yml", {"name" => "provider", "version" => "2"})
 
         # When using config_dir override, only that dir is used
         result = @reader.read_all(config_dir: dir1)
@@ -142,7 +142,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
 
   # models_dev_id extraction tests
   def test_extract_models_dev_id_returns_explicit_value
-    config = { "name" => "claude", "models_dev_id" => "anthropic" }
+    config = {"name" => "claude", "models_dev_id" => "anthropic"}
 
     result = @reader.extract_models_dev_id(config)
 
@@ -150,7 +150,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_models_dev_id_falls_back_to_name
-    config = { "name" => "anthropic" }
+    config = {"name" => "anthropic"}
 
     result = @reader.extract_models_dev_id(config)
 
@@ -167,7 +167,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
 
   # last_synced extraction tests
   def test_extract_last_synced_from_string
-    config = { "last_synced" => "2025-12-01" }
+    config = {"last_synced" => "2025-12-01"}
 
     result = @reader.extract_last_synced(config)
 
@@ -175,7 +175,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_last_synced_from_date
-    config = { "last_synced" => Date.new(2025, 11, 15) }
+    config = {"last_synced" => Date.new(2025, 11, 15)}
 
     result = @reader.extract_last_synced(config)
 
@@ -183,7 +183,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_last_synced_returns_nil_when_missing
-    config = { "name" => "provider" }
+    config = {"name" => "provider"}
 
     result = @reader.extract_last_synced(config)
 
@@ -191,7 +191,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_last_synced_returns_nil_for_invalid_date
-    config = { "last_synced" => "not-a-date" }
+    config = {"last_synced" => "not-a-date"}
 
     result = @reader.extract_last_synced(config)
 
@@ -199,7 +199,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
   end
 
   def test_extract_last_synced_returns_nil_for_invalid_type
-    config = { "last_synced" => 12345 }
+    config = {"last_synced" => 12345}
 
     result = @reader.extract_last_synced(config)
 

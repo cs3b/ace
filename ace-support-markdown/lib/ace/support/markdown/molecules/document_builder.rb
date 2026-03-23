@@ -68,12 +68,12 @@ module Ace
           # Build the document as a MarkdownDocument model
           # @return [MarkdownDocument]
           def build
-            if @sections.any?
+            body_text = if @sections.any?
               # Build from sections
-              body_text = @sections.map(&:to_markdown).join("\n\n")
+              @sections.map(&:to_markdown).join("\n\n")
             else
               # Use raw body content
-              body_text = @body_content || ""
+              @body_content || ""
             end
 
             Models::MarkdownDocument.new(

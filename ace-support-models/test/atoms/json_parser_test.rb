@@ -18,14 +18,14 @@ class JsonParserTest < AceModelsTestCase
   end
 
   def test_to_json_basic
-    data = { "key" => "value" }
+    data = {"key" => "value"}
     result = Ace::Support::Models::Atoms::JsonParser.to_json(data)
 
     assert_equal '{"key":"value"}', result
   end
 
   def test_to_json_pretty
-    data = { "key" => "value" }
+    data = {"key" => "value"}
     result = Ace::Support::Models::Atoms::JsonParser.to_json(data, pretty: true)
 
     assert_includes result, "\n"

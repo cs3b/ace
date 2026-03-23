@@ -84,7 +84,7 @@ module Ace
             required_fields = %w[timestamp gem operation]
             missing = required_fields - metadata.keys
             unless missing.empty?
-              raise ArgumentError, "Missing required metadata fields: #{missing.join(', ')}"
+              raise ArgumentError, "Missing required metadata fields: #{missing.join(", ")}"
             end
 
             # Validate field types

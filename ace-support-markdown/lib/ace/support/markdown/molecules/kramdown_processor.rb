@@ -16,7 +16,7 @@ module Ace
           # @return [Hash] Result with :document, :success, :errors
           def self.parse(content, options: {})
             default_options = {
-              input: 'GFM', # GitHub Flavored Markdown
+              input: "GFM", # GitHub Flavored Markdown
               hard_wrap: false,
               auto_ids: true,
               parse_block_html: true
@@ -33,7 +33,7 @@ module Ace
                 warnings: document.warnings || [],
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               {
                 document: nil,
                 success: false,
@@ -57,7 +57,7 @@ module Ace
                 success: true,
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               {
                 markdown: nil,
                 success: false,
@@ -101,9 +101,9 @@ module Ace
           def self.find_headings(element, headings = [])
             if element.type == :header
               text = element.children
-                            .select { |c| c.type == :text }
-                            .map(&:value)
-                            .join
+                .select { |c| c.type == :text }
+                .map(&:value)
+                .join
 
               headings << {
                 text: text,

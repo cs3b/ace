@@ -40,16 +40,16 @@ module Ace
                 serialize_entry(lines, k, v, indent: indent + 1)
               end
             when Array
-              if value.empty?
-                lines << "#{prefix}#{key}: []"
+              lines << if value.empty?
+                "#{prefix}#{key}: []"
               else
-                lines << "#{prefix}#{key}: [#{value.join(", ")}]"
+                "#{prefix}#{key}: [#{value.join(", ")}]"
               end
             when String
-              if needs_quoting?(value)
-                lines << "#{prefix}#{key}: \"#{escape_yaml_string(value)}\""
+              lines << if needs_quoting?(value)
+                "#{prefix}#{key}: \"#{escape_yaml_string(value)}\""
               else
-                lines << "#{prefix}#{key}: #{value}"
+                "#{prefix}#{key}: #{value}"
               end
             else
               lines << "#{prefix}#{key}: #{value}"
@@ -72,7 +72,7 @@ module Ace
           # @param value [String] Value to escape
           # @return [String] Escaped value
           private_class_method def self.escape_yaml_string(value)
-            value.gsub('\\', '\\\\\\\\').gsub('"', '\\"')
+            value.gsub("\\", "\\\\\\\\").gsub('"', '\\"')
           end
         end
       end

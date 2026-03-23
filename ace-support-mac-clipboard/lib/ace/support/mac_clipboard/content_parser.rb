@@ -7,8 +7,8 @@ module Ace
     module MacClipboard
       class ContentParser
         def self.parse(raw_result)
-          return { text: nil, attachments: [] } unless raw_result[:success]
-          return { text: nil, attachments: [] } if raw_result[:types].empty?
+          return {text: nil, attachments: []} unless raw_result[:success]
+          return {text: nil, attachments: []} if raw_result[:types].empty?
 
           pasteboard = raw_result[:raw_pasteboard]
           types = raw_result[:types]
@@ -105,7 +105,7 @@ module Ace
           return nil unless data
 
           data.force_encoding("UTF-8").strip
-        rescue => e
+        rescue
           nil
         end
 
@@ -120,11 +120,15 @@ module Ace
           url_str = url_str.sub(%r{^file://}, "")
 
           # URL decode
-          url_str = URI.decode_www_form_component(url_str) rescue url_str
+          url_str = begin
+            URI.decode_www_form_component(url_str)
+          rescue
+            url_str
+          end
 
           urls << url_str if File.exist?(url_str)
           urls
-        rescue => e
+        rescue
           []
         end
 
@@ -137,7 +141,7 @@ module Ace
             format: format,
             data: data
           }
-        rescue => e
+        rescue
           nil
         end
 
@@ -145,7 +149,7 @@ module Ace
           return nil unless data && data.bytesize > 0
 
           data
-        rescue => e
+        rescue
           nil
         end
 
@@ -153,7 +157,7 @@ module Ace
           return nil unless data && data.bytesize > 0
 
           data.force_encoding("UTF-8")
-        rescue => e
+        rescue
           nil
         end
       end

@@ -62,7 +62,7 @@ module Ace
           # Convert section to markdown string
           # @return [String] The complete section as markdown
           def to_markdown
-            heading_prefix = '#' * @level
+            heading_prefix = "#" * @level
             "#{heading_prefix} #{@heading}\n\n#{@content}"
           end
 

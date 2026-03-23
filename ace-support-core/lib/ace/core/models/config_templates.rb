@@ -20,7 +20,7 @@ module Ace
           return nil unless info
 
           # Prefer local path for development
-          path = info[:source] == :gem ? info[:path] : (info[:path] || info[:gem_path])
+          path = (info[:source] == :gem) ? info[:path] : (info[:path] || info[:gem_path])
           resolve_defaults_dir(path)
         end
 
@@ -37,7 +37,7 @@ module Ace
             next unless File.directory?(dir)
             gem_name = File.basename(dir)
             if has_example_dir?(dir)
-              gems[gem_name] = { source: :local, path: dir }
+              gems[gem_name] = {source: :local, path: dir}
             end
           end
 
@@ -52,11 +52,11 @@ module Ace
                   gems[spec.name][:source] = :both
                   gems[spec.name][:gem_path] = gem_path
                 else
-                  gems[spec.name] = { source: :gem, path: gem_path }
+                  gems[spec.name] = {source: :gem, path: gem_path}
                 end
               end
             end
-          rescue StandardError
+          rescue
             # If we can't access installed gems, just use local ones
           end
 
@@ -68,7 +68,7 @@ module Ace
           return nil unless info
 
           # Prefer local path for development
-          path = info[:source] == :gem ? info[:path] : (info[:path] || info[:gem_path])
+          path = (info[:source] == :gem) ? info[:path] : (info[:path] || info[:gem_path])
           File.join(path, "docs", "config.md")
         end
 

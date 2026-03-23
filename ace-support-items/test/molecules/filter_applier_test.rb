@@ -7,17 +7,17 @@ class FilterApplierTest < AceSupportItemsTestCase
 
   def setup
     @items = [
-      { id: "item.001", status: "pending",     priority: "high",   team: "backend",  tags: ["ux"],           metadata: { estimate: "2h" } },
-      { id: "item.002", status: "in-progress", priority: "medium", team: "frontend", tags: [],               metadata: { estimate: "4h" } },
-      { id: "item.003", status: "done",        priority: "high",   team: "backend",  tags: ["ux", "design"], metadata: { estimate: "2h" } },
-      { id: "item.004", status: "blocked",     priority: "low",    team: "backend",  tags: ["backend"],      metadata: { estimate: "1h" } }
+      {id: "item.001", status: "pending", priority: "high", team: "backend", tags: ["ux"], metadata: {estimate: "2h"}},
+      {id: "item.002", status: "in-progress", priority: "medium", team: "frontend", tags: [], metadata: {estimate: "4h"}},
+      {id: "item.003", status: "done", priority: "high", team: "backend", tags: ["ux", "design"], metadata: {estimate: "2h"}},
+      {id: "item.004", status: "blocked", priority: "low", team: "backend", tags: ["backend"], metadata: {estimate: "1h"}}
     ]
   end
 
   # --- Simple matching ---
 
   def test_apply_simple_filter
-    specs = [{ key: "status", values: ["pending"], negated: false, or_mode: false }]
+    specs = [{key: "status", values: ["pending"], negated: false, or_mode: false}]
     result = FA.apply(@items, specs)
 
     assert_equal 1, result.length
@@ -26,8 +26,8 @@ class FilterApplierTest < AceSupportItemsTestCase
 
   def test_apply_multiple_filters_and_logic
     specs = [
-      { key: "status", values: ["pending"], negated: false, or_mode: false },
-      { key: "priority", values: ["high"], negated: false, or_mode: false }
+      {key: "status", values: ["pending"], negated: false, or_mode: false},
+      {key: "priority", values: ["high"], negated: false, or_mode: false}
     ]
     result = FA.apply(@items, specs)
 
@@ -36,14 +36,14 @@ class FilterApplierTest < AceSupportItemsTestCase
   end
 
   def test_apply_no_match
-    specs = [{ key: "status", values: ["archived"], negated: false, or_mode: false }]
+    specs = [{key: "status", values: ["archived"], negated: false, or_mode: false}]
     assert_equal 0, FA.apply(@items, specs).length
   end
 
   # --- OR values ---
 
   def test_apply_or_values
-    specs = [{ key: "status", values: ["pending", "in-progress"], negated: false, or_mode: true }]
+    specs = [{key: "status", values: ["pending", "in-progress"], negated: false, or_mode: true}]
     result = FA.apply(@items, specs)
 
     assert_equal 2, result.length
@@ -55,7 +55,7 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Negation ---
 
   def test_apply_negated_filter
-    specs = [{ key: "status", values: ["done"], negated: true, or_mode: false }]
+    specs = [{key: "status", values: ["done"], negated: true, or_mode: false}]
     result = FA.apply(@items, specs)
 
     assert_equal 3, result.length
@@ -63,7 +63,7 @@ class FilterApplierTest < AceSupportItemsTestCase
   end
 
   def test_apply_negated_or_values
-    specs = [{ key: "status", values: ["done", "blocked"], negated: true, or_mode: true }]
+    specs = [{key: "status", values: ["done", "blocked"], negated: true, or_mode: true}]
     result = FA.apply(@items, specs)
 
     assert_equal 2, result.length
@@ -75,7 +75,7 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Array matching ---
 
   def test_apply_array_contains
-    specs = [{ key: "tags", values: ["ux"], negated: false, or_mode: false }]
+    specs = [{key: "tags", values: ["ux"], negated: false, or_mode: false}]
     result = FA.apply(@items, specs)
 
     assert_equal 2, result.length
@@ -85,14 +85,14 @@ class FilterApplierTest < AceSupportItemsTestCase
   end
 
   def test_apply_array_or_values
-    specs = [{ key: "tags", values: ["ux", "backend"], negated: false, or_mode: true }]
+    specs = [{key: "tags", values: ["ux", "backend"], negated: false, or_mode: true}]
     result = FA.apply(@items, specs)
 
     assert_equal 3, result.length
   end
 
   def test_apply_negated_array
-    specs = [{ key: "tags", values: ["ux"], negated: true, or_mode: false }]
+    specs = [{key: "tags", values: ["ux"], negated: true, or_mode: false}]
     result = FA.apply(@items, specs)
 
     assert_equal 2, result.length
@@ -104,7 +104,7 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Case insensitivity ---
 
   def test_apply_case_insensitive
-    specs = [{ key: "status", values: ["PENDING"], negated: false, or_mode: false }]
+    specs = [{key: "status", values: ["PENDING"], negated: false, or_mode: false}]
     assert_equal 1, FA.apply(@items, specs).length
   end
 
@@ -119,25 +119,25 @@ class FilterApplierTest < AceSupportItemsTestCase
   end
 
   def test_apply_empty_items
-    specs = [{ key: "status", values: ["pending"], negated: false, or_mode: false }]
+    specs = [{key: "status", values: ["pending"], negated: false, or_mode: false}]
     assert_equal 0, FA.apply([], specs).length
   end
 
   def test_apply_nil_items
-    specs = [{ key: "status", values: ["pending"], negated: false, or_mode: false }]
+    specs = [{key: "status", values: ["pending"], negated: false, or_mode: false}]
     assert_equal 0, FA.apply(nil, specs).length
   end
 
   def test_apply_non_existent_field
-    specs = [{ key: "nonexistent", values: ["val"], negated: false, or_mode: false }]
+    specs = [{key: "nonexistent", values: ["val"], negated: false, or_mode: false}]
     assert_equal 0, FA.apply(@items, specs).length
   end
 
   # --- String vs symbol keys ---
 
   def test_apply_string_key_access
-    items = [{ "status" => "pending", "priority" => "high" }]
-    specs = [{ key: "status", values: ["pending"], negated: false, or_mode: false }]
+    items = [{"status" => "pending", "priority" => "high"}]
+    specs = [{key: "status", values: ["pending"], negated: false, or_mode: false}]
 
     assert_equal 1, FA.apply(items, specs).length
   end
@@ -145,7 +145,7 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Metadata access ---
 
   def test_apply_metadata_field
-    specs = [{ key: "estimate", values: ["2h"], negated: false, or_mode: false }]
+    specs = [{key: "estimate", values: ["2h"], negated: false, or_mode: false}]
     result = FA.apply(@items, specs)
 
     assert_equal 2, result.length
@@ -158,7 +158,7 @@ class FilterApplierTest < AceSupportItemsTestCase
       OpenStruct.new(name: "Alice", role: "dev"),
       OpenStruct.new(name: "Bob", role: "pm")
     ]
-    specs = [{ key: "role", values: ["dev"], negated: false, or_mode: false }]
+    specs = [{key: "role", values: ["dev"], negated: false, or_mode: false}]
     accessor = ->(item, key) { item.send(key.to_sym) }
 
     result = FA.apply(items, specs, value_accessor: accessor)
@@ -170,8 +170,8 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Whitespace handling ---
 
   def test_apply_handles_whitespace_in_values
-    items = [{ status: "  pending  " }]
-    specs = [{ key: "status", values: ["pending"], negated: false, or_mode: false }]
+    items = [{status: "  pending  "}]
+    specs = [{key: "status", values: ["pending"], negated: false, or_mode: false}]
 
     assert_equal 1, FA.apply(items, specs).length
   end
@@ -179,15 +179,15 @@ class FilterApplierTest < AceSupportItemsTestCase
   # --- Numeric and boolean values ---
 
   def test_apply_numeric_values
-    items = [{ sprint: 12 }, { sprint: 13 }]
-    specs = [{ key: "sprint", values: ["12"], negated: false, or_mode: false }]
+    items = [{sprint: 12}, {sprint: 13}]
+    specs = [{key: "sprint", values: ["12"], negated: false, or_mode: false}]
 
     assert_equal 1, FA.apply(items, specs).length
   end
 
   def test_apply_boolean_values
-    items = [{ archived: true }, { archived: false }]
-    specs = [{ key: "archived", values: ["true"], negated: false, or_mode: false }]
+    items = [{archived: true}, {archived: false}]
+    specs = [{key: "archived", values: ["true"], negated: false, or_mode: false}]
 
     assert_equal 1, FA.apply(items, specs).length
   end

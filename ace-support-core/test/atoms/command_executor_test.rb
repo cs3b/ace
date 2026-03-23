@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'timeout'
+require_relative "../test_helper"
+require "timeout"
 
 class CommandExecutorTest < Minitest::Test
   def setup
@@ -18,7 +18,7 @@ class CommandExecutorTest < Minitest::Test
   end
 
   def test_execute_command_with_error
-    result = @executor.execute('ls /non/existent/directory')
+    result = @executor.execute("ls /non/existent/directory")
 
     refute result[:success]
     assert_match(/No such file|cannot access/, result[:stderr])
@@ -33,7 +33,7 @@ class CommandExecutorTest < Minitest::Test
   end
 
   def test_execute_empty_command
-    result = @executor.execute('   ')
+    result = @executor.execute("   ")
 
     refute result[:success]
     assert_equal "Command cannot be empty", result[:error]
@@ -51,18 +51,18 @@ class CommandExecutorTest < Minitest::Test
 
   def test_execute_with_working_directory
     Dir.mktmpdir do |tmpdir|
-      result = @executor.execute('pwd', cwd: tmpdir)
+      result = @executor.execute("pwd", cwd: tmpdir)
 
       assert result[:success]
       # Force UTF-8 encoding for comparison and handle macOS /private prefix
-      output = result[:stdout].force_encoding('UTF-8').strip
+      output = result[:stdout].force_encoding("UTF-8").strip
       expected = File.realpath(tmpdir)
       assert_equal expected, output
     end
   end
 
   def test_execute_non_existent_command
-    result = @executor.execute('this_command_does_not_exist')
+    result = @executor.execute("this_command_does_not_exist")
 
     refute result[:success]
     assert_match(/Command not found/, result[:error])
@@ -75,20 +75,20 @@ class CommandExecutorTest < Minitest::Test
   end
 
   def test_capture_returns_nil_on_failure
-    output = @executor.capture('ls /non/existent/directory')
+    output = @executor.capture("ls /non/existent/directory")
 
     assert_nil output
   end
 
   def test_available_checks_command_existence
     # Common commands that should exist
-    assert @executor.available?('echo')
-    assert @executor.available?('ls')
+    assert @executor.available?("echo")
+    assert @executor.available?("ls")
 
     # Commands that shouldn't exist
-    refute @executor.available?('this_command_does_not_exist')
+    refute @executor.available?("this_command_does_not_exist")
     refute @executor.available?(nil)
-    refute @executor.available?('')
+    refute @executor.available?("")
   end
 
   def test_execute_batch
@@ -110,7 +110,7 @@ class CommandExecutorTest < Minitest::Test
   def test_execute_batch_with_failures
     commands = [
       'echo "Success"',
-      'ls /non/existent',
+      "ls /non/existent",
       'echo "Another success"'
     ]
 
@@ -124,16 +124,16 @@ class CommandExecutorTest < Minitest::Test
 
   def test_build_command_with_escaping
     # Test escaping special characters
-    cmd = @executor.build_command('echo', 'Hello World')
+    cmd = @executor.build_command("echo", "Hello World")
     assert_equal "echo 'Hello World'", cmd
 
     # Test escaping quotes - this is complex due to shell escaping
-    cmd = @executor.build_command('echo', "It's a test")
+    cmd = @executor.build_command("echo", "It's a test")
     # The actual output is: echo 'It'\''s a test' but Ruby shows it differently
     assert cmd.include?("It") && cmd.include?("s a test")
 
     # Test safe arguments (no escaping needed)
-    cmd = @executor.build_command('ls', '-la', '/tmp')
+    cmd = @executor.build_command("ls", "-la", "/tmp")
     assert_equal "ls -la /tmp", cmd
   end
 
@@ -172,10 +172,10 @@ class CommandExecutorTest < Minitest::Test
   end
 
   # Integration tests - run with INTEGRATION_TESTS=1 environment variable
-  if ENV['INTEGRATION_TESTS']
+  if ENV["INTEGRATION_TESTS"]
     def test_execute_with_real_timeout
       # This test uses real sleep and timeout - only run in integration mode
-      result = @executor.execute('sleep 0.5', timeout: 0.2)
+      result = @executor.execute("sleep 0.5", timeout: 0.2)
 
       refute result[:success]
       assert_match(/Command timed out/, result[:error])
@@ -183,7 +183,7 @@ class CommandExecutorTest < Minitest::Test
 
     def test_stream_with_real_timeout
       # This test uses real sleep and timeout - only run in integration mode
-      result = @executor.stream('sleep 0.5', timeout: 0.2)
+      result = @executor.stream("sleep 0.5", timeout: 0.2)
 
       refute result[:success]
       assert_match(/Command timed out/, result[:error])

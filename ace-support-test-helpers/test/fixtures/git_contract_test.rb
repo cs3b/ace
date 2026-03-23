@@ -53,20 +53,20 @@ class GitContractTest < AceTestCase
   def test_mock_constants_are_realistic
     # Verify worktree list format
     assert Ace::TestSupport::Fixtures::GitMocks::MOCK_WORKTREE_LIST.include?("/"),
-           "MOCK_WORKTREE_LIST should contain paths"
+      "MOCK_WORKTREE_LIST should contain paths"
     assert Ace::TestSupport::Fixtures::GitMocks::MOCK_WORKTREE_LIST.include?("["),
-           "MOCK_WORKTREE_LIST should contain branch indicators"
+      "MOCK_WORKTREE_LIST should contain branch indicators"
 
     # Verify branch list format
     assert Ace::TestSupport::Fixtures::GitMocks::MOCK_BRANCH_LIST.include?("*"),
-           "MOCK_BRANCH_LIST should indicate current branch with *"
+      "MOCK_BRANCH_LIST should indicate current branch with *"
 
     # Verify status outputs
     assert Ace::TestSupport::Fixtures::GitMocks::MOCK_STATUS_CLEAN.include?("clean"),
-           "MOCK_STATUS_CLEAN should indicate clean status"
+      "MOCK_STATUS_CLEAN should indicate clean status"
 
     assert Ace::TestSupport::Fixtures::GitMocks::MOCK_STATUS_DIRTY.include?("modified"),
-           "MOCK_STATUS_DIRTY should show modifications"
+      "MOCK_STATUS_DIRTY should show modifications"
   end
 
   # Test create_task result structure for normal execution
@@ -159,7 +159,7 @@ class GitContractTest < AceTestCase
   def test_stub_ace_core_config_integration
     skip "Ace::Core.get not available" unless defined?(Ace::Core) && Ace::Core.respond_to?(:get)
 
-    test_config = { "test" => "value" }
+    test_config = {"test" => "value"}
 
     Ace::TestSupport::Fixtures::GitMocks.stub_ace_core_config(test_config) do
       # Verify stub returns mocked config

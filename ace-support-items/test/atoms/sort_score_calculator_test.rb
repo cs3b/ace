@@ -35,11 +35,11 @@ class SortScoreCalculatorTest < AceSupportItemsTestCase
 
   def test_custom_boost_and_factor
     score = SSC.compute(priority_weight: 2, age_days: 10, status: "in-progress",
-                        in_progress_boost: 500)
+      in_progress_boost: 500)
     assert_equal 710.0, score
 
     score = SSC.compute(priority_weight: 2, age_days: 10, status: "blocked",
-                        blocked_factor: 0.5)
+      blocked_factor: 0.5)
     assert_equal 105.0, score
   end
 
@@ -77,7 +77,7 @@ class SortScoreCalculatorTest < AceSupportItemsTestCase
   end
 
   def test_priority_weight_custom_weights
-    custom = { "p0" => 10, "p1" => 5 }
+    custom = {"p0" => 10, "p1" => 5}
     assert_equal 10, SSC.priority_weight("p0", weights: custom)
     assert_equal 0, SSC.priority_weight("high", weights: custom)
   end

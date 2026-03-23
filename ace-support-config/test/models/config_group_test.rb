@@ -11,13 +11,13 @@ module Ace
             group = ConfigGroup.new(
               name: "taskflow",
               source: ".ace-taskflow/.ace/git/commit.yml",
-              config: { "model" => "gflash" },
+              config: {"model" => "gflash"},
               files: ["a.txt", "b.txt"]
             )
 
             assert_equal "taskflow", group.name
             assert_equal ".ace-taskflow/.ace/git/commit.yml", group.source
-            assert_equal({ "model" => "gflash" }, group.config)
+            assert_equal({"model" => "gflash"}, group.config)
             assert_equal ["a.txt", "b.txt"], group.files
           end
 
@@ -25,7 +25,7 @@ module Ace
             group = ConfigGroup.new(
               name: "default",
               source: ".ace/git/commit.yml",
-              config: { "model" => "glite" },
+              config: {"model" => "glite"},
               files: ["a.txt"]
             )
 

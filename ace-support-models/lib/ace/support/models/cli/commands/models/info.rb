@@ -48,13 +48,13 @@ module Ace
                 lines = []
                 lines << "#{model.name} (#{model.full_id})"
                 lines << "  Provider: #{model.provider_id}"
-                lines << "  Status: #{model.status || 'active'}"
+                lines << "  Status: #{model.status || "active"}"
                 lines << "  Context: #{format_number(model.context_limit)} tokens"
                 lines << "  Output: #{format_number(model.output_limit)} tokens"
 
                 pricing = model.pricing
                 if pricing&.available?
-                  lines << "  Pricing: $#{sprintf('%.2f', pricing.input)}/M input, $#{sprintf('%.2f', pricing.output)}/M output"
+                  lines << "  Pricing: $#{sprintf("%.2f", pricing.input)}/M input, $#{sprintf("%.2f", pricing.output)}/M output"
                 end
 
                 caps = model.capabilities
@@ -62,7 +62,7 @@ module Ace
                 enabled << "reasoning" if caps[:reasoning]
                 enabled << "tools" if caps[:tool_call]
                 enabled << "structured" if caps[:structured_output]
-                lines << "  Capabilities: #{enabled.any? ? enabled.join(', ') : 'none'}"
+                lines << "  Capabilities: #{enabled.any? ? enabled.join(", ") : "none"}"
 
                 lines << ""
                 lines << "Use --full for complete details"
@@ -74,21 +74,21 @@ module Ace
                 lines = []
                 lines << "Model: #{model.name} (#{model.full_id})"
                 lines << "Provider: #{model.provider_id}"
-                lines << "Status: #{model.status || 'active'}"
+                lines << "Status: #{model.status || "active"}"
                 lines << ""
 
                 lines << "Capabilities:"
                 caps = model.capabilities
-                lines << "  Reasoning: #{caps[:reasoning] ? 'Yes' : 'No'}"
-                lines << "  Tool Call: #{caps[:tool_call] ? 'Yes' : 'No'}"
-                lines << "  Structured Output: #{caps[:structured_output] ? 'Yes' : 'No'}"
-                lines << "  Attachment: #{caps[:attachment] ? 'Yes' : 'No'}"
-                lines << "  Temperature: #{caps[:temperature] ? 'Yes' : 'No'}"
+                lines << "  Reasoning: #{caps[:reasoning] ? "Yes" : "No"}"
+                lines << "  Tool Call: #{caps[:tool_call] ? "Yes" : "No"}"
+                lines << "  Structured Output: #{caps[:structured_output] ? "Yes" : "No"}"
+                lines << "  Attachment: #{caps[:attachment] ? "Yes" : "No"}"
+                lines << "  Temperature: #{caps[:temperature] ? "Yes" : "No"}"
                 lines << ""
 
                 lines << "Modalities:"
-                lines << "  Input: #{model.modalities[:input]&.join(', ') || 'none'}"
-                lines << "  Output: #{model.modalities[:output]&.join(', ') || 'none'}"
+                lines << "  Input: #{model.modalities[:input]&.join(", ") || "none"}"
+                lines << "  Output: #{model.modalities[:output]&.join(", ") || "none"}"
                 lines << ""
 
                 lines << "Limits:"
@@ -108,10 +108,10 @@ module Ace
                 end
 
                 lines << "Metadata:"
-                lines << "  Knowledge: #{model.knowledge_date || 'unknown'}"
-                lines << "  Released: #{model.release_date || 'unknown'}"
-                lines << "  Updated: #{model.last_updated || 'unknown'}"
-                lines << "  Open Weights: #{model.open_weights ? 'Yes' : 'No'}"
+                lines << "  Knowledge: #{model.knowledge_date || "unknown"}"
+                lines << "  Released: #{model.release_date || "unknown"}"
+                lines << "  Updated: #{model.last_updated || "unknown"}"
+                lines << "  Open Weights: #{model.open_weights ? "Yes" : "No"}"
 
                 lines.join("\n")
               end
@@ -125,7 +125,7 @@ module Ace
               def format_price(price)
                 return "N/A" unless price
 
-                "$#{sprintf('%.2f', price)}"
+                "$#{sprintf("%.2f", price)}"
               end
             end
           end

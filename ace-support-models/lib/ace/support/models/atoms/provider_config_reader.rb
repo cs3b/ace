@@ -131,8 +131,6 @@ module Ace
                 value
               when String
                 Date.parse(value)
-              else
-                nil
               end
             rescue ArgumentError
               nil
@@ -162,7 +160,11 @@ module Ace
               # Find ace-llm gem's providers directory (from .ace-defaults/ - single source of truth)
               if defined?(Ace::LLM)
                 # Try to find via gem spec
-                spec = Gem::Specification.find_by_name("ace-llm") rescue nil
+                spec = begin
+                  Gem::Specification.find_by_name("ace-llm")
+                rescue
+                  nil
+                end
                 return File.join(spec.gem_dir, ".ace-defaults", "llm", "providers") if spec
               end
 

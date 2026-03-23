@@ -59,5 +59,4 @@ class ItemStatisticsTest < AceSupportItemsTestCase
     assert_equal 1, stats[:total]
     assert_equal 1, stats[:by_field][""]
   end
-
 end

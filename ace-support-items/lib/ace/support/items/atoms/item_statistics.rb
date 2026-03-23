@@ -11,7 +11,7 @@ module Ace
           # @param field [Symbol] Field to group by (e.g., :status, :priority, :type)
           # @return [Hash] { total:, by_field: { "value" => count } }
           def self.count_by(items, field)
-            result = { total: items.size, by_field: {} }
+            result = {total: items.size, by_field: {}}
             items.each do |item|
               value = item.public_send(field).to_s
               result[:by_field][value] ||= 0

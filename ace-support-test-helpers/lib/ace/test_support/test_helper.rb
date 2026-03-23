@@ -58,7 +58,7 @@ module Ace
       end
 
       def capture_subprocess_io
-        require 'stringio'
+        require "stringio"
 
         captured_stdout = StringIO.new
         captured_stderr = StringIO.new
@@ -79,7 +79,7 @@ module Ace
 
       # Capture only stdout and return as string (convenience wrapper)
       def capture_stdout
-        require 'stringio'
+        require "stringio"
 
         original_stdout = $stdout
         $stdout = StringIO.new
@@ -91,7 +91,7 @@ module Ace
 
       # Capture only stderr and return as string (convenience wrapper)
       def capture_stderr
-        require 'stringio'
+        require "stringio"
 
         original_stderr = $stderr
         $stderr = StringIO.new

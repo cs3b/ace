@@ -13,7 +13,7 @@ module Ace
       # @param code [String] Ruby code to execute
       # @param requires [Array<String>] Libraries to require before executing code
       # @return [Array<String, Process::Status>] stdout+stderr output and exit status
-      def run_in_subprocess(env: {}, code:, requires: [])
+      def run_in_subprocess(code:, env: {}, requires: [])
         # Build require flags
         require_flags = requires.flat_map { |r| ["-r", r] }
 
@@ -28,7 +28,7 @@ module Ace
       def run_in_clean_env(code:, requires: [])
         # Create clean environment without PROJECT_ROOT_PATH
         # We need to explicitly unset it by setting to nil
-        clean_env = { "PROJECT_ROOT_PATH" => nil }
+        clean_env = {"PROJECT_ROOT_PATH" => nil}
         run_in_subprocess(env: clean_env, code: code, requires: requires)
       end
 
@@ -37,7 +37,7 @@ module Ace
       # @param code [String] Ruby code to execute (will have access to temp_dir variable)
       # @param requires [Array<String>] Libraries to require before executing code
       # @return [Array<String, Process::Status>] stdout+stderr output and exit status
-      def run_in_temp_dir(env: {}, code:, requires: [])
+      def run_in_temp_dir(code:, env: {}, requires: [])
         Dir.mktmpdir("ace-test-") do |temp_dir|
           wrapped_code = <<~RUBY
             temp_dir = "#{temp_dir}"

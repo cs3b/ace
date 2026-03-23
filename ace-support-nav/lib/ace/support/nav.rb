@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "nav/version"
-require 'ace/support/config'
+require "ace/support/config"
 
 # Load all ace-support-nav components
 require_relative "nav/cli"
@@ -34,7 +34,7 @@ module Ace
       # @return [String] Path to the gem root directory
       def self.gem_root
         @gem_root ||= Gem.loaded_specs["ace-support-nav"]&.gem_dir ||
-                      File.expand_path("../../..", __dir__)
+          File.expand_path("../../..", __dir__)
       end
 
       # Check if debug mode is enabled
@@ -72,13 +72,13 @@ module Ace
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
-          gem_path: self.gem_root
+          gem_path: gem_root
         )
 
         # Resolve config for nav namespace
         config = resolver.resolve_namespace("nav")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "ace-support-nav: Could not load config: #{e.class} - #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback
@@ -90,12 +90,12 @@ module Ace
       # or user config issues
       # @return [Hash] Defaults hash or empty hash if defaults also fail
       def self.load_gem_defaults_fallback
-        defaults_path = File.join(self.gem_root, ".ace-defaults", "nav", "config.yml")
+        defaults_path = File.join(gem_root, ".ace-defaults", "nav", "config.yml")
 
         return {} unless File.exist?(defaults_path)
 
         YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-      rescue StandardError
+      rescue
         {} # Only return empty hash if even defaults fail to load
       end
       private_class_method :load_gem_defaults_fallback

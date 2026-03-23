@@ -6,12 +6,12 @@ class BaseFormatterTest < AceSupportItemsTestCase
   BF = Ace::Support::Items::Molecules::BaseFormatter
 
   def test_format_item_hash
-    item = { id: "8ppq7w", title: "Dark mode" }
+    item = {id: "8ppq7w", title: "Dark mode"}
     assert_equal "8ppq7w Dark mode", BF.format_item(item)
   end
 
   def test_format_item_with_scan_result
-    item = { title: "My Idea" }
+    item = {title: "My Idea"}
     scan = Ace::Support::Items::Models::ScanResult.new(id: "abc123", slug: "my-idea",
       folder_name: "abc123-my-idea", dir_path: "/tmp", file_path: "/tmp/f", special_folder: nil)
 
@@ -20,7 +20,7 @@ class BaseFormatterTest < AceSupportItemsTestCase
 
   def test_format_item_loaded_document
     doc = Ace::Support::Items::Models::LoadedDocument.new(
-      frontmatter: { "id" => "8ppq7w" },
+      frontmatter: {"id" => "8ppq7w"},
       body: "",
       title: "Test Doc",
       file_path: "/tmp/f",
@@ -33,8 +33,8 @@ class BaseFormatterTest < AceSupportItemsTestCase
 
   def test_format_list
     items = [
-      { id: "aaa111", title: "First" },
-      { id: "bbb222", title: "Second" }
+      {id: "aaa111", title: "First"},
+      {id: "bbb222", title: "Second"}
     ]
 
     result = BF.format_list(items)

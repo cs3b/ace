@@ -21,7 +21,7 @@ module Ace
         class ProjectConfigScanner
           # Directories to skip during traversal
           SKIP_DIRS = %w[.git .cache vendor node_modules tmp coverage
-                         .bundle _legacy .ace-local .ace-tasks .ace-taskflow].freeze
+            .bundle _legacy .ace-local .ace-tasks .ace-taskflow].freeze
 
           # @param project_root [String, nil] Root directory to scan (default: Dir.pwd)
           # @param config_dir [String] Config folder name (default: ".ace")
@@ -52,10 +52,10 @@ module Ace
               yaml_target = "#{namespace}/#{filename}.yaml"
 
               matched = if files.include?(yml_target)
-                          yml_target
-                        elsif files.include?(yaml_target)
-                          yaml_target
-                        end
+                yml_target
+              elsif files.include?(yaml_target)
+                yaml_target
+              end
 
               next unless matched
 

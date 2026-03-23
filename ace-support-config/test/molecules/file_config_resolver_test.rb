@@ -34,7 +34,7 @@ module Ace
               result = resolver.resolve(".ace-taskflow/spec.md")
 
               assert_equal ".ace-taskflow", result.name
-              assert_equal({ "model" => "gflash" }, result.config)
+              assert_equal({"model" => "gflash"}, result.config)
               assert result.source.include?(".ace-taskflow/.ace/git/commit.yml")
             end
           end
