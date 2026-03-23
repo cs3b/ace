@@ -9,8 +9,9 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Git workflows and context commands for developers and AI agents'
-  spec.description = 'ace-git combines repository context commands with guided workflows for rebases, ' \
-                     'pull requests, and commit reorganization, with smart diff output and Git 2.23+ guardrails.'
+  spec.description = 'ace-git gives developers and coding agents focused git context commands and guided ' \
+                     'workflows for rebases, pull requests, and commit reorganization, with smart diff ' \
+                     'output and Git 2.23+ guardrails.'
   spec.homepage = 'https://github.com/cs3b/ace/tree/main/ace-git'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
