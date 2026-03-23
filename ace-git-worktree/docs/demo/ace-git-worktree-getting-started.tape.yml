@@ -16,7 +16,7 @@ setup:
 scenes:
 - name: Create a worktree from a branch
   commands:
-  - type: ace-git-worktree create feature/demo --dry-run
+  - type: ace-git-worktree create feature/demo
     sleep: 4s
 - name: List worktrees
   commands:
