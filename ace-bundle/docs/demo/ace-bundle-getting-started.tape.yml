@@ -7,20 +7,20 @@ tags:
 settings:
   font_size: 16
   width: 960
-  height: 540
+  height: 640
   format: gif
 scenes:
 - name: Bundle project context to cache
   commands:
   - type: ace-bundle project --output cache
-    sleep: 24s
+    sleep: 28s
 - name: Load workflow via protocol
   commands:
   - type: ace-bundle wfi://task/finder
-    sleep: 12s
+    sleep: 16s
 - name: Bundle task context to cache
   commands:
   - type: ace-bundle task://t.0or --output cache
-    sleep: 12s
+    sleep: 16s
 teardown:
 - cleanup
