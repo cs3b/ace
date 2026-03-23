@@ -34,4 +34,4 @@
 **Embed in shell and CI pipelines** - use deterministic, timestamp-derived IDs in scripts and Ruby automation through the `Ace::B36ts` API for encode/decode helpers.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
