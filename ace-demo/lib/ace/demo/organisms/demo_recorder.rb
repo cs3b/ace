@@ -66,6 +66,7 @@ module Ace
               "#{File.basename(tape_path).sub(/\.ya?ml\z/, "")}.compiled.tape"
             )
             tape_output = "./#{File.basename(output_path)}"
+            inject_sandbox_env(spec, sandbox[:path])
             tape_content = @yaml_compiler.compile(spec: spec, output_path: tape_output)
             File.write(compiled_tape_path, tape_content)
 
@@ -79,6 +80,12 @@ module Ace
           ensure
             @teardown_executor.execute(steps: spec["teardown"] || [], sandbox_path: sandbox[:path]) if sandbox
           end
+        end
+
+        def inject_sandbox_env(spec, sandbox_path)
+          settings = spec["settings"] ||= {}
+          env = settings["env"] ||= {}
+          env["PROJECT_ROOT_PATH"] ||= sandbox_path
         end
 
         def default_output_path(tape_ref, format)

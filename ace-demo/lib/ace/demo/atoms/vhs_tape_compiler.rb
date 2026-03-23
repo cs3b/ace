@@ -16,6 +16,10 @@ module Ace
           lines << "Set Width #{settings["width"] || 960}"
           lines << "Set Height #{settings["height"] || 480}"
 
+          (settings["env"] || {}).each do |key, value|
+            lines << "Env #{key} \"#{value}\""
+          end
+
           spec.fetch("scenes", []).each do |scene|
             scene_name = scene["name"]
             lines << ""
