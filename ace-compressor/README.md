@@ -4,9 +4,11 @@
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/ace-compressor.svg)](https://rubygems.org/gems/ace-compressor)
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+</p>
 
 > Compress Markdown and text into ContextPack/3 artifacts for efficient LLM context loading.
 
