@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.972] - 2026-03-23
+
+### Changed
+- **ace-prompt-prep v0.23.0**: Removed stale security documentation with outdated module paths and package references; re-recorded getting-started demo.
+
 ## [0.9.971] - 2026-03-23
 
 ### Added
