@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-23
+
+### Added
+- Arch Linux install instructions for `gitleaks` and `git-filter-repo` in getting-started guide.
+
+### Changed
+- Aligned gemspec summary with README tagline.
+- Moved Installation from README to Getting Started guide as a proper section.
+- Clarified agent workflow references in Use Cases (removed raw `/as-` prefix).
+- Fixed broken relative links in `handbook/guides/security/rust.md` and `handbook/guides/security/typescript.md`.
+- Redesigned getting-started demo tape: sandbox with scan, history rewrite, and verify-clean flow.
+- Re-recorded getting-started demo GIF from new tape.
+
 ## [0.12.2] - 2026-03-23
 
 ### Changed

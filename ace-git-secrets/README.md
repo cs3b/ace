@@ -28,9 +28,9 @@
 
 ## Use Cases
 
-**Detect leaked credentials in Git history** - run [`ace-git-secrets`](docs/usage.md) to scan commits and capture a reusable JSON report for remediation. Use `/as-git-security-audit` for the full agent-driven audit workflow.
+**Detect leaked credentials in Git history** - run [`ace-git-secrets`](docs/usage.md) to scan commits and capture a reusable JSON report for remediation. Use the `as-git-security-audit` agent workflow for a guided audit.
 
-**Revoke exposed tokens by provider** - use `/as-git-token-remediation` to revoke high-confidence findings from the saved scan report for GitHub PATs and other supported token classes before any history rewrites.
+**Revoke exposed tokens by provider** - use the `as-git-token-remediation` workflow to revoke high-confidence findings from the saved scan report for GitHub PATs and other supported token classes before any history rewrites.
 
 **Clean history safely with dry-run-first safeguards** - preview rewrite changes with [`ace-git-secrets rewrite-history --dry-run`](docs/usage.md), execute cleanup when ready, then block release pipelines if secrets are still present.
 

@@ -11,30 +11,25 @@ ace-docs:
 
 Use `ace-git-secrets` when you need to find leaked credentials, revoke them quickly, and remove them from Git history.
 
-## Prerequisites
-
-- Ruby 3.2+
-- `gitleaks` installed and available on your `PATH`
-- Optional: `git-filter-repo` for history rewriting
-- A Git repository you can inspect locally
-
-Install the gem:
+## Installation
 
 ```bash
 gem install ace-git-secrets
 ```
 
-Install the required scanner:
+Install the required scanner and optional history-rewrite tool:
 
 ```bash
-brew install gitleaks
+# macOS
+brew install gitleaks              # required scanner
+brew install git-filter-repo       # optional, for history rewriting
+
+# Arch Linux
+pacman -S gitleaks                 # required scanner
+pacman -S git-filter-repo          # optional, for history rewriting
 ```
 
-Install history-rewrite support when you need cleanup:
-
-```bash
-brew install git-filter-repo
-```
+Requires Ruby 3.2+ and `gitleaks` on your `PATH`.
 
 ## 1. Run your first scan
 
