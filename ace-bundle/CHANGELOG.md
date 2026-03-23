@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-03-23
+
+### Changed
+- Refreshed the README structure, navigation row, and section flow to align with the current ACE package documentation layout pattern.
+
 ## [0.38.1] - 2026-03-21
 
 ### Technical

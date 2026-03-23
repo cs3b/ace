@@ -1,45 +1,55 @@
 # ace-bundle
 
-Assemble project context for AI agents and developers — in one command.
+Assemble project context for AI agents and developers in one command.
+
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Configuration Reference](docs/configuration.md) | [Handbook Reference](docs/handbook.md)
 
 ![ace-bundle demo](docs/demo/ace-bundle-getting-started.gif)
 
-## Why ace-bundle
+`ace-bundle` helps developers and coding agents load consistent, reusable project context from presets, files, and protocol URLs while staying inside terminal-native workflows.
 
-Context is the bottleneck for AI-assisted development. `ace-bundle` collects files, commands, diffs, and protocol resources into a single context package — so humans and agents work from the same source of truth. Fast enough for tight loops, flexible enough for team-level preset composition.
+## Use Cases
+
+**Load baseline project context before coding sessions** - run `ace-bundle project` to gather architecture docs, conventions, and current repository state.
+
+**Pull workflow instructions and guides by protocol URL** - run `ace-bundle wfi://assign/drive` (or `guide://...`, `tmpl://...`, `prompt://...`) to retrieve canonical handbook resources.
+
+**Compose team and task context without manual copy/paste** - combine presets and explicit files in one call to produce targeted context bundles for reviews, implementation, or debugging.
+
+**Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression to keep context payloads manageable.
+
+## Works With
+
+- **[ace-support-nav](../ace-support-nav)** for resolving `wfi://`, `guide://`, `prompt://`, and `tmpl://` protocol URLs.
+- **[ace-git](../ace-git)** for diff context, PR metadata, and branch state used by review-oriented presets.
+- **[ace-compressor](../ace-compressor)** for optional section-level compression of larger context bundles.
+- **[ace-llm](../ace-llm)** for prompt context loading in LLM-powered workflows.
 
 ## Features
 
-- **Preset composition** — stack reusable context packs (project, code-review, security-review, team) with intelligent merging
-- **Protocol loading** — fetch workflows, guides, prompts, and templates via `wfi://`, `guide://`, `prompt://`, `tmpl://`
-- **Smart caching** — auto-format threshold decides inline vs cached output; artifacts in `.ace-local/bundle/`
-- **Mixed inputs** — combine presets, file paths, and protocol URLs in a single invocation
-- **Section-based output** — XML-style sections for structured, tool-processable context
-- **Compression** — optional exact or agent-mode compression via ace-compressor integration
-- **11 built-in presets** — project, base, development, team, code-review, security-review, and more
-
-## Works with
-
-- **[ace-support-nav](../ace-support-nav)** — resolves `wfi://`, `guide://`, `prompt://`, `tmpl://` protocol URLs to filesystem paths
-- **[ace-git](../ace-git)** — provides diff context, PR metadata, and branch information for review presets
-- **[ace-compressor](../ace-compressor)** — optional section-level compression for large context bundles
-- **[ace-llm](../ace-llm)** — prompt context loading for LLM-powered workflows
-
-## Agent Skills
-
-- **`as-bundle`** — load project context from preset names, file paths, or protocol URLs
-- **`as-onboard`** — load full project context bundle for onboarding to the codebase
-
-See [Handbook Reference](docs/handbook.md) for the complete catalog.
+- Preset composition for reusable context packs (project, code-review, security-review, team) with intelligent merging.
+- Protocol loading from `wfi://`, `guide://`, `prompt://`, and `tmpl://`.
+- Smart caching with auto-format threshold and artifacts in `.ace-local/bundle/`.
+- Mixed input support (preset names, file paths, and protocol URLs) in one invocation.
+- Section-based output for structured, tool-processable context.
+- Optional exact or agent-mode compression through ace-compressor integration.
+- Built-in presets for base onboarding, development, reviews, and team flows.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — end-to-end tutorial
-- [Usage Guide](docs/usage.md) — full command reference
-- [Configuration Reference](docs/configuration.md) — preset format, sections, parameters
-- [Handbook Reference](docs/handbook.md) — skills, workflows, presets
-- Runtime help: `ace-bundle --help`
+- [Getting Started](docs/getting-started.md)
+- [CLI Usage Reference](docs/usage.md)
+- [Configuration Reference](docs/configuration.md)
+- [Handbook Reference](docs/handbook.md)
+- Command help: `ace-bundle --help`
+
+## Agent Skills
+
+Package-owned canonical skills:
+
+- `as-bundle`
+- `as-onboard`
 
 ## Part of ACE
 
-`ace-bundle` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+`ace-bundle` is part of [ACE](../README.md) (Agentic Coding Environment).
