@@ -1,39 +1,41 @@
-# ace-llm
+<div align="center">
+  <h1> ACE - LLM </h1>
 
-Query any LLM from the terminal -- one interface for every provider.
+  Query any LLM from the terminal with one interface across API and CLI providers.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-llm"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-llm.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
-## Why ace-llm
+`ace-llm` gives developers and coding agents one command surface for multi-provider prompting, alias-based model selection, fallback routing, and structured output handling. Switch between providers without changing calling conventions, and keep prompt workflows resilient with automatic retry and fallback behavior.
 
-`ace-llm` gives you one CLI for API providers and CLI providers, so you can stop juggling different tools and flags. Built-in aliases, fallback routing, and response formatting make it practical for daily developer and agent workflows.
+## How It Works
 
-## Works With
+1. Select a model using aliases or explicit provider:model notation and submit a prompt via [`ace-llm`](docs/usage.md).
+2. The provider router resolves the target through [ace-llm-providers-cli](../ace-llm-providers-cli) adapters, applying fallback and retry rules from [ace-support-config](../ace-support-config) cascade.
+3. The response is returned in your chosen format (text, markdown, or JSON) with optional cost and token usage metadata.
 
-- **[ace-support-cli](../ace-support-cli)** - shared CLI command patterns and option handling
-- **[ace-support-config](../ace-support-config)** - config cascade across defaults, user, and project
-- **[ace-llm-providers-cli](../ace-llm-providers-cli)** - provider bridge for CLI-based model execution
+## Use Cases
 
-## Agent Skills
+**Run the same prompt across different providers** - switch models quickly with aliases while keeping one command shape and consistent output controls, powered by [ace-llm-providers-cli](../ace-llm-providers-cli) adapters.
 
-`ace-llm` currently ships no package-owned skills. Use runtime help and package docs directly.
+**Build resilient prompt workflows** - configure fallback and retry behavior through [ace-support-config](../ace-support-config) so transient provider issues do not block interactive development or automation.
 
-## Features
+**Capture responses for downstream tooling** - emit plain text, markdown, or JSON outputs for handoff into docs, reviews via [ace-review](../ace-review), and scripted workflows.
 
-- **Unified provider interface** - query many providers through one command surface
-- **Alias-first workflows** - use short model aliases for fast prompting
-- **Fallback and retries** - route around transient provider failures
-- **Output controls** - save responses in text, markdown, or JSON
-- **Preset support** - apply repeatable execution profiles with `@preset` or `--preset`
-- **Cost and token reporting** - inspect usage metadata in response summaries
+**Execute preset-driven prompts** - apply named execution profiles with `@preset` or `--preset` for repeatable, team-shared prompt configurations.
 
-## Documentation
+**Power LLM-enhanced flows in sibling packages** - serve as the execution backend for prompt enhancement in [ace-prompt-prep](../ace-prompt-prep), simulation chains in [ace-sim](../ace-sim), and multi-model review in [ace-review](../ace-review).
 
-- [Getting Started](docs/getting-started.md) - tutorial flow for first query to fallback
-- [Usage Guide](docs/usage.md) - command reference and operational examples
-- [Handbook Reference](docs/handbook.md) - package handbook assets
-- Runtime help: `ace-llm --help`
-
-## Part of ACE
-
-`ace-llm` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
