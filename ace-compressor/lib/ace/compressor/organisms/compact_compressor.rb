@@ -14,12 +14,12 @@ module Ace
         SENSITIVE_TABLE_RE = /\b(?:must|must not|never|required|only|shall|cannot|do not|policy|constraint)\b/i
         TABLE_SEPARATOR_RE = /\A\|?\s*:?-{3,}:?(?:\s*\|\s*:?-{3,}:?)*\|?\z/
         TABLE_ROW_SEPARATOR_ESCAPED_RE = /\s+\\\|\\\|ROW\\\|\\\|\s+/
-        EXAMPLE_PAYLOAD_PREFIXES = ["CMD|", "FILES|", "TREE|", "CODE|"] .freeze
+        EXAMPLE_PAYLOAD_PREFIXES = ["CMD|", "FILES|", "TREE|", "CODE|"].freeze
         PRESERVE_TABLE_MAX_ROWS = 2
         SCHEMA_KEY_ROWS_MAX_ROWS = 6
         SCHEMA_KEY_ROWS_LIMIT = 2
         SUMMARY_ROWS_LIMIT = 1
-        EXACT_SECTION_PREFIXES = ["RULE|", "CONSTRAINT|", "CMD|", "U|"] .freeze
+        EXACT_SECTION_PREFIXES = ["RULE|", "CONSTRAINT|", "CMD|", "U|"].freeze
 
         attr_reader :ignored_paths, :refused_sources
 
@@ -119,7 +119,7 @@ module Ace
           if used_agent
             [Ace::Compressor::Models::ContextPack.fidelity_line(source: source_label, status: "pass", check: "agent_value", details: "agent_sections_applied"), *result]
           else
-            @refused_sources << { "source" => source_label, "reason" => "no_win", "failed_check" => "agent_value" }
+            @refused_sources << {"source" => source_label, "reason" => "no_win", "failed_check" => "agent_value"}
             [
               Ace::Compressor::Models::ContextPack.fidelity_line(source: source_label, status: "fail", check: "agent_value", details: "no_agent_section_beat_deterministic"),
               *result,
@@ -161,7 +161,7 @@ module Ace
         def deterministic_section_records(section_records, strategy:, source_label:)
           return section_records if strategy == :exact
 
-          action = strategy == :lossy ? "aggressive_compact" : "conservative_compact"
+          action = (strategy == :lossy) ? "aggressive_compact" : "conservative_compact"
           compact_records(section_records, action, source_label: source_label)
         end
 
@@ -227,9 +227,9 @@ module Ace
           missing_rules = original_rules.reject { |line| compacted_rules.include?(line) }
 
           if missing_rules.empty?
-            { status: "pass", details: "all_rule_records_preserved" }
+            {status: "pass", details: "all_rule_records_preserved"}
           else
-            { status: "fail", details: "missing_rule_records=#{missing_rules.size}" }
+            {status: "fail", details: "missing_rule_records=#{missing_rules.size}"}
           end
         end
 
@@ -238,7 +238,7 @@ module Ace
         end
 
         def refusal_for_source(source_label, reason, failed_check, details)
-          @refused_sources << { "source" => source_label, "reason" => reason, "failed_check" => failed_check }
+          @refused_sources << {"source" => source_label, "reason" => reason, "failed_check" => failed_check}
           [
             Ace::Compressor::Models::ContextPack.fidelity_line(source: source_label, status: "fail", check: failed_check, details: details),
             Ace::Compressor::Models::ContextPack.refusal_line(source: source_label, reason: reason, failed_check: failed_check),
@@ -285,7 +285,7 @@ module Ace
               seen = @example_registry[tool]
               if seen
                 acc << Ace::Compressor::Models::ContextPack.example_ref_line(tool: tool, source: source_label, original_source: seen.fetch("source"), reason: "duplicate_example")
-                acc << Ace::Compressor::Models::ContextPack.loss_line(kind: "example", target: tool, strategy: "reference", original: 1, retained: 0, unit: "examples", source: source_label, details: "collapsed_to=#{seen.fetch('source')}")
+                acc << Ace::Compressor::Models::ContextPack.loss_line(kind: "example", target: tool, strategy: "reference", original: 1, retained: 0, unit: "examples", source: source_label, details: "collapsed_to=#{seen.fetch("source")}")
                 collapse_example_payload = true
               else
                 register_example(tool, source_label)
@@ -362,9 +362,9 @@ module Ace
           columns = fields.fetch("cols", "").split(",").map { |cell| cell.gsub("\\|", "|").strip }.reject(&:empty?)
           data_rows = decode_structured_table_rows(fields.fetch("rows", ""))
           rows = []
-          rows << "| #{columns.join(' | ')} |" unless columns.empty?
-          rows << "|#{Array(columns).map { '---' }.join('|')}|" unless columns.empty?
-          rows.concat(data_rows.map { |cells| "| #{cells.join(' | ')} |" })
+          rows << "| #{columns.join(" | ")} |" unless columns.empty?
+          rows << "|#{Array(columns).map { "---" }.join("|")}|" unless columns.empty?
+          rows.concat(data_rows.map { |cells| "| #{cells.join(" | ")} |" })
           rows
         end
 
@@ -435,7 +435,7 @@ module Ace
         end
 
         def register_example(tool, source_label)
-          @example_registry[tool] ||= { "source" => source_label }
+          @example_registry[tool] ||= {"source" => source_label}
         end
 
         def display_source(source, source_paths)

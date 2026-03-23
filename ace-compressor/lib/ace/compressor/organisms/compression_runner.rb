@@ -20,11 +20,13 @@ module Ace
 
         def call
           raise Ace::Compressor::Error, "Unsupported format '#{@format}'. Use --format path, stdio, or stats" unless SUPPORTED_FORMATS.include?(@format)
-          raise Ace::Compressor::Error,
-                "Unsupported mode '#{@mode}'. Use --mode exact, --mode compact, or --mode agent" unless SUPPORTED_MODES.include?(@mode)
+          unless SUPPORTED_MODES.include?(@mode)
+            raise Ace::Compressor::Error,
+              "Unsupported mode '#{@mode}'. Use --mode exact, --mode compact, or --mode agent"
+          end
           unless SUPPORTED_SOURCE_SCOPES.include?(@source_scope)
             raise Ace::Compressor::Error,
-                  "Unsupported source scope '#{@source_scope}'. Use --source-scope merged or --source-scope per-source"
+              "Unsupported source scope '#{@source_scope}'. Use --source-scope merged or --source-scope per-source"
           end
 
           resolver = Ace::Compressor::Molecules::InputResolver.new(@paths)
@@ -58,26 +60,26 @@ module Ace
           canonical = @cache_store.canonical_paths(mode: @mode, sources: source_metadata, manifest_key: manifest["key"])
           shared_manifest = @cache_store.shared_manifest(mode: @mode, sources: source_metadata)
           shared_canonical = if shared_manifest
-                               @cache_store.shared_canonical_paths(mode: @mode, sources: source_metadata, manifest_key: shared_manifest["key"])
-                             end
+            @cache_store.shared_canonical_paths(mode: @mode, sources: source_metadata, manifest_key: shared_manifest["key"])
+          end
 
           cache_hit = @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
           content, metadata = if cache_hit
-                                content = @cache_store.read_pack(canonical[:pack_path])
-                                metadata = hydrate_metadata(
-                                  @cache_store.read_metadata(canonical[:metadata_path]),
-                                  manifest,
-                                  canonical,
-                                  content
-                                )
-                                [content, metadata]
-                              elsif shared_cache_hit?(shared_canonical)
-                                hydrate_from_shared_cache(manifest, canonical, shared_canonical)
-                              elsif bundle_stats
-                                build_passthrough_entry(sources, manifest, canonical, shared_canonical)
-                              else
-                                build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical)
-                              end
+            content = @cache_store.read_pack(canonical[:pack_path])
+            metadata = hydrate_metadata(
+              @cache_store.read_metadata(canonical[:metadata_path]),
+              manifest,
+              canonical,
+              content
+            )
+            [content, metadata]
+          elsif shared_cache_hit?(shared_canonical)
+            hydrate_from_shared_cache(manifest, canonical, shared_canonical)
+          elsif bundle_stats
+            build_passthrough_entry(sources, manifest, canonical, shared_canonical)
+          else
+            build_cache_entry(compressor, sources, source_metadata, manifest, canonical, shared_canonical)
+          end
           cache_hit ||= shared_cache_hit?(shared_canonical)
 
           output_path = @cache_store.output_path_for(
@@ -111,7 +113,7 @@ module Ace
         def run_per_source(resolved_inputs)
           if resolved_inputs.size > 1 && output_file_target?
             raise Ace::Compressor::Error,
-                  "Per-source mode with multiple inputs requires --output to be a directory path"
+              "Per-source mode with multiple inputs requires --output to be a directory path"
           end
 
           results = resolved_inputs.map { |entry| run_for_sources([entry]) }
@@ -124,7 +126,7 @@ module Ace
             metadata: results.map { |result| result[:metadata] },
             refusal_lines: results.flat_map { |result| result[:refusal_lines] },
             fallback_lines: results.flat_map { |result| result[:fallback_lines] },
-            exit_code: results.any? { |result| result[:exit_code].to_i.nonzero? } ? 1 : 0
+            exit_code: (results.any? { |result| result[:exit_code].to_i.nonzero? }) ? 1 : 0
           }
         end
 
@@ -132,7 +134,7 @@ module Ace
           values = Array(outputs).map(&:to_s).reject(&:empty?)
           return "" if values.empty?
 
-          separator = @format == "stats" ? "\n\n" : "\n"
+          separator = (@format == "stats") ? "\n\n" : "\n"
           values.join(separator)
         end
 

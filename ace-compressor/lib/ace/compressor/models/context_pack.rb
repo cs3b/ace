@@ -7,7 +7,7 @@ module Ace
         SCHEMA = "ContextPack/3"
 
         def self.escape(value)
-          value.to_s.gsub("|", "\\|").gsub("\n", " ").strip
+          value.to_s.gsub("|", "\\|").tr("\n", " ").strip
         end
 
         def self.header(mode)
@@ -86,7 +86,7 @@ module Ace
         end
 
         def self.files_line(label, files)
-          "FILES|#{escape(label)}|[#{Array(files).map { |value| escape(value) }.join(',')}]"
+          "FILES|#{escape(label)}|[#{Array(files).map { |value| escape(value) }.join(",")}]"
         end
 
         def self.tree_line(label, tree)
@@ -103,9 +103,9 @@ module Ace
           columns, data_rows = normalize_table_rows(rows)
           fields << "id=#{escape(table_id)}" unless table_id.to_s.strip.empty?
           fields << "strategy=#{escape(strategy)}" unless strategy.to_s.strip.empty?
-          fields << "cols=#{escape(columns.join(','))}" unless columns.empty?
+          fields << "cols=#{escape(columns.join(","))}" unless columns.empty?
           fields << "rows=#{escape(encode_table_data_rows(data_rows))}"
-          "TABLE|#{fields.join('|')}"
+          "TABLE|#{fields.join("|")}"
         end
 
         def self.loss_line(kind:, target:, strategy:, original:, retained:, unit:, source: nil, details: nil)
@@ -167,7 +167,7 @@ module Ace
         end
 
         def self.table_separator_row?(row)
-          row.to_s.strip.match?(/\A\|?[\-\s:|]+\|?\z/)
+          row.to_s.strip.match?(/\A\|?[-\s:|]+\|?\z/)
         end
       end
     end

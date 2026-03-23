@@ -21,17 +21,15 @@ class CompressCommandTest < AceCompressorTestCase
 
   def invoke(args)
     stdout, stderr = capture_io do
-      begin
-        @result = Ace::Compressor::CLI.start(args)
-      rescue SystemExit => e
-        @result = e.status
-      rescue Ace::Support::Cli::Error => e
-        $stderr.puts e.message
-        @result = e.exit_code
-      end
+      @result = Ace::Compressor::CLI.start(args)
+    rescue SystemExit => e
+      @result = e.status
+    rescue Ace::Support::Cli::Error => e
+      warn e.message
+      @result = e.exit_code
     end
 
-    { stdout: stdout, stderr: stderr, result: @result }
+    {stdout: stdout, stderr: stderr, result: @result}
   end
 
   def test_success_on_single_file_exact_mode
@@ -66,7 +64,7 @@ class CompressCommandTest < AceCompressorTestCase
     File.write(path, "# Bundled\n\nFrom preset")
     fake_resolver = Class.new do
       define_method(:initialize) { |_sources| nil }
-      define_method(:call) { [{ content_path: path, source_path: "project", source_kind: "preset" }] }
+      define_method(:call) { [{content_path: path, source_path: "project", source_kind: "preset"}] }
     end
 
     Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
@@ -83,7 +81,7 @@ class CompressCommandTest < AceCompressorTestCase
     File.write(path, "# Config\n\nFrom yaml")
     fake_resolver = Class.new do
       define_method(:initialize) { |_sources| nil }
-      define_method(:call) { [{ content_path: path, source_path: File.expand_path("./custom-context.yml"), source_kind: "bundle_config" }] }
+      define_method(:call) { [{content_path: path, source_path: File.expand_path("./custom-context.yml"), source_kind: "bundle_config"}] }
     end
 
     Ace::Compressor::Molecules::InputResolver.stub(:new, ->(*) { fake_resolver.new(nil) }) do
@@ -574,7 +572,7 @@ class CompressCommandTest < AceCompressorTestCase
       "",
       "This document provides a high-level summary of how agents and developers can cooperate across long-running initiatives and iterative deliveries.",
       "",
-      *((0...80).map { |index| "- Context bloat check #{index}" }),
+      *(0...80).map { |index| "- Context bloat check #{index}" },
       "",
       "You must run commands with clear boundaries. Never call internal APIs directly."
     ].join("\n")

@@ -10,9 +10,9 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_headings_normalize_and_strip_markdown
     blocks = [
-      { type: :heading, level: 2, text: "### 1. CLI-First, Agent-Agnostic" },
-      { type: :text, text: "**Agents** can run `cli` commands and read [docs](docs.md)." },
-      { type: :text, text: "Only keep safe defaults." }
+      {type: :heading, level: 2, text: "### 1. CLI-First, Agent-Agnostic"},
+      {type: :text, text: "**Agents** can run `cli` commands and read [docs](docs.md)."},
+      {type: :text, text: "Only keep safe defaults."}
     ]
 
     lines = @transformer.call(blocks)
@@ -24,8 +24,8 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_lists_become_typed_array_records
     blocks = [
-      { type: :heading, level: 1, text: "Why Problems" },
-      { type: :list, ordered: false, items: ["Context bloat", "No isolation boundary"] }
+      {type: :heading, level: 1, text: "Why Problems"},
+      {type: :list, ordered: false, items: ["Context bloat", "No isolation boundary"]}
     ]
 
     lines = @transformer.call(blocks)
@@ -35,8 +35,8 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_generic_lists_use_stable_list_record
     blocks = [
-      { type: :heading, level: 2, text: "Core Principles" },
-      { type: :list, ordered: false, items: ["CLI First", "Transparent & Inspectable"] }
+      {type: :heading, level: 2, text: "Core Principles"},
+      {type: :list, ordered: false, items: ["CLI First", "Transparent & Inspectable"]}
     ]
 
     lines = @transformer.call(blocks)
@@ -46,11 +46,11 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_long_narrative_lists_use_compact_phrase_slugs
     blocks = [
-      { type: :heading, level: 2, text: "Execution Flow" },
-      { type: :list, ordered: false, items: [
+      {type: :heading, level: 2, text: "Execution Flow"},
+      {type: :list, ordered: false, items: [
         "Update the task status before implementation and verification steps begin",
         "Document the final implementation details in the task record"
-      ] }
+      ]}
     ]
 
     lines = @transformer.call(blocks)
@@ -60,9 +60,9 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_problem_context_text_can_drive_problems_record
     blocks = [
-      { type: :heading, level: 2, text: "Why ACE Exists" },
-      { type: :text, text: "Agents can run CLI commands and read files, but they struggle with:" },
-      { type: :list, ordered: false, items: ["Context bloat", "No isolation boundary"] }
+      {type: :heading, level: 2, text: "Why ACE Exists"},
+      {type: :text, text: "Agents can run CLI commands and read files, but they struggle with:"},
+      {type: :list, ordered: false, items: ["Context bloat", "No isolation boundary"]}
     ]
 
     lines = @transformer.call(blocks)
@@ -72,10 +72,10 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_fenced_code_is_typed
     blocks = [
-      { type: :heading, level: 2, text: "Example: ace-git-commit" },
-      { type: :fenced_code, language: "bash", content: "ace-git-commit -i \"fix auth bug\"\n" },
-      { type: :fenced_code, language: "", content: ".ace-defaults/git/commit.yml\nhandbook/prompts/git-commit.system.md\nexe/ace-git-commit\n" },
-      { type: :fenced_code, language: "ruby", content: "puts 1\nputs 2\n" }
+      {type: :heading, level: 2, text: "Example: ace-git-commit"},
+      {type: :fenced_code, language: "bash", content: "ace-git-commit -i \"fix auth bug\"\n"},
+      {type: :fenced_code, language: "", content: ".ace-defaults/git/commit.yml\nhandbook/prompts/git-commit.system.md\nexe/ace-git-commit\n"},
+      {type: :fenced_code, language: "ruby", content: "puts 1\nputs 2\n"}
     ]
 
     lines = @transformer.call(blocks)
@@ -88,8 +88,8 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_shell_script_blocks_collapse_to_single_code_record
     blocks = [
-      { type: :heading, level: 2, text: "Run Script" },
-      { type: :fenced_code, language: "bash", content: "# prepare\nif test -f tmp.txt; then\n  echo ok\nfi\n" }
+      {type: :heading, level: 2, text: "Run Script"},
+      {type: :fenced_code, language: "bash", content: "# prepare\nif test -f tmp.txt; then\n  echo ok\nfi\n"}
     ]
 
     lines = @transformer.call(blocks)
@@ -100,7 +100,7 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_nested_contextpack_fenced_markdown_passes_through_records
     blocks = [
-      { type: :heading, level: 2, text: "Compressed Vision" },
+      {type: :heading, level: 2, text: "Compressed Vision"},
       {
         type: :fenced_code,
         language: "markdown",
@@ -125,8 +125,8 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_prose_example_line_emits_example_record
     blocks = [
-      { type: :heading, level: 2, text: "How It Works" },
-      { type: :text, text: "**Example: `ace-git-commit`**" }
+      {type: :heading, level: 2, text: "How It Works"},
+      {type: :text, text: "**Example: `ace-git-commit`**"}
     ]
 
     lines = @transformer.call(blocks)
@@ -137,8 +137,8 @@ class CanonicalBlockTransformerTest < AceCompressorTestCase
 
   def test_blockquote_markers_are_removed
     blocks = [
-      { type: :heading, level: 1, text: "Vision" },
-      { type: :text, text: ">> Agents can read files and run commands." }
+      {type: :heading, level: 1, text: "Vision"},
+      {type: :text, text: ">> Agents can read files and run commands."}
     ]
 
     lines = @transformer.call(blocks)

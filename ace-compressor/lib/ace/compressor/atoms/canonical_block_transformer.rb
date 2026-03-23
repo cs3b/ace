@@ -11,7 +11,7 @@ module Ace
         EXAMPLE_HEADING_RE = /\Aexample\s*:\s*(.+)\z/i
         PROBLEM_SECTION_RE = /(problems?|issues?|risks?|pitfalls?|drawbacks?)/i
         PROBLEM_CONTEXT_RE = /\b(?:suffer from|struggle with|problems?|issues?|risks?|pitfalls?|drawbacks?|pain points?)\b/i
-        TREE_LINE_RE = /[│├└╰]\-\-/
+        TREE_LINE_RE = /[│├└╰]--/
         FILE_PATH_RE = /\A(?:\.{1,2}\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\z/
         SHELL_LANGS = %w[bash sh shell zsh fish cmd powershell ps1].freeze
         SHELL_CONTROL_RE = /\A(?:#|if\b|then\b|else\b|elif\b|fi\b|for\b|while\b|until\b|do\b|done\b|case\b|esac\b|function\b|\{|\})/
@@ -194,7 +194,7 @@ module Ace
           return true if SHELL_LANGS.include?(language)
           return false unless language.empty?
 
-          lines.all? { |line| line.match?(/\A[a-zA-Z0-9_\.\/-]+(?:\s+.+)?\z/) }
+          lines.all? { |line| line.match?(/\A[a-zA-Z0-9_.\/-]+(?:\s+.+)?\z/) }
         end
 
         def shell_script_block?(language, lines)
@@ -259,9 +259,8 @@ module Ace
         def heading_slug(text)
           normalize_heading_text(text)
             .downcase
-            .gsub(/[\"']/, "")
-            .gsub(/\P{Alnum}+/, "_")
-            .gsub(/_+/, "_")
+            .gsub(/["']/, "")
+            .gsub(/\P{Alnum}+/, "_").squeeze("_")
             .sub(/\A_+/, "")
             .sub(/_+\z/, "")
             .then { |value| value.empty? ? "section" : value }
@@ -270,9 +269,8 @@ module Ace
         def heading_tool_slug(text)
           normalize_heading_text(text)
             .downcase
-            .gsub(/[\"']/, "")
-            .gsub(/\P{Alnum}+/, "-")
-            .gsub(/-+/, "-")
+            .gsub(/["']/, "")
+            .gsub(/\P{Alnum}+/, "-").squeeze("-")
             .sub(/\A-+/, "")
             .sub(/-+\z/, "")
             .then { |value| value.empty? ? "tool" : value }
@@ -292,7 +290,7 @@ module Ace
         def compact_phrase_slug(text)
           tokens = normalize_heading_text(normalize_inline(text.to_s))
             .downcase
-            .gsub(/[\"']/, "")
+            .gsub(/["']/, "")
             .scan(/[a-z0-9]+/)
             .filter_map do |token|
               next if LIST_STOPWORDS.include?(token)
@@ -309,7 +307,7 @@ module Ace
         end
 
         def shellish_line?(line)
-          line.match?(/\A[a-zA-Z0-9_\.\/\-\$\"'`#\[\]\(\)=:;]+(?:\s+.+)?\z/)
+          line.match?(/\A[a-zA-Z0-9_.\/\-$"'`#\[\]()=:;]+(?:\s+.+)?\z/)
         end
 
         def shell_script_line?(line)
@@ -328,7 +326,7 @@ module Ace
         def normalize_inline(text)
           without_links = text.gsub(/\[([^\]]+)\]\([^)]+\)/, "\\1")
           without_emoji = without_links.gsub(emoji_re, "")
-          without_bold = without_emoji.gsub(/\*{1,3}([^\*]+)\*{1,3}/, "\\1")
+          without_bold = without_emoji.gsub(/\*{1,3}([^*]+)\*{1,3}/, "\\1")
           without_backticks = without_bold.gsub(/`([^`]+)`/, "\\1")
           without_blockquote = without_backticks.gsub(/^(?:\s*>+\s*)+/, "")
           without_blockquote.gsub(/\s+/, " ").strip

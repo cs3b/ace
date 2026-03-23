@@ -21,7 +21,7 @@ module Ace
             sources = normalize_sources(options[:sources] || [])
             if sources.empty?
               raise Ace::Support::Cli::Error,
-                    "Missing input path. Usage: ace-compressor benchmark <file-or-dir> [more-paths...]"
+                "Missing input path. Usage: ace-compressor benchmark <file-or-dir> [more-paths...]"
             end
 
             runner = Ace::Compressor::Organisms::BenchmarkRunner.new(

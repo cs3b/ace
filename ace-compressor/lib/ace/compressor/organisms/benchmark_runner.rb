@@ -43,7 +43,7 @@ module Ace
           values = values.flat_map { |value| value.to_s.split(",") }.map(&:strip).reject(&:empty?)
           values = SUPPORTED_MODES if values.empty?
           unknown = values - SUPPORTED_MODES
-          raise Ace::Compressor::Error, "Unsupported modes: #{unknown.join(', ')}" unless unknown.empty?
+          raise Ace::Compressor::Error, "Unsupported modes: #{unknown.join(", ")}" unless unknown.empty?
 
           values.uniq
         end
@@ -59,7 +59,7 @@ module Ace
         end
 
         def mode_report(source, mode, reference_content, exact_result)
-          result = mode == "exact" ? exact_result : run_mode(source, mode)
+          result = (mode == "exact") ? exact_result : run_mode(source, mode)
           return result.merge("mode" => mode) unless result["status"] == "ok"
 
           metrics = @retention.compare(reference_content: reference_content, candidate_content: result.fetch("content"))
@@ -91,7 +91,7 @@ module Ace
             "refusal_lines" => result[:refusal_lines],
             "fallback_lines" => result[:fallback_lines]
           }
-        rescue StandardError => e
+        rescue => e
           {
             "status" => "error",
             "error" => e.message
@@ -131,12 +131,12 @@ module Ace
           widths = rows.transpose.map { |column| column.map { |cell| cell.to_s.length }.max }
           rows.map.with_index do |row, index|
             line = row.each_with_index.map { |cell, column| cell.to_s.ljust(widths[column]) }.join("  ")
-            index == 0 ? "#{line}\n#{widths.map { |width| '-' * width }.join('  ')}" : line
+            (index == 0) ? "#{line}\n#{widths.map { |width| "-" * width }.join("  ")}" : line
           end.join("\n")
         end
 
         def coverage_ratio(metric)
-          "#{metric.fetch('retained')}/#{metric.fetch('total')} (#{metric.fetch('percent')}%)"
+          "#{metric.fetch("retained")}/#{metric.fetch("total")} (#{metric.fetch("percent")}%)"
         end
 
         def total_loss_markers(markers)
