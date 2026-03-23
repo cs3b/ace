@@ -1,56 +1,45 @@
 # ace-test-runner-e2e
 
-Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-test-runner-e2e.svg)](https://rubygems.org/gems/ace-test-runner-e2e)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-test-runner-e2e demo](docs/demo/ace-test-runner-e2e-getting-started.gif)
 
 `ace-test-runner-e2e` runs realistic workflow scenarios through coding agents so teams can validate behavior beyond unit and integration coverage while keeping execution reproducible and isolated from the working tree.
 
+## How It Works
+
+1. Discover E2E scenario definitions from package-local `test/e2e/` suites with metadata, tags, and command flows.
+2. Execute scenarios inside reproducible sandboxes that isolate agent runs from the working tree.
+3. Produce structured reports that are easy to inspect, compare across runs, and feed back into triage workflows.
+
 ## Use Cases
 
-**Validate real developer workflows end-to-end** - run package-level scenarios with `ace-test-e2e` to confirm instructions, tooling, and outputs behave correctly under agent execution.
+**Validate real developer workflows end-to-end** - use `/as-e2e-run` or run `ace-test-e2e` to confirm that instructions, tooling, and outputs behave correctly under agent execution for any package.
 
 **Run broad regression sweeps across packages** - use `ace-test-e2e-suite` for cross-package scenario orchestration with filtering by package, tags, and prior failures.
 
-**Keep execution deterministic and reviewable** - execute in sandboxes with structured outputs that are easy to inspect and compare across runs.
+**Keep execution deterministic and reviewable** - execute in sandboxes with structured outputs so results are reproducible and easy to compare across runs, complementing fast loops from [ace-test-runner](../ace-test-runner).
 
-**Support migration and documentation-heavy testing** - run TS-style scenario suites where each case carries explicit metadata and reproducible command flows.
+**Create and maintain E2E scenarios** - use `/as-e2e-create` to scaffold new scenarios and `/as-e2e-rewrite` or `/as-e2e-fix` to keep existing ones current as workflows evolve.
 
-## Works With
-
-- **[ace-test](../ace-test)** and **[ace-test-runner](../ace-test-runner)** for fast package/unit loops outside E2E scenario execution.
-- **`ace-assign` workflows** for batched E2E execution, retries, and assignment-driven orchestration.
-- **Package-local `test/e2e/` suites** for TS scenario definitions and package-specific coverage.
-
-## Features
-
-- Agent-executed E2E scenario runs with structured reports.
-- Reproducible sandbox setup and cleanup workflows.
-- Scenario discovery and selective execution by package, scenario ID, and tags.
-- Suite-level execution across packages with parallel controls.
+**Plan E2E coverage for new features** - use `/as-e2e-plan-changes` to map which scenarios need updates when instructions or tooling change, and `/as-e2e-review` to audit scenario quality.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- [`ace-test-runner-e2e` changelog](CHANGELOG.md)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-Package-owned canonical skills:
-
-- `as-e2e-run`
-- `as-e2e-create`
-- `as-e2e-review`
-- `as-e2e-plan-changes`
-- `as-e2e-rewrite`
-- `as-e2e-fix`
-- `as-e2e-manage`
-- `as-e2e-setup-sandbox`
-
-## Part of ACE
-
-`ace-test-runner-e2e` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
