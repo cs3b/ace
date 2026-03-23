@@ -66,9 +66,18 @@ module Ace
           normalized["width"] = integer_or_nil(settings["width"], "settings.width", source_path)
           normalized["height"] = integer_or_nil(settings["height"], "settings.height", source_path)
           normalized["format"] = settings["format"]&.to_s
+          normalized["env"] = normalize_env(settings["env"], source_path: source_path) if settings.key?("env")
           normalized
         end
         private_class_method :normalize_settings
+
+        def normalize_env(env, source_path:)
+          return {} if env.nil?
+          raise DemoYamlParseError, "settings.env must be a map in #{source_path}" unless env.is_a?(Hash)
+
+          env.transform_keys(&:to_s).transform_values(&:to_s)
+        end
+        private_class_method :normalize_env
 
         def integer_or_nil(value, field, source_path)
           return nil if value.nil?
