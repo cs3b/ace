@@ -34,4 +34,4 @@
 **Coordinate with commit and worktree tools** - pair with [ace-git-commit](../ace-git-commit) for scoped commit authoring, [ace-git-worktree](../ace-git-worktree) for task-oriented worktree management, and [ace-bundle](../ace-bundle) for loading workflow instructions.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
