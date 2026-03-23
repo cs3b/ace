@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-03-23
+
+### Changed
+- Refreshed README with "How It Works" section and `ace-framework` CLI reference in intro and footer navigation.
+
+### Technical
+- Removed phantom `handbook/**/*` glob from gemspec (no handbook directory exists).
+
 ## [0.28.3] - 2026-03-22
 
 ### Added

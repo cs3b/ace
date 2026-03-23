@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-23
+
+### Technical
+- Removed phantom `handbook/**/*` glob from gemspec (no handbook directory exists).
+
 ## [0.2.3] - 2026-03-22
 
 ### Technical

@@ -34,6 +34,15 @@
 
 **Load resolved content into agent workflows** - pair with [ace-bundle](../ace-bundle) to fetch and embed resources discovered through `ace-nav` into agent context for skills and workflows.
 
+## Quick Start
+
+```bash
+ace-nav resolve wfi://setup           # Locate a workflow instruction
+ace-nav resolve guide://configuration # Find a guide by protocol URI
+ace-nav list 'wfi://*test*'           # Wildcard search across sources
+ace-nav --sources                     # List all registered handbook sources
+```
+
 ---
 
-Part of [ACE](https://github.com/cs3b/ace)
+[Handbook](handbook/) | Part of [ACE](https://github.com/cs3b/ace)
