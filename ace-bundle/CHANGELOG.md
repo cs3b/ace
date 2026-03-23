@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-03-23
+
+### Changed
+- Refreshed README presentation after shine review polish pass.
+
 ## [0.39.0] - 2026-03-23
 
 ### Changed
