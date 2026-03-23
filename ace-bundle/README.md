@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Bundle </h1>
 
-  Assemble project context for agents and developers in one command.
+  Assemble multiple sources into a single bundled file, with optional compression.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -18,23 +18,23 @@
 
 ![ace-bundle demo](docs/demo/ace-bundle-getting-started.gif)
 
-`ace-bundle` helps developers and coding agents load consistent, reusable project context from presets, files, and protocol URLs while staying inside terminal-native workflows. It supports preset composition, protocol loading, smart caching, and optional compression to keep payloads manageable for LLM workflows.
+`ace-bundle` assembles multiple sources — files, shell commands, and git diffs — into a single bundled file. Configure inputs through [presets](.ace-defaults/bundle/presets/project.md) or [frontmatter in any markdown file](../ace-task/handbook/workflow-instructions/task/finder.wf.md), with built-in support for protocol URLs (`wfi://`, `guide://`, `tmpl://`, `prompt://`, `task://`) resolved by [ace-support-nav](../ace-support-nav). Output goes to stdout or a cache file under `.ace-local/bundle/`, with optional compression through [ace-compressor](../ace-compressor).
 
 ## How It Works
 
-1. Specify inputs as preset names (`project`, `code-review`), file paths, or protocol URLs (`wfi://`, `guide://`, `tmpl://`, `prompt://`).
-2. ace-bundle resolves, merges, and assembles the inputs into structured section-based output with intelligent caching.
-3. Output is delivered inline or cached to `.ace-local/bundle/`, optionally compressed through [ace-compressor](../ace-compressor) for large payloads.
+1. Specify inputs as preset names (`project`, `code-review`), file paths, protocol URLs (`wfi://`, `guide://`, `task://`), or markdown files with [frontmatter configuration](.ace-defaults/bundle/presets/code-review.md).
+2. ace-bundle resolves protocols via [ace-support-nav](../ace-support-nav), reads files, executes commands, generates diffs, and merges everything into structured section-based output.
+3. Output is delivered to stdout or saved to `.ace-local/bundle/`, optionally compressed through [ace-compressor](../ace-compressor) for large payloads.
 
 ## Use Cases
 
-**Load baseline project context before coding sessions** - run [`ace-bundle project`](docs/usage.md) to gather architecture docs, conventions, and current repository state into a single context payload.
+**Load project context in one command** — run [`ace-bundle project`](docs/usage.md) to assemble architecture docs, repository state, and command output from a single [preset](.ace-defaults/bundle/presets/project.md) into a cached bundle.
 
-**Pull workflow instructions and guides by protocol URL** - run `ace-bundle wfi://assign/drive` (or `guide://...`, `tmpl://...`, `prompt://...`) to retrieve canonical handbook resources resolved by [ace-support-nav](../ace-support-nav).
+**Pull workflow instructions by protocol URL** — run `ace-bundle wfi://task/finder` (or `guide://...`, `tmpl://...`, `prompt://...`) to resolve and load canonical handbook resources via [ace-support-nav](../ace-support-nav).
 
-**Compose team and task context without manual copy-paste** - combine presets and explicit files in one call to produce targeted context bundles for reviews, implementation, or debugging with [ace-git](../ace-git) metadata when needed.
+**Bundle task context for agent workflows** — run `ace-bundle task://t.0or --output cache` to assemble task-specific files, commands, and diffs into a single artifact for agent consumption.
 
-**Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression through [ace-compressor](../ace-compressor) to keep payloads manageable for LLM workflows.
+**Compress large bundles for LLM workflows** — add `--compressor on` to reduce payload size through [ace-compressor](../ace-compressor), with `exact` and `agent` compression modes.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

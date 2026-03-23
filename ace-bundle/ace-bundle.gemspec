@@ -8,10 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Assemble project context for AI agents and developers — in one command'
-  spec.description = 'Collects files, presets, diffs, and protocol resources into a single ' \
-                     'context package. Supports compression, mixed inputs, and team-level ' \
-                     'preset composition via configuration cascade.'
+  spec.summary = 'Assemble multiple sources into a single bundled file, with optional compression'
+  spec.description = 'Assembles files, shell commands, and git diffs into a single bundled file. ' \
+                     'Configured via presets or markdown frontmatter with protocol URL support ' \
+                     '(wfi://, guide://, tmpl://, prompt://, task://). Output to stdout or cache, ' \
+                     'with optional compression through ace-compressor.'
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"

@@ -9,7 +9,7 @@ ace-docs:
 
 # Getting Started with ace-bundle
 
-Use `ace-bundle` when you want repeatable project context for AI agents and developers.
+Use `ace-bundle` when you want to assemble files, commands, and other sources into a single bundled output.
 
 ## Prerequisites
 

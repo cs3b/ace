@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-03-23
+
+### Changed
+- Rewrote README tagline and description to reflect ace-bundle as a general-purpose source bundler (files, commands, git diffs) rather than project-context-only tool.
+- Updated gemspec summary and description to match the broadened identity.
+- Replaced demo tape scenes to showcase preset caching, protocol loading (`wfi://task/finder`), and task bundling (`task://t.0or`).
+- Updated getting-started guide opening to describe general-purpose bundling.
+
 ## [0.39.1] - 2026-03-23
 
 ### Changed
