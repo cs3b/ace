@@ -34,7 +34,7 @@ class RevokeCommandTest < GitSecretsTestCase
 
     # Mock the API client to avoid real network calls using stub
     mock_api_client = MockApiClient.new
-    mock_api_client.github_response = { success: false, message: "Mocked - no real revocation" }
+    mock_api_client.github_response = {success: false, message: "Mocked - no real revocation"}
 
     # Test using direct token with proper GitHub PAT format
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_opts) { mock_api_client } do
@@ -53,7 +53,7 @@ class RevokeCommandTest < GitSecretsTestCase
 
     # Mock the API client using stub for thread-safety
     mock_api_client = MockApiClient.new
-    mock_api_client.github_response = { success: true, message: "Token revoked" }
+    mock_api_client.github_response = {success: true, message: "Token revoked"}
 
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_opts) { mock_api_client } do
       output, = capture_io do
@@ -73,7 +73,7 @@ class RevokeCommandTest < GitSecretsTestCase
 
     # Mock the API client using stub for thread-safety
     mock_api_client = MockApiClient.new
-    mock_api_client.github_response = { success: true, message: "Token revoked" }
+    mock_api_client.github_response = {success: true, message: "Token revoked"}
 
     # Test using direct token with proper GitHub PAT format
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_opts) { mock_api_client } do
@@ -112,7 +112,7 @@ class RevokeCommandTest < GitSecretsTestCase
     attr_accessor :github_response, :should_raise
 
     def initialize
-      @github_response = { success: true, message: "Mocked" }
+      @github_response = {success: true, message: "Mocked"}
       @should_raise = false
     end
 
@@ -128,7 +128,7 @@ class RevokeCommandTest < GitSecretsTestCase
         {
           method: :post,
           url: "https://api.github.com/credentials/revoke",
-          headers: { "Content-Type" => "application/json" },
+          headers: {"Content-Type" => "application/json"},
           body: {},
           notes: "GitHub tokens can be revoked via API"
         }

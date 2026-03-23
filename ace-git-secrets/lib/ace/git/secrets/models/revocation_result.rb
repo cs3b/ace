@@ -22,7 +22,7 @@ module Ace
             @service = service
             @status = validate_status(status)
             @message = message
-            @revoked_at = revoked_at || (status == "revoked" ? Time.now : nil)
+            @revoked_at = revoked_at || ((status == "revoked") ? Time.now : nil)
 
             freeze
           end

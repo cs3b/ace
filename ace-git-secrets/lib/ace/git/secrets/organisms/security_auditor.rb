@@ -20,7 +20,7 @@ module Ace
           # @param whitelist [Array<Hash>] Patterns/files to whitelist
           # @param exclusions [Array<String>, nil] Glob patterns for files to exclude
           def initialize(repository_path: ".", gitleaks_config: nil, output_format: "table",
-                         whitelist: [], exclusions: nil)
+            whitelist: [], exclusions: nil)
             @scanner = Molecules::HistoryScanner.new(
               repository_path: repository_path,
               gitleaks_config: gitleaks_config,

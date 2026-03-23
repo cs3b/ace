@@ -44,7 +44,7 @@ module Ace
             else
               1
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
             puts e.backtrace.first(5).join("\n") if ENV["DEBUG"]
             2
@@ -91,18 +91,18 @@ module Ace
           # @return [String] Token type
           def identify_token_type(value)
             case value
-            when /\Aghp_/  then "github_pat_classic"
-            when /\Agho_/  then "github_oauth"
-            when /\Aghs_/  then "github_app"
-            when /\Aghr_/  then "github_refresh"
+            when /\Aghp_/ then "github_pat_classic"
+            when /\Agho_/ then "github_oauth"
+            when /\Aghs_/ then "github_app"
+            when /\Aghr_/ then "github_refresh"
             when /\Agithub_pat_/ then "github_pat_fine"
-            when /\Ask-ant-/     then "anthropic_api_key"
-            when /\Ask-/         then "openai_api_key"
-            when /\AAKIA/        then "aws_access_key"
-            when /\AASIA/        then "aws_session"
-            when /\AAIza/        then "google_api_key"
+            when /\Ask-ant-/ then "anthropic_api_key"
+            when /\Ask-/ then "openai_api_key"
+            when /\AAKIA/ then "aws_access_key"
+            when /\AASIA/ then "aws_session"
+            when /\AAIza/ then "google_api_key"
             when /\Axox[baprs]-/ then "slack_token"
-            when /\Anpm_/        then "npm_token"
+            when /\Anpm_/ then "npm_token"
             else "unknown"
             end
           end
@@ -149,10 +149,10 @@ module Ace
           rescue JSON::ParserError => e
             warn "Invalid JSON in scan file: #{e.message}"
             nil
-          rescue Errno::EACCES => e
+          rescue Errno::EACCES
             warn "Permission denied reading scan file: #{file_path}"
             nil
-          rescue StandardError => e
+          rescue => e
             warn "Error loading scan file: #{e.class.name}: #{e.message}"
             nil
           end
@@ -164,11 +164,11 @@ module Ace
 
             results.each do |result|
               status_icon = case result.status
-                            when "revoked" then "[OK]"
-                            when "failed" then "[FAIL]"
-                            when "skipped" then "[SKIP]"
-                            else "[?]"
-                            end
+              when "revoked" then "[OK]"
+              when "failed" then "[FAIL]"
+              when "skipped" then "[SKIP]"
+              else "[?]"
+              end
 
               puts "#{status_icon} #{result.token.token_type}"
               puts "    Value: #{result.token.masked_value}"

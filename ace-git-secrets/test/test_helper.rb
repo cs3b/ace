@@ -226,7 +226,7 @@ class GitSecretsTestCase < Minitest::Test
     rewriter_class.prepend(stub_module)
 
     yield
-  ensure
+
     # Remove the prepended module by reloading the class behavior
     # The original method is still in the class, just shadowed
     # For tests, this is acceptable as each test creates fresh instances

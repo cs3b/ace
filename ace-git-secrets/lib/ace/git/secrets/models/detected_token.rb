@@ -8,7 +8,7 @@ module Ace
         # Immutable value object containing token metadata
         class DetectedToken
           attr_reader :token_type, :pattern_name, :confidence, :commit_hash,
-                      :file_path, :line_number, :raw_value, :detected_by
+            :file_path, :line_number, :raw_value, :detected_by
 
           # Confidence levels for token detection
           CONFIDENCE_LEVELS = %w[high medium low].freeze
@@ -22,7 +22,7 @@ module Ace
           # @param raw_value [String] The actual token value (stored for revocation)
           # @param detected_by [String] Detection method (gitleaks, ruby_patterns)
           def initialize(token_type:, pattern_name:, confidence:, commit_hash:,
-                         file_path:, raw_value:, line_number: nil, detected_by: "ruby_patterns")
+            file_path:, raw_value:, line_number: nil, detected_by: "ruby_patterns")
             @token_type = token_type
             @pattern_name = pattern_name
             @confidence = validate_confidence(confidence)

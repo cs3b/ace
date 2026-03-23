@@ -28,11 +28,9 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
-        begin
-          dispatch_cli(["scan"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+        dispatch_cli(["scan"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # Clean scan should show success message
@@ -54,13 +52,11 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(findings: mock_findings) do
       output, = capture_io do
-        begin
-          dispatch_cli(["scan"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        rescue Ace::Support::Cli::Error
-          # CLI raises Error with exit_code when tokens found
-        end
+        dispatch_cli(["scan"])
+      rescue SystemExit
+        # ace-support-cli may call exit
+      rescue Ace::Support::Cli::Error
+        # CLI raises Error with exit_code when tokens found
       end
 
       # Should report findings
@@ -70,11 +66,9 @@ class CLITest < GitSecretsTestCase
 
   def test_version_command
     output, = capture_io do
-      begin
-        dispatch_cli(["version"])
-      rescue SystemExit
-        # ace-support-cli may call exit for some commands
-      end
+      dispatch_cli(["version"])
+    rescue SystemExit
+      # ace-support-cli may call exit for some commands
     end
 
     assert_match(/ace-git-secrets/, output)
@@ -82,11 +76,9 @@ class CLITest < GitSecretsTestCase
 
   def test_version_long_flag
     output, = capture_io do
-      begin
-        dispatch_cli(["--version"])
-      rescue SystemExit
-        # ace-support-cli may call exit for some commands
-      end
+      dispatch_cli(["--version"])
+    rescue SystemExit
+      # ace-support-cli may call exit for some commands
     end
 
     assert_match(/ace-git-secrets/, output)
@@ -97,11 +89,9 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
-        begin
-          dispatch_cli(["scan", "--report-format", "json"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+        dispatch_cli(["scan", "--report-format", "json"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # New behavior: summary to stdout, full JSON report saved to file
@@ -125,11 +115,9 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
-        begin
-          dispatch_cli(["scan", "--verbose"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+        dispatch_cli(["scan", "--verbose"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # Verbose mode should show full report
@@ -142,12 +130,10 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       # High confidence should pass for clean repo - verify no error
-      output, stderr = capture_io do
-        begin
-          dispatch_cli(["scan", "--confidence", "high"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+      _, stderr = capture_io do
+        dispatch_cli(["scan", "--confidence", "high"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # Should not show error
@@ -160,11 +146,9 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
-        begin
-          dispatch_cli(["check-release"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+        dispatch_cli(["check-release"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # Should show release gate message
@@ -186,13 +170,11 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(findings: mock_findings) do
       output, = capture_io do
-        begin
-          dispatch_cli(["check-release"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        rescue Ace::Support::Cli::Error
-          # CLI raises Error with exit_code when tokens found
-        end
+        dispatch_cli(["check-release"])
+      rescue SystemExit
+        # ace-support-cli may call exit
+      rescue Ace::Support::Cli::Error
+        # CLI raises Error with exit_code when tokens found
       end
 
       # Should report tokens found
@@ -206,12 +188,10 @@ class CLITest < GitSecretsTestCase
 
     with_mocked_gitleaks(clean: true) do
       # Should not raise an error
-      output, stderr = capture_io do
-        begin
-          dispatch_cli(["scan", "--verbose"])
-        rescue SystemExit
-          # ace-support-cli may call exit
-        end
+      _, stderr = capture_io do
+        dispatch_cli(["scan", "--verbose"])
+      rescue SystemExit
+        # ace-support-cli may call exit
       end
 
       # Should not show error about unknown option
@@ -221,11 +201,9 @@ class CLITest < GitSecretsTestCase
 
   def test_help_command
     output, stderr = capture_io do
-      begin
-        dispatch_cli(["help"])
-      rescue SystemExit
-        # ace-support-cli calls exit(0) for help
-      end
+      dispatch_cli(["help"])
+    rescue SystemExit
+      # ace-support-cli calls exit(0) for help
     end
 
     # ace-support-cli help goes to stderr
@@ -235,11 +213,9 @@ class CLITest < GitSecretsTestCase
 
   def test_help_for_scan_command
     output, stderr = capture_io do
-      begin
-        dispatch_cli(["help", "scan"])
-      rescue SystemExit
-        # ace-support-cli calls exit(0) for help
-      end
+      dispatch_cli(["help", "scan"])
+    rescue SystemExit
+      # ace-support-cli calls exit(0) for help
     end
 
     # ace-support-cli help goes to stderr

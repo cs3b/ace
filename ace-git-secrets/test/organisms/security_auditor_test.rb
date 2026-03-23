@@ -17,7 +17,7 @@ class SecurityAuditorTest < GitSecretsTestCase
     @mock_repo.add_file("test/mock_tokens.json", '{"token": "ghp_1234567890abcdefghijklmnopqrstuvwxyzAB"}')
 
     whitelist = [
-      { "file" => "test/*", "reason" => "Test fixtures" }
+      {"file" => "test/*", "reason" => "Test fixtures"}
     ]
 
     # Mock gitleaks to return a finding for this file
@@ -45,7 +45,7 @@ class SecurityAuditorTest < GitSecretsTestCase
     @mock_repo.add_file("config.txt", "API_KEY=ghp_test_example_for_documentation_only")
 
     whitelist = [
-      { "pattern" => "ghp_test_example_for_documentation_only", "reason" => "Example token for docs" }
+      {"pattern" => "ghp_test_example_for_documentation_only", "reason" => "Example token for docs"}
     ]
 
     mock_findings = [
@@ -72,7 +72,7 @@ class SecurityAuditorTest < GitSecretsTestCase
     @mock_repo.add_file("secret.txt", "TOKEN=ghp_RealSecretToken1234567890ABCDEFGH")
 
     whitelist = [
-      { "file" => "test/*", "reason" => "Test fixtures" }
+      {"file" => "test/*", "reason" => "Test fixtures"}
     ]
 
     mock_findings = [
@@ -149,15 +149,15 @@ class SecurityAuditorTest < GitSecretsTestCase
     @mock_repo.add_file("src/real.rb", "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12")
 
     whitelist = [
-      { "file" => "test/*", "reason" => "Test fixtures" },
-      { "file" => "docs/*", "reason" => "Documentation examples" }
+      {"file" => "test/*", "reason" => "Test fixtures"},
+      {"file" => "docs/*", "reason" => "Documentation examples"}
     ]
 
     # Mock gitleaks to return findings for all three files
     mock_findings = [
-      { pattern_name: "github-pat", matched_value: "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRSTUVWXYZ", file_path: "test/fixture.json", commit_hash: "abc1234" },
-      { pattern_name: "github-pat", matched_value: "ghp_DocumentationExampleTokenABCDEFGHIJKLMNOPQ", file_path: "docs/example.md", commit_hash: "abc1234" },
-      { pattern_name: "github-pat", matched_value: "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12", file_path: "src/real.rb", commit_hash: "abc1234" }
+      {pattern_name: "github-pat", matched_value: "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRSTUVWXYZ", file_path: "test/fixture.json", commit_hash: "abc1234"},
+      {pattern_name: "github-pat", matched_value: "ghp_DocumentationExampleTokenABCDEFGHIJKLMNOPQ", file_path: "docs/example.md", commit_hash: "abc1234"},
+      {pattern_name: "github-pat", matched_value: "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12", file_path: "src/real.rb", commit_hash: "abc1234"}
     ]
 
     with_mocked_gitleaks(findings: mock_findings) do

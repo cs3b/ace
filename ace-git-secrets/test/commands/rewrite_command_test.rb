@@ -150,5 +150,4 @@ class RewriteCommandTest < GitSecretsTestCase
       assert_match(/missing raw_value/i, stderr)
     end
   end
-
 end

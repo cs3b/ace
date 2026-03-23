@@ -36,7 +36,7 @@ module Ace
             puts gate.format_result(result, format: @options[:format] || "table")
 
             result[:exit_code]
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
             puts e.backtrace.first(5).join("\n") if ENV["DEBUG"]
             2

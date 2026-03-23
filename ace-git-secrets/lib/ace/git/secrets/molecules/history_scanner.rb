@@ -62,7 +62,7 @@ module Ace
               tokens: detected_tokens,
               repository_path: repository_path,
               scanned_at: Time.now,
-              scan_options: { since: since, min_confidence: min_confidence },
+              scan_options: {since: since, min_confidence: min_confidence},
               commits_scanned: count_commits(since: since),
               detection_method: "gitleaks"
             )
@@ -99,7 +99,7 @@ module Ace
               tokens: detected_tokens,
               repository_path: repository_path,
               scanned_at: Time.now,
-              scan_options: { files_only: true, min_confidence: min_confidence },
+              scan_options: {files_only: true, min_confidence: min_confidence},
               commits_scanned: 0,
               detection_method: "gitleaks"
             )
@@ -125,7 +125,7 @@ module Ace
 
             output, status = Open3.capture2(*cmd, err: File::NULL)
             status.success? ? output.strip.to_i : 0
-          rescue StandardError
+          rescue
             0
           end
 
@@ -134,7 +134,7 @@ module Ace
           # @param min_confidence [String]
           # @return [Array<DetectedToken>]
           def filter_by_confidence(tokens, min_confidence)
-            confidence_order = { "high" => 3, "medium" => 2, "low" => 1 }
+            confidence_order = {"high" => 3, "medium" => 2, "low" => 1}
 
             unless confidence_order.key?(min_confidence)
               warn "Warning: Invalid confidence level '#{min_confidence}'. " \
