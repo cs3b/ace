@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-03-23
+
+### Added
+- New use case in README documenting `ace-handbook sync` and `ace-handbook status` CLI commands.
+- Added `as-release`, `as-release-bump-version`, `as-release-rubygems-publish`, and `as-release-update-changelog` to the handbook skills reference table.
+- Re-recorded getting-started demo GIF showcasing provider status and sync workflows.
+
+### Fixed
+- Fixed broken `[ace-nav](../ace-nav)` cross-link in README — corrected to `[ace-nav](../ace-support-nav)`.
+- Fixed incorrect `ace-integration-*` package reference in README — corrected to `ace-handbook-integration-*`.
+
+### Changed
+- Aligned gemspec description wording with summary for consistency.
+- Removed stale `mise` prerequisite from `docs/getting-started.md`.
+- Rewrote demo tape to focus on `ace-handbook status` and `ace-handbook sync --provider pi`.
+
 ## [0.18.3] - 2026-03-23
 
 ### Changed
