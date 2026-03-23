@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-03-23
+
+### Changed
+- Refreshed README layout, navigation links, and section flow to align with the current package README pattern.
+
 ## [0.27.0] - 2026-03-22
 
 ### Changed
