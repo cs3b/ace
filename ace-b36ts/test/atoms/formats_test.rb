@@ -4,7 +4,7 @@ require_relative "../test_helper"
 
 module Ace
   module B36ts
-  module Atoms
+    module Atoms
       class FormatsTest < Minitest::Test
         # ===================
         # detect Tests

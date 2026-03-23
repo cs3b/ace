@@ -80,14 +80,14 @@ module Ace
 
     def test_debug_returns_false_by_default
       # Stub ENV to return nil for debug env vars (parallel-safe)
-      ENV.stub(:[], ->(key) { nil }) do
+      ENV.stub(:[], ->(key) {}) do
         refute Ace::B36ts.debug?
       end
     end
 
     def test_debug_returns_true_when_ace_debug_set
       # Stub ENV to return "1" for ACE_DEBUG (parallel-safe)
-      env_stub = ->(key) { key == "ACE_DEBUG" ? "1" : nil }
+      env_stub = ->(key) { (key == "ACE_DEBUG") ? "1" : nil }
       ENV.stub(:[], env_stub) do
         assert Ace::B36ts.debug?
       end
@@ -95,7 +95,7 @@ module Ace
 
     def test_debug_returns_true_when_debug_set
       # Stub ENV to return "1" for DEBUG (parallel-safe)
-      env_stub = ->(key) { key == "DEBUG" ? "1" : nil }
+      env_stub = ->(key) { (key == "DEBUG") ? "1" : nil }
       ENV.stub(:[], env_stub) do
         assert Ace::B36ts.debug?
       end

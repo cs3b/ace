@@ -3,7 +3,7 @@
 require_relative "b36ts/version"
 
 # Load ace-config for configuration cascade management
-require 'ace/support/config'
+require "ace/support/config"
 
 # Atoms
 require_relative "b36ts/atoms/compact_id_encoder"

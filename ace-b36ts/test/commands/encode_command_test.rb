@@ -5,7 +5,7 @@ require_relative "../test_helper"
 
 module Ace
   module B36ts
-  module Commands
+    module Commands
       class EncodeCommandTest < Minitest::Test
         def setup
           Ace::B36ts.reset_config!

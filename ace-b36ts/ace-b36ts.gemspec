@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Compact, sortable Base36 timestamp IDs"
-  spec.description = "ace-b36ts provides 6-character Base36 compact IDs as a replacement for " \
-                     "14-character timestamp formats. Encodes timestamps with ~1.85s precision " \
-                     "over a 108-year range using hierarchical field encoding."
+  spec.summary = "Compact, sortable Base36 timestamp IDs for scripts, logs, and path-friendly artifacts"
+  spec.description = "ace-b36ts encodes UTC timestamps into 2-8 character Base36 IDs that sort " \
+                     "chronologically as plain strings. Seven formats from month to millisecond " \
+                     "precision, with split output for hierarchical directory paths."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

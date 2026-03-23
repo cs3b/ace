@@ -2,14 +2,13 @@
 
 require "time"
 require "date"
-require "set"
 
 require_relative "format_specs"
 require_relative "format_codecs"
 
 module Ace
   module B36ts
-  module Atoms
+    module Atoms
       # Encodes and decodes timestamps to/from variable-length Base36 compact IDs.
       #
       # Supports 7 format types with varying precision and length:
@@ -106,7 +105,7 @@ module Ace
               encode_ms(time, year_zero: year_zero, alphabet: alphabet)
             else
               suggestion = suggest_format_name(format)
-              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(', ')}"
+              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(", ")}"
               msg += ". Did you mean '#{suggestion}'?" if suggestion
               raise ArgumentError, msg
             end
@@ -149,7 +148,7 @@ module Ace
               decode_ms(compact_id, year_zero: year_zero, alphabet: alphabet)
             else
               suggestion = suggest_format_name(format)
-              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(', ')}"
+              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(", ")}"
               msg += ". Did you mean '#{suggestion}'?" if suggestion
               raise ArgumentError, msg
             end
@@ -264,7 +263,7 @@ module Ace
             return false unless compact_id.length == 6
 
             # Use Set for faster character validation (O(1) vs O(n))
-            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            alphabet_set = (alphabet == DEFAULT_ALPHABET) ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
             return false unless compact_id.downcase.chars.all? { |c| alphabet_set.include?(c) }
 
             # Also validate semantic ranges
@@ -355,7 +354,7 @@ module Ace
             return false unless compact_id.is_a?(String)
 
             # Use Set for faster character validation (O(1) vs O(n))
-            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            alphabet_set = (alphabet == DEFAULT_ALPHABET) ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
             return false unless compact_id.downcase.chars.all? { |c| alphabet_set.include?(c) }
 
             # Try to detect format
@@ -462,8 +461,8 @@ module Ace
           def normalize_split_levels(levels)
             list = levels.is_a?(String) ? levels.split(",") : Array(levels)
             list.map { |level| level.to_s.strip }
-                .reject(&:empty?)
-                .map(&:to_sym)
+              .reject(&:empty?)
+              .map(&:to_sym)
           end
 
           # Validate split levels ordering and hierarchy
@@ -475,7 +474,7 @@ module Ace
 
             unknown = levels - FormatSpecs::SPLIT_LEVELS
             unless unknown.empty?
-              raise ArgumentError, "unknown level: #{unknown.first} (valid: #{FormatSpecs::SPLIT_LEVELS.join(', ')})"
+              raise ArgumentError, "unknown level: #{unknown.first} (valid: #{FormatSpecs::SPLIT_LEVELS.join(", ")})"
             end
 
             unless levels.first == :month
@@ -587,10 +586,10 @@ module Ace
           # @raise [ArgumentError] If invalid characters found
           def validate_alphabet!(encoded_id, alphabet)
             # Use Set for faster character validation (O(1) vs O(n))
-            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            alphabet_set = (alphabet == DEFAULT_ALPHABET) ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
             invalid_chars = encoded_id.downcase.chars.reject { |c| alphabet_set.include?(c) }
             unless invalid_chars.empty?
-              raise ArgumentError, "Invalid characters in compact ID: #{invalid_chars.join(', ')}"
+              raise ArgumentError, "Invalid characters in compact ID: #{invalid_chars.join(", ")}"
             end
           end
 

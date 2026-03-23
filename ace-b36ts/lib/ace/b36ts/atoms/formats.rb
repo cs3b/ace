@@ -4,7 +4,7 @@ require_relative "format_specs"
 
 module Ace
   module B36ts
-  module Atoms
+    module Atoms
       # Detects and validates timestamp format types.
       #
       # Supports multiple compact ID formats:
@@ -56,8 +56,6 @@ module Ace
               FormatSpecs.detect_from_id(value)
             elsif TIMESTAMP_PATTERN.match?(value)
               :timestamp
-            else
-              nil
             end
           end
 

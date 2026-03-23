@@ -4,7 +4,7 @@ require_relative "../test_helper"
 
 module Ace
   module B36ts
-  module Molecules
+    module Molecules
       class ConfigResolverTest < Minitest::Test
         def setup
           ConfigResolver.reset!
