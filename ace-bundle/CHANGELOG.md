@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.40.2] - 2026-03-23
+
+### Added
+- Write `.meta.json` sidecar file alongside bundle output when compression is active, providing compression statistics for downstream tools like ace-compressor.
+
 ## [0.40.1] - 2026-03-23
 
 ### Added
