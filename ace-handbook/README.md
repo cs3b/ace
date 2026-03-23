@@ -1,45 +1,39 @@
-# ACE Handbook
+<div align="center">
+  <h1> ACE - Handbook </h1>
 
-Standardized workflows for creating and managing guides, workflow instructions, and agent definitions.
+  Standardized workflows for creating and managing guides, workflow instructions, and agent definitions.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-handbook"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-handbook demo](docs/demo/ace-handbook-getting-started.gif)
 
-## Why
+`ace-handbook` gives ACE teams a shared way to author, review, and maintain handbook assets with consistent quality gates and repeatable delivery workflows. It covers guides (`.g.md`), workflow instructions (`.wf.md`), and agent definitions (`.ag.md`).
 
-`ace-handbook` gives ACE teams a shared way to author and maintain documentation assets with consistent quality.
-It provides repeatable workflows for handbook content so documentation stays structured, reviewable, and current.
+## How It Works
 
-## Works With
+1. Author handbook assets using standardized templates and structure conventions for guides, workflows, and agents.
+2. Review content through quality-gate workflows that check clarity, formatting, and process compliance.
+3. Coordinate multi-step documentation changes through orchestration and research workflows.
 
-- `ace-nav` for workflow and resource discovery.
-- `ace-bundle` for loading complete workflow instructions.
-- Provider integrations (`ace-integration-*`) that project canonical handbook skills into provider-native folders.
+## Use Cases
 
-## Agent Skills
+**Author handbook assets with consistent structure** - use `/as-handbook-manage-guides`, `/as-handbook-manage-workflows`, and `/as-handbook-manage-agents` to create and update guides, workflow instructions, and agent definitions with package workflows.
 
-Package-owned skills live in `handbook/skills/` and map to handbook workflows used by provider agents and assignment runners.
-Common skills include:
+**Review handbook content before publishing** - run `/as-handbook-review-guides` and `/as-handbook-review-workflows` to catch clarity, formatting, and process issues before updates propagate to integrations.
 
-- `as-handbook-manage-guides`
-- `as-handbook-manage-workflows`
-- `as-handbook-manage-agents`
-- `as-handbook-review-guides`
-- `as-handbook-review-workflows`
-- `as-handbook-update-docs`
+**Coordinate larger handbook deliveries** - use `/as-handbook-update-docs` to plan, execute, and synthesize multi-step documentation changes across package handbook assets.
 
-## Features
+**Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-integration-*`) that project canonical handbook skills into provider-native folders.
 
-- Standardized authoring and review workflows for guides (`.g.md`), workflows (`.wf.md`), and agents (`.ag.md`).
-- Consistent handbook quality gates for structure, clarity, and maintainability.
-- Multi-agent research and synthesis workflows for deeper documentation discovery.
-- Delivery orchestration workflow for coordinated handbook updates.
-
-## Documentation
-
-- [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-
-## Part of ACE
-
-`ace-handbook` is part of ACE (Agentic Coding Environment), a modular CLI ecosystem for developer and AI-agent collaboration.
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
