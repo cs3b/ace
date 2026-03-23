@@ -1,48 +1,38 @@
-# ACE Test Gem
+<div align="center">
+  <h1> ACE - Test </h1>
 
-Testing knowledge base for ACE -- guides, patterns, and workflows for fast, reliable tests.
+  Testing strategy handbook -- planning, reviewing, and improving test quality across ACE projects.
 
-## Why
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-`ace-test` is the documentation package for testing in ACE. It provides one place for test strategy, review patterns, workflow workflows, and agent instructions.  
-Use `ace-test-runner` when you need to run tests.
+  <a href="https://rubygems.org/gems/ace-test"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-test.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-## Works With
+</div>
 
-- `ace-test-runner`: test execution CLI and runtime behavior
-- `ace-bundle`: load guides and workflows via protocol URIs
-- `ace-nav`: discover and resolve protocol resources
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-## Agent Skills
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+`ace-test` is the handbook and workflow package for testing in ACE. It centralizes strategy guides, workflow instructions, and skill entry points for agents and developers. Use [ace-test-runner](../ace-test-runner) when you need to execute tests; use `ace-test` when you need to plan, review, or improve them.
 
-- `as-test-plan`: build task-level coverage plans
-- `as-test-create-cases`: generate coverage-based test tasks
-- `as-test-fix`: execute test failure repair loop
-- `as-test-improve-coverage`: analyze and plan missing coverage
-- `as-test-verify-suite`: validate suite health and structure
-- `as-test-optimize`: identify and fix slow tests
-- `as-test-performance-audit`: run focused test performance analysis
-- `as-test-review`: apply quality review presets
+## How It Works
 
-## Features
+1. Load test planning and strategy content through protocol URLs (`guide://`, `wfi://`, `agent://`) via [ace-bundle](../ace-bundle).
+2. Invoke agent skills like `/as-test-plan` or `/as-test-fix` to drive structured test workflows with full context.
+3. Apply review, coverage, and optimization guidance to improve suite quality iteratively.
 
-- Protocol-first documentation access (`guide://`, `wfi://`, `agent://`)
-- Language-agnostic testing guides (Ruby, Rust, JavaScript/Vue, Bun, and more)
-- Practical workflow entry points for test planning, review, optimization, and coverage
-- Quick reference and getting-started guides for both humans and agents
+## Use Cases
 
-## Documentation
+**Plan test coverage before implementation starts** - use `/as-test-plan` and `/as-test-create-cases` to map expected behavior, ownership, and verification checkpoints before writing code.
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- [`ace-test` changelog](CHANGELOG.md)
+**Repair failing tests with a repeatable workflow** - use `/as-test-fix` to follow structured failure triage and fix loops that isolate regressions quickly and restore green runs with evidence.
 
-## Quick Access
+**Improve suite quality over time** - use `/as-test-improve-coverage` and `/as-test-performance-audit` to identify weak spots, prioritize upgrades, and keep the fast loop healthy alongside [ace-test-runner](../ace-test-runner) execution.
 
-- `ace-bundle guide://quick-reference`
-- `ace-bundle guide://testing-philosophy`
-- `ace-bundle wfi://test/create-cases`
-- `ace-bundle wfi://test/fix`
+**Standardize review quality for test code** - use `/as-test-review` for dedicated test review workflows covering mock quality, layering fit, and maintainability.
 
-For the test execution CLI, go to `ace-test-runner`: https://github.com/cs3b/ace/tree/main/ace-test-runner
+**Verify full-suite health** - use `/as-test-verify-suite` to confirm that the complete test suite passes after changes, coordinating with [`ace-test`](docs/usage.md) CLI commands for execution.
+
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
