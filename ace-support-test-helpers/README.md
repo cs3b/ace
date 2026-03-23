@@ -13,7 +13,6 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Documentation](#documentation)
 `ace-support-test-helpers` provides reusable helpers for temporary environment setup, assertions, and integration-friendly test scaffolding so that ACE packages share consistent test patterns without duplicating boilerplate.
 
 ## Use Cases

@@ -13,7 +13,6 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Documentation](#documentation)
 `ace-support-fs` provides reusable filesystem helpers for path expansion, root detection, and directory traversal. It handles the platform and context differences so packages like [ace-support-config](../ace-support-config) and [ace-search](../ace-search) can resolve paths safely from any working directory.
 
 ## Use Cases
