@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.955] - 2026-03-23
+
+### Changed
+- **ace-b36ts v0.13.0**: Added format examples table to README with all 7 encode formats, fixed "6-character" claim, expanded demo tape and re-recorded GIF.
+
 ## [0.9.954] - 2026-03-23
 
 ### Changed
