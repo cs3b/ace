@@ -14,6 +14,14 @@ context:
   default: null
   reason: "Task loading needs access to the main conversation context"
 
+instructions: |
+  Load task behavioral spec: run `ace-bundle task://{{taskref}}`
+
+  **Dependency context**: If the task spec has a `dependencies` field listing other task refs:
+  1. For each dependency ref, run `ace-bundle task://<dep-ref>` to load the completed sibling's spec
+  2. Read any work-on-task and plan-task reports for the dependency's subtree from `.ace-local/assign/` reports directory
+  3. This context is critical for planning — it reveals what was already implemented and what to build upon
+
 when_to_skip:
   - "Task spec already loaded in context"
 
