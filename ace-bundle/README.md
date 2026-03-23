@@ -1,45 +1,39 @@
-# ace-bundle
+<div align="center">
+  <h1> ACE - Bundle </h1>
 
-Assemble project context for AI agents and developers — in one command.
+  Assemble project context for agents and developers in one command.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-bundle"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-bundle.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-bundle demo](docs/demo/ace-bundle-getting-started.gif)
 
-## Why ace-bundle
+`ace-bundle` helps developers and coding agents load consistent, reusable project context from presets, files, and protocol URLs while staying inside terminal-native workflows. It supports preset composition, protocol loading, smart caching, and optional compression to keep payloads manageable for LLM workflows.
 
-Context is the bottleneck for AI-assisted development. `ace-bundle` collects files, commands, diffs, and protocol resources into a single context package — so humans and agents work from the same source of truth. Fast enough for tight loops, flexible enough for team-level preset composition.
+## How It Works
 
-## Features
+1. Specify inputs as preset names (`project`, `code-review`), file paths, or protocol URLs (`wfi://`, `guide://`, `tmpl://`, `prompt://`).
+2. ace-bundle resolves, merges, and assembles the inputs into structured section-based output with intelligent caching.
+3. Output is delivered inline or cached to `.ace-local/bundle/`, optionally compressed through [ace-compressor](../ace-compressor) for large payloads.
 
-- **Preset composition** — stack reusable context packs (project, code-review, security-review, team) with intelligent merging
-- **Protocol loading** — fetch workflows, guides, prompts, and templates via `wfi://`, `guide://`, `prompt://`, `tmpl://`
-- **Smart caching** — auto-format threshold decides inline vs cached output; artifacts in `.ace-local/bundle/`
-- **Mixed inputs** — combine presets, file paths, and protocol URLs in a single invocation
-- **Section-based output** — XML-style sections for structured, tool-processable context
-- **Compression** — optional exact or agent-mode compression via ace-compressor integration
-- **11 built-in presets** — project, base, development, team, code-review, security-review, and more
+## Use Cases
 
-## Works with
+**Load baseline project context before coding sessions** - run [`ace-bundle project`](docs/usage.md) to gather architecture docs, conventions, and current repository state into a single context payload.
 
-- **[ace-support-nav](../ace-support-nav)** — resolves `wfi://`, `guide://`, `prompt://`, `tmpl://` protocol URLs to filesystem paths
-- **[ace-git](../ace-git)** — provides diff context, PR metadata, and branch information for review presets
-- **[ace-compressor](../ace-compressor)** — optional section-level compression for large context bundles
-- **[ace-llm](../ace-llm)** — prompt context loading for LLM-powered workflows
+**Pull workflow instructions and guides by protocol URL** - run `ace-bundle wfi://assign/drive` (or `guide://...`, `tmpl://...`, `prompt://...`) to retrieve canonical handbook resources resolved by [ace-support-nav](../ace-support-nav).
 
-## Agent Skills
+**Compose team and task context without manual copy-paste** - combine presets and explicit files in one call to produce targeted context bundles for reviews, implementation, or debugging with [ace-git](../ace-git) metadata when needed.
 
-- **`as-bundle`** — load project context from preset names, file paths, or protocol URLs
-- **`as-onboard`** — load full project context bundle for onboarding to the codebase
+**Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression through [ace-compressor](../ace-compressor) to keep payloads manageable for LLM workflows.
 
-See [Handbook Reference](docs/handbook.md) for the complete catalog.
-
-## Documentation
-
-- [Getting Started](docs/getting-started.md) — end-to-end tutorial
-- [Usage Guide](docs/usage.md) — full command reference
-- [Configuration Reference](docs/configuration.md) — preset format, sections, parameters
-- [Handbook Reference](docs/handbook.md) — skills, workflows, presets
-- Runtime help: `ace-bundle --help`
-
-## Part of ACE
-
-`ace-bundle` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
