@@ -68,7 +68,7 @@ module Ace
           client = HTTPClient.new(max_retries: 3)
 
           # Create mock response with 429 status
-          response_env = { status: 429, body: "Rate limited" }
+          response_env = {status: 429, body: "Rate limited"}
           error = Faraday::ClientError.new("Rate limit", response_env)
 
           # Should retry on 429 status
@@ -79,7 +79,7 @@ module Ace
         def test_should_retry_logic_for_500_server_error
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 500, body: "Server error" }
+          response_env = {status: 500, body: "Server error"}
           error = Faraday::ServerError.new("Internal error", response_env)
 
           # Should retry on 500 status
@@ -89,7 +89,7 @@ module Ace
         def test_should_retry_logic_for_502_bad_gateway
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 502, body: "Bad gateway" }
+          response_env = {status: 502, body: "Bad gateway"}
           error = Faraday::ServerError.new("Bad gateway", response_env)
 
           # Should retry on 502 status
@@ -99,7 +99,7 @@ module Ace
         def test_should_retry_logic_for_503_service_unavailable
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 503, body: "Service unavailable" }
+          response_env = {status: 503, body: "Service unavailable"}
           error = Faraday::ServerError.new("Service unavailable", response_env)
 
           # Should retry on 503 status
@@ -109,7 +109,7 @@ module Ace
         def test_should_retry_logic_for_504_gateway_timeout
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 504, body: "Gateway timeout" }
+          response_env = {status: 504, body: "Gateway timeout"}
           error = Faraday::ServerError.new("Gateway timeout", response_env)
 
           # Should retry on 504 status
@@ -119,7 +119,7 @@ module Ace
         def test_should_not_retry_on_400_client_error
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 400, body: "Bad request" }
+          response_env = {status: 400, body: "Bad request"}
           error = Faraday::ClientError.new("Bad request", response_env)
 
           # Should not retry on 400 status
@@ -129,7 +129,7 @@ module Ace
         def test_should_not_retry_on_404_not_found
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 404, body: "Not found" }
+          response_env = {status: 404, body: "Not found"}
           error = Faraday::ClientError.new("Not found", response_env)
 
           # Should not retry on 404 status
@@ -139,7 +139,7 @@ module Ace
         def test_should_not_retry_on_401_unauthorized
           client = HTTPClient.new(max_retries: 3)
 
-          response_env = { status: 401, body: "Unauthorized" }
+          response_env = {status: 401, body: "Unauthorized"}
           error = Faraday::ClientError.new("Unauthorized", response_env)
 
           # Should not retry on 401 status
@@ -151,12 +151,12 @@ module Ace
           client = HTTPClient.new(retry_statuses: [429])
 
           # 429 should be retried
-          response_429 = { status: 429, body: "Rate limited" }
+          response_429 = {status: 429, body: "Rate limited"}
           error_429 = Faraday::ClientError.new("Rate limit", response_429)
           assert client.send(:should_retry?, error_429, 0)
 
           # 503 should not be retried (not in custom list)
-          response_503 = { status: 503, body: "Service unavailable" }
+          response_503 = {status: 503, body: "Service unavailable"}
           error_503 = Faraday::ServerError.new("Service unavailable", response_503)
           refute client.send(:should_retry?, error_503, 0)
         end

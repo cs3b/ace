@@ -9,6 +9,7 @@ module Ace
       # XAIClient handles interactions with x.ai's API
       class XAIClient < BaseClient
         include Molecules::OpenAICompatibleParams
+
         API_BASE_URL = "https://api.x.ai"
         DEFAULT_MODEL = "grok-4"
         DEFAULT_GENERATION_CONFIG = {
@@ -40,7 +41,7 @@ module Ace
           response = make_api_request(request_body)
 
           parse_response(response)
-        rescue StandardError => e
+        rescue => e
           handle_api_error(e)
         end
 
@@ -77,7 +78,7 @@ module Ace
         # @param options [Hash] Raw options
         # @return [Hash] Generation parameters
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
 
           # Add OpenAI-compatible options
           extract_openai_compatible_options(options, gen_opts)

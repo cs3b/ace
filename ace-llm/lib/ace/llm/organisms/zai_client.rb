@@ -33,7 +33,7 @@ module Ace
           response = make_api_request(request_body)
 
           parse_response(response)
-        rescue StandardError => e
+        rescue => e
           handle_api_error(e)
         end
 
@@ -59,7 +59,7 @@ module Ace
         end
 
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
           extract_openai_compatible_options(options, gen_opts)
           gen_opts.compact
         end

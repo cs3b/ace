@@ -27,12 +27,12 @@ class QueryCommandTest < AceLlmTestCase
     stub_request(:post, /generativelanguage\.googleapis\.com/)
       .to_return(
         status: 200,
-        headers: { "Content-Type" => "application/json" },
+        headers: {"Content-Type" => "application/json"},
         body: {
           "candidates" => [{
-            "content" => { "parts" => [{ "text" => "Mock response" }] }
+            "content" => {"parts" => [{"text" => "Mock response"}]}
           }],
-          "usageMetadata" => { "promptTokenCount" => 5, "candidatesTokenCount" => 10 }
+          "usageMetadata" => {"promptTokenCount" => 5, "candidatesTokenCount" => 10}
         }.to_json
       )
   end
@@ -76,7 +76,7 @@ class QueryCommandTest < AceLlmTestCase
       :query,
       ->(*_args, **kwargs) do
         captured_timeout = kwargs[:timeout]
-        { text: "ok", usage: {}, metadata: {} }
+        {text: "ok", usage: {}, metadata: {}}
       end
     ) do
       with_real_config do

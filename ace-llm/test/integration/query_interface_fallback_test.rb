@@ -49,7 +49,7 @@ module Ace
       end
 
       def test_load_fallback_config_with_explicit_parameters
-        config = with_config_fallback({ "enabled" => true }) do
+        config = with_config_fallback({"enabled" => true}) do
           QueryInterface.send(
             :load_fallback_config,
             false,
@@ -85,7 +85,7 @@ module Ace
             {}
           end
         ) do
-          Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.timeout" ? "600" : {} }) do
+          Molecules::ConfigLoader.stub(:get, ->(path) { (path == "llm.timeout") ? "600" : {} }) do
             QueryInterface.query("google:gemini-2.5-flash", "test prompt", timeout: "600")
           end
         end
@@ -141,7 +141,7 @@ module Ace
       def test_explicit_fallback_param_overrides_environment
         ENV["ACE_LLM_FALLBACK_ENABLED"] = "true"
 
-        config = with_config_fallback({ "enabled" => true }) do
+        config = with_config_fallback({"enabled" => true}) do
           QueryInterface.send(:load_fallback_config, false, nil)
         end
 
@@ -229,7 +229,7 @@ module Ace
       end
 
       def with_config_fallback(config_hash)
-        Ace::LLM::Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.fallback" ? config_hash : nil }) do
+        Ace::LLM::Molecules::ConfigLoader.stub(:get, ->(path) { (path == "llm.fallback") ? config_hash : nil }) do
           yield
         end
       end

@@ -41,7 +41,7 @@ module Ace
           parse_response(response)
         rescue Ace::LLM::ProviderError
           raise
-        rescue StandardError => e
+        rescue => e
           handle_api_error(e)
         end
 
@@ -78,7 +78,7 @@ module Ace
         # @param options [Hash] Raw options
         # @return [Hash] Generation parameters
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
 
           # Add Groq-specific options (OpenAI-compatible)
           # Use key? check to preserve zero-valued params

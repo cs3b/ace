@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-require 'simplecov'
+require "simplecov"
 SimpleCov.start
 
-require 'ace/llm'
-require 'ace/test_support'
+require "ace/llm"
+require "ace/test_support"
 
 # Base test case for ace-llm tests
 class AceLlmTestCase < AceTestCase

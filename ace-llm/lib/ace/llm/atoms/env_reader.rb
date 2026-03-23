@@ -25,6 +25,7 @@ module Ace
 
           loaded_vars
         end
+
         # Get an environment variable value
         # @param key [String] Environment variable name
         # @param default [String, nil] Default value if not found

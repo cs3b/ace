@@ -76,21 +76,19 @@ module Ace
           @last_failure_terminal = false
 
           loop do
-            begin
-              client = get_client(provider_name, registry)
-              return yield client
-            rescue => error
-              last_error = error
+            client = get_client(provider_name, registry)
+            return yield client
+          rescue => error
+            last_error = error
 
-              # Handle the error - returns :retry or :stop_and_fallback
-              action = handle_error(error, provider_name, attempts)
+            # Handle the error - returns :retry or :stop_and_fallback
+            action = handle_error(error, provider_name, attempts)
 
-              if action == :retry
-                attempts += 1
-                next
-              else # :stop_and_fallback
-                return nil
-              end
+            if action == :retry
+              attempts += 1
+              next
+            else # :stop_and_fallback
+              return nil
             end
           end
         end
@@ -111,10 +109,10 @@ module Ace
           when Atoms::ErrorClassifier::FALLBACK_IMMEDIATELY
             @last_failure_terminal = false
             reason = if Atoms::ErrorClassifier.quota_or_credit_limited?(error)
-                       "quota/credit/window limit reached"
-                     else
-                       "timeout"
-                     end
+              "quota/credit/window limit reached"
+            else
+              "timeout"
+            end
             report_status("⚠ #{provider_name} #{reason}, trying next provider...")
             :stop_and_fallback
           when Atoms::ErrorClassifier::RETRYABLE_WITH_BACKOFF

@@ -122,7 +122,7 @@ module Ace
         unknown = active_allow_list - available
         return if unknown.empty?
 
-        warn "Unknown providers in llm.providers.active: #{unknown.join(', ')} (ignored)"
+        warn "Unknown providers in llm.providers.active: #{unknown.join(", ")} (ignored)"
       end
 
       def active_provider_allow_list

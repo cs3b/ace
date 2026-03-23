@@ -17,7 +17,7 @@ module Ace
         end
 
         def test_extracts_frequency_penalty
-          options = { frequency_penalty: 0.5 }
+          options = {frequency_penalty: 0.5}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -26,7 +26,7 @@ module Ace
         end
 
         def test_extracts_presence_penalty
-          options = { presence_penalty: 0.3 }
+          options = {presence_penalty: 0.3}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -35,7 +35,7 @@ module Ace
         end
 
         def test_extracts_both_penalties
-          options = { frequency_penalty: 0.5, presence_penalty: 0.3 }
+          options = {frequency_penalty: 0.5, presence_penalty: 0.3}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -45,7 +45,7 @@ module Ace
         end
 
         def test_preserves_zero_frequency_penalty
-          options = { frequency_penalty: 0 }
+          options = {frequency_penalty: 0}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -55,7 +55,7 @@ module Ace
         end
 
         def test_preserves_zero_presence_penalty
-          options = { presence_penalty: 0 }
+          options = {presence_penalty: 0}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -65,7 +65,7 @@ module Ace
         end
 
         def test_preserves_negative_frequency_penalty
-          options = { frequency_penalty: -0.5 }
+          options = {frequency_penalty: -0.5}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -74,7 +74,7 @@ module Ace
         end
 
         def test_preserves_negative_presence_penalty
-          options = { presence_penalty: -0.3 }
+          options = {presence_penalty: -0.3}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -83,7 +83,7 @@ module Ace
         end
 
         def test_ignores_nil_frequency_penalty
-          options = { frequency_penalty: nil }
+          options = {frequency_penalty: nil}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -92,7 +92,7 @@ module Ace
         end
 
         def test_ignores_nil_presence_penalty
-          options = { presence_penalty: nil }
+          options = {presence_penalty: nil}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
@@ -119,8 +119,8 @@ module Ace
         end
 
         def test_preserves_existing_gen_opts
-          options = { frequency_penalty: 0.5 }
-          gen_opts = { temperature: 0.7, max_tokens: 100 }
+          options = {frequency_penalty: 0.5}
+          gen_opts = {temperature: 0.7, max_tokens: 100}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)
 
@@ -130,7 +130,7 @@ module Ace
         end
 
         def test_returns_gen_opts
-          options = { frequency_penalty: 0.5 }
+          options = {frequency_penalty: 0.5}
           gen_opts = {}
 
           result = @client.extract_openai_compatible_options(options, gen_opts)

@@ -15,28 +15,27 @@ module Ace
     # This allows direct Ruby calls to LLM providers without subprocess overhead.
     class QueryInterface
       def self.query(provider_model, prompt = nil,
-                    output: nil,
-                    format: "text",
-                    temperature: nil,
-                    max_tokens: nil,
-                    system: nil,
-                    timeout: nil,
-                    force: false,
-                    debug: false,
-                    model: nil,
-                    prompt_override: nil,
-                    fallback: nil,
-                    fallback_providers: nil,
-                    system_file: nil,
-                    prompt_file: nil,
-                    cli_args: nil,
-                    system_append: nil,
-                    preset: nil,
-                    sandbox: nil,
-                    working_dir: nil,
-                    subprocess_env: nil,
-                    last_message_file: nil)
-
+        output: nil,
+        format: "text",
+        temperature: nil,
+        max_tokens: nil,
+        system: nil,
+        timeout: nil,
+        force: false,
+        debug: false,
+        model: nil,
+        prompt_override: nil,
+        fallback: nil,
+        fallback_providers: nil,
+        system_file: nil,
+        prompt_file: nil,
+        cli_args: nil,
+        system_append: nil,
+        preset: nil,
+        sandbox: nil,
+        working_dir: nil,
+        subprocess_env: nil,
+        last_message_file: nil)
         registry = Molecules::ClientRegistry.new
         parser = Molecules::ProviderModelParser.new(registry: registry)
 
@@ -61,8 +60,8 @@ module Ace
         end
 
         messages = []
-        messages << { role: "system", content: system } if system && !system.empty?
-        messages << { role: "user", content: final_prompt }
+        messages << {role: "system", content: system} if system && !system.empty?
+        messages << {role: "user", content: final_prompt}
 
         generation_opts = {}
         resolved_temperature = first_non_nil(temperature, execution_overrides["temperature"])
@@ -85,12 +84,12 @@ module Ace
         generation_opts[:last_message_file] = last_message_file if last_message_file
 
         if debug
-          $stderr.puts "Provider: #{parse_result.provider}"
-          $stderr.puts "Model: #{final_model}"
-          $stderr.puts "Preset: #{resolved_preset}" if resolved_preset
-          $stderr.puts "Thinking level: #{parse_result.thinking_level}" if parse_result.thinking_level
-          $stderr.puts "Temperature: #{resolved_temperature}" unless resolved_temperature.nil?
-          $stderr.puts "Max tokens: #{resolved_max_tokens}" unless resolved_max_tokens.nil?
+          warn "Provider: #{parse_result.provider}"
+          warn "Model: #{final_model}"
+          warn "Preset: #{resolved_preset}" if resolved_preset
+          warn "Thinking level: #{parse_result.thinking_level}" if parse_result.thinking_level
+          warn "Temperature: #{resolved_temperature}" unless resolved_temperature.nil?
+          warn "Max tokens: #{resolved_max_tokens}" unless resolved_max_tokens.nil?
         end
 
         fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
@@ -124,20 +123,20 @@ module Ace
           handler = Molecules::FormatHandlers.get_handler(format)
 
           formatted_content = case format
-                              when "json"
-                                handler.format(result)
-                              when "yaml"
-                                handler.format(result)
-                              when "raw"
-                                handler.format(response)
-                              else
-                                text_content
-                              end
+          when "json"
+            handler.format(result)
+          when "yaml"
+            handler.format(result)
+          when "raw"
+            handler.format(response)
+          else
+            text_content
+          end
 
           file_handler = Molecules::FileIoHandler.new
           file_handler.write_content(formatted_content, output, format: format, force: force)
 
-          $stderr.puts "Output written to: #{output}" if debug
+          warn "Output written to: #{output}" if debug
         end
 
         result
@@ -180,13 +179,13 @@ module Ace
         merged = left.dup
 
         right.each do |key, value|
-          case key
+          merged[key] = case key
           when "cli_args"
-            merged[key] = append_cli_args(merged[key], value)
+            append_cli_args(merged[key], value)
           when "subprocess_env"
-            merged[key] = merge_hash_values(merged[key], value)
+            merge_hash_values(merged[key], value)
           else
-            merged[key] = value
+            value
           end
         end
 
@@ -291,13 +290,13 @@ module Ace
       end
 
       def self.execute_with_fallback(provider:, model:, messages:, generation_opts:,
-                                     registry:, fallback_config:, timeout:, debug:)
+        registry:, fallback_config:, timeout:, debug:)
         if fallback_config.disabled?
           client = registry.get_client(provider, model: model, timeout: timeout)
           return client.generate(messages, **generation_opts)
         end
 
-        status_callback = ->(msg) { $stderr.puts msg }
+        status_callback = ->(msg) { warn msg }
 
         orchestrator = Molecules::FallbackOrchestrator.new(
           config: fallback_config,
@@ -373,10 +372,10 @@ module Ace
 
           parse_result = parser.parse(provider)
           canonical_provider = if parse_result.valid?
-                                 "#{parse_result.provider}:#{parse_result.model}"
-                               else
-                                 provider
-                               end
+            "#{parse_result.provider}:#{parse_result.model}"
+          else
+            provider
+          end
 
           next if seen[canonical_provider]
 

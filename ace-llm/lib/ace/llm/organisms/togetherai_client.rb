@@ -68,7 +68,7 @@ module Ace
         # @param options [Hash] Raw options
         # @return [Hash] Generation parameters
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
 
           # Add Together AI-specific options
           gen_opts[:repetition_penalty] = options[:repetition_penalty] if options[:repetition_penalty]

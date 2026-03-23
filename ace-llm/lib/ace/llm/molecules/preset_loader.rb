@@ -14,13 +14,13 @@ module Ace
             preset_hash = resolve_preset(preset_name)
             if preset_hash.nil? || preset_hash.empty?
               raise ConfigurationError,
-                    "Preset '#{preset_name}' not found. Define .ace/llm/presets/#{preset_name}.yml"
+                "Preset '#{preset_name}' not found. Define .ace/llm/presets/#{preset_name}.yml"
             end
 
             preset_hash
           rescue ConfigurationError
             raise
-          rescue StandardError => e
+          rescue => e
             raise ConfigurationError, "Failed to load preset '#{preset_name}': #{e.message}"
           end
 
@@ -33,9 +33,9 @@ module Ace
 
             if global_preset.empty? && provider_preset.empty?
               raise ConfigurationError,
-                    "Preset '#{normalized_preset_name}' not found for provider '#{normalized_provider}'. " \
-                    "Define .ace/llm/presets/#{normalized_preset_name}.yml or " \
-                    ".ace/llm/presets/#{normalized_provider}/#{normalized_preset_name}.yml"
+                "Preset '#{normalized_preset_name}' not found for provider '#{normalized_provider}'. " \
+                "Define .ace/llm/presets/#{normalized_preset_name}.yml or " \
+                ".ace/llm/presets/#{normalized_provider}/#{normalized_preset_name}.yml"
             end
 
             Ace::Support::Config::Models::Config.wrap(
@@ -45,9 +45,9 @@ module Ace
             )
           rescue ConfigurationError
             raise
-          rescue StandardError => e
+          rescue => e
             raise ConfigurationError,
-                  "Failed to load preset '#{normalized_preset_name}' for provider '#{normalized_provider}': #{e.message}"
+              "Failed to load preset '#{normalized_preset_name}' for provider '#{normalized_provider}': #{e.message}"
           end
 
           private

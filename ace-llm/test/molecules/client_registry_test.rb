@@ -202,7 +202,7 @@ module Ace
             "gem" => "test-gem",
             "models" => ["gpt-5", "gpt-5-mini"],
             "aliases" => {
-              "model" => { "mini" => "gpt-5-mini", "5" => "gpt-5" }
+              "model" => {"mini" => "gpt-5-mini", "5" => "gpt-5"}
             }
           },
           "claude" => {

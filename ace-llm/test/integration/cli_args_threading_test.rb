@@ -8,7 +8,7 @@ module Ace
       FakeClient = Struct.new(:received_options) do
         def generate(_messages, **options)
           self.received_options = options
-          { text: "ok", metadata: {} }
+          {text: "ok", metadata: {}}
         end
       end
 
@@ -30,7 +30,7 @@ module Ace
         end
 
         def available_aliases
-          { global: {}, model: {} }
+          {global: {}, model: {}}
         end
 
         def get_client(_provider, model:, timeout: nil)
