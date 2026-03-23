@@ -33,11 +33,5 @@
 
 **Verify full-suite health** - use `/as-test-verify-suite` to confirm that the complete test suite passes after changes, coordinating with [`ace-test`](docs/usage.md) CLI commands for execution.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
