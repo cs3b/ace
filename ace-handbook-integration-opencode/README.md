@@ -24,4 +24,4 @@
 **Keep provider layers small** - isolate integration glue from core handbook behavior with a focused set of manifests and projection assets.
 
 ---
-[ace-handbook](../ace-handbook) | Part of ACE
+[ace-handbook](../ace-handbook) | Part of [ACE](https://github.com/cs3b/ace)

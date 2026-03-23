@@ -24,4 +24,4 @@
 **Enable incremental provider onboarding** - add or update PI support independently of core ACE changes, maintaining a focused provider shim layer.
 
 ---
-[ace-handbook](../ace-handbook) | Part of ACE
+[ace-handbook](../ace-handbook) | Part of [ACE](https://github.com/cs3b/ace)
