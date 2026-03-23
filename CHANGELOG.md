@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.961] - 2026-03-23
+
+### Changed
+- **ace-git v0.18.0**: Added Installation section, aligned gemspec with README, clarified agent workflow references, expanded handbook template paths, re-recorded demo GIF.
+
 ## [0.9.960] - 2026-03-23
 
 ### Changed
