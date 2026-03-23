@@ -94,7 +94,7 @@ module Ace
                 error: nil
               }
             end
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               path: nil,
@@ -150,7 +150,7 @@ module Ace
               archive_path: restore_result[:archive_path],
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               path: nil,
@@ -158,7 +158,6 @@ module Ace
               error: "Reset failed: #{e.message}"
             }
           end
-
         end
       end
     end

@@ -24,22 +24,22 @@ module Ace
           DESC
 
           example [
-            '                             # Basic setup (archives existing prompt)',
-            '--template bug               # Custom template (short form)',
-            '--template tmpl://custom     # Custom template (full URI)',
-            '--no-archive                 # Skip archiving existing prompt',
-            '--force                      # Force overwrite (alias for --no-archive)',
-            '--task 121                   # Setup for specific task'
+            "                             # Basic setup (archives existing prompt)",
+            "--template bug               # Custom template (short form)",
+            "--template tmpl://custom     # Custom template (full URI)",
+            "--no-archive                 # Skip archiving existing prompt",
+            "--force                      # Force overwrite (alias for --no-archive)",
+            "--task 121                   # Setup for specific task"
           ]
 
           option :template, type: :string, aliases: %w[-t],
-                            desc: "Template name or URI (e.g., 'bug' or 'tmpl://the-prompt-bug')"
+            desc: "Template name or URI (e.g., 'bug' or 'tmpl://the-prompt-bug')"
           option :no_archive, type: :boolean,
-                              desc: "Skip archiving existing prompt file"
+            desc: "Skip archiving existing prompt file"
           option :force, type: :boolean, aliases: %w[-f],
-                         desc: "Skip archiving (alias for --no-archive)"
+            desc: "Skip archiving (alias for --no-archive)"
           option :task, type: :string,
-                      desc: "Use task's prompts directory (e.g., '117' or '121.01')"
+            desc: "Use task's prompts directory (e.g., '117' or '121.01')"
 
           # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -70,7 +70,7 @@ module Ace
             if result[:archive_path]
               $stdout.puts "  Archive: #{result[:archive_path]}"
             end
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new("Setup failed: #{e.message}")
           end
 
@@ -85,4 +85,3 @@ module Ace
     end
   end
 end
-

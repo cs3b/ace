@@ -76,7 +76,7 @@ module Ace
           return nil unless File.exist?(cache_path)
 
           File.read(cache_path, encoding: "utf-8")
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to read cache: #{e.message}"
           nil
         end
@@ -94,7 +94,7 @@ module Ace
           cache_path = File.join(cache_dir_path, "#{hash}.md")
           File.write(cache_path, content, encoding: "utf-8")
           true
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to store cache: #{e.message}"
           false
         end
@@ -131,7 +131,7 @@ module Ace
         # @param iteration [Integer] Iteration number
         # @return [String] Filename (e.g., "i50jj3_e001.md")
         def self.enhancement_filename(session_id, iteration)
-          "#{session_id}_e#{iteration.to_s.rjust(3, '0')}.md"
+          "#{session_id}_e#{iteration.to_s.rjust(3, "0")}.md"
         end
       end
     end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'ace/prompt_prep/molecules/bundle_loader'
+require "test_helper"
+require "ace/prompt_prep/molecules/bundle_loader"
 
 class BundleLoaderSecurityTest < Minitest::Test
   def setup
@@ -159,9 +159,9 @@ class BundleLoaderSecurityTest < Minitest::Test
   def test_respects_configurable_file_size_limit
     # Mock config with different size limit
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 5 },
-      "debug" => { "enabled" => false, "bundle_loading" => false }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 5},
+      "debug" => {"enabled" => false, "bundle_loading" => false}
     }
 
     Ace::PromptPrep.stub(:config, mock_config) do
@@ -219,9 +219,9 @@ class BundleLoaderSecurityTest < Minitest::Test
     File.write(test_file, "# Test content")
 
     # Mock File.exist? to return false (file disappears during validation)
-    File.stub(:exist?, ->(path) { path == test_file ? false : true }) do
+    File.stub(:exist?, ->(path) { !(path == test_file) }) do
       # Mock File.readable? to prevent read access attempt
-      File.stub(:readable?, ->(path) { path == test_file ? false : true }) do
+      File.stub(:readable?, ->(path) { !(path == test_file) }) do
         result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
         assert_equal "", result, "Should handle disappearing files gracefully"
       end
@@ -235,7 +235,7 @@ class BundleLoaderSecurityTest < Minitest::Test
 
     # Mock File.readable? to return false (permission denied)
     File.stub(:exist?, ->(path) { true }) do
-      File.stub(:readable?, ->(path) { path == test_file ? false : true }) do
+      File.stub(:readable?, ->(path) { !(path == test_file) }) do
         result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
         assert_equal "", result, "Should handle permission denied gracefully"
       end
@@ -245,13 +245,12 @@ class BundleLoaderSecurityTest < Minitest::Test
   def test_debug_logging_configuration
     # Mock config with debug enabled
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => true, "bundle_loading" => true }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => true, "bundle_loading" => true}
     }
 
     # Mock debug output capture
-    debug_output = []
 
     Ace::PromptPrep.stub(:config, mock_config) do
       # Capture warn calls to verify debug logging
@@ -263,9 +262,9 @@ class BundleLoaderSecurityTest < Minitest::Test
   def test_debug_logging_with_category_filtering
     # Mock config with specific debug category enabled
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => true, "bundle_loading" => true }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => true, "bundle_loading" => true}
     }
 
     test_file = File.join(@prompt_dir, "debug_test.md")
@@ -289,9 +288,9 @@ class BundleLoaderSecurityTest < Minitest::Test
   def test_debug_logging_with_category_filtering_disabled
     # Mock config with debug enabled but category filtered
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => true, "bundle_loading" => false }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => true, "bundle_loading" => false}
     }
 
     test_file = File.join(@prompt_dir, "filtered_test.md")
@@ -315,9 +314,9 @@ class BundleLoaderSecurityTest < Minitest::Test
   def test_debug_logging_disabled
     # Mock config with debug disabled
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => false, "bundle_loading" => false }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => false, "bundle_loading" => false}
     }
 
     test_file = File.join(@prompt_dir, "no_debug.md")
@@ -340,14 +339,14 @@ class BundleLoaderSecurityTest < Minitest::Test
 
   def test_error_message_consistency
     # All error messages should use "Error:" prefix for actual failures
-    original_warn = method(:warn)
+    method(:warn)
     error_messages = []
 
     Object.stub(:warn, ->(message) { error_messages << message }) do
       # Trigger various error conditions
-      result = Ace::PromptPrep::Molecules::BundleLoader.call(nil)  # nil path
-      result = Ace::PromptPrep::Molecules::BundleLoader.call("")  # empty path
-      result = Ace::PromptPrep::Molecules::BundleLoader.call("#{@tmpdir}/nonexistent")  # non-existent file
+      Ace::PromptPrep::Molecules::BundleLoader.call(nil)  # nil path
+      Ace::PromptPrep::Molecules::BundleLoader.call("")  # empty path
+      Ace::PromptPrep::Molecules::BundleLoader.call("#{@tmpdir}/nonexistent")  # non-existent file
     end
 
     # Verify all error messages use "Error:" prefix
@@ -358,13 +357,13 @@ class BundleLoaderSecurityTest < Minitest::Test
 
   def test_warning_messages_for_fallback_conditions
     # Warning messages should be used for fallback behaviors, not errors
-    original_warn = method(:warn)
+    method(:warn)
     warning_messages = []
 
     Object.stub(:warn, ->(message) { warning_messages << message }) do
       # Mock ace-bundle failure to trigger fallback
       Ace::PromptPrep::Molecules::BundleLoader.stub(:call, "") do
-        result = Ace::PromptPrep::Molecules::BundleLoader.call("#{@prompt_dir}/test.md")
+        Ace::PromptPrep::Molecules::BundleLoader.call("#{@prompt_dir}/test.md")
       end
     end
 
@@ -383,15 +382,15 @@ class BundleLoaderSecurityTest < Minitest::Test
     error_message = ""
 
     mock_config = {
-      "bundle" => { "enabled" => false },
-      "security" => { "max_file_size_mb" => 10 },
-      "debug" => { "enabled" => false }
+      "bundle" => {"enabled" => false},
+      "security" => {"max_file_size_mb" => 10},
+      "debug" => {"enabled" => false}
     }
 
     Ace::PromptPrep.stub :config, mock_config do
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(msg) { error_message = msg }) do
-          result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
+          Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
         end
       end
     end
@@ -410,11 +409,11 @@ class BundleLoaderSecurityTest < Minitest::Test
     symlink_file = File.join(@prompt_dir, "external.md")
     File.symlink(external_file, symlink_file)
 
-    original_warn = method(:warn)
+    method(:warn)
     error_message = ""
 
     Object.stub(:warn, ->(msg) { error_message = msg }) do
-      result = Ace::PromptPrep::Molecules::BundleLoader.call(symlink_file)
+      Ace::PromptPrep::Molecules::BundleLoader.call(symlink_file)
     end
 
     # Error message should include resolved path

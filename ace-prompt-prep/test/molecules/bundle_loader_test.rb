@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'test_helper'
-require 'ace/prompt_prep/molecules/bundle_loader'
+require "test_helper"
+require "ace/prompt_prep/molecules/bundle_loader"
 
 class BundleLoaderTest < Minitest::Test
   def test_call_returns_empty_string_for_nil_path

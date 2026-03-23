@@ -40,11 +40,11 @@ module Ace
 
           # Determine archive directory and symlink path based on prompt location
           archive_dir, symlink_path = if final_input_path
-                                        prompt_dir = File.dirname(final_input_path)
-                                        [File.join(prompt_dir, "archive"), File.join(prompt_dir, "_previous.md")]
-                                      else
-                                        [nil, nil] # Use defaults
-                                      end
+            prompt_dir = File.dirname(final_input_path)
+            [File.join(prompt_dir, "archive"), File.join(prompt_dir, "_previous.md")]
+          else
+            [nil, nil] # Use defaults
+          end
 
           # Archive ORIGINAL content (before context expansion)
           archive_result = Molecules::PromptArchiver.call(
@@ -64,27 +64,27 @@ module Ace
           # Check if bundle is explicitly disabled in frontmatter
           extracted = Atoms::FrontmatterExtractor.extract(original_content)
           bundle_enabled = if extracted[:has_frontmatter] && extracted[:frontmatter]["bundle"]
-                             extracted[:frontmatter]["bundle"]["enabled"] != false
-                           else
-                             true # Default to enabled if not specified
-                           end
+            extracted[:frontmatter]["bundle"]["enabled"] != false
+          else
+            true # Default to enabled if not specified
+          end
 
           # Determine output content based on bundle flag and frontmatter
           output_content = if bundle && bundle_enabled
-                             # ace-bundle handles entire file processing (including frontmatter)
-                             bundle_content = Molecules::BundleLoader.call(read_result[:path])
-                             if bundle_content.empty?
-                               # Fallback: extract body ONLY if ace-bundle fails
-                               warn "Warning: ace-bundle failed, extracting prompt body only"
-                               extracted[:body]
-                             else
-                               # Use ace-bundle processed content (includes frontmatter handling)
-                               bundle_content
-                             end
-                           else
-                             # No bundle or bundle disabled - just strip frontmatter for clean output
-                             extracted[:body]
-                           end
+            # ace-bundle handles entire file processing (including frontmatter)
+            bundle_content = Molecules::BundleLoader.call(read_result[:path])
+            if bundle_content.empty?
+              # Fallback: extract body ONLY if ace-bundle fails
+              warn "Warning: ace-bundle failed, extracting prompt body only"
+              extracted[:body]
+            else
+              # Use ace-bundle processed content (includes frontmatter handling)
+              bundle_content
+            end
+          else
+            # No bundle or bundle disabled - just strip frontmatter for clean output
+            extracted[:body]
+          end
 
           # Track the final archive path (may change if enhanced)
           final_archive_path = archive_result[:archive_path]
@@ -134,10 +134,10 @@ module Ace
               # Write enhanced content back to source file (preserve frontmatter)
               original_extracted = Atoms::FrontmatterExtractor.extract(original_content)
               write_content = if original_extracted[:has_frontmatter] && original_extracted[:raw_frontmatter]
-                                "---\n#{original_extracted[:raw_frontmatter]}---\n\n#{enhance_result[:content]}"
-                              else
-                                enhance_result[:content]
-                              end
+                "---\n#{original_extracted[:raw_frontmatter]}---\n\n#{enhance_result[:content]}"
+              else
+                enhance_result[:content]
+              end
               File.write(read_result[:path], write_content, encoding: "utf-8")
             end
           end
@@ -157,7 +157,6 @@ module Ace
             error: nil
           }
         end
-
       end
     end
   end

@@ -24,35 +24,35 @@ module Ace
           DESC
 
           example [
-            '                             # Process prompt from default location',
-            '--output /tmp/prompt.md      # Write to file instead of stdout',
-            '--output -                   # Explicit stdout (default)',
-            '--bundle                     # Process via ace-bundle SDK (short: -b)',
-            '--no-bundle                  # Explicitly disable ace-bundle processing',
-            '--enhance --model gpt-4     # Enhance via LLM',
-            '--task 121                   # Use task-specific prompts'
+            "                             # Process prompt from default location",
+            "--output /tmp/prompt.md      # Write to file instead of stdout",
+            "--output -                   # Explicit stdout (default)",
+            "--bundle                     # Process via ace-bundle SDK (short: -b)",
+            "--no-bundle                  # Explicitly disable ace-bundle processing",
+            "--enhance --model gpt-4     # Enhance via LLM",
+            "--task 121                   # Use task-specific prompts"
           ]
 
           option :output, type: :string, aliases: %w[-o],
-                        desc: "Write content to file instead of stdout (use '-' for explicit stdout)"
+            desc: "Write content to file instead of stdout (use '-' for explicit stdout)"
           option :bundle, type: :boolean, aliases: %w[-b],
-                        desc: "Process via ace-bundle SDK"
+            desc: "Process via ace-bundle SDK"
           option :context, type: :boolean, aliases: %w[-c],
-                          desc: "Deprecated alias for --bundle"
+            desc: "Deprecated alias for --bundle"
           option :no_bundle, type: :boolean,
-                          desc: "Explicitly disable ace-bundle processing"
+            desc: "Explicitly disable ace-bundle processing"
           option :no_context, type: :boolean,
-                            desc: "Deprecated alias for --no-bundle"
+            desc: "Deprecated alias for --no-bundle"
           option :enhance, type: :boolean, aliases: %w[-e],
-                         desc: "Enhance prompt via LLM"
+            desc: "Enhance prompt via LLM"
           option :no_enhance, type: :boolean,
-                          desc: "Explicitly disable LLM enhancement (override config)"
+            desc: "Explicitly disable LLM enhancement (override config)"
           option :model, type: :string,
-                       desc: "LLM model (default from config: defaults.model)"
+            desc: "LLM model (default from config: defaults.model)"
           option :system_prompt, type: :string,
-                               desc: "Custom system prompt path"
+            desc: "Custom system prompt path"
           option :task, type: :string,
-                      desc: "Use task's prompts directory (e.g., '117' or '121.01')"
+            desc: "Use task's prompts directory (e.g., '117' or '121.01')"
           # Note: ace-support-cli handles --help/-h automatically, no need to define it
 
           # Standard options (inherited from Base but need explicit definition for ace-support-cli)
@@ -100,7 +100,7 @@ module Ace
                 $stdout.puts "Prompt archived and saved:"
                 $stdout.puts "  Archive: #{result[:archive_path]}"
                 $stdout.puts "  Output:  #{File.expand_path(output_mode)}"
-              rescue StandardError => e
+              rescue => e
                 raise Ace::Support::Cli::Error.new("Failed to write output file: #{e.message}")
               end
             end

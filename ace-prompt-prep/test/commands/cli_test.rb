@@ -19,14 +19,12 @@ class CLITest < Minitest::Test
   # Note: ace-support-cli calls exit(0) for --help, so we catch SystemExit
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
-      begin
-        @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
-      rescue SystemExit => e
-        @_cli_result = e.status
-      rescue Ace::Support::Cli::Error => e
-        @_cli_result = e.exit_code
-        $stderr.print e.message
-      end
+      @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
+    rescue SystemExit => e
+      @_cli_result = e.status
+    rescue Ace::Support::Cli::Error => e
+      @_cli_result = e.exit_code
+      $stderr.print e.message
     end
 
     {

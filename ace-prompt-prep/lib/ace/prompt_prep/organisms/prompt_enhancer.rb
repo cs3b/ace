@@ -96,7 +96,7 @@ module Ace
               cached: false,
               error: "ace-llm not available"
             }
-          rescue StandardError => e
+          rescue => e
             warn "Warning: LLM enhancement failed: #{e.message}"
             {
               content: content,
@@ -131,7 +131,7 @@ module Ace
               end
             rescue LoadError => e
               warn "Warning: ace-nav not available: #{e.message}" if ENV["DEBUG"]
-            rescue StandardError => e
+            rescue => e
               warn "Warning: ace-nav resolution failed: #{e.message}" if ENV["DEBUG"]
             end
           end
@@ -143,7 +143,7 @@ module Ace
 
           # Failed to load
           nil
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to load system prompt: #{e.message}"
           nil
         end

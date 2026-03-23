@@ -102,7 +102,6 @@ class TaskPathResolverTest < Minitest::Test
     end
   end
 
-
   # ============================================
   # Tests for extract_from_branch() - unchanged
   # ============================================

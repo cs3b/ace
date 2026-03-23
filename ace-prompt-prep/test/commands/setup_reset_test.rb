@@ -15,14 +15,12 @@ class SetupResetCommandsTest < Minitest::Test
   # Helper method to invoke CLI using CLI runner pattern
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
-      begin
-        @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
-      rescue SystemExit => e
-        @_cli_result = e.status
-      rescue Ace::Support::Cli::Error => e
-        @_cli_result = e.exit_code
-        $stderr.print e.message
-      end
+      @_cli_result = Ace::Support::Cli::Runner.new(Ace::PromptPrep::CLI).call(args: args)
+    rescue SystemExit => e
+      @_cli_result = e.status
+    rescue Ace::Support::Cli::Error => e
+      @_cli_result = e.exit_code
+      $stderr.print e.message
     end
 
     {
@@ -36,7 +34,7 @@ class SetupResetCommandsTest < Minitest::Test
   def test_setup_command_creates_prompt
     # Stub the initializer to return successful result
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
-      { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
+      {success: true, path: "/tmp/the-prompt.md", archive_path: nil}
     }) do
       result = invoke_prompt_cli(["setup"])
       # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
@@ -49,7 +47,7 @@ class SetupResetCommandsTest < Minitest::Test
   def test_setup_command_archives_existing_prompt
     # Stub to return successful result with archive
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
-      { success: true, path: "/tmp/the-prompt.md", archive_path: "/tmp/archive/the-prompt-20250101.md" }
+      {success: true, path: "/tmp/the-prompt.md", archive_path: "/tmp/archive/the-prompt-20250101.md"}
     }) do
       result = invoke_prompt_cli(["setup"])
       # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
@@ -64,7 +62,7 @@ class SetupResetCommandsTest < Minitest::Test
     force_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       force_passed = opts[:force]
-      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+      {success: true, path: "/tmp/the-prompt.md", skipped: false}
     }) do
       invoke_prompt_cli(["setup", "--force"])
       assert force_passed
@@ -76,7 +74,7 @@ class SetupResetCommandsTest < Minitest::Test
     force_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       force_passed = opts[:force]
-      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+      {success: true, path: "/tmp/the-prompt.md", skipped: false}
     }) do
       invoke_prompt_cli(["setup", "-f"])
       assert force_passed
@@ -88,7 +86,7 @@ class SetupResetCommandsTest < Minitest::Test
     template_uri_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       template_uri_passed = opts[:template_uri]
-      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+      {success: true, path: "/tmp/the-prompt.md", skipped: false}
     }) do
       invoke_prompt_cli(["setup", "--template", "tmpl://custom/template"])
       assert_equal "tmpl://custom/template", template_uri_passed
@@ -100,7 +98,7 @@ class SetupResetCommandsTest < Minitest::Test
     template_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       template_passed = opts[:template_uri]
-      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+      {success: true, path: "/tmp/the-prompt.md", skipped: false}
     }) do
       invoke_prompt_cli(["setup", "-t", "bug"])
       assert_equal "bug", template_passed
@@ -110,7 +108,7 @@ class SetupResetCommandsTest < Minitest::Test
   def test_setup_command_handles_failure
     # Stub to return failure
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
-      { success: false, path: nil, skipped: false, error: "Setup failed" }
+      {success: false, path: nil, skipped: false, error: "Setup failed"}
     }) do
       result = invoke_prompt_cli(["setup"])
       # Note: ace-support-cli v1.3.0 returns a Set, not the exit code
@@ -134,7 +132,7 @@ class SetupResetCommandsTest < Minitest::Test
     force_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       force_passed = opts[:force]
-      { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
+      {success: true, path: "/tmp/the-prompt.md", archive_path: nil}
     }) do
       invoke_prompt_cli(["setup", "--no-archive"])
       assert force_passed
@@ -146,7 +144,7 @@ class SetupResetCommandsTest < Minitest::Test
     template_uri_passed = nil
     Ace::PromptPrep::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
       template_uri_passed = opts[:template_uri]
-      { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
+      {success: true, path: "/tmp/the-prompt.md", archive_path: nil}
     }) do
       invoke_prompt_cli(["setup", "--template", "bug"])
       assert_equal "bug", template_uri_passed
@@ -155,7 +153,7 @@ class SetupResetCommandsTest < Minitest::Test
 
   def test_default_template_uri_constant
     assert_equal "tmpl://the-prompt-base",
-                 Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
+      Ace::PromptPrep::Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
   end
 
   # Task option tests

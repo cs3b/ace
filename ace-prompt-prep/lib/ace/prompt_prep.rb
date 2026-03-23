@@ -5,7 +5,7 @@ require_relative "prompt_prep/version"
 require_relative "prompt_prep/atoms/defaults"
 
 # Load ace-config for configuration cascade management
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module PromptPrep
@@ -100,7 +100,7 @@ module Ace
     # @return [Hash] Merged configuration
     def self.load_config
       gem_root = Gem.loaded_specs["ace-prompt-prep"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
 
       resolver = Ace::Support::Config.create(
         config_dir: ".ace",
@@ -111,7 +111,7 @@ module Ace
       # Resolve config for prompt-prep namespace
       config = resolver.resolve_namespace("prompt-prep")
       config.data
-    rescue StandardError => e
+    rescue => e
       warn "ace-prompt-prep: Could not load config: #{e.class} - #{e.message}" if debug?
       # Fall back to gem defaults instead of empty hash to prevent silent config erasure
       load_gem_defaults_fallback
@@ -124,13 +124,13 @@ module Ace
     # @return [Hash] Defaults hash or empty hash if defaults also fail
     def self.load_gem_defaults_fallback
       gem_root = Gem.loaded_specs["ace-prompt-prep"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "prompt-prep", "config.yml")
 
       return {} unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue StandardError
+    rescue
       {} # Only return empty hash if even defaults fail to load
     end
     private_class_method :load_gem_defaults_fallback

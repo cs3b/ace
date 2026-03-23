@@ -49,7 +49,7 @@ module Ace
               skipped: false,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               path: nil,
@@ -93,7 +93,7 @@ module Ace
               skipped: false,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               archive_path: nil,
@@ -112,7 +112,7 @@ module Ace
           def restore_template(template_path:, target_path:, archive_dir:, force: false)
             # Archive current file unless force
             archive_result = if force || !File.exist?(target_path)
-              { success: true, archive_path: nil, skipped: true }
+              {success: true, archive_path: nil, skipped: true}
             else
               archive_file(source_path: target_path, archive_dir: archive_dir)
             end
@@ -148,7 +148,7 @@ module Ace
               archive_path: archive_result[:archive_path],
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               path: nil,

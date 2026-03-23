@@ -40,7 +40,7 @@ module Ace
                 }
               end
             end
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               path: nil,
@@ -93,7 +93,7 @@ module Ace
             # ace-nav not available, return nil to fall back to bundled templates
             warn "ace-nav not available: #{e.message}" if ENV["DEBUG"]
             nil
-          rescue StandardError => e
+          rescue => e
             # Log error but don't fail, fall back to bundled templates
             warn "ace-nav resolution failed: #{e.message}" if ENV["DEBUG"]
             nil

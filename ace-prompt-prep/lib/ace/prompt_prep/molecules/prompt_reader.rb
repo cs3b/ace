@@ -50,7 +50,7 @@ module Ace
             success: true,
             error: nil
           }
-        rescue StandardError => e
+        rescue => e
           {
             content: nil,
             path: prompt_path,

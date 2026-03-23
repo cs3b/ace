@@ -48,7 +48,7 @@ module Ace
 
           # Process via ace-bundle
           process_with_context(system_prompt_uri, system_prompt_content)
-        rescue StandardError => e
+        rescue => e
           warn "Warning: EnhancementSessionManager error: #{e.message}"
           {
             content: system_prompt_content,
@@ -117,7 +117,7 @@ module Ace
                 context_loaded: true,
                 error: nil
               }
-            rescue StandardError => e
+            rescue => e
               warn "Warning: Context loading failed: #{e.message}"
               {
                 content: instructions,
@@ -134,22 +134,21 @@ module Ace
           # @return [String, nil] Preset content or nil
           def load_preset_via_api(preset)
             # Try Ruby API first (faster, in-process, testable)
-            begin
-              require "ace/bundle"
-              context_data = Ace::Bundle.load_preset(preset)
-              content = context_data&.content
-              return content if content && !content.strip.empty?
 
-              warn "Warning: ace-bundle returned empty content for preset '#{preset}'" unless ENV["ACE_QUIET"]
-              nil
-            rescue LoadError
-              # ace-bundle gem not available, try CLI fallback
-              load_preset_via_cli(preset)
-            rescue StandardError => e
-              warn "Warning: ace-bundle API failed for '#{preset}': #{e.message}" unless ENV["ACE_QUIET"]
-              # Try CLI as fallback
-              load_preset_via_cli(preset)
-            end
+            require "ace/bundle"
+            context_data = Ace::Bundle.load_preset(preset)
+            content = context_data&.content
+            return content if content && !content.strip.empty?
+
+            warn "Warning: ace-bundle returned empty content for preset '#{preset}'" unless ENV["ACE_QUIET"]
+            nil
+          rescue LoadError
+            # ace-bundle gem not available, try CLI fallback
+            load_preset_via_cli(preset)
+          rescue => e
+            warn "Warning: ace-bundle API failed for '#{preset}': #{e.message}" unless ENV["ACE_QUIET"]
+            # Try CLI as fallback
+            load_preset_via_cli(preset)
           end
 
           # Load preset content via ace-bundle CLI (fallback)
@@ -170,7 +169,7 @@ module Ace
           rescue Errno::ENOENT
             warn "Warning: ace-bundle CLI not found on PATH. Install ace-bundle or ensure it's in your PATH." unless ENV["ACE_QUIET"]
             nil
-          rescue StandardError => e
+          rescue => e
             warn "Warning: ace-bundle CLI error: #{e.message}" unless ENV["ACE_QUIET"]
             nil
           end

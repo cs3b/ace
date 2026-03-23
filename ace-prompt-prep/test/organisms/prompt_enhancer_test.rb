@@ -98,7 +98,7 @@ class PromptEnhancerTest < Minitest::Test
     mock_query = lambda { |model, _prompt, **_opts|
       # Model alias is passed directly; ace-llm resolves it
       assert_equal "glite", model
-      { text: "Enhanced content" }
+      {text: "Enhanced content"}
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
@@ -127,7 +127,7 @@ class PromptEnhancerTest < Minitest::Test
     mock_query = lambda { |model, _prompt, **_opts|
       # Default model "glite" is used when nil
       assert_equal "glite", model
-      { text: "Enhanced content" }
+      {text: "Enhanced content"}
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
@@ -152,7 +152,7 @@ class PromptEnhancerTest < Minitest::Test
       end
 
       # Mock empty response
-      mock_query = ->(_model, _prompt, **_opts) { { text: "" } }
+      mock_query = ->(_model, _prompt, **_opts) { {text: ""} }
 
       Ace::LLM::QueryInterface.stub :query, mock_query do
         result = Ace::PromptPrep::Organisms::PromptEnhancer.call(
@@ -208,7 +208,7 @@ class PromptEnhancerTest < Minitest::Test
       end
 
       # Mock successful enhancement
-      mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
+      mock_query = ->(_model, _prompt, **_opts) { {text: enhanced_content} }
 
       Ace::LLM::QueryInterface.stub :query, mock_query do
         result = Ace::PromptPrep::Organisms::PromptEnhancer.call(
