@@ -33,11 +33,5 @@
 
 **Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression through [ace-compressor](../ace-compressor) to keep payloads manageable for LLM workflows.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
