@@ -27,7 +27,7 @@ module Ace
               return [pattern] if pattern.empty?
 
               # Guard against nil fallback_order
-              fallback_order = fallback_order || DEFAULT_FALLBACK_ORDER
+              fallback_order ||= DEFAULT_FALLBACK_ORDER
 
               # Extract shorthand extensions from protocol extensions
               # e.g., from [".g.md", ".guide.md"] extract [".g"]

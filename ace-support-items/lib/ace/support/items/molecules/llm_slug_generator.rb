@@ -53,7 +53,7 @@ module Ace
             else
               raise "Slug generation prompt not found via ace-nav"
             end
-          rescue StandardError => e
+          rescue => e
             debug_log("Error loading slug prompt: #{e.message}")
             raise "Failed to load slug generation prompt: #{e.message}"
           end
@@ -61,10 +61,10 @@ module Ace
           def try_llm_task_generation(title, context)
             prompt = build_task_slug_prompt(title, context)
             result = call_llm(prompt)
-            return { success: false } unless result[:success]
+            return {success: false} unless result[:success]
 
             parsed = parse_llm_response(result[:text])
-            return { success: false } unless parsed
+            return {success: false} unless parsed
 
             if valid_slugs?(parsed)
               {
@@ -75,20 +75,20 @@ module Ace
               }
             else
               debug_log("LLM returned invalid slug format: #{parsed.inspect}")
-              { success: false }
+              {success: false}
             end
-          rescue StandardError => e
+          rescue => e
             debug_log("LLM task generation error: #{e.message}")
-            { success: false }
+            {success: false}
           end
 
           def try_llm_idea_generation(description, context)
             prompt = build_idea_slug_prompt(description, context)
             result = call_llm(prompt)
-            return { success: false } unless result[:success]
+            return {success: false} unless result[:success]
 
             parsed = parse_llm_response(result[:text])
-            return { success: false } unless parsed
+            return {success: false} unless parsed
 
             if valid_slugs?(parsed)
               {
@@ -99,11 +99,11 @@ module Ace
               }
             else
               debug_log("LLM returned invalid slug format: #{parsed.inspect}")
-              { success: false }
+              {success: false}
             end
-          rescue StandardError => e
+          rescue => e
             debug_log("LLM idea generation error: #{e.message}")
-            { success: false }
+            {success: false}
           end
 
           def call_llm(prompt)
@@ -127,13 +127,13 @@ module Ace
             debug_log(response[:text])
             debug_log("=== END RESPONSE ===")
 
-            { success: true, text: response[:text] }
+            {success: true, text: response[:text]}
           rescue LoadError => e
             debug_log("ace-llm not available: #{e.message}")
-            { success: false, error: e.message }
-          rescue StandardError => e
+            {success: false, error: e.message}
+          rescue => e
             debug_log("LLM call failed: #{e.message}")
-            { success: false, error: e.message }
+            {success: false, error: e.message}
           end
 
           def parse_llm_response(text)
@@ -231,11 +231,10 @@ module Ace
 
           def sanitize_to_slug(text)
             text.to_s.downcase
-                .gsub(/[^\w\s-]/, "")
-                .gsub(/[\s_]+/, "-")
-                .gsub(/-+/, "-")
-                .gsub(/^-|-$/, "")
-                .strip
+              .gsub(/[^\w\s-]/, "")
+              .gsub(/[\s_]+/, "-").squeeze("-")
+              .gsub(/^-|-$/, "")
+              .strip
           end
 
           def extract_area_from_content(content)
@@ -247,16 +246,16 @@ module Ace
           def extract_goal_type_from_content(content)
             content_lower = content.downcase
 
-            return "add" if content_lower =~ /\b(add|create|implement|new)\b/
-            return "enhance" if content_lower =~ /\b(enhance|improve|update|upgrade)\b/
-            return "fix" if content_lower =~ /\b(fix|repair|resolve|correct)\b/
-            return "refactor" if content_lower =~ /\b(refactor|restructure|reorganize)\b/
+            return "add" if /\b(add|create|implement|new)\b/.match?(content_lower)
+            return "enhance" if /\b(enhance|improve|update|upgrade)\b/.match?(content_lower)
+            return "fix" if /\b(fix|repair|resolve|correct)\b/.match?(content_lower)
+            return "refactor" if /\b(refactor|restructure|reorganize)\b/.match?(content_lower)
 
             "enhance"
           end
 
           def debug_log(message)
-            $stderr.puts "[LlmSlugGenerator] #{message}" if @debug
+            warn "[LlmSlugGenerator] #{message}" if @debug
           end
         end
       end

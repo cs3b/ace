@@ -70,7 +70,7 @@ class ConfigResolverTest < AceTestCase
 
   def test_resolve_type_local
     with_temp_dir do
-      local_config = { "ace" => { "type" => "local" } }
+      local_config = {"ace" => {"type" => "local"}}
       create_config_file(".ace/config.yml", local_config.to_yaml)
 
       resolver = Ace::Support::Config::Organisms::ConfigResolver.new

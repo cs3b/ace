@@ -47,8 +47,6 @@ module Ace
             added_models = []
             removed_models = []
             updated_models = []
-            added_providers = []
-            removed_providers = []
 
             prev_providers = Set.new(previous.keys)
             curr_providers = Set.new(current.keys)

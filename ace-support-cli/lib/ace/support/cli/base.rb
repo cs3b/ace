@@ -28,7 +28,7 @@ module Ace
         end
 
         def debug_log(message, options)
-          $stderr.puts "DEBUG: #{message}" if debug?(options)
+          warn "DEBUG: #{message}" if debug?(options)
         end
 
         def raise_cli_error(message, exit_code: 1)
@@ -39,7 +39,7 @@ module Ace
           missing = required - options.keys.select { |key| !options[key].nil? }
           return if missing.empty?
 
-          raise ArgumentError, "Missing required options: #{missing.join(', ')}"
+          raise ArgumentError, "Missing required options: #{missing.join(", ")}"
         end
 
         def format_pairs(hash)
@@ -56,14 +56,14 @@ module Ace
               begin
                 options[key] = Integer(options[key])
               rescue ArgumentError, TypeError
-                raise ArgumentError, "Invalid value for --#{key.to_s.tr('_', '-')}: " \
+                raise ArgumentError, "Invalid value for --#{key.to_s.tr("_", "-")}: " \
                                      "'#{options[key]}' is not a valid integer"
               end
             when :float
               begin
                 options[key] = Float(options[key])
               rescue ArgumentError, TypeError
-                raise ArgumentError, "Invalid value for --#{key.to_s.tr('_', '-')}: " \
+                raise ArgumentError, "Invalid value for --#{key.to_s.tr("_", "-")}: " \
                                      "'#{options[key]}' is not a valid number"
               end
             end

@@ -23,7 +23,7 @@ module Ace
 
             unless extractor_result[:valid]
               errors.concat(extractor_result[:errors])
-              return { valid: false, errors: errors, warnings: warnings }
+              return {valid: false, errors: errors, warnings: warnings}
             end
 
             # Validate frontmatter structure
@@ -82,7 +82,7 @@ module Ace
                 next unless value
 
                 unless allowed_values.include?(value)
-                  errors << "Field '#{field}' must be one of #{allowed_values.join(', ')}, got '#{value}'"
+                  errors << "Field '#{field}' must be one of #{allowed_values.join(", ")}, got '#{value}'"
                 end
               end
             end
@@ -108,7 +108,7 @@ module Ace
               )
 
               serialized[:valid]
-            rescue StandardError
+            rescue
               false
             end
           end

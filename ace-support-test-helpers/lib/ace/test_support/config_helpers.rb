@@ -30,7 +30,7 @@ module Ace
       #   end
       #
       def with_test_config(mock_config = {})
-        require 'ace/support/config'
+        require "ace/support/config"
 
         original_test_mode = Ace::Support::Config.test_mode
         original_mock = Ace::Support::Config.default_mock
@@ -61,7 +61,7 @@ module Ace
       #   end
       #
       def with_real_config
-        require 'ace/support/config'
+        require "ace/support/config"
 
         original_test_mode = Ace::Support::Config.test_mode
 
@@ -78,13 +78,13 @@ module Ace
 
         # Handle both Hash and String content
         file_content = case content
-                      when Hash
-                        content.to_yaml
-                      when String
-                        content
-                      else
-                        raise ArgumentError, "Content must be Hash or String"
-                      end
+        when Hash
+          content.to_yaml
+        when String
+          content
+        else
+          raise ArgumentError, "Content must be Hash or String"
+        end
 
         File.write(path, file_content)
         yield
@@ -190,7 +190,7 @@ module Ace
       # Assert config cascade precedence
       def assert_precedence(resolver, key_path, expected_value, source_description)
         config = resolver.resolve
-        actual = config.get(*key_path.split('.'))
+        actual = config.get(*key_path.split("."))
 
         assert_equal expected_value, actual,
           "Expected #{key_path} to be '#{expected_value}' from #{source_description}, got '#{actual}'"

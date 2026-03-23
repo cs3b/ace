@@ -61,7 +61,7 @@ module Ace
           def test_save_file_creates_file
             with_temp_config({}) do |tmpdir|
               path = File.join(tmpdir, "output.yml")
-              config = Models::Config.new({ "key" => "value" })
+              config = Models::Config.new({"key" => "value"})
 
               YamlLoader.save_file(config, path)
 
@@ -75,7 +75,7 @@ module Ace
             with_temp_config({}) do |tmpdir|
               path = File.join(tmpdir, "nested", "dir", "output.yml")
 
-              YamlLoader.save_file({ "key" => "value" }, path)
+              YamlLoader.save_file({"key" => "value"}, path)
 
               assert File.exist?(path)
             end
@@ -85,7 +85,7 @@ module Ace
             with_temp_config({}) do |tmpdir|
               path = File.join(tmpdir, "output.yml")
 
-              YamlLoader.save_file({ "key" => "value" }, path)
+              YamlLoader.save_file({"key" => "value"}, path)
 
               assert File.exist?(path)
             end

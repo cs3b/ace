@@ -42,14 +42,12 @@ module Ace
       #   (exception-based exit code pattern per ADR-023).
       def invoke_cli(cli_class, args)
         stdout, stderr = capture_io do
-          begin
-            @_cli_result = cli_class.start(args)
-          rescue SystemExit => e
-            @_cli_result = e.status
-          rescue Ace::Support::Cli::Error => e
-            $stderr.puts e.message
-            @_cli_result = e.exit_code
-          end
+          @_cli_result = cli_class.start(args)
+        rescue SystemExit => e
+          @_cli_result = e.status
+        rescue Ace::Support::Cli::Error => e
+          warn e.message
+          @_cli_result = e.exit_code
         end
 
         {
@@ -83,7 +81,7 @@ module Ace
       def assert_cli_success(cli_class, args, message = nil)
         result = invoke_cli(cli_class, args)
         assert_equal 0, result[:result],
-                     message || "Expected CLI to return 0, got #{result[:result]}. stderr: #{result[:stderr]}"
+          message || "Expected CLI to return 0, got #{result[:result]}. stderr: #{result[:stderr]}"
       end
 
       # Assert CLI output matches pattern
@@ -98,7 +96,7 @@ module Ace
       def assert_cli_output_matches(cli_class, args, pattern, message = nil)
         result = invoke_cli(cli_class, args)
         assert_match pattern, result[:stdout],
-                     message || "Expected stdout to match #{pattern.inspect}"
+          message || "Expected stdout to match #{pattern.inspect}"
       end
     end
   end

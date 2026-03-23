@@ -136,7 +136,7 @@ module Ace
               sources = @registry.sources_for_protocol("test")
 
               home_source = sources.find { |s| s.name == "home_source" }
-              assert_equal "#{ENV['HOME']}/documents", home_source.path
+              assert_equal "#{ENV["HOME"]}/documents", home_source.path
             end
           end
 

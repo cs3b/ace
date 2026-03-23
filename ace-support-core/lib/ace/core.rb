@@ -4,7 +4,7 @@ require_relative "core/version"
 require_relative "core/errors"
 
 # Import ace-config for generic configuration cascade
-require 'ace/support/config'
+require "ace/support/config"
 
 # Import ace-support-fs for filesystem utilities (also re-exported by ace-config)
 require "ace/support/fs"

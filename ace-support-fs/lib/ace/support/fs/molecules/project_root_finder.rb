@@ -59,7 +59,7 @@ module Ace
               end
             end
 
-            cache_key = "#{@start_path}:#{@markers.join(',')}"
+            cache_key = "#{@start_path}:#{@markers.join(",")}"
 
             # Thread-safe cache access
             self.class.cache_mutex.synchronize do

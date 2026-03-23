@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'yaml'
+require "yaml"
 
 module Ace
   module Core
@@ -10,7 +10,7 @@ module Ace
         # Supported output formats
         FORMATS = %w[markdown yaml xml markdown-xml json].freeze
 
-        def initialize(format = 'markdown')
+        def initialize(format = "markdown")
           @format = validate_format(format)
         end
 
@@ -19,15 +19,15 @@ module Ace
         # @return [String] Formatted output
         def format(data)
           case @format
-          when 'markdown'
+          when "markdown"
             format_markdown(data)
-          when 'yaml'
+          when "yaml"
             format_yaml(data)
-          when 'xml'
+          when "xml"
             format_xml(data)
-          when 'markdown-xml'
+          when "markdown-xml"
             format_markdown_xml(data)
-          when 'json'
+          when "json"
             format_json(data)
           else
             format_markdown(data)
@@ -149,7 +149,7 @@ module Ace
         # @param data [Hash] Data to format
         # @return [String] JSON formatted output
         def format_json(data)
-          require 'json'
+          require "json"
           clean_data = prepare_for_serialization(data)
           JSON.pretty_generate(clean_data)
         end
@@ -160,31 +160,31 @@ module Ace
         def format_xml(data)
           output = []
           output << '<?xml version="1.0" encoding="UTF-8"?>'
-          output << '<context>'
+          output << "<context>"
 
           # Add metadata
           if data[:metadata]
-            output << '  <metadata>'
+            output << "  <metadata>"
             data[:metadata].each do |key, value|
               output << "    <#{key}>#{escape_xml(value.to_s)}</#{key}>"
             end
-            output << '  </metadata>'
+            output << "  </metadata>"
           end
 
           # Add files
           if data[:files] && !data[:files].empty?
-            output << '  <files>'
+            output << "  <files>"
             data[:files].each do |file|
               output << "    <file path=\"#{escape_xml(file[:path])}\" size=\"#{file[:size]}\">"
               output << "      <content><![CDATA[#{file[:content]}]]></content>"
-              output << '    </file>'
+              output << "    </file>"
             end
-            output << '  </files>'
+            output << "  </files>"
           end
 
           # Add commands
           if data[:commands] && !data[:commands].empty?
-            output << '  <commands>'
+            output << "  <commands>"
             data[:commands].each do |cmd|
               output << "    <command name=\"#{escape_xml(cmd[:command])}\" success=\"#{cmd[:success]}\">"
               if cmd[:output]
@@ -193,14 +193,14 @@ module Ace
               if cmd[:error]
                 output << "      <error>#{escape_xml(cmd[:error])}</error>"
               end
-              output << '    </command>'
+              output << "    </command>"
             end
-            output << '  </commands>'
+            output << "  </commands>"
           end
 
           # Add diffs
           if data[:diffs] && !data[:diffs].empty?
-            output << '  <diffs>'
+            output << "  <diffs>"
             data[:diffs].each do |diff|
               output << "    <diff range=\"#{escape_xml(diff[:range])}\" success=\"#{diff[:success]}\">"
               if diff[:output]
@@ -209,21 +209,21 @@ module Ace
               if diff[:error]
                 output << "      <error>#{escape_xml(diff[:error])}</error>"
               end
-              output << '    </diff>'
+              output << "    </diff>"
             end
-            output << '  </diffs>'
+            output << "  </diffs>"
           end
 
           # Add errors
           if data[:errors] && !data[:errors].empty?
-            output << '  <errors>'
+            output << "  <errors>"
             data[:errors].each do |error|
               output << "    <error>#{escape_xml(error)}</error>"
             end
-            output << '  </errors>'
+            output << "  </errors>"
           end
 
-          output << '</context>'
+          output << "</context>"
           output.join("\n")
         end
 
@@ -280,7 +280,7 @@ module Ace
             output << ""
 
             data[:commands].each do |cmd|
-              success_attr = cmd[:success] ? 'true' : 'false'
+              success_attr = cmd[:success] ? "true" : "false"
               error_attr = cmd[:error] ? " error=\"#{escape_xml(cmd[:error])}\"" : ""
 
               output << "<output command=\"#{escape_xml(cmd[:command])}\" success=\"#{success_attr}\"#{error_attr}>"
@@ -297,7 +297,7 @@ module Ace
             output << ""
 
             data[:diffs].each do |diff|
-              success_attr = diff[:success] ? 'true' : 'false'
+              success_attr = diff[:success] ? "true" : "false"
               error_attr = diff[:error] ? " error=\"#{escape_xml(diff[:error])}\"" : ""
 
               output << "<diff range=\"#{escape_xml(diff[:range])}\" success=\"#{success_attr}\"#{error_attr}>"
@@ -327,7 +327,7 @@ module Ace
         # @return [String] Valid format
         def validate_format(format)
           normalized = format.to_s.downcase
-          FORMATS.include?(normalized) ? normalized : 'markdown'
+          FORMATS.include?(normalized) ? normalized : "markdown"
         end
 
         # Prepare data for serialization (YAML/JSON)
@@ -335,24 +335,24 @@ module Ace
         # @return [Hash] Clean data for serialization
         def prepare_for_serialization(data)
           {
-            'metadata' => data[:metadata],
-            'files' => data[:files]&.map do |f|
+            "metadata" => data[:metadata],
+            "files" => data[:files]&.map do |f|
               {
-                'path' => f[:path],
-                'content' => f[:content],
-                'size' => f[:size]
+                "path" => f[:path],
+                "content" => f[:content],
+                "size" => f[:size]
               }.compact
             end,
-            'commands' => data[:commands]&.map do |c|
+            "commands" => data[:commands]&.map do |c|
               {
-                'command' => c[:command],
-                'output' => c[:output],
-                'success' => c[:success],
-                'error' => c[:error]
+                "command" => c[:command],
+                "output" => c[:output],
+                "success" => c[:success],
+                "error" => c[:error]
               }.compact
             end,
-            'errors' => data[:errors],
-            'stats' => data[:stats]
+            "errors" => data[:errors],
+            "stats" => data[:stats]
           }.compact
         end
 
@@ -383,7 +383,7 @@ module Ace
           if data[:commands] && !data[:commands].empty?
             output << "<commands>"
             data[:commands].each do |cmd|
-              success_attr = cmd[:success] ? 'true' : 'false'
+              success_attr = cmd[:success] ? "true" : "false"
               output << "<command name=\"#{escape_xml(cmd[:command])}\" success=\"#{success_attr}\">"
               output << cmd[:output] if cmd[:output]
               if cmd[:error]
@@ -400,7 +400,7 @@ module Ace
           if data[:diffs] && !data[:diffs].empty?
             output << "<diffs>"
             data[:diffs].each do |diff|
-              success_attr = diff[:success] ? 'true' : 'false'
+              success_attr = diff[:success] ? "true" : "false"
               output << "<diff range=\"#{escape_xml(diff[:range])}\" success=\"#{success_attr}\">"
               output << diff[:output] if diff[:output]
               if diff[:error]
@@ -421,11 +421,11 @@ module Ace
         # @return [String] Escaped text
         def escape_xml(text)
           text.to_s
-            .gsub('&', '&amp;')
-            .gsub('<', '&lt;')
-            .gsub('>', '&gt;')
-            .gsub('"', '&quot;')
-            .gsub("'", '&apos;')
+            .gsub("&", "&amp;")
+            .gsub("<", "&lt;")
+            .gsub(">", "&gt;")
+            .gsub('"', "&quot;")
+            .gsub("'", "&apos;")
         end
       end
     end

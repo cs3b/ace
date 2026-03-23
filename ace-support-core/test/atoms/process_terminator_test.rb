@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'ace/core/atoms/process_terminator'
+require_relative "../test_helper"
+require "ace/core/atoms/process_terminator"
 
 class ProcessTerminatorTest < Minitest::Test
   def setup
@@ -15,7 +15,7 @@ class ProcessTerminatorTest < Minitest::Test
 
   def test_returns_true_when_termination_attempted
     # Spawn a process that we can terminate
-    pid = spawn('sleep', '60')
+    pid = spawn("sleep", "60")
 
     # Verify process is running
     assert Process.kill(0, pid), "Process should be running"
@@ -51,7 +51,7 @@ class ProcessTerminatorTest < Minitest::Test
 
   def test_handles_already_terminated_process
     # Spawn and immediately terminate a process
-    pid = spawn('echo', 'done')
+    pid = spawn("echo", "done")
     Process.wait(pid)
 
     # Should not raise, should return true
@@ -60,7 +60,7 @@ class ProcessTerminatorTest < Minitest::Test
   end
 
   def test_respects_custom_grace_period
-    pid = spawn('sleep', '60')
+    pid = spawn("sleep", "60")
 
     start_time = Time.now
     @terminator.terminate(pid, grace_period: 0.01)

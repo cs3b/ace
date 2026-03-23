@@ -91,7 +91,7 @@ class TestEnvironmentTest < Minitest::Test
 
   def test_write_config_to_project_location
     @env.setup
-    content = { "test" => "data" }.to_yaml
+    content = {"test" => "data"}.to_yaml
     path = @env.write_config(:project, "config.yml", content)
 
     assert File.exist?(path)
@@ -101,7 +101,7 @@ class TestEnvironmentTest < Minitest::Test
 
   def test_write_config_to_home_location
     @env.setup
-    content = { "home" => "config" }.to_yaml
+    content = {"home" => "config"}.to_yaml
     path = @env.write_config(:home, "settings.yml", content)
 
     assert File.exist?(path)
@@ -111,7 +111,7 @@ class TestEnvironmentTest < Minitest::Test
 
   def test_write_config_to_gem_location
     @env.setup
-    content = { "gem" => "defaults" }.to_yaml
+    content = {"gem" => "defaults"}.to_yaml
     path = @env.write_config(:gem, "defaults.yml", content)
 
     assert File.exist?(path)

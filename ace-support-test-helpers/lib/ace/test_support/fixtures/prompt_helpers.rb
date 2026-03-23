@@ -31,7 +31,7 @@ module Ace
         end
 
         # Alias for backwards compatibility with ace-review tests
-        alias stub_synthesizer_prompt_path stub_prompt_path
+        alias_method :stub_synthesizer_prompt_path, :stub_prompt_path
 
         private
 

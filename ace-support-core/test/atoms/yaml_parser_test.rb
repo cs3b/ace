@@ -38,7 +38,7 @@ class YamlParserTest < Minitest::Test
   def test_dump_hash_to_yaml
     data = {
       "key" => "value",
-      "nested" => { "inner" => "data" }
+      "nested" => {"inner" => "data"}
     }
 
     yaml = Ace::Support::Config::Atoms::YamlParser.dump(data)

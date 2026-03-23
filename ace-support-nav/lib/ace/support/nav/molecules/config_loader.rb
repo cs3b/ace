@@ -4,7 +4,7 @@ require "yaml"
 require "pathname"
 require_relative "source_registry"
 require "ace/support/fs"
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module Support
@@ -49,7 +49,7 @@ module Ace
             rescue Ace::Support::Config::YamlParseError => e
               warn "Warning: Failed to parse nav config: #{e.message}" if debug?
               load_gem_defaults_only
-            rescue StandardError => e
+            rescue => e
               warn "Warning: Could not load ace-support-nav config: #{e.message}" if debug?
               load_gem_defaults_only
             end
@@ -57,11 +57,11 @@ module Ace
             # Load user config from @config_dir if explicitly set (for testing/override)
             # or use the cascade from resolver
             user_config = if @config_dir
-                            load_user_config_from_dir(@config_dir)
-                          else
-                            # No explicit config_dir - defaults already include cascade
-                            {}
-                          end
+              load_user_config_from_dir(@config_dir)
+            else
+              # No explicit config_dir - defaults already include cascade
+              {}
+            end
 
             # Deep merge: user config over gem defaults
             @configs["settings"] = Ace::Support::Config::Atoms::DeepMerger.merge(gem_defaults, user_config)
@@ -202,7 +202,7 @@ module Ace
           def load_yaml_file(path)
             content = File.read(path)
             YAML.safe_load(content, permitted_classes: [Symbol]) || {}
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Failed to load config from #{path}: #{e.message}"
             {}
           end

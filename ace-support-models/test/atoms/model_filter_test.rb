@@ -10,7 +10,7 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test provider filter
   def test_filter_by_provider
-    result = @filter.apply(@models, { provider: "openai" })
+    result = @filter.apply(@models, {provider: "openai"})
 
     assert_equal 2, result.size
     assert result.all? { |m| m.provider_id == "openai" }
@@ -18,28 +18,28 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test capability filters
   def test_filter_by_reasoning_true
-    result = @filter.apply(@models, { reasoning: "true" })
+    result = @filter.apply(@models, {reasoning: "true"})
 
     assert_equal 2, result.size
     assert result.all? { |m| m.capabilities[:reasoning] == true }
   end
 
   def test_filter_by_reasoning_false
-    result = @filter.apply(@models, { reasoning: "false" })
+    result = @filter.apply(@models, {reasoning: "false"})
 
     assert_equal 3, result.size # gpt-4o, llama-3, gemini-2
     assert result.all? { |m| m.capabilities[:reasoning] == false }
   end
 
   def test_filter_by_tool_call
-    result = @filter.apply(@models, { tool_call: "true" })
+    result = @filter.apply(@models, {tool_call: "true"})
 
     assert_equal 3, result.size
     assert result.all? { |m| m.capabilities[:tool_call] == true }
   end
 
   def test_filter_by_attachment
-    result = @filter.apply(@models, { attachment: "true" })
+    result = @filter.apply(@models, {attachment: "true"})
 
     assert_equal 1, result.size
     assert_equal "claude-4", result.first.id
@@ -47,7 +47,7 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test open_weights filter
   def test_filter_by_open_weights
-    result = @filter.apply(@models, { open_weights: "true" })
+    result = @filter.apply(@models, {open_weights: "true"})
 
     assert_equal 1, result.size
     assert_equal "llama-3", result.first.id
@@ -55,14 +55,14 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test modality filter
   def test_filter_by_modality_image
-    result = @filter.apply(@models, { modality: "image" })
+    result = @filter.apply(@models, {modality: "image"})
 
     assert_equal 3, result.size # gpt-4o, claude-4, gemini-2
     assert result.all? { |m| m.modalities[:input].include?("image") }
   end
 
   def test_filter_by_modality_audio
-    result = @filter.apply(@models, { modality: "audio" })
+    result = @filter.apply(@models, {modality: "audio"})
 
     assert_equal 1, result.size
     assert_equal "gemini-2", result.first.id
@@ -70,14 +70,14 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test numeric filters
   def test_filter_by_min_context
-    result = @filter.apply(@models, { min_context: "100000" })
+    result = @filter.apply(@models, {min_context: "100000"})
 
     assert_equal 3, result.size # gpt-4o (128k), o1 (200k), claude-4 (200k)
     assert result.all? { |m| m.context_limit >= 100_000 }
   end
 
   def test_filter_by_max_input_cost
-    result = @filter.apply(@models, { max_input_cost: "2" })
+    result = @filter.apply(@models, {max_input_cost: "2"})
 
     assert_equal 2, result.size
     assert result.all? { |m| m.pricing.input <= 2 }
@@ -85,14 +85,14 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test filter combination (AND logic)
   def test_multiple_filters_and_logic
-    result = @filter.apply(@models, { provider: "openai", reasoning: "true" })
+    result = @filter.apply(@models, {provider: "openai", reasoning: "true"})
 
     assert_equal 1, result.size
     assert_equal "o1", result.first.id
   end
 
   def test_multiple_capability_filters
-    result = @filter.apply(@models, { tool_call: "true", reasoning: "true" })
+    result = @filter.apply(@models, {tool_call: "true", reasoning: "true"})
 
     assert_equal 1, result.size
     assert_equal "claude-4", result.first.id
@@ -100,13 +100,13 @@ class ModelFilterTest < AceModelsTestCase
 
   # Test unknown filter keys (should be ignored)
   def test_unknown_filter_key_ignored
-    result = @filter.apply(@models, { unknown_filter: "value" })
+    result = @filter.apply(@models, {unknown_filter: "value"})
 
     assert_equal 5, result.size # All models returned
   end
 
   def test_unknown_filter_combined_with_known
-    result = @filter.apply(@models, { provider: "openai", unknown_filter: "value" })
+    result = @filter.apply(@models, {provider: "openai", unknown_filter: "value"})
 
     assert_equal 2, result.size # Only provider filter applied
   end
@@ -165,13 +165,13 @@ class ModelFilterTest < AceModelsTestCase
   def test_parse_all_multiple_filters
     result = @filter.parse_all(["provider:openai", "reasoning:true"])
 
-    assert_equal({ provider: "openai", reasoning: "true" }, result)
+    assert_equal({provider: "openai", reasoning: "true"}, result)
   end
 
   def test_parse_all_skips_invalid_filters
     result = @filter.parse_all(["provider:openai", "invalid", "reasoning:true"])
 
-    assert_equal({ provider: "openai", reasoning: "true" }, result)
+    assert_equal({provider: "openai", reasoning: "true"}, result)
   end
 
   def test_parse_all_empty_array
@@ -230,8 +230,8 @@ class ModelFilterTest < AceModelsTestCase
         provider_id: "openai",
         pricing: Ace::Support::Models::Models::PricingInfo.new(input: 2.5, output: 10.0),
         context_limit: 128_000,
-        modalities: { input: %w[text image], output: ["text"] },
-        capabilities: { reasoning: false, tool_call: true, attachment: false },
+        modalities: {input: %w[text image], output: ["text"]},
+        capabilities: {reasoning: false, tool_call: true, attachment: false},
         open_weights: false
       ),
       # OpenAI o1 - text only, reasoning, no tool_call
@@ -241,8 +241,8 @@ class ModelFilterTest < AceModelsTestCase
         provider_id: "openai",
         pricing: Ace::Support::Models::Models::PricingInfo.new(input: 15.0, output: 60.0),
         context_limit: 200_000,
-        modalities: { input: ["text"], output: ["text"] },
-        capabilities: { reasoning: true, tool_call: false, attachment: false },
+        modalities: {input: ["text"], output: ["text"]},
+        capabilities: {reasoning: true, tool_call: false, attachment: false},
         open_weights: false
       ),
       # Anthropic Claude 4 - text+image, reasoning, tool_call, attachment
@@ -252,8 +252,8 @@ class ModelFilterTest < AceModelsTestCase
         provider_id: "anthropic",
         pricing: Ace::Support::Models::Models::PricingInfo.new(input: 3.0, output: 15.0),
         context_limit: 200_000,
-        modalities: { input: %w[text image], output: ["text"] },
-        capabilities: { reasoning: true, tool_call: true, attachment: true },
+        modalities: {input: %w[text image], output: ["text"]},
+        capabilities: {reasoning: true, tool_call: true, attachment: true},
         open_weights: false
       ),
       # Meta Llama 3 - text only, no reasoning, tool_call, open_weights
@@ -263,8 +263,8 @@ class ModelFilterTest < AceModelsTestCase
         provider_id: "meta",
         pricing: Ace::Support::Models::Models::PricingInfo.new(input: 0.5, output: 0.5),
         context_limit: 8192,
-        modalities: { input: ["text"], output: ["text"] },
-        capabilities: { reasoning: false, tool_call: true, attachment: false },
+        modalities: {input: ["text"], output: ["text"]},
+        capabilities: {reasoning: false, tool_call: true, attachment: false},
         open_weights: true
       ),
       # Google Gemini 2 - multimodal including audio
@@ -274,8 +274,8 @@ class ModelFilterTest < AceModelsTestCase
         provider_id: "google",
         pricing: Ace::Support::Models::Models::PricingInfo.new(input: 1.0, output: 2.0),
         context_limit: 32_000,
-        modalities: { input: %w[text image audio], output: ["text"] },
-        capabilities: { reasoning: false, tool_call: false, attachment: false },
+        modalities: {input: %w[text image audio], output: ["text"]},
+        capabilities: {reasoning: false, tool_call: false, attachment: false},
         open_weights: false
       )
     ]

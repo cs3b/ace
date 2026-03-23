@@ -78,7 +78,7 @@ class YamlLoaderTest < AceTestCase
 
   def test_creates_directory_when_saving
     with_temp_dir do
-      config = Ace::Support::Config::Models::Config.new({ "test" => "data" })
+      config = Ace::Support::Config::Models::Config.new({"test" => "data"})
 
       Ace::Support::Config::Molecules::YamlLoader.save_file(config, "deep/nested/path/file.yml")
 
@@ -120,7 +120,7 @@ class YamlLoaderTest < AceTestCase
 
   def test_load_and_merge_with_missing_files
     with_temp_dir do
-      config1 = { "ace" => { "exists" => true } }
+      config1 = {"ace" => {"exists" => true}}
       create_config_file("exists.yml", config1.to_yaml)
 
       merged = Ace::Support::Config::Molecules::YamlLoader.load_and_merge(
@@ -155,15 +155,15 @@ class YamlLoaderTest < AceTestCase
     with_temp_dir do
       # Create a file and make it read-only to cause an IO error
       FileUtils.mkdir_p("readonly")
-      FileUtils.chmod(0444, "readonly")
+      FileUtils.chmod(0o444, "readonly")
 
-      config = Ace::Support::Config::Models::Config.new({ "test" => "data" })
+      config = Ace::Support::Config::Models::Config.new({"test" => "data"})
 
       assert_raises(IOError) do
         Ace::Support::Config::Molecules::YamlLoader.save_file(config, "readonly/subdir/file.yml")
       end
     ensure
-      FileUtils.chmod(0755, "readonly") if File.exist?("readonly")
+      FileUtils.chmod(0o755, "readonly") if File.exist?("readonly")
     end
   end
 end

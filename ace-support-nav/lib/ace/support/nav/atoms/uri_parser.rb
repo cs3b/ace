@@ -21,13 +21,13 @@ module Ace
             rest = parts[1]
 
             return nil unless valid_protocol?(protocol)
-            return { protocol: protocol, source: nil, path: nil } if rest.nil? || rest.empty?
+            return {protocol: protocol, source: nil, path: nil} if rest.nil? || rest.empty?
 
             # Check for source-specific syntax (@source/path or @source)
             if rest.start_with?("@")
               parse_source_specific(protocol, rest)
             else
-              { protocol: protocol, source: nil, path: rest }
+              {protocol: protocol, source: nil, path: rest}
             end
           end
 
@@ -50,9 +50,9 @@ module Ace
             # Format: @source/path or just @source
             if rest.include?("/")
               source_parts = rest.split("/", 2)
-              { protocol: protocol, source: source_parts[0], path: source_parts[1] }
+              {protocol: protocol, source: source_parts[0], path: source_parts[1]}
             else
-              { protocol: protocol, source: rest, path: nil }
+              {protocol: protocol, source: rest, path: nil}
             end
           end
         end

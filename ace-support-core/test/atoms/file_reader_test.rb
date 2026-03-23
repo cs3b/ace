@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
-require 'ace/core/atoms/file_reader'
-require 'tempfile'
+require_relative "../test_helper"
+require "ace/core/atoms/file_reader"
+require "tempfile"
 
 class FileReaderTest < Minitest::Test
   def setup
@@ -10,7 +10,7 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_read_existing_file
-    Tempfile.create(['test', '.txt']) do |file|
+    Tempfile.create(["test", ".txt"]) do |file|
       content = "Hello, World!"
       file.write(content)
       file.flush
@@ -24,7 +24,7 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_read_non_existent_file
-    result = @reader.read('/non/existent/file.txt')
+    result = @reader.read("/non/existent/file.txt")
 
     refute result[:success]
     assert_match(/File not found/, result[:error])
@@ -47,7 +47,7 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_read_file_with_size_limit
-    Tempfile.create(['test', '.txt']) do |file|
+    Tempfile.create(["test", ".txt"]) do |file|
       content = "x" * 1000
       file.write(content)
       file.flush
@@ -70,7 +70,7 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_readable_returns_false_for_non_existent_file
-    refute @reader.readable?('/non/existent/file.txt')
+    refute @reader.readable?("/non/existent/file.txt")
   end
 
   def test_readable_returns_false_for_nil
@@ -78,15 +78,15 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_binary_detection_by_extension
-    assert @reader.binary?('image.jpg')
-    assert @reader.binary?('document.pdf')
-    assert @reader.binary?('archive.zip')
-    refute @reader.binary?('text.txt')
-    refute @reader.binary?('script.rb')
+    assert @reader.binary?("image.jpg")
+    assert @reader.binary?("document.pdf")
+    assert @reader.binary?("archive.zip")
+    refute @reader.binary?("text.txt")
+    refute @reader.binary?("script.rb")
   end
 
   def test_binary_detection_by_content
-    Tempfile.create(['binary', '.dat']) do |file|
+    Tempfile.create(["binary", ".dat"]) do |file|
       # Write binary content with null bytes
       file.write("\x00\x01\x02\x03")
       file.flush
@@ -94,7 +94,7 @@ class FileReaderTest < Minitest::Test
       assert @reader.binary?(file.path)
     end
 
-    Tempfile.create(['text', '.txt']) do |file|
+    Tempfile.create(["text", ".txt"]) do |file|
       file.write("Plain text content")
       file.flush
 
@@ -119,10 +119,10 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_metadata_for_non_existent_file
-    metadata = @reader.metadata('/non/existent/file.txt')
+    metadata = @reader.metadata("/non/existent/file.txt")
 
     refute metadata[:exists]
-    assert_equal '/non/existent/file.txt', metadata[:path]
+    assert_equal "/non/existent/file.txt", metadata[:path]
   end
 
   def test_read_lines_with_limit
@@ -157,7 +157,7 @@ class FileReaderTest < Minitest::Test
   end
 
   def test_read_lines_binary_file
-    Tempfile.create(['binary', '.jpg']) do |file|
+    Tempfile.create(["binary", ".jpg"]) do |file|
       file.write("\x00\x01\x02")
       file.flush
 

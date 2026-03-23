@@ -95,7 +95,7 @@ class ApiFetcherTest < AceModelsTestCase
 
   def test_api_url_constant
     assert_equal "https://models.dev/api.json",
-                 Ace::Support::Models::Atoms::ApiFetcher::API_URL
+      Ace::Support::Models::Atoms::ApiFetcher::API_URL
   end
 
   def test_timeout_constant
@@ -112,7 +112,7 @@ class ApiFetcherTest < AceModelsTestCase
     stub_connection = Faraday.new do |f|
       f.adapter :test do |stub|
         stub.get("http://test.example/api.json") do
-          [status, { "Content-Type" => "application/json" }, body]
+          [status, {"Content-Type" => "application/json"}, body]
         end
       end
     end

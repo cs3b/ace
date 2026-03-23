@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'minitest/test'
+require "minitest/test"
 
 module Ace
   module TestSupport

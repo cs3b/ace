@@ -78,7 +78,7 @@ module Ace
             lines << ""
 
             tokens = result[:tokens]
-            costs = result[:costs]
+            result[:costs]
             rates = result[:rates]
 
             if tokens[:input] > 0
@@ -111,19 +111,19 @@ module Ace
             return "$0.00" if cost.zero?
 
             if cost < 0.01
-              "$#{sprintf('%.4f', cost)}"
+              "$#{sprintf("%.4f", cost)}"
             elsif cost < 1
-              "$#{sprintf('%.3f', cost)}"
+              "$#{sprintf("%.3f", cost)}"
             else
-              "$#{sprintf('%.2f', cost)}"
+              "$#{sprintf("%.2f", cost)}"
             end
           end
 
           def format_tokens(count)
             if count >= 1_000_000
-              "#{sprintf('%.1f', count / 1_000_000.0)}M"
+              "#{sprintf("%.1f", count / 1_000_000.0)}M"
             elsif count >= 1_000
-              "#{sprintf('%.1f', count / 1_000.0)}K"
+              "#{sprintf("%.1f", count / 1_000.0)}K"
             else
               count.to_s
             end

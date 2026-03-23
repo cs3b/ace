@@ -7,9 +7,9 @@ class ItemSorterTest < AceSupportItemsTestCase
 
   def setup
     @items = [
-      { id: "c", priority: 3, title: "Charlie" },
-      { id: "a", priority: 1, title: "Alice" },
-      { id: "b", priority: 2, title: "Bob" }
+      {id: "c", priority: 3, title: "Charlie"},
+      {id: "a", priority: 1, title: "Alice"},
+      {id: "b", priority: 2, title: "Bob"}
     ]
   end
 
@@ -32,7 +32,7 @@ class ItemSorterTest < AceSupportItemsTestCase
   end
 
   def test_sort_nil_values_last_ascending
-    items = @items + [{ id: "d", priority: nil, title: "Dave" }]
+    items = @items + [{id: "d", priority: nil, title: "Dave"}]
     result = IS.sort(items, field: :priority)
 
     assert_equal [1, 2, 3], result[0..2].map { |i| i[:priority] }
@@ -40,7 +40,7 @@ class ItemSorterTest < AceSupportItemsTestCase
   end
 
   def test_sort_nil_values_last_descending
-    items = @items + [{ id: "d", priority: nil, title: "Dave" }]
+    items = @items + [{id: "d", priority: nil, title: "Dave"}]
     result = IS.sort(items, field: :priority, direction: :desc)
 
     assert_equal [3, 2, 1], result[0..2].map { |i| i[:priority] }

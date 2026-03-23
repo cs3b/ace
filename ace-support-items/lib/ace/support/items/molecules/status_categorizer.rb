@@ -17,8 +17,8 @@ module Ace
           # @param up_next_sorter [Proc, nil] Custom sorter for up-next items.
           #   Receives array of items, returns sorted array. Default: sort by id.
           def self.categorize(items, up_next_limit:, recently_done_limit:,
-                              pending_statuses: ["pending"], done_statuses: ["done"],
-                              up_next_sorter: nil)
+            pending_statuses: ["pending"], done_statuses: ["done"],
+            up_next_sorter: nil)
             up_next = if up_next_limit > 0
               candidates = items
                 .select { |i| pending_statuses.include?(i.status) && i.special_folder.nil? }
@@ -35,14 +35,14 @@ module Ace
             recently_done = if recently_done_limit > 0
               items
                 .select { |i| done_statuses.include?(i.status) }
-                .map { |i| { item: i, completed_at: safe_mtime(i.file_path) } }
+                .map { |i| {item: i, completed_at: safe_mtime(i.file_path)} }
                 .sort_by { |entry| -(entry[:completed_at]&.to_f || 0) }
                 .first(recently_done_limit)
             else
               []
             end
 
-            { up_next: up_next, recently_done: recently_done }
+            {up_next: up_next, recently_done: recently_done}
           end
 
           # Safely read file mtime, returning nil if the file is missing.

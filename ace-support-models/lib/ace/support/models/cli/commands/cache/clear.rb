@@ -27,11 +27,11 @@ module Ace
 
                 if result[:status] == :success
                   puts "Cache cleared successfully"
-                  puts "Deleted: #{result[:deleted_files].join(', ')}" if result[:deleted_files]&.any?
+                  puts "Deleted: #{result[:deleted_files].join(", ")}" if result[:deleted_files]&.any?
                 else
                   raise Ace::Support::Cli::Error.new(result[:message])
                 end
-              rescue StandardError => e
+              rescue => e
                 raise Ace::Support::Cli::Error.new(e.message)
               end
             end

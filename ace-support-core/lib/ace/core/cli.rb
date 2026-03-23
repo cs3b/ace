@@ -43,7 +43,6 @@ module Ace
 
       def run_init(argv)
         options = {}
-        gem_name = nil
 
         parser = OptionParser.new do |opts|
           opts.banner = <<~BANNER.chomp
@@ -59,7 +58,10 @@ module Ace
           opts.on("--dry-run", "Show what would be done") { options[:dry_run] = true }
           opts.on("--global", "Use ~/.ace instead of ./.ace") { options[:global] = true }
           opts.on("--verbose", "Show verbose output") { options[:verbose] = true }
-          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+          opts.on("-h", "--help", "Show this help") {
+            puts opts
+            exit
+          }
         end
 
         parser.parse!(argv)
@@ -76,7 +78,6 @@ module Ace
 
       def run_diff(argv)
         options = {}
-        gem_name = nil
 
         parser = OptionParser.new do |opts|
           opts.banner = <<~BANNER.chomp
@@ -92,7 +93,10 @@ module Ace
           opts.on("--local", "Compare local configs (default)") { options[:local] = true }
           opts.on("--file PATH", "Compare specific file") { |f| options[:file] = f }
           opts.on("--one-line", "One-line summary per file") { options[:one_line] = true }
-          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+          opts.on("-h", "--help", "Show this help") {
+            puts opts
+            exit
+          }
         end
 
         parser.parse!(argv)
@@ -121,7 +125,10 @@ module Ace
             OPTIONS
           BANNER
           opts.on("--verbose", "Show detailed information") { verbose = true }
-          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+          opts.on("-h", "--help", "Show this help") {
+            puts opts
+            exit
+          }
         end
 
         parser.parse!(argv)
@@ -136,10 +143,10 @@ module Ace
         ConfigTemplates.all_gems.each do |gem_name|
           info = ConfigTemplates.gem_info[gem_name]
           source_label = case info[:source]
-                         when :local then "[local]"
-                         when :gem then "[gem]"
-                         when :both then "[local+gem]"
-                         end
+          when :local then "[local]"
+          when :gem then "[gem]"
+          when :both then "[local+gem]"
+          end
 
           puts "  #{gem_name} #{source_label}"
 

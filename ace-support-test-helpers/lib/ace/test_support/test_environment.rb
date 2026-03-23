@@ -18,9 +18,9 @@ module Ace
       # Set up isolated test environment
       def setup
         @temp_dir = Dir.mktmpdir("ace-#{@gem_name}-test")
-        @home_dir = File.join(@temp_dir, 'home')
-        @project_dir = File.join(@temp_dir, 'project')
-        @gem_dir = File.join(@temp_dir, 'gem')
+        @home_dir = File.join(@temp_dir, "home")
+        @project_dir = File.join(@temp_dir, "project")
+        @gem_dir = File.join(@temp_dir, "gem")
 
         # Create directory structure
         Dir.mkdir(@home_dir)
@@ -28,13 +28,13 @@ module Ace
         Dir.mkdir(@gem_dir)
 
         # Store original environment
-        @original_env['HOME'] = ENV['HOME']
-        @original_env['ACE_CONFIG_PATH'] = ENV['ACE_CONFIG_PATH']
+        @original_env["HOME"] = ENV["HOME"]
+        @original_env["ACE_CONFIG_PATH"] = ENV["ACE_CONFIG_PATH"]
         @original_pwd = Dir.pwd
 
         # Set test environment
-        ENV['HOME'] = @home_dir
-        ENV['ACE_CONFIG_PATH'] = nil
+        ENV["HOME"] = @home_dir
+        ENV["ACE_CONFIG_PATH"] = nil
         Dir.chdir(@project_dir)
       end
 
@@ -57,21 +57,21 @@ module Ace
 
       # Create project config directory
       def create_project_config_dir
-        config_dir = File.join(@project_dir, '.ace', @gem_name)
+        config_dir = File.join(@project_dir, ".ace", @gem_name)
         FileUtils.mkdir_p(config_dir)
         config_dir
       end
 
       # Create home config directory
       def create_home_config_dir
-        config_dir = File.join(@home_dir, '.ace', @gem_name)
+        config_dir = File.join(@home_dir, ".ace", @gem_name)
         FileUtils.mkdir_p(config_dir)
         config_dir
       end
 
       # Create gem config directory
       def create_gem_config_dir
-        config_dir = File.join(@gem_dir, 'config', 'ace', @gem_name)
+        config_dir = File.join(@gem_dir, "config", "ace", @gem_name)
         FileUtils.mkdir_p(config_dir)
         config_dir
       end
@@ -79,22 +79,22 @@ module Ace
       # Write config file to specified location
       def write_config(type, filename, content)
         path = case type
-               when :project
-                 File.join(create_project_config_dir, filename)
-               when :home
-                 File.join(create_home_config_dir, filename)
-               when :gem
-                 File.join(create_gem_config_dir, filename)
-               else
-                 raise ArgumentError, "Unknown config type: #{type}"
-               end
+        when :project
+          File.join(create_project_config_dir, filename)
+        when :home
+          File.join(create_home_config_dir, filename)
+        when :gem
+          File.join(create_gem_config_dir, filename)
+        else
+          raise ArgumentError, "Unknown config type: #{type}"
+        end
 
         File.write(path, content)
         path
       end
 
       # Write .env file to project directory
-      def write_env_file(filename = '.env', content = '')
+      def write_env_file(filename = ".env", content = "")
         path = File.join(@project_dir, filename)
         File.write(path, content)
         path
@@ -120,11 +120,11 @@ module Ace
       def config_path(type)
         case type
         when :project
-          File.join(@project_dir, '.ace', @gem_name)
+          File.join(@project_dir, ".ace", @gem_name)
         when :home
-          File.join(@home_dir, '.ace', @gem_name)
+          File.join(@home_dir, ".ace", @gem_name)
         when :gem
-          File.join(@gem_dir, 'config', 'ace', @gem_name)
+          File.join(@gem_dir, "config", "ace", @gem_name)
         else
           raise ArgumentError, "Unknown config type: #{type}"
         end

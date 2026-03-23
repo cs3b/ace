@@ -53,27 +53,27 @@ class ModelSearcherTest < AceModelsTestCase
 
   # Test filters parameter
   def test_search_with_filter_provider
-    results = @searcher.search(nil, filters: { provider: "test-provider" })
+    results = @searcher.search(nil, filters: {provider: "test-provider"})
 
     assert_equal 1, results.size
     assert_equal "test-provider", results.first.provider_id
   end
 
   def test_search_with_filter_tool_call
-    results = @searcher.search(nil, filters: { tool_call: "true" })
+    results = @searcher.search(nil, filters: {tool_call: "true"})
 
     assert_equal 1, results.size
     assert results.first.capabilities[:tool_call]
   end
 
   def test_search_with_filter_min_context
-    results = @searcher.search(nil, filters: { min_context: "100000" })
+    results = @searcher.search(nil, filters: {min_context: "100000"})
 
     assert results.all? { |m| m.context_limit >= 100_000 }
   end
 
   def test_search_with_multiple_filters
-    results = @searcher.search(nil, filters: { provider: "test-provider", tool_call: "true" })
+    results = @searcher.search(nil, filters: {provider: "test-provider", tool_call: "true"})
 
     assert_equal 1, results.size
     assert_equal "test-provider", results.first.provider_id
@@ -81,7 +81,7 @@ class ModelSearcherTest < AceModelsTestCase
   end
 
   def test_search_with_query_and_filters
-    results = @searcher.search("test", filters: { tool_call: "true" })
+    results = @searcher.search("test", filters: {tool_call: "true"})
 
     assert results.any?
     assert results.all? { |m| m.capabilities[:tool_call] }
@@ -89,7 +89,7 @@ class ModelSearcherTest < AceModelsTestCase
 
   def test_search_filters_applied_before_limit
     # Set up a search that would return 2 models, filter to 1, limit to 10
-    results = @searcher.search(nil, filters: { provider: "test-provider" }, limit: 10)
+    results = @searcher.search(nil, filters: {provider: "test-provider"}, limit: 10)
 
     assert_equal 1, results.size
   end
@@ -123,7 +123,7 @@ class ModelSearcherTest < AceModelsTestCase
 
   # Test that filters still work with the new implementation
   def test_search_with_filters_returns_correct_total
-    result = @searcher.search(nil, filters: { provider: "test-provider" }, limit: 10, with_total: true)
+    result = @searcher.search(nil, filters: {provider: "test-provider"}, limit: 10, with_total: true)
 
     assert_equal 1, result[:models].size
     assert_equal 1, result[:total] # Only 1 model matches the filter

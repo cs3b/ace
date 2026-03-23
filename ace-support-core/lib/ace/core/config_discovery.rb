@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
+require "ace/support/config"
 require "ace/support/fs"
 
 module Ace
@@ -80,22 +80,20 @@ module Ace
         config = {}
 
         # Load in reverse order so higher priority overwrites lower
-        files.reverse.each do |file|
-          begin
-            file_config = YAML.load_file(file)
-            if file_config.is_a?(Hash)
-              # Resolve relative paths if requested
-              if resolve_paths
-                base_dir = File.dirname(file)
-                # Determine project root for resolving plain paths
-                proj_root = project_root
-                file_config = resolve_relative_paths(file_config, base_dir, proj_root)
-              end
-              config = ::Ace::Support::Config::Atoms::DeepMerger.merge(config, file_config)
+        files.reverse_each do |file|
+          file_config = YAML.load_file(file)
+          if file_config.is_a?(Hash)
+            # Resolve relative paths if requested
+            if resolve_paths
+              base_dir = File.dirname(file)
+              # Determine project root for resolving plain paths
+              proj_root = project_root
+              file_config = resolve_relative_paths(file_config, base_dir, proj_root)
             end
-          rescue => e
-            warn "Error loading config from #{file}: #{e.message}"
+            config = ::Ace::Support::Config::Atoms::DeepMerger.merge(config, file_config)
           end
+        rescue => e
+          warn "Error loading config from #{file}: #{e.message}"
         end
 
         config
@@ -146,7 +144,7 @@ module Ace
           obj.map { |v| resolve_relative_paths(v, base_dir, project_root) }
         when String
           # Check if this looks like a relative path with dots
-          if obj.start_with?("./") || obj.start_with?("../")
+          if obj.start_with?("./", "../")
             # Resolve relative to the config file's directory
             File.expand_path(File.join(base_dir, obj))
           elsif project_root && looks_like_project_path?(obj)

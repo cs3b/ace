@@ -7,8 +7,8 @@ module Ace
         # Represents the diff between two API versions
         class DiffResult
           attr_reader :added_models, :removed_models, :updated_models,
-                      :added_providers, :removed_providers,
-                      :previous_sync_at, :current_sync_at
+            :added_providers, :removed_providers,
+            :previous_sync_at, :current_sync_at
 
           # Initialize diff result
           def initialize(attrs = {})

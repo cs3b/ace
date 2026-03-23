@@ -9,11 +9,11 @@ module Ace
         module MockGem
           class << self
             def config
-              { "model" => "gflash", "preset" => "pr", "max_tokens" => 1000 }
+              {"model" => "gflash", "preset" => "pr", "max_tokens" => 1000}
             end
 
             def default_config
-              { "model" => "glite", "preset" => "pr", "max_tokens" => 1000 }
+              {"model" => "glite", "preset" => "pr", "max_tokens" => 1000}
             end
           end
         end
@@ -26,11 +26,11 @@ module Ace
           include Ace::Core::CLI::ConfigSummaryMixin
 
           def gem_config
-            { "key" => "value" }
+            {"key" => "value"}
           end
 
           def gem_defaults
-            { "key" => "default" }
+            {"key" => "default"}
           end
         end
 
@@ -44,13 +44,13 @@ module Ace
         end
 
         def test_display_config_summary_shows_when_verbose
-          output = capture_stderr { @command.display_config_summary("test", { verbose: true }) }
+          output = capture_stderr { @command.display_config_summary("test", {verbose: true}) }
           assert_includes output, "Config:"
           assert_includes output, "model=gflash"
         end
 
         def test_display_config_summary_quiet_when_quiet
-          output = capture_stderr { @command.display_config_summary("test", { verbose: true, quiet: true }) }
+          output = capture_stderr { @command.display_config_summary("test", {verbose: true, quiet: true}) }
           refute_includes output, "Config:"
         end
 
@@ -67,14 +67,14 @@ module Ace
 
         def test_base_mixin_works_with_implemented_methods
           command = BaseMixinCommand.new
-          output = capture_stderr { command.display_config_summary("test", { verbose: true }) }
+          output = capture_stderr { command.display_config_summary("test", {verbose: true}) }
           assert_includes output, "Config:"
         end
 
         def test_base_mixin_raises_without_gem_config
           command = NotImplementedCommand.new
           assert_raises(NotImplementedError) do
-            command.display_config_summary("test", { verbose: true })
+            command.display_config_summary("test", {verbose: true})
           end
         end
       end

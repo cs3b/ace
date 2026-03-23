@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/env_loader"
-require 'ace/support/config'
+require "ace/support/config"
 require "ace/support/fs"
 
 module Ace
@@ -48,10 +48,10 @@ module Ace
           filepath = File.join(root_path, filepath) unless Ace::Support::Fs::Atoms::PathExpander.absolute?(filepath)
 
           vars_to_save = if keys
-                           ENV.to_h.select { |k, _| keys.include?(k) }
-                         else
-                           ENV.to_h
-                         end
+            ENV.to_h.select { |k, _| keys.include?(k) }
+          else
+            ENV.to_h
+          end
 
           Molecules::EnvLoader.save_file(vars_to_save, filepath)
           vars_to_save

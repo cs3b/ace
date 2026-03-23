@@ -241,8 +241,6 @@ module Ace
               value
             when String
               Date.parse(value)
-            else
-              nil
             end
           rescue ArgumentError
             nil

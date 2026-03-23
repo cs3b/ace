@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "set"
 require_relative "../atoms/gem_resolver"
 require_relative "../atoms/path_normalizer"
 require_relative "../atoms/extension_inferrer"
@@ -159,60 +158,56 @@ module Ace
                     end
                   end
                 end
-              else
+              elsif extensions.empty?
                 # Pattern like "base/*" or "base/something" - use as-is but handle properly
-                if extensions.empty?
-                  glob_pattern = File.join(search_path, pattern)
-                  glob_pattern += "*" unless pattern.end_with?("*") || pattern.include?("*")
+                glob_pattern = File.join(search_path, pattern)
+                glob_pattern += "*" unless pattern.end_with?("*") || pattern.include?("*")
+
+                Dir.glob(glob_pattern).each do |file_path|
+                  next unless File.file?(file_path)
+                  resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                end
+              else
+                extensions.each do |ext|
+                  glob_pattern = if pattern.end_with?(ext)
+                    File.join(search_path, pattern)
+                  else
+                    File.join(search_path, "#{pattern}#{ext}")
+                  end
 
                   Dir.glob(glob_pattern).each do |file_path|
                     next unless File.file?(file_path)
                     resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
                   end
-                else
-                  extensions.each do |ext|
-                    if pattern.end_with?(ext)
-                      glob_pattern = File.join(search_path, pattern)
-                    else
-                      glob_pattern = File.join(search_path, "#{pattern}#{ext}")
-                    end
-
-                    Dir.glob(glob_pattern).each do |file_path|
-                      next unless File.file?(file_path)
-                      resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
-                    end
-                  end
                 end
               end
-            else
+            elsif extensions.empty?
               # Original behavior for patterns without directory structure
-              if extensions.empty?
-                # If no extensions specified, match any file
-                glob_pattern = File.join(search_path, "**", pattern)
-                glob_pattern += "*" unless pattern.end_with?("*")
+              glob_pattern = File.join(search_path, "**", pattern)
+              glob_pattern += "*" unless pattern.end_with?("*")
+
+              Dir.glob(glob_pattern).each do |file_path|
+                next unless File.file?(file_path)
+
+                resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+              end
+            # If no extensions specified, match any file
+            else
+              # Match files with specified extensions
+              extensions.each do |ext|
+                # Check if pattern already ends with this extension
+                glob_pattern = if pattern.end_with?(ext)
+                  # Pattern already has extension, search as-is
+                  File.join(search_path, "**", pattern)
+                else
+                  # Append extension to pattern
+                  File.join(search_path, "**", "#{pattern}#{ext}")
+                end
 
                 Dir.glob(glob_pattern).each do |file_path|
                   next unless File.file?(file_path)
 
                   resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
-                end
-              else
-                # Match files with specified extensions
-                extensions.each do |ext|
-                  # Check if pattern already ends with this extension
-                  if pattern.end_with?(ext)
-                    # Pattern already has extension, search as-is
-                    glob_pattern = File.join(search_path, "**", pattern)
-                  else
-                    # Append extension to pattern
-                    glob_pattern = File.join(search_path, "**", "#{pattern}#{ext}")
-                  end
-
-                  Dir.glob(glob_pattern).each do |file_path|
-                    next unless File.file?(file_path)
-
-                    resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
-                  end
                 end
               end
             end
@@ -268,7 +263,7 @@ module Ace
                 basename = File.basename(file_path)
                 basename_candidate = File.basename(candidate)
                 next unless basename == basename_candidate ||
-                            basename.start_with?(basename_candidate + ".")
+                  basename.start_with?(basename_candidate + ".")
 
                 found_paths.add(file_path)
                 resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
@@ -379,11 +374,11 @@ module Ace
             normalized_search_path = search_path.end_with?("/") ? search_path : "#{search_path}/"
 
             # Calculate relative path from the search path
-            if file_path.start_with?(normalized_search_path)
-              relative_path = file_path[normalized_search_path.length..]
+            relative_path = if file_path.start_with?(normalized_search_path)
+              file_path[normalized_search_path.length..]
             else
               # Fallback to original logic if path doesn't start with search_path
-              relative_path = file_path.sub("#{search_path}/", "")
+              file_path.sub("#{search_path}/", "")
             end
 
             # Remove extension for resource path

@@ -380,7 +380,7 @@ module Ace
             assert_equal "@user", source.alias_name
             assert_equal :user, source.type
             assert_equal 20, source.priority
-          ensure
+
             # Don't remove user directory as it might contain real config
           end
 
@@ -527,7 +527,7 @@ module Ace
               config_dir = File.join(@test_dir, ".ace", "nav")
               FileUtils.mkdir_p(config_dir)
               File.write(File.join(config_dir, "config.yml"), {
-                "extension_inference" => { "enabled" => false }
+                "extension_inference" => {"enabled" => false}
               }.to_yaml)
 
               # Reload config loader to pick up the new config

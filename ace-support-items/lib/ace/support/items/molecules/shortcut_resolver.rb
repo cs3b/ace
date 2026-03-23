@@ -48,7 +48,7 @@ module Ace
                 on_ambiguity.call(matches)
               else
                 warn "Warning: Ambiguous shortcut '#{ref}' matches #{matches.size} items: " \
-                     "#{matches.map(&:id).join(', ')}. Using most recent."
+                     "#{matches.map(&:id).join(", ")}. Using most recent."
               end
               # Return most recent (last by sorted ID = chronologically latest)
               matches.last

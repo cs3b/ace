@@ -74,10 +74,18 @@ module Ace
           private_class_method def self.default_value_accessor(item, key)
             # Hash-like access (symbol then string)
             if item.respond_to?(:[])
-              val = item[key.to_sym] rescue nil
+              val = begin
+                item[key.to_sym]
+              rescue
+                nil
+              end
               return val unless val.nil?
 
-              val = item[key.to_s] rescue nil
+              val = begin
+                item[key.to_s]
+              rescue
+                nil
+              end
               return val unless val.nil?
             end
 

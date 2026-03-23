@@ -68,7 +68,7 @@ class ProvidersCommandsTest < AceModelsTestCase
   def test_list_supports_wrapped_providers_hash_cache_shape
     with_temp_cache do |cache_dir|
       cache_manager = Ace::Support::Models::Molecules::CacheManager.new(cache_dir: cache_dir)
-      cache_manager.write({ "providers" => sample_api_response })
+      cache_manager.write({"providers" => sample_api_response})
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
         cmd = Ace::Support::Models::CLI::Commands::Providers::List.new
@@ -87,7 +87,7 @@ class ProvidersCommandsTest < AceModelsTestCase
           {
             "id" => "anthropic",
             "models" => [
-              { "id" => "claude-3-opus", "name" => "Claude 3 Opus" }
+              {"id" => "claude-3-opus", "name" => "Claude 3 Opus"}
             ]
           }
         ]

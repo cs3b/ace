@@ -32,17 +32,17 @@ module Ace
 
         # Read clipboard content
         def self.read
-          return { success: false, error: "Not on macOS" } unless RUBY_PLATFORM =~ /darwin/
+          return {success: false, error: "Not on macOS"} unless RUBY_PLATFORM.match?(/darwin/)
 
           pasteboard = get_general_pasteboard
-          return { success: false, error: "Could not access pasteboard" } unless pasteboard
+          return {success: false, error: "Could not access pasteboard"} unless pasteboard
 
           types = available_types(pasteboard)
-          return { success: true, types: [], text: nil, attachments: [] } if types.empty?
+          return {success: true, types: [], text: nil, attachments: []} if types.empty?
 
-          { success: true, types: types, raw_pasteboard: pasteboard }
+          {success: true, types: types, raw_pasteboard: pasteboard}
         rescue => e
-          { success: false, error: e.message }
+          {success: false, error: e.message}
         end
 
         # Get the general (system) pasteboard
@@ -73,15 +73,15 @@ module Ace
 
           types
         rescue => e
-          STDERR.puts "Error in available_types: #{e.message}"
-          STDERR.puts e.backtrace.first(5)
+          warn "Error in available_types: #{e.message}"
+          warn e.backtrace.first(5)
           []
         end
 
         # Read data for a specific UTI type
         def self.read_type(pasteboard, uti)
           # Create NSString for the UTI
-          ns_string_class = objc_getClass("NSString")
+          objc_getClass("NSString")
           uti_str = create_nsstring(uti)
           return nil unless uti_str
 
@@ -99,14 +99,14 @@ module Ace
 
           # Read binary data
           bytes.read_bytes(length)
-        rescue => e
+        rescue
           nil
         end
 
         # Read string content for text types
         def self.read_string(pasteboard, uti)
           # Try to get as string first
-          ns_string_class = objc_getClass("NSString")
+          objc_getClass("NSString")
           uti_str = create_nsstring(uti)
           return nil unless uti_str
 
@@ -120,7 +120,7 @@ module Ace
           # Fallback to reading as data
           data = read_type(pasteboard, uti)
           data&.force_encoding("UTF-8")
-        rescue => e
+        rescue
           nil
         end
 
@@ -136,7 +136,7 @@ module Ace
 
           []
         rescue => e
-          STDERR.puts "Error reading file URLs: #{e.message}"
+          warn "Error reading file URLs: #{e.message}"
           []
         end
 
@@ -172,7 +172,7 @@ module Ace
 
           file_paths
         rescue => e
-          STDERR.puts "Error reading NSFilenamesPboardType: #{e.message}"
+          warn "Error reading NSFilenamesPboardType: #{e.message}"
           []
         end
 
@@ -188,10 +188,14 @@ module Ace
           url_str = url_str.sub(%r{^file://}, "")
 
           # URL decode
-          url_str = URI.decode_www_form_component(url_str) rescue url_str
+          url_str = begin
+            URI.decode_www_form_component(url_str)
+          rescue
+            url_str
+          end
 
           File.exist?(url_str) ? [url_str] : []
-        rescue => e
+        rescue
           []
         end
 
@@ -202,7 +206,7 @@ module Ace
 
           utf8_selector = sel_registerName("stringWithUTF8String:")
           objc_msgSend_id(ns_string_class, utf8_selector, FFI::MemoryPointer.from_string(str))
-        rescue => e
+        rescue
           nil
         end
       end

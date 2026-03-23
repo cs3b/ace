@@ -43,7 +43,6 @@ module Ace
             sources.sort_by(&:priority)
           end
 
-
           def discover_user_sources(protocol)
             sources = []
             user_sources_dir = File.expand_path("~/.ace/nav/protocols/#{protocol}-sources")
@@ -84,7 +83,7 @@ module Ace
             return nil unless data.is_a?(Hash)
 
             # Expand environment variables in path (only for non-gem types)
-            path = data["type"] == "gem" ? nil : expand_path(data["path"]) if data["path"]
+            path = (data["type"] == "gem") ? nil : expand_path(data["path"]) if data["path"]
 
             # Log warning if path is provided for gem type
             if data["type"] == "gem" && data["path"]
@@ -102,7 +101,7 @@ module Ace
               config_dir: file_path,  # Pass the config file path for relative resolution
               config: data["config"]  # Pass the config section
             )
-          rescue StandardError => e
+          rescue => e
             warn "Failed to load source file #{file_path}: #{e.message}"
             nil
           end

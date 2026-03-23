@@ -92,15 +92,15 @@ module Ace
       end
 
       def compare_files(source_file, target_file, gem_name)
-        if !File.exist?(target_file)
-          @diffs << {
+        @diffs << if !File.exist?(target_file)
+          {
             gem: gem_name,
             file: target_file,
             status: :missing,
             source: source_file
           }
         elsif files_differ?(source_file, target_file)
-          @diffs << {
+          {
             gem: gem_name,
             file: target_file,
             status: :different,
@@ -108,7 +108,7 @@ module Ace
             diff_output: get_diff_output(source_file, target_file)
           }
         else
-          @diffs << {
+          {
             gem: gem_name,
             file: target_file,
             status: :same,

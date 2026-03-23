@@ -138,12 +138,12 @@ module Ace
                 # Reload document
                 @document = Models::MarkdownDocument.parse(@original_content, file_path: @file_path)
 
-                { success: true, errors: [] }
-              rescue StandardError => e
-                { success: false, errors: ["Rollback failed: #{e.message}"] }
+                {success: true, errors: []}
+              rescue => e
+                {success: false, errors: ["Rollback failed: #{e.message}"]}
               end
             else
-              { success: false, errors: ["No backup available for rollback"] }
+              {success: false, errors: ["No backup available for rollback"]}
             end
           end
 
@@ -172,8 +172,8 @@ module Ace
           def self.from_content(content, file_path: nil)
             # Create a temporary file if needed
             if file_path.nil?
-              require 'tempfile'
-              temp = Tempfile.new(['markdown', '.md'])
+              require "tempfile"
+              temp = Tempfile.new(["markdown", ".md"])
               temp.write(content)
               temp.close
               file_path = temp.path

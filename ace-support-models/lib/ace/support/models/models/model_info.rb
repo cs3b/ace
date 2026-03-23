@@ -7,8 +7,8 @@ module Ace
         # Represents information about a single model
         class ModelInfo
           attr_reader :id, :name, :provider_id, :pricing, :context_limit, :output_limit,
-                      :modalities, :capabilities, :status, :knowledge_date, :release_date,
-                      :last_updated, :open_weights
+            :modalities, :capabilities, :status, :knowledge_date, :release_date,
+            :last_updated, :open_weights
 
           # Initialize model info
           def initialize(attrs = {})
@@ -18,7 +18,7 @@ module Ace
             @pricing = attrs[:pricing] || PricingInfo.new
             @context_limit = attrs[:context_limit]
             @output_limit = attrs[:output_limit]
-            @modalities = attrs[:modalities] || { input: [], output: [] }
+            @modalities = attrs[:modalities] || {input: [], output: []}
             @capabilities = attrs[:capabilities] || {}
             @status = attrs[:status]
             @knowledge_date = attrs[:knowledge_date]
@@ -98,11 +98,11 @@ module Ace
           private
 
           def self.parse_modalities(hash)
-            return { input: [], output: [] } if hash.nil?
+            return {input: [], output: []} if hash.nil?
 
             unless hash.is_a?(Hash)
               warn "[ModelInfo] Unexpected modalities type: #{hash.class}, expected Hash"
-              return { input: [], output: [] }
+              return {input: [], output: []}
             end
 
             {

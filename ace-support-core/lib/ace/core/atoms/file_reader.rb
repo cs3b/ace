@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module Ace
   module Core
@@ -29,16 +29,16 @@ module Ace
         # @param max_size [Integer] Maximum file size in bytes
         # @return [Hash] {success: Boolean, content: String, error: String}
         def read(path, max_size: MAX_FILE_SIZE)
-          return { success: false, error: "Path cannot be nil" } if path.nil?
+          return {success: false, error: "Path cannot be nil"} if path.nil?
 
           expanded_path = File.expand_path(path)
 
           unless File.exist?(expanded_path)
-            return { success: false, error: "File not found: #{path}" }
+            return {success: false, error: "File not found: #{path}"}
           end
 
           unless File.file?(expanded_path)
-            return { success: false, error: "Not a file: #{path}" }
+            return {success: false, error: "Not a file: #{path}"}
           end
 
           file_size = File.size(expanded_path)
@@ -56,12 +56,12 @@ module Ace
             }
           end
 
-          content = File.read(expanded_path, encoding: 'UTF-8')
-          { success: true, content: content, size: file_size }
+          content = File.read(expanded_path, encoding: "UTF-8")
+          {success: true, content: content, size: file_size}
         rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
-          { success: false, error: "File contains invalid UTF-8: #{path}" }
+          {success: false, error: "File contains invalid UTF-8: #{path}"}
         rescue => e
-          { success: false, error: "Failed to read file: #{e.message}" }
+          {success: false, error: "Failed to read file: #{e.message}"}
         end
 
         # Check if file exists and is readable
@@ -89,7 +89,7 @@ module Ace
           return false unless File.exist?(expanded_path)
 
           sample_size = [File.size(expanded_path), 8192].min
-          sample = File.read(expanded_path, sample_size, mode: 'rb')
+          sample = File.read(expanded_path, sample_size, mode: "rb")
 
           # Check for null bytes (common in binary files)
           # Also check for common binary file markers
@@ -111,12 +111,12 @@ module Ace
         # @param path [String] Path to file
         # @return [Hash] File metadata
         def metadata(path)
-          return { exists: false } if path.nil?
+          return {exists: false} if path.nil?
 
           expanded_path = File.expand_path(path)
 
           unless File.exist?(expanded_path)
-            return { exists: false, path: path }
+            return {exists: false, path: path}
           end
 
           stat = File.stat(expanded_path)
@@ -135,7 +135,7 @@ module Ace
             binary: binary?(expanded_path)
           }
         rescue => e
-          { exists: false, path: path, error: e.message }
+          {exists: false, path: path, error: e.message}
         end
 
         # Read lines from file with line limit
@@ -144,22 +144,22 @@ module Ace
         # @param offset [Integer] Starting line number (0-based)
         # @return [Hash] {success: Boolean, lines: Array, total_lines: Integer, error: String}
         def read_lines(path, limit: 100, offset: 0)
-          return { success: false, error: "Path cannot be nil" } if path.nil?
+          return {success: false, error: "Path cannot be nil"} if path.nil?
 
           expanded_path = File.expand_path(path)
 
           unless File.exist?(expanded_path)
-            return { success: false, error: "File not found: #{path}" }
+            return {success: false, error: "File not found: #{path}"}
           end
 
           if binary?(expanded_path)
-            return { success: false, error: "Binary file detected: #{path}" }
+            return {success: false, error: "Binary file detected: #{path}"}
           end
 
           lines = []
           total_lines = 0
 
-          File.foreach(expanded_path, encoding: 'UTF-8').with_index do |line, index|
+          File.foreach(expanded_path, encoding: "UTF-8").with_index do |line, index|
             total_lines = index + 1
             if index >= offset && lines.size < limit
               lines << line.chomp
@@ -174,9 +174,9 @@ module Ace
             limit: limit
           }
         rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
-          { success: false, error: "File contains invalid UTF-8: #{path}" }
+          {success: false, error: "File contains invalid UTF-8: #{path}"}
         rescue => e
-          { success: false, error: "Failed to read lines: #{e.message}" }
+          {success: false, error: "Failed to read lines: #{e.message}"}
         end
       end
     end

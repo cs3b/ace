@@ -42,7 +42,7 @@ module Ace
               end
             else
               # Original path resolution logic for directory/path types
-              return path if path&.start_with?('/')
+              return path if path&.start_with?("/")
 
               if config_dir && path
                 # Resolve relative paths from project root (parent of .ace directory)
@@ -89,13 +89,13 @@ module Ace
           # config_dir is like /path/to/project/.ace/protocols/wfi-sources/local.yml
           def find_project_root(dir)
             ace_dir = dir
-            while ace_dir && !ace_dir.end_with?('/.ace')
+            while ace_dir && !ace_dir.end_with?("/.ace")
               parent = File.dirname(ace_dir)
               break if parent == ace_dir # Reached filesystem root
               ace_dir = parent
             end
 
-            File.dirname(ace_dir) if ace_dir&.end_with?('/.ace')
+            File.dirname(ace_dir) if ace_dir&.end_with?("/.ace")
           end
         end
       end

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'bundler/setup'
-require 'minitest/autorun'
-require 'minitest/pride'
+require "bundler/setup"
+require "minitest/autorun"
+require "minitest/pride"
 
 # Load the gem
-require_relative '../lib/ace/support/markdown'
+require_relative "../lib/ace/support/markdown"
 
 # Test helpers
 module TestHelpers
@@ -47,8 +47,8 @@ module TestHelpers
   end
 
   def create_temp_file(content)
-    require 'tempfile'
-    temp = Tempfile.new(['test', '.md'])
+    require "tempfile"
+    temp = Tempfile.new(["test", ".md"])
     temp.write(content)
     temp.close
     temp

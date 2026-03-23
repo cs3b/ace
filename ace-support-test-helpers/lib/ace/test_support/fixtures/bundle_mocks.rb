@@ -116,7 +116,7 @@ module Ace
 
           OpenStruct.new(
             content: mock_content,
-            metadata: { "format" => "markdown-xml" },
+            metadata: {"format" => "markdown-xml"},
             success: true
           )
         end
@@ -139,7 +139,7 @@ module Ace
 
           OpenStruct.new(
             content: MOCK_GIT_DIFF,
-            metadata: { "format" => format, "config" => config },
+            metadata: {"format" => format, "config" => config},
             success: true
           )
         end

@@ -16,7 +16,7 @@ module Ace
         def self.mock_success_output(package: "ace-bundle", test_count: 2, assertion_count: 4)
           <<~OUTPUT
             Running tests in #{package}
-            #{'.' * test_count}
+            #{"." * test_count}
             Finished tests in 0.001s
             #{test_count} tests, #{assertion_count} assertions, 0 failures
           OUTPUT

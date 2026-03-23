@@ -18,7 +18,7 @@ module Ace
 
             accessor = value_accessor || method(:default_value_accessor)
 
-            multiplier = direction == :desc ? -1 : 1
+            multiplier = (direction == :desc) ? -1 : 1
 
             items.sort do |a, b|
               val_a = accessor.call(a, field.to_s)
@@ -40,10 +40,18 @@ module Ace
           # Default value accessor matching FilterApplier convention
           private_class_method def self.default_value_accessor(item, key)
             if item.respond_to?(:[])
-              val = item[key.to_sym] rescue nil
+              val = begin
+                item[key.to_sym]
+              rescue
+                nil
+              end
               return val unless val.nil?
 
-              val = item[key.to_s] rescue nil
+              val = begin
+                item[key.to_s]
+              rescue
+                nil
+              end
               return val unless val.nil?
             end
 

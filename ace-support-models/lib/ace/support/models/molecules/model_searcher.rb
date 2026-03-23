@@ -65,7 +65,7 @@ module Ace
             end
 
             if with_total
-              { models: limited, total: total }
+              {models: limited, total: total}
             else
               limited
             end

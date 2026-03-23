@@ -17,7 +17,7 @@ module Ace
         # - Backward compatible class methods for utilities
         class PathExpander
           # Protocol pattern for URI detection
-          PROTOCOL_PATTERN = %r{^[a-z][a-z0-9+.-]*://}.freeze
+          PROTOCOL_PATTERN = %r{^[a-z][a-z0-9+.-]*://}
 
           # Instance attributes
           attr_reader :source_dir, :project_root
@@ -106,7 +106,7 @@ module Ace
             return File.expand_path(expanded) if Pathname.new(expanded).absolute?
 
             # Handle source-relative paths (./ or ../)
-            if expanded.start_with?("./") || expanded.start_with?("../")
+            if expanded.start_with?("./", "../")
               return File.expand_path(expanded, @source_dir)
             end
 
@@ -280,8 +280,8 @@ module Ace
 
             # No resolver registered - raise exception for consistent error handling
             raise PathError,
-                  "Protocol '#{uri}' could not be resolved. " \
-                  "Register a protocol resolver with PathExpander.register_protocol_resolver(resolver)"
+              "Protocol '#{uri}' could not be resolved. " \
+              "Register a protocol resolver with PathExpander.register_protocol_resolver(resolver)"
           end
 
           # Expand environment variables in path

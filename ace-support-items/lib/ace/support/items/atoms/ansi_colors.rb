@@ -7,13 +7,13 @@ module Ace
         # Simple ANSI color helpers for terminal output.
         # Automatically skips color codes when stdout is not a TTY.
         module AnsiColors
-          RED    = "\e[31m"
-          GREEN  = "\e[32m"
+          RED = "\e[31m"
+          GREEN = "\e[32m"
           YELLOW = "\e[33m"
-          CYAN   = "\e[36m"
-          DIM    = "\e[2m"
-          BOLD   = "\e[1m"
-          RESET  = "\e[0m"
+          CYAN = "\e[36m"
+          DIM = "\e[2m"
+          BOLD = "\e[1m"
+          RESET = "\e[0m"
 
           # Wrap text in ANSI color codes.
           # Returns plain text when stdout is not a TTY.

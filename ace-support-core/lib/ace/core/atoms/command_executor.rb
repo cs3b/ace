@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'open3'
-require 'timeout'
+require "open3"
+require "timeout"
 
 module Ace
   module Core
@@ -23,7 +23,7 @@ module Ace
         # @return [Integer] Configured timeout in seconds
         def configured_timeout
           Ace::Core.get("core", "command_executor", "timeout") || DEFAULT_TIMEOUT
-        rescue StandardError
+        rescue
           DEFAULT_TIMEOUT
         end
 
@@ -35,8 +35,8 @@ module Ace
         # @return [Hash] {success: Boolean, stdout: String, stderr: String, exit_code: Integer, error: String}
         def execute(command, timeout: nil, max_output: MAX_OUTPUT_SIZE, cwd: nil)
           timeout ||= configured_timeout
-          return { success: false, error: "Command cannot be nil" } if command.nil?
-          return { success: false, error: "Command cannot be empty" } if command.strip.empty?
+          return {success: false, error: "Command cannot be nil"} if command.nil?
+          return {success: false, error: "Command cannot be empty"} if command.strip.empty?
 
           stdout_data = String.new
           stderr_data = String.new
@@ -47,7 +47,7 @@ module Ace
           options[:chdir] = cwd if cwd && Dir.exist?(cwd)
 
           begin
-            Timeout::timeout(timeout) do
+            Timeout.timeout(timeout) do
               Open3.popen3(command, options) do |stdin, stdout, stderr, wait_thr|
                 stdin.close
 
@@ -108,7 +108,7 @@ module Ace
               stderr: stderr_data,
               error: "Command timed out after #{timeout} seconds"
             }
-          rescue Errno::ENOENT => e
+          rescue Errno::ENOENT
             {
               success: false,
               error: "Command not found: #{command.split.first}"
@@ -142,7 +142,7 @@ module Ace
           cmd = command.split.first
 
           # Check if command exists in PATH
-          ENV['PATH'].split(File::PATH_SEPARATOR).any? do |path|
+          ENV["PATH"].split(File::PATH_SEPARATOR).any? do |path|
             executable = File.join(path, cmd)
             File.executable?(executable) && !File.directory?(executable)
           end
@@ -158,7 +158,7 @@ module Ace
         # @return [Hash] {success: Boolean, exit_code: Integer, error: String}
         def stream(command, output_callback: nil, timeout: nil, cwd: nil)
           timeout ||= configured_timeout
-          return { success: false, error: "Command cannot be nil" } if command.nil?
+          return {success: false, error: "Command cannot be nil"} if command.nil?
 
           options = {}
           options[:chdir] = cwd if cwd && Dir.exist?(cwd)
@@ -166,7 +166,7 @@ module Ace
           exit_status = nil
 
           begin
-            Timeout::timeout(timeout) do
+            Timeout.timeout(timeout) do
               Open3.popen2e(command, options) do |stdin, stdout_err, wait_thr|
                 stdin.close
 
@@ -231,7 +231,7 @@ module Ace
             end
           end
 
-          [command, *escaped_args].join(' ')
+          [command, *escaped_args].join(" ")
         end
       end
     end

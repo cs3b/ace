@@ -38,8 +38,8 @@ module Ace
         config = {
           "test_suite" => {
             "packages" => [
-              { "name" => "pkg1", "path" => "lib" },
-              { "name" => "pkg2", "path" => "src" }
+              {"name" => "pkg1", "path" => "lib"},
+              {"name" => "pkg2", "path" => "src"}
             ],
             "some_file" => "config/settings.yml"
           }

@@ -20,7 +20,7 @@ module Ace
 
             begin
               # Parse markdown with Kramdown
-              doc = Kramdown::Document.new(content, input: 'GFM')
+              doc = Kramdown::Document.new(content, input: "GFM")
 
               # Find the target header in the AST
               target_header, target_index = find_header(doc.root.children, heading_text)
@@ -45,7 +45,7 @@ module Ace
                 found: true,
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               {
                 section_content: nil,
                 found: false,
@@ -61,7 +61,7 @@ module Ace
             return [] if content.nil? || content.empty?
 
             begin
-              doc = Kramdown::Document.new(content, input: 'GFM')
+              doc = Kramdown::Document.new(content, input: "GFM")
               headers = find_all_headers(doc.root.children)
 
               headers.map.with_index do |header_info, idx|
@@ -78,7 +78,7 @@ module Ace
                   content: content_text
                 }
               end
-            rescue StandardError
+            rescue
               []
             end
           end
@@ -92,9 +92,9 @@ module Ace
 
               # Extract text from header children
               text = el.children
-                       .select { |c| c.type == :text }
-                       .map(&:value)
-                       .join
+                .select { |c| c.type == :text }
+                .map(&:value)
+                .join
 
               return [el, idx] if text == heading_text
             end
@@ -110,9 +110,9 @@ module Ace
               next unless el.type == :header
 
               text = el.children
-                       .select { |c| c.type == :text }
-                       .map(&:value)
-                       .join
+                .select { |c| c.type == :text }
+                .map(&:value)
+                .join
 
               headers << {
                 text: text,
@@ -151,7 +151,7 @@ module Ace
             # Create a new document with these elements
             temp_doc = Kramdown::Document.new("")
             temp_root = temp_doc.root
-            temp_root.options[:encoding] = 'UTF-8'
+            temp_root.options[:encoding] = "UTF-8"
 
             # Add elements to the new root
             elements.each { |el| temp_root.children << el }

@@ -256,7 +256,6 @@ module Ace
               end
             end
           end
-
         end
       end
     end

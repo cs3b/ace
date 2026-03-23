@@ -35,7 +35,7 @@ module Ace
 
         # File extensions for auto-generated filenames
         EXTENSIONS = {
-          image: { png: ".png", jpeg: ".jpg", tiff: ".tiff" },
+          image: {png: ".png", jpeg: ".jpg", tiff: ".tiff"},
           rtf: ".rtf",
           html: ".html"
         }.freeze

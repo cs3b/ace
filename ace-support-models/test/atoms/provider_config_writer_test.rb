@@ -25,10 +25,10 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_models(path, ["new-model-1", "new-model-2", "new-model-3"])
 
-      result = YAML.safe_load(File.read(path))
+      result = YAML.safe_load_file(path)
       assert_equal ["new-model-1", "new-model-2", "new-model-3"], result["models"]
       assert_equal "test-provider", result["name"]
-      assert_equal({ "global" => { "test" => "model" } }, result["aliases"])
+      assert_equal({"global" => {"test" => "model"}}, result["aliases"])
     end
   end
 
@@ -60,7 +60,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_models(path, ["claude-4-opus", "claude-4-sonnet"])
 
-      result = YAML.safe_load(File.read(path))
+      result = YAML.safe_load_file(path)
       assert_equal ["claude-4-opus", "claude-4-sonnet"], result["models"]
       assert_equal "anthropic", result["name"]
       assert_equal "Ace::LLM::Organisms::AnthropicClient", result["class"]
@@ -121,7 +121,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
       @writer.write(path, config)
 
       assert File.exist?(path)
-      result = YAML.safe_load(File.read(path))
+      result = YAML.safe_load_file(path)
       assert_equal "new-provider", result["name"]
       assert_equal ["model-1", "model-2"], result["models"]
     end
@@ -130,7 +130,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
   def test_write_creates_parent_directory
     with_temp_config_dir do |dir|
       path = File.join(dir, "subdir", "nested", "provider.yml")
-      config = { "name" => "provider" }
+      config = {"name" => "provider"}
 
       @writer.write(path, config)
 
@@ -171,7 +171,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_last_synced(path, Date.new(2025, 12, 5))
 
-      result = YAML.safe_load(File.read(path), permitted_classes: [Date])
+      result = YAML.safe_load_file(path, permitted_classes: [Date])
       assert_equal Date.new(2025, 12, 5), result["last_synced"]
       assert_equal "anthropic", result["name"]
     end
@@ -189,7 +189,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_last_synced(path, Date.new(2025, 12, 5))
 
-      result = YAML.safe_load(File.read(path), permitted_classes: [Date])
+      result = YAML.safe_load_file(path, permitted_classes: [Date])
       assert_equal Date.new(2025, 12, 5), result["last_synced"]
       assert_equal "anthropic", result["name"]
     end
@@ -213,7 +213,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_models_and_sync_date(path, ["new-model-1", "new-model-2"], Date.new(2025, 12, 5))
 
-      result = YAML.safe_load(File.read(path), permitted_classes: [Date])
+      result = YAML.safe_load_file(path, permitted_classes: [Date])
       assert_equal ["new-model-1", "new-model-2"], result["models"]
       assert_equal Date.new(2025, 12, 5), result["last_synced"]
     end
@@ -236,11 +236,11 @@ class ProviderConfigWriterTest < AceModelsTestCase
 
       @writer.update_models_and_sync_date(path, ["claude-4"], Date.new(2025, 12, 5))
 
-      result = YAML.safe_load(File.read(path), permitted_classes: [Date])
+      result = YAML.safe_load_file(path, permitted_classes: [Date])
       assert_equal ["claude-4"], result["models"]
       assert_equal Date.new(2025, 12, 5), result["last_synced"]
       assert_equal "anthropic", result["models_dev_id"]
-      assert_equal({ "model" => { "s" => "sonnet" } }, result["aliases"])
+      assert_equal({"model" => {"s" => "sonnet"}}, result["aliases"])
     end
   end
 

@@ -24,7 +24,7 @@ module Ace
           # @param age_cap [Numeric] Maximum age_days value used in calculation
           # @return [Float] Computed sort score
           def self.compute(priority_weight:, age_days:, status: nil,
-                           in_progress_boost: 1000, blocked_factor: 0.1, age_cap: 90)
+            in_progress_boost: 1000, blocked_factor: 0.1, age_cap: 90)
             capped_age = [age_days.to_f, age_cap.to_f].min
             score = priority_weight.to_f * 100 + capped_age
 

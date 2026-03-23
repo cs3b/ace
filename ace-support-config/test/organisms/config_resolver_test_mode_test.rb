@@ -33,7 +33,7 @@ module Ace
         def test_accepts_mock_config_parameter
           resolver = Organisms::ConfigResolver.new(
             test_mode: true,
-            mock_config: { "key" => "value" }
+            mock_config: {"key" => "value"}
           )
 
           config = resolver.resolve
@@ -51,7 +51,7 @@ module Ace
         end
 
         def test_resolve_returns_mock_config_in_test_mode
-          mock_data = { "setting" => "mocked", "nested" => { "value" => 42 } }
+          mock_data = {"setting" => "mocked", "nested" => {"value" => 42}}
           resolver = Organisms::ConfigResolver.new(test_mode: true, mock_config: mock_data)
 
           config = resolver.resolve
@@ -76,7 +76,7 @@ module Ace
         # --- resolve_file() in test mode ---
 
         def test_resolve_file_returns_mock_config_in_test_mode
-          mock_data = { "file_setting" => "test" }
+          mock_data = {"file_setting" => "test"}
           resolver = Organisms::ConfigResolver.new(test_mode: true, mock_config: mock_data)
 
           config = resolver.resolve_file("some/path.yml")
@@ -86,7 +86,7 @@ module Ace
         # --- resolve_namespace() in test mode ---
 
         def test_resolve_namespace_returns_mock_config_in_test_mode
-          mock_data = { "ns_setting" => "namespace_test" }
+          mock_data = {"ns_setting" => "namespace_test"}
           resolver = Organisms::ConfigResolver.new(test_mode: true, mock_config: mock_data)
 
           config = resolver.resolve_namespace("my_gem")
@@ -104,8 +104,8 @@ module Ace
         end
 
         def test_class_default_mock_setter
-          Ace::Support::Config.default_mock = { "default" => "mock_value" }
-          assert_equal({ "default" => "mock_value" }, Ace::Support::Config.default_mock)
+          Ace::Support::Config.default_mock = {"default" => "mock_value"}
+          assert_equal({"default" => "mock_value"}, Ace::Support::Config.default_mock)
         end
 
         def test_create_uses_class_test_mode
@@ -117,7 +117,7 @@ module Ace
 
         def test_create_uses_class_default_mock
           Ace::Support::Config.test_mode = true
-          Ace::Support::Config.default_mock = { "class_mock" => "value" }
+          Ace::Support::Config.default_mock = {"class_mock" => "value"}
 
           resolver = Ace::Support::Config.create
           config = resolver.resolve
@@ -134,9 +134,9 @@ module Ace
 
         def test_create_explicit_mock_config_overrides_default_mock
           Ace::Support::Config.test_mode = true
-          Ace::Support::Config.default_mock = { "default" => "value" }
+          Ace::Support::Config.default_mock = {"default" => "value"}
 
-          resolver = Ace::Support::Config.create(mock_config: { "explicit" => "override" })
+          resolver = Ace::Support::Config.create(mock_config: {"explicit" => "override"})
           config = resolver.resolve
 
           assert_nil config.get("default")
@@ -175,7 +175,7 @@ module Ace
 
         def test_reset_config_clears_test_mode
           Ace::Support::Config.test_mode = true
-          Ace::Support::Config.default_mock = { "key" => "value" }
+          Ace::Support::Config.default_mock = {"key" => "value"}
 
           Ace::Support::Config.reset_config!
 

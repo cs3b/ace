@@ -36,7 +36,7 @@ module Ace
 
               def self.render_commands
                 lines = normalized_commands.map do |name, description|
-                  "#{("  #{name}").ljust(16)}# #{description}"
+                  "#{"  #{name}".ljust(16)}# #{description}"
                 end
                 "Commands:\n#{lines.join("\n")}"
               end

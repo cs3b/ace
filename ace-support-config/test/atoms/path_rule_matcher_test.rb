@@ -9,31 +9,31 @@ module Ace
         class PathRuleMatcherTest < TestCase
           def test_matches_simple_glob
             matcher = PathRuleMatcher.new({
-              "docs" => { "glob" => "docs/**", "model" => "gflash" }
+              "docs" => {"glob" => "docs/**", "model" => "gflash"}
             })
 
             result = matcher.match("docs/readme.md")
 
             assert result
             assert_equal "docs", result.name
-            assert_equal({ "model" => "gflash" }, result.config)
+            assert_equal({"model" => "gflash"}, result.config)
           end
 
           def test_matches_dot_paths_with_dotmatch
             matcher = PathRuleMatcher.new({
-              "taskflow" => { "glob" => ".ace-taskflow/**", "format" => "simple" }
+              "taskflow" => {"glob" => ".ace-taskflow/**", "format" => "simple"}
             })
 
             result = matcher.match(".ace-taskflow/v1/task.md")
 
             assert result
             assert_equal "taskflow", result.name
-            assert_equal({ "format" => "simple" }, result.config)
+            assert_equal({"format" => "simple"}, result.config)
           end
 
           def test_supports_extglob_patterns
             matcher = PathRuleMatcher.new({
-              "packages" => { "glob" => "ace-{docs,handbook}/**", "model" => "gflash" }
+              "packages" => {"glob" => "ace-{docs,handbook}/**", "model" => "gflash"}
             })
 
             result = matcher.match("ace-docs/README.md")
@@ -44,19 +44,19 @@ module Ace
 
           def test_matches_glob_array_with_single_entry
             matcher = PathRuleMatcher.new({
-              "packages" => { "glob" => ["ace-*/**"], "type" => "chore" }
+              "packages" => {"glob" => ["ace-*/**"], "type" => "chore"}
             })
 
             result = matcher.match("ace-bundle/README.md")
 
             assert result
             assert_equal "packages", result.name
-            assert_equal({ "type" => "chore" }, result.config)
+            assert_equal({"type" => "chore"}, result.config)
           end
 
           def test_matches_glob_array_first_pattern
             matcher = PathRuleMatcher.new({
-              "docs" => { "glob" => ["docs/**", "lib/**"], "model" => "gflash" }
+              "docs" => {"glob" => ["docs/**", "lib/**"], "model" => "gflash"}
             })
 
             result = matcher.match("docs/readme.md")
@@ -67,7 +67,7 @@ module Ace
 
           def test_matches_glob_array_second_pattern
             matcher = PathRuleMatcher.new({
-              "library" => { "glob" => ["docs/**", "lib/**"], "model" => "gflash" }
+              "library" => {"glob" => ["docs/**", "lib/**"], "model" => "gflash"}
             })
 
             result = matcher.match("lib/file.rb")
@@ -78,7 +78,7 @@ module Ace
 
           def test_returns_nil_with_empty_glob_array
             matcher = PathRuleMatcher.new({
-              "empty" => { "glob" => [], "model" => "gflash" }
+              "empty" => {"glob" => [], "model" => "gflash"}
             })
 
             result = matcher.match("docs/readme.md")
@@ -88,7 +88,7 @@ module Ace
 
           def test_matches_glob_array_with_mixed_values
             matcher = PathRuleMatcher.new({
-              "docs" => { "glob" => ["docs/**", nil, 123, ""], "model" => "gflash" }
+              "docs" => {"glob" => ["docs/**", nil, 123, ""], "model" => "gflash"}
             })
 
             result = matcher.match("docs/readme.md")
@@ -99,7 +99,7 @@ module Ace
 
           def test_returns_nil_when_no_match
             matcher = PathRuleMatcher.new({
-              "docs" => { "glob" => "docs/**", "model" => "gflash" }
+              "docs" => {"glob" => "docs/**", "model" => "gflash"}
             })
 
             result = matcher.match("lib/file.rb")
@@ -110,20 +110,20 @@ module Ace
           # Edge case: overlapping patterns - first match wins
           def test_first_matching_rule_wins_with_overlapping_patterns
             matcher = PathRuleMatcher.new({
-              "specific" => { "glob" => "docs/api/**", "model" => "gpro" },
-              "general" => { "glob" => "docs/**", "model" => "gflash" }
+              "specific" => {"glob" => "docs/api/**", "model" => "gpro"},
+              "general" => {"glob" => "docs/**", "model" => "gflash"}
             })
 
             result = matcher.match("docs/api/endpoints.md")
 
             assert_equal "specific", result.name
-            assert_equal({ "model" => "gpro" }, result.config)
+            assert_equal({"model" => "gpro"}, result.config)
           end
 
           # Edge case: bracket character class wildcard
           def test_matches_bracket_character_class
             matcher = PathRuleMatcher.new({
-              "images" => { "glob" => "assets/*.[jp][pn]g", "type" => "media" }
+              "images" => {"glob" => "assets/*.[jp][pn]g", "type" => "media"}
             })
 
             result = matcher.match("assets/logo.png")
@@ -135,7 +135,7 @@ module Ace
           # Edge case: question mark single character wildcard
           def test_matches_question_mark_wildcard
             matcher = PathRuleMatcher.new({
-              "logs" => { "glob" => "logs/app?.log", "type" => "log" }
+              "logs" => {"glob" => "logs/app?.log", "type" => "log"}
             })
 
             result = matcher.match("logs/app1.log")
@@ -156,14 +156,14 @@ module Ace
           # Edge case: deeply nested paths
           def test_matches_deeply_nested_paths
             matcher = PathRuleMatcher.new({
-              "nested" => { "glob" => "a/b/c/d/**", "depth" => "deep" }
+              "nested" => {"glob" => "a/b/c/d/**", "depth" => "deep"}
             })
 
             result = matcher.match("a/b/c/d/e/f/g/file.rb")
 
             assert result
             assert_equal "nested", result.name
-            assert_equal({ "depth" => "deep" }, result.config)
+            assert_equal({"depth" => "deep"}, result.config)
           end
 
           # Config root relative path matching tests
@@ -174,7 +174,7 @@ module Ace
               FileUtils.mkdir_p(config_root)
 
               matcher = PathRuleMatcher.new(
-                { "lib-scope" => { "glob" => "lib/**", "type" => "feat", "_config_root" => config_root } },
+                {"lib-scope" => {"glob" => "lib/**", "type" => "feat", "_config_root" => config_root}},
                 project_root: project_root
               )
 
@@ -184,14 +184,14 @@ module Ace
 
               assert result
               assert_equal "lib-scope", result.name
-              assert_equal({ "type" => "feat" }, result.config)
+              assert_equal({"type" => "feat"}, result.config)
             end
           end
 
           def test_config_root_excludes_internal_metadata
             Dir.mktmpdir do |project_root|
               matcher = PathRuleMatcher.new(
-                { "lib-scope" => { "glob" => "lib/**", "type" => "feat", "_config_root" => project_root } },
+                {"lib-scope" => {"glob" => "lib/**", "type" => "feat", "_config_root" => project_root}},
                 project_root: project_root
               )
 
@@ -200,14 +200,14 @@ module Ace
               assert result
               # _config_root should not appear in extracted config
               refute result.config.key?("_config_root")
-              assert_equal({ "type" => "feat" }, result.config)
+              assert_equal({"type" => "feat"}, result.config)
             end
           end
 
           def test_rule_without_config_root_uses_project_relative_path
             Dir.mktmpdir do |project_root|
               matcher = PathRuleMatcher.new(
-                { "lib-scope" => { "glob" => "lib/**", "type" => "feat" } },
+                {"lib-scope" => {"glob" => "lib/**", "type" => "feat"}},
                 project_root: project_root
               )
 
@@ -222,7 +222,7 @@ module Ace
           def test_config_root_same_as_project_root_matches_unchanged
             Dir.mktmpdir do |project_root|
               matcher = PathRuleMatcher.new(
-                { "lib-scope" => { "glob" => "lib/**", "type" => "feat", "_config_root" => project_root } },
+                {"lib-scope" => {"glob" => "lib/**", "type" => "feat", "_config_root" => project_root}},
                 project_root: project_root
               )
 
@@ -239,7 +239,7 @@ module Ace
               FileUtils.mkdir_p(config_root)
 
               matcher = PathRuleMatcher.new(
-                { "lib-scope" => { "glob" => "lib/**", "type" => "feat", "_config_root" => config_root } },
+                {"lib-scope" => {"glob" => "lib/**", "type" => "feat", "_config_root" => config_root}},
                 project_root: project_root
               )
 

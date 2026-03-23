@@ -42,7 +42,7 @@ class CLIIntegrationTest < AceModelsTestCase
     assert_includes result[:diff]["anthropic"][:added], "claude-4-sonnet"
 
     # Verify: config file was updated
-    config = YAML.safe_load(File.read(File.join(@config_dir, "anthropic.yml")), permitted_classes: [Date])
+    config = YAML.safe_load_file(File.join(@config_dir, "anthropic.yml"), permitted_classes: [Date])
     assert_includes config["models"], "claude-4-opus"
     assert_includes config["models"], "claude-4-sonnet"
   end
@@ -60,7 +60,7 @@ class CLIIntegrationTest < AceModelsTestCase
     assert_includes result[:diff]["anthropic"][:removed], "old-deprecated-model"
 
     # Verify: config file was updated
-    config = YAML.safe_load(File.read(File.join(@config_dir, "anthropic.yml")), permitted_classes: [Date])
+    config = YAML.safe_load_file(File.join(@config_dir, "anthropic.yml"), permitted_classes: [Date])
     refute_includes config["models"], "old-deprecated-model"
     assert_includes config["models"], "claude-3-sonnet"
   end
@@ -126,15 +126,15 @@ class CLIIntegrationTest < AceModelsTestCase
       "anthropic" => {
         "id" => "anthropic",
         "models" => {
-          "claude-3-sonnet" => { "name" => "Claude 3 Sonnet" },
-          "claude-4-opus" => { "name" => "Claude 4 Opus" }
+          "claude-3-sonnet" => {"name" => "Claude 3 Sonnet"},
+          "claude-4-opus" => {"name" => "Claude 4 Opus"}
         }
       },
       "openai" => {
         "id" => "openai",
         "models" => {
-          "gpt-4o" => { "name" => "GPT-4o" },
-          "gpt-5" => { "name" => "GPT-5" }
+          "gpt-4o" => {"name" => "GPT-4o"},
+          "gpt-5" => {"name" => "GPT-5"}
         }
       }
     }
@@ -149,8 +149,8 @@ class CLIIntegrationTest < AceModelsTestCase
     assert_includes result[:diff]["openai"][:added], "gpt-5"
 
     # Verify: both config files updated
-    anthropic_config = YAML.safe_load(File.read(File.join(@config_dir, "anthropic.yml")), permitted_classes: [Date])
-    openai_config = YAML.safe_load(File.read(File.join(@config_dir, "openai.yml")), permitted_classes: [Date])
+    anthropic_config = YAML.safe_load_file(File.join(@config_dir, "anthropic.yml"), permitted_classes: [Date])
+    openai_config = YAML.safe_load_file(File.join(@config_dir, "openai.yml"), permitted_classes: [Date])
 
     assert_includes anthropic_config["models"], "claude-4-opus"
     assert_includes openai_config["models"], "gpt-5"
@@ -302,7 +302,7 @@ class CLIIntegrationTest < AceModelsTestCase
 
   def create_cache_with_models(provider_name, model_ids)
     models = model_ids.each_with_object({}) do |id, hash|
-      hash[id] = { "id" => id, "name" => id.gsub("-", " ").capitalize }
+      hash[id] = {"id" => id, "name" => id.tr("-", " ").capitalize}
     end
 
     cache_data = {

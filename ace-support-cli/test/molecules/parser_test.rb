@@ -36,7 +36,7 @@ class ParserTest < AceSupportCliTestCase
     assert_equal 2.5, parsed[:rate]
     assert_equal true, parsed[:verbose]
     assert_equal ["a", "b", "c"], parsed[:tags]
-    assert_equal({ "x" => "1" }, parsed[:headers])
+    assert_equal({"x" => "1"}, parsed[:headers])
     assert_equal ["demo", "other"], parsed[:name]
     assert_equal "dest", parsed[:target]
     assert_equal 9, parsed[:level]

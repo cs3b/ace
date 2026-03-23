@@ -81,8 +81,6 @@ module Ace
             prefix = config_relative + "/"
             if file_path.start_with?(prefix)
               file_path.sub(prefix, "")
-            else
-              nil
             end
           end
 

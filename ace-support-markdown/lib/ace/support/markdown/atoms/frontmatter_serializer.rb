@@ -42,7 +42,7 @@ module Ace
                 valid: true,
                 errors: []
               }
-            rescue StandardError => e
+            rescue => e
               {
                 content: "",
                 valid: false,

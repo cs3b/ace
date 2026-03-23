@@ -8,7 +8,7 @@ class HelpCommandFactoryTest < AceSupportCliTestCase
     command_class = Ace::Support::Cli::HelpCommand.build(
       program_name: "ace-tool",
       version: "1.0.0",
-      commands: { "lint" => "Run linter", "test" => "Run tests" },
+      commands: {"lint" => "Run linter", "test" => "Run tests"},
       examples: ["ace-tool lint ."]
     )
 

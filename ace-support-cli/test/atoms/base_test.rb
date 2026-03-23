@@ -50,7 +50,7 @@ module Ace
 
         def test_validate_required_raises_when_missing
           error = assert_raises(ArgumentError) do
-            @command.validate_required!({ a: 1 }, :a, :b)
+            @command.validate_required!({a: 1}, :a, :b)
           end
           assert_includes error.message, "Missing required options: b"
         end
