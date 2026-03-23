@@ -63,7 +63,7 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
     output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(
       [],
       total_count: 10,
-      global_folder_stats: { nil => 2, "_maybe" => 3, "_archive" => 5 }
+      global_folder_stats: {nil => 2, "_maybe" => 3, "_archive" => 5}
     )
 
     assert_includes output, "No ideas found."

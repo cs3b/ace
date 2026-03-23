@@ -99,7 +99,7 @@ class IdeaValidationRulesTest < AceIdeaTestCase
   # --- missing_required_fields ---
 
   def test_missing_required_fields_all_present
-    fm = { "id" => "abc123", "status" => "pending", "title" => "Test" }
+    fm = {"id" => "abc123", "status" => "pending", "title" => "Test"}
     assert_empty Rules.missing_required_fields(fm)
   end
 
@@ -116,7 +116,7 @@ class IdeaValidationRulesTest < AceIdeaTestCase
   end
 
   def test_missing_required_fields_blank_values
-    fm = { "id" => "", "status" => "pending", "title" => " " }
+    fm = {"id" => "", "status" => "pending", "title" => " "}
     missing = Rules.missing_required_fields(fm)
     assert_includes missing, "id"
     assert_includes missing, "title"
@@ -126,7 +126,7 @@ class IdeaValidationRulesTest < AceIdeaTestCase
   # --- missing_recommended_fields ---
 
   def test_missing_recommended_fields_all_present
-    fm = { "tags" => ["a"], "created_at" => "2026-01-01" }
+    fm = {"tags" => ["a"], "created_at" => "2026-01-01"}
     assert_empty Rules.missing_recommended_fields(fm)
   end
 

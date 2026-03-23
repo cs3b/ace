@@ -22,32 +22,32 @@ module Ace
             '"Dark mode for night coding"                          # Basic capture',
             '"Dark mode" --title "Dark mode" --tags ux,design      # With metadata',
             '"raw thought" --move-to maybe                         # Place in _maybe/',
-            '--clipboard --llm-enhance --move-to maybe             # From clipboard with LLM',
+            "--clipboard --llm-enhance --move-to maybe             # From clipboard with LLM",
             '"rough idea" --dry-run                                # Preview without writing'
           ]
 
           argument :content, required: false, desc: "Idea content (positional)"
 
-          option :title,       type: :string,  aliases: %w[-t],   desc: "Explicit title"
-          option :tags,        type: :string,  aliases: %w[-T],   desc: "Comma-separated tags"
-          option :"move-to",   type: :string,  aliases: %w[-m],   desc: "Target folder (e.g. next, maybe, archive)"
-          option :clipboard,   type: :boolean, aliases: %w[-c],   desc: "Capture content from clipboard"
+          option :title, type: :string, aliases: %w[-t], desc: "Explicit title"
+          option :tags, type: :string, aliases: %w[-T], desc: "Comma-separated tags"
+          option :"move-to", type: :string, aliases: %w[-m], desc: "Target folder (e.g. next, maybe, archive)"
+          option :clipboard, type: :boolean, aliases: %w[-c], desc: "Capture content from clipboard"
           option :"llm-enhance", type: :boolean, aliases: %w[-l], desc: "Enhance content with LLM"
-          option :"dry-run",   type: :boolean, aliases: %w[-n],   desc: "Preview without writing"
+          option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(content: nil, **options)
-            clipboard  = options[:clipboard]
+            clipboard = options[:clipboard]
             llm_enhance = options[:"llm-enhance"]
-            move_to    = options[:"move-to"]
-            title      = options[:title]
-            tags_str   = options[:tags]
-            dry_run    = options[:"dry-run"]
+            move_to = options[:"move-to"]
+            title = options[:title]
+            tags_str = options[:tags]
+            dry_run = options[:"dry-run"]
 
             # Parse tags from comma-separated string
             tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
@@ -62,11 +62,11 @@ module Ace
 
             if dry_run
               puts "Would create idea:"
-              puts "  Content:  #{content || '(from clipboard)'}"
-              puts "  Title:    #{title || '(auto-generated)'}"
-              puts "  Tags:     #{tags.any? ? tags.join(', ') : '(none)'}"
-              puts "  Folder:   #{move_to ? "_#{move_to.delete_prefix('_')}" : '(root)'}"
-              puts "  LLM:      #{llm_enhance ? 'yes' : 'no'}"
+              puts "  Content:  #{content || "(from clipboard)"}"
+              puts "  Title:    #{title || "(auto-generated)"}"
+              puts "  Tags:     #{tags.any? ? tags.join(", ") : "(none)"}"
+              puts "  Folder:   #{move_to ? "_#{move_to.delete_prefix("_")}" : "(root)"}"
+              puts "  LLM:      #{llm_enhance ? "yes" : "no"}"
               return
             end
 

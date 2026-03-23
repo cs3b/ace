@@ -22,8 +22,8 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["create", "Create a new idea"],
-        ["show",   "Show idea details"],
-        ["list",   "List ideas"],
+        ["show", "Show idea details"],
+        ["list", "List ideas"],
         ["update", "Update idea metadata (fields and move)"],
         ["doctor", "Run health checks on ideas"],
         ["status", "Show idea status overview"]
@@ -42,8 +42,8 @@ module Ace
       ].freeze
 
       register "create", CLI::Commands::Create
-      register "show",   CLI::Commands::Show
-      register "list",   CLI::Commands::List
+      register "show", CLI::Commands::Show
+      register "list", CLI::Commands::List
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
@@ -52,7 +52,7 @@ module Ace
         gem_name: "ace-idea",
         version: Ace::Idea::VERSION
       )
-      register "version",   version_cmd
+      register "version", version_cmd
       register "--version", version_cmd
 
       help_cmd = Ace::Support::Cli::HelpCommand.build(
@@ -61,9 +61,9 @@ module Ace
         commands: REGISTERED_COMMANDS,
         examples: HELP_EXAMPLES
       )
-      register "help",   help_cmd
+      register "help", help_cmd
       register "--help", help_cmd
-      register "-h",     help_cmd
+      register "-h", help_cmd
 
       # Entry point for CLI invocation
       # @param args [Array<String>] Command-line arguments

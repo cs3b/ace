@@ -37,7 +37,7 @@ module Ace
 
           virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)
           case virtual
-          when :all  then results
+          when :all then results
           when :next then results.select { |r| r.special_folder.nil? }
           else
             normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)

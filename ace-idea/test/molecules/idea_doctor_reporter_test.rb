@@ -12,7 +12,7 @@ class IdeaDoctorReporterTest < AceIdeaTestCase
       valid: true,
       health_score: 100,
       issues: [],
-      stats: { ideas_scanned: 5, folders_checked: 5, errors: 0, warnings: 0, info: 0 },
+      stats: {ideas_scanned: 5, folders_checked: 5, errors: 0, warnings: 0, info: 0},
       duration: 0.05,
       root_path: "/tmp/test"
     }
@@ -23,11 +23,11 @@ class IdeaDoctorReporterTest < AceIdeaTestCase
       valid: false,
       health_score: 70,
       issues: [
-        { type: :error, message: "Missing required field: id", location: "/tmp/test/abc.md" },
-        { type: :warning, message: "Stale backup file", location: "/tmp/test/old.backup.md" },
-        { type: :warning, message: "Empty directory", location: "/tmp/test/empty" }
+        {type: :error, message: "Missing required field: id", location: "/tmp/test/abc.md"},
+        {type: :warning, message: "Stale backup file", location: "/tmp/test/old.backup.md"},
+        {type: :warning, message: "Empty directory", location: "/tmp/test/empty"}
       ],
-      stats: { ideas_scanned: 3, folders_checked: 3, errors: 1, warnings: 2, info: 0 },
+      stats: {ideas_scanned: 3, folders_checked: 3, errors: 1, warnings: 2, info: 0},
       duration: 0.1,
       root_path: "/tmp/test"
     }
@@ -97,8 +97,8 @@ class IdeaDoctorReporterTest < AceIdeaTestCase
       fixed: 2,
       skipped: 1,
       fixes_applied: [
-        { file: "/tmp/test.md", description: "Added missing status" },
-        { file: "/tmp/old.backup.md", description: "Deleted stale backup" }
+        {file: "/tmp/test.md", description: "Added missing status"},
+        {file: "/tmp/old.backup.md", description: "Deleted stale backup"}
       ],
       dry_run: false
     }
@@ -126,13 +126,13 @@ class IdeaDoctorReporterTest < AceIdeaTestCase
 
   def test_verbose_shows_all_warnings
     many_warnings = (1..15).map do |i|
-      { type: :warning, message: "Warning #{i}", location: "/tmp/w#{i}" }
+      {type: :warning, message: "Warning #{i}", location: "/tmp/w#{i}"}
     end
     results = {
       valid: true,
       health_score: 70,
       issues: many_warnings,
-      stats: { ideas_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0 },
+      stats: {ideas_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0},
       duration: 0.1,
       root_path: "/tmp/test"
     }

@@ -150,7 +150,7 @@ class IdeaStructureValidatorTest < AceIdeaTestCase
       FileUtils.mkdir_p(category)
       FileUtils.mkdir_p(File.join(category, "def456-archived-idea"))
       File.write(File.join(category, "def456-archived-idea", "def456-archived-idea.idea.s.md"),
-                 "---\nid: def456\nstatus: done\n---\n")
+        "---\nid: def456\nstatus: done\n---\n")
 
       validator = Validator.new(root)
       issues = validator.validate

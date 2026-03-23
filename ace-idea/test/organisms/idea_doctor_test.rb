@@ -127,7 +127,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_detects_archive_non_terminal
     with_ideas_dir do |root|
       create_idea_fixture(root, id: "abc123", slug: "pending-archive",
-                          status: "pending", special_folder: "_archive")
+        status: "pending", special_folder: "_archive")
 
       doctor = Doctor.new(root)
       results = doctor.run_diagnosis
@@ -138,7 +138,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_detects_maybe_with_terminal
     with_ideas_dir do |root|
       create_idea_fixture(root, id: "abc123", slug: "done-maybe",
-                          status: "done", special_folder: "_maybe")
+        status: "done", special_folder: "_maybe")
 
       doctor = Doctor.new(root)
       results = doctor.run_diagnosis
@@ -210,7 +210,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_auto_fixable_missing_status
     with_ideas_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :warning, message: "Missing required field: status", location: "/tmp/test.md" }
+      issue = {type: :warning, message: "Missing required field: status", location: "/tmp/test.md"}
       assert doctor.auto_fixable?(issue)
     end
   end
@@ -218,7 +218,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_auto_fixable_stale_backup
     with_ideas_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md" }
+      issue = {type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md"}
       assert doctor.auto_fixable?(issue)
     end
   end
@@ -226,7 +226,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_not_auto_fixable_invalid_id_format
     with_ideas_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :error, message: "Invalid idea ID format: 'bad'", location: "/tmp/test.md" }
+      issue = {type: :error, message: "Invalid idea ID format: 'bad'", location: "/tmp/test.md"}
       refute doctor.auto_fixable?(issue)
     end
   end
@@ -234,7 +234,7 @@ class IdeaDoctorTest < AceIdeaTestCase
   def test_not_auto_fixable_folder_naming
     with_ideas_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :error, message: "Folder name does not match", location: "/tmp/bad" }
+      issue = {type: :error, message: "Folder name does not match", location: "/tmp/bad"}
       refute doctor.auto_fixable?(issue)
     end
   end

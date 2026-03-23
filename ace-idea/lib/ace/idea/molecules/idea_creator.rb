@@ -33,7 +33,7 @@ module Ace
         # @param time [Time] Creation time (default: now)
         # @return [Idea] Created idea object
         def create(content = nil, title: nil, tags: [], move_to: nil,
-                   clipboard: false, llm_enhance: false, time: Time.now.utc)
+          clipboard: false, llm_enhance: false, time: Time.now.utc)
           # Step 1: Gather content
           body, attachments_to_save = gather_content(content, clipboard: clipboard)
 
@@ -59,7 +59,7 @@ module Ace
           FileUtils.mkdir_p(target_dir)
 
           # Step 5: Create idea folder (ensure unique name if ID collision occurs)
-          folder_name, folder_slug = unique_folder_name(id, folder_slug, target_dir)
+          folder_name, _ = unique_folder_name(id, folder_slug, target_dir)
           idea_dir = File.join(target_dir, folder_name)
           FileUtils.mkdir_p(idea_dir)
 
@@ -174,7 +174,7 @@ module Ace
           first_line = content.split("\n").first&.strip
           return nil if first_line.nil? || first_line.empty?
 
-          first_line.length > 50 ? first_line[0..49] : first_line
+          (first_line.length > 50) ? first_line[0..49] : first_line
         end
 
         def determine_target_dir(move_to)
@@ -215,13 +215,13 @@ module Ace
             end
 
             # Add markdown reference based on type
-            case attachment[:type]
+            refs << case attachment[:type]
             when :image
-              refs << "![#{filename}](#{filename})"
+              "![#{filename}](#{filename})"
             else
-              refs << "[#{filename}](#{filename})"
+              "[#{filename}](#{filename})"
             end
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Failed to save attachment #{filename}: #{e.message}"
           end
 

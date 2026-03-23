@@ -49,13 +49,13 @@ class IdeaFrontmatterDefaultsTest < AceIdeaTestCase
   end
 
   def test_serialize_empty_array
-    frontmatter = { "tags" => [] }
+    frontmatter = {"tags" => []}
     result = Ace::Idea::Atoms::IdeaFrontmatterDefaults.serialize(frontmatter)
     assert_includes result, "tags: []"
   end
 
   def test_serialize_array_with_values
-    frontmatter = { "tags" => ["ux", "design"] }
+    frontmatter = {"tags" => ["ux", "design"]}
     result = Ace::Idea::Atoms::IdeaFrontmatterDefaults.serialize(frontmatter)
     assert_includes result, "tags: [ux, design]"
   end

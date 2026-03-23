@@ -22,7 +22,7 @@ class IdeaMoverTest < AceIdeaTestCase
   def test_moves_idea_to_root
     with_ideas_dir do |root|
       idea_dir = create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode",
-                                     special_folder: "_maybe")
+        special_folder: "_maybe")
 
       loader = Ace::Idea::Molecules::IdeaLoader.new
       idea = loader.load(idea_dir, id: "8ppq7w", special_folder: "_maybe")
