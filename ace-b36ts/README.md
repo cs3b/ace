@@ -1,57 +1,43 @@
 # ace-b36ts
 
-Generate compact, sortable Base36 timestamp IDs for scripts, logs, and path-friendly artifacts.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-b36ts.svg)](https://rubygems.org/gems/ace-b36ts)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-![ace-b36ts getting started](docs/demo/ace-b36ts-getting-started.gif)
+> Compact, sortable Base36 timestamp IDs for scripts, logs, and path-friendly artifacts.
 
-`ace-b36ts` encodes UTC timestamps into short IDs that preserve chronological order in plain string sorting, and decodes them back when you need readable time output.
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
+![ace-b36ts demo](docs/demo/ace-b36ts-getting-started.gif)
+
+`ace-b36ts` encodes UTC timestamps into short Base36 IDs that preserve chronological order in plain string sorting, and decodes them back when you need readable time output. Seven encode formats range from `month` granularity down to `ms`, with a configurable `year_zero` epoch baseline.
+
+## How It Works
+
+1. Encode a timestamp (or `now`) into a compact 6-character Base36 ID using a chosen format (`month`, `week`, `day`, `40min`, `2sec`, `50ms`, `ms`).
+2. Use the ID directly in file names, directory paths (with `--split`), log entries, or automation artifacts.
+3. Decode the ID back into a human-readable UTC timestamp for debugging, audits, or incident review.
 
 ## Use Cases
 
-**Create sortable IDs for automation output** - generate compact IDs for build artifacts, log entries, and task files without long timestamp strings.
+**Create sortable IDs for automation output** - generate compact IDs for build artifacts, log entries, and task files without long timestamp strings. Use [`ace-b36ts encode now`](docs/usage.md) for quick generation or `/as-b36ts` in agent workflows.
 
-**Map IDs to directory paths** - use split output (`--split`) to create hierarchical paths for storage and archival workflows.
+**Map IDs to directory paths** - use split output (`--split`) to create hierarchical paths for storage and archival workflows across [ace-assign](../ace-assign) and [ace-task](../ace-task) pipelines.
 
-**Round-trip between compact IDs and timestamps** - decode IDs during debugging, audits, and incident review flows.
+**Round-trip between compact IDs and timestamps** - decode IDs during debugging, audits, and incident review flows with [`ace-b36ts decode`](docs/usage.md).
 
-## Works With
-
-- **[ace-assign](../ace-assign)** for assignment/task workflows that benefit from compact sortable IDs.
-- **[ace-task](../ace-task)** for task references and structured artifact naming.
-- **Shell and CI pipelines** for deterministic, timestamp-derived IDs in scripts.
-- **Ruby automation** through the `Ace::B36ts` API for encode/decode helpers.
-
-## Features
-
-- 6-character Base36 IDs by default (`2sec` format).
-- Seven encode formats: `month`, `week`, `day`, `40min`, `2sec`, `50ms`, `ms`.
-- Chronological sortability with plain string order.
-- Configurable `year_zero` to control epoch baseline.
-- Encode/decode commands plus split and JSON path output options.
-
-## Quick Start
-
-
-```bash
-ace-b36ts encode now
-ace-b36ts decode i50jj3
-ace-b36ts config
-
-```
+**Embed in shell and CI pipelines** - use deterministic, timestamp-derived IDs in scripts and Ruby automation through the `Ace::B36ts` API for encode/decode helpers.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-b36ts --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-- `as-b36ts`
-
-## Part of ACE
-
-`ace-b36ts` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
