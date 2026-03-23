@@ -17,7 +17,7 @@
 
 ![ace-git-commit demo](docs/demo/ace-git-commit-getting-started.gif)
 
-`ace-git-commit` helps developers and coding agents turn repository changes into clear, scoped conventional commit messages while staying inside the terminal workflow. It analyzes diffs, supports intention hints, and handles monorepo scope-based splitting automatically.
+`ace-git-commit` helps developers and coding agents turn repository changes into clear, scoped conventional commit messages while staying inside the terminal workflow. It analyzes diffs, supports intention hints, and handles monorepo scope-based splitting (separate commits per package) automatically.
 
 ## How It Works
 
