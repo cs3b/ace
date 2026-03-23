@@ -31,6 +31,8 @@ Record terminal demos using `ace-demo record`. Supports two modes: tape-based re
 
 ### Record from Existing Tape
 
+The tape argument accepts a **preset name** (from `ace-demo list`) or a **direct file path** to a `.tape` or `.tape.yml` file.
+
 1. **Find available tapes**:
 
    ```bash
@@ -43,16 +45,21 @@ Record terminal demos using `ace-demo record`. Supports two modes: tape-based re
    ace-demo record <tape-name> --dry-run
    ```
 
-3. **Record**:
+3. **Record by preset name or file path**:
 
    ```bash
+   # By preset name
    ace-demo record <tape-name>
+
+   # By direct file path (YAML tape)
+   ace-demo record path/to/tape.tape.yml
    ```
 
 4. **Record with custom format or output**:
 
    ```bash
    ace-demo record <tape-name> --format mp4 --output path/to/output.mp4
+   ace-demo record path/to/tape.tape.yml --output path/to/output.gif
    ```
 
 ### Record Inline (Ad-Hoc Commands)
