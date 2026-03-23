@@ -19,6 +19,7 @@ document_types:
   guide:
     paths:
       - "**/*.g.md"              # Extension-based pattern
+    guide: "guide://documentation"
     defaults:
       update_frequency: monthly
       max_lines: 500
@@ -30,6 +31,7 @@ document_types:
   workflow:
     paths:
       - "**/*.wf.md"             # Extension pattern
+    guide: "guide://documentation"
     defaults:
       update_frequency: on-change
       auto_generate:
@@ -46,11 +48,20 @@ document_types:
         - endpoints: from-routes
         - schemas: from-models
 
-  # User-facing documentation
-  user:
+  # Package READMEs
+  readme:
     paths:
       - "README.md"
       - "*/README.md"
+    template: "tmpl://project-docs/README"
+    guide: "guide://documentation"
+    defaults:
+      update_frequency: on-change
+      max_lines: 1200
+
+  # User-facing documentation (non-README)
+  user:
+    paths:
       - "*/docs/**/*.md"
     defaults:
       update_frequency: on-change
