@@ -1,21 +1,17 @@
-# ace-test-runner-e2e
+<h1 align="center">ace-test-runner-e2e</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
-</p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-test-runner-e2e.svg)](https://rubygems.org/gems/ace-test-runner-e2e)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  <a href="https://rubygems.org/gems/ace-test-runner-e2e"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-test-runner-e2e.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
 </p>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-<p align="center">
-  Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
-</p>
-
 
 ![ace-test-runner-e2e demo](docs/demo/ace-test-runner-e2e-getting-started.gif)
 
