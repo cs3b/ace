@@ -69,7 +69,7 @@ echo "git status" | ace-demo create <name> [options]
 
 ### Arguments
 
-- `<name>` — tape name (saved as `.ace/demo/tapes/<name>.tape`)
+- `<name>` — tape name (saved as `.ace/demo/tapes/<name>.tape.yml`)
 
 ### Options
 
@@ -83,7 +83,7 @@ echo "git status" | ace-demo create <name> [options]
 | `--timeout` | `-t` | `2s` | Delay after each command |
 | `--format` | `-f` | `gif` | Output format hint for generated metadata |
 | `--force` | — | `false` | Overwrite existing tape |
-| `--dry-run` | `-n` | `false` | Print generated `.tape` content only |
+| `--dry-run` | `-n` | `false` | Print generated `.tape.yml` content only |
 
 ### Examples
 
@@ -96,7 +96,7 @@ ace-demo create my-demo --dry-run -- "echo hello"
 
 ### Output
 
-- `Created: .ace/demo/tapes/my-demo.tape`
+- `Created: .ace/demo/tapes/my-demo.tape.yml`
 - with `--dry-run`: prints tape content and exits
 
 ## `ace-demo record <tape|name>`
@@ -149,7 +149,7 @@ ace-demo record hello --pr 42 --dry-run
 
 ```text
 Recorded: .ace-local/demo/hello.gif
-Tape: .ace-local/demo/i50jj3/my-demo.tape
+Tape: .ace-local/demo/i50jj3/my-demo.tape.yml
 Retimed: .ace-local/demo/hello-4x.gif (4x)
 Uploaded: hello-1700000000.gif -> https://github.com/OWNER/REPO/releases/download/demo-assets/hello-1700000000.gif
 Posted demo comment to PR #42
