@@ -1,16 +1,18 @@
-<h1 align="center">ace-test</h1>
+<div align="center">
+  <h1> ACE - Test </h1>
 
-<p align="center">
+  Testing strategy handbook -- planning, reviewing, and improving test quality across ACE projects.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-test"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-test.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  Testing strategy handbook -- planning, reviewing, and improving test quality across ACE projects.
-</p>
+</div>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-test` is the handbook and workflow package for testing in ACE. It centralizes strategy guides, workflow instructions, and skill entry points for agents and developers. Use [ace-test-runner](../ace-test-runner) when you need to execute tests; use `ace-test` when you need to plan, review, or improve them.
@@ -40,3 +42,4 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+
