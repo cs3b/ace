@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.960] - 2026-03-23
+
+### Changed
+- **ace-docs v0.31.0**: Sharpened README "How It Works" with bold labels and inline command names; cleaned up usage guide.
+
 ## [0.9.959] - 2026-03-23
 
 ### Added
