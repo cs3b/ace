@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-23
+
+### Added
+- New "Tape Format" section in README explaining the `.tape.yml` YAML spec (setup, scenes, teardown, settings).
+- Comprehensive YAML tape tutorial in getting-started.md (step 7) covering setup directives, multi-scene recordings, teardown, and fixture provisioning.
+- Re-recorded getting-started demo GIF using a sandbox-based YAML tape with setup/teardown and multiple scenes.
+
+### Changed
+- Reframed README and gemspec around proof-of-work evidence delivery for agent-driven workflows.
+- Updated getting-started demo tape to demonstrate sandbox setup, git-init, multi-scene recording, and teardown cleanup.
+- Consolidated README use cases: merged overlapping PR attachment and code review paragraphs.
+
+### Fixed
+- Corrected `.tape` → `.tape.yml` file extension in four places in usage.md to match actual implementation output.
+
 ## [0.17.4] - 2026-03-23
 
 ### Changed

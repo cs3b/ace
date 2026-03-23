@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Record terminal demos and attach to pull requests"
-  spec.description = "ace-demo records terminal demos from VHS tape presets or explicit tape paths and supports PR attachment from recorded media."
+  spec.description = "ace-demo records terminal sessions as reviewable proof-of-work artifacts, with sandbox-isolated YAML tapes and GitHub PR attachment for agent-driven evidence delivery."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

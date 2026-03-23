@@ -1,20 +1,32 @@
 ---
-description: Showcase listing available demos and recording the built-in hello tape
+description: Demonstrate git workflow in a clean sandbox
 tags:
 - ace-demo
 - docs
 - getting-started
 settings:
   font_size: 16
-  width: 960
-  height: 700
+  width: 1100
+  height: 600
   format: gif
+setup:
+- sandbox
+- git-init
+- run: echo "ready" > status.txt
 scenes:
-- name: Main flow
+- name: Check initial state
   commands:
-  - type: ace-demo list
-    sleep: 4s
-  - type: ace-demo record hello
-    sleep: 6s
+  - type: git status
+    sleep: 3s
+  - type: cat status.txt
+    sleep: 2s
+- name: Make a commit
+  commands:
+  - type: git add -A
+    sleep: 1s
+  - type: git commit -m 'initial commit'
+    sleep: 3s
+  - type: git log --oneline
+    sleep: 2s
 teardown:
 - cleanup
