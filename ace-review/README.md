@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-review demo](docs/demo/ace-review-getting-started.gif)
 
 `ace-review` runs focused, repeatable reviews with configurable presets and parallel model execution via [ace-llm](../ace-llm). Findings are captured as feedback items with a verify, apply, and resolve lifecycle so review outcomes stay actionable.
