@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.965] - 2026-03-23
+
+### Changed
+- **ace-git-worktree v0.19.0**: Moved Installation to Getting Started, replaced coordination paragraph with ace-overseer integration, clarified workflow references, redesigned demo tape.
+
 ## [0.9.964] - 2026-03-23
 
 ### Added
