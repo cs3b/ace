@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.959] - 2026-03-23
+
+### Added
+- **ace-demo v0.18.0**: Tape Format section in README and comprehensive YAML tape tutorial in getting-started with setup/scenes/teardown documentation.
+
+### Changed
+- **ace-demo v0.18.0**: Reframed README and gemspec around proof-of-work evidence delivery; re-recorded demo GIF with sandbox-based YAML tape.
+
+### Fixed
+- **ace-demo v0.18.0**: Corrected `.tape` → `.tape.yml` extension in usage.md to match implementation.
+
 ## [0.9.958] - 2026-03-23
 
 ### Added
