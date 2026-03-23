@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.950] - 2026-03-23
+
+### Fixed
+- **ace-support-models v0.8.2**: Normalize provider/model data shapes in cache manager to handle wrapped, array, and flat hash formats.
+
 ## [0.9.949] - 2026-03-23
 
 ### Fixed
