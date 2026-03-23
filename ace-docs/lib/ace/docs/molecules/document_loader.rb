@@ -30,7 +30,7 @@ module Ace
             frontmatter: doc.frontmatter,
             content: doc.raw_body
           )
-        rescue StandardError => e
+        rescue => e
           if e.message.include?("No frontmatter found")
             return load_frontmatter_free_document(path, content)
           end
@@ -84,7 +84,7 @@ module Ace
 
           # Check if has doc-type field (ace-docs requirement)
           !doc.frontmatter.empty? && doc.frontmatter["doc-type"]
-        rescue StandardError
+        rescue
           frontmatter_free?(path)
         end
 

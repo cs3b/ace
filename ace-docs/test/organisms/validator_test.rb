@@ -234,7 +234,7 @@ module Ace
           )
 
           # Mock LLM call to return VALID response
-          @validator.stub :call_llm_for_validation, { text: "VALID\n" } do
+          @validator.stub :call_llm_for_validation, {text: "VALID\n"} do
             result = @validator.validate_document(document, syntax: false, semantic: true)
 
             assert result[:valid]

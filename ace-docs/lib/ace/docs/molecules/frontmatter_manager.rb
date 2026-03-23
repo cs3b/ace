@@ -27,7 +27,7 @@ module Ace
           result = editor.save!(backup: true, validate_before: false)
 
           result[:success]
-        rescue StandardError => e
+        rescue => e
           warn "Error updating #{document.path}: #{e.message}"
           false
         end
@@ -48,15 +48,15 @@ module Ace
           updates.each do |key, value|
             # Handle special key mappings (convert to dot notation for DocumentEditor)
             mapped_key = case key
-                        when "last-updated", "last_updated"
-                          "ace-docs.last-updated"
-                        when "last-checked", "last_checked"
-                          "ace-docs.last-checked"
-                        when "version"
-                          "metadata.version"
-                        else
-                          key
-                      end
+            when "last-updated", "last_updated"
+              "ace-docs.last-updated"
+            when "last-checked", "last_checked"
+              "ace-docs.last-checked"
+            when "version"
+              "metadata.version"
+            else
+              key
+            end
 
             processed[mapped_key] = process_value(value)
           end

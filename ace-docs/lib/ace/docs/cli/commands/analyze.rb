@@ -83,8 +83,8 @@ module Ace
             document = registry.find_by_path(file)
 
             unless document
-              $stderr.puts "Error: Document not found or not managed by ace-docs: #{file}"
-              $stderr.puts "Ensure the file has ace-docs frontmatter (doc-type, purpose)"
+              warn "Error: Document not found or not managed by ace-docs: #{file}"
+              warn "Ensure the file has ace-docs frontmatter (doc-type, purpose)"
               return EXIT_ERROR
             end
 
@@ -150,10 +150,10 @@ module Ace
 
             # Check if ace-llm is available
             unless defined?(Ace::LLM)
-              $stderr.puts "\nError: ace-llm gem not available"
-              $stderr.puts "Install it with: gem install ace-llm"
-              $stderr.puts "\nOr add to your Gemfile:"
-              $stderr.puts "  gem 'ace-llm'"
+              warn "\nError: ace-llm gem not available"
+              warn "Install it with: gem install ace-llm"
+              warn "\nOr add to your Gemfile:"
+              warn "  gem 'ace-llm'"
               return EXIT_ANALYSIS_ERROR
             end
 
@@ -170,21 +170,21 @@ module Ace
             analysis = analyze_with_llm(document, diff_for_analysis, since, session_dir: session_dir)
 
             unless analysis[:success]
-              $stderr.puts "Error: #{analysis[:error]}"
+              warn "Error: #{analysis[:error]}"
               return EXIT_ANALYSIS_ERROR
             end
 
             # Save results to cache
             puts "\nSaving analysis results...".cyan
-            cache_path = save_to_cache(document, diff_result, analysis, since, session_dir: session_dir)
+            save_to_cache(document, diff_result, analysis, since, session_dir: session_dir)
 
             # Display summary with session directory
             display_summary(analysis, session_dir: session_dir)
 
             EXIT_SUCCESS
-          rescue StandardError => e
-            $stderr.puts "Error during analysis: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if debug?(options)
+          rescue => e
+            warn "Error during analysis: #{e.message}"
+            warn e.backtrace.join("\n") if debug?(options)
             EXIT_ANALYSIS_ERROR
           end
 
@@ -258,7 +258,7 @@ module Ace
               diff_stats: prompts[:diff_stats],
               timestamp: Time.now.utc.iso8601
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               error: e.message,
@@ -308,7 +308,7 @@ module Ace
               # #{prompt_type}
 
               **Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
-              **Source**: #{prompt_type == "System Prompt" ? "ace-nav prompt://document-analysis.system" : "Generated from document context"}
+              **Source**: #{(prompt_type == "System Prompt") ? "ace-nav prompt://document-analysis.system" : "Generated from document context"}
 
               ---
 
@@ -334,9 +334,9 @@ module Ace
           end
 
           def display_summary(analysis, session_dir:)
-            puts "\n" + "="*60
+            puts "\n" + "=" * 60
             puts "✅ Analysis Complete".bold.green
-            puts "="*60
+            puts "=" * 60
             puts "\nModel: #{analysis[:model]} (#{analysis[:provider]})"
             puts "\nResults saved to: #{session_dir}"
             puts "\nNext steps:"

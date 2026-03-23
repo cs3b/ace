@@ -55,7 +55,7 @@ module Ace
           mock_diff = "diff --git a/test.md b/test.md\n+Updated content\n+More content"
           mock_result = Ace::Git::Models::DiffResult.new(
             content: mock_diff,
-            stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
+            stats: {additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3},
             files: ["test.md"]
           )
           Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
@@ -71,20 +71,20 @@ module Ace
           # Create multiple documents
           doc1 = Models::Document.new(
             path: "doc1.md",
-            frontmatter: { "doc-type" => "guide", "purpose" => "First doc" }
+            frontmatter: {"doc-type" => "guide", "purpose" => "First doc"}
           )
 
           doc2 = Models::Document.new(
             path: "doc2.md",
-            frontmatter: { "doc-type" => "api", "purpose" => "Second doc" }
+            frontmatter: {"doc-type" => "api", "purpose" => "Second doc"}
           )
 
           # Mock DiffOrchestrator to return diff content (avoids real git operations)
           mock_result = Ace::Git::Models::DiffResult.new(
             content: "diff --git a/doc1.md b/doc1.md\n+Updated content",
-            stats: { additions: 1, deletions: 0, files: 1, total_changes: 1 },
+            stats: {additions: 1, deletions: 0, files: 1, total_changes: 1},
             files: ["doc1.md"],
-            metadata: { since: "HEAD~1" }
+            metadata: {since: "HEAD~1"}
           )
           Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
             result = ChangeDetector.get_diff_for_documents([doc1, doc2], since: "HEAD~1")
@@ -132,7 +132,7 @@ module Ace
         def test_diff_with_exclude_renames_option
           document = Models::Document.new(
             path: "renamed.md",
-            frontmatter: { "doc-type" => "guide", "purpose" => "Test" }
+            frontmatter: {"doc-type" => "guide", "purpose" => "Test"}
           )
 
           # Mock ace-git DiffOrchestrator to avoid real git operations
@@ -141,7 +141,7 @@ module Ace
             result = ChangeDetector.get_diff_for_document(
               document,
               since: "HEAD~1",
-              options: { exclude_renames: true }
+              options: {exclude_renames: true}
             )
 
             assert_equal true, result[:options][:exclude_renames]
@@ -151,7 +151,7 @@ module Ace
         def test_determine_since_uses_document_last_updated
           document = Models::Document.new(
             path: "test.md",
-          frontmatter: {
+            frontmatter: {
               "doc-type" => "guide",
               "purpose" => "Test",
               "ace-docs" => {
@@ -230,12 +230,12 @@ module Ace
         def test_format_diff_for_saving_multiple_documents
           doc1 = Models::Document.new(
             path: "doc1.md",
-            frontmatter: { "doc-type" => "guide", "purpose" => "First doc" }
+            frontmatter: {"doc-type" => "guide", "purpose" => "First doc"}
           )
 
           doc2 = Models::Document.new(
             path: "doc2.md",
-            frontmatter: { "doc-type" => "api", "purpose" => "Second doc" }
+            frontmatter: {"doc-type" => "api", "purpose" => "Second doc"}
           )
 
           diff_result = {
@@ -244,8 +244,8 @@ module Ace
             since: "2024-10-01",
             timestamp: Time.now.iso8601,
             document_diffs: [
-              { document: doc1, diff: "+ Changes", has_changes: true },
-              { document: doc2, diff: "", has_changes: false }
+              {document: doc1, diff: "+ Changes", has_changes: true},
+              {document: doc2, diff: "", has_changes: false}
             ]
           }
 
@@ -262,7 +262,7 @@ module Ace
 
         def test_empty_diff_result_for_nil_document_path
           document = Models::Document.new(
-            frontmatter: { "doc-type" => "guide", "purpose" => "Test" }
+            frontmatter: {"doc-type" => "guide", "purpose" => "Test"}
           )
 
           result = ChangeDetector.get_diff_for_document(document)
@@ -349,13 +349,13 @@ module Ace
             if call_count == 1 || (options[:paths] && options[:paths].include?("lib/**/*.rb"))
               Ace::Git::Models::DiffResult.new(
                 content: code_diff,
-                stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
+                stats: {additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3},
                 files: ["lib/test.rb"]
               )
             elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.md"))
               Ace::Git::Models::DiffResult.new(
                 content: docs_diff,
-                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                stats: {additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2},
                 files: ["README.md"]
               )
             else
@@ -385,8 +385,8 @@ module Ace
               "purpose" => "Test",
               "ace-docs" => {
                 "subject" => [
-                  { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
-                  { "config" => { "diff" => { "filters" => ["**/*.yml"] } } }
+                  {"code" => {"diff" => {"filters" => ["**/*.rb"]}}},
+                  {"config" => {"diff" => {"filters" => ["**/*.yml"]}}}
                 ]
               }
             }
@@ -399,13 +399,13 @@ module Ace
             if call_count == 1 || (options[:paths] && options[:paths].include?("**/*.rb"))
               Ace::Git::Models::DiffResult.new(
                 content: "diff --git a/app.rb b/app.rb\n+modified app",
-                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                stats: {additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2},
                 files: ["app.rb"]
               )
             elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.yml"))
               Ace::Git::Models::DiffResult.new(
                 content: "diff --git a/config.yml b/config.yml\n+new_value",
-                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                stats: {additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2},
                 files: ["config.yml"]
               )
             else
@@ -684,8 +684,7 @@ module Ace
                 include_renames: true,    # would map to exclude_renames: false
                 exclude_renames: true,    # explicit new key should win
                 include_moves: false,     # would map to exclude_moves: true
-                exclude_moves: false      # explicit new key should win
-              )
+                exclude_moves: false)      # explicit new key should win
             end
           end
 

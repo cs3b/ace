@@ -59,8 +59,8 @@ module Ace
 
             Ace::Docs::Organisms::DocumentRegistry.stub :new, mock_registry do
               # Should raise because no file or preset specified
-              output = capture_io do
-                result = @command.send(:execute_update, nil, {})
+              capture_io do
+                @command.send(:execute_update, nil, {})
                 # The error is raised in select_documents
               end
             end
@@ -76,7 +76,7 @@ module Ace
 
             Ace::Docs::Organisms::DocumentRegistry.stub :new, mock_registry do
               output = capture_io do
-                result = @command.send(:execute_update, nil, { preset: "nonexistent" })
+                result = @command.send(:execute_update, nil, {preset: "nonexistent"})
                 assert_equal 0, result
               end.first
 
@@ -108,7 +108,7 @@ module Ace
               # Note
             MARKDOWN
 
-            docs = @command.send(:select_documents, nil, { glob: ["docs/**/*.md"], project_root: temp_dir })
+            docs = @command.send(:select_documents, nil, {glob: ["docs/**/*.md"], project_root: temp_dir})
             assert_equal 1, docs.size
             assert_match(%r{/docs/guide\.md$}, docs.first.path)
           ensure

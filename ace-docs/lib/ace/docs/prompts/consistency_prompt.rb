@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'yaml'
-require 'fileutils'
+require "yaml"
+require "fileutils"
 
 # Try to load ace-bundle for better document embedding
 begin
-  require 'ace/bundle'
+  require "ace/bundle"
 rescue LoadError
   # Will work without ace-bundle but with less optimal formatting
 end
@@ -23,10 +23,10 @@ module Ace
         def build(documents, options = {}, session_dir: nil)
           # Use ace-bundle if available for better document separation
           user_content = if defined?(Ace::Bundle) && session_dir
-                          build_with_context(documents, options, session_dir)
-                        else
-                          user_prompt(documents, options)
-                        end
+            build_with_context(documents, options, session_dir)
+          else
+            user_prompt(documents, options)
+          end
 
           {
             system: system_prompt,
@@ -148,8 +148,8 @@ module Ace
             ## Analysis Parameters
 
             - Similarity threshold for duplicates: #{threshold}%
-            - Focus areas: #{focus_areas.join(', ')}
-            #{options[:pattern] ? "- Pattern filter: #{options[:pattern]}" : ''}
+            - Focus areas: #{focus_areas.join(", ")}
+            #{"- Pattern filter: #{options[:pattern]}" if options[:pattern]}
 
             ## Instructions
 
@@ -174,7 +174,7 @@ module Ace
 
             <<~DOC
               ### File: #{path}
-              #{frontmatter ? "Frontmatter: #{frontmatter.to_json}\n" : ''}
+              #{"Frontmatter: #{frontmatter.to_json}\n" if frontmatter}
               ```
               #{truncated_content}
               ```
@@ -190,9 +190,9 @@ module Ace
           return nil unless parts.size >= 2
 
           begin
-            require 'yaml'
+            require "yaml"
             YAML.safe_load(parts[1])
-          rescue StandardError
+          rescue
             nil
           end
         end
@@ -211,14 +211,14 @@ module Ace
           areas = []
 
           if options[:all] || (!options[:terminology] && !options[:duplicates] && !options[:versions])
-            areas = ['terminology conflicts', 'duplicate content', 'version inconsistencies', 'consolidation opportunities']
+            areas = ["terminology conflicts", "duplicate content", "version inconsistencies", "consolidation opportunities"]
           else
-            areas << 'terminology conflicts' if options[:terminology]
-            areas << 'duplicate content' if options[:duplicates]
-            areas << 'version inconsistencies' if options[:versions]
+            areas << "terminology conflicts" if options[:terminology]
+            areas << "duplicate content" if options[:duplicates]
+            areas << "version inconsistencies" if options[:versions]
           end
 
-          areas.empty? ? ['all issue types'] : areas
+          areas.empty? ? ["all issue types"] : areas
         end
 
         # Build user prompt with ace-bundle for better document separation
@@ -232,13 +232,13 @@ module Ace
 
           # Build context configuration
           context_config = {
-            "params" => { "format" => "markdown-xml" },
+            "params" => {"format" => "markdown-xml"},
             "embed_document_source" => true,
             "files" => doc_files
           }
 
           # Create frontmatter
-          frontmatter = { "context" => context_config }
+          frontmatter = {"context" => context_config}
 
           # Build instructions
           instructions = <<~INSTRUCTIONS
@@ -249,8 +249,8 @@ module Ace
             ## Analysis Parameters
 
             - Similarity threshold for duplicates: #{threshold}%
-            - Focus areas: #{focus_areas.join(', ')}
-            #{options[:pattern] ? "- Pattern filter: #{options[:pattern]}" : ''}
+            - Focus areas: #{focus_areas.join(", ")}
+            #{"- Pattern filter: #{options[:pattern]}" if options[:pattern]}
 
             ## Instructions
 
@@ -274,7 +274,7 @@ module Ace
           begin
             result = Ace::Bundle.load_file(context_md_path)
             result.content
-          rescue StandardError => e
+          rescue => e
             warn "ace-bundle embedding failed: #{e.message}, falling back to direct format" if Ace::Docs.debug?
             # Fallback to regular prompt if ace-bundle fails
             user_prompt(documents, options)

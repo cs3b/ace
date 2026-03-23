@@ -189,7 +189,7 @@ module Ace
               parts = line.strip.split(/\s+/, 3)
               if parts.length >= 3
                 old_path, new_path = parts[1], parts[2]
-                renames << { old: old_path, new: new_path }
+                renames << {old: old_path, new: new_path}
               end
             end
           end
@@ -247,7 +247,7 @@ module Ace
 
           result = Ace::Git::Organisms::DiffOrchestrator.generate(diff_options)
           result.content
-        rescue StandardError => e
+        rescue => e
           warn "ace-git failed: #{e.message}" if ENV["DEBUG"]
           ""
         end
@@ -287,7 +287,7 @@ module Ace
 
         def self.resolve_since_to_commit(since)
           # If it looks like a commit SHA, use as-is
-          return since if since =~ /^[0-9a-f]{7,40}$/i
+          return since if /^[0-9a-f]{7,40}$/i.match?(since)
 
           # It's a date - find the first commit since that date
           cmd = "git log --since=\"#{since}\" --format=%H --reverse --all"
@@ -339,7 +339,7 @@ module Ace
               content << "## #{doc.display_name}"
               content << "- Type: #{doc.doc_type}"
               content << "- Purpose: #{doc.purpose}"
-              content << "- Has changes: #{doc_diff[:has_changes] ? 'Yes' : 'No'}"
+              content << "- Has changes: #{doc_diff[:has_changes] ? "Yes" : "No"}"
               content << ""
 
               if doc_diff[:has_changes]
@@ -356,7 +356,7 @@ module Ace
             # Single document
             content << "## Document: #{diff_result[:document_path]}"
             content << "- Type: #{diff_result[:document_type]}"
-            content << "- Has changes: #{diff_result[:has_changes] ? 'Yes' : 'No'}"
+            content << "- Has changes: #{diff_result[:has_changes] ? "Yes" : "No"}"
             content << ""
 
             if diff_result[:has_changes]

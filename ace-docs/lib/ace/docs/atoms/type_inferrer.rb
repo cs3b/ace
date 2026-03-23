@@ -60,7 +60,7 @@ module Ace
           return true if normalized.casecmp("README.md").zero?
 
           File.expand_path(path.to_s) == File.join(Dir.pwd, "README.md")
-        rescue StandardError
+        rescue
           false
         end
         private_class_method :root_readme?

@@ -10,7 +10,7 @@ module Ace
       # Model representing a managed document with frontmatter and content
       class Document
         attr_accessor :path, :frontmatter, :content, :doc_type, :purpose,
-                      :update_config, :context_config, :rules, :metadata
+          :update_config, :context_config, :rules, :metadata
 
         def initialize(path: nil, frontmatter: {}, content: "")
           @path = path
@@ -56,13 +56,11 @@ module Ace
           return nil unless date_str
 
           result = case date_str
-                   when Date, Time
-                     date_str  # Return as-is
-                   when String
-                     Atoms::TimestampParser.parse_timestamp(date_str)
-                   else
-                     nil
-                   end
+          when Date, Time
+            date_str  # Return as-is
+          when String
+            Atoms::TimestampParser.parse_timestamp(date_str)
+          end
 
           # Ensure Time objects are in UTC
           result.is_a?(Time) ? result.utc : result
@@ -83,13 +81,11 @@ module Ace
           return nil unless date_str
 
           result = case date_str
-                   when Date, Time
-                     date_str  # Return as-is
-                   when String
-                     Atoms::TimestampParser.parse_timestamp(date_str)
-                   else
-                     nil
-                   end
+          when Date, Time
+            date_str  # Return as-is
+          when String
+            Atoms::TimestampParser.parse_timestamp(date_str)
+          end
 
           # Ensure Time objects are in UTC
           result.is_a?(Time) ? result.utc : result
@@ -193,9 +189,7 @@ module Ace
         end
 
         # Get the ace-docs configuration namespace
-        def ace_docs_config
-          @ace_docs_config
-        end
+        attr_reader :ace_docs_config
 
         # Get subject diff filters
         # @return [Array<String>] Flat array of path filters for single subject
@@ -296,7 +290,7 @@ module Ace
           return nil unless @path
 
           begin
-            require 'pathname'
+            require "pathname"
             # Try to get a nice relative path from current directory
             pwd_path = Pathname.new(Dir.pwd)
             file_path = Pathname.new(@path)
@@ -335,7 +329,7 @@ module Ace
 
         # Format for display
         def to_s
-          "Document: #{display_name} (#{@doc_type || 'untyped'})"
+          "Document: #{display_name} (#{@doc_type || "untyped"})"
         end
 
         # Check equality

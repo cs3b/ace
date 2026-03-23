@@ -231,7 +231,7 @@ module Ace
           registry = DocumentRegistry.new(project_root: @temp_dir)
 
           current_docs = registry.by_freshness(:current)
-          stale_docs = registry.by_freshness(:stale)
+          registry.by_freshness(:stale)
           outdated_docs = registry.by_freshness(:outdated)
 
           assert current_docs.any? { |d| d.purpose == "Current document" }

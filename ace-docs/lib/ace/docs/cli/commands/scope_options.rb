@@ -27,7 +27,7 @@ module Ace
             expanded = File.expand_path(path, project_root)
             relative = begin
               expanded.delete_prefix("#{File.expand_path(project_root)}/")
-            rescue StandardError
+            rescue
               path.to_s
             end
 
@@ -43,7 +43,7 @@ module Ace
             path = File.join(project_root, value)
             raise ArgumentError, "Unknown package for --package: #{value}" unless Dir.exist?(path)
 
-            "#{value.chomp('/')}/**/*.md"
+            "#{value.chomp("/")}/**/*.md"
           end
 
           def normalize_glob_scope(raw_value, project_root)
@@ -55,7 +55,7 @@ module Ace
 
             directory_path = File.join(project_root, value)
             if value.end_with?("/") || Dir.exist?(directory_path)
-              return "#{value.chomp('/')}/**/*.md"
+              return "#{value.chomp("/")}/**/*.md"
             end
 
             "#{value}/**/*.md"

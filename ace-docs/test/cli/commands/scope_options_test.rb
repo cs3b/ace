@@ -29,7 +29,7 @@ module Ace
 
           def test_normalizes_package_scope
             globs = @harness.normalized_scope_globs(
-              { package: ["ace-assign"] },
+              {package: ["ace-assign"]},
               project_root: @temp_dir
             )
 
@@ -38,7 +38,7 @@ module Ace
 
           def test_normalizes_bare_glob_scope
             globs = @harness.normalized_scope_globs(
-              { glob: ["ace-assign"] },
+              {glob: ["ace-assign"]},
               project_root: @temp_dir
             )
 
@@ -47,7 +47,7 @@ module Ace
 
           def test_keeps_explicit_glob_unchanged
             globs = @harness.normalized_scope_globs(
-              { glob: ["ace-assign/docs/**/*.md"] },
+              {glob: ["ace-assign/docs/**/*.md"]},
               project_root: @temp_dir
             )
 
@@ -57,7 +57,7 @@ module Ace
           def test_unknown_package_raises
             error = assert_raises(ArgumentError) do
               @harness.normalized_scope_globs(
-                { package: ["ace-missing"] },
+                {package: ["ace-missing"]},
                 project_root: @temp_dir
               )
             end
