@@ -35,11 +35,5 @@
 
 **Profile slow tests** - run `ace-test molecules --profile 10` to identify the slowest tests and prioritize optimization with [ace-test](../ace-test) performance audit workflows.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
