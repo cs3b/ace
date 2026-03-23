@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-bundle demo](docs/demo/ace-bundle-getting-started.gif)
 
 `ace-bundle` helps developers and coding agents load consistent, reusable project context from presets, files, and protocol URLs while staying inside terminal-native workflows. It supports preset composition, protocol loading, smart caching, and optional compression to keep payloads manageable for LLM workflows.
