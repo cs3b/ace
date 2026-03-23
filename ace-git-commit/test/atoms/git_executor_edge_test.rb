@@ -73,7 +73,7 @@ class GitExecutorEdgeTest < TestCase
   end
 
   def test_handles_git_command_failure
-    @cmd_executor.stub :execute, { success: false, output: "", error: "fatal: invalid command\n" } do
+    @cmd_executor.stub :execute, {success: false, output: "", error: "fatal: invalid command\n"} do
       assert_raises(Ace::GitCommit::GitError) do
         @git.execute("invalid-command")
       end

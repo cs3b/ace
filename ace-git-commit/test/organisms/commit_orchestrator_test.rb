@@ -106,7 +106,7 @@ class CommitOrchestratorTest < TestCase
 
     # Single file validation and path separation
     mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In non_glob_paths check
-    mock_path_resolver.expect :validate_paths, { valid: ["file1.txt"], invalid: [] }, [["file1.txt"]]
+    mock_path_resolver.expect :validate_paths, {valid: ["file1.txt"], invalid: []}, [["file1.txt"]]
     mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In glob_patterns check
 
     # Single files now use stage_paths (same path as directories)
@@ -173,7 +173,7 @@ class CommitOrchestratorTest < TestCase
     expect_single_group(["test.txt"])
     @mock_file_stager.expect :staged_files, ["test.txt"]
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
-    @mock_diff_analyzer.expect :analyze_diff, { insertions: 5, deletions: 2 }, ["diff content"]
+    @mock_diff_analyzer.expect :analyze_diff, {insertions: 5, deletions: 2}, ["diff content"]
 
     # Suppress stdout during dry run
     original_stdout = $stdout
@@ -224,12 +224,12 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :has_staged_changes?, true
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
     @mock_diff_analyzer.expect :changed_files, ["file.txt"] do |**kwargs|
-      kwargs == { staged_only: true }
+      kwargs == {staged_only: true}
     end
-    expect_single_group(["file.txt"], config: { "model" => "glite" })
+    expect_single_group(["file.txt"], config: {"model" => "glite"})
     @mock_message_generator.expect :generate, "feat: generated message" do |diff, **kwargs|
       diff == "diff content" &&
-        kwargs == { intention: "add feature", files: ["file.txt"], config: { "model" => "glite" } }
+        kwargs == {intention: "add feature", files: ["file.txt"], config: {"model" => "glite"}}
     end
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: generated message"]
     @mock_git.expect :execute, "jkl3456", ["rev-parse", "HEAD"]
@@ -266,13 +266,13 @@ class CommitOrchestratorTest < TestCase
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "docs",
         source: "#{PROJECT_ROOT}/.ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["a.md"]
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
         source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
-        config: { "model" => "gflash" },
+        config: {"model" => "gflash"},
         files: ["b.md"]
       )
     ]
@@ -306,13 +306,13 @@ class CommitOrchestratorTest < TestCase
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "docs",
         source: "#{PROJECT_ROOT}/.ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["a.md"]
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
         source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
-        config: { "model" => "gflash" },
+        config: {"model" => "gflash"},
         files: ["b.md"]
       )
     ]
@@ -352,7 +352,7 @@ class CommitOrchestratorTest < TestCase
 
     # Mock validate_paths to return invalid path
     mock_path_resolver.expect :validate_paths,
-      { valid: [], invalid: ["nonexistent/"] },
+      {valid: [], invalid: ["nonexistent/"]},
       [["nonexistent/"]]
 
     # Mock last_error to return nil (no git error, just missing path)
@@ -430,7 +430,7 @@ class CommitOrchestratorTest < TestCase
     mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # In validation
     mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # In validation
     mock_path_resolver.expect :validate_paths,
-      { valid: ["lib/", "test/"], invalid: [] },
+      {valid: ["lib/", "test/"], invalid: []},
       [["lib/", "test/"]]
 
     # Mock glob_pattern? for separating paths (directories, globs, single files)

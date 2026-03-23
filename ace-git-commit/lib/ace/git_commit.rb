@@ -3,7 +3,7 @@
 require_relative "git_commit/version"
 
 # Load ace-config and ace-llm
-require 'ace/support/config'
+require "ace/support/config"
 require "ace/llm"
 
 # Require all components

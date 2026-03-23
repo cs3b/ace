@@ -7,7 +7,7 @@ class CommitGroupTest < TestCase
     group = Ace::GitCommit::Models::CommitGroup.new(
       scope_name: "docs",
       source: ".ace/git/commit.yml",
-      config: { "model" => "glite" },
+      config: {"model" => "glite"},
       files: ["a.md"]
     )
 
@@ -17,8 +17,8 @@ class CommitGroupTest < TestCase
   end
 
   def test_signature_is_stable
-    config_a = { "model" => "glite", "conventions" => { "format" => "simple" } }
-    config_b = { "conventions" => { "format" => "simple" }, "model" => "glite" }
+    config_a = {"model" => "glite", "conventions" => {"format" => "simple"}}
+    config_b = {"conventions" => {"format" => "simple"}, "model" => "glite"}
 
     sig_a = Ace::GitCommit::Models::CommitGroup.signature_for(config_a)
     sig_b = Ace::GitCommit::Models::CommitGroup.signature_for(config_b)
@@ -29,12 +29,12 @@ class CommitGroupTest < TestCase
   def test_signature_is_stable_with_nested_structures
     # Test that deeply nested configs produce stable signatures regardless of key order
     config_a = {
-      "paths" => [{ "glob" => "docs/**", "type_hint" => "docs" }, { "glob" => "lib/**", "type_hint" => "feat" }],
+      "paths" => [{"glob" => "docs/**", "type_hint" => "docs"}, {"glob" => "lib/**", "type_hint" => "feat"}],
       "model" => "glite"
     }
     config_b = {
       "model" => "glite",
-      "paths" => [{ "type_hint" => "docs", "glob" => "docs/**" }, { "type_hint" => "feat", "glob" => "lib/**" }]
+      "paths" => [{"type_hint" => "docs", "glob" => "docs/**"}, {"type_hint" => "feat", "glob" => "lib/**"}]
     }
 
     sig_a = Ace::GitCommit::Models::CommitGroup.signature_for(config_a)
@@ -45,8 +45,8 @@ class CommitGroupTest < TestCase
 
   def test_signature_differs_for_different_array_content
     # Arrays with different content should produce different signatures
-    config_a = { "paths" => [{ "glob" => "docs/**" }] }
-    config_b = { "paths" => [{ "glob" => "lib/**" }] }
+    config_a = {"paths" => [{"glob" => "docs/**"}]}
+    config_b = {"paths" => [{"glob" => "lib/**"}]}
 
     sig_a = Ace::GitCommit::Models::CommitGroup.signature_for(config_a)
     sig_b = Ace::GitCommit::Models::CommitGroup.signature_for(config_b)
@@ -57,8 +57,8 @@ class CommitGroupTest < TestCase
   def test_signature_differs_for_different_array_order
     # NOTE: Array order DOES matter for signatures - same elements in different order = different signature
     # This is intentional: [A, B] and [B, A] represent different path rule priorities
-    config_a = { "paths" => [{ "glob" => "docs/**" }, { "glob" => "lib/**" }] }
-    config_b = { "paths" => [{ "glob" => "lib/**" }, { "glob" => "docs/**" }] }
+    config_a = {"paths" => [{"glob" => "docs/**"}, {"glob" => "lib/**"}]}
+    config_b = {"paths" => [{"glob" => "lib/**"}, {"glob" => "docs/**"}]}
 
     sig_a = Ace::GitCommit::Models::CommitGroup.signature_for(config_a)
     sig_b = Ace::GitCommit::Models::CommitGroup.signature_for(config_b)

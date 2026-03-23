@@ -14,11 +14,11 @@ class CommitSummarizerTest < TestCase
 
     output = @summarizer.summarize("HEAD")
 
-    assert_match /^abc1234/, output
-    assert_match /feat: add new feature/, output
-    assert_match /2 files changed/, output
-    assert_match /12 insertions/, output
-    assert_match /3 deletions/, output
+    assert_match(/^abc1234/, output)
+    assert_match(/feat: add new feature/, output)
+    assert_match(/2 files changed/, output)
+    assert_match(/12 insertions/, output)
+    assert_match(/3 deletions/, output)
   end
 
   def test_summarize_includes_file_stats
@@ -39,10 +39,10 @@ class CommitSummarizerTest < TestCase
 
     output = @summarizer.summarize("HEAD")
 
-    assert_match /^aaa111/, output
-    assert_match /Initial commit/, output
-    assert_match /README.md/, output
-    assert_match /1 file changed, 3 insertions/, output
+    assert_match(/^aaa111/, output)
+    assert_match(/Initial commit/, output)
+    assert_match(/README.md/, output)
+    assert_match(/1 file changed, 3 insertions/, output)
   end
 
   def test_summarize_with_specific_commit_sha
@@ -51,8 +51,8 @@ class CommitSummarizerTest < TestCase
 
     output = @summarizer.summarize("bbb222")
 
-    assert_match /^bbb222/, output
-    assert_match /refactor: improve code/, output
+    assert_match(/^bbb222/, output)
+    assert_match(/refactor: improve code/, output)
   end
 
   def test_summarize_with_refs
@@ -74,8 +74,8 @@ class CommitSummarizerTest < TestCase
     # First line should not have leading whitespace
     # It will have a trailing newline from the format
     first_line = output.lines.first.chomp
-    refute_match /^\s/, first_line
-    refute_match /\s$/, first_line
+    refute_match(/^\s/, first_line)
+    refute_match(/\s$/, first_line)
   end
 
   # Mock GitExecutor for testing

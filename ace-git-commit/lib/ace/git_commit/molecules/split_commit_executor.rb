@@ -110,7 +110,7 @@ module Ace
 
           if cli_model
             # CLI flag overrides all group models - can batch
-            config_override = { "model" => cli_model }
+            config_override = {"model" => cli_model}
             return @message_generator.generate_batch(
               groups_context,
               intention: options.intention,
@@ -118,7 +118,7 @@ module Ace
             )
           elsif models_used.length <= 1
             # All groups use same model (or no model) - can batch
-            config_override = models_used.first ? { "model" => models_used.first } : {}
+            config_override = models_used.first ? {"model" => models_used.first} : {}
             return @message_generator.generate_batch(
               groups_context,
               intention: options.intention,
@@ -141,7 +141,7 @@ module Ace
           by_model = groups_context.group_by { |ctx| ctx[:model] || "default" }
 
           by_model.each do |model, contexts|
-            config_override = model == "default" ? {} : { "model" => model }
+            config_override = (model == "default") ? {} : {"model" => model}
             result = @message_generator.generate_batch(
               contexts,
               intention: intention,
@@ -156,7 +156,7 @@ module Ace
 
           # Rebuild in original order
           ordered_messages = groups_context.map { |ctx| messages_by_scope[ctx[:scope_name]] }
-          { messages: ordered_messages, order: groups_context.map { |ctx| ctx[:scope_name] } }
+          {messages: ordered_messages, order: groups_context.map { |ctx| ctx[:scope_name] }}
         end
 
         # Normalize config keys to strings for consistent access
@@ -184,7 +184,7 @@ module Ace
           aligned_messages = aligned_groups.map { |g| message_by_scope[g.scope_name] }
           if aligned_messages.any?(&:nil?)
             missing = aligned_groups.each_with_index.filter_map { |g, idx| g.scope_name if aligned_messages[idx].nil? }
-            raise Error, "Missing generated message(s) for scope(s): #{missing.join(', ')}"
+            raise Error, "Missing generated message(s) for scope(s): #{missing.join(", ")}"
           end
 
           # Always sort by commit type - more reliable than LLM ordering
@@ -205,7 +205,7 @@ module Ace
             )
           end
 
-          { messages: messages, order: groups_context.map { |ctx| ctx[:scope_name] } }
+          {messages: messages, order: groups_context.map { |ctx| ctx[:scope_name] }}
         end
 
         def sort_by_commit_type(groups, messages)
@@ -217,8 +217,8 @@ module Ace
 
           # Pair groups with messages and extract types
           pairs = groups.zip(messages).map do |group, msg|
-            type = msg.to_s.match(/^(\w+)[\(:]/)&.[](1) || "chore"
-            { group: group, message: msg, type: type, priority: type_priority[type] || 5 }
+            type = msg.to_s.match(/^(\w+)[(:]/)&.[](1) || "chore"
+            {group: group, message: msg, type: type, priority: type_priority[type] || 5}
           end
 
           # Sort by priority

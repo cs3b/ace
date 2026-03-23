@@ -115,7 +115,7 @@ module Ace
 
           def load_effective_config
             gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
-                       File.expand_path("../../../../../..", __dir__)
+              File.expand_path("../../../../../..", __dir__)
 
             resolver = Ace::Support::Config.create(
               config_dir: ".ace",
@@ -129,7 +129,7 @@ module Ace
 
           def default_config
             gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
-                       File.expand_path("../../../../../..", __dir__)
+              File.expand_path("../../../../../..", __dir__)
 
             defaults_path = File.join(gem_root, ".ace-defaults", "git", "commit.yml")
 

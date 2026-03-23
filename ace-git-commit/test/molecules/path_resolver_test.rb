@@ -342,7 +342,7 @@ class PathResolverTest < TestCase
     File.stub :directory?, ->(path) { path == "test/" } do
       File.stub :exist?, ->(path) { path == "README.md" } do
         Dir.stub :glob, ->(pattern, *) do
-          pattern == "lib/*.rb" ? ["lib/file1.rb"] : []
+          (pattern == "lib/*.rb") ? ["lib/file1.rb"] : []
         end do
           File.stub :file?, ->(path) { true } do
             @mock_git.expect :execute, "lib/file1.rb\n", ["ls-files"]
@@ -503,7 +503,7 @@ class PathResolverTest < TestCase
     File.stub :exist?, ->(path) { true } do
       File.stub :expand_path, ->(path) {
         # Handle both the file path and repo root
-        path == "/repo" ? "/repo" : "/repo/#{path}"
+        (path == "/repo") ? "/repo" : "/repo/#{path}"
       } do
         @mock_git.expect :execute, "/repo\n", ["rev-parse", "--show-toplevel"]
 
@@ -810,5 +810,4 @@ class PathResolverTest < TestCase
       @mock_git.verify
     end
   end
-
 end

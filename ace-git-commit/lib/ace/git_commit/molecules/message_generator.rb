@@ -11,7 +11,7 @@ module Ace
         DEFAULT_MODEL = "glite"
         MAX_TOKENS = 8192
         SYSTEM_PROMPT_PATH = "ace-git-commit/handbook/prompts/git-commit.system.md"
-        COMMIT_HEADER_PATTERN = /\A(feat|fix|docs|style|refactor|test|chore|spec|perf|build|ci|revert)(\([^)]+\))?:\s+\S+/.freeze
+        COMMIT_HEADER_PATTERN = /\A(feat|fix|docs|style|refactor|test|chore|spec|perf|build|ci|revert)(\([^)]+\))?:\s+\S+/
 
         class BatchParseError < StandardError; end
 
@@ -51,11 +51,11 @@ module Ace
         # @param config [Hash, nil] Optional config override
         # @return [Hash] { messages: Array<String>, order: Array<String> } with LLM-recommended order
         def generate_batch(groups_context, intention: nil, config: nil)
-          return { messages: [], order: [] } if groups_context.empty?
+          return {messages: [], order: []} if groups_context.empty?
 
           if groups_context.length == 1
             msg = generate(groups_context.first[:diff], intention: intention, files: groups_context.first[:files], config: config)
-            return { messages: [msg], order: [groups_context.first[:scope_name]] }
+            return {messages: [msg], order: [groups_context.first[:scope_name]]}
           end
 
           system_prompt = load_batch_system_prompt
@@ -162,10 +162,10 @@ module Ace
             prompt << "=" * 60
 
             # Include type hint OR explicit instruction to analyze
-            if ctx[:type_hint] && !ctx[:type_hint].to_s.empty?
-              prompt << "PREFERRED TYPE FOR THIS GROUP ONLY: #{ctx[:type_hint]}"
+            prompt << if ctx[:type_hint] && !ctx[:type_hint].to_s.empty?
+              "PREFERRED TYPE FOR THIS GROUP ONLY: #{ctx[:type_hint]}"
             else
-              prompt << "TYPE: Analyze changes and select appropriate type (feat/fix/refactor/test/docs/chore)"
+              "TYPE: Analyze changes and select appropriate type (feat/fix/refactor/test/docs/chore)"
             end
 
             # Include description if provided
@@ -190,7 +190,7 @@ module Ace
         end
 
         def parse_batch_response(response, groups_context)
-          return { messages: [clean_commit_message(response)], order: [groups_context.first[:scope_name]] } if groups_context.length == 1
+          return {messages: [clean_commit_message(response)], order: [groups_context.first[:scope_name]]} if groups_context.length == 1
 
           scope_names = groups_context.map { |g| g[:scope_name] }
           parsed = parse_batch_json(response)
@@ -217,7 +217,7 @@ module Ace
             msg
           end
 
-          { messages: ordered_messages, order: order }
+          {messages: ordered_messages, order: order}
         end
 
         def parse_batch_json(response)
@@ -246,10 +246,10 @@ module Ace
           return if missing.empty? && extra.empty? && duplicates.empty?
 
           parts = []
-          parts << "missing=#{missing.join(',')}" unless missing.empty?
-          parts << "extra=#{extra.join(',')}" unless extra.empty?
-          parts << "duplicates=#{duplicates.join(',')}" unless duplicates.empty?
-          raise BatchParseError, "#{label} scope validation failed (#{parts.join(' | ')})"
+          parts << "missing=#{missing.join(",")}" unless missing.empty?
+          parts << "extra=#{extra.join(",")}" unless extra.empty?
+          parts << "duplicates=#{duplicates.join(",")}" unless duplicates.empty?
+          raise BatchParseError, "#{label} scope validation failed (#{parts.join(" | ")})"
         end
 
         def validate_commit_header!(scope, message)
@@ -282,7 +282,7 @@ module Ace
           prompt = []
           prompt << "Your previous response was invalid for strict JSON batch commit output."
           prompt << "Reason: #{reason}"
-          prompt << "Allowed scopes: #{scope_names.join(', ')}"
+          prompt << "Allowed scopes: #{scope_names.join(", ")}"
           prompt << "Intention/context: #{intention}" if intention && !intention.empty?
           prompt << ""
           prompt << "Previous response:"

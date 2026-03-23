@@ -6,7 +6,7 @@ module Ace
       # CommitOptions encapsulates all options for a commit operation
       class CommitOptions
         attr_accessor :intention, :message, :model, :files,
-                      :only_staged, :dry_run, :debug, :force, :verbose, :quiet, :no_split
+          :only_staged, :dry_run, :debug, :force, :verbose, :quiet, :no_split
 
         def initialize(
           intention: nil,
