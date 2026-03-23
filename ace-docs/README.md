@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-docs demo](docs/demo/ace-docs-getting-started.gif)
 
 `ace-docs` provides a practical maintenance loop for teams that need package docs to stay aligned with fast-moving code and workflow changes. It uses frontmatter-based freshness tracking, targeted change analysis, and LLM-assisted update guidance to keep documentation in sync.
