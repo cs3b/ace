@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.967] - 2026-03-23
+
+### Changed
+- **ace-support-core v0.29.0**: Refreshed README with "How It Works" section and `ace-framework` CLI reference.
+- **ace-support-models v0.9.0**: Added `ace-models` and `ace-llm-providers` CLI references and Quick Start section to README.
+- **ace-support-nav v0.25.0**: Added Quick Start section with `ace-nav` CLI examples, handbook footer link, demo tape, and `docs/**/*` gemspec glob.
+
+### Fixed
+- **ace-support-test-helpers v0.13.0**: Corrected `source_code_uri` gemspec metadata to point to package-specific path.
+
+### Technical
+- **ace-support-config v0.9.0**, **ace-support-core v0.29.0**, **ace-support-fs v0.3.0**, **ace-support-mac-clipboard v0.3.0**, **ace-support-markdown v0.3.0**, **ace-support-models v0.9.0**, **ace-support-test-helpers v0.13.0**: Removed phantom `handbook/**/*` glob from gemspecs where no handbook directory exists.
+
 ## [0.9.966] - 2026-03-23
 
 ### Fixed

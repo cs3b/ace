@@ -259,13 +259,13 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.8.5)
+    ace-support-config (0.9.0)
       ace-support-fs (~> 0.2)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.28.3)
+    ace-support-core (0.29.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-fs (~> 0.2)
@@ -273,7 +273,7 @@ PATH
 PATH
   remote: ace-support-fs
   specs:
-    ace-support-fs (0.2.3)
+    ace-support-fs (0.3.0)
 
 PATH
   remote: ace-support-items
@@ -285,20 +285,20 @@ PATH
 PATH
   remote: ace-support-mac-clipboard
   specs:
-    ace-support-mac-clipboard (0.2.3)
+    ace-support-mac-clipboard (0.3.0)
       ffi (~> 1.15)
 
 PATH
   remote: ace-support-markdown
   specs:
-    ace-support-markdown (0.2.2)
+    ace-support-markdown (0.3.0)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
 
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.8.2)
+    ace-support-models (0.9.0)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)
       faraday (~> 2.0)
@@ -307,7 +307,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.24.0)
+    ace-support-nav (0.25.0)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
@@ -316,7 +316,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.12.6)
+    ace-support-test-helpers (0.13.0)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
