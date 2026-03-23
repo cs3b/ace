@@ -65,13 +65,6 @@ ace-docs:
        reveals scope. Use `/as-task-draft` to draft from an earlier captured [idea](../ace-idea) or
        short note, or [`ace-task create`](docs/usage.md#ace-task-create-title) from the CLI. -->
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
-<!-- One-line repeat of the nav row. Readers who scroll past Use Cases find docs again
-     without scrolling back to the top. Same pipe-separated format as the top nav. -->
-
 ---
 
-Part of [ACE](../README.md) (Agentic Coding Environment)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
