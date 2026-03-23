@@ -12,15 +12,21 @@
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Getting Started](docs/getting-started.md) | [Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-docs demo](docs/demo/ace-docs-getting-started.gif)
 
-`ace-docs` provides a practical maintenance loop for teams that need package docs to stay aligned with fast-moving code and workflow changes.
+`ace-docs` provides a practical maintenance loop for teams that need package docs to stay aligned with fast-moving code and workflow changes. It uses frontmatter-based freshness tracking, targeted change analysis, and LLM-assisted update guidance to keep documentation in sync.
+
+## How It Works
+
+1. Discover and scan markdown documentation across package roots, tracking freshness through frontmatter metadata.
+2. Analyze per-document changes since last update to identify stale files and prioritize update targets.
+3. Generate targeted update guidance or validate cross-document consistency before release.
 
 ## Use Cases
 
-**Prioritize documentation updates based on real drift** - identify which files are stale, what changed since last update, and where to focus first.
+**Prioritize documentation updates based on real drift** - identify which files are stale, what changed since last update, and where to focus first using [`ace-docs`](docs/usage.md) freshness tracking.
 
 **Generate targeted update guidance for specific documents** - run LLM-assisted analysis with [ace-bundle](../ace-bundle) and [ace-llm](../ace-llm) context to propose concrete doc revisions.
 
@@ -28,22 +34,10 @@ Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 **Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
-## Features
-
-- Frontmatter-based freshness tracking for markdown documentation.
-- Document discovery across package roots and file globs.
-- Targeted per-document change analysis for update planning.
-- Cross-document consistency analysis before release.
-- Metadata update workflows for single files or scoped sets.
-- Syntax and semantic documentation validation support.
-
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-docs --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Part of ACE
+---
 
-`ace-docs` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
