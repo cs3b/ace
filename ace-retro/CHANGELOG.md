@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-03-23
+
+### Changed
+- Refreshed the package README with a stronger overview, quick documentation navigation, and use-case-first structure aligned with current README layout patterns.
+
 ## [0.15.3] - 2026-03-22
 
 ### Changed
