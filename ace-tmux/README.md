@@ -35,11 +35,5 @@
 
 **Orchestrate task-focused workspaces** - pair with [ace-overseer](../ace-overseer) and [ace-assign](../ace-assign) for assignment-driven worktree and tmux orchestration that spins up isolated workspaces per task.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
