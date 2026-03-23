@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-23
+
+### Changed
+- Added `ace-models` and `ace-llm-providers` CLI references to README intro and new Quick Start section with usage examples.
+
+### Technical
+- Removed phantom `handbook/**/*` glob from gemspec (no handbook directory exists).
+
 ## [0.8.2] - 2026-03-23
 
 ### Fixed

@@ -1,0 +1,28 @@
+---
+description: Browse and resolve ACE handbook resources with ace-nav
+tags:
+- docs
+- nav
+- getting-started
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+scenes:
+- name: Show registered handbook sources
+  commands:
+  - type: ace-nav sources
+    sleep: 4s
+- name: List all workflow instructions
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-nav list 'wfi://*'
+    sleep: 4s
+- name: Resolve a specific workflow
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-nav resolve wfi://task/work
+    sleep: 4s

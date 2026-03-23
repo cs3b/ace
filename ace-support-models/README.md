@@ -14,7 +14,7 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-models` normalizes provider and model metadata into a single canonical source so ACE tools that reason about LLM capabilities, pricing, and compatibility do not duplicate catalogs or drift out of sync.
+`ace-support-models` normalizes provider and model metadata into a single canonical source so ACE tools that reason about LLM capabilities, pricing, and compatibility do not duplicate catalogs or drift out of sync. Includes `ace-models` for search, pricing, and cache sync, and `ace-llm-providers` for provider listing.
 
 ## Use Cases
 
@@ -23,6 +23,16 @@
 **Calculate usage expectations** - support stable cost and compatibility assumptions during tool workflows with shared pricing and capability primitives.
 
 **Share validation rules** - apply one metadata model for provider and model checks so that [ace-llm-providers-cli](../ace-llm-providers-cli) and other provider-aware packages stay aligned.
+
+## Quick Start
+
+```bash
+ace-models search claude              # Find models by name
+ace-models info claude-sonnet-4-6     # Pricing and context window
+ace-models cost claude-opus-4-6       # Token cost calculator
+ace-models sync                       # Update cache from models.dev
+ace-llm-providers list                # List known providers
+```
 
 ---
 

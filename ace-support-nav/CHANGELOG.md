@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-23
+
+### Added
+- Added getting-started demo tape and recorded GIF showing `ace-nav sources`, `list`, and `resolve` commands.
+
+### Changed
+- Added Quick Start section with `ace-nav` CLI examples and handbook link in README footer navigation.
+- Added `docs/**/*` to gemspec file glob for demo and documentation assets.
+
 ## [0.24.0] - 2026-03-23
 
 ### Changed

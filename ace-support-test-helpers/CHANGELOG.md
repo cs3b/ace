@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-23
+
+### Fixed
+- Corrected `source_code_uri` gemspec metadata to point to package-specific path instead of repository root.
+
+### Technical
+- Removed phantom `handbook/**/*` glob from gemspec (no handbook directory exists).
+
 ## [0.12.6] - 2026-03-22
 
 ### Changed

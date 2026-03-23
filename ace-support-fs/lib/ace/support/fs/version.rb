@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Fs
-      VERSION = "0.2.3"
+      VERSION = "0.3.0"
     end
   end
 end
