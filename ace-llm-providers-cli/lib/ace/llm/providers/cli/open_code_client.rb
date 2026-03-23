@@ -15,6 +15,7 @@ module Ace
         # Provides access to multiple AI providers through OpenCode's unified platform
         class OpenCodeClient < Ace::LLM::Organisms::BaseClient
           include CliArgsSupport
+
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://models.dev"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -65,13 +66,13 @@ module Ace
             # Return a standard set of models that OpenCode typically supports
             # Actual models come from YAML config
             [
-              { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Fast Google model", context_size: 1_000_000 },
-              { id: "google/gemini-2.0-flash-experimental", name: "Gemini 2.0 Flash", description: "Experimental Google model", context_size: 1_000_000 },
-              { id: "google/gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced Google model", context_size: 2_000_000 },
-              { id: "anthropic/claude-3-5-sonnet", name: "Claude 3.5 Sonnet", description: "Anthropic model", context_size: 200_000 },
-              { id: "anthropic/claude-3-5-haiku", name: "Claude 3.5 Haiku", description: "Fast Anthropic model", context_size: 200_000 },
-              { id: "openai/gpt-4o", name: "GPT-4 Omni", description: "OpenAI model", context_size: 128_000 },
-              { id: "openai/gpt-4o-mini", name: "GPT-4 Omni Mini", description: "Small OpenAI model", context_size: 128_000 }
+              {id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Fast Google model", context_size: 1_000_000},
+              {id: "google/gemini-2.0-flash-experimental", name: "Gemini 2.0 Flash", description: "Experimental Google model", context_size: 1_000_000},
+              {id: "google/gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced Google model", context_size: 2_000_000},
+              {id: "anthropic/claude-3-5-sonnet", name: "Claude 3.5 Sonnet", description: "Anthropic model", context_size: 200_000},
+              {id: "anthropic/claude-3-5-haiku", name: "Claude 3.5 Haiku", description: "Fast Anthropic model", context_size: 200_000},
+              {id: "openai/gpt-4o", name: "GPT-4 Omni", description: "OpenAI model", context_size: 128_000},
+              {id: "openai/gpt-4o-mini", name: "GPT-4 Omni Mini", description: "Small OpenAI model", context_size: 128_000}
             ]
           end
 
@@ -118,13 +119,12 @@ module Ace
 
           def opencode_authenticated?
             # Quick check if OpenCode can execute (will fail fast if not authenticated)
-            begin
-              cmd = ["opencode", "--version"]
-              stdout, _, status = Open3.capture3(*cmd)
-              status.success?
-            rescue
-              false
-            end
+
+            cmd = ["opencode", "--version"]
+            _, _, status = Open3.capture3(*cmd)
+            status.success?
+          rescue
+            false
           end
 
           # Build command array with pre-built full prompt
@@ -183,9 +183,9 @@ module Ace
             return prompt_str if prompt_str.start_with?("System:")
 
             system_content = options[:system_instruction] ||
-                           options[:system] ||
-                           options[:system_prompt] ||
-                           @generation_config[:system_prompt]
+              options[:system] ||
+              options[:system_prompt] ||
+              @generation_config[:system_prompt]
 
             if system_content
               "System: #{system_content}\n\n#{prompt_str}"
@@ -193,7 +193,6 @@ module Ace
               prompt_str
             end
           end
-
 
           def execute_opencode_command(cmd, timeout: nil, options: {})
             timeout_val = timeout || @options[:timeout] || 120

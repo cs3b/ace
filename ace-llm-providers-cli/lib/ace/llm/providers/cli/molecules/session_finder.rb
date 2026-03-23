@@ -33,7 +33,7 @@ module Ace
               return nil unless finder
 
               finder.call(working_dir: working_dir, prompt: prompt)
-            rescue StandardError
+            rescue
               nil
             end
           end

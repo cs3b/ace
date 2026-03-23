@@ -24,8 +24,8 @@ module Ace
                   data = {
                     "sessionId" => "gem-001",
                     "messages" => [
-                      { "content" => [{ "text" => PROMPT }] },
-                      { "content" => [{ "text" => "ok" }] }
+                      {"content" => [{"text" => PROMPT}]},
+                      {"content" => [{"text" => "ok"}]}
                     ]
                   }
                   File.write(chat_file, data.to_json)
@@ -52,7 +52,7 @@ module Ace
                   data = {
                     "sessionId" => "gem-001",
                     "messages" => [
-                      { "content" => [{ "text" => "different" }] }
+                      {"content" => [{"text" => "different"}]}
                     ]
                   }
                   File.write(chat_file, data.to_json)

@@ -19,9 +19,9 @@ module Ace
 
                   session_file = File.join(date_dir, "session1.jsonl")
                   lines = [
-                    { "session_meta" => { "payload" => { "id" => "cdx-001" } } }.to_json,
-                    { "payload" => { "role" => "user", "content" => [{ "text" => PROMPT }] } }.to_json,
-                    { "payload" => { "role" => "assistant", "content" => [{ "text" => "ok" }] } }.to_json
+                    {"session_meta" => {"payload" => {"id" => "cdx-001"}}}.to_json,
+                    {"payload" => {"role" => "user", "content" => [{"text" => PROMPT}]}}.to_json,
+                    {"payload" => {"role" => "assistant", "content" => [{"text" => "ok"}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -44,8 +44,8 @@ module Ace
 
                   session_file = File.join(date_dir, "session1.jsonl")
                   lines = [
-                    { "session_meta" => { "payload" => { "id" => "cdx-002" } } }.to_json,
-                    { "payload" => { "role" => "user", "content" => PROMPT } }.to_json
+                    {"session_meta" => {"payload" => {"id" => "cdx-002"}}}.to_json,
+                    {"payload" => {"role" => "user", "content" => PROMPT}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -67,8 +67,8 @@ module Ace
 
                   session_file = File.join(date_dir, "session1.jsonl")
                   lines = [
-                    { "session_meta" => { "payload" => { "id" => "cdx-001" } } }.to_json,
-                    { "payload" => { "role" => "user", "content" => [{ "text" => "wrong" }] } }.to_json
+                    {"session_meta" => {"payload" => {"id" => "cdx-001"}}}.to_json,
+                    {"payload" => {"role" => "user", "content" => [{"text" => "wrong"}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -102,8 +102,8 @@ module Ace
                   session_file = File.join(date_dir, "session1.jsonl")
                   lines = [
                     "bad json",
-                    { "session_meta" => { "payload" => { "id" => "cdx-003" } } }.to_json,
-                    { "payload" => { "role" => "user", "content" => [{ "text" => PROMPT }] } }.to_json
+                    {"session_meta" => {"payload" => {"id" => "cdx-003"}}}.to_json,
+                    {"payload" => {"role" => "user", "content" => [{"text" => PROMPT}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 

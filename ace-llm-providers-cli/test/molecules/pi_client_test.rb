@@ -42,8 +42,8 @@ describe "PiClient" do
 
   it "formats message array with roles" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -53,9 +53,9 @@ describe "PiClient" do
 
   it "formats multi-turn conversations" do
     messages = [
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi there" },
-      { role: "user", content: "How are you?" }
+      {role: "user", content: "Hello"},
+      {role: "assistant", content: "Hi there"},
+      {role: "user", content: "How are you?"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -370,7 +370,7 @@ describe "PiClient" do
         {"type":"agent_end","messages":[{"content":[{"type":"text","text":"Fallback text"}]}]}
       NDJSON
 
-      text, usage = @client.send(:parse_ndjson, ndjson)
+      text, _ = @client.send(:parse_ndjson, ndjson)
       assert_equal "Fallback text", text
     end
 
@@ -383,15 +383,15 @@ describe "PiClient" do
 
   describe "normalize_usage" do
     it "normalizes Pi field names to standard format" do
-      usage = { "input" => 10, "output" => 5 }
+      usage = {"input" => 10, "output" => 5}
       result = @client.send(:normalize_usage, usage)
-      assert_equal({ "input_tokens" => 10, "output_tokens" => 5 }, result)
+      assert_equal({"input_tokens" => 10, "output_tokens" => 5}, result)
     end
 
     it "passes through already-normalized field names" do
-      usage = { "input_tokens" => 10, "output_tokens" => 5 }
+      usage = {"input_tokens" => 10, "output_tokens" => 5}
       result = @client.send(:normalize_usage, usage)
-      assert_equal({ "input_tokens" => 10, "output_tokens" => 5 }, result)
+      assert_equal({"input_tokens" => 10, "output_tokens" => 5}, result)
     end
 
     it "returns empty hash for nil usage" do

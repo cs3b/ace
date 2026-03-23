@@ -37,12 +37,12 @@ module Ace
                 end
 
                 nil
-              rescue StandardError
+              rescue
                 nil
               end
 
               def self.encode_path(path)
-                "--#{path.gsub("/", "-")}--"
+                "--#{path.tr("/", "-")}--"
               end
 
               def self.scan_file(path, prompt)
@@ -67,13 +67,13 @@ module Ace
                   end
 
                   if text.is_a?(String) && text.strip == prompt.strip
-                    return { session_id: session_id, session_path: path }
+                    return {session_id: session_id, session_path: path}
                   end
                 rescue JSON::ParserError
                   next
                 end
                 nil
-              rescue StandardError
+              rescue
                 nil
               end
 

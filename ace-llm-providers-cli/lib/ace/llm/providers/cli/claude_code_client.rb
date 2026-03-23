@@ -15,6 +15,7 @@ module Ace
         # Provides access to Claude Code models through subprocess execution
         class ClaudeCodeClient < Ace::LLM::Organisms::BaseClient
           include CliArgsSupport
+
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://claude.ai"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -72,14 +73,13 @@ module Ace
             # Return models based on what the CLI supports
             # This is a simplified list - actual models come from YAML config
             [
-              { id: "claude-opus-4-1", name: "Claude Opus 4.1", description: "Most capable model", context_size: 200_000 },
-              { id: "claude-sonnet-4-0", name: "Claude Sonnet 4.0", description: "Balanced model", context_size: 200_000 },
-              { id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", description: "Fast model", context_size: 200_000 }
+              {id: "claude-opus-4-1", name: "Claude Opus 4.1", description: "Most capable model", context_size: 200_000},
+              {id: "claude-sonnet-4-0", name: "Claude Sonnet 4.0", description: "Balanced model", context_size: 200_000},
+              {id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", description: "Fast model", context_size: 200_000}
             ]
           end
 
           private
-
 
           def format_messages_as_prompt(messages)
             # Handle both array of message hashes and string prompt
@@ -157,7 +157,6 @@ module Ace
 
             cmd
           end
-
 
           def execute_claude_command(cmd, prompt, subprocess_env: nil, working_dir: nil)
             timeout_val = @options[:timeout] || 120
@@ -350,7 +349,7 @@ module Ace
           def debug_subprocess(message)
             return unless ENV["ACE_LLM_DEBUG_SUBPROCESS"] == "1"
 
-            $stderr.puts("[ClaudeCodeClient] #{message}")
+            warn("[ClaudeCodeClient] #{message}")
           end
         end
       end

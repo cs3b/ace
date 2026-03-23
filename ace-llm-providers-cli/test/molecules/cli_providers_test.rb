@@ -23,8 +23,8 @@ describe "CLI Providers" do
 
     it "formats messages correctly" do
       messages = [
-        { role: "system", content: "You are helpful" },
-        { role: "user", content: "Hello" }
+        {role: "system", content: "You are helpful"},
+        {role: "user", content: "Hello"}
       ]
 
       formatted = @client.send(:format_messages_as_prompt, messages)
@@ -47,7 +47,7 @@ describe "CLI Providers" do
           captured_cmd = cmd
           ['{"result":"ok","usage":{}}', "", status]
         } do
-          @client.generate([{ role: "user", content: "hi" }], cli_args: "--verbose")
+          @client.generate([{role: "user", content: "hi"}], cli_args: "--verbose")
         end
       end
 
@@ -64,7 +64,7 @@ describe "CLI Providers" do
 
       @client.stub :validate_claude_availability!, true do
         Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub :call, ['{"result":"ok","usage":{}}', "", status] do
-          @client.generate([{ role: "user", content: "hi" }], cli_args: "--verbose")
+          @client.generate([{role: "user", content: "hi"}], cli_args: "--verbose")
         end
       end
 

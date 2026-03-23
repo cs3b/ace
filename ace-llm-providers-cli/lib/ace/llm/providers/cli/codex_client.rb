@@ -19,6 +19,7 @@ module Ace
         # Provides access to Codex models through subprocess execution
         class CodexClient < Ace::LLM::Organisms::BaseClient
           include CliArgsSupport
+
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://api.openai.com"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -73,13 +74,12 @@ module Ace
             # Return models based on what the CLI supports
             # Actual models come from YAML config
             [
-              { id: "gpt-5", name: "GPT-5", description: "Advanced Codex model", context_size: 128_000 },
-              { id: "gpt-5-mini", name: "GPT-5 Mini", description: "Smaller, faster model", context_size: 128_000 }
+              {id: "gpt-5", name: "GPT-5", description: "Advanced Codex model", context_size: 128_000},
+              {id: "gpt-5-mini", name: "GPT-5 Mini", description: "Smaller, faster model", context_size: 128_000}
             ]
           end
 
           private
-
 
           def format_messages_as_prompt(messages)
             # Handle both array of message hashes and string prompt
@@ -130,19 +130,18 @@ module Ace
 
           def codex_authenticated?
             # Quick check if Codex can execute (will fail fast if not authenticated)
+
+            cmd = ["codex", "--version"]
+            stdout, _, status = Open3.capture3(*cmd)
+            status.success? && (stdout.include?("codex") || stdout.include?("Codex"))
+          rescue
+            # If version check fails, try help command
             begin
-              cmd = ["codex", "--version"]
-              stdout, _, status = Open3.capture3(*cmd)
-              return status.success? && (stdout.include?("codex") || stdout.include?("Codex"))
+              cmd = ["codex", "--help"]
+              _, _, status = Open3.capture3(*cmd)
+              status.success?
             rescue
-              # If version check fails, try help command
-              begin
-                cmd = ["codex", "--help"]
-                _, _, status = Open3.capture3(*cmd)
-                return status.success?
-              rescue
-                return false
-              end
+              false
             end
           end
 
@@ -183,16 +182,15 @@ module Ace
             cmd
           end
 
-
           def execute_codex_command(cmd, prompt, options)
             # Prepare the input - combine system prompt with user prompt if needed
             input = prompt.to_s
 
             # Check for system prompt in options or generation config
             system_content = options[:system_instruction] ||
-                           options[:system] ||
-                           options[:system_prompt] ||
-                           @generation_config[:system_prompt]
+              options[:system] ||
+              options[:system_prompt] ||
+              @generation_config[:system_prompt]
 
             if system_content && !prompt.include?("System:")
               input = "System: #{system_content}\n\nUser: #{input}"

@@ -14,6 +14,7 @@ module Ace
         # Provides access to Gemini models through subprocess execution
         class GeminiClient < Ace::LLM::Organisms::BaseClient
           include CliArgsSupport
+
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://generativelanguage.googleapis.com"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -65,10 +66,10 @@ module Ace
           # Project-level additions (like preview models) are handled by the config cascade
           def list_models
             [
-              { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Fast, efficient Gemini model", context_size: 1_048_576 },
-              { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "Advanced Gemini model", context_size: 1_048_576 },
-              { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Fast Gemini model", context_size: 1_048_576 },
-              { id: "gemini-1.5-pro-latest", name: "Gemini 1.5 Pro", description: "Previous generation Pro model", context_size: 2_097_152 }
+              {id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Fast, efficient Gemini model", context_size: 1_048_576},
+              {id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "Advanced Gemini model", context_size: 1_048_576},
+              {id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Fast Gemini model", context_size: 1_048_576},
+              {id: "gemini-1.5-pro-latest", name: "Gemini 1.5 Pro", description: "Previous generation Pro model", context_size: 2_097_152}
             ]
           end
 
@@ -220,7 +221,7 @@ module Ace
             file_refs = []
             file_refs << "Read this system instruction: #{system_file_path}" if system_file_path
             file_refs << "Read the user instructions: #{user_file_path}"
-            file_refs << "Follow the instructions in the file#{system_file_path ? 's' : ''}."
+            file_refs << "Follow the instructions in the file#{"s" if system_file_path}."
 
             new_prompt = file_refs.join("\n")
 
@@ -252,7 +253,6 @@ module Ace
           def append_cli_args(cmd, options)
             cmd.concat(normalized_cli_args(options))
           end
-
 
           def execute_gemini_command(cmd, prompt, options)
             timeout_val = options[:timeout] || @options[:timeout] || 120

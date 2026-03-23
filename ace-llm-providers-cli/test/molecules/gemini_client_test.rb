@@ -40,7 +40,7 @@ describe "GeminiClient" do
 
   it "formats message array without system prompt correctly" do
     messages = [
-      { role: "user", content: "Hello" }
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -49,8 +49,8 @@ describe "GeminiClient" do
 
   it "formats message array with system prompt correctly" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -60,9 +60,9 @@ describe "GeminiClient" do
 
   it "formats multi-turn conversations correctly" do
     messages = [
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi there" },
-      { role: "user", content: "How are you?" }
+      {role: "user", content: "Hello"},
+      {role: "assistant", content: "Hi there"},
+      {role: "user", content: "How are you?"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -73,10 +73,10 @@ describe "GeminiClient" do
 
   it "formats messages with system prompt at the beginning" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi" },
-      { role: "user", content: "Thanks" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"},
+      {role: "assistant", content: "Hi"},
+      {role: "user", content: "Thanks"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -211,7 +211,7 @@ describe "GeminiClient" do
     it "builds command with file references for large prompts" do
       # Create a client with system_prompt to trigger large prompt path
       client = Ace::LLM::Providers::CLI::GeminiClient.new(
-        generation_config: { system_prompt: "x" * 50_000 }
+        generation_config: {system_prompt: "x" * 50_000}
       )
 
       # Stub file operations to avoid polluting .cache/ during tests

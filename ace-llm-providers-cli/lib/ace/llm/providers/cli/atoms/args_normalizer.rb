@@ -45,10 +45,10 @@ module Ace
                   next
                 end
 
-                if previous_flag
-                  normalized << arg
+                normalized << if previous_flag
+                  arg
                 else
-                  normalized << "--#{arg}"
+                  "--#{arg}"
                 end
 
                 previous_flag = false

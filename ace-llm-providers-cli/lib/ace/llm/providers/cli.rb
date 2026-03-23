@@ -32,11 +32,9 @@ module Ace
             ]
 
             providers.each do |provider|
-              begin
-                require_relative "cli/#{provider}"
-              rescue LoadError => e
-                warn "Could not load CLI provider #{provider}: #{e.message}"
-              end
+              require_relative "cli/#{provider}"
+            rescue LoadError => e
+              warn "Could not load CLI provider #{provider}: #{e.message}"
             end
           end
         end

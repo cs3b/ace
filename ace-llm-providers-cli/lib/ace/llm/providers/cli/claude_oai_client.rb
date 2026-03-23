@@ -72,9 +72,9 @@ module Ace
           # List available models
           def list_models
             [
-              { id: "zai/glm-5", name: "GLM-5", description: "Z.ai flagship model (Anthropic-compatible)", context_size: 128_000 },
-              { id: "zai/glm-4.7", name: "GLM-4.7", description: "Z.ai balanced model (Anthropic-compatible)", context_size: 128_000 },
-              { id: "zai/glm-4.6", name: "GLM-4.6", description: "Z.ai fast model (Anthropic-compatible)", context_size: 128_000 }
+              {id: "zai/glm-5", name: "GLM-5", description: "Z.ai flagship model (Anthropic-compatible)", context_size: 128_000},
+              {id: "zai/glm-4.7", name: "GLM-4.7", description: "Z.ai balanced model (Anthropic-compatible)", context_size: 128_000},
+              {id: "zai/glm-4.6", name: "GLM-4.6", description: "Z.ai fast model (Anthropic-compatible)", context_size: 128_000}
             ]
           end
 
@@ -313,7 +313,7 @@ module Ace
           def debug_subprocess(message)
             return unless ENV["ACE_LLM_DEBUG_SUBPROCESS"] == "1"
 
-            $stderr.puts("[ClaudeOaiClient] #{message}")
+            warn("[ClaudeOaiClient] #{message}")
           end
         end
       end

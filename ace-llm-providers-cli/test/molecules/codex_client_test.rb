@@ -41,8 +41,8 @@ describe "CodexClient" do
 
   it "formats message array with roles" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -52,9 +52,9 @@ describe "CodexClient" do
 
   it "formats multi-turn conversations" do
     messages = [
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi there" },
-      { role: "user", content: "How are you?" }
+      {role: "user", content: "Hello"},
+      {role: "assistant", content: "Hi there"},
+      {role: "user", content: "How are you?"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -104,7 +104,7 @@ describe "CodexClient" do
     end
 
     it "includes --output-last-message when last_message_file option provided" do
-      cmd = @client.send(:build_codex_command, "Test prompt", { last_message_file: "/tmp/last-msg.md" })
+      cmd = @client.send(:build_codex_command, "Test prompt", {last_message_file: "/tmp/last-msg.md"})
 
       idx = cmd.index("--output-last-message")
       refute_nil idx, "expected --output-last-message in command"
