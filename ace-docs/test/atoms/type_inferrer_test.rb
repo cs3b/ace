@@ -17,14 +17,24 @@ module Ace
           assert_equal "workflow", result
         end
 
-        def test_readme_defaults_to_user_without_pattern
+        def test_package_readme_defaults_to_readme_without_pattern
           result = TypeInferrer.resolve(
             "ace-docs/README.md",
             pattern_type: nil,
             frontmatter_type: nil
           )
 
-          assert_equal "user", result
+          assert_equal "readme", result
+        end
+
+        def test_root_readme_defaults_to_root_readme_without_pattern
+          result = TypeInferrer.resolve(
+            "README.md",
+            pattern_type: nil,
+            frontmatter_type: nil
+          )
+
+          assert_equal "root_readme", result
         end
       end
     end

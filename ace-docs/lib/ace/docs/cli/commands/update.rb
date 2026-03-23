@@ -174,7 +174,7 @@ module Ace
 
           def infer_doc_type(path)
             case path
-            when /README\.md$/i then 'user'
+            when /README\.md$/i then 'readme'
             when /\.wf\.md$/ then 'workflow'
             when /\.g\.md$/ then 'guide'
             when /\.template\.md$/ then 'template'

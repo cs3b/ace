@@ -19,7 +19,7 @@ module Ace
 
           def test_infer_doc_type_readme
             result = @command.send(:infer_doc_type, "/path/to/README.md")
-            assert_equal "user", result
+            assert_equal "readme", result
           end
 
           def test_infer_doc_type_workflow

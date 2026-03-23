@@ -20,7 +20,7 @@ module Ace
             last_updated: Date.new(2026, 3, 20)
           )
 
-          assert_equal "user", result["doc-type"]
+          assert_equal "readme", result["doc-type"]
           assert_equal "User-facing introduction for ace-docs", result["purpose"]
           assert_equal "ace-docs", result["title"]
           assert_equal({"frequency" => "on-change"}, result["update"])
