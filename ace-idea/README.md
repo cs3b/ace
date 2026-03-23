@@ -4,6 +4,7 @@
   Capture ideas quickly, then shape and organize them for execution.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <br><br>
 
   <a href="https://rubygems.org/gems/ace-idea"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-idea.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
