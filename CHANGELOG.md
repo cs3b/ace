@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.964] - 2026-03-23
+
+### Added
+- **ace-git-secrets v0.13.0**: Arch Linux install instructions for gitleaks and git-filter-repo.
+
+### Changed
+- **ace-git-secrets v0.13.0**: Moved Installation to Getting Started, fixed handbook guide links, redesigned demo with scan-rewrite-verify flow.
+
 ## [0.9.963] - 2026-03-23
 
 ### Added
