@@ -12,7 +12,7 @@ module Ace
           parent = parent_label(path)
 
           metadata = {
-            "doc-type" => "user",
+            "doc-type" => "readme",
             "purpose" => "User-facing introduction for #{parent}",
             "update" => {"frequency" => "on-change"}
           }

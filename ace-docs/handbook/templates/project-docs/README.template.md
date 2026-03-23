@@ -1,100 +1,72 @@
 ---
 doc-type: template
-title: [Project Name]
-purpose: Documentation for ace-docs/handbook/templates/project-docs/README.template.md
+title: Package README
+purpose: Selling-page README template for ACE packages
 ace-docs:
-  last-updated: 2026-01-08
-  last-checked: 2026-03-21
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
 ---
 
-# [Project Name]
+# {package-name}
 
-## Overview
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-<!-- Brief description of what this project does and why it's valuable -->
+[![Gem Version](https://img.shields.io/gem/v/{package-name}.svg)](https://rubygems.org/gems/{package-name})
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+<!-- Tagline as blockquote: what it IS, not what it does. The `>` creates a
+     visual box on GitHub that draws the eye to the selling line. -->
 
-<!-- Key features and capabilities -->
+> {one-sentence tagline}
 
-- Feature 1
-- Feature 2
-- Feature 3
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-## Quick Start
+<!-- Agent compatibility line: always include below the tagline.
+     Keep the list current as new agents gain traction. -->
 
-### Prerequisites
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-<!-- List any required dependencies or setup -->
+<!-- Nav row: pipe-separated links above the demo. Always use "Handbook - Skills, Agents, Templates"
+     as the expanded label so readers know what the handbook contains.
+     Place above the demo so readers find docs before scrolling. -->
 
-- Prerequisite 1
-- Prerequisite 2
+![demo](docs/demo/{package-name}-getting-started.gif)
 
-### Installation
+<!-- Include GIF for CLI tools. Omit for support libraries and integrations. -->
 
-```bash
-# Installation commands
-```
+<!-- Intro paragraph: 2-4 sentences that describe the problem space and what the package
+     does about it. Do NOT list subcommands or features here — Use Cases covers those.
+     Weave the value proposition naturally instead of splitting into Problem/Solution.
+     IMPORTANT: Read the implementation code before describing features - do not write from plan notes. -->
 
-### Usage
+## How It Works
 
-```bash
-# Basic usage examples
-```
+<!-- Mermaid diagram OR 3-step numbered list.
+     Show the mental model, not the implementation.
+     Optional - include only when the mental model isn't obvious from Use Cases.
 
-## Documentation
+     Example Mermaid (add as a fenced mermaid code block):
+       graph LR
+         A[Input] then B[Process] then C[Output]
+     Replace "then" with the Mermaid arrow syntax. -->
 
-<!-- Links to additional documentation -->
+## Use Cases
 
-- [API Documentation](./docs/api.md)
-- [User Guide](./docs/user-guide.md)
-- [Developer Guide](./docs/developer-guide.md)
-- [Architecture](./docs/architecture.md)
+<!-- Each entry: **bold title** - description paragraph.
+     Inline references:
+       - Skills: always use `/as-` prefix (e.g., `/as-task-draft`)
+       - CLI commands: link to usage docs (e.g., [`ace-task create`](docs/usage.md#ace-task-create-title))
+       - Ecosystem packages: link to sibling directories inline (e.g., [ace-overseer](../ace-overseer))
+     Write 3-6 use cases. Each should show a real workflow, not just name a feature.
 
-## Development
-
-### Setup
-
-```bash
-# Development setup commands
-```
-
-### Testing
-
-```bash
-# Test commands
-```
-
-### Building
-
-```bash
-# Build commands
-```
-
-## Contributing
-
-<!-- Guidelines for contributors -->
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
-## License
-
-<!-- License information -->
-
-[License Name] - See [LICENSE](./LICENSE) file for details
-
-## Support
-
-<!-- How to get help -->
-
-- [Issue Tracker](./issues)
-- [Documentation](./docs)
-- [Community Forum](./discussions)
+     Example:
+       **Draft and structure work** - create a task, split it into subtasks, add new subtasks as work
+       reveals scope. Use `/as-task-draft` to draft from an earlier captured [idea](../ace-idea) or
+       short note, or [`ace-task create`](docs/usage.md#ace-task-create-title) from the CLI. -->
 
 ---
 
-*This project is actively maintained. For the latest updates, see the [CHANGELOG](./CHANGELOG.md).*
+Part of [ACE](../README.md) (Agentic Coding Environment)

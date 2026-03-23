@@ -47,6 +47,23 @@ Review the diff and identify all significant changes. Use the context files to u
 - Clear priority assignments based on impact
 - Complete coverage metrics in Self-check section
 
+## Template and Guide Verification
+
+If a **template** is provided in the context (embedded as a file tag), verify the document follows
+the template structure. Flag deviations as issues:
+- Missing sections that the template requires
+- Sections present that the template does not define
+- Sections in wrong order relative to the template
+
+If a **guide** is provided in the context (embedded as a file tag), verify the document follows
+the guide conventions. Flag violations as issues:
+- Structure rules not followed (e.g., nav row placement, badge count)
+- Anti-patterns present (e.g., separate Problem/Solution sections when Use Cases is required)
+- Missing conventions (e.g., skill refs without `/as-` prefix, CLI commands not linked to usage docs)
+
+Include template/guide compliance findings in your Recommended Updates section with priority
+MEDIUM unless the deviation is structural (then HIGH).
+
 ## What to Exclude
 
 - Whitespace-only changes
