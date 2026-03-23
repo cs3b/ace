@@ -1,51 +1,56 @@
 # ace-compressor
 
-Compresses Markdown and text files into compact `ContextPack/3` records for LLM consumption.
+Compress Markdown and text inputs into `ContextPack/3` artifacts for efficient LLM context loading.
 
-## Purpose
+[CLI Usage Reference](docs/usage.md)
 
-`ContextPack/3` preserves source structure in a compact record format so agent workflows can load
-reliable context with less token overhead.
+`ace-compressor` provides deterministic context compression for one or more sources, with exact extraction,
+policy-driven compact output, and agent-assisted payload rewriting while preserving record structure.
 
-## Installation
+## Use Cases
 
-Add to your `Gemfile`:
+**Prepare large docs for agent workflows** - reduce source size while keeping provenance and section structure intact.
 
-```ruby
-gem "ace-compressor"
-```
+**Compare compression strategies on real files** - run benchmark mode across `exact`, `compact`, and `agent` to inspect
+retention and size tradeoffs.
 
-Or install directly:
+**Build repeatable context artifacts** - generate stable output paths and reuse cache-backed pack artifacts across runs.
 
-```bash
-gem install ace-compressor
-```
+## Works With
+
+- **[ace-bundle](../ace-bundle)** for resolving preset and protocol-based input sources.
+- **[ace-llm](../ace-llm)** for agent-mode payload rewriting through configured models.
+
+## Features
+
+- Exact mode for canonical semantic extraction into structured records.
+- Compact mode with policy metadata for narrative-heavy content.
+- Agent mode that rewrites payload text while keeping deterministic `ContextPack/3` structure.
+- Multi-source support for files, directories, and mixed source inputs.
+- Benchmark command for side-by-side mode comparison on live sources.
+- Output controls for cache path, inline stdio content, or stats summaries.
 
 ## Quick Start
 
 ```bash
-# Single file
 ace-compressor docs/vision.md --mode exact
 
-# Compact narrative-heavy docs with policy metadata
 ace-compressor docs/vision.md --mode compact --format stdio
 
-# Directory
-ace-compressor docs/ --mode exact
+ace-compressor docs/architecture.md --mode agent --verbose
 
-# Multiple files
-ace-compressor docs/vision.md docs/architecture.md --mode exact
-
-# Print content instead of cache path
-ace-compressor docs/vision.md --format stdio
-
-# Save to a specific file
-ace-compressor docs/vision.md --output /tmp/vision.pack
+ace-compressor benchmark docs/architecture.md --modes exact,compact,agent
 ```
 
 ## Documentation
 
-See [docs/usage.md](docs/usage.md) for the full usage guide: output format, scenarios, error
-conditions, configuration, and troubleshooting.
+- [CLI Usage Reference](docs/usage.md)
+- Command help: `ace-compressor --help`
 
-Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
+## Agent Skills
+
+`ace-compressor` currently ships no package-owned canonical skills.
+
+## Part of ACE
+
+`ace-compressor` is part of [ACE](../README.md) (Agentic Coding Environment).
