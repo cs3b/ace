@@ -102,7 +102,7 @@ ace-idea create [CONTENT] [options]
 
 * `--title`, `-t` - Explicit title for the new idea
 * `--tags`, `-T` - Comma-separated tags
-* `--move-to`, `-m` - Place the idea in `next`, `maybe`, `anytime`, or `archive`
+* `--move-to`, `-m` - Place the idea in a named folder (e.g. `maybe`, `review`, `archive`) or `next` for root
 * `--clipboard`, `-c` - Read idea content from the system clipboard
 * `--llm-enhance`, `-l` - Expand or refine the captured content with the configured LLM
 * `--dry-run`, `-n` - Preview the capture without writing files
@@ -191,7 +191,7 @@ ace-idea update REF [options]
 * `--set` - Set a scalar field with `key=value`
 * `--add` - Add a value to an array field with `key=value`
 * `--remove` - Remove a value from an array field with `key=value`
-* `--move-to`, `-m` - Move the idea to `archive`, `maybe`, `anytime`, `next`, or `root`
+* `--move-to`, `-m` - Move the idea to any named folder (e.g. `archive`, `maybe`, `review`) or `next`/`root` for top-level
 * `--git-commit`, `--gc` - Commit the update automatically
 * `--quiet`, `-q` - Suppress non-essential output
 * `--verbose`, `-v` - Show verbose output
@@ -258,6 +258,20 @@ ace-idea status [options]
 ace-idea status
 ace-idea status --up-next-limit 5
 ace-idea status --recently-done-limit 3
+```
+
+**Expected output:**
+
+```text
+Up Next:
+  ○ 8ppq7w  Dark mode
+  ○ 8rrab4  API rate limiting
+
+Ideas: ○ 3 | ✓ 2 • 5 total
+
+Recently Done:
+  ✓ 8nn1k2  Onboarding flow  (2d ago)
+  ✓ 8mm3j1  Error page redesign  (5d ago)
 ```
 
 ## Storage Notes

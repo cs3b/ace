@@ -17,7 +17,7 @@ organize it, and list what should happen next.
 * Ruby 3.2+
 * `ace-idea` installed
 * A project directory where you want ideas stored
-* Optional: clipboard support for `--clipboard`
+* Optional: clipboard support for `--clipboard` — on macOS this works out of the box with rich content (text, RTF, HTML, images via ace-support-mac-clipboard); on Linux or Windows install the `clipboard` gem (`gem install clipboard`) for plain-text clipboard access
 * Optional: LLM provider configuration for `--llm-enhance`
 
 ## Installation

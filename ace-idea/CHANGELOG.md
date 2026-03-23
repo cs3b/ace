@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-23
+
+### Fixed
+- Corrected `--enhance` flag reference in README to `--llm-enhance` matching the actual CLI option.
+
+### Changed
+- Updated gemspec summary to align with README tagline emphasizing the capture-to-execution lifecycle.
+- Rewrote folder documentation to clarify that folders are user-defined; only `_archive` has special behavior.
+- Updated `--move-to` option descriptions in usage docs to reflect any-named-folder support.
+- Added `ace-idea status` example output to usage reference.
+- Documented clipboard platform behavior in getting-started prerequisites (macOS rich vs generic fallback).
+- Re-recorded getting-started demo with list, create, archive, and status scenes running in the main project.
+
 ## [0.17.4] - 2026-03-23
 
 ### Changed

@@ -28,11 +28,11 @@ Ideas appear mid-flow: copied from chat, typed in a terminal, or drafted with an
 
 ## Use Cases
 
-**Capture from anywhere** - create an idea from direct text input, stdin, or clipboard content with [`ace-idea create`](docs/usage.md). Add `--enhance` when a rough note needs LLM cleanup, or use `/as-idea-capture` for the full agent-driven workflow.
+**Capture from anywhere** - create an idea from direct text input, stdin, or clipboard content with [`ace-idea create`](docs/usage.md). Add `--llm-enhance` when a rough note needs LLM cleanup, or use `/as-idea-capture` for the full agent-driven workflow.
 
-**Shape and review** - run `/as-idea-review` to turn raw notes into structured entries with clearer scope, tags, and next actions. Use `/as-idea-capture-features` for feature-oriented ideation sessions.
+**Shape and review** - run `/as-idea-review` to turn raw notes into structured entries with clearer scope, tags, and next actions.
 
-**Organize by intent** - move ideas through root `next` plus `_maybe`, `_anytime`, and `_archive` buckets to keep near-term ideas visible while preserving long-tail exploration.
+**Organize by intent** - move ideas into any named folder you choose (e.g. `_review`, `_big`, `_maybe`) to group them by intent. `_archive` is the only special folder — it partitions by date. Root-level ideas act as the `next` queue.
 
 **Track and maintain** - use [`ace-idea list`](docs/usage.md), `ace-idea show`, and `ace-idea status` for visibility, then run `ace-idea doctor` to detect and repair structure drift.
 
