@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.966] - 2026-03-23
+
+### Fixed
+- **ace-demo v0.18.1**: Normalize `settings.env` values to strings and validate map structure in YAML tape parser.
+
 ## [0.9.965] - 2026-03-23
 
 ### Changed
