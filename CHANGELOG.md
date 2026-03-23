@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.963] - 2026-03-23
+
+### Added
+- **ace-handbook v0.19.0**: Documented `ace-handbook sync` and `ace-handbook status` CLI commands in README use cases; added release skills to handbook reference.
+
+### Fixed
+- **ace-handbook v0.19.0**: Corrected broken `ace-nav` cross-link and `ace-integration-*` package reference in README.
+
+### Changed
+- **ace-handbook v0.19.0**: Removed stale `mise` prerequisite, re-recorded demo GIF for provider status and sync.
+
 ## [0.9.962] - 2026-03-23
 
 ### Added
