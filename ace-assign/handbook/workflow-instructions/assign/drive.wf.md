@@ -316,9 +316,20 @@ After fork-run returns and completion is verified, the driver acts as the **guar
    ls .ace-local/assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
    # Read each report file to review the forked agent's work
    ```
-2. **Verify quality**: Check that reports indicate successful completion, not just step advancement.
-3. **Flag concerns**: If any report indicates partial work, errors, or skipped steps, stop and ask the user before continuing.
-4. **Only then continue** the main drive loop to the next step.
+2. **Check for uncommitted changes** left by the fork agent:
+   ```bash
+   DIRTY=$(git status --short)
+   if [ -n "$DIRTY" ]; then
+     echo "WARNING: Fork subtree ${FORK_ROOT} left uncommitted changes:"
+     echo "$DIRTY"
+     # Commit orphaned changes as safety net
+     ace-git-commit -i "commit changes left by fork subtree ${FORK_ROOT}"
+   fi
+   ```
+   Fork agents are expected to commit all their work. Uncommitted files indicate incomplete commit discipline — note this when reviewing reports.
+3. **Verify quality**: Check that reports indicate successful completion, not just step advancement.
+4. **Flag concerns**: If any report indicates partial work, errors, or skipped steps, stop and ask the user before continuing.
+5. **Only then continue** the main drive loop to the next step.
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
 

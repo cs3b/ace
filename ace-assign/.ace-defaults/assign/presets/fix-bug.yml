@@ -31,6 +31,7 @@ steps:
     instructions:
       - "Mark task {{taskref}} as done."
       - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
+      - "Commit the archive file moves: `ace-git-commit .ace-tasks/ -i 'archive completed task'`"
 
   - name: verify-test-suite
     skill: as-test-verify-suite

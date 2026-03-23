@@ -43,6 +43,12 @@ instructions: |
      ```
      Repeat upward if the parent itself has a parent.
 
+  4. **Commit the task file moves:**
+     ```bash
+     ace-git-commit .ace-tasks/ -i "archive completed tasks"
+     ```
+     The `--move-to archive` flag relocates task files. This commit captures those moves.
+
 when_to_skip:
   - "Task was already marked done (verified via ace-task show)"
   - "Implementation was not completed"
