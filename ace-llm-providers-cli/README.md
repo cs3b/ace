@@ -29,11 +29,5 @@
 
 **Diagnose local provider readiness** - run `ace-llm-providers-cli-check` to verify that CLI tools are installed, authenticated, and reachable before starting work.
 
-## Documentation
-
-[ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md) | Part of ACE
