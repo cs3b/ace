@@ -4,6 +4,7 @@
   One command to provision a worktree, open a tmux window, and start working on a task.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <br><br>
 
   <a href="https://rubygems.org/gems/ace-overseer"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-overseer.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
