@@ -100,7 +100,7 @@ module Ace
 
             # Determine focus areas
             focus_areas = determine_focus_areas(normalized_options)
-            puts "Focus areas: #{focus_areas.join(', ')}".cyan
+            puts "Focus areas: #{focus_areas.join(", ")}".cyan
 
             # Run analysis
             report = analyzer.analyze(pattern)
@@ -108,7 +108,7 @@ module Ace
             # The report is now a path to the saved file
             # Check if it's nil or file doesn't exist
             if report.nil? || !File.exist?(report)
-              $stderr.puts "No analysis results returned."
+              warn "No analysis results returned."
               return EXIT_ERROR
             end
 
@@ -118,9 +118,9 @@ module Ace
             # Simple completion message
             puts "\n✅ Analysis complete"
             EXIT_SUCCESS
-          rescue StandardError => e
-            $stderr.puts "Error: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if normalized_options[:debug]
+          rescue => e
+            warn "Error: #{e.message}"
+            warn e.backtrace.join("\n") if normalized_options[:debug]
             EXIT_ERROR
           end
 
@@ -129,11 +129,11 @@ module Ace
             normalized = {}
 
             # Output format
-            normalized[:output] = options[:output] || 'markdown'
+            normalized[:output] = options[:output] || "markdown"
 
             # Analysis focus
             normalized[:all] = options[:all] ||
-                              (!options[:terminology] && !options[:duplicates] && !options[:versions])
+              (!options[:terminology] && !options[:duplicates] && !options[:versions])
             normalized[:terminology] = options[:terminology] || false
             normalized[:duplicates] = options[:duplicates] || false
             normalized[:versions] = options[:versions] || false
@@ -169,14 +169,14 @@ module Ace
             areas = []
 
             if options[:all]
-              areas = ['terminology', 'duplicates', 'versions', 'consolidation']
+              areas = ["terminology", "duplicates", "versions", "consolidation"]
             else
-              areas << 'terminology' if options[:terminology]
-              areas << 'duplicates' if options[:duplicates]
-              areas << 'versions' if options[:versions]
+              areas << "terminology" if options[:terminology]
+              areas << "duplicates" if options[:duplicates]
+              areas << "versions" if options[:versions]
             end
 
-            areas.empty? ? ['all types'] : areas
+            areas.empty? ? ["all types"] : areas
           end
         end
       end

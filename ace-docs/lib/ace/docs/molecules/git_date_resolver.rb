@@ -21,7 +21,7 @@ module Ace
           return nil if value.empty?
 
           Date.parse(value)
-        rescue StandardError
+        rescue
           nil
         end
       end

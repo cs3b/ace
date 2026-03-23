@@ -17,14 +17,14 @@ module Ace
           # Verifies --exclude-renames/--exclude-moves flags propagate to DiffOrchestrator
 
           def test_build_diff_options_passes_exclude_renames_true
-            options = @command.send(:build_diff_options, { exclude_renames: true })
+            options = @command.send(:build_diff_options, {exclude_renames: true})
 
             assert_equal true, options[:exclude_renames],
               "Should pass exclude_renames: true when CLI flag is set"
           end
 
           def test_build_diff_options_passes_exclude_moves_true
-            options = @command.send(:build_diff_options, { exclude_moves: true })
+            options = @command.send(:build_diff_options, {exclude_moves: true})
 
             assert_equal true, options[:exclude_moves],
               "Should pass exclude_moves: true when CLI flag is set"
@@ -45,7 +45,7 @@ module Ace
           end
 
           def test_build_diff_options_uses_new_exclude_keys_not_legacy_include_keys
-            options = @command.send(:build_diff_options, { exclude_renames: true, exclude_moves: true })
+            options = @command.send(:build_diff_options, {exclude_renames: true, exclude_moves: true})
 
             # Must use exclude_* keys (ace-git API)
             assert options.key?(:exclude_renames), "Should use exclude_renames key"

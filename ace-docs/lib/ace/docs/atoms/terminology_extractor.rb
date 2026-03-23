@@ -72,7 +72,7 @@ module Ace
 
           lines.each_with_index do |line, index|
             # Skip code blocks and front matter
-            next if line.strip.start_with?('```', '---')
+            next if line.strip.start_with?("```", "---")
 
             # Extract words and normalize them
             words = line.downcase.scan(/\b[a-z]+(?:-[a-z]+)*\b/)
@@ -82,9 +82,9 @@ module Ace
               next if COMMON_WORDS.include?(word) || word.length < 3
 
               # Track term frequency and locations
-              terms[word] ||= { count: 0, locations: [], variations: Set.new }
+              terms[word] ||= {count: 0, locations: [], variations: Set.new}
               terms[word][:count] += 1
-              terms[word][:locations] << { file: doc_path, line: index + 1 }
+              terms[word][:locations] << {file: doc_path, line: index + 1}
 
               # Track original variations (case)
               original = line[/\b#{Regexp.escape(word)}\b/i]
@@ -157,8 +157,8 @@ module Ace
           # Check for plural/singular variants
           return 0.95 if t1 == "#{t2}s" || t2 == "#{t1}s"
           return 0.95 if t1 == "#{t2}es" || t2 == "#{t1}es"
-          return 0.95 if t1.end_with?('y') && t2 == t1[0...-1] + 'ies'
-          return 0.95 if t2.end_with?('y') && t1 == t2[0...-1] + 'ies'
+          return 0.95 if t1.end_with?("y") && t2 == t1[0...-1] + "ies"
+          return 0.95 if t2.end_with?("y") && t1 == t2[0...-1] + "ies"
 
           # Check for common variations
           return 0.9 if one_char_diff?(t1, t2)
@@ -172,20 +172,20 @@ module Ace
         # Check if two terms are known variants
         def are_variants?(term1, term2)
           variants = {
-            'analyze' => 'analyse',
-            'organize' => 'organise',
-            'recognize' => 'recognise',
-            'realize' => 'realise',
-            'color' => 'colour',
-            'behavior' => 'behaviour',
-            'center' => 'centre',
-            'fiber' => 'fibre',
-            'license' => 'licence'
+            "analyze" => "analyse",
+            "organize" => "organise",
+            "recognize" => "recognise",
+            "realize" => "realise",
+            "color" => "colour",
+            "behavior" => "behaviour",
+            "center" => "centre",
+            "fiber" => "fibre",
+            "license" => "licence"
           }
 
           variants.any? do |us, uk|
             (term1.include?(us) && term2.include?(uk)) ||
-            (term1.include?(uk) && term2.include?(us))
+              (term1.include?(uk) && term2.include?(us))
           end
         end
 
@@ -201,8 +201,8 @@ module Ace
             diff_count == 1
           else
             # Check for single insertion/deletion
-            longer = term1.length > term2.length ? term1 : term2
-            shorter = term1.length > term2.length ? term2 : term1
+            longer = (term1.length > term2.length) ? term1 : term2
+            shorter = (term1.length > term2.length) ? term2 : term1
 
             longer.length.times do |i|
               test = longer[0...i] + longer[(i + 1)..-1]
@@ -220,7 +220,7 @@ module Ace
           return nil if docs1.empty? || docs2.empty?
 
           {
-            type: 'terminology',
+            type: "terminology",
             terms: [term1, term2],
             documents: {
               term1 => docs1.map { |doc|
@@ -251,7 +251,7 @@ module Ace
 
             if unique_variations.size > 1 && significantly_different_cases?(unique_variations)
               conflicts << {
-                type: 'case_inconsistency',
+                type: "case_inconsistency",
                 term: term,
                 variations: unique_variations,
                 documents: docs.map { |path, data|
@@ -278,7 +278,7 @@ module Ace
           return :lower if word == word.downcase
           return :upper if word == word.upcase
           return :title if word == word.capitalize
-          return :mixed
+          :mixed
         end
 
         # Suggest which term to standardize on
@@ -291,17 +291,15 @@ module Ace
             "Standardize to '#{term1}' (used #{count1} times vs #{count2})"
           elsif count2 > count1 * 2
             "Standardize to '#{term2}' (used #{count2} times vs #{count1})"
-          else
+          elsif are_variants?(term1, term2)
             # Check for US vs UK spelling
-            if are_variants?(term1, term2)
-              if term1.include?('z') || term1.include?('or')
-                "Standardize to '#{term1}' (US spelling)"
-              else
-                "Standardize to '#{term2}' (UK spelling)"
-              end
+            if term1.include?("z") || term1.include?("or")
+              "Standardize to '#{term1}' (US spelling)"
             else
-              "Consider standardizing to '#{count1 >= count2 ? term1 : term2}'"
+              "Standardize to '#{term2}' (UK spelling)"
             end
+          else
+            "Consider standardizing to '#{(count1 >= count2) ? term1 : term2}'"
           end
         end
       end

@@ -12,10 +12,10 @@ module Ace
           parent = parent_label(path)
           doc_type = root_readme?(path) ? "root_readme" : "readme"
           purpose = if doc_type == "root_readme"
-                      "Monorepo entry point and navigation for ACE"
-                    else
-                      "User-facing introduction for #{parent}"
-                    end
+            "Monorepo entry point and navigation for ACE"
+          else
+            "User-facing introduction for #{parent}"
+          end
 
           metadata = {
             "doc-type" => doc_type,
@@ -41,7 +41,7 @@ module Ace
 
         def self.parent_label(path)
           parent = File.basename(File.dirname(path.to_s))
-          parent.nil? || parent.empty? || parent == "." ? File.basename(Dir.pwd) : parent
+          (parent.nil? || parent.empty? || parent == ".") ? File.basename(Dir.pwd) : parent
         end
         private_class_method :parent_label
 
@@ -50,7 +50,7 @@ module Ace
           return true if normalized.casecmp("README.md").zero?
 
           File.expand_path(path.to_s) == File.join(Dir.pwd, "README.md")
-        rescue StandardError
+        rescue
           false
         end
         private_class_method :root_readme?

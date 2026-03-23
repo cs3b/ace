@@ -63,7 +63,7 @@ module Ace
               puts "  #{doc.relative_path || doc.path} (#{doc.doc_type})"
             end
             EXIT_SUCCESS
-          rescue StandardError => e
+          rescue => e
             warn "Error discovering documents: #{e.message}"
             warn e.backtrace.join("\n  ") if debug?(options)
             EXIT_ERROR

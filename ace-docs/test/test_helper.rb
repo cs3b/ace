@@ -23,7 +23,7 @@ def stub_ace_nav_prompts(user_content: "mock user prompt", system_content: "mock
       [args[0].end_with?(".system") ? system_content : user_content, "", mock_status]
     else
       # Fall through for non-ace-nav calls (shouldn't happen in tests)
-      raise "Unexpected subprocess call in test: #{cmd} #{args.join(' ')}"
+      raise "Unexpected subprocess call in test: #{cmd} #{args.join(" ")}"
     end
   } do
     yield

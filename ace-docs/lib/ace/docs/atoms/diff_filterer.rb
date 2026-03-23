@@ -64,7 +64,7 @@ module Ace
           # @param diff [String] The diff content
           # @return [Hash] Statistics about the diff
           def count_changes(diff)
-            return { additions: 0, deletions: 0, files: 0 } if diff.nil? || diff.empty?
+            return {additions: 0, deletions: 0, files: 0} if diff.nil? || diff.empty?
 
             additions = 0
             deletions = 0

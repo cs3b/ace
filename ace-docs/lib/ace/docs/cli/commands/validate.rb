@@ -84,7 +84,7 @@ module Ace
             documents = select_documents(registry, pattern)
 
             if documents.empty?
-              $stderr.puts "No documents to validate."
+              warn "No documents to validate."
               return EXIT_SUCCESS
             end
 
@@ -107,9 +107,9 @@ module Ace
             end
 
             has_errors ? EXIT_ERROR : EXIT_SUCCESS
-          rescue StandardError => e
-            $stderr.puts "Error validating documents: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if debug?(options)
+          rescue => e
+            warn "Error validating documents: #{e.message}"
+            warn e.backtrace.join("\n") if debug?(options)
             EXIT_ERROR
           end
 
@@ -167,11 +167,11 @@ module Ace
             stdout, stderr, status = Open3.capture3(ace_lint_path, doc.path)
 
             if status.success?
-              { valid: true, errors: [], warnings: parse_lint_warnings(stdout) }
+              {valid: true, errors: [], warnings: parse_lint_warnings(stdout)}
             else
-              { valid: false, errors: parse_lint_errors(stdout, stderr), warnings: [] }
+              {valid: false, errors: parse_lint_errors(stdout, stderr), warnings: []}
             end
-          rescue StandardError => e
+          rescue => e
             {
               valid: false,
               errors: ["Lint validation failed: #{e.message}"],

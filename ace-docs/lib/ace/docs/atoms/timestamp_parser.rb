@@ -100,7 +100,6 @@ module Ace
         rescue ArgumentError => e
           raise ArgumentError, "Invalid ISO 8601 datetime: #{e.message}"
         end
-
       end
     end
   end

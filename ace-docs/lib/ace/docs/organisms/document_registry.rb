@@ -105,12 +105,12 @@ module Ace
         def discover_explicit_documents
           # Search for all markdown files in the project
           all_md_files = if @scope_globs.empty?
-                           Dir.glob(File.join(@project_root, "**/*.md"))
-                         else
-                           @scope_globs.flat_map do |pattern|
-                             Dir.glob(File.join(@project_root, pattern))
-                           end.uniq
-                         end
+            Dir.glob(File.join(@project_root, "**/*.md"))
+          else
+            @scope_globs.flat_map do |pattern|
+              Dir.glob(File.join(@project_root, pattern))
+            end.uniq
+          end
 
           # Load those with ace-docs frontmatter
           all_md_files.each do |path|
@@ -200,10 +200,10 @@ module Ace
                 augmented_frontmatter["purpose"] ||= infer_purpose_from_content(doc)
 
                 # Merge defaults for update config if needed
-                if augmented_frontmatter["update"]
-                  augmented_frontmatter["update"] = defaults.merge(augmented_frontmatter["update"])
+                augmented_frontmatter["update"] = if augmented_frontmatter["update"]
+                  defaults.merge(augmented_frontmatter["update"])
                 else
-                  augmented_frontmatter["update"] = defaults
+                  defaults
                 end
 
                 # Create new document with augmented frontmatter
@@ -277,12 +277,12 @@ module Ace
             .gsub("\x00STAR\x00", "[^/]*")        # * matches within a single directory
 
           # Anchor to project root unless pattern starts with ** (which means "anywhere under project")
-          if glob_pattern.start_with?("**/")
+          regex_str = if glob_pattern.start_with?("**/")
             # Pattern like "**/tmp/**" means "anywhere under project root"
-            regex_str = "#{Regexp.escape(@project_root)}/#{regex_str}"
+            "#{Regexp.escape(@project_root)}/#{regex_str}"
           else
             # Pattern like "tmp/**" means "at project root"
-            regex_str = "^#{Regexp.escape(@project_root)}/#{regex_str}"
+            "^#{Regexp.escape(@project_root)}/#{regex_str}"
           end
 
           Regexp.new(regex_str)
@@ -310,7 +310,7 @@ module Ace
 
           # 4. Fallback to filename-based description
           filename = File.basename(document.path, ".*")
-          "#{filename.gsub(/[-_]/, ' ').capitalize} documentation"
+          "#{filename.gsub(/[-_]/, " ").capitalize} documentation"
         end
       end
     end

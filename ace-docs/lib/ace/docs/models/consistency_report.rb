@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'json'
-require 'time'
+require "json"
+require "time"
 
 module Ace
   module Docs
@@ -9,8 +9,8 @@ module Ace
       # Model for storing and formatting consistency analysis results
       class ConsistencyReport
         attr_reader :terminology_conflicts, :duplicate_content,
-                    :version_inconsistencies, :consolidation_opportunities,
-                    :generated_at, :document_count, :raw_response
+          :version_inconsistencies, :consolidation_opportunities,
+          :generated_at, :document_count, :raw_response
 
         def initialize(data = {})
           @terminology_conflicts = data[:terminology_conflicts] || []
@@ -27,26 +27,24 @@ module Ace
         # @param document_count [Integer] number of documents analyzed
         # @return [ConsistencyReport] parsed report
         def self.parse(response, document_count = 0)
-          begin
-            data = JSON.parse(response, symbolize_names: true)
+          data = JSON.parse(response, symbolize_names: true)
 
-            new(
-              terminology_conflicts: data[:terminology_conflicts] || [],
-              duplicate_content: data[:duplicate_content] || [],
-              version_inconsistencies: data[:version_inconsistencies] || [],
-              consolidation_opportunities: data[:consolidation_opportunities] || [],
-              document_count: document_count,
-              generated_at: Time.now,
-              raw_response: response
-            )
-          rescue JSON::ParserError => e
-            # If parsing fails, create a report with the raw response
-            new(
-              raw_response: response,
-              document_count: document_count,
-              generated_at: Time.now
-            )
-          end
+          new(
+            terminology_conflicts: data[:terminology_conflicts] || [],
+            duplicate_content: data[:duplicate_content] || [],
+            version_inconsistencies: data[:version_inconsistencies] || [],
+            consolidation_opportunities: data[:consolidation_opportunities] || [],
+            document_count: document_count,
+            generated_at: Time.now,
+            raw_response: response
+          )
+        rescue JSON::ParserError
+          # If parsing fails, create a report with the raw response
+          new(
+            raw_response: response,
+            document_count: document_count,
+            generated_at: Time.now
+          )
         end
 
         # Check if the report has any issues
@@ -57,9 +55,9 @@ module Ace
         # Get total number of issues found
         def total_issues
           terminology_conflicts.size +
-          duplicate_content.size +
-          version_inconsistencies.size +
-          consolidation_opportunities.size
+            duplicate_content.size +
+            version_inconsistencies.size +
+            consolidation_opportunities.size
         end
 
         # Check if parsing was successful
@@ -73,7 +71,7 @@ module Ace
 
           output << "# Cross-Document Consistency Report"
           output << ""
-          output << "Generated: #{generated_at.strftime('%Y-%m-%d %H:%M:%S')}"
+          output << "Generated: #{generated_at.strftime("%Y-%m-%d %H:%M:%S")}"
           output << "Documents analyzed: #{document_count}"
           output << "Issues found: #{total_issues}"
           output << ""
@@ -156,28 +154,28 @@ module Ace
         def format_terminology_conflict(conflict)
           lines = []
 
-          terms = conflict[:terms] || conflict['terms'] || []
+          terms = conflict[:terms] || conflict["terms"] || []
           lines << "### \"#{terms[0]}\" vs \"#{terms[1]}\""
 
-          occurrences = conflict[:occurrences] || conflict['occurrences'] || {}
+          occurrences = conflict[:occurrences] || conflict["occurrences"] || {}
 
           terms.each do |term|
             term_occurrences = occurrences[term.to_sym] || occurrences[term.to_s] || []
             next if term_occurrences.empty?
 
             term_occurrences.each do |occurrence|
-              file = occurrence[:file] || occurrence['file']
-              count = occurrence[:count] || occurrence['count']
-              examples = occurrence[:examples] || occurrence['examples'] || []
+              file = occurrence[:file] || occurrence["file"]
+              count = occurrence[:count] || occurrence["count"]
+              examples = occurrence[:examples] || occurrence["examples"] || []
 
               lines << "- #{file}: uses \"#{term}\" (#{count} occurrences)"
               if examples.any?
-                lines << "  Examples: #{examples.first(2).join('; ')}"
+                lines << "  Examples: #{examples.first(2).join("; ")}"
               end
             end
           end
 
-          recommendation = conflict[:recommendation] || conflict['recommendation']
+          recommendation = conflict[:recommendation] || conflict["recommendation"]
           lines << "**Recommendation**: #{recommendation}" if recommendation
 
           lines.join("\n")
@@ -187,23 +185,23 @@ module Ace
         def format_duplicate_content(duplicate)
           lines = []
 
-          description = duplicate[:description] || duplicate['description'] || 'Duplicate content'
-          similarity = duplicate[:similarity_percentage] || duplicate['similarity_percentage']
+          description = duplicate[:description] || duplicate["description"] || "Duplicate content"
+          similarity = duplicate[:similarity_percentage] || duplicate["similarity_percentage"]
 
           lines << "### #{description}"
           lines << "Files with duplicate content (#{similarity}% similarity):" if similarity
 
-          locations = duplicate[:locations] || duplicate['locations'] || []
+          locations = duplicate[:locations] || duplicate["locations"] || []
           locations.each do |location|
-            file = location[:file] || location['file']
-            line_range = location[:lines] || location['lines']
-            excerpt = location[:excerpt] || location['excerpt']
+            file = location[:file] || location["file"]
+            line_range = location[:lines] || location["lines"]
+            excerpt = location[:excerpt] || location["excerpt"]
 
             lines << "- #{file} (lines #{line_range})"
             lines << "  \"#{excerpt}\"" if excerpt
           end
 
-          recommendation = duplicate[:recommendation] || duplicate['recommendation']
+          recommendation = duplicate[:recommendation] || duplicate["recommendation"]
           lines << "**Recommendation**: #{recommendation}" if recommendation
 
           lines.join("\n")
@@ -213,20 +211,20 @@ module Ace
         def format_version_inconsistency(version_issue)
           lines = []
 
-          item = version_issue[:item] || version_issue['item'] || 'Version'
+          item = version_issue[:item] || version_issue["item"] || "Version"
           lines << "### #{item}"
 
-          versions = version_issue[:versions_found] || version_issue['versions_found'] || []
+          versions = version_issue[:versions_found] || version_issue["versions_found"] || []
           versions.each do |version_info|
-            version = version_info[:version] || version_info['version']
-            file = version_info[:file] || version_info['file']
-            line = version_info[:line] || version_info['line']
+            version = version_info[:version] || version_info["version"]
+            file = version_info[:file] || version_info["file"]
+            line = version_info[:line] || version_info["line"]
 
             lines << "- #{file}: \"#{version}\""
             lines << "  (line #{line})" if line
           end
 
-          recommendation = version_issue[:recommendation] || version_issue['recommendation']
+          recommendation = version_issue[:recommendation] || version_issue["recommendation"]
           lines << "**Recommendation**: #{recommendation}" if recommendation
 
           lines.join("\n")
@@ -236,21 +234,21 @@ module Ace
         def format_consolidation_opportunity(opportunity)
           lines = []
 
-          topic = opportunity[:topic] || opportunity['topic'] || 'Related content'
+          topic = opportunity[:topic] || opportunity["topic"] || "Related content"
           lines << "### #{topic}"
 
           lines << "Multiple documents explain similar content:"
 
-          documents = opportunity[:documents] || opportunity['documents'] || []
+          documents = opportunity[:documents] || opportunity["documents"] || []
           documents.each do |doc|
-            file = doc[:file] || doc['file']
-            coverage = doc[:coverage] || doc['coverage']
+            file = doc[:file] || doc["file"]
+            coverage = doc[:coverage] || doc["coverage"]
 
             lines << "- #{file}"
             lines << "  Coverage: #{coverage}" if coverage
           end
 
-          recommendation = opportunity[:recommendation] || opportunity['recommendation']
+          recommendation = opportunity[:recommendation] || opportunity["recommendation"]
           lines << "**Recommendation**: #{recommendation}" if recommendation
 
           lines.join("\n")

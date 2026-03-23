@@ -2,7 +2,7 @@
 
 require "yaml"
 require_relative "docs/version"
-require 'ace/support/config' # For config cascade
+require "ace/support/config" # For config cascade
 
 # CLI Commands (Hanami pattern)
 require_relative "docs/cli/commands/status"
@@ -33,7 +33,7 @@ module Ace
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -44,7 +44,7 @@ module Ace
         # Resolve config for docs namespace
         config = resolver.resolve_namespace("docs")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "ace-docs: Could not load config: #{e.class} - #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback
@@ -62,13 +62,13 @@ module Ace
     # @return [Hash] Defaults hash or empty hash if defaults also fail
     def self.load_gem_defaults_fallback
       gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "docs", "config.yml")
 
       return {} unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue StandardError
+    rescue
       {} # Only return empty hash if even defaults fail to load
     end
     private_class_method :load_gem_defaults_fallback

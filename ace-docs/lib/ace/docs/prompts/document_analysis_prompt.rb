@@ -35,20 +35,18 @@ module Ace
                 diff_files << diff_file_path
               end
             end
-          else
+          elsif cache_dir && Dir.exist?(cache_dir)
             # Single diff: backward compatible behavior
-            if cache_dir && Dir.exist?(cache_dir)
-              diff_file_path = File.join(cache_dir, "repo-diff.diff")
-              File.write(diff_file_path, diff)
-              # Store absolute path for ace-bundle
-              diff_files << diff_file_path
-            end
+            diff_file_path = File.join(cache_dir, "repo-diff.diff")
+            File.write(diff_file_path, diff)
+            # Store absolute path for ace-bundle
+            diff_files << diff_file_path
           end
 
           # Create context.md = frontmatter + instructions + scope section
           # Use relative paths for diff files
           context_md = create_context_markdown(base_instructions, document, since,
-                                                diff_files: diff_files)
+            diff_files: diff_files)
 
           # Save context.md to cache
           if cache_dir && Dir.exist?(cache_dir)
@@ -73,7 +71,7 @@ module Ace
         # Load user prompt template via ace-nav protocol
         # @return [String] User prompt template content
         def self.load_user_prompt_template
-          stdout, stderr, status = Open3.capture3("ace-nav", "prompt://document-analysis", "--content")
+          stdout, _, status = Open3.capture3("ace-nav", "prompt://document-analysis", "--content")
 
           if status.success?
             stdout.strip
@@ -82,7 +80,7 @@ module Ace
             template_path = File.join(Ace::Docs.root, "handbook/prompts/document-analysis.md")
             File.exist?(template_path) ? File.read(template_path) : fallback_user_template
           end
-        rescue StandardError
+        rescue
           fallback_user_template
         end
 
@@ -105,7 +103,7 @@ module Ace
         # Load system prompt via ace-nav protocol
         # @return [String] System prompt content
         def self.load_system_prompt
-          stdout, stderr, status = Open3.capture3("ace-nav", "prompt://document-analysis.system", "--content")
+          stdout, _, status = Open3.capture3("ace-nav", "prompt://document-analysis.system", "--content")
 
           if status.success?
             stdout.strip
@@ -113,7 +111,7 @@ module Ace
             # Fallback to embedded prompt if ace-nav fails
             fallback_system_prompt
           end
-        rescue StandardError
+        rescue
           fallback_system_prompt
         end
 
@@ -147,10 +145,10 @@ module Ace
 
           # Build context section if provided
           context_section = if context && !context.strip.empty?
-                              "\n## Context\n\n#{context}\n"
-                            else
-                              ""
-                            end
+            "\n## Context\n\n#{context}\n"
+          else
+            ""
+          end
 
           <<~PROMPT
             ## Document Information
@@ -189,7 +187,6 @@ module Ace
           PROMPT
         end
 
-
         # Calculate diff statistics
         # @param diff [String] The git diff content
         # @return [Hash] Statistics with hunks_total, files_changed, insertions, deletions
@@ -202,8 +199,6 @@ module Ace
           }
         end
 
-
-
         # Create context.md with frontmatter, instructions, and scope section
         # @param base_instructions [String] The base prompt instructions
         # @param document [Document] The document configuration
@@ -213,7 +208,7 @@ module Ace
         def self.create_context_markdown(base_instructions, document, since, diff_files: [])
           # Start with base context config
           context_config = {
-            "params" => { "format" => "markdown-xml" },
+            "params" => {"format" => "markdown-xml"},
             "embed_document_source" => true
           }
 
@@ -234,7 +229,7 @@ module Ace
             context_config["files"].concat(diff_files)
           end
 
-          frontmatter = { "context" => context_config }
+          frontmatter = {"context" => context_config}
 
           # Build analysis scope section
           scope_section = build_analysis_scope_section(document, since)
@@ -253,30 +248,30 @@ module Ace
           keywords = document.context_keywords
 
           context_desc = if preset && !preset.empty?
-                          "- Loaded from preset: `#{preset}`"
-                        elsif keywords && !keywords.empty?
-                          "- Keywords: #{keywords.map { |k| "`#{k}`" }.join(", ")}"
-                        else
-                          "- No context files specified"
-                        end
+            "- Loaded from preset: `#{preset}`"
+          elsif keywords && !keywords.empty?
+            "- Keywords: #{keywords.map { |k| "`#{k}`" }.join(", ")}"
+          else
+            "- No context files specified"
+          end
 
           # Handle both multi-subject and single-subject configurations
           if document.multi_subject?
             subject_configs = document.subject_configurations
-            if subject_configs.empty?
-              filters_desc = "- All repository changes (no filters)"
+            filters_desc = if subject_configs.empty?
+              "- All repository changes (no filters)"
             else
-              filters_desc = subject_configs.map do |subj|
+              subject_configs.map do |subj|
                 "- `#{subj[:name]}`: #{subj[:filters].join(", ")}"
               end.join("\n")
             end
           else
             filters = document.subject_diff_filters || []
             filters_desc = if filters.empty?
-                            "- All repository changes (no filters)"
-                          else
-                            filters.map { |f| "- `#{f}`" }.join("\n")
-                          end
+              "- All repository changes (no filters)"
+            else
+              filters.map { |f| "- `#{f}`" }.join("\n")
+            end
           end
 
           # Check for template/guide references from document type config
@@ -291,7 +286,7 @@ module Ace
             **Subject of analysis** (git diff filtered to):
             #{filters_desc}
 
-            **Time range**: Changes since #{since || 'recent'}
+            **Time range**: Changes since #{since || "recent"}
             #{refs_section}
           SECTION
         end
@@ -323,7 +318,7 @@ module Ace
           end
 
           files
-        rescue StandardError
+        rescue
           []
         end
 
@@ -344,12 +339,12 @@ module Ace
           return "" unless type_config
 
           refs = []
-          refs << "- Template: `#{type_config['template']}`" if type_config["template"]
-          refs << "- Guide: `#{type_config['guide']}`" if type_config["guide"]
+          refs << "- Template: `#{type_config["template"]}`" if type_config["template"]
+          refs << "- Guide: `#{type_config["guide"]}`" if type_config["guide"]
           return "" if refs.empty?
 
           "\n**Reference documents** (template/guide for `#{doc_type}` doc type):\n#{refs.join("\n")}\n"
-        rescue StandardError
+        rescue
           ""
         end
 
@@ -359,25 +354,23 @@ module Ace
         # @param cache_dir [String, nil] Directory containing context.md and referenced files
         # @return [String, nil] Final prompt with embedded files or nil if unavailable
         def self.load_context_md(context_md, document:, cache_dir: nil)
-          begin
-            require "ace/bundle"
+          require "ace/bundle"
 
-            # Load context.md - ace-bundle processes presets and files from frontmatter
-            result = if cache_dir
-                      context_file = File.join(cache_dir, "context.md")
-                      Ace::Bundle.load_file(context_file)
-                    else
-                      Ace::Bundle.load_auto(context_md)
-                    end
-
-            result.content
-          rescue LoadError
-            warn "ace-bundle not available - context embedding disabled" if Ace::Docs.debug?
-            nil
-          rescue StandardError => e
-            warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
-            nil
+          # Load context.md - ace-bundle processes presets and files from frontmatter
+          result = if cache_dir
+            context_file = File.join(cache_dir, "context.md")
+            Ace::Bundle.load_file(context_file)
+          else
+            Ace::Bundle.load_auto(context_md)
           end
+
+          result.content
+        rescue LoadError
+          warn "ace-bundle not available - context embedding disabled" if Ace::Docs.debug?
+          nil
+        rescue => e
+          warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
+          nil
         end
 
         # Make helper methods accessible

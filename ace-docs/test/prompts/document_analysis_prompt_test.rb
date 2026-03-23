@@ -111,8 +111,8 @@ module Ace
                 "purpose" => "Test",
                 "ace-docs" => {
                   "subject" => [
-                    { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
-                    { "config" => { "diff" => { "filters" => ["**/*.yml"] } } }
+                    {"code" => {"diff" => {"filters" => ["**/*.rb"]}}},
+                    {"config" => {"diff" => {"filters" => ["**/*.yml"]}}}
                   ]
                 }
               }
@@ -131,7 +131,6 @@ module Ace
             assert File.exist?(context_path), "Context file should be created"
 
             context = File.read(context_path)
-
 
             # Should include multiple subjects in analysis scope
             assert context.include?("`code`:"), "Should list code subject"
@@ -170,7 +169,7 @@ module Ace
         def test_build_prompt_with_context_files
           stub_ace_nav_prompts(user_content: "# Change Analysis Instructions\n\nMock instructions") do
             # Test that context markdown is generated
-            result = DocumentAnalysisPrompt.build(
+            DocumentAnalysisPrompt.build(
               @document,
               "test diff",
               since: "2025-10-01",
@@ -198,8 +197,8 @@ module Ace
                 "purpose" => "Test",
                 "ace-docs" => {
                   "subject" => [
-                    { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
-                    { "docs" => { "diff" => { "filters" => ["**/*.md"] } } }
+                    {"code" => {"diff" => {"filters" => ["**/*.rb"]}}},
+                    {"docs" => {"diff" => {"filters" => ["**/*.md"]}}}
                   ]
                 }
               }

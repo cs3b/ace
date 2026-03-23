@@ -112,7 +112,7 @@ module Ace
         def self.parse_documents(doc_list)
           return [] unless doc_list
 
-          doc_list.map { |path| { path: path } }
+          doc_list.map { |path| {path: path} }
         end
       end
     end

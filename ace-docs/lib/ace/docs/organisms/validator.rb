@@ -35,7 +35,7 @@ module Ace
           if document.required_sections.any?
             missing_sections = check_sections(document)
             if missing_sections.any?
-              errors << "Missing required sections: #{missing_sections.join(', ')}"
+              errors << "Missing required sections: #{missing_sections.join(", ")}"
             end
           end
 
@@ -70,7 +70,7 @@ module Ace
           required.each do |section|
             # Check for section as a header
             unless content.include?("# #{section.downcase}") ||
-                   content.include?("## #{section.downcase}")
+                content.include?("## #{section.downcase}")
               missing << section
             end
           end
@@ -80,7 +80,7 @@ module Ace
 
         def validate_syntax(document)
           # TODO: Integrate with markdownlint or similar
-          { errors: [], warnings: [] }
+          {errors: [], warnings: []}
         end
 
         def validate_semantic(document)
@@ -112,14 +112,14 @@ module Ace
           begin
             response = call_llm_for_validation(prompt)
             stdout = response[:text]
-          rescue StandardError => e
+          rescue => e
             # Handle all errors (including when Ace::LLM is not loaded)
             error_msg = if e.message.include?("not found") || e.message.include?("No model specified") || e.message.include?("uninitialized constant")
               "Semantic validation unavailable (ace-llm configuration issue). Check ace-llm setup."
             else
               "Semantic validation error: #{e.message}"
             end
-            return { errors: [error_msg], warnings: [] }
+            return {errors: [error_msg], warnings: []}
           end
 
           # Parse LLM response
@@ -145,7 +145,7 @@ module Ace
             end
           end
 
-          { errors: errors, warnings: warnings }
+          {errors: errors, warnings: warnings}
         end
 
         # Call LLM for validation (protected for testing)

@@ -58,7 +58,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01"})
 
           assert result
           content = File.read(doc_path)
@@ -76,7 +76,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01T14:30:00Z"})
 
           assert result
           content = File.read(doc_path)
@@ -94,7 +94,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "now" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "now"})
 
           assert result
           content = File.read(doc_path)
@@ -112,7 +112,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "today" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "today"})
 
           assert result
           content = File.read(doc_path)
@@ -139,7 +139,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01T14:30:00Z"})
 
           assert result
           content = File.read(doc_path)
@@ -181,7 +181,7 @@ module Ace
           YAML
 
           doc = Models::Document.new(path: doc_path)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01T14:30:00Z"})
 
           assert result
           content = File.read(doc_path)
@@ -212,15 +212,14 @@ module Ace
 
           # List files before update to see original state
           dir = File.dirname(doc_path)
-          files_before = Dir.glob("#{dir}/*")
+          Dir.glob("#{dir}/*")
 
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01T14:30:00Z" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01T14:30:00Z"})
 
           assert result
 
           # List all files after update to see what was created
-          files_after = Dir.glob("#{dir}/*")
-          new_files = files_after - files_before
+          Dir.glob("#{dir}/*")
 
           # Just verify the update succeeded - backup behavior is internal to DocumentEditor
           # and may vary based on implementation
@@ -231,14 +230,14 @@ module Ace
         # Test error handling
         def test_update_returns_false_for_nonexistent_file
           doc = Models::Document.new(path: "/nonexistent/file.md")
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01"})
 
           refute result
         end
 
         def test_update_returns_false_for_nil_path
           doc = Models::Document.new(path: nil)
-          result = FrontmatterManager.update_document(doc, { "last-updated" => "2025-11-01" })
+          result = FrontmatterManager.update_document(doc, {"last-updated" => "2025-11-01"})
 
           refute result
         end
@@ -251,7 +250,7 @@ module Ace
           doc1 = Models::Document.new(path: doc1_path)
           doc2 = Models::Document.new(path: doc2_path)
 
-          count = FrontmatterManager.update_documents([doc1, doc2], { "last-updated" => "2025-11-01" })
+          count = FrontmatterManager.update_documents([doc1, doc2], {"last-updated" => "2025-11-01"})
 
           assert_equal 2, count
         end
@@ -259,7 +258,7 @@ module Ace
         private
 
         def create_test_document(content)
-          file = Tempfile.new(['test', '.md'], @test_dir)
+          file = Tempfile.new(["test", ".md"], @test_dir)
           file.write(content)
           file.close
           file.path

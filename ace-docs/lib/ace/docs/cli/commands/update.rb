@@ -91,9 +91,9 @@ module Ace
             puts "Updated frontmatter for #{updated_count} document(s)"
 
             EXIT_SUCCESS
-          rescue StandardError => e
-            $stderr.puts "Error updating documents: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if debug?(options)
+          rescue => e
+            warn "Error updating documents: #{e.message}"
+            warn e.backtrace.join("\n") if debug?(options)
             EXIT_ERROR
           end
 
@@ -162,10 +162,10 @@ module Ace
             required_updates = updates.dup
 
             # Infer doc-type from file path/extension if not provided
-            required_updates['doc-type'] ||= infer_doc_type(doc.path)
+            required_updates["doc-type"] ||= infer_doc_type(doc.path)
 
             # Require purpose to be provided
-            unless required_updates['purpose']
+            unless required_updates["purpose"]
               raise MissingArgumentError, "Purpose required for new frontmatter. Use: --set purpose:'Document description'"
             end
 
@@ -174,12 +174,12 @@ module Ace
 
           def infer_doc_type(path)
             case path
-            when /README\.md$/i then 'readme'
-            when /\.wf\.md$/ then 'workflow'
-            when /\.g\.md$/ then 'guide'
-            when /\.template\.md$/ then 'template'
-            when /docs\/.*\.md$/ then 'context'
-            else 'reference'
+            when /README\.md$/i then "readme"
+            when /\.wf\.md$/ then "workflow"
+            when /\.g\.md$/ then "guide"
+            when /\.template\.md$/ then "template"
+            when /docs\/.*\.md$/ then "context"
+            else "reference"
             end
           end
 

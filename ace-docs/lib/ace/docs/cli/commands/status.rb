@@ -66,15 +66,15 @@ module Ace
             documents = filter_documents(registry, options)
 
             if documents.empty?
-              $stderr.puts "No managed documents found."
+              warn "No managed documents found."
               return
             end
 
             display_status(documents)
             display_summary(documents, registry)
-          rescue StandardError => e
-            $stderr.puts "Error showing status: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if debug?(options)
+          rescue => e
+            warn "Error showing status: #{e.message}"
+            warn e.backtrace.join("\n") if debug?(options)
             raise Ace::Support::Cli::Error.new(e.message)
           end
 
@@ -136,7 +136,7 @@ module Ace
             table = Terminal::Table.new do |t|
               t.headings = ["", "Document", "Type", "Last Updated", "Status"]
               t.rows = rows
-              t.style = { border_top: false, border_bottom: false }
+              t.style = {border_top: false, border_bottom: false}
             end
 
             puts table
@@ -164,11 +164,11 @@ module Ace
               puts "  By freshness:"
               freshness_counts.each do |status, count|
                 color = case status
-                        when :current then :green
-                        when :stale then :yellow
-                        when :outdated then :red
-                        else :white
-                        end
+                when :current then :green
+                when :stale then :yellow
+                when :outdated then :red
+                else :white
+                end
                 puts "    #{status}: #{count}".colorize(color)
               end
             end
@@ -196,10 +196,10 @@ module Ace
 
             # Display with time component when available (ISO 8601 for Time objects)
             date_str = if date.respond_to?(:hour)
-                         date.utc.strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 UTC
-                       else
-                         date.strftime("%Y-%m-%d")  # Date-only
-                       end
+              date.utc.strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 UTC
+            else
+              date.strftime("%Y-%m-%d")  # Date-only
+            end
 
             if days_ago == 0
               "#{date_str} (today)".green

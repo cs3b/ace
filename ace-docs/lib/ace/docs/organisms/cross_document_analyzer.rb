@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'json'
-require 'yaml'
-require 'colorize'
-require 'ace/core/molecules/prompt_cache_manager'
-require_relative '../organisms/document_registry'
-require_relative '../prompts/consistency_prompt'
-require_relative '../models/consistency_report'
+require "fileutils"
+require "json"
+require "yaml"
+require "colorize"
+require "ace/core/molecules/prompt_cache_manager"
+require_relative "../organisms/document_registry"
+require_relative "../prompts/consistency_prompt"
+require_relative "../models/consistency_report"
 
 # Try to load ace-llm
 begin
-  require 'ace/llm'
+  require "ace/llm"
 rescue LoadError
   # Will be handled with clear error message during execution
 end
@@ -134,9 +134,9 @@ module Ace
           # Determine model (use config or default)
           # Check both llm_model and llm.model in config
           model = @options[:model] ||
-                  Ace::Docs.config["llm_model"] ||
-                  Ace::Docs.config.dig("llm", "model") ||
-                  "glite"  # Default to glite (fast model)
+            Ace::Docs.config["llm_model"] ||
+            Ace::Docs.config.dig("llm", "model") ||
+            "glite"  # Default to glite (fast model)
 
           puts "Executing LLM query (model: #{model}, timeout: #{timeout}s)..." if @options[:verbose]
 
@@ -163,7 +163,7 @@ module Ace
 
             # Return the report path (not the content)
             report_path
-          rescue StandardError => e
+          rescue => e
             raise "#{e.message}"
           end
         end
@@ -219,7 +219,7 @@ module Ace
           <<~PROMPT
             # #{title}
 
-            Generated: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}
+            Generated: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
 
             ---
 
@@ -265,7 +265,7 @@ module Ace
           }
 
           metadata_path = File.join(session_dir, "metadata.yml")
-          require 'yaml'
+          require "yaml"
           File.write(metadata_path, metadata.to_yaml)
         end
       end
