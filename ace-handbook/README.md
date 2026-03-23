@@ -34,7 +34,9 @@
 
 **Coordinate larger handbook deliveries** - use `/as-handbook-update-docs` to plan, execute, and synthesize multi-step documentation changes across package handbook assets.
 
-**Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-integration-*`) that project canonical handbook skills into provider-native folders.
+**Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-support-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-handbook-integration-*`) that project canonical handbook skills into provider-native folders.
+
+**Sync and inspect provider integrations** - run `ace-handbook sync` to project canonical skills into provider-native folders and `ace-handbook status` to check integration health across all configured providers.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

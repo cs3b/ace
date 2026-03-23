@@ -12,7 +12,6 @@ ace-docs:
 ## Prerequisites
 
 - ACE repository available locally
-- `mise` installed for managed runtime/tool execution
 - `ace-nav` and `ace-bundle` available on your PATH
 
 ## Installation

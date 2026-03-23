@@ -23,6 +23,10 @@ ace-docs:
 | `as-handbook-parallel-research` | Coordinate parallel handbook research |
 | `as-handbook-synthesize-research` | Synthesize parallel research outputs |
 | `as-handbook-perform-delivery` | Drive delivery execution workflow |
+| `as-release` | Orchestrate gem release workflow |
+| `as-release-bump-version` | Increment gem version following semver |
+| `as-release-rubygems-publish` | Publish gems to RubyGems.org |
+| `as-release-update-changelog` | Update CHANGELOG with recent changes |
 
 ## Workflow Protocols
 

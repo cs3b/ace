@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Standardized workflows for creating and managing guides, workflow instructions, and agent definitions."
-  spec.description = "Workflow package for creating, reviewing, and maintaining ACE handbook guides, workflows, and agent definitions."
+  spec.description = "Standardized workflows for creating, reviewing, and maintaining ACE handbook guides, workflow instructions, and agent definitions."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
