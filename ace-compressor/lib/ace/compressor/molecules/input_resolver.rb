@@ -46,7 +46,15 @@ module Ace
         def resolve_with_bundle(raw_input, index, source_path:, source_kind:)
           output_path = File.join(@temp_root, "resolved_#{index + 1}.md")
           stdout, stderr, status = @shell_runner.call(["ace-bundle", raw_input, "--output", output_path])
-          return resolved_input(content_path: output_path, source_path: source_path, source_kind: source_kind) if status.success?
+          if status.success?
+            result = resolved_input(content_path: output_path, source_path: source_path, source_kind: source_kind)
+            meta_path = "#{output_path}.meta.json"
+            if File.exist?(meta_path)
+              require "json"
+              result[:bundle_compression_stats] = JSON.parse(File.read(meta_path))
+            end
+            return result
+          end
 
           details = stderr.to_s.strip
           details = stdout.to_s.strip if details.empty?

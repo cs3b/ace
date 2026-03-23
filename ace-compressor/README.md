@@ -14,14 +14,23 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Usage Guide](docs/usage.md)
-`ace-compressor` provides deterministic context compression for one or more sources, with exact extraction, policy-driven compact output, and agent-assisted payload rewriting while preserving record structure. It integrates with [ace-bundle](../ace-bundle) for input resolution and [ace-llm](../ace-llm) for agent-mode rewriting.
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md)
+
+![ace-compressor demo](docs/demo/ace-compressor-getting-started.gif)
+
+`ace-compressor` provides deterministic context compression for one or more sources, with exact extraction, policy-driven compact output, and agent-assisted payload rewriting while preserving record structure. It integrates with [ace-bundle](../ace-bundle) for input resolution and [ace-llm](../ace-llm) for agent-mode rewriting. Compression returns are moderate — expect ~10% byte reduction in exact mode and ~25% in agent mode — with the main wins coming from line count reduction and structured record normalization.
 
 ## How It Works
 
-1. Feed one or more Markdown or text sources into a compression mode (`exact`, `compact`, or `agent`).
-2. The compressor extracts structured records, applies mode-specific reduction policies, and produces a stable `ContextPack/3` artifact (a pipe-delimited record format preserving document structure in minimal tokens).
+1. Feed one or more Markdown or text sources into a compression mode.
+2. The compressor extracts structured records, applies mode-specific reduction policies, and produces a stable `ContextPack/3` artifact — a pipe-delimited record format preserving document structure in minimal tokens.
 3. Output goes to a cache-backed path for reuse or inline to stdio, with optional stats summaries and benchmark comparisons.
+
+| Mode | What it does | Tradeoff |
+|------|-------------|----------|
+| `exact` | Canonical semantic extraction — headings, prose, lists, and code become compact typed records. Fully deterministic, no LLM involved. | ~10% byte reduction; preserves all content |
+| `compact` | Policy-driven narrative compaction that classifies sections and applies aggressive reduction rules. Emits explicit `LOSS|` markers for anything dropped. | Higher compression; may lose detail |
+| `agent` | Runs exact extraction first, then uses an LLM to rewrite selected payloads (`SUMMARY|`, `FACT|`, long `LIST|` values) while keeping record structure deterministic. | ~25% byte reduction; requires [ace-llm](../ace-llm) |
 
 ## Use Cases
 
@@ -34,4 +43,4 @@
 **Rewrite payloads with LLM assistance** - use agent mode with [ace-llm](../ace-llm) to rewrite payload text while keeping the deterministic `ContextPack/3` structure, producing more concise context for downstream consumers.
 
 ---
-[Usage Guide](docs/usage.md) | Part of [ACE](https://github.com/cs3b/ace)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | Part of [ACE](https://github.com/cs3b/ace)
