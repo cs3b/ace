@@ -223,6 +223,94 @@ module Ace
             assert context.include?("`docs`:"), "Should list docs subject"
           end
         end
+
+        def test_resolve_type_references_uses_ace_nav_resolve
+          document = Models::Document.new(
+            path: "ace-task/README.md",
+            frontmatter: {
+              "doc-type" => "readme",
+              "purpose" => "Package README"
+            }
+          )
+
+          template_file = File.join(@temp_dir, "README.template.md")
+          guide_file = File.join(@temp_dir, "documentation.g.md")
+          File.write(template_file, "# Template")
+          File.write(guide_file, "# Guide")
+
+          status_ok = Struct.new(:success?).new(true)
+          ace_nav_calls = []
+          fake_config = {
+            "document_types" => {
+              "readme" => {
+                "template" => "tmpl://project-docs/README",
+                "guide" => "guide://documentation"
+              }
+            }
+          }
+
+          capture3_stub = lambda do |*args|
+            ace_nav_calls << args
+            case args
+            when ["ace-nav", "resolve", "tmpl://project-docs/README"]
+              [template_file, "", status_ok]
+            when ["ace-nav", "resolve", "guide://documentation"]
+              [guide_file, "", status_ok]
+            else
+              ["", "", status_ok]
+            end
+          end
+
+          Ace::Docs.stub :config, fake_config do
+            Open3.stub :capture3, capture3_stub do
+              result = DocumentAnalysisPrompt.send(:resolve_type_references, document)
+              assert_equal [template_file, guide_file], result
+            end
+          end
+
+          assert_includes ace_nav_calls, ["ace-nav", "resolve", "tmpl://project-docs/README"]
+          assert_includes ace_nav_calls, ["ace-nav", "resolve", "guide://documentation"]
+        end
+
+        def test_resolve_type_references_skips_entries_when_resolve_fails
+          document = Models::Document.new(
+            path: "README.md",
+            frontmatter: {
+              "doc-type" => "readme",
+              "purpose" => "Root README"
+            }
+          )
+
+          fake_config = {
+            "document_types" => {
+              "readme" => {
+                "template" => "tmpl://project-docs/README",
+                "guide" => "guide://documentation"
+              }
+            }
+          }
+
+          status_ok = Struct.new(:success?).new(true)
+          status_fail = Struct.new(:success?).new(false)
+
+          capture3_stub = lambda do |*args|
+            case args
+            when ["ace-nav", "resolve", "tmpl://project-docs/README"]
+              ["", "not found", status_fail]
+            when ["ace-nav", "resolve", "guide://documentation"]
+              ["/tmp/missing-guide.g.md", "", status_ok]
+            else
+              ["", "", status_fail]
+            end
+          end
+
+          Ace::Docs.stub :config, fake_config do
+            Open3.stub :capture3, capture3_stub do
+              result = DocumentAnalysisPrompt.send(:resolve_type_references, document)
+              assert_equal [], result
+            end
+          end
+        end
       end
     end
   end

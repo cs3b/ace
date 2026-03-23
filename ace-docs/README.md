@@ -1,58 +1,39 @@
-# ace-docs
+<div align="center">
+  <h1> ACE - Docs </h1>
 
-Keep documentation current - track freshness, detect drift, and get LLM-powered suggestions.
+  Keep documentation current by tracking freshness, detecting drift, and generating actionable updates.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-docs"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-docs.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-docs demo](docs/demo/ace-docs-getting-started.gif)
 
-## Why
+`ace-docs` provides a practical maintenance loop for teams that need package docs to stay aligned with fast-moving code and workflow changes. It uses frontmatter-based freshness tracking, targeted change analysis, and LLM-assisted update guidance to keep documentation in sync.
 
-Documentation gets stale when code and docs drift apart. `ace-docs` gives you a practical loop:
+## How It Works
 
-* find what changed since a document was last updated
-* identify which docs need attention first
-* run LLM-assisted analysis for concrete update suggestions
-* catch cross-document conflicts before release
+1. Discover and scan markdown documentation across package roots, tracking freshness through frontmatter metadata.
+2. Analyze per-document changes since last update to identify stale files and prioritize update targets.
+3. Generate targeted update guidance or validate cross-document consistency before release.
 
-## Works With
+## Use Cases
 
-* `ace-bundle` for context assembly
-* `ace-llm` for analysis and consistency checks
-* `ace-lint` for syntax validation
+**Prioritize documentation updates based on real drift** - identify which files are stale, what changed since last update, and where to focus first using [`ace-docs`](docs/usage.md) freshness tracking.
 
-## Agent Skills
+**Generate targeted update guidance for specific documents** - run LLM-assisted analysis with [ace-bundle](../ace-bundle) and [ace-llm](../ace-llm) context to propose concrete doc revisions.
 
-Package-owned canonical skills for docs workflows:
+**Catch cross-document inconsistencies before release** - validate metadata and compare documents to find conflicts across package documentation sets before publishing.
 
-* `as-docs-update`
-* `as-docs-update-usage`
-* `as-docs-create-user`
-* `as-docs-create-api`
-* `as-docs-create-adr`
-* `as-docs-maintain-adrs`
-* `as-docs-update-blueprint`
-* `as-docs-update-roadmap`
-* `as-docs-update-tools`
-* `as-docs-squash-changelog`
+**Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
-## Features
-
-* frontmatter-based freshness tracking
-* document discovery across packages or globs
-* targeted change analysis per document
-* cross-document consistency analysis
-* metadata updates for one file or scoped sets
-* syntax + semantic validation workflow
-
-## Documentation
-
-* [Getting Started](docs/getting-started.md)
-* [CLI Usage Reference](docs/usage.md)
-* [Handbook Catalog](docs/handbook.md)
-
-## Part of ACE
-
-`ace-docs` is part of [ACE][1]: CLI tools designed for developers and ready for agents.
-
-
-
-[1]: https://github.com/cs3b/ace
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

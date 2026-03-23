@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-03-23
+
+### Added
+- Classify root README as `root_readme` doc-type, separate from package READMEs.
+- Add timeout guard around `ace-nav resolve` subprocess in `DocumentAnalysisPrompt`.
+
+### Changed
+- Update docs config defaults and project override for `root_readme` classification.
+- Refresh documentation guide to reflect `root_readme` handling.
+
+## [0.30.2] - 2026-03-23
+
+### Fixed
+- Aligned README handling to the dedicated `readme` doc type by updating README inference and frontmatter-free README metadata inference from `user` to `readme`.
+- Fixed document analysis type reference resolution to call `ace-nav resolve` so template/guide protocol URLs are resolved correctly.
+
+### Changed
+- Narrowed `readme` path matching to package-level `*/README.md` so the repository root README is not treated as a package README.
+
+## [0.30.1] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` to the current package layout pattern with quick-link navigation, use-case framing, and standardized section flow.
+
+## [0.30.0] - 2026-03-23
+
+### Added
+- Template and guide references in document type config (`template`, `guide` fields) enabling `ace-docs analyze` to embed the correct template/guide when reviewing a document.
+- New `readme` document type with narrow `README.md`/`*/README.md` paths, split from the broad `user` type to avoid applying the README template to architecture, vision, and blueprint docs.
+- Template/guide verification instructions in the document analysis prompt so the LLM checks documents against their template structure and guide conventions.
+
+### Changed
+- Rewrote `README.template.md` to match the proven ace-task pattern: logo block, pipe-separated nav row above demo, intro paragraph instead of Problem/Solution, Use Cases section with inline `/as-` skill refs and linked CLI commands.
+- Updated documentation guide README section with new structure table, nav row guidance, Use Cases format, skill reference convention, implementation rule, and expanded anti-patterns list.
+- Narrowed `user` document type paths to `*/docs/**/*.md` only (READMEs now use dedicated `readme` type).
+
 ## [0.29.3] - 2026-03-22
 
 ### Changed

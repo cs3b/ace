@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "timeout"
 require "yaml"
 
 module Ace
@@ -8,6 +9,8 @@ module Ace
     module Prompts
       # Builds prompts for analyzing changes relevant to a specific document
       class DocumentAnalysisPrompt
+        NAV_RESOLVE_TIMEOUT_SECONDS = 10
+
         # Build prompts for analyzing changes for a specific document
         # @param document [Document] The document to analyze changes for
         # @param diff [String, Hash] Either single diff string or hash of {subject_name => diff_string}
@@ -218,6 +221,13 @@ module Ace
           doc_context = document.ace_docs_config&.dig("context") || document.context_config || {}
           context_config = context_config.merge(doc_context)
 
+          # Add template/guide files from document type config
+          type_ref_files = resolve_type_references(document)
+          if type_ref_files && !type_ref_files.empty?
+            context_config["files"] ||= []
+            context_config["files"].concat(type_ref_files)
+          end
+
           # Add diff files to files array (append to existing files if any)
           if diff_files && !diff_files.empty?
             context_config["files"] ||= []
@@ -269,6 +279,9 @@ module Ace
                           end
           end
 
+          # Check for template/guide references from document type config
+          refs_section = build_type_references_section(document)
+
           <<~SECTION
             ## Analysis Scope
 
@@ -279,7 +292,65 @@ module Ace
             #{filters_desc}
 
             **Time range**: Changes since #{since || 'recent'}
+            #{refs_section}
           SECTION
+        end
+
+        # Resolve template and guide references from document type config
+        # Looks up the document's type in Ace::Docs.config to find template/guide protocol URLs,
+        # then resolves them to file paths via ace-nav
+        # @param document [Document] The document configuration
+        # @return [Array<String>] Array of resolved file paths
+        def self.resolve_type_references(document)
+          doc_type = document.doc_type
+          return [] unless doc_type
+
+          type_config = Ace::Docs.config.dig("document_types", doc_type)
+          return [] unless type_config
+
+          files = []
+          %w[template guide].each do |ref_key|
+            protocol_url = type_config[ref_key]
+            next unless protocol_url
+
+            stdout, _stderr, status = with_nav_resolve_timeout do
+              Open3.capture3("ace-nav", "resolve", protocol_url)
+            end
+            if status.success?
+              path = stdout.strip
+              files << path if path && !path.empty? && File.exist?(path)
+            end
+          end
+
+          files
+        rescue StandardError
+          []
+        end
+
+        def self.with_nav_resolve_timeout
+          Timeout.timeout(NAV_RESOLVE_TIMEOUT_SECONDS) { yield }
+        rescue Timeout::Error
+          ["", "ace-nav resolve timed out after #{NAV_RESOLVE_TIMEOUT_SECONDS}s", Struct.new(:success?).new(false)]
+        end
+
+        # Build a reference section describing template/guide for this doc type
+        # @param document [Document] The document configuration
+        # @return [String] Reference section text or empty string
+        def self.build_type_references_section(document)
+          doc_type = document.doc_type
+          return "" unless doc_type
+
+          type_config = Ace::Docs.config.dig("document_types", doc_type)
+          return "" unless type_config
+
+          refs = []
+          refs << "- Template: `#{type_config['template']}`" if type_config["template"]
+          refs << "- Guide: `#{type_config['guide']}`" if type_config["guide"]
+          return "" if refs.empty?
+
+          "\n**Reference documents** (template/guide for `#{doc_type}` doc type):\n#{refs.join("\n")}\n"
+        rescue StandardError
+          ""
         end
 
         # Load context.md via ace-bundle (embeds files as XML)
@@ -315,6 +386,9 @@ module Ace
         private_class_method :calculate_diff_stats
         private_class_method :create_context_markdown
         private_class_method :build_analysis_scope_section
+        private_class_method :resolve_type_references
+        private_class_method :with_nav_resolve_timeout
+        private_class_method :build_type_references_section
         private_class_method :load_context_md
       end
     end

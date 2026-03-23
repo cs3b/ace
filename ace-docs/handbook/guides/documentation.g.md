@@ -3,8 +3,8 @@ doc-type: guide
 title: Goal
 purpose: Documentation for ace-docs/handbook/guides/documentation.g.md
 ace-docs:
-  last-updated: 2026-01-18
-  last-checked: 2026-03-21
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
 ---
 
 # Goal
@@ -97,31 +97,99 @@ This section clarifies the purpose and scope of each major documentation file. F
 
 #### Core Documentation Files
 
-##### README.md (Project Root)
+##### README.md (Package)
 
-**Purpose**: Entry point for new users and quick reference
+**Purpose**: Selling page - quickly convey what the package is and why it matters
 
-**Contains**:
+A README is the first thing someone sees. Lead with value, not feature lists.
 
-- Project badges and status
-- Brief project description (1-2 paragraphs)
-- Quick start installation instructions
-- Key features list (high-level)
-- Basic usage examples
-- Links to detailed documentation
-- Contributing quick start
-- License information
+**Structure** (in order):
 
-**Does NOT contain**:
+| Section | Purpose | Length |
+|---------|---------|--------|
+| Title + logo | Identity with ACE branding | Title + centered logo block |
+| Badges | Status indicators | 3 badges: gem version, Ruby 3.2+, MIT license |
+| Tagline | What it IS (blockquote) | `> one sentence` |
+| Agent compatibility | Trust signal | "Works with: ..." 1 line |
+| Nav row | Quick access to docs | Pipe-separated links, above demo |
+| GIF | Visual hook | CLI tools only |
+| Intro paragraph | Value proposition in context | 2-4 sentences |
+| How It Works | Mental model | Optional - Mermaid diagram or 3-step list |
+| Use Cases | Real workflows with tool refs | 3-6 entries |
+| Footer | ACE link | 1 line separator |
 
-- Detailed technical architecture
-- Comprehensive feature documentation
-- Development environment setup details
-- Internal implementation details
+**Logo**: Place a centered logo block (`<p align="center">`) between title and badges.
+Use the standard ACE logo path: `../docs/brand/AgenticCodingEnvironment.Logo.S.png`.
 
-**Example Structure**:
+**Nav row**: Pipe-separated links placed above the demo GIF, not in a bottom section.
+Always use three links: Getting Started, Usage Guide, and Handbook. Expand the Handbook
+link with a subtitle: `[Handbook - Skills, Agents, Templates](docs/handbook.md)` so
+readers know what it contains without clicking.
 
-Refer to the README.md template in the project initialization templates
+**No Quick Start section**: Getting Started is linked in the nav row. A separate Quick
+Start section duplicates it. Remove it.
+
+**Intro paragraph**: 2-4 sentences that describe the problem space and what the package
+does about it. Do not split into separate Problem/Solution sections. Do not list
+subcommands or features — let Use Cases do that. Frame through what the package enables,
+not what it replaces.
+
+**Use Cases** (replaces Problem/Solution/Ecosystem/Agent Skills):
+
+Each entry: **bold title** followed by a description paragraph. Weave in:
+- Skill references with `/as-` prefix (e.g., `/as-task-draft`)
+- CLI commands linked to usage docs (e.g., [`ace-task create`](docs/usage.md#ace-task-create-title))
+- Ecosystem package links inline (e.g., [ace-overseer](../ace-overseer))
+
+This replaces separate Ecosystem and Agent Skills sections. Related packages and skills
+appear naturally within the use cases where they add value.
+
+Additional Use Cases rules:
+- CLI examples in code blocks should include all meaningful flags (e.g., `--preset`)
+- Do not repeat in prose what a nearby code block already shows
+- When describing customization, link config files and presets in other packages
+  using relative paths (e.g., `[preset](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml)`)
+
+**Badges**: Use shields.io. Always use these 3: gem version, Ruby 3.2+ (with logo),
+MIT license. Do not add CI, coverage, downloads, or social badges.
+
+**Tagline**: Use a blockquote (`> one sentence`). The `>` creates a visual box on
+GitHub that draws the eye to the selling line. Place immediately after badges.
+
+**Agent compatibility line**: Place below the tagline, above the nav row. Use the
+standard text: "Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent,
+and more." Keep the agent list current as new agents gain traction.
+
+**Implementation rule**: Read the implementation code before describing features. Do not
+write from plan notes or spec documents alone.
+
+**Package category variants**:
+
+| Section | CLI Tool | Support Library | Integration | Infrastructure |
+|---------|----------|-----------------|-------------|----------------|
+| Logo | Yes | Yes | Yes | Yes |
+| GIF | Yes | No | No | If available |
+| How It Works | Optional | Optional | Skip | Optional |
+| Use Cases | 4-6 entries | 2-4 entries | 2-3 entries | 3-5 entries |
+
+**Root README differs**: The monorepo root uses "What ACE Does" (value bullets) and
+a "Tools" table instead of Use Cases. In `ace-docs` classification this file uses
+`doc-type: root_readme` (not package `readme`). See the root README for the pattern.
+
+**Anti-patterns** (never include in a README):
+
+- Full API documentation (belongs in docs/)
+- Development setup (belongs in docs/SETUP.md)
+- Contributing guidelines beyond a link (belongs in docs/contributing/)
+- Separate Problem/Solution sections (weave into intro paragraph)
+- Separate Ecosystem or Agent Skills sections (inline in Use Cases)
+- Quick Start section (redundant with Getting Started in nav row)
+- Feature bullet lists without workflow context
+- More than 3 badges
+- Decorative emojis (follow markdown-style guide)
+- Describing features from plan notes without reading implementation code
+
+**Template**: `ace-docs/handbook/templates/project-docs/README.template.md`
 
 ##### docs/vision.md
 
