@@ -1,45 +1,39 @@
-# ace-demo
+<div align="center">
+  <h1> ACE - Demo </h1>
 
-`ace-demo` records terminal demos and attaches them to pull requests.
+  Record deterministic terminal demos and attach review-ready media to pull requests.
 
-![ace-demo getting started](docs/demo/ace-demo-getting-started.gif)
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-Record deterministic terminal demos as GIF, MP4, or WebM files and post visual proof directly in code review.
+  <a href="https://rubygems.org/gems/ace-demo"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-demo.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-## Why
+</div>
 
-`ace-demo` makes reproducible terminal recording simple for teams and agents:
-- It turns command output into stable review artifacts, not flaky screen recordings.
-- It reduces ambiguity by showing exactly what ran and what changed.
-- It brings consistency when human and AI contributors need the same workflow.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-## Works With
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-- `ace-assign` for scoped task workflows
-- `ace-bundle` for workflow and config loading
-- `gh` for authenticated PR attachments
-- `ace-demo` package-owned skills for demos and recordings
+![ace-demo demo](docs/demo/ace-demo-getting-started.gif)
 
-## Agent Skills
+`ace-demo` turns terminal sessions into reproducible GIF/MP4/WebM artifacts, supports inline and tape-driven recordings, and can post the resulting media directly to GitHub pull requests. It relies on `vhs`, `chromium`, and `ttyd` for deterministic terminal rendering (see [setup requirements](docs/setup.md)).
 
-- `as-demo-record`
-- `as-demo-create`
+## How It Works
 
-## Features
+1. Define a demo as a tape (built-in preset, local tape file, or inline commands) that captures a terminal session.
+2. Record the tape into a GIF, MP4, or WebM artifact with optional playback-speed control.
+3. Attach the recording to a GitHub pull request with `--pr` or the separate `attach` command.
 
-- Built-in presets and project-level `.ace/demo/tapes` overrides
-- Inline recording from shell commands
-- PR attachment for existing recordings
-- Playback-speed postprocessing (`retime` and `--playback-speed`)
-- Tape discovery (`list`) and inspection (`show`)
+## Use Cases
 
-## Documentation
+**Show command behavior in code review** - record built-in or custom tapes with [`ace-demo record`](docs/usage.md) to replace ambiguous text-only explanations. Use `/as-demo-record` for agent-driven recording sessions.
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Catalog](docs/handbook.md)
-- Command help: `ace-demo --help`
+**Attach visual proof to pull requests** - use `--pr` during recording or [`ace-demo attach`](docs/usage.md) for existing files to comment directly on a PR through [gh](https://cli.github.com/) integration.
 
-## Part of ACE
+**Create reusable terminal demos quickly** - generate tapes from shell commands with `/as-demo-create` or [`ace-demo create`](docs/usage.md) and reuse them across docs, demos, and verification loops.
 
-`ace-demo` is part of [ACE](../README.md): CLI tools for practical agent workflows.
+**Provide demo evidence for assignments** - pair with [ace-assign](../ace-assign) for scoped task workflows that require demo evidence, using [ace-bundle](../ace-bundle) for loading workflow context that drives repeatable demo scenarios.
+
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
