@@ -13,13 +13,12 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Documentation](#documentation)
-`ace-support-nav` powers the [`ace-nav`](../ace-support-nav) CLI with cascade-aware URI resolution across project, user, and gem sources. It supports protocols like `wfi://`, `guide://`, `tmpl://`, `skill://`, and `task://`, with override targeting, wildcard discovery, and fast cached lookups.
+`ace-support-nav` powers the `ace-nav` CLI with cascade-aware URI resolution across project, user, and gem sources. It supports built-in protocols (`wfi://`, `guide://`, `tmpl://`, `skill://`, `prompt://`) and extensible command protocols like `task://` for tool delegation, with override targeting, wildcard discovery, and fast cached lookups.
 
 ## How It Works
 
 1. Accept a protocol URI (e.g., `wfi://setup`) and search project, user, and gem handbook sources in cascade order.
-2. Apply extension inference and override targeting (`@project`, `@user`, `@gem`) to locate the best match.
+2. Apply extension inference and override targeting (`@project` for repo `.ace-handbook/`, `@user` for `~/.ace-handbook/`, `@gem` for a specific gem's bundled handbook) to locate the best match.
 3. Return the resolved path, content, or a list of candidates for wildcard and prefix patterns.
 
 ## Use Cases

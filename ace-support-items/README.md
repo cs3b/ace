@@ -13,14 +13,13 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[Documentation](#documentation)
 `ace-support-items` standardizes directory scanning, shortcut resolution, and slug handling for ACE item workflows. It provides the low-level store operations that packages like [ace-task](../ace-task) and [ace-retro](../ace-retro) build their item management on.
 
 ## Use Cases
 
-**Parse and resolve ACE task/idea shortcuts** - map compact IDs to canonical b36ts item paths, powering the shorthand lookups in [ace-task](../ace-task).
+**Parse and resolve ACE task/idea shortcuts** - map compact IDs to canonical b36ts (base-36 timestamp) item paths, powering the shorthand lookups in [ace-task](../ace-task).
 
-**Handle special item directories consistently** - support shared folder conventions across tools so scanners in [ace-retro](../ace-retro) and [ace-task](../ace-task) discover items the same way.
+**Handle special item directories (underscore-prefixed folders like _maybe, _archive, and _anytime) consistently** - support shared folder conventions across tools so scanners in [ace-retro](../ace-retro) and [ace-task](../ace-task) discover items the same way.
 
 **Normalize metadata safely** - sanitize slugs and arguments before persistence, preventing malformed entries in item stores.
 
