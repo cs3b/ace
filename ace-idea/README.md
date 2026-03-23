@@ -1,23 +1,46 @@
 # ace-idea
 
-Capture and organize ideas from anywhere -- clipboard, terminal, or LLM.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-idea.svg)](https://rubygems.org/gems/ace-idea)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Capture ideas quickly, then shape and organize them for execution.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-idea demo](docs/demo/ace-idea-getting-started.gif)
 
-## Why
+Ideas appear mid-flow: copied from chat, typed in a terminal, or drafted with an LLM. `ace-idea` gives them a stable home in git with sortable IDs and lightweight status updates, so ideas stay actionable instead of scattered across notes and tabs.
 
-`ace-idea` turns raw notes into structured idea files so nothing gets lost:
+## How It Works
 
-* capture an idea as plain text or straight from your clipboard
-* ask for LLM enhancement when a rough note needs more shape
-* move ideas through the root-scope `next` queue plus `_maybe`, `_anytime`, and `_archive`
-* keep the workflow small with six commands: create, show, list, update, doctor, status
+1. Capture idea text into a structured markdown artifact with metadata.
+2. Refine and organize entries through review-oriented workflows.
+3. Promote ready ideas into execution tasks when they pass review.
 
-## Works With
+## Use Cases
 
-* `ace-task` when an idea is ready to become a task
-* `ace-bundle` for loading idea workflows directly
-* `ace-git-commit` for scoped commits around idea changes
+**Capture from anywhere** - create an idea from direct text input, stdin, or clipboard content. Use `ace-idea create` for quick capture or add `--enhance` when a rough note needs LLM cleanup before saving.
+
+**Shape and review** - run `/as-idea-capture` and `/as-idea-review` to turn raw notes into structured entries with clearer scope, tags, and next actions.
+
+**Organize by intent** - move ideas through root `next` plus `_maybe`, `_anytime`, and `_archive` buckets to keep near-term ideas visible while preserving long-tail exploration.
+
+**Track and maintain** - use `ace-idea list`, `ace-idea show`, and `ace-idea status` for visibility, then run `ace-idea doctor` to detect and repair structure drift.
+
+**Promote to execution** - once an idea is ready, hand it off to [ace-task](../ace-task) and continue with planning and implementation workflows.
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [Usage Guide](docs/usage.md)
+- [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ## Agent Skills
 
@@ -27,22 +50,6 @@ Package-owned canonical skills:
 * `as-idea-capture-features`
 * `as-idea-review`
 
-## Features
+---
 
-* text, clipboard, and LLM-enhanced capture
-* short sortable IDs with 3-character shortcut lookup
-* GTD-style folder organization with `--move-to`
-* status views, metadata updates, and doctor checks for idea hygiene
-
-## Documentation
-
-* [Getting Started](docs/getting-started.md)
-* [CLI Usage Reference](docs/usage.md)
-* [Handbook Catalog](docs/handbook.md)
-* Command help: `ace-idea --help`
-
-## Part of ACE
-
-`ace-idea` is part of [ACE][1]: CLI tools designed for developers and ready for agents.
-
-[1]: https://github.com/cs3b/ace
+Part of [ACE](../README.md) (Agentic Coding Environment)
