@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-03-23
+
+### Changed
+- Refreshed the package README to match the current layout pattern with quick-link navigation, use-case framing, and normalized section flow.
+
 ## [0.12.1] - 2026-03-22
 
 ### Technical
