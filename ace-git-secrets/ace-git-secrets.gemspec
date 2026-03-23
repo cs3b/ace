@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Detect, revoke, and remove leaked tokens from Git history"
+  spec.summary = "Scan, revoke, and remove leaked credentials from Git history"
   spec.description = <<~DESC
     ace-git-secrets scans Git history for leaked credentials with gitleaks-backed
     detection, revokes supported tokens, rewrites compromised history, and blocks
