@@ -1,106 +1,29 @@
-# ace-support-fs
+<div align="center">
+  <h1> ACE - Support FS </h1>
 
-Filesystem utilities for ace-* gems -- unified path expansion, project root detection, and directory traversal.
+  File system primitives for ACE path resolution and project root discovery.
 
-## Overview
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-`ace-support-fs` provides reusable filesystem primitives used across `ace-*` gems.
+  <a href="https://rubygems.org/gems/ace-support-fs"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-fs.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It includes path expansion with context-aware resolution, project root detection from marker files, and
-directory traversal for configuration cascades.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-Add to your gemspec:
+[Documentation](#documentation)
+`ace-support-fs` provides reusable filesystem helpers for path expansion, root detection, and directory traversal. It handles the platform and context differences so packages like [ace-support-config](../ace-support-config) and [ace-search](../ace-search) can resolve paths safely from any working directory.
 
-```ruby
-spec.add_dependency "ace-support-fs", "~> 0.2"
-```
+## Use Cases
 
-## Basic Usage
+**Resolve paths safely across subdirectories** - use consistent path expansion for tools that move across project subdirectories, including protocol-aware path handling.
 
-```ruby
-require "ace/support/fs"
-```
+**Detect workspace boundaries** - infer project root from marker files without shell-specific assumptions, so [ace-search](../ace-search) and [ace-support-config](../ace-support-config) scope correctly.
 
-### PathExpander (Atom)
+**Build config scans** - discover and rank candidate configuration directories during resolution, supporting the cascade logic in [ace-support-config](../ace-support-config).
 
-Path expansion with protocol URIs, environment variables, and relative path support.
+---
 
-```ruby
-require "ace/support/fs"
-
-# Factory methods for context-aware resolution
-expander = Ace::Support::Fs::Atoms::PathExpander.for_file("config/settings.yml", project_root: "/app")
-expander.resolve("./local.yml")     # => "/app/config/local.yml"
-expander.resolve("lib/models")      # => "/app/lib/models"
-expander.resolve("$HOME/.config")   # => "/Users/you/.config"
-
-# CLI context (current directory)
-expander = Ace::Support::Fs::Atoms::PathExpander.for_cli
-expander.resolve("./relative")      # => "{cwd}/relative"
-
-# Stateless class methods
-Ace::Support::Fs::Atoms::PathExpander.expand("$HOME/file")     # => "/Users/you/file"
-Ace::Support::Fs::Atoms::PathExpander.protocol?("wfi://test")  # => true
-Ace::Support::Fs::Atoms::PathExpander.join("a", "b", "c")      # => "a/b/c"
-```
-
-### ProjectRootFinder (Molecule)
-
-Detect project root directory by looking for marker files (.git, Gemfile, etc).
-
-```ruby
-require "ace/support/fs"
-
-# Find project root from current directory
-finder = Ace::Support::Fs::Molecules::ProjectRootFinder.new
-finder.find           # => "/path/to/project" or nil
-finder.find_or_current  # => "/path/to/project" or Dir.pwd
-finder.in_project?    # => true/false
-
-# Class methods for convenience
-Ace::Support::Fs::Molecules::ProjectRootFinder.find
-Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-
-# Custom markers and start path
-finder = Ace::Support::Fs::Molecules::ProjectRootFinder.new(
-  markers: %w[.git package.json],
-  start_path: "/some/path"
-)
-```
-
-### DirectoryTraverser (Molecule)
-
-Find configuration directories in the directory hierarchy.
-
-```ruby
-require "ace/support/fs"
-
-# Find .ace directories from current to project root
-traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
-traverser.traverse                   # => ["/deep/path", "/path"] (dirs with .ace)
-traverser.find_config_directories    # => ["/deep/path/.ace", "/path/.ace"]
-traverser.directory_hierarchy        # => All directories from cwd to root
-traverser.build_cascade_priorities   # => {"/deep/.ace" => 0, "/path/.ace" => 10, ...}
-
-# Custom config directory name
-traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(config_dir: ".myconfig")
-```
-
-## Environment Variables
-
-- `PROJECT_ROOT_PATH` - Override project root detection with explicit path
-
-## Thread Safety
-
-All components are thread-safe with proper mutex synchronization for shared state (cache, protocol resolver).
-
-## Part of ACE
-
-`ace-support-fs` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for
-agent-assisted development.
-
-## License
-
-See LICENSE.txt
+Part of [ACE](https://github.com/cs3b/ace)

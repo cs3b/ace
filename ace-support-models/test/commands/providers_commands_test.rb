@@ -64,4 +64,41 @@ class ProvidersCommandsTest < AceModelsTestCase
       end
     end
   end
+
+  def test_list_supports_wrapped_providers_hash_cache_shape
+    with_temp_cache do |cache_dir|
+      cache_manager = Ace::Support::Models::Molecules::CacheManager.new(cache_dir: cache_dir)
+      cache_manager.write({ "providers" => sample_api_response })
+
+      Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
+        cmd = Ace::Support::Models::CLI::Commands::Providers::List.new
+        output = capture_io { cmd.call(json: false) }.first
+        assert_match(/Providers \(2\):/, output)
+        assert_match(/test-provider: 1 models/, output)
+      end
+    end
+  end
+
+  def test_show_supports_wrapped_providers_array_cache_shape
+    with_temp_cache do |cache_dir|
+      cache_manager = Ace::Support::Models::Molecules::CacheManager.new(cache_dir: cache_dir)
+      cache_manager.write({
+        "providers" => [
+          {
+            "id" => "anthropic",
+            "models" => [
+              { "id" => "claude-3-opus", "name" => "Claude 3 Opus" }
+            ]
+          }
+        ]
+      })
+
+      Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
+        cmd = Ace::Support::Models::CLI::Commands::Providers::Show.new
+        output = capture_io { cmd.call(provider_id: "anthropic", json: false) }.first
+        assert_match(/Provider: anthropic/, output)
+        assert_match(/claude-3-opus/, output)
+      end
+    end
+  end
 end

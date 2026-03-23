@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-03-23
+
+### Changed
+- Refreshed the README layout for clearer package positioning, quick section navigation, and streamlined `ace-nav` usage/configuration guidance.
+
 ## [0.23.4] - 2026-03-22
 
 ### Changed

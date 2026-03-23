@@ -1,121 +1,29 @@
-# ace-support-test-helpers
+<div align="center">
+  <h1> ACE - Support Test Helpers </h1>
 
-Shared test utilities for all ace-* gems.
+  Shared test harness and environment helpers for ACE packages.
 
-Follows the `ace-support-*` pattern for library-only infrastructure gems (no CLI tools).
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-## Purpose
+  <a href="https://rubygems.org/gems/ace-support-test-helpers"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-test-helpers.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-This development-only infrastructure gem provides:
-- Base test case classes with common assertions
-- Test helper methods for temporary files and directories
-- Configuration testing utilities with cascade support
-- Isolated test environment management
-- Minitest reporters configuration
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-This gem is automatically included in the test group of ace-* gems:
+[Documentation](#documentation)
+`ace-support-test-helpers` provides reusable helpers for temporary environment setup, assertions, and integration-friendly test scaffolding so that ACE packages share consistent test patterns without duplicating boilerplate.
 
-```ruby
-# In ace-*/ace-*.gemspec
-spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9.0'
-```
+## Use Cases
 
-## Usage
+**Write consistent package tests** - share base test case abstractions, setup patterns, and assertions across `ace-support-*` and other ACE packages via common helper modules.
 
-### In Your Test Helper
+**Build integration test flows** - isolate environment variables, filesystem state, and config fixtures with reliable temporary-directory and override helpers used alongside [ace-test-runner](../ace-test-runner).
 
-```ruby
-# test/test_helper.rb
-require 'ace/test_support'
+**Improve CI stability** - reduce flaky test behavior with shared deterministic helpers for directory management, configuration, and environment cleanup.
 
-# Your gem-specific requires
-require 'ace/context'
-```
+---
 
-### Base Test Case
-
-```ruby
-class MyTest < AceTestCase
-  def test_something
-    # Access to all test helpers
-    with_temp_dir do |dir|
-      # Test in isolated directory
-    end
-  end
-end
-```
-
-### Config Testing
-
-```ruby
-class ConfigTest < AceTestCase
-  include Ace::TestSupport::ConfigHelpers
-
-  def test_config_cascade
-    with_cascade_configs("context", {
-      project: { "ace" => { "context" => { "setting" => "project" } } },
-      home: { "ace" => { "context" => { "setting" => "home" } } }
-    }) do
-      # Test config resolution
-    end
-  end
-end
-```
-
-### Integration Testing
-
-```ruby
-class IntegrationTest < AceTestCase
-  def setup
-    @env = Ace::TestSupport::TestEnvironment.new("context")
-    @env.setup
-  end
-
-  def teardown
-    @env.teardown
-  end
-
-  def test_full_integration
-    @env.write_config(:project, "config.yml", sample_config)
-    # Test with isolated environment
-  end
-end
-```
-
-## Test Utilities
-
-### TestHelper Module
-- `with_temp_dir` - Execute in temporary directory
-- `with_temp_file` - Create temporary file
-- `create_config_file` - Create config file with directory creation
-- `assert_file_exists` - Assert file exists
-- `assert_file_content` - Assert file content matches
-- `assert_directory_exists` - Assert directory exists
-- `capture_subprocess_io` - Capture stdout/stderr
-
-### ConfigHelpers Module
-- `with_config` - Temporary config file
-- `with_env` - Temporary environment variables
-- `with_cascade_configs` - Multi-level config setup
-- `sample_config` - Generate sample configurations
-- `assert_config_structure` - Verify config structure
-
-### TestEnvironment Class
-- Complete isolation with temp directories
-- Separate home, project, and gem directories
-- Environment variable management
-- Config directory creation helpers
-
-## Development
-
-This gem is part of the ACE project and shares the root Gemfile dependencies.
-
-## Part of ACE
-
-Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
-
-## License
-
-MIT
+Part of [ACE](https://github.com/cs3b/ace)
