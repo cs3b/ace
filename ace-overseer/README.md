@@ -18,13 +18,13 @@
 
 ![ace-overseer demo](docs/demo/ace-overseer-getting-started.gif)
 
-Starting task work means creating a worktree, opening a tmux window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers.
+Starting task work means creating a worktree, opening a tmux window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers. You can jump straight to a focused worktree any time with a single invocation.
 
 ## How It Works
 
 1. Resolve task refs and create a scoped worktree.
-2. Open a dedicated tmux window mapped to that worktree.
-3. Start an assignment preset so execution can be driven step-by-step.
+2. Expand the assignment preset into concrete steps under `.ace-local/assign/`, then open a dedicated tmux window mapped to that worktree.
+3. Instruct the agent inside the tmux window to act as an orchestrator and drive the assignment step-by-step.
 
 ## Use Cases
 

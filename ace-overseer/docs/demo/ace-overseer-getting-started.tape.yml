@@ -9,21 +9,14 @@ settings:
   width: 960
   height: 540
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
 - name: Show the worktree dashboard — progress bars, PR status, failure counts
   commands:
+  - type: cd $PROJECT_ROOT_PATH
+    sleep: 1s
   - type: ace-overseer status
-    sleep: 6s
-- name: Show available commands
-  commands:
-  - type: ace-overseer --help
-    sleep: 4s
-- name: Show work-on options for launching task worktrees
-  commands:
-  - type: ace-overseer work-on --help
-    sleep: 5s
+    sleep: 9s
 teardown:
 - cleanup
-setup:
-- sandbox
-- copy-fixtures
