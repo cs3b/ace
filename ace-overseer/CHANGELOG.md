@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-23
+
+### Changed
+- Clarified README intro and How It Works section to describe assignment expansion into `.ace-local/assign/` and agent-driven orchestration.
+- Re-recorded getting-started demo GIF against live project context showing the full worktree dashboard with progress bars, PR status, and failure counts.
+
 ## [0.10.3] - 2026-03-23
 
 ### Changed
