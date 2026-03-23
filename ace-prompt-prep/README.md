@@ -1,45 +1,51 @@
 # ace-prompt-prep
 
-Prompt workspace with archiving, LLM enhancement, and context loading -- manage prompts like code.
+Prepare prompts in a structured workspace with optional LLM enhancement and bundled project context.
 
-![ace-prompt-prep demo](docs/demo/ace-prompt-prep-setup-enhance.gif)
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
 
-## Why use ace-prompt-prep
+![ace-prompt-prep demo](docs/demo/ace-prompt-prep-getting-started.gif)
 
-- Write prompts in markdown and keep every revision.
-- Archive every prompt automatically with compact IDs for easy history browsing.
-- Enhance prompts with LLM before sending.
-- Inject project context from files, presets, or command output.
-- Keep task-specific prompts grouped by task ID.
+`ace-prompt-prep` helps developers and coding agents keep prompt authoring repeatable: initialize templates,
+archive every revision, enrich prompt context with `ace-bundle`, and optionally run enhancement through `ace-llm`.
+
+## Use Cases
+
+**Keep prompt history without manual bookkeeping** - initialize and process prompts in a stable workspace where
+archives and `_previous.md` are maintained automatically.
+
+**Improve prompt quality before execution** - run `--enhance` with model selection to rewrite prompts for clarity and
+completeness before handing them to an agent or API.
+
+**Inject project context directly into prompts** - use `bundle` frontmatter sources so prompts include selected files,
+presets, and command output at processing time.
 
 ## Works With
 
-- `ace-task` / `ace-taskflow`
-- `ace-bundle`
-- `ace-llm`
-- `ace-git`
-
-## Agent Skills
-
-- `as-prompt-prep` (package-owned)
+- **[ace-task](../ace-task)** for task-scoped prompt directories via `--task`.
+- **[ace-bundle](../ace-bundle)** for context loading from files, presets, and commands.
+- **[ace-llm](../ace-llm)** for optional LLM-based prompt enhancement.
+- **[ace-git](../ace-git)** for branch-aware task workflow usage patterns.
 
 ## Features
 
-- **Automatic archiving**
-  - Every run stores prompt history and keeps `_previous.md` updated.
-- **LLM enhancement**
-  - Improve prompt quality with `--enhance` and model selection.
-- **Context loading**
-  - Add project context to prompts through `ace-bundle` integration.
-- **Task-specific prompts**
-  - Automatically switch to task prompt folders with `--task` or branch detection.
+- Workspace setup with package templates (`setup`, `--template`, `--task`).
+- Prompt processing with archive management and output controls (`process`, `--output`).
+- Optional context loading via `--bundle` / `--no-bundle` and prompt frontmatter sources.
+- Optional enhancement flow via `--enhance`, `--model`, and custom system prompts.
+- Task-aware prompt routing for task and subtask IDs.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
-- [CLI Reference](docs/usage.md)
-- CLI Help: `ace-prompt-prep --help`
+- [CLI Usage Reference](docs/usage.md)
+- [Handbook Reference](docs/handbook.md)
+- Command help: `ace-prompt-prep --help`
+
+## Agent Skills
+
+- `as-prompt-prep` (package-owned canonical skill)
 
 ## Part of ACE
 
-Part of the ACE package ecosystem for agent-aware developer tooling.
+`ace-prompt-prep` is part of [ACE](../README.md) (Agentic Coding Environment).
