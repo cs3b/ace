@@ -1,14 +1,15 @@
-<h1 align="center">ace-llm-providers-cli</h1>
+<div align="center">
+  <h1> ACE - LLM Providers CLI </h1>
 
-<p align="center">
+  CLI-backed provider adapters that extend ace-llm with local tool execution.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-llm-providers-cli"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-llm-providers-cli.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  CLI-backed provider adapters that extend ace-llm with local tool execution.
-</p>
+</div>
 
 [ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md)
 
@@ -37,3 +38,4 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+
