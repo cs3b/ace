@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-23
+
+### Changed
+- Updated gemspec description to include Gemini CLI, OpenCode, and pi-agent alongside Claude Code and Codex.
+- Removed scaffolding boilerplate comment from gemspec.
+
 ## [0.26.2] - 2026-03-23
 
 ### Changed
