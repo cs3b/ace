@@ -37,10 +37,5 @@
 
 **Compose assignments from templates** - use `/as-assign-compose` and `/as-assign-prepare` to build assignment plans from reusable patterns, then pair with [ace-task](../ace-task) for task lifecycle, [ace-bundle](../ace-bundle) for context loading, and [ace-review](../ace-review) for quality checks.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
