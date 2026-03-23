@@ -2,7 +2,7 @@
 
 module Ace
   module B36ts
-  module Commands
+    module Commands
       # Command to decode a compact ID to a timestamp
       #
       # @example Usage
@@ -26,18 +26,18 @@ module Ace
 
             # Use split decoding for hierarchical paths, otherwise auto-detect
             time = if options[:split] || contains_split_separator?(compact_id)
-                     Atoms::CompactIdEncoder.decode_path(
-                       compact_id,
-                       year_zero: config[:year_zero],
-                       alphabet: config[:alphabet]
-                     )
-                   else
-                     Atoms::CompactIdEncoder.decode_auto(
-                       compact_id,
-                       year_zero: config[:year_zero],
-                       alphabet: config[:alphabet]
-                     )
-                   end
+              Atoms::CompactIdEncoder.decode_path(
+                compact_id,
+                year_zero: config[:year_zero],
+                alphabet: config[:alphabet]
+              )
+            else
+              Atoms::CompactIdEncoder.decode_auto(
+                compact_id,
+                year_zero: config[:year_zero],
+                alphabet: config[:alphabet]
+              )
+            end
 
             output = format_output(time, options[:format])
             puts output
@@ -45,7 +45,7 @@ module Ace
           rescue ArgumentError => e
             warn "Error: #{e.message}"
             raise
-          rescue StandardError => e
+          rescue => e
             warn "Error decoding compact ID: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::B36ts.debug?
             raise
@@ -99,6 +99,6 @@ module Ace
           end
         end
       end
-  end
+    end
   end
 end

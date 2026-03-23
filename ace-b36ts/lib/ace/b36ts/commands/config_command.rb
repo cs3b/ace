@@ -2,7 +2,7 @@
 
 module Ace
   module B36ts
-  module Commands
+    module Commands
       # Command to display current configuration
       #
       # @example Usage
@@ -40,7 +40,7 @@ module Ace
             end
 
             0
-          rescue StandardError => e
+          rescue => e
             warn "Error displaying config: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::B36ts.debug?
             raise
@@ -50,4 +50,3 @@ module Ace
     end
   end
 end
-

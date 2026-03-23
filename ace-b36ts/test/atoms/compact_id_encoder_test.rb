@@ -4,7 +4,7 @@ require_relative "../test_helper"
 
 module Ace
   module B36ts
-  module Atoms
+    module Atoms
       class CompactIdEncoderTest < Minitest::Test
         def setup
           @encoder = CompactIdEncoder
@@ -464,7 +464,7 @@ module Ace
             Time.utc(2025, 3, 15),
             Time.utc(2025, 6, 30),
             Time.utc(2025, 12, 25),
-            Time.utc(2028, 2, 29),  # Leap year
+            Time.utc(2028, 2, 29)  # Leap year
           ]
 
           dates.each do |time|

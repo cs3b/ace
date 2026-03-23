@@ -5,7 +5,7 @@ require "time"
 
 module Ace
   module B36ts
-  module Commands
+    module Commands
       # Command to encode a timestamp to a compact ID
       #
       # @example Usage
@@ -89,7 +89,7 @@ module Ace
           rescue ArgumentError => e
             warn "Error: #{e.message}"
             raise
-          rescue StandardError => e
+          rescue => e
             warn "Error encoding timestamp: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::B36ts.debug?
             raise
@@ -154,8 +154,8 @@ module Ace
           def parse_split_levels(levels)
             list = levels.is_a?(String) ? levels.split(",") : Array(levels)
             list.map { |level| level.to_s.strip }
-                .reject(&:empty?)
-                .map(&:to_sym)
+              .reject(&:empty?)
+              .map(&:to_sym)
           end
 
           # Display split output in key/value format
@@ -172,9 +172,8 @@ module Ace
             lines << "full: #{output[:full]}"
             puts lines.join("\n")
           end
-
         end
       end
-  end
+    end
   end
 end
