@@ -1,66 +1,29 @@
-# ace-support-items
+<div align="center">
+  <h1> ACE - Support Items </h1>
 
-Shared item management infrastructure for ACE gems -- directory scanning, ID resolution, and slug sanitization.
+  Shared primitives for scanning, resolving, and sanitizing ACE item stores.
 
-## Overview
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-`ace-support-items` provides reusable item-management primitives for ACE packages such as `ace-task`
-and `ace-idea`.
+  <a href="https://rubygems.org/gems/ace-support-items"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-items.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It standardizes directory scanning, shortcut resolution, and slug sanitization for b36ts-based item
-stores while keeping CLI field parsing and special-folder detection consistent across tools.
+</div>
 
-## Installation
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-Add to your gemspec:
+[Documentation](#documentation)
+`ace-support-items` standardizes directory scanning, shortcut resolution, and slug handling for ACE item workflows. It provides the low-level store operations that packages like [ace-task](../ace-task) and [ace-retro](../ace-retro) build their item management on.
 
-```ruby
-spec.add_dependency "ace-support-items", "~> 0.15"
-```
+## Use Cases
 
-## Core Components
+**Parse and resolve ACE task/idea shortcuts** - map compact IDs to canonical b36ts item paths, powering the shorthand lookups in [ace-task](../ace-task).
 
-- **`DirectoryScanner`** - Recursively scans item directories, returns `ScanResult` objects
-- **`ShortcutResolver`** - Resolves 3-char suffix shortcuts to full 6-char b36ts IDs
-- **`SlugSanitizer`** - Strict kebab-case slug sanitization for filesystem safety
-- **`FieldArgumentParser`** - Parses `key=value` CLI arguments with type inference
-- **`SpecialFolderDetector`** - Recognizes `_archive`, `_maybe`, `_anytime`, `_next` folders
+**Handle special item directories consistently** - support shared folder conventions across tools so scanners in [ace-retro](../ace-retro) and [ace-task](../ace-task) discover items the same way.
 
-## Item Directory Convention
+**Normalize metadata safely** - sanitize slugs and arguments before persistence, preventing malformed entries in item stores.
 
-Items follow this convention:
+---
 
-```
-.ace-ideas/
-  8ppq7w-dark-mode-support/
-    8ppq7w-dark-mode-support.idea.s.md
-  _maybe/
-    9xzr1k-some-idea/
-      9xzr1k-some-idea.idea.s.md
-```
-
-## Basic Usage
-
-```ruby
-require "ace/support/items"
-
-# Scan for items
-scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(
-  ".ace-ideas",
-  file_pattern: "*.idea.s.md"
-)
-results = scanner.scan
-
-# Resolve shortcut
-resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results)
-result = resolver.resolve("q7w")  # Matches ID ending in "q7w"
-```
-
-## Part of ACE
-
-`ace-support-items` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit
-for agent-assisted development.
-
-## License
-
-MIT
+Part of [ACE](https://github.com/cs3b/ace)

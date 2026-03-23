@@ -1,65 +1,35 @@
-# ace-support-cli
+<div align="center">
+  <h1> ACE - Support CLI </h1>
 
-Command metadata DSL, parser, registry, and runner primitives for ace-* CLIs.
+  Shared command primitives for consistent ACE CLI behavior.
 
-## Overview
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
-`ace-support-cli` provides the shared command framework used across ACE gems.
+  <a href="https://rubygems.org/gems/ace-support-cli"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-cli.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-It includes:
+</div>
 
-- A command DSL for describing command metadata and arguments/options
-- Parser primitives for turning argv into typed command parameters
-- Registry-based command discovery and lookup
-- Runner primitives for executing resolved commands with consistent help/error handling
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-## Installation
+[Documentation](#documentation)
+`ace-support-cli` is the foundation layer for ACE commands, providing metadata-driven command definitions, parser behavior, and execution orchestration. Packages like [ace-llm](../ace-llm), [ace-review](../ace-review), and [ace-search](../ace-search) build their CLI surfaces on top of these shared primitives.
 
-Add to your gemspec:
+## How It Works
 
-```ruby
-spec.add_dependency "ace-support-cli", "~> 0.6"
-```
+1. Package commands extend shared `Command` base classes and define arguments/options declaratively.
+2. Parsers normalize argv into structured Ruby types and route to a command registry.
+3. Runners execute command objects with consistent help, error, and exit semantics.
 
-## Basic Usage
+## Use Cases
 
-```ruby
-require "ace/support/cli"
+**Build a new ACE CLI tool quickly** - reuse shared conventions for command declaration, option parsing, and execution so new packages like [ace-retro](../ace-retro) or [ace-sim](../ace-sim) get consistent behavior from day one.
 
-class GreetCommand < Ace::Support::Cli::Command
-  desc "Print a greeting"
-  argument :name, type: :string, required: true
-  option :upper, type: :boolean, default: false
+**Standardize command behavior across packages** - enforce predictable option parsing, help text, and exit codes for both human and agent callers.
 
-  def call(name:, upper: false)
-    message = "Hello, #{name}"
-    puts(upper ? message.upcase : message)
-    0
-  end
-end
+**Keep agent invocations safe** - preserve a stable CLI contract so coding agents can call `ace-*` tools reliably in mixed human/agent workflows.
 
-registry = Ace::Support::Cli::Registry.new
-registry.register("greet", GreetCommand)
+---
 
-exit_code = Ace::Support::Cli::Runner.new(registry).call(
-  args: ["greet", "world", "--upper"]
-)
-```
-
-## API Overview
-
-- **`Ace::Support::Cli::Command`**: Base class and DSL for command definitions
-- **`Ace::Support::Cli::Parser`**: Converts argv tokens into typed keyword args
-- **`Ace::Support::Cli::Registry`**: Registers and resolves command paths
-- **`Ace::Support::Cli::RegistryDsl`**: Adapter for module-level `register` semantics
-- **`Ace::Support::Cli::Runner`**: Executes resolved commands and handles help/errors
-- **`Ace::Support::Cli::StandardOptions`**: Shared CLI option definitions/conventions
-
-## Part of ACE
-
-`ace-support-cli` is part of [ACE](../README.md) (Agentic Coding Environment), a
-CLI-first toolkit for agent-assisted development.
-
-## License
-
-MIT
+Part of [ACE](https://github.com/cs3b/ace)
