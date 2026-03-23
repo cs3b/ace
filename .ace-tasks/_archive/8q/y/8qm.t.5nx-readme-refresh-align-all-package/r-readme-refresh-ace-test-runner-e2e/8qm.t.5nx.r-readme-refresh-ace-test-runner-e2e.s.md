@@ -1,6 +1,6 @@
 ---
 id: 8qm.t.5nx.r
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-03-23 10:12:00"
 estimate: 
