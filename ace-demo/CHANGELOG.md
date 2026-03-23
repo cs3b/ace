@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` with the new package layout pattern, including top-level docs navigation, use-case-led content, and quick-start commands.
+
+### Technical
+- Added setup-doc discoverability in README navigation and aligned package footer/handbook labels with current ACE conventions.
+
 ## [0.17.3] - 2026-03-22
 
 ### Fixed
