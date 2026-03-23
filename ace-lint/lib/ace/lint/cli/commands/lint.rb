@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require "ace/support/cli"
 require_relative "../../atoms/validator_registry"
 require_relative "../../organisms/lint_orchestrator"
 require_relative "../../organisms/result_reporter"

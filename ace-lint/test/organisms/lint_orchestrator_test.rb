@@ -37,7 +37,7 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     MARKDOWN
 
     orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
-    results = orchestrator.lint_files([skill_file], options: { fix: true })
+    results = orchestrator.lint_files([skill_file], options: {fix: true})
 
     assert_equal 1, results.size
     # The result should have been processed (not skipped)
@@ -59,7 +59,7 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     MARKDOWN
 
     orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
-    results = orchestrator.lint_files([workflow_file], options: { fix: true })
+    results = orchestrator.lint_files([workflow_file], options: {fix: true})
 
     assert_equal 1, results.size
     result = results.first
@@ -79,7 +79,7 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     MARKDOWN
 
     orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
-    results = orchestrator.lint_files([agent_file], options: { fix: true })
+    results = orchestrator.lint_files([agent_file], options: {fix: true})
 
     assert_equal 1, results.size
     result = results.first
@@ -106,7 +106,7 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     MARKDOWN
 
     orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
-    results = orchestrator.lint_files([skill_file], options: { format: true })
+    results = orchestrator.lint_files([skill_file], options: {format: true})
 
     assert_equal 1, results.size
     result = results.first

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "date"
-require "set"
 require "yaml"
 
 require_relative "../atoms/validator_registry"

@@ -121,7 +121,7 @@ module Ace
           require "ace/support/config"
           config = Ace::Support::Config.create.resolve_namespace("docs").to_h
           Ace::Core::Molecules::FrontmatterFreePolicy.patterns(config: config)
-        rescue StandardError
+        rescue
           Ace::Core::Molecules::FrontmatterFreePolicy::DEFAULT_PATTERNS
         end
         private_class_method :frontmatter_free_patterns

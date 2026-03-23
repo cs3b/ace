@@ -221,10 +221,6 @@ module Ace
           end
 
           # Subclass interface methods - must be implemented
-          def command_name
-            raise NotImplementedError, "Subclass must implement command_name"
-          end
-
           def tool_name
             raise NotImplementedError, "Subclass must implement tool_name"
           end
