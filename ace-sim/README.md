@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-sim demo](docs/demo/ace-sim-run.gif)
 
 `ace-sim` executes preset-driven simulation steps (draft, plan, work) across one or more providers via [ace-llm](../ace-llm), then optionally synthesizes suggestions and revised source artifacts for follow-up work. Use `/as-sim-run` to launch simulations from inside a coding agent.
