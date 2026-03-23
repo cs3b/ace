@@ -19,7 +19,7 @@ module Ace
         end
 
         def record(name:, commands:, format: "gif", output: nil, description: nil, tags: nil,
-                   font_size: 16, width: 960, height: 480, timeout: "2s")
+          font_size: 16, width: 960, height: 480, timeout: "2s")
           safe_name = Atoms::DemoNameSanitizer.sanitize(name)
           session_id = generate_session_id
           session_dir = File.expand_path(File.join(@output_dir, session_id), Dir.pwd)
@@ -48,7 +48,7 @@ module Ace
           )
           @executor.run(cmd)
 
-          { output_path: output_path, tape_path: tape_path, session_dir: session_dir }
+          {output_path: output_path, tape_path: tape_path, session_dir: session_dir}
         end
 
         private

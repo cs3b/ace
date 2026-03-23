@@ -36,7 +36,7 @@ class DemoSandboxBuilderTest < AceDemoTestCase
 
     Ace::B36ts.stub(:now, "def456") do
       error = assert_raises(RuntimeError) do
-        builder.build(source_tape_path: @tape_path, setup_steps: [{ "run" => "exit 2" }])
+        builder.build(source_tape_path: @tape_path, setup_steps: [{"run" => "exit 2"}])
       end
 
       assert_includes error.message, "Sandbox setup failed for"

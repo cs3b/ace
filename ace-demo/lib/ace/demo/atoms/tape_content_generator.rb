@@ -7,7 +7,7 @@ module Ace
         module_function
 
         def generate(name:, commands:, description: nil, tags: nil, output_path: nil,
-                     font_size: 16, width: 960, height: 480, timeout: "2s")
+          font_size: 16, width: 960, height: 480, timeout: "2s")
           lines = []
 
           lines << "# Description: #{description}" if description
@@ -22,7 +22,7 @@ module Ace
           lines << "Set Height #{height}"
 
           commands.each do |cmd|
-            escaped = cmd.gsub('\\', '\\\\\\\\').gsub('"', '\\"')
+            escaped = cmd.gsub("\\", "\\\\\\\\").gsub('"', '\\"')
             lines << ""
             lines << "Type \"#{escaped}\""
             lines << "Enter"

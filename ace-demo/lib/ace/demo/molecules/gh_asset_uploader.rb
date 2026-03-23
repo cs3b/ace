@@ -24,7 +24,7 @@ module Ace
           if dry_run
             repo = ENV.fetch("GITHUB_REPOSITORY", "OWNER/REPO")
             asset_url = "https://github.com/#{repo}/releases/download/#{RELEASE_TAG}/#{asset_name}"
-            return { asset_name: asset_name, asset_url: asset_url, dry_run: true }
+            return {asset_name: asset_name, asset_url: asset_url, dry_run: true}
           end
 
           repo = repo_name_with_owner
@@ -38,7 +38,7 @@ module Ace
             run_gh!("release", "upload", RELEASE_TAG, upload_path, "--clobber")
           end
 
-          { asset_name: asset_name, asset_url: asset_url, dry_run: false }
+          {asset_name: asset_name, asset_url: asset_url, dry_run: false}
         end
 
         private
@@ -79,7 +79,7 @@ module Ace
           raise_auth_if_needed!(stderr)
           return if status.success?
 
-          raise GhUploadError, "gh #{args.join(' ')} failed: #{stderr.strip}"
+          raise GhUploadError, "gh #{args.join(" ")} failed: #{stderr.strip}"
         end
 
         def raise_auth_if_needed!(stderr)

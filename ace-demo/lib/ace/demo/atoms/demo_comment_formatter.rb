@@ -8,10 +8,10 @@ module Ace
           timestamp = recorded_at.strftime("%Y-%m-%d %H:%M:%S")
 
           media_line = if format == "gif"
-                         "![Demo](#{asset_url})"
-                       else
-                         "[#{demo_name}.#{format}](#{asset_url})"
-                       end
+            "![Demo](#{asset_url})"
+          else
+            "[#{demo_name}.#{format}](#{asset_url})"
+          end
 
           <<~MARKDOWN.strip
             ## Demo: #{demo_name}

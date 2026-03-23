@@ -30,13 +30,13 @@ module Ace
             )
           end
 
-          { id: sandbox_id, path: sandbox_path, warnings: warnings }
+          {id: sandbox_id, path: sandbox_path, warnings: warnings}
         rescue ArgumentError
           cleanup_failed_sandbox(sandbox_path)
           raise
-        rescue StandardError => e
+        rescue => e
           cleanup_failed_sandbox(sandbox_path)
-          raise RuntimeError, "Sandbox setup failed for #{sandbox_path}: #{e.message}"
+          raise "Sandbox setup failed for #{sandbox_path}: #{e.message}"
         end
 
         private
@@ -58,11 +58,11 @@ module Ace
           when Hash
             run = step["run"] || step[:run]
             unless run
-              raise ArgumentError, "Unknown setup directive #{step.inspect}. Valid: #{VALID_SETUP_DIRECTIVES.join(', ')}"
+              raise ArgumentError, "Unknown setup directive #{step.inspect}. Valid: #{VALID_SETUP_DIRECTIVES.join(", ")}"
             end
             run_shell(run.to_s, chdir: sandbox_path)
           else
-            raise ArgumentError, "Unknown setup directive #{step.inspect}. Valid: #{VALID_SETUP_DIRECTIVES.join(', ')}"
+            raise ArgumentError, "Unknown setup directive #{step.inspect}. Valid: #{VALID_SETUP_DIRECTIVES.join(", ")}"
           end
         end
 
@@ -100,14 +100,14 @@ module Ace
           _stdout, stderr, status = Open3.capture3("bash", "-lc", command, chdir: chdir)
           return if status.success?
 
-          raise RuntimeError, "Setup command failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
+          raise "Setup command failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
         end
 
         def run_command(args, chdir:)
           _stdout, stderr, status = Open3.capture3(*args, chdir: chdir)
           return if status.success?
 
-          raise RuntimeError, "Setup command failed (exit #{status.exitstatus}): #{args.join(' ')}\n#{stderr}"
+          raise "Setup command failed (exit #{status.exitstatus}): #{args.join(" ")}\n#{stderr}"
         end
 
         def cleanup_failed_sandbox(sandbox_path)

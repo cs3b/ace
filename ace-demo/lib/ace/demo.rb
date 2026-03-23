@@ -50,7 +50,7 @@ module Ace
 
     def self.gem_root
       @gem_root ||= Gem.loaded_specs["ace-demo"]&.gem_dir ||
-                    File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
     end
 
     def self.config
@@ -75,7 +75,7 @@ module Ace
       )
 
       resolver.resolve_namespace("demo").data
-    rescue StandardError => e
+    rescue => e
       warn "ace-demo config load failed (#{e.class}): #{e.message}. Using defaults."
       {}
     end

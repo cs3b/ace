@@ -12,7 +12,7 @@ module Ace
         end
 
         def post(pr:, comment_body:, dry_run: false)
-          return { dry_run: true } if dry_run
+          return {dry_run: true} if dry_run
 
           Tempfile.create(["ace-demo-pr-comment", ".md"]) do |file|
             file.write(comment_body)
@@ -28,7 +28,7 @@ module Ace
             end
           end
 
-          { dry_run: false, posted: true }
+          {dry_run: false, posted: true}
         end
 
         private
@@ -42,9 +42,9 @@ module Ace
         def raise_auth_if_needed!(stderr)
           text = stderr.to_s.downcase
           return unless text.include?("gh auth login") ||
-                        text.include?("not logged into any github hosts") ||
-                        text.include?("authentication required") ||
-                        text.include?("authentication token")
+            text.include?("not logged into any github hosts") ||
+            text.include?("authentication required") ||
+            text.include?("authentication token")
 
           raise GhAuthenticationError, "gh CLI not authenticated. Run: gh auth login"
         end

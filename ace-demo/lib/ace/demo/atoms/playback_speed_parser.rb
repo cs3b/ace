@@ -20,9 +20,9 @@ module Ace
           return nil if normalized.empty?
 
           factor = SPEED_FACTORS[normalized]
-          raise ArgumentError, "Invalid playback speed: #{value}. Use one of: #{SPEED_FACTORS.keys.join(', ')}." unless factor
+          raise ArgumentError, "Invalid playback speed: #{value}. Use one of: #{SPEED_FACTORS.keys.join(", ")}." unless factor
 
-          { label: normalized, factor: factor }
+          {label: normalized, factor: factor}
         end
       end
     end

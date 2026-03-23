@@ -7,17 +7,15 @@ require "tmpdir"
 class CliTest < AceDemoTestCase
   def invoke(args)
     stdout, stderr = capture_io do
-      begin
-        @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
-      rescue SystemExit => e
-        @result = e.status
-      rescue Ace::Support::Cli::Error => e
-        $stderr.puts e.message
-        @result = e.exit_code
-      end
+      @result = Ace::Support::Cli::Runner.new(Ace::Demo::CLI).call(args: args)
+    rescue SystemExit => e
+      @result = e.status
+    rescue Ace::Support::Cli::Error => e
+      warn e.message
+      @result = e.exit_code
     end
 
-    { stdout: stdout, stderr: stderr, result: @result }
+    {stdout: stdout, stderr: stderr, result: @result}
   end
 
   def test_help_lists_record_command
@@ -250,7 +248,7 @@ class CliTest < AceDemoTestCase
 
     Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
       Ace::Demo::Molecules::MediaRetimer.stub(:new, fake_retimer) do
-        Ace::Demo.stub(:config, { "record" => { "postprocess" => { "playback_speed" => "8x" } } }) do
+        Ace::Demo.stub(:config, {"record" => {"postprocess" => {"playback_speed" => "8x"}}}) do
           result = invoke(["record", "hello"])
           assert_includes result[:stdout], "Retimed: .ace-local/demo/hello-8x.gif (8x)"
           assert_equal "8x", fake_retimer.speed
@@ -320,9 +318,9 @@ class CliTest < AceDemoTestCase
 
     Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
       result = invoke(["record", "my-demo", "--format", "mp4", "--timeout", "3s",
-                       "--width", "1200", "--height", "600", "--font-size", "20",
-                       "--desc", "A test", "--tags", "ci,test",
-                       "--", "echo hello"])
+        "--width", "1200", "--height", "600", "--font-size", "20",
+        "--desc", "A test", "--tags", "ci,test",
+        "--", "echo hello"])
       assert_includes result[:stdout], "Recorded:"
       assert_equal "mp4", fake_inline.recorded_args[:format]
       assert_equal "3s", fake_inline.recorded_args[:timeout]
@@ -435,8 +433,8 @@ class CliTest < AceDemoTestCase
     fake_scanner = Class.new do
       def list
         [
-          { name: "hello", description: "Built-in echo demo", source: ".ace-defaults/demo/tapes/" },
-          { name: "quick-check", description: "Project quick check demo", source: ".ace/demo/tapes/" }
+          {name: "hello", description: "Built-in echo demo", source: ".ace-defaults/demo/tapes/"},
+          {name: "quick-check", description: "Project quick check demo", source: ".ace/demo/tapes/"}
         ]
       end
     end.new

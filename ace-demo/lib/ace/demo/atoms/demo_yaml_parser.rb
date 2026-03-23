@@ -26,7 +26,7 @@ module Ace
           unless unknown_keys.empty?
             allowed = ALLOWED_ROOT_KEYS.join(", ")
             raise DemoYamlParseError,
-                  "Unknown top-level keys in #{source_path}: #{unknown_keys.join(', ')}. Allowed: #{allowed}"
+              "Unknown top-level keys in #{source_path}: #{unknown_keys.join(", ")}. Allowed: #{allowed}"
           end
 
           spec = {
@@ -91,9 +91,9 @@ module Ace
               normalized = item.transform_keys(&:to_s)
               unless normalized.key?("run")
                 raise DemoYamlParseError,
-                      "#{section}[#{index}] must be a string directive or a map with run: in #{source_path}"
+                  "#{section}[#{index}] must be a string directive or a map with run: in #{source_path}"
               end
-              { "run" => normalized["run"].to_s }
+              {"run" => normalized["run"].to_s}
             else
               raise DemoYamlParseError, "#{section} entries must be string or map in #{source_path}"
             end
@@ -111,7 +111,7 @@ module Ace
             commands = scene["commands"]
             unless commands.is_a?(Array) && !commands.empty?
               raise DemoYamlParseError,
-                    "scenes[#{scene_index}].commands must be a non-empty array in #{source_path}"
+                "scenes[#{scene_index}].commands must be a non-empty array in #{source_path}"
             end
 
             {
@@ -127,13 +127,13 @@ module Ace
         def normalize_command(command, scene_index, command_index, source_path:)
           unless command.is_a?(Hash)
             raise DemoYamlParseError,
-                  "scenes[#{scene_index}].commands[#{command_index}] must be a map in #{source_path}"
+              "scenes[#{scene_index}].commands[#{command_index}] must be a map in #{source_path}"
           end
 
           type = command["type"]&.to_s
           if type.nil? || type.strip.empty?
             raise DemoYamlParseError,
-                  "scenes[#{scene_index}].commands[#{command_index}].type is required in #{source_path}"
+              "scenes[#{scene_index}].commands[#{command_index}].type is required in #{source_path}"
           end
 
           {

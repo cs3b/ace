@@ -68,7 +68,7 @@ class DemoRecorderTest < AceDemoTestCase
     def build(source_tape_path:, setup_steps:)
       @source_tape_path = source_tape_path
       @setup_steps = setup_steps
-      { id: "abc123", path: @sandbox_path, warnings: [] }
+      {id: "abc123", path: @sandbox_path, warnings: []}
     end
   end
 
@@ -112,7 +112,7 @@ class DemoRecorderTest < AceDemoTestCase
     File.write(resolver.resolve("hello"), "output /tmp/hello.gif\n")
     executor = StubExecutor.new
 
-    Ace::Demo.stub(:config, { "output_dir" => "tmp/demo-out", "vhs_bin" => "vhs-custom" }) do
+    Ace::Demo.stub(:config, {"output_dir" => "tmp/demo-out", "vhs_bin" => "vhs-custom"}) do
       recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor)
       output = recorder.record(tape_ref: "hello", format: "gif")
 
@@ -151,10 +151,10 @@ class DemoRecorderTest < AceDemoTestCase
     resolver = StubResolver.new(yaml_path)
     executor = StubExecutor.new
     parser = StubYamlParser.new(
-      "settings" => { "format" => "gif" },
+      "settings" => {"format" => "gif"},
       "setup" => ["sandbox", "copy-fixtures"],
       "teardown" => ["cleanup"],
-      "scenes" => [{ "name" => "Main flow", "commands" => [{ "type" => "echo ok", "sleep" => "1s" }] }]
+      "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
     )
     compiler = StubYamlCompiler.new
     sandbox_builder = StubSandboxBuilder.new(sandbox_path)
@@ -192,10 +192,10 @@ class DemoRecorderTest < AceDemoTestCase
       resolver: StubResolver.new(yaml_path),
       executor: FailingExecutor.new,
       yaml_parser: StubYamlParser.new(
-        "settings" => { "format" => "gif" },
+        "settings" => {"format" => "gif"},
         "setup" => ["sandbox"],
         "teardown" => ["cleanup"],
-        "scenes" => [{ "name" => "Main flow", "commands" => [{ "type" => "echo ok", "sleep" => "1s" }] }]
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
       ),
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),

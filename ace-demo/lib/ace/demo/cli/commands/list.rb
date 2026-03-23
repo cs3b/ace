@@ -22,10 +22,10 @@ module Ace
             tapes.each do |item|
               description = item[:description].to_s.strip
               description = "(no description)" if description.empty?
-              format_label = item[:format] == "yaml" ? "yaml" : "tape"
+              format_label = (item[:format] == "yaml") ? "yaml" : "tape"
               puts format("  %-#{width}s  %-5s  %-40s  (%s)", item[:name], format_label, description, item[:source])
             end
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error, e.message
           end
         end

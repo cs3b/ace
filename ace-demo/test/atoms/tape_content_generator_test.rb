@@ -38,8 +38,8 @@ class TapeContentGeneratorTest < AceDemoTestCase
 
     assert_includes content, 'Type "git status"'
     assert_includes content, 'Type "make deploy"'
-    assert_equal 2, content.scan(/Enter/).length
-    assert_equal 2, content.scan(/Sleep 2s/).length
+    assert_equal 2, content.scan("Enter").length
+    assert_equal 2, content.scan("Sleep 2s").length
   end
 
   def test_uses_custom_settings

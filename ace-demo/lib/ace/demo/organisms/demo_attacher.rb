@@ -5,9 +5,9 @@ module Ace
     module Organisms
       class DemoAttacher
         def initialize(uploader: Molecules::GhAssetUploader.new,
-                       formatter: Atoms::DemoCommentFormatter,
-                       poster: Molecules::DemoCommentPoster.new,
-                       clock: -> { Time.now })
+          formatter: Atoms::DemoCommentFormatter,
+          poster: Molecules::DemoCommentPoster.new,
+          clock: -> { Time.now })
           @uploader = uploader
           @formatter = formatter
           @poster = poster
