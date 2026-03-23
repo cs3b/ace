@@ -73,7 +73,7 @@ module Ace
           {
             "total" => skills.size,
             "by_source" => counts.keys.sort.map do |source|
-              { "source" => source, "count" => counts.fetch(source) }
+              {"source" => source, "count" => counts.fetch(source)}
             end
           }
         end
@@ -152,7 +152,7 @@ module Ace
         def selected_providers(provider)
           selected = provider ? [provider.to_s] : registry.providers
           unknown = selected.reject { |provider_id| registry.known?(provider_id) }
-          raise ArgumentError, "Unknown provider: #{unknown.join(', ')}" if unknown.any?
+          raise ArgumentError, "Unknown provider: #{unknown.join(", ")}" if unknown.any?
 
           selected
         end

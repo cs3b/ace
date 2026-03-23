@@ -26,7 +26,7 @@ module Ace
                    "(#{result[:projected_skills]} skills, #{result[:updated_files]} updated, " \
                    "#{result[:removed_entries]} removed)"
             end
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
         end
