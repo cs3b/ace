@@ -1,51 +1,51 @@
 # ace-sim
 
-`ace-sim` runs **multi-provider simulation chains** over project tasks and ideas so teams can compare perspectives before deciding on a direction.
+Run multi-provider simulation chains for ideas and task specs before implementation.
+
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
 
 ![ace-sim getting started](docs/demo/ace-sim-run.gif)
 
-Multi-provider LLM simulations for validating ideas and reviewing tasks
+`ace-sim` executes preset-driven simulation steps (`draft`, `plan`, `work`) across one or more providers, then
+optionally synthesizes suggestions and revised source artifacts for follow-up work.
 
-## Why
+## Use Cases
 
-`ace-sim` gives you structured, repeatable simulation runs when you need:
-- Alternative model reasoning before committing to a plan
-- A review lens on tasks before work starts
-- Confidence that assumptions were tested across multiple providers
+**Validate ideas before committing to implementation** - run `validate-idea` to compare model reasoning and stress-test
+assumptions from a single source file.
+
+**Review task specs before coding starts** - run `validate-task` to inspect plan/work outputs across providers and
+iteration counts.
+
+**Compare provider behavior under the same workflow** - use repeated `--provider` and `--repeat` options to evaluate
+consistency and convergence in simulation outputs.
 
 ## Works With
 
-- `ace-sim` simulation presets (`validate-idea`, `validate-task`)
-- `ace-bundle` for source collection and context assembly
-- `ace-llm` for step-level provider execution
-- `ace-review` for applying synthesized recommendations
-- `ace-task` and `ace-assign` workflows
-
-## Agent Skills
-
-- `as-sim-run`
+- **[ace-bundle](../ace-bundle)** for source collection and context assembly before simulation chains run.
+- **[ace-llm](../ace-llm)** for provider execution across chain steps and final synthesis flows.
+- **[ace-task](../ace-task)** and **[ace-assign](../ace-assign)** for task-centered simulation and validation loops.
+- **[ace-review](../ace-review)** for post-simulation recommendation review workflows.
 
 ## Features
 
-- Multi-provider chains with repeatable execution and provider overrides
-- Preset-driven behavior for idea validation and task review
-- File-chained steps (`draft`, `plan`, `work`) for progressive refinement
-- Final synthesis aggregation into actionable suggestions and revised source
+- Preset-driven simulation (`validate-idea`, `validate-task`) with configurable step sequences.
+- Multi-provider and repeat-aware execution via `--provider` and `--repeat`.
+- Optional step override support with `--steps` for focused runs.
+- Optional synthesis + writeback controls (`--synthesis-workflow`, `--synthesis-provider`, `--writeback`).
+- Deterministic run artifacts under `.ace-local/sim/simulations/<run-id>/` for traceable review.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
 - [CLI Usage Reference](docs/usage.md)
-- [Handbook Catalog](docs/handbook.md)
-- `ace-sim` command reference in this package documentation
+- [Handbook Reference](docs/handbook.md)
+- Command help: `ace-sim --help`
+
+## Agent Skills
+
+- `as-sim-run`
 
 ## Part of ACE
 
-`ace-sim` is part of [ACE](../README.md): practical tooling for humans and AI working together.
-
-## Additional Context
-
-- Runs are deterministic and stored under `.ace-local/sim/simulations`.
-- Each run can be repeated with different providers and repeat counts.
-- Presets can be reused across team workflows and CI.
-- Agent-friendly output is designed for both manual review and automation.
+`ace-sim` is part of [ACE](../README.md) (Agentic Coding Environment).

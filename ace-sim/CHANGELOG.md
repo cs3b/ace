@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` to align with the current package layout pattern, including top-level docs navigation, use-case framing, integration links, and updated feature wording.
+
 ## [0.11.1] - 2026-03-22
 
 ### Fixed
