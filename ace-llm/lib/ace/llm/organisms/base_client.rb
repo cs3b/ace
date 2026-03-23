@@ -124,7 +124,7 @@ module Ace
         # @return [Array<Hash>] Formatted messages
         def build_messages(messages)
           if messages.is_a?(String)
-            [{ role: "user", content: messages }]
+            [{role: "user", content: messages}]
           elsif messages.is_a?(Array)
             messages
           else
@@ -160,7 +160,7 @@ module Ace
         def concatenate_system_prompts(base_content, append_content)
           # Return nil if both are empty
           return nil if (base_content.nil? || base_content.empty?) &&
-                       (append_content.nil? || append_content.empty?)
+            (append_content.nil? || append_content.empty?)
 
           # Return base if append is empty
           return base_content if append_content.nil? || append_content.empty?
@@ -192,7 +192,7 @@ module Ace
             processed[system_index][:content] = concatenate_system_prompts(existing_content, system_append)
           else
             # Add new system message at the beginning
-            processed.unshift({ role: "system", content: system_append })
+            processed.unshift({role: "system", content: system_append})
           end
 
           processed

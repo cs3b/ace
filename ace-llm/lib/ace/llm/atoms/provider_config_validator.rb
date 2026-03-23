@@ -102,14 +102,14 @@ module Ace
 
             expected_types = Array(OPTIONAL_FIELDS[field])
             unless expected_types.any? { |type| value.is_a?(type) }
-              errors << "Field '#{field}' must be #{expected_types.join(' or ')}, got #{value.class}"
+              errors << "Field '#{field}' must be #{expected_types.join(" or ")}, got #{value.class}"
             end
           end
 
           # Warn about unknown fields
           unknown_fields = config.keys - REQUIRED_FIELDS - OPTIONAL_FIELDS.keys
           unless unknown_fields.empty?
-            warnings << "Unknown fields in configuration: #{unknown_fields.join(', ')}"
+            warnings << "Unknown fields in configuration: #{unknown_fields.join(", ")}"
           end
         end
 
@@ -155,7 +155,7 @@ module Ace
             unknown_keys = api_key_config.keys - valid_keys
 
             unless unknown_keys.empty?
-              warnings << "Unknown API key configuration keys: #{unknown_keys.join(', ')}"
+              warnings << "Unknown API key configuration keys: #{unknown_keys.join(", ")}"
             end
 
             # Must have either env or value
@@ -182,14 +182,13 @@ module Ace
           invalid_capabilities = capabilities - VALID_CAPABILITIES
 
           unless invalid_capabilities.empty?
-            warnings << "Unknown capabilities: #{invalid_capabilities.join(', ')}. " \
-                      "Valid capabilities: #{VALID_CAPABILITIES.join(', ')}"
+            warnings << "Unknown capabilities: #{invalid_capabilities.join(", ")}. " \
+                      "Valid capabilities: #{VALID_CAPABILITIES.join(", ")}"
           end
         end
 
         # Validate default options
         def validate_default_options(options, warnings)
-
           # Validate temperature range
           if options["temperature"]
             temp = options["temperature"]
@@ -226,32 +225,32 @@ module Ace
           valid_sections = %w[global model]
           unknown_sections = aliases.keys - valid_sections
           unless unknown_sections.empty?
-            warnings << "Unknown alias sections: #{unknown_sections.join(', ')}. Valid sections: global, model"
+            warnings << "Unknown alias sections: #{unknown_sections.join(", ")}. Valid sections: global, model"
           end
 
           # Validate global aliases if present
           if aliases["global"]
-            unless aliases["global"].is_a?(Hash)
-              errors << "Global aliases must be a Hash, got #{aliases["global"].class}"
-            else
+            if aliases["global"].is_a?(Hash)
               aliases["global"].each do |key, value|
                 unless value.is_a?(String)
                   errors << "Global alias '#{key}' must be a String, got #{value.class}"
                 end
               end
+            else
+              errors << "Global aliases must be a Hash, got #{aliases["global"].class}"
             end
           end
 
           # Validate model aliases if present
           if aliases["model"]
-            unless aliases["model"].is_a?(Hash)
-              errors << "Model aliases must be a Hash, got #{aliases["model"].class}"
-            else
+            if aliases["model"].is_a?(Hash)
               aliases["model"].each do |key, value|
                 unless value.is_a?(String)
                   errors << "Model alias '#{key}' must be a String, got #{value.class}"
                 end
               end
+            else
+              errors << "Model aliases must be a Hash, got #{aliases["model"].class}"
             end
           end
         end

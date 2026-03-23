@@ -63,8 +63,8 @@ module Ace
           # Convert messages to Gemini format
           contents = processed_messages.map do |msg|
             {
-              role: msg[:role] == "assistant" ? "model" : "user",
-              parts: [{ text: msg[:content] }]
+              role: (msg[:role] == "assistant") ? "model" : "user",
+              parts: [{text: msg[:content]}]
             }
           end
 

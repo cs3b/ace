@@ -75,7 +75,7 @@ class OpenRouterClientTest < AceTestCase
 
   # Test build_request_body
   def test_build_request_body_basic
-    messages = [{ role: "user", content: "Hello" }]
+    messages = [{role: "user", content: "Hello"}]
     body = @client.send(:build_request_body, messages, {})
 
     assert_equal "openai/gpt-oss-120b:nitro", body[:model]
@@ -84,22 +84,22 @@ class OpenRouterClientTest < AceTestCase
   end
 
   def test_build_request_body_with_temperature
-    messages = [{ role: "user", content: "Hello" }]
-    body = @client.send(:build_request_body, messages, { temperature: 0.5 })
+    messages = [{role: "user", content: "Hello"}]
+    body = @client.send(:build_request_body, messages, {temperature: 0.5})
 
     assert_equal 0.5, body[:temperature]
   end
 
   def test_build_request_body_with_max_tokens
-    messages = [{ role: "user", content: "Hello" }]
-    body = @client.send(:build_request_body, messages, { max_tokens: 1000 })
+    messages = [{role: "user", content: "Hello"}]
+    body = @client.send(:build_request_body, messages, {max_tokens: 1000})
 
     assert_equal 1000, body[:max_tokens]
   end
 
   def test_build_request_body_with_system_append
-    messages = [{ role: "user", content: "Hello" }]
-    body = @client.send(:build_request_body, messages, { system_append: "Be helpful" })
+    messages = [{role: "user", content: "Hello"}]
+    body = @client.send(:build_request_body, messages, {system_append: "Be helpful"})
 
     # Should add system message
     assert_equal 2, body[:messages].length
@@ -113,8 +113,11 @@ class OpenRouterClientTest < AceTestCase
     captured_headers = nil
 
     http_client = @client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_headers = headers; mock_response } do
-      body = { model: "openai/gpt-4o", messages: [] }
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_headers = headers
+      mock_response
+    } do
+      body = {model: "openai/gpt-4o", messages: []}
       @client.send(:make_api_request, body)
     end
 
@@ -131,8 +134,11 @@ class OpenRouterClientTest < AceTestCase
     captured_headers = nil
 
     http_client = client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_headers = headers; mock_response } do
-      body = { model: "openai/gpt-4o", messages: [] }
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_headers = headers
+      mock_response
+    } do
+      body = {model: "openai/gpt-4o", messages: []}
       client.send(:make_api_request, body)
     end
 
@@ -149,8 +155,11 @@ class OpenRouterClientTest < AceTestCase
     captured_headers = nil
 
     http_client = client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_headers = headers; mock_response } do
-      body = { model: "openai/gpt-4o", messages: [] }
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_headers = headers
+      mock_response
+    } do
+      body = {model: "openai/gpt-4o", messages: []}
       client.send(:make_api_request, body)
     end
 
@@ -162,8 +171,11 @@ class OpenRouterClientTest < AceTestCase
     captured_headers = nil
 
     http_client = @client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_headers = headers; mock_response } do
-      body = { model: "openai/gpt-4o", messages: [] }
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_headers = headers
+      mock_response
+    } do
+      body = {model: "openai/gpt-4o", messages: []}
       @client.send(:make_api_request, body)
     end
 
@@ -176,7 +188,7 @@ class OpenRouterClientTest < AceTestCase
     response = {
       "choices" => [
         {
-          "message" => { "content" => "Hello, world!" },
+          "message" => {"content" => "Hello, world!"},
           "finish_reason" => "stop"
         }
       ],
@@ -192,7 +204,7 @@ class OpenRouterClientTest < AceTestCase
     response = {
       "choices" => [
         {
-          "message" => { "content" => "Hello" },
+          "message" => {"content" => "Hello"},
           "finish_reason" => "stop"
         }
       ],
@@ -212,7 +224,7 @@ class OpenRouterClientTest < AceTestCase
     response = {
       "choices" => [
         {
-          "message" => { "content" => "Hello" },
+          "message" => {"content" => "Hello"},
           "finish_reason" => "stop"
         }
       ],
@@ -234,7 +246,7 @@ class OpenRouterClientTest < AceTestCase
     response = {
       "choices" => [
         {
-          "message" => { "content" => "Hello" },
+          "message" => {"content" => "Hello"},
           "finish_reason" => "stop",
           "native_finish_reason" => "end_turn"
         }
@@ -363,7 +375,7 @@ class OpenRouterClientTest < AceTestCase
 
     http_client = @client.instance_variable_get(:@http_client)
     http_client.stub :post, mock_response do
-      result = @client.generate([{ role: "user", content: "How are you?" }])
+      result = @client.generate([{role: "user", content: "How are you?"}])
       assert_equal "I'm doing well!", result[:text]
     end
   end
@@ -373,7 +385,10 @@ class OpenRouterClientTest < AceTestCase
     captured_body = nil
 
     http_client = @client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_body = body; mock_response } do
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_body = body
+      mock_response
+    } do
       @client.generate("Test", temperature: 0)
     end
 
@@ -385,7 +400,10 @@ class OpenRouterClientTest < AceTestCase
     captured_body = nil
 
     http_client = @client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_body = body; mock_response } do
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_body = body
+      mock_response
+    } do
       @client.generate("Test", frequency_penalty: 0)
     end
 
@@ -397,7 +415,10 @@ class OpenRouterClientTest < AceTestCase
     captured_body = nil
 
     http_client = @client.instance_variable_get(:@http_client)
-    http_client.stub :post, ->(url, body, headers:) { captured_body = body; mock_response } do
+    http_client.stub :post, ->(url, body, headers:) {
+      captured_body = body
+      mock_response
+    } do
       @client.generate("Test", presence_penalty: 0)
     end
 

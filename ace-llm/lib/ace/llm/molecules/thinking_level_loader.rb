@@ -18,16 +18,16 @@ module Ace
 
             if thinking_hash.nil? || thinking_hash.empty?
               raise ConfigurationError,
-                    "Thinking level '#{normalized_level}' not found for provider '#{normalized_provider}'. " \
-                    "Define .ace/llm/thinking/#{normalized_provider}/#{normalized_level}.yml"
+                "Thinking level '#{normalized_level}' not found for provider '#{normalized_provider}'. " \
+                "Define .ace/llm/thinking/#{normalized_provider}/#{normalized_level}.yml"
             end
 
             thinking_hash
           rescue ConfigurationError
             raise
-          rescue StandardError => e
+          rescue => e
             raise ConfigurationError,
-                  "Failed to load thinking level '#{normalized_level}' for provider '#{normalized_provider}': #{e.message}"
+              "Failed to load thinking level '#{normalized_level}' for provider '#{normalized_provider}': #{e.message}"
           end
 
           private
@@ -52,7 +52,7 @@ module Ace
             raise ConfigurationError, "Thinking level cannot be empty" if normalized_level.empty?
             unless ALLOWED_LEVELS.include?(normalized_level)
               raise ConfigurationError,
-                    "Unsupported thinking level '#{normalized_level}'. Supported levels: #{ALLOWED_LEVELS.join(", ")}"
+                "Unsupported thinking level '#{normalized_level}'. Supported levels: #{ALLOWED_LEVELS.join(", ")}"
             end
 
             normalized_level

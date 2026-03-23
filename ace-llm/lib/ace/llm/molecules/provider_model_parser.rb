@@ -80,8 +80,7 @@ module Ace
             return create_error_result(original_input, "Invalid target: resolved model cannot be empty")
           end
 
-          return ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
-
+          ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
         end
 
         def supported_providers
@@ -164,7 +163,7 @@ module Ace
 
         def inactive_provider?(provider)
           Ace::LLM.configuration.provider_inactive?(provider)
-        rescue StandardError
+        rescue
           false
         end
       end

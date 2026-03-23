@@ -3,7 +3,7 @@
 require "yaml"
 require "date"
 require "pathname"
-require 'ace/support/config'
+require "ace/support/config"
 require_relative "../atoms/env_reader"
 
 module Ace
@@ -34,7 +34,7 @@ module Ace
           provider_config = get_provider(provider_name)
 
           unless provider_config
-            raise ProviderError, "Unknown provider: #{provider_name}. Available providers: #{available_providers.join(', ')}"
+            raise ProviderError, "Unknown provider: #{provider_name}. Available providers: #{available_providers.join(", ")}"
           end
 
           # Load the provider's gem if needed
@@ -216,7 +216,7 @@ module Ace
             normalized_name = normalize_provider_name(config["name"])
             @providers[normalized_name] = config
           end
-        rescue StandardError => e
+        rescue => e
           warn "Error loading provider configurations: #{e.message}"
         end
 
@@ -236,7 +236,7 @@ module Ace
           @providers[provider_name] = config
         rescue Ace::Support::Config::YamlParseError => e
           warn "Error parsing provider config #{filename}: #{e.message}"
-        rescue StandardError => e
+        rescue => e
           warn "Error loading provider #{filename}: #{e.message}"
         end
 
@@ -259,7 +259,7 @@ module Ace
 
           # Try to require the gem
           begin
-            require gem_name.gsub("-", "/")
+            require gem_name.tr("-", "/")
             @loaded_gems[gem_name] = true
           rescue LoadError => e
             raise LoadError, "Cannot load provider gem '#{gem_name}': #{e.message}"

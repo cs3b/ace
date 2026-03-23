@@ -48,8 +48,8 @@ class BaseClientHelpersTest < AceTestCase
   # Test deep_copy_messages helper
   def test_deep_copy_messages
     original = [
-      { role: "system", content: "System prompt" },
-      { role: "user", content: "User message" }
+      {role: "system", content: "System prompt"},
+      {role: "user", content: "User message"}
     ]
 
     copied = @anthropic_client.send(:deep_copy_messages, original)
@@ -69,7 +69,7 @@ class BaseClientHelpersTest < AceTestCase
 
   # Test process_messages_with_system_append
   def test_process_messages_with_system_append_no_existing_system
-    messages = [{ role: "user", content: "Hello" }]
+    messages = [{role: "user", content: "Hello"}]
     result = @anthropic_client.send(:process_messages_with_system_append, messages, "System context")
 
     assert_equal 2, result.length
@@ -80,8 +80,8 @@ class BaseClientHelpersTest < AceTestCase
 
   def test_process_messages_with_system_append_with_existing_system
     messages = [
-      { role: "system", content: "Base system" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "Base system"},
+      {role: "user", content: "Hello"}
     ]
     result = @anthropic_client.send(:process_messages_with_system_append, messages, "Additional")
 
@@ -91,7 +91,7 @@ class BaseClientHelpersTest < AceTestCase
   end
 
   def test_process_messages_with_system_append_nil_append
-    messages = [{ role: "user", content: "Hello" }]
+    messages = [{role: "user", content: "Hello"}]
     result = @anthropic_client.send(:process_messages_with_system_append, messages, nil)
 
     # Should return deep copy with no system message added
@@ -101,7 +101,7 @@ class BaseClientHelpersTest < AceTestCase
   end
 
   def test_process_messages_with_system_append_empty_append
-    messages = [{ role: "user", content: "Hello" }]
+    messages = [{role: "user", content: "Hello"}]
     result = @anthropic_client.send(:process_messages_with_system_append, messages, "")
 
     # Should return deep copy with no system message added
@@ -112,8 +112,8 @@ class BaseClientHelpersTest < AceTestCase
   # Test that original messages aren't mutated
   def test_original_messages_not_mutated
     original = [
-      { role: "system", content: "Original system" },
-      { role: "user", content: "User message" }
+      {role: "system", content: "Original system"},
+      {role: "user", content: "User message"}
     ]
     original_system_content = original[0][:content]
 

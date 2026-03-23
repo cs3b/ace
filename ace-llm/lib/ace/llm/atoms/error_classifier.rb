@@ -127,7 +127,7 @@ module Ace
 
           # Exponential backoff with jitter: base_delay * 2^(attempt - 1) * (1 + jitter)
           # Jitter is 10-30% to prevent thundering herd
-          exponential_delay = base_delay * (2 ** (attempt - 1))
+          exponential_delay = base_delay * (2**(attempt - 1))
           jitter = rand(0.1..0.3)
           exponential_delay * (1 + jitter)
         end

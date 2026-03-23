@@ -294,7 +294,7 @@ module Ace
           wait_calls = []
           orchestrator.stub :wait, ->(duration) { wait_calls << duration } do
             # Stub Time.now to simulate elapsed time exceeding timeout
-            start_time = Time.now
+            Time.now
             orchestrator.stub :timeout_exceeded?, -> { wait_calls.size > 1 } do
               error = assert_raises(Ace::LLM::ProviderError) do
                 orchestrator.execute(primary_provider: "google", registry: registry) do |client|
@@ -339,7 +339,7 @@ module Ace
         def test_uses_per_provider_chain_for_matching_primary
           config = Models::FallbackConfig.new(
             retry_count: 0,
-            chains: { "google" => ["anthropic"] },
+            chains: {"google" => ["anthropic"]},
             providers: ["openai"]
           )
           orchestrator = FallbackOrchestrator.new(
@@ -364,7 +364,7 @@ module Ace
         def test_uses_default_providers_when_primary_not_in_chains
           config = Models::FallbackConfig.new(
             retry_count: 0,
-            chains: { "google" => ["anthropic"] },
+            chains: {"google" => ["anthropic"]},
             providers: ["openai"]
           )
           orchestrator = FallbackOrchestrator.new(
@@ -487,7 +487,7 @@ module Ace
         end
 
         def mock_server_error(status)
-          response = { status: status, body: "Error" }
+          response = {status: status, body: "Error"}
           Faraday::ServerError.new("Server error", response)
         end
       end

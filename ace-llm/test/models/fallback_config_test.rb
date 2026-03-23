@@ -149,7 +149,7 @@ module Ace
 
         def test_merge_with_hash
           base = FallbackConfig.new(retry_count: 3)
-          hash = { retry_count: 5, providers: ["gpt"] }
+          hash = {retry_count: 5, providers: ["gpt"]}
 
           merged = base.merge(hash)
 
@@ -276,7 +276,7 @@ module Ace
 
         def test_providers_for_returns_chain_when_primary_matches
           config = FallbackConfig.new(
-            chains: { "glite" => ["zai", "codex"] },
+            chains: {"glite" => ["zai", "codex"]},
             providers: ["fallback_default"]
           )
 
@@ -285,7 +285,7 @@ module Ace
 
         def test_providers_for_returns_default_providers_when_primary_not_in_chains
           config = FallbackConfig.new(
-            chains: { "glite" => ["zai", "codex"] },
+            chains: {"glite" => ["zai", "codex"]},
             providers: ["fallback_default"]
           )
 
@@ -294,7 +294,7 @@ module Ace
 
         def test_providers_for_with_symbol_key_in_constructor
           config = FallbackConfig.new(
-            chains: { glite: ["zai"] },
+            chains: {glite: ["zai"]},
             providers: ["default"]
           )
 
@@ -304,7 +304,7 @@ module Ace
 
         def test_from_hash_with_chains_symbol_keys
           hash = {
-            chains: { glite: ["zai", "codex"] },
+            chains: {glite: ["zai", "codex"]},
             providers: ["default"]
           }
 
@@ -316,7 +316,7 @@ module Ace
 
         def test_from_hash_with_chains_string_keys
           hash = {
-            "chains" => { "glite" => ["zai", "codex"] },
+            "chains" => {"glite" => ["zai", "codex"]},
             "providers" => ["default"]
           }
 
@@ -327,16 +327,16 @@ module Ace
 
         def test_to_h_includes_chains
           config = FallbackConfig.new(
-            chains: { "glite" => ["zai"] },
+            chains: {"glite" => ["zai"]},
             providers: ["default"]
           )
 
           hash = config.to_h
-          assert_equal({ "glite" => ["zai"] }, hash[:chains])
+          assert_equal({"glite" => ["zai"]}, hash[:chains])
         end
 
         def test_to_h_chains_are_independent_copies
-          config = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          config = FallbackConfig.new(chains: {"glite" => ["zai"]})
           hash = config.to_h
           hash[:chains]["glite"] << "codex"
 
@@ -344,8 +344,8 @@ module Ace
         end
 
         def test_merge_combines_chains
-          base = FallbackConfig.new(chains: { "glite" => ["zai"] })
-          other = FallbackConfig.new(chains: { "codex" => ["glite"] })
+          base = FallbackConfig.new(chains: {"glite" => ["zai"]})
+          other = FallbackConfig.new(chains: {"codex" => ["glite"]})
 
           merged = base.merge(other)
 
@@ -354,8 +354,8 @@ module Ace
         end
 
         def test_merge_other_chains_override_base_for_same_key
-          base = FallbackConfig.new(chains: { "glite" => ["zai"] })
-          other_hash = { chains: { "glite" => ["codex", "zai"] } }
+          base = FallbackConfig.new(chains: {"glite" => ["zai"]})
+          other_hash = {chains: {"glite" => ["codex", "zai"]}}
 
           merged = base.merge(other_hash)
 
@@ -363,7 +363,7 @@ module Ace
         end
 
         def test_chains_are_frozen
-          config = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          config = FallbackConfig.new(chains: {"glite" => ["zai"]})
           assert config.chains.frozen?
         end
 
@@ -377,7 +377,7 @@ module Ace
 
         def test_validates_chains_values_must_be_arrays
           error = assert_raises(Ace::LLM::ConfigurationError) do
-            FallbackConfig.new(chains: { "glite" => "zai" })
+            FallbackConfig.new(chains: {"glite" => "zai"})
           end
 
           assert_match(/chains value for 'glite' must be an array/, error.message)
@@ -385,7 +385,7 @@ module Ace
 
         def test_validates_chains_entries_must_be_non_empty_strings
           error = assert_raises(Ace::LLM::ConfigurationError) do
-            FallbackConfig.new(chains: { "glite" => [""] })
+            FallbackConfig.new(chains: {"glite" => [""]})
           end
 
           assert_match(/each provider in chains\['glite'\] must be a non-empty string/, error.message)

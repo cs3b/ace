@@ -23,11 +23,11 @@ module Ace
         # @param chains [Hash{String => Array<String>}] Per-provider fallback chains
         # @param max_total_timeout [Float] Maximum total time for all retries and fallbacks
         def initialize(enabled: DEFAULT_ENABLED,
-                      retry_count: DEFAULT_RETRY_COUNT,
-                      retry_delay: DEFAULT_RETRY_DELAY,
-                      providers: DEFAULT_PROVIDERS,
-                      chains: DEFAULT_CHAINS,
-                      max_total_timeout: DEFAULT_MAX_TOTAL_TIMEOUT)
+          retry_count: DEFAULT_RETRY_COUNT,
+          retry_delay: DEFAULT_RETRY_DELAY,
+          providers: DEFAULT_PROVIDERS,
+          chains: DEFAULT_CHAINS,
+          max_total_timeout: DEFAULT_MAX_TOTAL_TIMEOUT)
           @enabled = enabled
           @retry_count = retry_count
           @retry_delay = retry_delay
@@ -171,7 +171,7 @@ module Ace
           duplicates = @providers.group_by { |p| p }.select { |_, v| v.size > 1 }.keys
           unless duplicates.empty?
             raise Ace::LLM::ConfigurationError,
-              "providers contains duplicates: #{duplicates.join(', ')}"
+              "providers contains duplicates: #{duplicates.join(", ")}"
           end
 
           # Validate each provider string format

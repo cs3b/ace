@@ -10,6 +10,7 @@ module Ace
       # OpenRouter provides unified access to 400+ models through OpenAI-compatible API
       class OpenRouterClient < BaseClient
         include Molecules::OpenAICompatibleParams
+
         API_BASE_URL = "https://openrouter.ai/api/v1"
         DEFAULT_MODEL = "openai/gpt-oss-120b:nitro"
 
@@ -49,7 +50,7 @@ module Ace
           response = make_api_request(request_body)
 
           parse_response(response)
-        rescue StandardError => e
+        rescue => e
           # Intentionally catch StandardError to wrap all API/network errors
           # as ProviderError for consistent error handling upstream
           handle_api_error(e)
@@ -88,7 +89,7 @@ module Ace
         # @param options [Hash] Raw options
         # @return [Hash] Generation parameters
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
 
           # Add OpenAI-compatible options
           extract_openai_compatible_options(options, gen_opts)
@@ -131,7 +132,7 @@ module Ace
           status = response.status
           raw_body = begin
             response.body
-          rescue StandardError
+          rescue
             nil
           end
 

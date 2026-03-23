@@ -88,7 +88,11 @@ module Ace
                 "Please ensure LM Studio is running with the local server enabled."
             end
 
-            error_body = response.body rescue {}
+            error_body = begin
+              response.body
+            rescue
+              {}
+            end
             error_message = error_body["error"] || "Unknown error"
 
             raise Ace::LLM::ProviderError, "LM Studio API error (#{response.status}): #{error_message}"

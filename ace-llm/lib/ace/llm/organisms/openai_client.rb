@@ -9,6 +9,7 @@ module Ace
       # OpenAIClient handles interactions with OpenAI's API
       class OpenAIClient < BaseClient
         include Molecules::OpenAICompatibleParams
+
         API_BASE_URL = "https://api.openai.com"
         DEFAULT_MODEL = "gpt-4o"
 
@@ -78,7 +79,7 @@ module Ace
         # @param options [Hash] Raw options
         # @return [Hash] Generation parameters
         def extract_generation_options(options)
-          gen_opts = super(options)
+          gen_opts = super
 
           # Add OpenAI-compatible options
           extract_openai_compatible_options(options, gen_opts)

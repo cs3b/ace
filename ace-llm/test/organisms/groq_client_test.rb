@@ -89,8 +89,8 @@ class GroqClientTest < AceTestCase
     client = create_client_with_mock_http
 
     result = client.generate([
-      { role: "system", content: "You are helpful." },
-      { role: "user", content: "Hi there!" }
+      {role: "system", content: "You are helpful."},
+      {role: "user", content: "Hi there!"}
     ])
 
     assert_equal "Hello! How can I assist you today?", result[:text]
@@ -237,7 +237,7 @@ class GroqClientTest < AceTestCase
     client = create_client_with_mock_http
 
     client.generate(
-      [{ role: "system", content: "Base system" }, { role: "user", content: "Hello" }],
+      [{role: "system", content: "Base system"}, {role: "user", content: "Hello"}],
       system_append: "Additional context"
     )
 
@@ -282,7 +282,7 @@ class GroqClientTest < AceTestCase
   def test_generate_raises_provider_error_on_missing_text
     @mock_http_client.set_response({
       "id" => "chatcmpl-test",
-      "choices" => [{ "message" => { "content" => nil }, "finish_reason" => "stop" }],
+      "choices" => [{"message" => {"content" => nil}, "finish_reason" => "stop"}],
       "model" => "openai/gpt-oss-120b"
     })
 
@@ -321,7 +321,7 @@ class GroqClientTest < AceTestCase
       "model" => "openai/gpt-oss-120b",
       "choices" => [
         {
-          "message" => { "role" => "assistant", "content" => "Response without usage" },
+          "message" => {"role" => "assistant", "content" => "Response without usage"},
           "finish_reason" => "stop"
         }
       ]
@@ -343,11 +343,11 @@ class GroqClientTest < AceTestCase
       "id" => "chatcmpl-test",
       "choices" => [
         {
-          "message" => { "role" => "assistant", "content" => "Response without model" },
+          "message" => {"role" => "assistant", "content" => "Response without model"},
           "finish_reason" => "stop"
         }
       ],
-      "usage" => { "prompt_tokens" => 5, "completion_tokens" => 10, "total_tokens" => 15 }
+      "usage" => {"prompt_tokens" => 5, "completion_tokens" => 10, "total_tokens" => 15}
     }
     @mock_http_client.set_response(response_without_model)
 
@@ -468,5 +468,4 @@ class GroqClientTest < AceTestCase
       }
     }
   end
-
 end

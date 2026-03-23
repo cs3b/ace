@@ -163,7 +163,7 @@ module Ace
         end
 
         def test_retry_delay_respects_retry_after_header_seconds
-          error = mock_faraday_error(status: 429, headers: { "retry-after" => "5" })
+          error = mock_faraday_error(status: 429, headers: {"retry-after" => "5"})
           assert_equal 5.0, ErrorClassifier.retry_delay(error, attempt: 1, base_delay: 1.0)
         end
 
@@ -171,7 +171,7 @@ module Ace
           future_time = Time.now + 10
           error = mock_faraday_error(
             status: 429,
-            headers: { "retry-after" => future_time.httpdate }
+            headers: {"retry-after" => future_time.httpdate}
           )
           delay = ErrorClassifier.retry_delay(error, attempt: 1, base_delay: 1.0)
 
@@ -182,7 +182,7 @@ module Ace
         def test_retry_delay_handles_invalid_retry_after
           error = mock_faraday_error(
             status: 429,
-            headers: { "retry-after" => "invalid" }
+            headers: {"retry-after" => "invalid"}
           )
           # Should fallback to default 1.0 when parsing fails
           assert_equal 1.0, ErrorClassifier.retry_delay(error, attempt: 1, base_delay: 1.0)
@@ -212,8 +212,7 @@ module Ace
             body: {}
           }
 
-          error = Faraday::ClientError.new("HTTP #{status}", response)
-          error
+          Faraday::ClientError.new("HTTP #{status}", response)
         end
       end
     end

@@ -82,7 +82,7 @@ module Ace
             status[:class_object] = klass
           rescue NameError => e
             status[:error] = "Class '#{provider_config["class"]}' not found: #{e.message}"
-          rescue StandardError => e
+          rescue => e
             status[:error] = "Error loading provider: #{e.message}"
           end
 
@@ -97,7 +97,7 @@ module Ace
           return true if @loaded_gems[gem_name]
 
           # Try to find the gem in the load path
-          gem_path = gem_name.gsub("-", "/")
+          gem_path = gem_name.tr("-", "/")
 
           $LOAD_PATH.any? do |path|
             File.exist?(File.join(path, "#{gem_path}.rb")) ||
@@ -147,7 +147,7 @@ module Ace
           end
 
           # Try with underscores instead of hyphens
-          gem_path = gem_name.gsub("-", "/")
+          gem_path = gem_name.tr("-", "/")
           begin
             require gem_path
             return
