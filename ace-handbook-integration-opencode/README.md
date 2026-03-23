@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-handbook-integration-opencode
-purpose: OpenCode-specific provider integration for ACE handbook skills
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-handbook-integration-opencode
 
-> Provider manifest package for OpenCode-native handbook workflow integration.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-handbook-integration-opencode.svg)](https://rubygems.org/gems/ace-handbook-integration-opencode)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> OpenCode provider integration for ACE handbook skills and workflows.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-handbook-integration-opencode` provides OpenCode-focused handbook manifests and projection artifacts.
-
-## How It Works
-
-1. Canonical skills remain in the ACE handbook canonical source.
-2. OpenCode-specific assets are generated from that canonical contract.
-3. OpenCode runtime uses these assets to expose the same skills in local formats.
+`ace-handbook-integration-opencode` provides OpenCode-focused handbook manifests and projection artifacts so that canonical ACE skills invoked from OpenCode resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
 ## Use Cases
 
-**Run ACE workflows from OpenCode integrations** - keep canonical skill intent while targeting OpenCode entrypoints.
+**Run ACE workflows from OpenCode integrations** - keep canonical skill intent while targeting OpenCode entrypoints, so agents running under OpenCode get the same behavior as any other provider.
 
-**Adapt quickly to provider-specific layouts** - update projections instead of rewriting handbook logic.
+**Adapt quickly to provider-specific layouts** - update projection assets inside this package instead of rewriting handbook logic, keeping changes isolated from [ace-handbook](../ace-handbook) canonical definitions.
 
-**Keep provider layers small** - isolate integration glue from core handbook behavior.
+**Keep provider layers small** - isolate integration glue from core handbook behavior with a focused set of manifests and projection assets.
 
-## What It Provides
+## Documentation
 
-- OpenCode provider manifests for handbook skills.
-- OpenCode workflow and projection assets.
-- Alignment with canonical skill contracts managed by `ace-handbook`.
+See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
 
-## Part of ACE
+---
 
-`ace-handbook-integration-opencode` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
+Part of [ACE](../README.md) (Agentic Coding Environment)

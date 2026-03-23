@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-handbook-integration-codex
-purpose: Codex-specific provider integration for ACE handbook skills
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-handbook-integration-codex
 
-> Provider manifest package for Codex-native handbook workflow integration.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-handbook-integration-codex.svg)](https://rubygems.org/gems/ace-handbook-integration-codex)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Codex CLI provider integration for ACE handbook skills and workflows.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets.
-
-## How It Works
-
-1. Canonical skill definitions stay in the canonical ACE handbook sources.
-2. This package produces Codex-focused manifests and skill wiring.
-3. Codex agents consume those assets while keeping semantics unchanged.
+`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets so that skill invocations from Codex CLI resolve correctly while keeping semantics unchanged from the definitions in [ace-handbook](../ace-handbook).
 
 ## Use Cases
 
-**Run handbook workflows in Codex contexts** - keep same behavior while using Codex-native execution entrypoints.
+**Run handbook workflows in Codex contexts** - keep the same behavior while using Codex-native execution entrypoints, so agents running under Codex CLI get the same skill intent as any other provider.
 
-**Avoid duplication across providers** - update canonical skill definitions once and generate provider-specific projections.
+**Avoid duplication across providers** - update canonical skill definitions once in [ace-handbook](../ace-handbook) and generate Codex-specific projections automatically from shared contracts.
 
-**Keep integration delivery minimal** - maintain a tiny provider shim layer with focused assets.
+**Keep integration delivery minimal** - maintain a focused provider shim layer with only the manifests and projection assets needed for Codex compatibility.
 
-## What It Provides
+## Documentation
 
-- Codex-specific provider manifests for ACE handbook skills.
-- Projection assets that keep canonical behavior portable.
-- Alignment with canonical skill contracts managed by `ace-handbook`.
+See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
 
-## Part of ACE
+---
 
-`ace-handbook-integration-codex` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
+Part of [ACE](../README.md) (Agentic Coding Environment)

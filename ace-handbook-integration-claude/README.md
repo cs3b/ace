@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-handbook-integration-claude
-purpose: Claude-specific provider integration for ACE handbook skills
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-handbook-integration-claude
 
-> Provider manifest package for Claude-native handbook workflow integration.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-handbook-integration-claude.svg)](https://rubygems.org/gems/ace-handbook-integration-claude)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Claude Code provider integration for ACE handbook skills and workflows.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-handbook-integration-claude` hosts Claude-specific manifests that let ACE route canonical handbook skills to Claude-native runtime assets.
-
-## How It Works
-
-1. Canonical ACE skills stay owned in canonical `handbook/skills` trees.
-2. This package projects those definitions into Claude-specific provider formats.
-3. Claude-specific integrations consume those projections during skill invocation.
+`ace-handbook-integration-claude` projects canonical ACE handbook skills into Claude-native runtime assets so that `/as-*` skills invoked from Claude Code resolve to the correct provider-specific entrypoints while preserving shared semantics defined in [ace-handbook](../ace-handbook).
 
 ## Use Cases
 
-**Run ACE workflows from Claude-native entrypoints** - load canonical skill semantics with Claude-specific packaging.
+**Run ACE workflows from Claude Code** - load canonical skill semantics with Claude-specific packaging so that skills like `/as-task-work` and `/as-git-commit` work natively in Claude Code sessions.
 
-**Keep provider integration changes isolated** - update manifests and projections without altering canonical handbook definitions.
+**Keep provider integration changes isolated** - update Claude-specific manifests and projections inside this package without altering canonical handbook definitions managed by [ace-handbook](../ace-handbook).
 
-**Standardize cross-provider behavior** - preserve shared conventions while adapting to provider-specific command surfaces.
+**Standardize cross-provider behavior** - preserve shared conventions while adapting to Claude Code's command surface, ensuring the same skill intent works across all supported providers.
 
-## What It Provides
+## Documentation
 
-- Claude manifest generation and projection assets for ACE handbook skills.
-- Provider-specific runtime glue that preserves canonical intent.
-- Alignment with canonical skill contracts managed by `ace-handbook`.
+See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
 
-## Part of ACE
+---
 
-`ace-handbook-integration-claude` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
+Part of [ACE](../README.md) (Agentic Coding Environment)
