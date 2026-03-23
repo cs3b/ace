@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.13] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` to the current package layout pattern with logo/badges header, compatibility line, quick links, and use-case-oriented overview content.
+- Updated README skill inventory to include `as-assign-recover-fork` and aligned the footer to the canonical ACE package format.
+
 ## [0.36.12] - 2026-03-22
 
 ### Fixed

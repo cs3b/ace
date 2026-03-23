@@ -732,13 +732,18 @@ module Ace
           when "plan-task"
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
-            "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion."
+            "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion.\n- Before marking complete, verify working tree is clean (`git status --short`). If dirty, commit remaining changes with `ace-git-commit`."
           when "pre-commit-review"
             pre_commit_review_action_instructions(task_hint: task_hint)
           when "verify-test"
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this step skipped with a clear reason."
           when /\Arelease(?:-.+)?\z/
-            "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this step."
+            "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this step.\n- When auto-detecting packages, include `git diff origin/main...HEAD --name-only` in addition to working-tree state — prior steps may have already committed changes."
+          when "verify-e2e"
+            "- Check change scope: run `git diff origin/main --name-only` to list modified files.\n" \
+            "- **Skip criteria**: If ALL modified files match `*.md`, `*.yml` (non-CI config), `.ace-tasks/**`, or `.ace-retros/**`, skip E2E verification — mark step done with \"skipped: docs/task-spec only changes, no runnable code affected\".\n" \
+            "- Otherwise: detect modified packages, run E2E scenarios for each package with `test/e2e/` scenarios#{task_hint}.\n" \
+            "- If no modified package has E2E scenarios, mark step done with \"skipped: no E2E scenarios for modified packages\"."
           else
             "- Execute the #{sub_name} step."
           end
@@ -952,8 +957,8 @@ module Ace
           lines << "- Detect active client/provider from fork session metadata first (`.ace-local/assign/<assignment-id>/sessions/<fork-root>-session.yml`, key: provider)."
           lines << "- If session metadata is unavailable, fallback to `execution.provider` from assign config."
           lines << "- Allowed native review clients: #{allowlist_text}."
-          lines << "- If detected client is allowed and mode is `auto` or `native`, run native `/review` on the current diff."
-          lines << "- If client is not allowed or native `/review` is unavailable, skip this step gracefully and continue."
+          lines << "- If detected client is allowed and mode is `auto` or `native`, review uncommitted changes and find issues (use the `/review` agent slash command — this is a conversation command, NOT a bash command)."
+          lines << "- If the `/review` agent command is not available in the current execution environment, run `ace-lint` on modified files as a fallback quality gate, then continue."
           lines << "- Summarize findings with severity counts and keep raw output when structure is incomplete."
           lines << "- If `pre_commit_review_block` is true and a critical finding is confidently detected, fail this step with evidence to block release."
           lines.join("\n")
