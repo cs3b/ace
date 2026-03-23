@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.962] - 2026-03-23
+
+### Added
+- **ace-git-commit v0.23.0**: Configuration section in README for model and prompt template overrides.
+
+### Changed
+- **ace-git-commit v0.23.0**: Aligned gemspec, moved Installation to Getting Started, redesigned demo with real sandbox commits.
+
 ## [0.9.961] - 2026-03-23
 
 ### Changed
