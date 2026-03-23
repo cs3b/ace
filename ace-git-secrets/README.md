@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-git-secrets demo](docs/demo/ace-git-secrets-getting-started.gif)
 
 `ace-git-secrets` gives developers and coding agents a focused remediation loop for leaked credentials: detect exposure with gitleaks-backed scanning, revoke impacted tokens by provider, and safely clean repository history with dry-run-first safeguards.
