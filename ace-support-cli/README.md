@@ -12,6 +12,7 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Documentation](#documentation)
 `ace-support-cli` is the foundation layer for ACE commands, providing metadata-driven command definitions, parser behavior, and execution orchestration. Packages like [ace-llm](../ace-llm), [ace-review](../ace-review), and [ace-search](../ace-search) build their CLI surfaces on top of these shared primitives.
 
