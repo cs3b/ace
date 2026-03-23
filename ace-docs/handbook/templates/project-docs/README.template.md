@@ -7,26 +7,22 @@ ace-docs:
   last-checked: 2026-03-23
 ---
 
-# {package-name}
+<h1 align="center">{package-name}</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/{package-name}"><img alt="Gem Version" src="https://img.shields.io/gem/v/{package-name}.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  {one-sentence tagline}
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/{package-name}.svg)](https://rubygems.org/gems/{package-name})
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
-
-<!-- Tagline as blockquote: what it IS, not what it does. The `>` creates a
-     visual box on GitHub that draws the eye to the selling line. -->
+<!-- Keep the tag line as the one-sentence statement above the link row. -->
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-<p align="center">
-  {one-sentence tagline}
-</p>
 
 
 <!-- Nav row: pipe-separated links above the demo. Always use "Handbook - Skills, Agents, Templates"
