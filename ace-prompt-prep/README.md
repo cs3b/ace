@@ -34,4 +34,4 @@
 **Scope prompts to tasks** - use `--task` to route prompt workspaces into [ace-task](../ace-task) directories, keeping prompts connected to delivery work alongside [ace-git](../ace-git) branch workflows.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
