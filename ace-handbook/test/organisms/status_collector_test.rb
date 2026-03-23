@@ -22,8 +22,8 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
 
     assert_equal 3, snapshot.fetch("canonical").fetch("total")
     assert_equal [
-      { "source" => "ace-demo", "count" => 1 },
-      { "source" => "ace-task", "count" => 2 }
+      {"source" => "ace-demo", "count" => 1},
+      {"source" => "ace-task", "count" => 2}
     ], snapshot.fetch("canonical").fetch("by_source")
   end
 
@@ -136,7 +136,7 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
   end
 
   def install_skill(provider_or_dir, skill_name, content: nil)
-    output_dir = provider_or_dir == "shared" ? File.join(@tmpdir, ".shared", "skills") : File.join(@tmpdir, ".#{provider_or_dir}", "skills")
+    output_dir = (provider_or_dir == "shared") ? File.join(@tmpdir, ".shared", "skills") : File.join(@tmpdir, ".#{provider_or_dir}", "skills")
     FileUtils.mkdir_p(File.join(output_dir, skill_name))
 
     skill = Ace::Handbook::Organisms::SkillInventory.new(project_root: @tmpdir).all.find { |entry| entry.name == skill_name }

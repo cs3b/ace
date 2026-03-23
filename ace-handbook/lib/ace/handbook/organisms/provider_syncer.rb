@@ -67,7 +67,7 @@ module Ace
           end
 
           unknown = providers.reject { |provider| registry.known?(provider) }
-          raise ArgumentError, "Unknown provider: #{unknown.join(', ')}" if unknown.any?
+          raise ArgumentError, "Unknown provider: #{unknown.join(", ")}" if unknown.any?
 
           enabled = providers.select { |provider| provider_enabled?(provider) }
           return enabled if requested_provider.nil? || enabled.any?

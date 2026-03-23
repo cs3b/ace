@@ -26,7 +26,7 @@ module Ace
             end
 
             puts @collector.to_table(snapshot)
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
         end

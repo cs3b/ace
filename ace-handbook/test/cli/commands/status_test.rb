@@ -37,7 +37,7 @@ class Ace::Handbook::CLI::Commands::StatusTest < Minitest::Test
         {
           "canonical" => {
             "total" => 2,
-            "by_source" => [{ "source" => "ace-task", "count" => 2 }]
+            "by_source" => [{"source" => "ace-task", "count" => 2}]
           },
           "providers" => [
             {
