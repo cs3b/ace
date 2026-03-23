@@ -59,6 +59,12 @@ Work through the plan checklist, step by step:
 - If spec and plan conflict, spec wins — the plan is a HOW, not a WHAT
 - If the spec is ambiguous or incomplete: stop and ask, don't assume
 
+**Prior implementation awareness:**
+- Before creating new modules, search for existing implementations of the same concern — especially spike or prototype code from prior subtasks
+- If a sibling task (same parent, earlier sequence) produced spike code: refactor and promote it rather than creating parallel "production" versions
+- Check dependency task reports and the task folder for prior work artifacts (concept inventories, spike reports)
+- When plan file paths point to locations where code already exists, integrate rather than duplicate
+
 **Execution discipline:**
 - Commit incrementally — one logical step per commit, use `ace-git-commit`
 - Test after every change — run `ace-test`; don't accumulate untested code
@@ -88,6 +94,13 @@ Work through the plan checklist, step by step:
 
 All plan steps checked, all success criteria pass:
 
-```bash
-ace-task update <ref> --set status=done
-```
+1. **Verify working tree is clean** — no uncommitted changes:
+   ```bash
+   git status --short
+   ```
+   If dirty, commit remaining changes with `ace-git-commit` before proceeding.
+
+2. Mark task done:
+   ```bash
+   ace-task update <ref> --set status=done
+   ```
