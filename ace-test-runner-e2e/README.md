@@ -35,11 +35,5 @@
 
 **Plan E2E coverage for new features** - use `/as-e2e-plan-changes` to map which scenarios need updates when instructions or tooling change, and `/as-e2e-review` to audit scenario quality.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
