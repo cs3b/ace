@@ -1,15 +1,26 @@
 # ace-retro
 
-Lightweight retrospective management -- create, tag, and archive retros from the command line.
+Structured retrospective management for ACE workflows, from capture to archive.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook Reference](docs/handbook.md)
 
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
-## Why ace-retro
+`ace-retro` helps teams capture learning while context is still fresh, keep retros connected to tasks, and maintain a searchable archive for follow-up improvements.
 
-- Capture reflection while context is still fresh.
-- Keep retros linked to real tasks and releases.
-- Use consistent templates for standard, conversation-analysis, and self-review flows.
-- Archive completed retros without losing searchability.
+## Use Cases
+
+**Capture retros quickly** - Create a new retrospective from templates for standard, conversation-analysis, or self-review flows.
+
+**Keep retros connected to delivery work** - Link retros to task references so findings stay tied to concrete changes.
+
+**Review and maintain retro metadata** - List, show, and update retros with tags and status metadata.
+
+**Archive completed retros without losing history** - Move completed retros into archive locations while preserving searchability.
+
+**Run health checks before sharing** - Use `ace-retro doctor` to validate environment and workflow readiness.
 
 ## Works With
 
@@ -27,15 +38,18 @@ Package-owned canonical skills:
 
 ## Features
 
-- Fast create/show/list/update workflow for everyday retros
-- Type-aware templates for different reflection styles
-- Metadata updates with tags, status, and folder moves
-- Health checks via `ace-retro doctor`
+- Fast create, show, list, and update workflow for daily retrospective work.
+- Type-aware templates for different reflection styles.
+- Metadata updates with tags, status, and folder moves.
+- Health checks via `ace-retro doctor`.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
 - [Usage Guide](docs/usage.md)
 - [Handbook Reference](docs/handbook.md)
+- Command help: `ace-retro --help`
 
-Part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+## Part of ACE
+
+`ace-retro` is part of [ACE](../README.md) (Agentic Coding Environment).
