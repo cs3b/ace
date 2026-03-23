@@ -1,50 +1,58 @@
 # ace-review
 
-Multi-model code review with preset-based analysis — for PRs, tasks, and packages.
+Multi-model code review with preset-based analysis for PRs, tasks, and packages.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Feedback Workflow](docs/feedback-workflow.md) | [Handbook Reference](docs/handbook.md)
 
 ![ace-review demo](docs/demo/ace-review-getting-started.gif)
 
-## Why ace-review
+`ace-review` runs focused, repeatable reviews with configurable presets and parallel model execution. Findings are captured as feedback items with a verify -> apply -> resolve lifecycle so review outcomes stay actionable.
 
-Code review shouldn't depend on who's available or which model is trending. `ace-review` runs focused, repeatable reviews using configurable presets and multiple LLM models in parallel. Findings become trackable feedback items with a full verify → apply → resolve lifecycle.
+## Use Cases
 
-Same CLI for developers and coding agents. Same review quality.
+**Review pull requests with consistent quality gates** - run preset-driven reviews over PR diffs and optionally integrate with GitHub feedback flows.
+
+**Run multi-model analysis in parallel** - execute the same review prompt across multiple models, then synthesize overlapping and conflicting findings.
+
+**Manage feedback as tracked work** - move findings through draft, verified, pending, resolved, and skipped states with explicit follow-up commands.
+
+**Audit review history through session artifacts** - keep saved review sessions for traceability, comparison, and handoff across contributors.
+
+## Works With
+
+- `ace-bundle` for loading workflow and prompt context.
+- `ace-git` for diffs, commit ranges, and PR metadata.
+- `ace-llm` for provider abstraction and multi-model execution.
+- `ace-task` for task-scoped review workflows.
 
 ## Features
 
-- **Multi-model execution** — run reviews across multiple LLMs in parallel, then synthesize findings
-- **Preset-based** — focused presets for code quality, security, docs, PR review, and custom workflows
-- **GitHub PR integration** — review PRs directly with `--pr`, optionally post comments back
-- **Feedback lifecycle** — findings become draft → verified → pending → resolved/skipped items
-- **Session artifacts** — every review is saved for traceability, follow-up, and audit
-- **Prompt composition** — modular prompts for architecture, languages, quality focus, and format
-- **Developer feedback** — include PR comments as review inputs alongside LLM analysis
-
-## Works with
-
-- **[ace-bundle](../ace-bundle)** — context loading for review presets and workflow instructions
-- **[ace-git](../ace-git)** — diff analysis, commit ranges, and PR metadata
-- **[ace-llm](../ace-llm)** — LLM provider abstraction for multi-model review execution
-- **[ace-task](../ace-task)** — task-scoped reviews with context from behavioral specs
-
-## Agent Skills
-
-- **`as-review-run`** — review code changes with preset-based analysis and LLM feedback
-- **`as-review-pr`** — review a GitHub PR with feedback verification and comment resolution
-- **`as-review-package`** — comprehensive code, docs, UX/DX review with recommendations
-- **`as-review-apply-feedback`** — apply verified feedback items from code review
-- **`as-review-verify-feedback`** — verify feedback items through multi-dimensional claim analysis
-
-See [Handbook Reference](docs/handbook.md) for the complete catalog including prompts and the code review guide.
+- Multi-model review execution with synthesis.
+- Preset-based review modes for code, security, docs, PRs, and custom checks.
+- GitHub PR integration through `--pr` and optional comment publication.
+- Feedback lifecycle commands for verification and application.
+- Session artifacts for reproducible review records.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — end-to-end tutorial
-- [Usage Guide](docs/usage.md) — full command reference
-- [Feedback Workflow](docs/feedback-workflow.md) — feedback lifecycle and CLI
-- [Handbook Reference](docs/handbook.md) — skills, workflows, prompts, guide, template
-- Runtime help: `ace-review --help`
+- [Getting Started](docs/getting-started.md)
+- [Usage Guide](docs/usage.md)
+- [Feedback Workflow](docs/feedback-workflow.md)
+- [Handbook Reference](docs/handbook.md)
+- Command help: `ace-review --help`
+
+## Agent Skills
+
+Package-owned canonical skills:
+
+- `as-review-run`
+- `as-review-pr`
+- `as-review-package`
+- `as-review-apply-feedback`
+- `as-review-verify-feedback`
 
 ## Part of ACE
 
-`ace-review` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+`ace-review` is part of [ACE](../README.md) (Agentic Coding Environment).
