@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
 `ace-retro` helps teams capture learning while context is still fresh, keep retros connected to tasks, and maintain a searchable archive for follow-up improvements. Use `/as-retro-create` to start a retro from inside a coding agent, or `/as-retro-synthesize` to distill patterns across multiple retros.
