@@ -4,9 +4,11 @@
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/ace-support-mac-clipboard.svg)](https://rubygems.org/gems/ace-support-mac-clipboard)
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+</p>
 
 > macOS clipboard support for text, files, and image payloads used by ACE tools.
 
