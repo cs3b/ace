@@ -1,36 +1,43 @@
 # ace-support-nav
 
-Unified navigation and resource discovery for the ACE ecosystem.
+Protocol-aware navigation and resource discovery for the ACE ecosystem.
 
-## Purpose
+[Use Cases](#use-cases) | [Features](#features) | [Usage](#usage) | [Configuration](#configuration) | [Ruby API](#ruby-api)
 
-`ace-support-nav` provides unified navigation and path resolution primitives for ACE packages.
-It supports protocol-based resource lookup, source-aware override resolution, and consistent
-resource discovery behavior across project, user, and gem contexts.
+`ace-support-nav` powers `ace-nav` resolution behavior across project, user, and gem sources, with consistent URI lookup, override targeting, and fast cached discovery.
 
-## Overview
+## Use Cases
 
-ace-support-nav provides unified navigation and path resolution across the ACE ecosystem. It automatically discovers handbooks bundled within ace-* gems, resolves resource URIs to actual file paths, and supports a multi-level override cascade (project > user > gem).
+**Resolve ACE resources without memorizing file paths** - use `ace-nav resolve` with protocols like `wfi://`, `guide://`, `tmpl://`, `skill://`, and `task://`.
+
+**Target the right override layer explicitly** - use `@project`, `@user`, or specific gem aliases to bypass cascade ambiguity.
+
+**Discover matching resources quickly** - use wildcard and prefix patterns to list candidate workflows, prompts, templates, and skills.
+
+**Navigate task specs through the same interface** - use `task://` references so task lookup shares the same navigation workflow as handbook resources.
+
+## Works With
+
+- **[ace-task](../ace-task)** for `task://` resolution and task metadata retrieval.
+- **[ace-bundle](../ace-bundle)** for loading resources resolved through `wfi://`, `guide://`, `tmpl://`, and related protocols.
+- **[ace-support-config](../ace-support-config)** for layered config behavior used by navigation settings.
 
 ## Features
 
-- **Automatic Discovery**: Discovers handbooks bundled in ace-* gems without configuration
-- **URI Resolution**: Resolves resource URIs (wfi://, tmpl://, guide://, sample://, skill://, task://)
-- **Override Cascade**: Multi-level overrides with @ prefix for source-specific lookups
-- **Smart Pattern Matching**:
-  - Subdirectory/prefix patterns (e.g., `prompt://guidelines/`)
-  - Wildcard patterns auto-list without `--list` flag
-  - Intelligent detection of multi-result patterns
-- **Fuzzy Matching**: Intelligent autocorrection and partial path matching
-- **Performance**: Fast cached lookups after initial scan (< 100ms) using `.ace-local/nav`
-- **Standard CLI**: Explicit subcommands (`resolve`, `list`, `create`, `sources`)
+- Automatic handbook discovery across `ace-*` gem sources.
+- URI resolution for `wfi://`, `tmpl://`, `guide://`, `sample://`, `skill://`, and `task://`.
+- Override-aware source targeting with `@` aliases.
+- Smart multi-result detection for wildcard, directory, and prefix patterns.
+- Fuzzy matching support for partial references.
+- Cached lookups via `.ace-local/nav` for fast repeated resolution.
+- Standard CLI subcommands: `resolve`, `list`, `create`, `sources`.
 
 ## Installation
 
 Add to your Gemfile:
 
 ```ruby
-gem 'ace-support-nav'
+gem "ace-support-nav"
 ```
 
 Or install directly:
@@ -41,103 +48,96 @@ gem install ace-support-nav
 
 ## Usage
 
-### Basic Usage
+### Basic Resolution
 
 ```bash
-# Cascade search (searches all sources in order)
-ace-nav resolve wfi://setup          # Finds first 'setup' workflow
-ace-nav resolve tmpl://minitest      # Finds first matching template
-ace-nav resolve guide://configuration # Finds first matching guide
-ace-nav resolve skill://as-task-plan # Finds first matching skill
+# Cascade search (project > user > gem)
+ace-nav resolve wfi://setup
+ace-nav resolve tmpl://minitest
+ace-nav resolve guide://configuration
+ace-nav resolve skill://as-task-plan
 
-# Source-specific with @ prefix
-ace-nav resolve wfi://@ace-git/setup     # Only from ace-git gem
-ace-nav resolve tmpl://@project/minitest # Only from project overrides
-ace-nav resolve wfi://@user/setup        # Only from user overrides
+# Source-specific resolution
+ace-nav resolve wfi://@ace-git/setup
+ace-nav resolve tmpl://@project/minitest
+ace-nav resolve wfi://@user/setup
 ```
 
 ### Content Retrieval
 
 ```bash
-# Get content directly
-ace-nav resolve wfi://setup --content           # First matching content
-ace-nav resolve wfi://@ace-git/setup --content  # From specific source
+ace-nav resolve wfi://setup --content
+ace-nav resolve wfi://@ace-git/setup --content
 ```
 
 ### Resource Creation
 
 ```bash
-# Create from template
-ace-nav create wfi://bundle                  # Creates in project .ace-handbook
-ace-nav create tmpl://@ace-test/minitest     # Uses ace-test template
+ace-nav create wfi://bundle
+ace-nav create tmpl://@ace-test/minitest
 ```
 
 ### Resource Discovery
 
-ace-nav intelligently detects patterns that should return multiple results:
-
 ```bash
-# Automatic list mode (no --list needed!)
-ace-nav resolve prompt://            # All prompts (protocol-only)
-ace-nav resolve prompt://guidelines/ # All files in guidelines/ directory
-ace-nav resolve "prompt://format/*"  # All files matching pattern
-ace-nav resolve "wfi://create*"      # All workflows starting with 'create'
+# Auto-list patterns
+ace-nav resolve prompt://
+ace-nav resolve prompt://guidelines/
+ace-nav resolve "prompt://format/*"
+ace-nav resolve "wfi://create*"
 
-# Subdirectory and prefix patterns
-ace-nav resolve prompt://focus/         # Lists all focus modules
-ace-nav resolve prompt://focus/quality/ # Lists quality-specific focus modules
-ace-nav resolve wfi://review/           # Lists all review-related workflows
+# Prefix-based listings
+ace-nav resolve prompt://focus/
+ace-nav resolve prompt://focus/quality/
+ace-nav resolve wfi://review/
 
-# Explicit list mode still works
-ace-nav list 'wfi://*'               # All workflows
-ace-nav list 'skill://*'             # All canonical skills
-ace-nav list 'tmpl://@project/*'     # Project template overrides
-ace-nav list 'wfi://*test*'          # Test-related workflows
+# Explicit list mode
+ace-nav list 'wfi://*'
+ace-nav list 'skill://*'
+ace-nav list 'tmpl://@project/*'
+ace-nav list 'wfi://*test*'
 ```
 
 ### Task Navigation
 
-The `task://` protocol delegates to `ace-task` commands, providing unified navigation across all ACE resources.
+`task://` delegates to `ace-task`, allowing task references to resolve through the same navigation surface.
 
 ```bash
 # Basic task navigation
-ace-nav resolve task://083                   # Show task summary
-ace-nav resolve task://083 --path            # Get task file path
-ace-nav resolve task://083 --content         # Show full task content
-ace-nav resolve task://083 --tree            # Show task dependencies
+ace-nav resolve task://083
+ace-nav resolve task://083 --path
+ace-nav resolve task://083 --content
+ace-nav resolve task://083 --tree
 
-# All ace-taskflow reference formats supported
-ace-nav resolve task://018                   # Task in current context
-ace-nav resolve task://task.018              # Prefixed format
-ace-nav resolve task://v.0.9.0+task.018      # Specific release
-ace-nav resolve task://backlog+025           # Backlog tasks
+# Supported task reference formats
+ace-nav resolve task://018
+ace-nav resolve task://task.018
+ace-nav resolve task://v.0.9.0+task.018
+ace-nav resolve task://backlog+025
 
 # Shell integration
-nvim "$(ace-nav resolve task://083 --path)"  # Open task in editor
+nvim "$(ace-nav resolve task://083 --path)"
 ```
 
 ## Configuration
 
-Configuration is stored in `.ace/nav/` directory:
+Configuration is read from `.ace/nav/config.yml` (with normal ACE cascade behavior).
 
 ```yaml
-# .ace/nav/config.yml
 handbooks:
   sources:
-    - gem: "ace-*"              # All ace-* gems
-    - path: "/opt/handbooks"    # Custom path
-      alias: "handbooks"        # Access as @handbooks
+    - gem: "ace-*"
+    - path: "/opt/handbooks"
+      alias: "handbooks"
 
-# Extension inference (DWIM - Do What I Mean)
 extension_inference:
-  enabled: true                 # Enable automatic extension detection
-  fallback_order:               # Order of extension attempts
-    - shorthand                 # 1. Protocol shorthand (wfi://workflow → wfi://workflow.wfi.md)
-    - full                      # 2. Full extension (wfi://workflow.md)
-    - generic                   # 3. Generic markdown (wfi://workflow.markdown.md)
-    - bare                      # 4. No extension (wfi://workflow)
+  enabled: true
+  fallback_order:
+    - shorthand
+    - full
+    - generic
+    - bare
 
-# Protocol-specific inferred extensions
 protocols:
   wfi:
     inferred_extensions: [".wfi.md", ".md", ".markdown.md", ""]
@@ -149,80 +149,76 @@ protocols:
     inferred_extensions: [".prompt.md", ".md", ".markdown.md", ""]
   sample:
     inferred_extensions: [".sample.md", ".md", ".markdown.md", ""]
-
-# Built-in aliases:
-# @project → ./.ace-handbook
-# @user → ~/.ace-handbook
 ```
+
+Built-in aliases:
+- `@project` -> `./.ace-handbook`
+- `@user` -> `~/.ace-handbook`
 
 ### Extension Inference
 
-The extension inference feature enables DWIM (Do What I Mean) behavior by automatically trying common file extensions when a resource is not found. For example:
+Extension inference enables shorthand resolution by trying protocol-specific and generic filename variants when an exact path is not found.
 
-- `ace-nav resolve wfi://setup` will try: `setup.wfi.md`, `setup.md`, `setup.markdown.md`, `setup`
-- `ace-nav resolve tmpl://custom` will try: `custom.tmpl.md`, `custom.md`, `custom.markdown.md`, `custom`
+Examples:
+- `ace-nav resolve wfi://setup` tries `setup.wfi.md`, `setup.md`, `setup.markdown.md`, `setup`
+- `ace-nav resolve tmpl://custom` tries `custom.tmpl.md`, `custom.md`, `custom.markdown.md`, `custom`
 
-This reduces the need to type full extensions while maintaining compatibility with existing resources.
-
-To disable extension inference:
+Disable inference:
 
 ```yaml
-# .ace/nav/config.yml
 extension_inference:
   enabled: false
 ```
 
-To customize the fallback order:
+Customize fallback order:
 
 ```yaml
-# .ace/nav/config.yml
 extension_inference:
   fallback_order:
-    - bare      # Try without extension first
-    - full      # Then try .md
-    - shorthand # Then try protocol-specific (.wfi.md)
+    - bare
+    - full
+    - shorthand
 ```
 
-## Override System
+### Override System
 
-The cascade priority is:
-1. **@project** - Project-specific overrides in `./.ace-handbook`
-2. **@user** - User-level overrides in `~/.ace-handbook`
-3. **@gem** - Bundled resources in ace-* gems
+Cascade priority:
+1. `@project` - `./.ace-handbook`
+2. `@user` - `~/.ace-handbook`
+3. `@gem` - bundled gem resources
 
-Use @ prefix to bypass cascade and target specific sources:
-- `ace-nav resolve wfi://setup` - Cascade search (project > user > gems)
-- `ace-nav resolve wfi://@ace-git/setup` - Only from ace-git gem
-- `ace-nav resolve wfi://@project/setup` - Only from project overrides
+Examples:
+- `ace-nav resolve wfi://setup`
+- `ace-nav resolve wfi://@ace-git/setup`
+- `ace-nav resolve wfi://@project/setup`
 
 ## Ruby API
 
 ```ruby
 require "ace/support/nav"
 
-# Access configuration
 Ace::Support::Nav.config
 
-# Use CLI programmatically
 Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: ["resolve", "wfi://setup"])
 
-# Use navigation engine directly
 engine = Ace::Support::Nav::Organisms::NavigationEngine.new
 result = engine.resolve("wfi://setup")
 ```
 
 ## Development
 
-After checking out the repo, run:
-
 ```bash
 bundle install
 ace-test ace-support-nav
 ```
 
+## Documentation
+
+- Command help: `ace-nav --help`
+
 ## Part of ACE
 
-Part of [ACE](../README.md) - Modular CLI toolkit for AI-assisted development.
+`ace-support-nav` is part of [ACE](../README.md) (Agentic Coding Environment).
 
 ## License
 
