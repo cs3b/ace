@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-git-worktree demo](docs/demo/ace-git-worktree-getting-started.gif)
 
 `ace-git-worktree` gives each task, PR, or branch its own workspace so you can move faster without carrying local state between changes. It handles naming, hooks, cleanup, and navigation with configurable conventions across the team.
