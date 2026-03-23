@@ -1,7 +1,8 @@
-<h1>ACE - task</h1>
-<h2> 
+<h1 align="center">
+  ACE - Task
+  <br />
   Draft, organize, and tackle tasks (specs) - for you and your agents.
-</h2>
+</h1>
 
 <div align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
