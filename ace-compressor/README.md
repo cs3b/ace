@@ -31,11 +31,5 @@
 
 **Rewrite payloads with LLM assistance** - use agent mode with [ace-llm](../ace-llm) to rewrite payload text while keeping the deterministic `ContextPack/3` structure, producing more concise context for downstream consumers.
 
-## Documentation
-
-[Usage Guide](docs/usage.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Usage Guide](docs/usage.md) | Part of ACE
