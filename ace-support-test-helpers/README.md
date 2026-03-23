@@ -25,4 +25,5 @@
 **Improve CI stability** - reduce flaky test behavior with shared deterministic helpers for directory management, configuration, and environment cleanup.
 
 ---
-[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)
+
+Part of [ACE](https://github.com/cs3b/ace)

@@ -25,4 +25,5 @@
 **Share validation rules** - apply one metadata model for provider and model checks so that [ace-llm-providers-cli](../ace-llm-providers-cli) and other provider-aware packages stay aligned.
 
 ---
-[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)
+
+Part of [ACE](https://github.com/cs3b/ace)
