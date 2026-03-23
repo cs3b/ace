@@ -8,20 +8,21 @@ settings:
   width: 960
   height: 480
   format: gif
-scenes:
-- name: Main flow
-  commands:
-  - type: cd $PWD
-    sleep: 2s
-  - type: TASK_ID=$(ace-task create "Prepare worktree demo task" --status pending --priority low | grep -Eo '[a-z0-9]+\.t\.[a-z0-9]+' | tail -n 1) && echo "Using ${TASK_ID}"
-    sleep: 2s
-  - type: ace-git-worktree create --task "$TASK_ID" --dry-run --no-commit --no-push --no-pr --no-auto-navigate
-    sleep: 2s
-  - type: ace-git-worktree list --show-tasks
-    sleep: 2s
-teardown:
-- cleanup
 setup:
 - sandbox
-- run: git init -b main && git config user.name "Demo User" && git config user.email demo@example.com && git add -A && git commit -qm "seed fixtures"
+- git-init
 - copy-fixtures
+- run: git add -A && git commit -qm "initial commit"
+scenes:
+- name: Create a worktree from a branch
+  commands:
+  - type: ace-git-worktree create --branch feature/demo --dry-run
+    sleep: 4s
+- name: List worktrees
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-git-worktree list
+    sleep: 3s
+teardown:
+- cleanup

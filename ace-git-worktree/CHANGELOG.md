@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-03-23
+
+### Changed
+- Moved Installation from README to Getting Started guide.
+- Clarified agent workflow references in Use Cases (removed raw `/as-` prefix).
+- Replaced generic "coordinate with git tools" use case with ace-overseer integration paragraph.
+- Explained "hooks" in README intro with parenthetical definition.
+- Converted Related Tools in usage guide to linked sibling packages.
+- Redesigned getting-started demo tape: proper sandbox setup with git-init, branch-based worktree creation.
+- Re-recorded getting-started demo GIF from new tape.
+
 ## [0.18.3] - 2026-03-23
 
 ### Changed

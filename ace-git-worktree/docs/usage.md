@@ -328,7 +328,7 @@ Confirm the identifier matches a task ID, branch name, directory name, or path s
 
 ## Related Tools
 
-* `ace-task` for task metadata and status updates
-* `ace-git` for repository and PR context
-* `ace-git-commit` for commits inside worktrees
-* `ace-bundle` for loading worktree workflow instructions directly
+* [ace-task](../ace-task) for task metadata and status updates
+* [ace-git](../ace-git) for repository and PR context
+* [ace-git-commit](../ace-git-commit) for commits inside worktrees
+* [ace-bundle](../ace-bundle) for loading worktree workflow instructions directly
