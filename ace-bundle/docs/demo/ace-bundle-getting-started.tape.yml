@@ -13,14 +13,14 @@ scenes:
 - name: Bundle project context to cache
   commands:
   - type: ace-bundle project --output cache
-    sleep: 6s
+    sleep: 24s
 - name: Load workflow via protocol
   commands:
   - type: ace-bundle wfi://task/finder
-    sleep: 6s
+    sleep: 12s
 - name: Bundle task context to cache
   commands:
   - type: ace-bundle task://t.0or --output cache
-    sleep: 6s
+    sleep: 12s
 teardown:
 - cleanup
