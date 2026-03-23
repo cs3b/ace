@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-23
+
+### Changed
+- Removed stale `docs/security.md` which contained pervasively outdated references to old package name, module paths, CLI commands, and placeholder contact info.
+- Re-recorded getting-started demo GIF.
+
+### Technical
+- Updated `docs/handbook.md` to remove broken security doc link.
+
 ## [0.22.3] - 2026-03-23
 
 ### Changed

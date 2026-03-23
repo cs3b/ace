@@ -25,4 +25,3 @@ ace-docs:
 ## Supporting Docs
 
 - [Usage Reference](usage.md)
-- [Security Notes](security.md)
