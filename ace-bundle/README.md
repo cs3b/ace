@@ -1,6 +1,16 @@
 # ace-bundle
 
-Assemble project context for AI agents and developers in one command.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-bundle.svg)](https://rubygems.org/gems/ace-bundle)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Assemble project context for agents and developers in one command.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 [Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Configuration Reference](docs/configuration.md) | [Handbook Reference](docs/handbook.md)
 
@@ -12,18 +22,11 @@ Assemble project context for AI agents and developers in one command.
 
 **Load baseline project context before coding sessions** - run `ace-bundle project` to gather architecture docs, conventions, and current repository state.
 
-**Pull workflow instructions and guides by protocol URL** - run `ace-bundle wfi://assign/drive` (or `guide://...`, `tmpl://...`, `prompt://...`) to retrieve canonical handbook resources.
+**Pull workflow instructions and guides by protocol URL** - run `ace-bundle wfi://assign/drive` (or `guide://...`, `tmpl://...`, `prompt://...`) to retrieve canonical handbook resources resolved by [ace-support-nav](../ace-support-nav).
 
-**Compose team and task context without manual copy/paste** - combine presets and explicit files in one call to produce targeted context bundles for reviews, implementation, or debugging.
+**Compose team and task context without manual copy/paste** - combine presets and explicit files in one call to produce targeted context bundles for reviews, implementation, or debugging with [ace-git](../ace-git) metadata when needed.
 
-**Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression to keep context payloads manageable.
-
-## Works With
-
-- **[ace-support-nav](../ace-support-nav)** for resolving `wfi://`, `guide://`, `prompt://`, and `tmpl://` protocol URLs.
-- **[ace-git](../ace-git)** for diff context, PR metadata, and branch state used by review-oriented presets.
-- **[ace-compressor](../ace-compressor)** for optional section-level compression of larger context bundles.
-- **[ace-llm](../ace-llm)** for prompt context loading in LLM-powered workflows.
+**Handle large context safely in agent loops** - rely on inline-or-cache output behavior and optional compression through [ace-compressor](../ace-compressor) to keep payloads manageable for LLM workflows.
 
 ## Features
 
@@ -42,13 +45,6 @@ Assemble project context for AI agents and developers in one command.
 - [Configuration Reference](docs/configuration.md)
 - [Handbook Reference](docs/handbook.md)
 - Command help: `ace-bundle --help`
-
-## Agent Skills
-
-Package-owned canonical skills:
-
-- `as-bundle`
-- `as-onboard`
 
 ## Part of ACE
 
