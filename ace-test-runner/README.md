@@ -1,16 +1,18 @@
-<h1 align="center">ace-test-runner</h1>
+<div align="center">
+  <h1> ACE - Test Runner </h1>
 
-<p align="center">
+  AI-friendly test runner with smart grouping, failure analysis, and persistent reports.
+
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 
   <a href="https://rubygems.org/gems/ace-test-runner"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-test-runner.svg" /></a>
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  AI-friendly test runner with smart grouping, failure analysis, and persistent reports.
-</p>
+</div>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 ![ace-test-runner demo](docs/demo/ace-test-runner-getting-started.gif)
@@ -42,3 +44,4 @@
 ---
 
 Part of [ACE](../README.md) (Agentic Coding Environment)
+
