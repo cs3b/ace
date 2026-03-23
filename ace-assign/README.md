@@ -8,7 +8,7 @@
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-> Drive phase-based assignment queues so agents can execute complex work safely and resumably.
+> Phase-based assignment queues for safe, resumable agent execution.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
@@ -18,37 +18,27 @@ Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-assign` turns broad goals into explicit step queues with tracked state transitions, scoped execution, and durable reports. It is designed for long-running or multi-agent workflows where retries, audits, and deterministic progression matter as much as implementation speed.
 
+## How It Works
+
+1. Convert multi-step work into a phase queue with clear state transitions (`pending`, `in_progress`, `done`, `failed`).
+2. Execute steps sequentially or fork subtrees for parallel agent work, with scoped status tracking at each stage.
+3. Advance through the queue with report-backed progression, retrying or injecting fix steps when failures occur.
+
 ## Use Cases
 
-**Run structured delivery loops** - convert multi-step work into a queue and drive it from `pending` to `done` with clear state transitions (`pending`, `in_progress`, `done`, `failed`) and report-backed advancement.
+**Run structured delivery loops** - convert multi-step work into a queue and drive it from `pending` to `done` with clear state transitions and report-backed advancement. Use `/as-assign-drive` to run the full loop or `/as-assign-start` to kick off a fresh assignment.
 
-**Delegate deep subtrees safely** - mark fork-capable subtrees and run them through `fork-run` while preserving orchestrator visibility, scoped status checks, and post-subtree guard review.
+**Delegate deep subtrees safely** - mark fork-capable subtrees and run them through `/as-assign-recover-fork` while preserving orchestrator visibility, scoped status checks, and post-subtree guard review.
 
 **Recover from failure without losing history** - keep failed-step lineage intact, inject targeted retries or fix steps, and continue execution with auditable failure evidence.
 
-**Manage concurrent assignments** - pin or switch active assignments with explicit targeting (`--assignment <id>` and `--assignment <id>@<step>`) so parallel work does not cross streams.
+**Manage concurrent assignments** - pin or switch active assignments with explicit targeting ([`ace-assign --assignment <id>`](docs/usage.md)) so parallel work does not cross streams.
 
-**Coordinate with adjacent ACE tools** - pair with [ace-task](../ace-task) for task lifecycle, [ace-bundle](../ace-bundle) for context loading, [ace-review](../ace-review) and [ace-test](../ace-test) for quality checks, and [ace-demo](../ace-demo) for reproducible demos.
+**Compose assignments from templates** - use `/as-assign-compose` and `/as-assign-prepare` to build assignment plans from reusable patterns, then pair with [ace-task](../ace-task) for task lifecycle, [ace-bundle](../ace-bundle) for context loading, and [ace-review](../ace-review) for quality checks.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- [Exit Codes](docs/exit-codes.md)
-- [Fork Context Guide](handbook/guides/fork-context.g.md)
-
-## Agent Skills
-
-Package-owned canonical skills:
-
-- `as-assign-compose`
-- `as-assign-create`
-- `as-assign-drive`
-- `as-assign-prepare`
-- `as-assign-recover-fork`
-- `as-assign-run-in-batches`
-- `as-assign-start`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ---
 
