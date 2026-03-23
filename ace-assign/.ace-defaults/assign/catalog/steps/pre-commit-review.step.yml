@@ -1,6 +1,6 @@
 name: pre-commit-review
 skill: null
-description: Run native client pre-commit review when supported; otherwise skip gracefully
+description: Run /review agent command (conversation slash command, not bash) when supported; fall back to ace-lint
 
 prerequisites:
   - name: work-on-task
@@ -26,7 +26,7 @@ steps:
   - name: resolve-review-path
     description: "Resolve review mode from subtree config and detect active client/provider"
   - name: run-native-review
-    description: "Invoke native /review when client support is detected and mode is not skip"
+    description: "Review uncommitted changes and find issues using the /review agent slash command (NOT a bash command)"
   - name: summarize-findings
     description: "Present findings summary and preserve raw output when structure is incomplete"
   - name: enforce-blocking

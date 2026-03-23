@@ -21,6 +21,7 @@ context:
 when_to_skip:
   - "No public CLI API changes (internal-only refactoring)"
   - "Package has no E2E test scenarios and no coverage gaps identified"
+  - "All modified files are docs-only (*.md, *.yml non-config, task specs, retros)"
 
 effort: medium
 tags: [testing, e2e, verification]

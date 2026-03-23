@@ -164,6 +164,26 @@ Read the output to identify:
 
 Before executing the current step inline, check whether the active step is inside a fork-enabled subtree.
 
+#### Pre-Fork Clean Tree Guard
+
+Before launching any `fork-run`, verify the working tree is clean:
+
+```bash
+DIRTY=$(git status --short)
+if [ -n "$DIRTY" ]; then
+  # Filter out expected assignment metadata (always dirty during drive)
+  UNRELATED=$(echo "$DIRTY" | grep -v '\.ace-local/assign/' | grep -v '\.ace-tasks/' | grep -v '\.ace-retros/')
+  if [ -n "$UNRELATED" ]; then
+    echo "WARNING: Unrelated dirty files detected before fork-run:"
+    echo "$UNRELATED"
+    # Commit to prevent fork agent stall
+    ace-git-commit -i "pre-fork: commit dirty tree before ${FORK_ROOT}"
+  fi
+fi
+```
+
+This prevents fork agents from stalling on pre-existing unrelated changes. Assignment metadata files (`.ace-local/`, `.ace-tasks/`, `.ace-retros/`) are expected to be dirty during drive execution and are excluded.
+
 #### Delegation Rule
 
 **FORK SIGNAL**: If a step row shows `yes` in the `FORK` column, the step itself has `context: fork` and MUST be delegated via `fork-run`.
