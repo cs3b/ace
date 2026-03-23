@@ -4,15 +4,18 @@
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/ace-overseer.svg)](https://rubygems.org/gems/ace-overseer)
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-> One command to provision a worktree, open a tmux window, and start working on a task.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+</p>
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+<p align="center">
+  One command to provision a worktree, open a tmux window, and start working on a task.
+</p>
+
 
 ![ace-overseer demo](docs/demo/ace-overseer-getting-started.gif)
 
