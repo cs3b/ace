@@ -34,4 +34,4 @@
 **Coordinate with git workflow tools** - pair with [ace-task](../ace-task) for task lookup and status updates, [ace-git](../ace-git) for repository context, and [ace-git-commit](../ace-git-commit) for scoped commits inside task worktrees.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
