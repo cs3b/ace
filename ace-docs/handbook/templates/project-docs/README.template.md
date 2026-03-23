@@ -31,6 +31,9 @@ ace-docs:
 ![demo](docs/demo/{package-name}-getting-started.gif)
 
 <!-- Keep {package-title} as humanized package name, e.g. `ACE - Task` or `ACE - Test Runner E2E`. -->
+<!-- If this package has no docs/ directory, use only:
+Part of [ACE](https://github.com/cs3b/ace)
+and do not add documentation links in the footer. -->
 
 <!-- Include GIF for CLI tools. Omit for support libraries and integrations. -->
 
