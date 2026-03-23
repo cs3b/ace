@@ -35,11 +35,5 @@
 
 **Improve agent workflows over time** - use `/as-handbook-selfimprove` to feed retro insights back into handbook guidance for better future performance.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
