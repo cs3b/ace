@@ -20,35 +20,25 @@ Ideas appear mid-flow: copied from chat, typed in a terminal, or drafted with an
 
 ## How It Works
 
-1. Capture idea text into a structured markdown artifact with metadata.
-2. Refine and organize entries through review-oriented workflows.
+1. Capture idea text into a structured markdown artifact with metadata from direct input, stdin, or clipboard.
+2. Refine and organize entries through review-oriented workflows with tags, scoping, and bucket placement.
 3. Promote ready ideas into execution tasks when they pass review.
 
 ## Use Cases
 
-**Capture from anywhere** - create an idea from direct text input, stdin, or clipboard content. Use `ace-idea create` for quick capture or add `--enhance` when a rough note needs LLM cleanup before saving.
+**Capture from anywhere** - create an idea from direct text input, stdin, or clipboard content with [`ace-idea create`](docs/usage.md). Add `--enhance` when a rough note needs LLM cleanup, or use `/as-idea-capture` for the full agent-driven workflow.
 
-**Shape and review** - run `/as-idea-capture` and `/as-idea-review` to turn raw notes into structured entries with clearer scope, tags, and next actions.
+**Shape and review** - run `/as-idea-review` to turn raw notes into structured entries with clearer scope, tags, and next actions. Use `/as-idea-capture-features` for feature-oriented ideation sessions.
 
 **Organize by intent** - move ideas through root `next` plus `_maybe`, `_anytime`, and `_archive` buckets to keep near-term ideas visible while preserving long-tail exploration.
 
-**Track and maintain** - use `ace-idea list`, `ace-idea show`, and `ace-idea status` for visibility, then run `ace-idea doctor` to detect and repair structure drift.
+**Track and maintain** - use [`ace-idea list`](docs/usage.md), `ace-idea show`, and `ace-idea status` for visibility, then run `ace-idea doctor` to detect and repair structure drift.
 
 **Promote to execution** - once an idea is ready, hand it off to [ace-task](../ace-task) and continue with planning and implementation workflows.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
-## Agent Skills
-
-Package-owned canonical skills:
-
-* `as-idea-capture`
-* `as-idea-capture-features`
-* `as-idea-review`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ---
 
