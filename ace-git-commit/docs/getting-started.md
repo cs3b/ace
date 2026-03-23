@@ -11,17 +11,13 @@ ace-docs:
 
 Use `ace-git-commit` to generate meaningful commit messages from your git diff with one command.
 
-## Prerequisites
-
-- Ruby installed
-- `ace-git-commit` installed
-- A configured LLM provider in your ACE setup
-
-Run:
+## Installation
 
 ```bash
 gem install ace-git-commit
 ```
+
+Requires Ruby 3.2+ and a configured LLM provider in your ACE setup (see [ace-llm](../ace-llm)).
 
 ## 1) Make your first commit message
 

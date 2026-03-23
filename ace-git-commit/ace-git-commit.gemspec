@@ -8,9 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = 'Turn diffs into clear, conventional commit messages — powered by LLM'
-  spec.description = 'Analyzes diffs and developer intent to generate conventional commit messages. ' \
-                     'Handles monorepo scoping automatically — split commits across packages with one command.'
+  spec.summary = 'Intention-aware conventional commit generation from diffs'
+  spec.description = 'Analyzes diffs and developer intent to generate conventional commit messages ' \
+                     'using LLM. Handles monorepo scoping automatically — split commits across packages ' \
+                     'with one command.'
   spec.homepage = 'https://github.com/cs3b/ace'
   spec.license = 'MIT'
   spec.required_ruby_version = ">= 3.2.0"
