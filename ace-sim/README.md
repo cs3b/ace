@@ -33,11 +33,5 @@
 
 **Synthesize recommendations from simulation runs** - enable `--synthesis-workflow` and `--synthesis-provider` to produce actionable suggestions, then feed results into [ace-review](../ace-review) for follow-up review.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
