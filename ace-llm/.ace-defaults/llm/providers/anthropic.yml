@@ -1,5 +1,5 @@
 name: anthropic
-last_synced: 2025-12-05
+last_synced: 2026-03-23
 class: Ace::LLM::Organisms::AnthropicClient
 gem: ace-llm
 context_limit: 1000000  # Claude models have 1M context window
@@ -17,9 +17,9 @@ aliases:
     haiku: anthropic:h
     csonnet: anthropic:s
   model:
-    s: claude-3-5-sonnet-20241022
-    o: claude-3-opus-20240229
-    h: claude-3-haiku-20240307
+    s: claude-sonnet-4-5
+    o: claude-opus-4-5
+    h: claude-haiku-4-5
 api_key:
   env: ANTHROPIC_API_KEY
   required: true

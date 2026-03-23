@@ -3,8 +3,8 @@ doc-type: how-to-guide
 title: ace-llm Usage Guide
 purpose: Usage guide for ace-llm CLI — querying providers, managing output, and handling errors.
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-03-23
+  last-checked: 2026-03-23
 ---
 
 # ace-llm Usage Guide
@@ -64,15 +64,47 @@ Common aliases in current defaults:
 | `gflash` | `google:flash` -> `google:gemini-flash-latest` |
 | `glite` | `google:lite` -> `google:gemini-flash-lite-latest` |
 | `gpro` | `google:pro` -> `google:gemini-2.5-pro` |
-| `sonnet` | `anthropic:s` -> `anthropic:claude-3-5-sonnet-20241022` |
+| `sonnet` | `anthropic:s` -> `anthropic:claude-sonnet-4-5` |
+| `opus` | `anthropic:o` -> `anthropic:claude-opus-4-5` |
+| `haiku` | `anthropic:h` -> `anthropic:claude-haiku-4-5` |
 | `grok` | `xai:grok-4` |
 
-Preset suffixes can be applied with `@`:
+Preset suffixes can be applied with `@` or `--preset`:
 
 ```bash
-ace-llm gflash@ro "Summarize this diff"
+ace-llm cc@ro "Summarize this diff"
+ace-llm codex:gpt-5@yolo "Fix this bug"
 ace-llm claude:sonnet "Review this file" --preset rw
 ```
+
+Built-in presets for CLI providers:
+
+| Preset | Meaning | Providers |
+|--------|---------|-----------|
+| `@ro` | Read-only | `claude`, `codex`, `gemini`, `opencode`, `pi` |
+| `@rw` | Read-write | `claude`, `codex`, `gemini`, `opencode`, `pi` |
+| `@yolo` | Full autonomy | `claude`, `codex`, `gemini`, `opencode`, `pi` |
+
+Preset configs are loaded from `.ace-defaults/llm/presets/<provider>/<preset>.yml` and can be overridden in `.ace/llm/presets/`.
+
+## Thinking Levels
+
+Thinking levels control reasoning depth for CLI providers that support extended thinking. Append `:level` after the model:
+
+```bash
+ace-llm codex:gpt-5:high "Explain this architecture"
+ace-llm claude:sonnet:low "Quick summary"
+ace-llm codex:spark:medium@ro "Review this diff"
+```
+
+Supported providers and levels:
+
+| Provider | Levels |
+|----------|--------|
+| `claude` | `low`, `medium`, `high`, `xhigh` |
+| `codex` | `low`, `medium`, `high`, `xhigh` |
+
+Level configs are loaded from `.ace-defaults/llm/thinking/<provider>/<level>.yml` and can be overridden in `.ace/llm/thinking/`.
 
 ## Common Scenarios
 

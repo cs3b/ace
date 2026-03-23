@@ -18,25 +18,25 @@
 
 ![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
-`ace-llm` gives developers and coding agents one command surface for multi-provider prompting, alias-based model selection, fallback routing, and structured output handling. Switch between providers without changing calling conventions, and keep prompt workflows resilient with automatic retry and fallback behavior.
+`ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt-5:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths. Fallback routing and retry behavior keep prompt workflows resilient.
 
 ## How It Works
 
-1. Select a model using aliases or explicit provider:model notation and submit a prompt via [`ace-llm`](docs/usage.md).
-2. The provider router resolves the target through [ace-llm-providers-cli](../ace-llm-providers-cli) adapters, applying fallback and retry rules from [ace-support-config](../ace-support-config) cascade.
-3. The response is returned in your chosen format (text, markdown, or JSON) with optional cost and token usage metadata.
+1. Select a model — by alias, `provider:model`, with a thinking level suffix (`:low`/`:medium`/`:high`), or an `@preset` — and submit a prompt.
+2. The provider router resolves the target through [ace-llm-providers-cli](../ace-llm-providers-cli) adapters, applying fallback and retry rules from the [config cascade](../ace-support-config).
+3. The response is returned as text, markdown, or JSON with optional token usage metadata.
 
 ## Use Cases
 
-**Run the same prompt across different providers** - switch models quickly with aliases while keeping one command shape and consistent output controls, powered by [ace-llm-providers-cli](../ace-llm-providers-cli) adapters.
+**Switch providers with aliases** - use short names like `gflash`, `sonnet`, `opus` instead of full `provider:model` notation. Aliases resolve through versioned YAML in [`.ace-defaults/`](docs/usage.md).
 
-**Build resilient prompt workflows** - configure fallback and retry behavior through [ace-support-config](../ace-support-config) so transient provider issues do not block interactive development or automation.
+**Control reasoning depth** - append a thinking level (`codex:gpt-5:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
 
-**Capture responses for downstream tooling** - emit plain text, markdown, or JSON outputs for handoff into docs, reviews via [ace-review](../ace-review), and scripted workflows.
+**Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`.
 
-**Execute preset-driven prompts** - apply named execution profiles with `@preset` or `--preset` for repeatable, team-shared prompt configurations.
+**Build resilient prompt workflows** - configure fallback chains and retry behavior through the [config cascade](.ace-defaults/llm/config.yml) so transient provider issues do not block work.
 
-**Power LLM-enhanced flows in sibling packages** - serve as the execution backend for prompt enhancement in [ace-prompt-prep](../ace-prompt-prep), simulation chains in [ace-sim](../ace-sim), and multi-model review in [ace-review](../ace-review).
+**Power LLM-enhanced flows in sibling packages** - serve as the execution backend for [ace-git-commit](../ace-git-commit), [ace-idea](../ace-idea), [ace-review](../ace-review), [ace-sim](../ace-sim), [ace-prompt-prep](../ace-prompt-prep), and more.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

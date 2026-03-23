@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-llm querying a model, listing providers, and saving output
+description: Showcase ace-llm querying models by provider:model, alias, thinking level, and preset
 tags:
 - ace-llm
 - docs
@@ -12,13 +12,13 @@ settings:
 scenes:
 - name: Main flow
   commands:
-  - type: ace-llm --list-providers
-    sleep: 3s
-  - type: ace-llm gflash "Summarize this repository in two bullets"
-    sleep: 3s
-  - type: ace-llm google:gemini-2.5-flash "Explain service objects in Ruby"
-    sleep: 3s
-  - type: ace-llm gflash "Create release notes" --output /tmp/release.md --format markdown
-    sleep: 3s
+  - type: ace-llm google:gemini-2.5-flash 'Say hello in one sentence'
+    sleep: 4s
+  - type: ace-llm glite 'Say hello in one sentence'
+    sleep: 4s
+  - type: ace-llm codex:gpt-5:medium@yolo 'Say hello in one sentence'
+    sleep: 5s
+  - type: ace-llm codex:spark:low@ro 'Say hello in one sentence'
+    sleep: 5s
 teardown:
 - cleanup
