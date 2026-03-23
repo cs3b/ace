@@ -67,13 +67,13 @@ module Ace
           # List available Pi models
           def list_models
             [
-              { id: "zai/glm-4.7", name: "GLM 4.7", description: "ZAI default model", context_size: 128_000 },
-              { id: "anthropic/claude-opus-4-6", name: "Claude Opus 4.6", description: "Anthropic flagship", context_size: 200_000 },
-              { id: "anthropic/claude-sonnet-4-5", name: "Claude Sonnet 4.5", description: "Anthropic balanced", context_size: 200_000 },
-              { id: "anthropic/claude-haiku-4-5", name: "Claude Haiku 4.5", description: "Anthropic fast", context_size: 200_000 },
-              { id: "google-gemini-cli/gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "Google advanced", context_size: 1_000_000 },
-              { id: "google-gemini-cli/gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Google fast", context_size: 1_000_000 },
-              { id: "openai-codex/gpt-5.2", name: "GPT 5.2", description: "OpenAI model", context_size: 128_000 }
+              {id: "zai/glm-4.7", name: "GLM 4.7", description: "ZAI default model", context_size: 128_000},
+              {id: "anthropic/claude-opus-4-6", name: "Claude Opus 4.6", description: "Anthropic flagship", context_size: 200_000},
+              {id: "anthropic/claude-sonnet-4-5", name: "Claude Sonnet 4.5", description: "Anthropic balanced", context_size: 200_000},
+              {id: "anthropic/claude-haiku-4-5", name: "Claude Haiku 4.5", description: "Anthropic fast", context_size: 200_000},
+              {id: "google-gemini-cli/gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "Google advanced", context_size: 1_000_000},
+              {id: "google-gemini-cli/gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Google fast", context_size: 1_000_000},
+              {id: "openai-codex/gpt-5.2", name: "GPT 5.2", description: "OpenAI model", context_size: 128_000}
             ]
           end
 
@@ -114,9 +114,9 @@ module Ace
             return [prompt_str, nil] if prompt_str.start_with?("System:")
 
             system_content = options[:system_instruction] ||
-                           options[:system] ||
-                           options[:system_prompt] ||
-                           @generation_config[:system_prompt]
+              options[:system] ||
+              options[:system_prompt] ||
+              @generation_config[:system_prompt]
 
             [prompt_str, system_content]
           end
@@ -225,7 +225,7 @@ module Ace
             # Detect NDJSON: starts with {"type":"
             if stdout.strip.start_with?('{"type":"')
               text, usage = parse_ndjson(stdout)
-              response = { "usage" => normalize_usage(usage) }
+              response = {"usage" => normalize_usage(usage)}
             else
               # Plain text output
               text = stdout.strip

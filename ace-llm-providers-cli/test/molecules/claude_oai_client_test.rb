@@ -73,8 +73,8 @@ describe "ClaudeOaiClient" do
 
   it "formats message array with roles" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -207,7 +207,7 @@ describe "ClaudeOaiClient" do
     it "merges subprocess_env on top of backend env" do
       env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello",
-                     subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"})
+          subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"})
       end
 
       assert_equal "TS-TEST-001-e2e", env["ACE_TMUX_SESSION"]

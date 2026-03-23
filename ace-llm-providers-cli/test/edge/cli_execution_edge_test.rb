@@ -27,7 +27,7 @@ describe "CLI Execution Edge Cases" do
       # Use stub pattern for thread-safe mocking
       @client.stub :claude_available?, false do
         err = assert_raises(Ace::LLM::Error) do
-          @client.generate([{ role: "user", content: "test" }])
+          @client.generate([{role: "user", content: "test"}])
         end
 
         assert_match(/claude.*not.*found/i, err.message, "Should report claude CLI not found")
@@ -45,7 +45,7 @@ describe "CLI Execution Edge Cases" do
       skip "This test requires mocking or actual claude CLI"
       # Create a very long prompt (100k characters)
       long_prompt = "test " * 20_000
-      messages = [{ role: "user", content: long_prompt }]
+      messages = [{role: "user", content: long_prompt}]
 
       # Should either succeed or fail gracefully
       begin
@@ -59,7 +59,7 @@ describe "CLI Execution Edge Cases" do
 
     it "handles unicode in prompt" do
       messages = [
-        { role: "user", content: "Hello 世界 café résumé مرحبا" }
+        {role: "user", content: "Hello 世界 café résumé مرحبا"}
       ]
 
       # Should format messages without error
@@ -70,7 +70,7 @@ describe "CLI Execution Edge Cases" do
 
     it "handles special characters in prompt" do
       messages = [
-        { role: "user", content: "Test $VAR `command` $(subshell) & | > <" }
+        {role: "user", content: "Test $VAR `command` $(subshell) & | > <"}
       ]
 
       # Should format messages without error
@@ -81,7 +81,7 @@ describe "CLI Execution Edge Cases" do
     it "handles malformed message array" do
       # Missing required fields
       messages = [
-        { content: "no role specified" }
+        {content: "no role specified"}
       ]
 
       # Should handle gracefully
@@ -110,10 +110,10 @@ describe "CLI Execution Edge Cases" do
 
     it "handles multiple roles in conversation" do
       messages = [
-        { role: "system", content: "You are helpful" },
-        { role: "user", content: "Hello" },
-        { role: "assistant", content: "Hi there" },
-        { role: "user", content: "How are you?" }
+        {role: "system", content: "You are helpful"},
+        {role: "user", content: "Hello"},
+        {role: "assistant", content: "Hi there"},
+        {role: "user", content: "How are you?"}
       ]
 
       formatted = @client.send(:format_messages_as_prompt, messages)
@@ -124,7 +124,7 @@ describe "CLI Execution Edge Cases" do
 
     it "handles messages with newlines" do
       messages = [
-        { role: "user", content: "Line 1\nLine 2\nLine 3" }
+        {role: "user", content: "Line 1\nLine 2\nLine 3"}
       ]
 
       formatted = @client.send(:format_messages_as_prompt, messages)
@@ -134,7 +134,7 @@ describe "CLI Execution Edge Cases" do
 
     it "handles messages with quotes" do
       messages = [
-        { role: "user", content: 'Single \'quotes\' and "double" quotes' }
+        {role: "user", content: 'Single \'quotes\' and "double" quotes'}
       ]
 
       formatted = @client.send(:format_messages_as_prompt, messages)
@@ -167,7 +167,7 @@ describe "CLI Execution Edge Cases" do
       # Use stub pattern for thread-safe mocking
       @client.stub :aider_available?, false do
         err = assert_raises(Ace::LLM::Error) do
-          @client.generate([{ role: "user", content: "test" }])
+          @client.generate([{role: "user", content: "test"}])
         end
 
         assert_match(/aider.*not.*found/i, err.message, "Should report aider CLI not found")
@@ -187,7 +187,7 @@ describe "CLI Execution Edge Cases" do
 
     it "handles unicode in messages" do
       messages = [
-        { role: "user", content: "Code with unicode: café.js 文件" }
+        {role: "user", content: "Code with unicode: café.js 文件"}
       ]
 
       formatted = @client.send(:format_messages_as_prompt, messages)
@@ -204,7 +204,7 @@ describe "CLI Execution Edge Cases" do
       # Use stub pattern for thread-safe mocking
       @client.stub :opencode_available?, false do
         err = assert_raises(Ace::LLM::Error) do
-          @client.generate([{ role: "user", content: "test" }])
+          @client.generate([{role: "user", content: "test"}])
         end
 
         assert_match(/opencode.*not.*found/i, err.message, "Should report opencode CLI not found")
@@ -246,7 +246,7 @@ describe "CLI Execution Edge Cases" do
 
     it "builds opencode command without unsupported flags" do
       cmd = @client.send(:build_opencode_command, "test prompt",
-                         temperature: 0.7, max_tokens: 1000, format: "json")
+        temperature: 0.7, max_tokens: 1000, format: "json")
       refute_includes cmd, "--temperature"
       refute_includes cmd, "--max-tokens"
       # --format json is now added automatically for structured output
@@ -291,7 +291,7 @@ describe "CLI Execution Edge Cases" do
     it "builds full prompt with system instruction from generation_config" do
       # Create client with system_prompt in generation_config
       client = Ace::LLM::Providers::CLI::OpenCodeClient.new(
-        generation_config: { system_prompt: "You are helpful" }
+        generation_config: {system_prompt: "You are helpful"}
       )
 
       prompt = "main prompt"
@@ -303,7 +303,7 @@ describe "CLI Execution Edge Cases" do
     it "prioritizes explicit options over generation_config for system prompt" do
       # Create client with system_prompt in generation_config
       client = Ace::LLM::Providers::CLI::OpenCodeClient.new(
-        generation_config: { system_prompt: "Config system prompt" }
+        generation_config: {system_prompt: "Config system prompt"}
       )
 
       prompt = "main prompt"
@@ -428,7 +428,7 @@ describe "CLI Execution Edge Cases" do
       # Use stub pattern for thread-safe mocking
       @client.stub :opencode_available?, false do
         prompt = "test prompt"
-        messages = [{ role: "user", content: prompt }]
+        messages = [{role: "user", content: prompt}]
 
         # This will fail with opencode availability error (expected)
         # but validates the type handling works up to that point
@@ -452,7 +452,7 @@ describe "CLI Execution Edge Cases" do
       # Use stub pattern for thread-safe mocking
       @client.stub :codex_available?, false do
         err = assert_raises(Ace::LLM::Error) do
-          @client.generate([{ role: "user", content: "test" }])
+          @client.generate([{role: "user", content: "test"}])
         end
 
         assert_match(/codex.*not.*found/i, err.message, "Should report codex CLI not found")
@@ -515,27 +515,27 @@ describe "CLI Execution Edge Cases" do
     end
 
     it "handles message with only whitespace" do
-      messages = [{ role: "user", content: "   \n\t   " }]
+      messages = [{role: "user", content: "   \n\t   "}]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert formatted
     end
 
     it "handles message with control characters" do
-      messages = [{ role: "user", content: "Test\x00\x01\x02" }]
+      messages = [{role: "user", content: "Test\x00\x01\x02"}]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert formatted
     end
 
     it "handles message with emoji" do
-      messages = [{ role: "user", content: "Hello 👋 world 🌍" }]
+      messages = [{role: "user", content: "Hello 👋 world 🌍"}]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert_includes formatted, "👋"
     end
 
     it "handles mixed string and symbol keys" do
       messages = [
-        { "role" => "user", "content" => "String keys" },
-        { role: "user", content: "Symbol keys" }
+        {"role" => "user", "content" => "String keys"},
+        {role: "user", content: "Symbol keys"}
       ]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert_includes formatted, "String keys"
@@ -543,14 +543,14 @@ describe "CLI Execution Edge Cases" do
     end
 
     it "handles unknown role" do
-      messages = [{ role: "unknown", content: "Unknown role message" }]
+      messages = [{role: "unknown", content: "Unknown role message"}]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert_includes formatted, "Unknown role message"
     end
 
     it "handles deeply nested JSON-like content" do
-      content = { nested: { deeply: { value: "test" } } }.to_s
-      messages = [{ role: "user", content: content }]
+      content = {nested: {deeply: {value: "test"}}}.to_s
+      messages = [{role: "user", content: content}]
       formatted = @client.send(:format_messages_as_prompt, messages)
       assert formatted
     end

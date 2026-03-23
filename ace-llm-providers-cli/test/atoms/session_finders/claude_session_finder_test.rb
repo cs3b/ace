@@ -19,9 +19,9 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "sessionId" => "sess-001", "type" => "system" }.to_json,
-                    { "type" => "user", "message" => { "content" => PROMPT } }.to_json,
-                    { "type" => "assistant", "message" => { "content" => "ok" } }.to_json
+                    {"sessionId" => "sess-001", "type" => "system"}.to_json,
+                    {"type" => "user", "message" => {"content" => PROMPT}}.to_json,
+                    {"type" => "assistant", "message" => {"content" => "ok"}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -44,8 +44,8 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "sessionId" => "sess-002", "type" => "system" }.to_json,
-                    { "type" => "user", "message" => { "content" => [{ "text" => PROMPT }] } }.to_json
+                    {"sessionId" => "sess-002", "type" => "system"}.to_json,
+                    {"type" => "user", "message" => {"content" => [{"text" => PROMPT}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -67,8 +67,8 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "sessionId" => "sess-001", "type" => "system" }.to_json,
-                    { "type" => "user", "message" => { "content" => "different prompt" } }.to_json
+                    {"sessionId" => "sess-001", "type" => "system"}.to_json,
+                    {"type" => "user", "message" => {"content" => "different prompt"}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -102,8 +102,8 @@ module Ace
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
                     "not valid json",
-                    { "sessionId" => "sess-003", "type" => "system" }.to_json,
-                    { "type" => "user", "message" => { "content" => PROMPT } }.to_json
+                    {"sessionId" => "sess-003", "type" => "system"}.to_json,
+                    {"type" => "user", "message" => {"content" => PROMPT}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -125,8 +125,8 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "sessionId" => "sess-004", "type" => "system" }.to_json,
-                    { "type" => "user", "message" => { "content" => "User: #{PROMPT}" } }.to_json
+                    {"sessionId" => "sess-004", "type" => "system"}.to_json,
+                    {"type" => "user", "message" => {"content" => "User: #{PROMPT}"}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 

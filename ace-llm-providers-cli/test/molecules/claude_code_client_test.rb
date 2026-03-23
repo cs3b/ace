@@ -75,7 +75,7 @@ describe "ClaudeCodeClient" do
     it "merges subprocess_env into env" do
       env, _chdir = run_with_captured_env do
         @client.send(:execute_claude_command, ["claude", "-p"], "hello",
-                     subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e", "FOO" => "bar"})
+          subprocess_env: {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e", "FOO" => "bar"})
       end
 
       assert_nil env["CLAUDECODE"]
@@ -103,7 +103,7 @@ describe "ClaudeCodeClient" do
   describe "generate passes subprocess_env through" do
     it "forwards subprocess_env from options to execute_claude_command" do
       captured_subprocess_env = :not_called
-      messages = [{ role: "user", content: "hello" }]
+      messages = [{role: "user", content: "hello"}]
 
       @client.stub(:validate_claude_availability!, nil) do
         @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil, working_dir: nil|

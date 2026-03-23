@@ -18,8 +18,7 @@ module Ace
                   setup_opencode_structure(base,
                     session_id: "ses_001",
                     message_id: "msg_001",
-                    prompt_text: PROMPT
-                  )
+                    prompt_text: PROMPT)
 
                   result = OpenCodeSessionFinder.call(
                     working_dir: WORKING_DIR,
@@ -37,8 +36,7 @@ module Ace
                   setup_opencode_structure(base,
                     session_id: "ses_001",
                     message_id: "msg_001",
-                    prompt_text: "different prompt"
-                  )
+                    prompt_text: "different prompt")
 
                   result = OpenCodeSessionFinder.call(
                     working_dir: WORKING_DIR,
@@ -57,7 +55,7 @@ module Ace
                   FileUtils.mkdir_p(project_dir)
                   File.write(
                     File.join(project_dir, "proj1.json"),
-                    { "id" => "proj_001", "worktree" => "/other/path" }.to_json
+                    {"id" => "proj_001", "worktree" => "/other/path"}.to_json
                   )
 
                   result = OpenCodeSessionFinder.call(
@@ -106,7 +104,7 @@ module Ace
                 FileUtils.mkdir_p(project_dir)
                 File.write(
                   File.join(project_dir, "proj1.json"),
-                  { "id" => "proj_001", "worktree" => WORKING_DIR }.to_json
+                  {"id" => "proj_001", "worktree" => WORKING_DIR}.to_json
                 )
 
                 # Session file
@@ -114,7 +112,7 @@ module Ace
                 FileUtils.mkdir_p(session_dir)
                 File.write(
                   File.join(session_dir, "#{session_id}.json"),
-                  { "id" => session_id }.to_json
+                  {"id" => session_id}.to_json
                 )
 
                 # Message file
@@ -122,7 +120,7 @@ module Ace
                 FileUtils.mkdir_p(message_dir)
                 File.write(
                   File.join(message_dir, "#{message_id}.json"),
-                  { "id" => message_id, "role" => "user" }.to_json
+                  {"id" => message_id, "role" => "user"}.to_json
                 )
 
                 # Part file
@@ -130,7 +128,7 @@ module Ace
                 FileUtils.mkdir_p(part_dir)
                 File.write(
                   File.join(part_dir, "part1.json"),
-                  { "text" => prompt_text }.to_json
+                  {"text" => prompt_text}.to_json
                 )
               end
             end

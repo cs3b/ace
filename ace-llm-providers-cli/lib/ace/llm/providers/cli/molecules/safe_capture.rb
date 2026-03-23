@@ -26,8 +26,8 @@ module Ace
             # @param cleanup_group_on_exit [Boolean] Best-effort cleanup of descendants on success
             # @return [Array(String, String, Process::Status)] [stdout, stderr, status]
             # @raise [Ace::LLM::ProviderError] on timeout
-        def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
-                          isolate_process_group: true, cleanup_group_on_exit: true)
+            def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
+              isolate_process_group: true, cleanup_group_on_exit: true)
               normalized_timeout = normalize_timeout(timeout)
               opts = {}
               opts[:chdir] = chdir if chdir
@@ -142,7 +142,7 @@ module Ace
               def debug_log(provider_name, message)
                 return unless ENV["ACE_LLM_DEBUG_SUBPROCESS"] == "1"
 
-                $stderr.puts("[SafeCapture][#{provider_name}] #{message}")
+                warn("[SafeCapture][#{provider_name}] #{message}")
               end
             end
           end

@@ -68,9 +68,9 @@ module Ace
           # List available models
           def list_models
             [
-              { id: "zai/glm-5", name: "GLM-5", description: "Z.ai flagship model", context_size: 128_000 },
-              { id: "zai/glm-4.7", name: "GLM-4.7", description: "Z.ai balanced model", context_size: 128_000 },
-              { id: "zai/glm-4.6", name: "GLM-4.6", description: "Z.ai fast model", context_size: 128_000 }
+              {id: "zai/glm-5", name: "GLM-5", description: "Z.ai flagship model", context_size: 128_000},
+              {id: "zai/glm-4.7", name: "GLM-4.7", description: "Z.ai balanced model", context_size: 128_000},
+              {id: "zai/glm-4.6", name: "GLM-4.6", description: "Z.ai fast model", context_size: 128_000}
             ]
           end
 
@@ -179,9 +179,9 @@ module Ace
             input = prompt.to_s
 
             system_content = options[:system_instruction] ||
-                           options[:system] ||
-                           options[:system_prompt] ||
-                           @generation_config[:system_prompt]
+              options[:system] ||
+              options[:system_prompt] ||
+              @generation_config[:system_prompt]
 
             if system_content && !prompt.include?("System:")
               input = "System: #{system_content}\n\nUser: #{input}"

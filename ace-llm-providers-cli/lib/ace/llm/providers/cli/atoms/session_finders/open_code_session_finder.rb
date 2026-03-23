@@ -36,12 +36,12 @@ module Ace
                   next unless session_id
 
                   if first_message_matches?(base_path, session_id, prompt)
-                    return { session_id: session_id, session_path: session_path }
+                    return {session_id: session_id, session_path: session_path}
                   end
                 end
 
                 nil
-              rescue StandardError
+              rescue
                 nil
               end
 
@@ -53,7 +53,7 @@ module Ace
                 Dir.glob(File.join(project_dir, "*.json")).each do |path|
                   data = JSON.parse(File.read(path))
                   return data["id"] if data["worktree"] == expanded
-                rescue StandardError
+                rescue
                   next
                 end
                 nil
@@ -69,7 +69,7 @@ module Ace
                   .filter_map do |path|
                     data = JSON.parse(File.read(path))
                     [path, data]
-                  rescue StandardError
+                  rescue
                     nil
                   end
               end
@@ -100,12 +100,12 @@ module Ace
                   end
 
                   return false
-                rescue StandardError
+                rescue
                   next
                 end
 
                 false
-              rescue StandardError
+              rescue
                 false
               end
 

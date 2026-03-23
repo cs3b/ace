@@ -38,7 +38,7 @@ module Ace
                 end
 
                 nil
-              rescue StandardError
+              rescue
                 nil
               end
 
@@ -48,11 +48,11 @@ module Ace
 
                 first_message = data.dig("messages", 0, "content", 0, "text")
                 if first_message.is_a?(String) && first_message.strip == prompt.strip
-                  return { session_id: session_id, session_path: path }
+                  return {session_id: session_id, session_path: path}
                 end
 
                 nil
-              rescue StandardError
+              rescue
                 nil
               end
 

@@ -18,8 +18,8 @@ module Ace
 
                 session_file = File.join(project_dir, "session1.jsonl")
                 lines = [
-                  { "sessionId" => "sess-dispatch", "type" => "system" }.to_json,
-                  { "type" => "user", "message" => { "content" => PROMPT } }.to_json
+                  {"sessionId" => "sess-dispatch", "type" => "system"}.to_json,
+                  {"type" => "user", "message" => {"content" => PROMPT}}.to_json
                 ]
                 File.write(session_file, lines.join("\n") + "\n")
 

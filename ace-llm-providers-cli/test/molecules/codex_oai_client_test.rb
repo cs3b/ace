@@ -69,8 +69,8 @@ describe "CodexOaiClient" do
 
   it "formats message array with roles" do
     messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hello" }
+      {role: "system", content: "You are helpful"},
+      {role: "user", content: "Hello"}
     ]
 
     formatted = @client.send(:format_messages_as_prompt, messages)
@@ -87,7 +87,7 @@ describe "CodexOaiClient" do
 
       # Should have -c overrides for the backend
       assert_includes cmd, "-c"
-      assert cmd.any? { |arg| arg.include?('model_provider=') }
+      assert cmd.any? { |arg| arg.include?("model_provider=") }
       assert cmd.any? { |arg| arg.include?("model_providers.zai.name=") }
       assert cmd.any? { |arg| arg.include?("model_providers.zai.base_url=") }
       assert cmd.any? { |arg| arg.include?("model_providers.zai.env_key=") }
@@ -117,7 +117,7 @@ describe "CodexOaiClient" do
     end
 
     it "falls back to backend key as name when name not configured" do
-      backends = { "deepseek" => { "base_url" => "https://api.deepseek.com/v1", "env_key" => "DEEPSEEK_API_KEY" } }
+      backends = {"deepseek" => {"base_url" => "https://api.deepseek.com/v1", "env_key" => "DEEPSEEK_API_KEY"}}
       client = Ace::LLM::Providers::CLI::CodexOaiClient.new(model: "deepseek/deepseek-chat", backends: backends)
       cmd = client.send(:build_codex_oai_command, "Test prompt", {})
       name_arg = cmd.find { |arg| arg.include?("model_providers.deepseek.name=") }

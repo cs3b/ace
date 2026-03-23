@@ -20,11 +20,9 @@ module Ace
 
             def teardown
               @tracked_pids.each do |pid|
-                begin
-                  Process.kill("KILL", pid)
-                rescue Errno::ESRCH, Errno::EPERM
-                  nil
-                end
+                Process.kill("KILL", pid)
+              rescue Errno::ESRCH, Errno::EPERM
+                nil
               end
             end
 
@@ -91,7 +89,7 @@ module Ace
               stdout, _stderr, status = SafeCapture.call(
                 ["ruby", "-e", "print ENV['ACE_SAFE_CAPTURE_TEST']"],
                 timeout: 5,
-                env: { "ACE_SAFE_CAPTURE_TEST" => "env-ok" }
+                env: {"ACE_SAFE_CAPTURE_TEST" => "env-ok"}
               )
 
               assert_equal "env-ok", stdout
@@ -129,9 +127,9 @@ module Ace
             end
 
             def test_timeout_cleanup_terminates_background_descendants
-      Dir.mktmpdir do |dir|
-        pid_file = File.join(dir, "child.pid")
-        escaped = Shellwords.escape(pid_file)
+              Dir.mktmpdir do |dir|
+                pid_file = File.join(dir, "child.pid")
+                escaped = Shellwords.escape(pid_file)
 
                 error = assert_raises(Ace::LLM::ProviderError) do
                   SafeCapture.call(

@@ -20,9 +20,9 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "type" => "session", "id" => "pi-001" }.to_json,
-                    { "message" => { "role" => "user", "content" => [{ "text" => PROMPT }] } }.to_json,
-                    { "message" => { "role" => "assistant", "content" => [{ "text" => "ok" }] } }.to_json
+                    {"type" => "session", "id" => "pi-001"}.to_json,
+                    {"message" => {"role" => "user", "content" => [{"text" => PROMPT}]}}.to_json,
+                    {"message" => {"role" => "assistant", "content" => [{"text" => "ok"}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -45,8 +45,8 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "type" => "session", "id" => "pi-002" }.to_json,
-                    { "message" => { "role" => "user", "content" => PROMPT } }.to_json
+                    {"type" => "session", "id" => "pi-002"}.to_json,
+                    {"message" => {"role" => "user", "content" => PROMPT}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -68,8 +68,8 @@ module Ace
 
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
-                    { "type" => "session", "id" => "pi-001" }.to_json,
-                    { "message" => { "role" => "user", "content" => [{ "text" => "wrong" }] } }.to_json
+                    {"type" => "session", "id" => "pi-001"}.to_json,
+                    {"message" => {"role" => "user", "content" => [{"text" => "wrong"}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
@@ -103,8 +103,8 @@ module Ace
                   session_file = File.join(project_dir, "session1.jsonl")
                   lines = [
                     "corrupt",
-                    { "type" => "session", "id" => "pi-003" }.to_json,
-                    { "message" => { "role" => "user", "content" => [{ "text" => PROMPT }] } }.to_json
+                    {"type" => "session", "id" => "pi-003"}.to_json,
+                    {"message" => {"role" => "user", "content" => [{"text" => PROMPT}]}}.to_json
                   ]
                   File.write(session_file, lines.join("\n") + "\n")
 
