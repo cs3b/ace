@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.953] - 2026-03-23
+
+### Changed
+- **ace-test-runner-e2e v0.28.0**: Refreshed package README layout, navigation links, and section flow to align with the current package pattern.
+
 ## [0.9.952] - 2026-03-23
 
 ### Changed
