@@ -13,21 +13,21 @@ ace-docs:
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
 </p>
 
+<p align="center">
 [![Gem Version](https://img.shields.io/gem/v/{package-name}.svg)](https://rubygems.org/gems/{package-name})
 [![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+</p>
 
 <!-- Tagline as blockquote: what it IS, not what it does. The `>` creates a
      visual box on GitHub that draws the eye to the selling line. -->
 
-> {one-sentence tagline}
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
-<!-- Agent compatibility line: always include below the tagline.
-     Keep the list current as new agents gain traction. -->
-
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+<p align="center">
+  {one-sentence tagline}
+</p>
+
 
 <!-- Nav row: pipe-separated links above the demo. Always use "Handbook - Skills, Agents, Templates"
      as the expanded label so readers know what the handbook contains.
