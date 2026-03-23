@@ -1,47 +1,41 @@
-# Ace::TestRunner
+<div align="center">
+  <h1> ACE - Test Runner </h1>
 
-AI-friendly test runner with smart grouping, failure analysis, and persistent reports.
+  AI-friendly test runner with smart grouping, failure analysis, and persistent reports.
+
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+  <a href="https://rubygems.org/gems/ace-test-runner"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-test-runner.svg" /></a>
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+</div>
+
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-test-runner demo](docs/demo/ace-test-runner-getting-started.gif)
 
-## Why
+`ace-test-runner` streamlines test execution so both developers and coding agents can run focused checks quickly, diagnose failures with context, and retain searchable execution history. It handles the execution side of testing; use [ace-test](../ace-test) for planning, review, and suite improvement workflows.
 
-`ace-test-runner` streamlines test execution so both people and agents can read results quickly.
+## How It Works
 
-- It runs tests with progress output tuned for fast local and CI feedback.
-- It supports smart grouping and targeted execution in one command.
-- It captures failures with context so triage can start immediately.
-- It keeps timestamped reports so regressions are easier to audit.
+1. Resolve the target package and test scope from a package name, group (`atoms`, `molecules`, `organisms`, `unit`, `integration`, `system`, `all`, `quick`), or direct `file:line` selector.
+2. Execute the matching tests with failure-oriented output and optional profiling of the slowest cases.
+3. Persist structured run reports for historical debugging and searchable triage across runs.
 
-## Works With
+## Use Cases
 
-- ACE monorepo packages (`ace-*`) via cross-package test execution
-- `ace-test` for package-level runs and options
-- `ace-test-suite` for monorepo-wide execution
+**Run package tests from anywhere in the monorepo** - execute [`ace-test [package]`](docs/usage.md) by name without changing directories, keeping outputs consistent across local and CI environments.
 
-## Agent Skills
+**Target exactly the scope you need** - run by test groups (`ace-test atoms`, `ace-test molecules`) or direct file/line selectors (`ace-test test/file_test.rb:42`) to focus on the code you are changing.
 
-- No package-owned `as-*` skills are defined in `ace-test-runner`.
-- Use `ace-test` workflows (`as-test-*`) for planning, coverage, and remediation guidance.
+**Speed up triage on broken builds** - use failure-oriented output and persisted reports to locate regressions and continue diagnosis without rerunning broad suites.
 
-## Features
+**Validate the full monorepo before shipping** - run `ace-test-suite` for cross-package execution orchestration that covers every package in one sweep.
 
-- Package-aware execution: run any package from any working directory.
-- Smart group execution: `atoms`, `molecules`, `organisms`, `models`, `unit`, `integration`, `system`, `all`, `quick`.
-- Focused execution by explicit files and `file:line` locations.
-- Persistent, searchable run reports for historical debugging.
+**Profile slow tests** - run `ace-test molecules --profile 10` to identify the slowest tests and prioritize optimization with [ace-test](../ace-test) performance audit workflows.
 
-## Documentation
-
-- [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
-- [Handbook](docs/handbook.md)
-- [`ace-test-runner` changelog](CHANGELOG.md)
-
-## Cross-Reference
-
-For testing strategy guidance, use `ace-test` documentation.
-
-## Part of ACE
-
-This package is part of the ACE monorepo and follows ACE conventions.
+---
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
