@@ -48,9 +48,7 @@ Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated bra
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Usage Guide](docs/usage.md)
-- [Handbook - Skills, Agents, Templates](docs/handbook.md)
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ---
 
