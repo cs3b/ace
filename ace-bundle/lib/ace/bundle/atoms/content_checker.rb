@@ -13,9 +13,9 @@ module Ace
           # @param section_data [Hash] section data with symbol or string keys
           # @return [Boolean] true if section has ranges, diffs, or non-empty _processed_diffs
           def has_diffs_content?(section_data)
-            ranges = section_data[:ranges] || section_data['ranges']
-            diffs = section_data[:diffs] || section_data['diffs']
-            processed_diffs = section_data[:_processed_diffs] || section_data['_processed_diffs']
+            ranges = section_data[:ranges] || section_data["ranges"]
+            diffs = section_data[:diffs] || section_data["diffs"]
+            processed_diffs = section_data[:_processed_diffs] || section_data["_processed_diffs"]
             !!(ranges || diffs || (processed_diffs.is_a?(Array) && processed_diffs.any?))
           end
 
@@ -23,21 +23,21 @@ module Ace
           # @param section_data [Hash] section data with symbol or string keys
           # @return [Boolean] true if section has files
           def has_files_content?(section_data)
-            !!(section_data[:files] || section_data['files'])
+            !!(section_data[:files] || section_data["files"])
           end
 
           # Checks if section has commands content
           # @param section_data [Hash] section data with symbol or string keys
           # @return [Boolean] true if section has commands
           def has_commands_content?(section_data)
-            !!(section_data[:commands] || section_data['commands'])
+            !!(section_data[:commands] || section_data["commands"])
           end
 
           # Checks if section has inline content
           # @param section_data [Hash] section data with symbol or string keys
           # @return [Boolean] true if section has content
           def has_content_content?(section_data)
-            !!(section_data[:content] || section_data['content'])
+            !!(section_data[:content] || section_data["content"])
           end
         end
       end

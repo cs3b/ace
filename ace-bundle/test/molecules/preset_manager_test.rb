@@ -232,5 +232,4 @@ class PresetManagerTest < AceTestCase
       assert_equal ["echo \"new structure\""], preset.dig(:bundle, "commands")
     end
   end
-
 end

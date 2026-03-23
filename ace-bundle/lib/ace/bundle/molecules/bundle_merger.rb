@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require 'set'
-require 'time'
+require "time"
 
 module Ace
   module Bundle
@@ -102,7 +101,7 @@ module Ace
             commands: [],
             errors: [],
             sources: [],
-            metadata: { merged_at: Time.now.iso8601 },
+            metadata: {merged_at: Time.now.iso8601},
             merged: false,
             total_bundles: 0,
             total_files: 0,
@@ -178,11 +177,11 @@ module Ace
 
           bundles.each do |bundle|
             if bundle[:preset_name]
-              sources << { type: 'preset', name: bundle[:preset_name] }
+              sources << {type: "preset", name: bundle[:preset_name]}
             elsif bundle[:source_input]
-              sources << { type: 'input', path: bundle[:source_input] }
+              sources << {type: "input", path: bundle[:source_input]}
             elsif bundle[:file_path]
-              sources << { type: 'file', path: bundle[:file_path] }
+              sources << {type: "file", path: bundle[:file_path]}
             end
           end
 
@@ -215,8 +214,6 @@ module Ace
             "input:#{bundle[:source_input]}"
           elsif bundle[:file_path]
             "file:#{bundle[:file_path]}"
-          else
-            nil
           end
         end
 
@@ -232,12 +229,12 @@ module Ace
               value1 = merged[key]
 
               merged[key] = if value1.is_a?(Hash) && value2.is_a?(Hash)
-                              deep_merge(value1, value2)
-                            elsif value1.is_a?(Array) && value2.is_a?(Array)
-                              (value1 + value2).uniq
-                            else
-                              value2
-                            end
+                deep_merge(value1, value2)
+              elsif value1.is_a?(Array) && value2.is_a?(Array)
+                (value1 + value2).uniq
+              else
+                value2
+              end
             else
               merged[key] = value2
             end

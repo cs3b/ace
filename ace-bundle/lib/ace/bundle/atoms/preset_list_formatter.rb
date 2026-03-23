@@ -20,7 +20,7 @@ module Ace
           presets.each do |preset|
             lines << "  #{preset[:name]}"
             lines << "    Description: #{preset[:description]}" if preset[:description]
-            lines << "    Default output: #{preset[:output] || 'stdio'}"
+            lines << "    Default output: #{preset[:output] || "stdio"}"
             lines << "    Source: #{preset[:source_file]}" if preset[:source_file]
             lines << ""
           end

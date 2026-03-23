@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module Ace
   module Bundle
     module Atoms
@@ -21,15 +19,15 @@ module Ace
           if preset_chain.include?(preset_name)
             {
               success: false,
-              error: "Circular dependency detected: #{(preset_chain + [preset_name]).join(' -> ')}"
+              error: "Circular dependency detected: #{(preset_chain + [preset_name]).join(" -> ")}"
             }
           elsif preset_chain.size >= MAX_DEPTH
             {
               success: false,
-              error: "Maximum preset nesting depth (#{MAX_DEPTH}) exceeded: #{preset_chain.join(' -> ')}"
+              error: "Maximum preset nesting depth (#{MAX_DEPTH}) exceeded: #{preset_chain.join(" -> ")}"
             }
           else
-            { success: true }
+            {success: true}
           end
         end
 
@@ -59,8 +57,8 @@ module Ace
         def self.extract_preset_references(preset_data)
           return [] unless preset_data
 
-          bundle_config = preset_data[:bundle] || preset_data['bundle'] || {}
-          presets = bundle_config['presets'] || bundle_config[:presets] || []
+          bundle_config = preset_data[:bundle] || preset_data["bundle"] || {}
+          presets = bundle_config["presets"] || bundle_config[:presets] || []
 
           # Ensure we return an array of strings
           Array(presets).map(&:to_s)

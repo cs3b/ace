@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/section_validator'
-require_relative '../atoms/content_checker'
+require_relative "../atoms/section_validator"
+require_relative "../atoms/content_checker"
 
 module Ace
   module Bundle
@@ -29,7 +29,7 @@ module Ace
 
           # Process preset references within sections if preset manager is available
           if preset_manager
-            processed_sections = process_section_presets(processed_sections, preset_manager)
+            process_section_presets(processed_sections, preset_manager)
           end
         end
 
@@ -38,10 +38,10 @@ module Ace
         # @return [Boolean] true if has sections
         def has_sections?(config)
           # Use 'bundle' key for configuration
-          bundle = config['bundle'] || config[:bundle]
+          bundle = config["bundle"] || config[:bundle]
           return false unless bundle
 
-          sections = bundle['sections'] || bundle[:sections]
+          sections = bundle["sections"] || bundle[:sections]
           sections && !sections.empty?
         end
 
@@ -55,10 +55,10 @@ module Ace
             next if sections.empty?
 
             sections.each do |name, section|
-              if merged.key?(name)
-                merged[name] = merge_section_data(merged[name], section)
+              merged[name] = if merged.key?(name)
+                merge_section_data(merged[name], section)
               else
-                merged[name] = deep_copy(section)
+                deep_copy(section)
               end
             end
           end
@@ -99,7 +99,7 @@ module Ace
           processed = deep_copy(sections)
 
           processed.each do |section_name, section_data|
-            presets = section_data[:presets] || section_data['presets']
+            presets = section_data[:presets] || section_data["presets"]
             next unless presets&.any?
 
             # Load all referenced presets
@@ -168,19 +168,19 @@ module Ace
           end
 
           # Merge sections from preset bundle (flatten into current section)
-          if preset_content['sections']&.any?
-            preset_content['sections'].each do |_, preset_section|
+          if preset_content["sections"]&.any?
+            preset_content["sections"].each do |_, preset_section|
               merged = merge_section_data(merged, preset_section)
             end
           end
 
           # Merge other content
-          if preset_content['content'] && !preset_content['content'].empty?
-            existing_content = merged['content'] || merged[:content] || ''
-            if existing_content.empty?
-              merged['content'] = preset_content['content']
+          if preset_content["content"] && !preset_content["content"].empty?
+            existing_content = merged["content"] || merged[:content] || ""
+            merged["content"] = if existing_content.empty?
+              preset_content["content"]
             else
-              merged['content'] = existing_content + "\n\n#{preset_content['content']}"
+              existing_content + "\n\n#{preset_content["content"]}"
             end
           end
 
@@ -195,12 +195,12 @@ module Ace
           return preset_contents.first if preset_contents.size == 1
 
           merged = {
-            'files' => [],
-            'commands' => [],
-            'ranges' => [],
-            'diffs' => [],
-            'sections' => {},
-            'content' => ''
+            "files" => [],
+            "commands" => [],
+            "ranges" => [],
+            "diffs" => [],
+            "sections" => {},
+            "content" => ""
           }
 
           preset_contents.each do |content|
@@ -215,25 +215,25 @@ module Ace
             end
 
             # Merge sections
-            if content['sections']&.any?
-              content['sections'].each do |section_name, section_data|
-                if merged['sections'].key?(section_name)
-                  merged['sections'][section_name] = merge_section_data(
-                    merged['sections'][section_name],
+            if content["sections"]&.any?
+              content["sections"].each do |section_name, section_data|
+                merged["sections"][section_name] = if merged["sections"].key?(section_name)
+                  merge_section_data(
+                    merged["sections"][section_name],
                     section_data
                   )
                 else
-                  merged['sections'][section_name] = deep_copy(section_data)
+                  deep_copy(section_data)
                 end
               end
             end
 
             # Concatenate content
-            if content['content'] && !content['content'].empty?
-              if merged['content'].empty?
-                merged['content'] = content['content']
+            if content["content"] && !content["content"].empty?
+              if merged["content"].empty?
+                merged["content"] = content["content"]
               else
-                merged['content'] += "\n\n#{content['content']}"
+                merged["content"] += "\n\n#{content["content"]}"
               end
             end
           end
@@ -247,16 +247,16 @@ module Ace
         # @return [Boolean] true if section has the specified content type
         def has_content_type?(section, content_type)
           case content_type
-          when 'files'
-            !!(section['files'] || section[:files])
-          when 'commands'
-            !!(section['commands'] || section[:commands])
-          when 'diffs'
-            !!(section['ranges'] || section[:ranges] || section['diffs'] || section[:diffs])
-          when 'presets'
-            !!(section['presets'] || section[:presets])
-          when 'content'
-            !!(section['content'] || section[:content])
+          when "files"
+            !!(section["files"] || section[:files])
+          when "commands"
+            !!(section["commands"] || section[:commands])
+          when "diffs"
+            !!(section["ranges"] || section[:ranges] || section["diffs"] || section[:diffs])
+          when "presets"
+            !!(section["presets"] || section[:presets])
+          when "content"
+            !!(section["content"] || section[:content])
           else
             false
           end
@@ -284,10 +284,10 @@ module Ace
         # Extracts sections configuration from the main config
         def extract_sections_config(config)
           # Use 'bundle' key for configuration
-          bundle = config['bundle'] || config[:bundle]
+          bundle = config["bundle"] || config[:bundle]
           return {} unless bundle
 
-          bundle['sections'] || bundle[:sections] || {}
+          bundle["sections"] || bundle[:sections] || {}
         end
 
         # Normalizes sections configuration (string keys to symbols, defaults, etc.)
@@ -324,11 +324,11 @@ module Ace
             diff_config = normalized[:diff]
             if diff_config.is_a?(Hash)
               # Extract ranges from complex diff config
-              if diff_config[:ranges] || diff_config['ranges']
-                normalized[:ranges] = diff_config[:ranges] || diff_config['ranges']
-              elsif diff_config[:since] || diff_config['since']
+              if diff_config[:ranges] || diff_config["ranges"]
+                normalized[:ranges] = diff_config[:ranges] || diff_config["ranges"]
+              elsif diff_config[:since] || diff_config["since"]
                 # Convert 'since' to range format
-                since_ref = diff_config[:since] || diff_config['since']
+                since_ref = diff_config[:since] || diff_config["since"]
                 normalized[:ranges] = ["#{since_ref}...HEAD"]
               end
               # Note: paths filtering will be handled by ace-git when implemented
@@ -352,7 +352,6 @@ module Ace
 
           normalized
         end
-
 
         # Merges two section data hashes
         # Normalizes keys to symbols for consistent internal access
@@ -393,8 +392,8 @@ module Ace
 
           # Merge content (concatenate)
           if merged[:content] || new_normalized[:content]
-            existing_content = merged[:content] || ''
-            new_content = new_normalized[:content] || ''
+            existing_content = merged[:content] || ""
+            new_content = new_normalized[:content] || ""
 
             if !new_content.empty?
               merged[:content] = existing_content.empty? ? new_content : "#{existing_content}\n\n#{new_content}"
@@ -431,10 +430,10 @@ module Ace
           return nil unless name
 
           # Convert underscores and hyphens to spaces, capitalize each word
-          name.to_s.gsub(/[_-]/, ' ')
-               .split
-               .map(&:capitalize)
-               .join(' ')
+          name.to_s.gsub(/[_-]/, " ")
+            .split
+            .map(&:capitalize)
+            .join(" ")
         end
 
         # Helper methods to detect content types in sections
@@ -455,9 +454,7 @@ module Ace
         def has_content_content?(section_data)
           Atoms::ContentChecker.has_content_content?(section_data)
         end
-
       end
-
     end
   end
 end

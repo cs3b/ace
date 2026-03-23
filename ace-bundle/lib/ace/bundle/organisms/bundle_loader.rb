@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'date'
-require 'ace/core'
-require_relative '../molecules/bundle_merger'
-require 'ace/core/molecules/file_aggregator'
-require 'ace/core/molecules/output_formatter'
-require 'ace/support/fs'
-require 'ace/core/atoms/command_executor'
-require 'ace/core/atoms/template_parser'
-require 'ace/core/atoms/file_reader'
-require 'ace/git'
-require_relative '../molecules/preset_manager'
-require_relative '../molecules/section_processor'
-require_relative '../molecules/section_formatter'
-require_relative '../molecules/section_compressor'
-require_relative 'pr_bundle_loader'
-require_relative '../models/bundle_data'
-require_relative '../atoms/content_checker'
-require_relative '../atoms/typo_detector'
+require "pathname"
+require "date"
+require "ace/core"
+require_relative "../molecules/bundle_merger"
+require "ace/core/molecules/file_aggregator"
+require "ace/core/molecules/output_formatter"
+require "ace/support/fs"
+require "ace/core/atoms/command_executor"
+require "ace/core/atoms/template_parser"
+require "ace/core/atoms/file_reader"
+require "ace/git"
+require_relative "../molecules/preset_manager"
+require_relative "../molecules/section_processor"
+require_relative "../molecules/section_formatter"
+require_relative "../molecules/section_compressor"
+require_relative "pr_bundle_loader"
+require_relative "../models/bundle_data"
+require_relative "../atoms/content_checker"
+require_relative "../atoms/typo_detector"
 
 module Ace
   module Bundle
@@ -37,7 +37,7 @@ module Ace
           )
           @command_executor = Ace::Core::Atoms::CommandExecutor
           @output_formatter = Ace::Core::Molecules::OutputFormatter.new(
-            options[:format] || 'markdown-xml'
+            options[:format] || "markdown-xml"
           )
         end
 
@@ -49,12 +49,12 @@ module Ace
           unless preset[:success]
             return Models::BundleData.new(
               preset_name: preset_name,
-              metadata: { error: preset[:error] }
+              metadata: {error: preset[:error]}
             )
           end
 
           # Merge params into options for processing
-          params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
+          params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
           merged_options = @options.merge(params)
 
           # Process the preset bundle configuration
@@ -64,7 +64,7 @@ module Ace
             # Handle errors from top-level preset processing (fail-fast behavior)
             return Models::BundleData.new(
               preset_name: preset_name,
-              metadata: { error: e.message }
+              metadata: {error: e.message}
             )
           end
           bundle.metadata[:preset_name] = preset_name
@@ -80,17 +80,17 @@ module Ace
 
           # Determine format - respect explicit format requests but default to markdown-xml for embedded sources
           # Check for explicit format request in preset or params
-          explicit_format = preset[:format] || params['format'] || params[:format] || merged_options[:format]
+          explicit_format = preset[:format] || params["format"] || params[:format] || merged_options[:format]
 
-          if explicit_format
+          format = if explicit_format
             # Use the explicitly requested format
-            format = explicit_format
-          elsif preset.dig(:context, 'embed_document_source')
+            explicit_format
+          elsif preset.dig(:context, "embed_document_source")
             # Default to markdown-xml format when embed_document_source is true and no explicit format requested
-            format = 'markdown-xml'
+            "markdown-xml"
           else
             # Fallback to markdown
-            format = 'markdown'
+            "markdown"
           end
           format_bundle(bundle, format)
 
@@ -99,14 +99,18 @@ module Ace
 
         def load_file(path)
           # Check if it's a template file
-          content = File.read(path) rescue nil
+          content = begin
+            File.read(path)
+          rescue
+            nil
+          end
 
           # Treat as template if:
           # 1. TemplateParser recognizes it as a template, OR
           # 2. It has YAML frontmatter (starts with ---)
           is_template = content && (
             Ace::Core::Atoms::TemplateParser.template?(content) ||
-            content.start_with?('---')
+            content.start_with?("---")
           )
 
           if is_template
@@ -142,7 +146,7 @@ module Ace
             preset = @preset_manager.load_preset_with_composition(preset_name)
 
             if preset[:success]
-              params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
+              params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
               merged_options = @options.merge(params)
               bundle = load_from_preset_config(preset, merged_options)
               bundle.metadata[:preset_name] = preset_name
@@ -183,7 +187,7 @@ module Ace
         # Inspect configuration without loading files or executing commands
         # Returns a ContextData with just the merged configuration as YAML
         def inspect_config(inputs)
-          require 'yaml'
+          require "yaml"
 
           # Load all inputs (presets and files) with composition
           configs = []
@@ -203,7 +207,7 @@ module Ace
                   # ace-docs date-only fields without coercing them to strings.
                   config = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol, Date]) || {}
                 elsif has_frontmatter?(input)
-                  if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
+                  if content =~ /\A---\s*\n(.*?)\n---\s*\n/m
                     # Keep Date aligned with YAML file parsing above for frontmatter
                     # sources that include ace-docs date-only metadata.
                     frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol, Date]) || {}
@@ -212,14 +216,14 @@ module Ace
                 end
 
                 # Handle preset composition if file references presets
-                preset_refs = config['presets'] || config[:presets]
+                preset_refs = config["presets"] || config[:presets]
                 if preset_refs && !preset_refs.empty?
                   # Load all referenced presets first
                   preset_bundles = []
                   preset_refs.each do |preset_name|
                     preset = @preset_manager.load_preset_with_composition(preset_name)
                     if preset[:success]
-                      preset_bundles << { bundle: preset[:bundle] }
+                      preset_bundles << {bundle: preset[:bundle]}
                     else
                       warnings << "Failed to load preset '#{preset_name}' from file #{input}"
                     end
@@ -228,12 +232,12 @@ module Ace
                   # Merge all presets + file config (file config last = file wins)
                   # Order: preset1, preset2, ..., file config
                   if preset_bundles.any?
-                    merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{ bundle: config }])
+                    merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{bundle: config}])
                     config = merged[:bundle]
                   end
 
                   # Remove presets key from final config
-                  config.delete('presets')
+                  config.delete("presets")
                   config.delete(:presets)
                 end
 
@@ -308,11 +312,11 @@ module Ace
             preset = @preset_manager.load_preset_with_composition(preset_name)
 
             if preset[:success]
-              params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
+              params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
               merged_options = @options.merge(params)
               bundle = load_from_preset_config(preset, merged_options)
               bundle.metadata[:preset_name] = preset_name
-              bundle.metadata[:source_type] = 'preset'
+              bundle.metadata[:source_type] = "preset"
               bundle.metadata[:output] = preset[:output]  # Store preset's output mode
 
               # Add composition metadata if preset was composed
@@ -331,15 +335,13 @@ module Ace
 
           # Process files
           file_paths.each do |file_path|
-            begin
-              bundle = load_file(file_path)
-              bundle.metadata[:source_type] = 'file'
-              bundle.metadata[:source_path] = file_path
-              bundles << bundle
-            rescue => e
-              warnings << "Warning: Failed to load file #{file_path}: #{e.message}"
-              warn "Warning: Failed to load file #{file_path}: #{e.message}" if @options[:debug]
-            end
+            bundle = load_file(file_path)
+            bundle.metadata[:source_type] = "file"
+            bundle.metadata[:source_path] = file_path
+            bundles << bundle
+          rescue => e
+            warnings << "Warning: Failed to load file #{file_path}: #{e.message}"
+            warn "Warning: Failed to load file #{file_path}: #{e.message}" if @options[:debug]
           end
 
           # Return error if all inputs failed
@@ -376,45 +378,41 @@ module Ace
           elsif input.match?(/\A[\w-]+\z/)
             # Looks like a preset name
             load_preset(input)
-          elsif input.include?('files:') || input.include?('commands:') || input.include?('include:') || input.include?('diffs:') || input.include?('presets:') || input.include?('pr:')
+          elsif input.include?("files:") || input.include?("commands:") || input.include?("include:") || input.include?("diffs:") || input.include?("presets:") || input.include?("pr:")
             # Looks like inline YAML
             load_inline_yaml(input)
-          else
+          elsif File.exist?(input)
             # Try as file first, then preset
-            if File.exist?(input)
-              load_file(input)
-            else
-              load_preset(input)
-            end
+            load_file(input)
+          else
+            load_preset(input)
           end
         end
 
         def load_inline_yaml(yaml_string)
-          begin
-            require 'yaml'
-            # Inline bundle YAML accepts Date for the same reason as file/frontmatter
-            # loading: ace-docs date-only metadata may deserialize to Date.
-            config = YAML.safe_load(yaml_string, aliases: true, permitted_classes: [Symbol, Date])
-            # Unwrap 'bundle' key if present (typed subjects use nested structure)
-            # This allows both flat configs (diffs: [...]) and nested (bundle: { diffs: [...] })
-            template_config = unwrap_bundle_config(config)
-            bundle = process_template_config(template_config)
-            # Process PR references if present (uses same unwrapped config)
-            pr_processed = process_pr_config(bundle, template_config, @options)
-            # Re-format bundle if PR processing added sections
-            # Note: process_template_config already formats files/diffs/commands into bundle.content
-            # We only need to re-format if process_pr_config added new sections (PR diffs)
-            # If PR had no changes or failed, has_sections? returns false and we keep existing content
-            if bundle.has_sections? || pr_processed
-              format = config['format'] || @options[:format] || 'markdown-xml'
-              format_bundle(bundle, format)
-            end
-            bundle
-          rescue => e
-            bundle = Models::BundleData.new
-            bundle.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
-            bundle
+          require "yaml"
+          # Inline bundle YAML accepts Date for the same reason as file/frontmatter
+          # loading: ace-docs date-only metadata may deserialize to Date.
+          config = YAML.safe_load(yaml_string, aliases: true, permitted_classes: [Symbol, Date])
+          # Unwrap 'bundle' key if present (typed subjects use nested structure)
+          # This allows both flat configs (diffs: [...]) and nested (bundle: { diffs: [...] })
+          template_config = unwrap_bundle_config(config)
+          bundle = process_template_config(template_config)
+          # Process PR references if present (uses same unwrapped config)
+          pr_processed = process_pr_config(bundle, template_config, @options)
+          # Re-format bundle if PR processing added sections
+          # Note: process_template_config already formats files/diffs/commands into bundle.content
+          # We only need to re-format if process_pr_config added new sections (PR diffs)
+          # If PR had no changes or failed, has_sections? returns false and we keep existing content
+          if bundle.has_sections? || pr_processed
+            format = config["format"] || @options[:format] || "markdown-xml"
+            format_bundle(bundle, format)
           end
+          bundle
+        rescue => e
+          bundle = Models::BundleData.new
+          bundle.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
+          bundle
         end
 
         def load_template(path)
@@ -432,13 +430,13 @@ module Ace
             frontmatter_text = $1
             frontmatter_yaml = frontmatter_text  # Store original YAML for output
             begin
-              require 'yaml'
+              require "yaml"
               # Workflow/template frontmatter can include date-only ace-docs fields,
               # so Date remains an explicit safe-load allowance here as well.
               frontmatter = YAML.safe_load(frontmatter_text, aliases: true, permitted_classes: [Symbol, Date]) || {}
               frontmatter = {} unless frontmatter.is_a?(Hash)
               # Remove frontmatter from content for processing
-              template_content = template_content.sub(/\A---\s*\n.*?\n---\s*\n/m, '')
+              template_content = template_content.sub(/\A---\s*\n.*?\n---\s*\n/m, "")
             rescue Psych::SyntaxError
               # Invalid YAML, ignore frontmatter
               frontmatter_yaml = nil
@@ -447,29 +445,29 @@ module Ace
 
           # Check if frontmatter contains config directly (via 'bundle' key or template config keys)
           # This is the newer pattern for workflow files
-          if frontmatter['bundle'].is_a?(Hash) ||
-             (frontmatter.keys & %w[preset presets files commands include exclude diffs]).any?
+          if frontmatter["bundle"].is_a?(Hash) ||
+              (frontmatter.keys & %w[preset presets files commands include exclude diffs]).any?
             # Use frontmatter as the main config
             config = unwrap_bundle_config(frontmatter)
 
             # Merge params into options if present
-            params = config['params']
+            params = config["params"]
             if params.is_a?(Hash)
               @options = @options.merge(params)
             end
 
             # Handle preset/presets keys from frontmatter
             preset_names = []
-            if frontmatter['preset'] && !frontmatter['preset'].to_s.strip.empty?
-              preset_names << frontmatter['preset'].to_s.strip
+            if frontmatter["preset"] && !frontmatter["preset"].to_s.strip.empty?
+              preset_names << frontmatter["preset"].to_s.strip
             end
-            if frontmatter['presets'] && frontmatter['presets'].is_a?(Array)
-              preset_names += frontmatter['presets'].compact.map(&:to_s).map(&:strip)
+            if frontmatter["presets"] && frontmatter["presets"].is_a?(Array)
+              preset_names += frontmatter["presets"].compact.map(&:to_s).map(&:strip)
             end
 
             if preset_names.any?
-              existing_presets = config['presets'] || []
-              config['presets'] = preset_names + existing_presets
+              existing_presets = config["presets"] || []
+              config["presets"] = preset_names + existing_presets
             end
 
             # Apply CLI overrides to config (CLI takes precedence)
@@ -478,14 +476,14 @@ module Ace
             # Process presets from frontmatter
             preset_error = nil
             preset_names_loaded = []
-            if config['presets'] && config['presets'].any?
+            if config["presets"] && config["presets"].any?
               begin
-                preset_names_loaded = config['presets'].dup
+                preset_names_loaded = config["presets"].dup
                 config = process_top_level_presets(config)
               rescue Ace::Bundle::PresetLoadError => e
                 preset_error = e.message
                 warn "Warning: #{e.message}" if @options[:debug]
-                config.delete('presets')
+                config.delete("presets")
                 config.delete(:presets)
               end
             end
@@ -503,7 +501,7 @@ module Ace
             process_pr_config(bundle, config, @options)
 
             # Process sections if present (same as preset loading)
-            preset_like_config = { 'bundle' => config }
+            preset_like_config = {"bundle" => config}
             if @section_processor.has_sections?(preset_like_config)
               sections = @section_processor.process_sections(preset_like_config, @preset_manager)
               bundle.sections = sections
@@ -528,7 +526,7 @@ module Ace
             bundle.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
 
             # If embed_document_source is true, store original document and keep embedded files separate
-            if config['embed_document_source']
+            if config["embed_document_source"]
               # base replaces the source document for embedding
               bundle.content = base_content_resolved || original_content
 
@@ -536,12 +534,12 @@ module Ace
               # Don't add source to files array - it will be output as raw content
 
               # Format and return
-              format = config['format'] || @options[:format] || 'markdown-xml'
+              format = config["format"] || @options[:format] || "markdown-xml"
               return format_bundle(bundle, format)
             end
 
             # Format bundle before returning (same as preset loading)
-            format = config['format'] || @options[:format] || 'markdown-xml'
+            format = config["format"] || @options[:format] || "markdown-xml"
             format_bundle(bundle, format)
 
             return bundle
@@ -649,13 +647,11 @@ module Ace
           process_pr_config(bundle, bundle_config, options)
 
           # If embed_document_source is true, set content to trigger XML formatting
-          if bundle_config['embed_document_source'] && preset[:body] && !preset[:body].empty?
+          if bundle_config["embed_document_source"] && preset[:body] && !preset[:body].empty?
             bundle.content = preset[:body]
-          else
+          elsif preset[:body] && !preset[:body].empty?
             # Add preset body to metadata (old behavior for non-embedded)
-            if preset[:body] && !preset[:body].empty?
-              bundle.metadata[:preset_content] = preset[:body]
-            end
+            bundle.metadata[:preset_content] = preset[:body]
           end
 
           bundle
@@ -675,23 +671,23 @@ module Ace
             preset = @preset_manager.load_preset_with_composition(preset_name)
             if preset[:success]
               preset_bundle = preset[:bundle]
-              preset_bundles << { bundle: preset_bundle }
+              preset_bundles << {bundle: preset_bundle}
               composed_from << preset_name
               composed_from.concat(preset[:composed_from]) if preset[:composed_from]
-            else
-              warn "Warning: Failed to load preset '#{preset_name}' referenced in file" if @options[:debug]
+            elsif @options[:debug]
+              warn "Warning: Failed to load preset '#{preset_name}' referenced in file"
             end
           end
 
           # Merge all presets + file bundle (file bundle last = file wins)
           # Order: preset1, preset2, ..., file bundle
           if preset_bundles.any?
-            merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{ bundle: base_bundle }])
+            merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{bundle: base_bundle}])
             base_bundle = merged[:bundle]
           end
 
           # Remove presets key from bundle (it's metadata, already processed)
-          base_bundle.delete('presets')
+          base_bundle.delete("presets")
           base_bundle.delete(:presets)
 
           file_data[:bundle] = base_bundle
@@ -707,7 +703,7 @@ module Ace
         # @param config [Hash] Configuration hash, possibly with 'bundle' key
         # @return [Hash] The bundle configuration
         def unwrap_bundle_config(config)
-          config['bundle'] || config
+          config["bundle"] || config
         end
 
         # Apply CLI overrides to configuration
@@ -719,9 +715,9 @@ module Ace
         # - load_from_preset_config: For preset-based loading
         # - process_template_config: For template processing
         def apply_cli_overrides(config)
-          config = config || {}  # Guard against nil config
+          config ||= {}  # Guard against nil config
           if @options[:embed_source]
-            config.merge('embed_document_source' => true)
+            config.merge("embed_document_source" => true)
           else
             config
           end
@@ -741,7 +737,7 @@ module Ace
         def process_top_level_presets(bundle_config)
           return bundle_config unless bundle_config
 
-          preset_refs = bundle_config['presets'] || bundle_config[:presets]
+          preset_refs = bundle_config["presets"] || bundle_config[:presets]
           return bundle_config unless preset_refs&.any?
 
           # Load all referenced presets, collecting any errors
@@ -752,7 +748,7 @@ module Ace
             preset = @preset_manager.load_preset_with_composition(preset_name)
             if preset[:success]
               preset_bundle = preset[:bundle]
-              preset_bundles << { bundle: preset_bundle }
+              preset_bundles << {bundle: preset_bundle}
             else
               errors << "#{preset_name}: #{preset[:error]}"
             end
@@ -760,17 +756,17 @@ module Ace
 
           # Fail fast if any referenced preset failed to load
           if errors.any?
-            raise Ace::Bundle::PresetLoadError, "Failed to load referenced presets: #{errors.join('; ')}"
+            raise Ace::Bundle::PresetLoadError, "Failed to load referenced presets: #{errors.join("; ")}"
           end
 
           return bundle_config unless preset_bundles.any?
 
           # Merge: referenced presets first, then current config (current wins)
-          merged = @preset_manager.merge_preset_data(preset_bundles + [{ bundle: bundle_config }])
+          merged = @preset_manager.merge_preset_data(preset_bundles + [{bundle: bundle_config}])
           merged_config = merged[:bundle]
 
           # Remove presets key from merged config (already processed)
-          merged_config.delete('presets')
+          merged_config.delete("presets")
           merged_config.delete(:presets)
 
           merged_config
@@ -779,55 +775,59 @@ module Ace
         # Check if a file has YAML frontmatter
         def has_frontmatter?(path)
           return false unless File.exist?(path)
-          content = File.read(path, 100) rescue ""  # Read only beginning
-          content.start_with?("---\n") || content.start_with?("---\r\n")
+          content = begin
+            File.read(path, 100)
+          rescue
+            ""
+          end  # Read only beginning
+          content.start_with?("---\n", "---\r\n")
         end
 
         # Merge preset configurations (just config data, not content)
         def merge_preset_configurations(presets)
           merged = {
-            'description' => nil,
-            'bundle' => {
-              'params' => {},
-              'files' => [],
-              'commands' => []
+            "description" => nil,
+            "bundle" => {
+              "params" => {},
+              "files" => [],
+              "commands" => []
             }
           }
 
           presets.each do |preset|
             # Merge description (last wins)
-            merged['description'] = preset[:description] if preset[:description]
+            merged["description"] = preset[:description] if preset[:description]
 
             # Merge bundle configuration
             if preset[:bundle]
               bundle_config = preset[:bundle]
 
               # Merge params
-              if bundle_config['params']
-                merged['bundle']['params'].merge!(bundle_config['params'])
+              if bundle_config["params"]
+                merged["bundle"]["params"].merge!(bundle_config["params"])
               end
 
               # Merge files
-              if bundle_config['files']
-                merged['bundle']['files'].concat(bundle_config['files'])
+              if bundle_config["files"]
+                merged["bundle"]["files"].concat(bundle_config["files"])
               end
 
               # Merge commands
-              if bundle_config['commands']
-                merged['bundle']['commands'].concat(bundle_config['commands'])
+              if bundle_config["commands"]
+                merged["bundle"]["commands"].concat(bundle_config["commands"])
               end
 
               # Copy other bundle keys (embed_document_source, etc.)
               bundle_config.each do |key, value|
                 next if %w[params files commands presets].include?(key)
-                merged['bundle'][key] = value
+                merged["bundle"][key] = value
               end
             end
           end
 
           # Deduplicate arrays
-          merged['bundle']['files'].uniq!
-          merged['bundle']['commands'].uniq!
+          merged["bundle"]["files"].uniq!
+          merged["bundle"]["commands"].uniq!
 
           merged
         end
@@ -842,7 +842,7 @@ module Ace
             result.metadata[:merged] = true
             result.metadata[:total_bundles] = 1
             result.metadata[:sources] = [result.metadata[:preset_name] || result.metadata[:source_path]].compact
-            return format_bundle(result, @options[:format] || 'markdown-xml')
+            return format_bundle(result, @options[:format] || "markdown-xml")
           end
 
           # Default path: use original merge logic for backward compatibility
@@ -872,7 +872,7 @@ module Ace
           result.metadata[:sources] = merged[:sources]
           result.metadata[:errors] = merged[:errors] if merged[:errors]&.any?
 
-          format_bundle(result, @options[:format] || 'markdown-xml')
+          format_bundle(result, @options[:format] || "markdown-xml")
         end
 
         # Check if bundle has sections with actual processed content
@@ -897,52 +897,52 @@ module Ace
             files: [],
             commands: [],
             errors: [],
-            metadata: config.slice('format', 'embed_document_source')
+            metadata: config.slice("format", "embed_document_source")
           }
 
           # Process files
-          if config['files'] && config['files'].any?
+          if config["files"] && config["files"].any?
             # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = config['files'].map do |file_ref|
+            resolved_files = config["files"].map do |file_ref|
               resolve_file_reference(file_ref)
             end.compact
 
             aggregator = Ace::Core::Molecules::FileAggregator.new(
-              max_size: config['max_size'] || @options[:max_size],
+              max_size: config["max_size"] || @options[:max_size],
               base_dir: @options[:base_dir] || project_root,
-              exclude: config['exclude'] || []
+              exclude: config["exclude"] || []
             )
 
             # Check if any patterns contain glob characters
-            has_globs = resolved_files.any? { |f| f.include?('*') || f.include?('?') || f.include?('[') }
+            has_globs = resolved_files.any? { |f| f.include?("*") || f.include?("?") || f.include?("[") }
 
             # Use aggregate for globs, aggregate_files for literal paths
             result = if has_globs
-                       aggregator.aggregate(resolved_files)
-                     else
-                       aggregator.aggregate_files(resolved_files)
-                     end
+              aggregator.aggregate(resolved_files)
+            else
+              aggregator.aggregate_files(resolved_files)
+            end
             data[:files] = result[:files]
             data[:errors].concat(result[:errors])
           end
 
           # Process include patterns (similar to files)
-          if config['include'] && config['include'].any?
+          if config["include"] && config["include"].any?
             aggregator = Ace::Core::Molecules::FileAggregator.new(
-              max_size: config['max_size'] || @options[:max_size],
+              max_size: config["max_size"] || @options[:max_size],
               base_dir: @options[:base_dir] || project_root,
-              exclude: config['exclude'] || []
+              exclude: config["exclude"] || []
             )
 
-            result = aggregator.aggregate(config['include'])
+            result = aggregator.aggregate(config["include"])
             data[:files].concat(result[:files])
             data[:errors].concat(result[:errors])
           end
 
           # Process commands
-          if config['commands'] && config['commands'].any?
-            timeout = config['timeout'] || @options[:timeout] || 30
-            config['commands'].each do |command|
+          if config["commands"] && config["commands"].any?
+            timeout = config["timeout"] || @options[:timeout] || 30
+            config["commands"].each do |command|
               cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
               data[:commands] << {
                 command: command,
@@ -954,14 +954,14 @@ module Ace
           end
 
           # Process diffs
-          if config['diffs'] && config['diffs'].any?
+          if config["diffs"] && config["diffs"].any?
             data[:diffs] ||= []
-            config['diffs'].each do |diff_range|
+            config["diffs"].each do |diff_range|
               result = generate_diff_safe(diff_range)
               data[:diffs] << result.slice(:range, :output, :success, :error, :error_type)
 
               unless result[:success]
-                error_prefix = result[:error_type] == :git_error ? "Git diff failed" : "Invalid diff range"
+                error_prefix = (result[:error_type] == :git_error) ? "Git diff failed" : "Invalid diff range"
                 data[:errors] << "#{error_prefix} for '#{diff_range}': #{result[:error]}"
               end
             end
@@ -969,7 +969,7 @@ module Ace
 
           # Format output
           formatter = Ace::Core::Molecules::OutputFormatter.new(
-            config['format'] || @options[:format] || 'markdown-xml'
+            config["format"] || @options[:format] || "markdown-xml"
           )
           formatted_content = formatter.format(data)
 
@@ -979,7 +979,7 @@ module Ace
           bundle.commands = data[:commands]
 
           # Store individual files if embed_document_source is true
-          if config['embed_document_source']
+          if config["embed_document_source"]
             data[:files].each do |file_info|
               bundle.add_file(file_info[:path], file_info[:content])
             end
@@ -995,7 +995,7 @@ module Ace
           compress_bundle_sections(bundle)
 
           case format
-          when 'markdown', 'yaml', 'xml', 'markdown-xml', 'json'
+          when "markdown", "yaml", "xml", "markdown-xml", "json"
             # Use SectionFormatter if bundle has sections, otherwise fallback to OutputFormatter
             if bundle.has_sections?
               formatter = Molecules::SectionFormatter.new(format)
@@ -1145,7 +1145,7 @@ module Ace
           # Check if it's a protocol reference (contains ://)
           if file_ref.match?(/^[\w-]+:\/\//)
             resolve_protocol(file_ref)
-          elsif file_ref.start_with?('./') && @template_dir
+          elsif file_ref.start_with?("./") && @template_dir
             # Resolve ./ paths relative to the template file's directory
             File.join(@template_dir, file_ref)
           else
@@ -1176,7 +1176,7 @@ module Ace
 
         # Process files section content
         def process_files_section(bundle, section_name, section_data, options, bundle_config = {})
-          files = section_data[:files] || section_data['files'] || []
+          files = section_data[:files] || section_data["files"] || []
           return unless files.any?
 
           # Resolve any protocol references (e.g., wfi://workflow-name)
@@ -1185,26 +1185,26 @@ module Ace
           end.compact
 
           aggregator = Ace::Core::Molecules::FileAggregator.new(
-            max_size: options[:max_size] || options['max_size'],
+            max_size: options[:max_size] || options["max_size"],
             base_dir: options[:base_dir] || project_root,
-            exclude: section_data[:exclude] || section_data['exclude'] || []
+            exclude: section_data[:exclude] || section_data["exclude"] || []
           )
 
           # Check if any patterns contain glob characters
-          has_globs = resolved_files.any? { |f| f.include?('*') || f.include?('?') || f.include?('[') }
+          has_globs = resolved_files.any? { |f| f.include?("*") || f.include?("?") || f.include?("[") }
 
           # Use aggregate for globs, aggregate_files for literal paths to preserve order
           result = if has_globs
-                     aggregator.aggregate(resolved_files)
-                   else
-                     aggregator.aggregate_files(resolved_files)
-                   end
+            aggregator.aggregate(resolved_files)
+          else
+            aggregator.aggregate_files(resolved_files)
+          end
 
           # Store section files in section data
           section_data[:_processed_files] = result[:files]
 
           # Add files to bundle if embed_document_source is true
-          if bundle_config['embed_document_source']
+          if bundle_config["embed_document_source"]
             result[:files].each do |file_info|
               bundle.add_file(file_info[:path], file_info[:content])
             end
@@ -1219,10 +1219,10 @@ module Ace
 
         # Process commands section content
         def process_commands_section(bundle, section_name, section_data, options, bundle_config = {})
-          commands = section_data[:commands] || section_data['commands'] || []
+          commands = section_data[:commands] || section_data["commands"] || []
           return unless commands.any?
 
-          timeout = options[:timeout] || options['timeout'] || 30
+          timeout = options[:timeout] || options["timeout"] || 30
           processed_commands = []
 
           commands.each do |command|
@@ -1254,7 +1254,7 @@ module Ace
 
         # Process diffs section content
         def process_diffs_section(bundle, section_name, section_data, options)
-          ranges = section_data[:ranges] || section_data['ranges'] || []
+          ranges = section_data[:ranges] || section_data["ranges"] || []
           return unless ranges.any?
 
           processed_diffs = []
@@ -1265,7 +1265,7 @@ module Ace
 
             unless result[:success]
               bundle.metadata[:errors] ||= []
-              error_prefix = result[:error_type] == :git_error ? "Git diff failed" : "Invalid diff range"
+              error_prefix = (result[:error_type] == :git_error) ? "Git diff failed" : "Invalid diff range"
               bundle.metadata[:errors] << "Section '#{section_name}': #{error_prefix} for '#{diff_range}': #{result[:error]}"
             end
           end
@@ -1276,7 +1276,7 @@ module Ace
 
         # Process inline content section
         def process_inline_content_section(bundle, section_name, section_data, options)
-          content = section_data[:content] || section_data['content']
+          content = section_data[:content] || section_data["content"]
           # Store content in section data
           section_data[:_processed_content] = content if content
         end
@@ -1290,7 +1290,7 @@ module Ace
         # Resolution strategy prioritizes file existence to correctly handle extension-less files
         # (README, CONTEXT, etc.) while still supporting inline strings for simple use cases.
         def process_base_content(bundle, bundle_config, options)
-          base_ref = bundle_config['base'] || bundle_config[:base]
+          base_ref = bundle_config["base"] || bundle_config[:base]
           return unless base_ref && !base_ref.to_s.strip.empty?
 
           # Check if base_ref looks like a file reference (has protocol, slashes, or is a known path pattern)
@@ -1314,7 +1314,7 @@ module Ace
             bundle.content = base_content
             bundle.metadata[:base_path] = resolved_path
             bundle.metadata[:base_ref] = base_ref
-            bundle.metadata[:base_type] = 'file'
+            bundle.metadata[:base_type] = "file"
           elsif looks_like_file_ref
             # It looks like a file reference but resolution failed - set error
             if !resolved_path
@@ -1329,7 +1329,7 @@ module Ace
             # This allows direct definition of base context without requiring separate files
             # Example: base: "System instructions for the task"
             bundle.content = base_ref.to_s.strip
-            bundle.metadata[:base_type] = 'inline'
+            bundle.metadata[:base_type] = "inline"
             bundle.metadata[:base_ref] = base_ref
           end
         end

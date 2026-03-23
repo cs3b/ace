@@ -58,7 +58,7 @@ module Ace
             # Fill in rest of matrix
             (1...rows).each do |i|
               (1...cols).each do |j|
-                cost = str1[i - 1] == str2[j - 1] ? 0 : 1
+                cost = (str1[i - 1] == str2[j - 1]) ? 0 : 1
                 dist[i][j] = [
                   dist[i - 1][j] + 1,     # deletion
                   dist[i][j - 1] + 1,     # insertion

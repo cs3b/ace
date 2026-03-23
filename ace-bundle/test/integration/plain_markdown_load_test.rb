@@ -152,7 +152,7 @@ class PlainMarkdownLoadTest < AceTestCase
     refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
     # Should contain the sample file content (template processing worked)
     assert_includes result.content.to_s, "Sample content for context test",
-                    "Should include referenced file content"
+      "Should include referenced file content"
   end
 
   def test_template_keys_still_work
@@ -178,7 +178,7 @@ class PlainMarkdownLoadTest < AceTestCase
     refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
     # Should contain the sample file content (template processing worked)
     assert_includes result.content.to_s, "Sample content for template test",
-                    "Should include referenced file content"
+      "Should include referenced file content"
   end
 
   def test_large_plain_markdown_loads_correctly

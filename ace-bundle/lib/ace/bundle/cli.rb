@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require 'ace/core'
-require_relative '../bundle'
-require_relative 'cli/commands/load'
+require "ace/core"
+require_relative "../bundle"
+require_relative "cli/commands/load"
 
 module Ace
   module Bundle

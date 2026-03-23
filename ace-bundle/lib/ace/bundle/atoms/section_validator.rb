@@ -18,7 +18,7 @@ module Ace
         # @param sections [Hash] section definitions hash
         # @return [Boolean] true if valid, false otherwise
         def validate_sections(sections)
-          @errors.clear()
+          @errors.clear
           return true if sections.nil? || sections.empty?
 
           validate_section_names(sections)
@@ -30,16 +30,14 @@ module Ace
 
         # Returns validation errors
         # @return [Array<String>] list of validation errors
-        def errors
-          @errors
-        end
+        attr_reader :errors
 
         # Validates a single section
         # @param name [String] section name
         # @param section [Hash] section definition
         # @return [Boolean] true if valid, false otherwise
         def validate_section(name, section)
-          @errors.clear()
+          @errors.clear
           return true if section.nil? || section.empty?
 
           validate_section_name(name)
@@ -90,7 +88,6 @@ module Ace
           end
         end
 
-
         # Validates content for all sections
         def validate_section_content(sections)
           sections.each do |name, section|
@@ -110,7 +107,7 @@ module Ace
 
         # Validates files content for a section
         def validate_files_content(name, section)
-          files = section[:files] || section['files']
+          files = section[:files] || section["files"]
 
           # Only validate if files are present
           return if files.nil? || files.empty?
@@ -128,7 +125,7 @@ module Ace
         # Validates a single file item
         def validate_file_item(section_name, file, index)
           if file.is_a?(Hash)
-            path = file[:path] || file['path']
+            path = file[:path] || file["path"]
             if path.nil? || path.to_s.strip.empty?
               @errors << "Section '#{section_name}' file at index #{index} missing path"
             end
@@ -143,7 +140,7 @@ module Ace
 
         # Validates commands content for a section
         def validate_commands_content(name, section)
-          commands = section[:commands] || section['commands']
+          commands = section[:commands] || section["commands"]
 
           # Only validate if commands are present
           return if commands.nil? || commands.empty?
@@ -162,7 +159,7 @@ module Ace
 
         # Validates diffs content for a section
         def validate_diffs_content(name, section)
-          ranges = section[:ranges] || section['ranges']
+          ranges = section[:ranges] || section["ranges"]
 
           # Only validate if ranges are present
           return if ranges.nil? || ranges.empty?
@@ -181,7 +178,7 @@ module Ace
 
         # Validates presets content for a section
         def validate_presets_content(name, section)
-          presets = section[:presets] || section['presets']
+          presets = section[:presets] || section["presets"]
 
           # Only validate if presets are present
           return if presets.nil? || presets.empty?
@@ -204,10 +201,10 @@ module Ace
 
         # Validates inline content for a section
         def validate_inline_content(name, section)
-          content = section[:content] || section['content']
+          content = section[:content] || section["content"]
 
           # Only validate if content is present
-          return if content.nil? || content.to_s.strip.empty?
+          nil if content.nil? || content.to_s.strip.empty?
 
           # Content validation (if needed in future)
           # Currently just ensures content is present if specified

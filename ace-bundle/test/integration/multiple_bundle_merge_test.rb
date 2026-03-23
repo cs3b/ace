@@ -27,9 +27,9 @@ class MultipleBundleMergeTest < AceTestCase
   end
 
   def create_test_presets
-      File.write(
-        File.join(@presets_dir, "preset1.md"),
-        <<~PRESET
+    File.write(
+      File.join(@presets_dir, "preset1.md"),
+      <<~PRESET
         ---
         description: First test preset
         bundle:
@@ -44,9 +44,9 @@ class MultipleBundleMergeTest < AceTestCase
       PRESET
     )
 
-      File.write(
-        File.join(@presets_dir, "preset2.md"),
-        <<~PRESET
+    File.write(
+      File.join(@presets_dir, "preset2.md"),
+      <<~PRESET
         ---
         description: Second test preset
         bundle:
@@ -81,7 +81,7 @@ class MultipleBundleMergeTest < AceTestCase
 
     # Should have metadata from merge operation
     assert result.metadata.key?(:preset_content) || result.metadata.key?(:merged),
-           "Should have merge metadata"
+      "Should have merge metadata"
   end
 
   # Test that metadata can be modified after merge

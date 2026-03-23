@@ -27,14 +27,14 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_returns_first_for_single_bundle
-    bundle = { files: [{ path: "a.rb" }], commands: [] }
+    bundle = {files: [{path: "a.rb"}], commands: []}
     result = @merger.merge_bundles([bundle])
     assert_equal bundle, result
   end
 
   def test_merge_bundles_merges_files_from_multiple_bundles
-    bundle1 = { files: [{ path: "a.rb" }] }
-    bundle2 = { files: [{ path: "b.rb" }] }
+    bundle1 = {files: [{path: "a.rb"}]}
+    bundle2 = {files: [{path: "b.rb"}]}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -45,8 +45,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_deduplicates_files_by_path
-    bundle1 = { files: [{ path: "a.rb", content: "first" }] }
-    bundle2 = { files: [{ path: "a.rb", content: "second" }] }
+    bundle1 = {files: [{path: "a.rb", content: "first"}]}
+    bundle2 = {files: [{path: "a.rb", content: "second"}]}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -57,8 +57,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_merges_commands
-    bundle1 = { commands: [{ command: "echo 1" }] }
-    bundle2 = { commands: [{ command: "echo 2" }] }
+    bundle1 = {commands: [{command: "echo 1"}]}
+    bundle2 = {commands: [{command: "echo 2"}]}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -66,8 +66,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_merges_errors
-    bundle1 = { errors: ["Error 1"] }
-    bundle2 = { errors: ["Error 2"] }
+    bundle1 = {errors: ["Error 1"]}
+    bundle2 = {errors: ["Error 2"]}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -77,8 +77,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_deduplicates_errors
-    bundle1 = { errors: ["Same error"] }
-    bundle2 = { errors: ["Same error"] }
+    bundle1 = {errors: ["Same error"]}
+    bundle2 = {errors: ["Same error"]}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -86,8 +86,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_sets_merged_flag
-    bundle1 = { files: [] }
-    bundle2 = { files: [] }
+    bundle1 = {files: []}
+    bundle2 = {files: []}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -96,8 +96,8 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_calculates_totals
-    bundle1 = { files: [{ path: "a.rb" }], commands: [{ command: "echo 1" }], total_size: 100 }
-    bundle2 = { files: [{ path: "b.rb" }], commands: [{ command: "echo 2" }], total_size: 200 }
+    bundle1 = {files: [{path: "a.rb"}], commands: [{command: "echo 1"}], total_size: 100}
+    bundle2 = {files: [{path: "b.rb"}], commands: [{command: "echo 2"}], total_size: 200}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -107,20 +107,20 @@ class BundleMergerTest < AceTestCase
   end
 
   def test_merge_bundles_extracts_sources
-    bundle1 = { preset_name: "preset1", files: [] }
-    bundle2 = { source_input: "/path/to/file", files: [] }
+    bundle1 = {preset_name: "preset1", files: []}
+    bundle2 = {source_input: "/path/to/file", files: []}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
     assert result[:sources]
     assert_equal 2, result[:sources].size
-    assert_equal({ type: 'preset', name: 'preset1' }, result[:sources][0])
-    assert_equal({ type: 'input', path: '/path/to/file' }, result[:sources][1])
+    assert_equal({type: "preset", name: "preset1"}, result[:sources][0])
+    assert_equal({type: "input", path: "/path/to/file"}, result[:sources][1])
   end
 
   def test_merge_bundles_merges_metadata
-    bundle1 = { metadata: { key1: "value1" }, files: [] }
-    bundle2 = { metadata: { key2: "value2" }, files: [] }
+    bundle1 = {metadata: {key1: "value1"}, files: []}
+    bundle2 = {metadata: {key2: "value2"}, files: []}
 
     result = @merger.merge_bundles([bundle1, bundle2])
 
@@ -133,21 +133,21 @@ class BundleMergerTest < AceTestCase
   # --- resolve_output_path tests ---
 
   def test_resolve_output_path_prefers_command_output
-    presets = [{ output: "/preset/path" }]
+    presets = [{output: "/preset/path"}]
     result = @merger.resolve_output_path(presets, "/command/path")
 
     assert_equal "/command/path", result
   end
 
   def test_resolve_output_path_uses_preset_output_when_no_command_output
-    presets = [{ output: "/preset/path" }]
+    presets = [{output: "/preset/path"}]
     result = @merger.resolve_output_path(presets, nil)
 
     assert_equal "/preset/path", result
   end
 
   def test_resolve_output_path_returns_nil_for_stdout_preset
-    presets = [{ name: "preset1" }]  # No :output key means stdout
+    presets = [{name: "preset1"}]  # No :output key means stdout
     result = @merger.resolve_output_path(presets, nil)
 
     assert_nil result
@@ -155,8 +155,8 @@ class BundleMergerTest < AceTestCase
 
   def test_resolve_output_path_returns_nil_for_conflicting_outputs
     presets = [
-      { output: "/path/one" },
-      { output: "/path/two" }
+      {output: "/path/one"},
+      {output: "/path/two"}
     ]
     result = @merger.resolve_output_path(presets, nil)
 
@@ -165,8 +165,8 @@ class BundleMergerTest < AceTestCase
 
   def test_resolve_output_path_uses_same_output_from_multiple_presets
     presets = [
-      { output: "/same/path" },
-      { output: "/same/path" }
+      {output: "/same/path"},
+      {output: "/same/path"}
     ]
     result = @merger.resolve_output_path(presets, nil)
 
@@ -177,7 +177,7 @@ class BundleMergerTest < AceTestCase
 
   def test_merge_with_attribution_adds_source_to_files
     bundles = [
-      { preset_name: "test-preset", files: [{ path: "a.rb" }] }
+      {preset_name: "test-preset", files: [{path: "a.rb"}]}
     ]
 
     result = @merger.merge_with_attribution(bundles)
@@ -187,7 +187,7 @@ class BundleMergerTest < AceTestCase
 
   def test_merge_with_attribution_adds_source_to_commands
     bundles = [
-      { source_input: "/input/path", commands: [{ command: "echo test" }] }
+      {source_input: "/input/path", commands: [{command: "echo test"}]}
     ]
 
     result = @merger.merge_with_attribution(bundles)
@@ -197,7 +197,7 @@ class BundleMergerTest < AceTestCase
 
   def test_merge_with_attribution_uses_custom_source_key
     bundles = [
-      { custom_key: "my-source", files: [{ path: "a.rb" }] }
+      {custom_key: "my-source", files: [{path: "a.rb"}]}
     ]
 
     result = @merger.merge_with_attribution(bundles, :custom_key)
@@ -207,8 +207,8 @@ class BundleMergerTest < AceTestCase
 
   def test_merge_with_attribution_deep_merges_metadata
     bundles = [
-      { metadata: { nested: { a: 1 } }, files: [] },
-      { metadata: { nested: { b: 2 } }, files: [] }
+      {metadata: {nested: {a: 1}}, files: []},
+      {metadata: {nested: {b: 2}}, files: []}
     ]
 
     result = @merger.merge_with_attribution(bundles)

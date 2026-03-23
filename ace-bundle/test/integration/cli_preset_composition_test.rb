@@ -27,9 +27,9 @@ class CLIPresetCompositionTest < AceTestCase
   end
 
   def create_test_presets
-      File.write(
-        File.join(@presets_dir, "base.md"),
-        <<~PRESET
+    File.write(
+      File.join(@presets_dir, "base.md"),
+      <<~PRESET
         ---
         description: Base test preset
         bundle:
@@ -46,9 +46,9 @@ class CLIPresetCompositionTest < AceTestCase
       PRESET
     )
 
-      File.write(
-        File.join(@presets_dir, "extended.md"),
-        <<~PRESET
+    File.write(
+      File.join(@presets_dir, "extended.md"),
+      <<~PRESET
         ---
         description: Extended test preset
         bundle:
@@ -137,7 +137,7 @@ class CLIPresetCompositionTest < AceTestCase
     # Key verification: composition metadata is preserved on the BundleData object
     assert_equal true, result.metadata[:composed], "Should mark the bundle as composed"
     assert_equal %w[base extended], result.metadata[:composed_from],
-                 "Should record the full composition chain"
+      "Should record the full composition chain"
 
     # Preset body content is stored in metadata, not injected into rendered bundle output
     assert_match(/Base preset content/, result.metadata[:preset_content], "Should retain base preset body")

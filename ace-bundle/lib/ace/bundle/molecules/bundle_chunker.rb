@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/boundary_finder'
+require_relative "../atoms/boundary_finder"
 
 module Ace
   module Bundle
@@ -14,7 +14,7 @@ module Ace
       class BundleChunker
         # Fallback value if config is not available
         DEFAULT_MAX_LINES = 2_000
-        DEFAULT_CHUNK_SUFFIX = '_chunk'
+        DEFAULT_CHUNK_SUFFIX = "_chunk"
 
         attr_reader :max_lines
 
@@ -30,7 +30,7 @@ module Ace
         # @return [Integer] Configured max lines per chunk
         def config_max_lines
           Ace::Bundle.max_lines
-        rescue StandardError
+        rescue
           DEFAULT_MAX_LINES
         end
 
@@ -95,7 +95,7 @@ module Ace
             chunk_result[:index_file],
             options
           )
-          write_results << index_result.merge(file_type: 'index')
+          write_results << index_result.merge(file_type: "index")
 
           # Write chunk files
           chunk_result[:chunk_files].each do |chunk_info|
@@ -104,7 +104,7 @@ module Ace
               chunk_info[:path],
               options
             )
-            write_results << chunk_result_write.merge(file_type: 'chunk', chunk_number: chunk_info[:chunk_number])
+            write_results << chunk_result_write.merge(file_type: "chunk", chunk_number: chunk_info[:chunk_number])
 
             # Progress callback if provided
             if options[:progress_callback]
@@ -203,7 +203,7 @@ module Ace
 
           chunks.each_with_index do |chunk_content, index|
             chunk_number = index + 1
-            chunk_path = "#{base_path}#{options[:chunk_suffix]}_#{chunk_number.to_s.rjust(3, '0')}.md"
+            chunk_path = "#{base_path}#{options[:chunk_suffix]}_#{chunk_number.to_s.rjust(3, "0")}.md"
 
             chunk_files << {
               chunk_number: chunk_number,
@@ -235,7 +235,7 @@ module Ace
           index_lines << ""
 
           chunk_files.each do |chunk_info|
-            relative_path = chunk_info[:path].sub(%r{^.*/}, '')
+            relative_path = chunk_info[:path].sub(%r{^.*/}, "")
             index_lines << "### Chunk #{chunk_info[:chunk_number]}"
             index_lines << ""
             index_lines << "- File: [#{relative_path}](#{relative_path})"
@@ -263,7 +263,7 @@ module Ace
 
         # Format bytes for human readability
         def format_bytes(bytes)
-          units = ['B', 'KB', 'MB', 'GB']
+          units = ["B", "KB", "MB", "GB"]
           size = bytes.to_f
           unit_index = 0
 

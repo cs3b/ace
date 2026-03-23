@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'ace/compressor'
-require 'fileutils'
-require 'tmpdir'
+require "ace/compressor"
+require "fileutils"
+require "tmpdir"
 
 module Ace
   module Bundle
@@ -56,11 +56,11 @@ module Ace
         def resolve_mode(section_data)
           # Section-level params override: check compressor_source_scope first, fall back to compress
           section_scope = section_data.dig(:params, :compressor_source_scope) ||
-                          section_data.dig(:params, "compressor_source_scope") ||
-                          section_data.dig("params", "compressor_source_scope") ||
-                          section_data.dig(:params, :compress) ||
-                          section_data.dig(:params, "compress") ||
-                          section_data.dig("params", "compress")
+            section_data.dig(:params, "compressor_source_scope") ||
+            section_data.dig("params", "compressor_source_scope") ||
+            section_data.dig(:params, :compress) ||
+            section_data.dig(:params, "compress") ||
+            section_data.dig("params", "compress")
           mode = (section_scope || @default_mode).to_s
           return "off" unless %w[off per-source merged].include?(mode)
 
@@ -117,7 +117,7 @@ module Ace
                 file_info[:content] = @cache_store.read_pack(canonical[:pack_path])
                 file_info[:compressed] = true
               else
-                uncached << { file_info: file_info, fragment: fragment, manifest: manifest, canonical: canonical }
+                uncached << {file_info: file_info, fragment: fragment, manifest: manifest, canonical: canonical}
               end
             end
 
@@ -146,15 +146,15 @@ module Ace
             canonical = @cache_store.canonical_paths(mode: @compressor_mode, sources: source_entries, manifest_key: manifest["key"])
 
             content = if @cache_store.cache_hit?(pack_path: canonical[:pack_path], metadata_path: canonical[:metadata_path])
-                        @cache_store.read_pack(canonical[:pack_path])
-                      else
-                        fragments = source_entries.map { |entry| entry[:content_path] }
-                        compressor = build_compressor(fragments)
-                        output = compress_with_source_identity(compressor, path_map)
-                        compressed = strip_context_pack_header(output)
-                        write_cache_entry(manifest, canonical, compressed)
-                        compressed
-                      end
+              @cache_store.read_pack(canonical[:pack_path])
+            else
+              fragments = source_entries.map { |entry| entry[:content_path] }
+              compressor = build_compressor(fragments)
+              output = compress_with_source_identity(compressor, path_map)
+              compressed = strip_context_pack_header(output)
+              write_cache_entry(manifest, canonical, compressed)
+              compressed
+            end
 
             {
               path: files.first[:path],

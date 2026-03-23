@@ -189,8 +189,8 @@ class PresetCompositionTest < AceTestCase
     assert result[:success]
 
     # Params should be extracted to root level
-    assert_equal 'cache', result[:output]
-    assert_equal 'yaml', result[:format]
+    assert_equal "cache", result[:output]
+    assert_equal "yaml", result[:format]
     assert_equal 60, result[:timeout]
     assert_equal 2097152, result[:max_size]
 
@@ -198,8 +198,8 @@ class PresetCompositionTest < AceTestCase
     assert_equal true, result[:cache]
 
     # Params should also be in params hash
-    assert_equal 'cache', result[:params]['output']
-    assert_equal 60, result[:params]['timeout']
+    assert_equal "cache", result[:params]["output"]
+    assert_equal 60, result[:params]["timeout"]
   end
 
   def test_composed_preset_params_extracted_to_root
@@ -244,7 +244,7 @@ class PresetCompositionTest < AceTestCase
     assert result[:success]
 
     # Merged params should be extracted to root (last wins)
-    assert_equal 'cache', result[:output]
+    assert_equal "cache", result[:output]
     assert_equal 120, result[:timeout]
     assert_equal 5242880, result[:max_size]
     assert_equal true, result[:cache]

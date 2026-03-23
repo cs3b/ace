@@ -37,7 +37,7 @@ module Ace
           case input
           when String
             # String input (e.g., "project", "staged") -> wrap as preset
-            { "bundle" => { "presets" => [input] } }
+            {"bundle" => {"presets" => [input]}}
           when Hash
             normalize_hash_config(input)
           when NilClass
@@ -80,7 +80,7 @@ module Ace
         # @return [Hash] Configuration with base under bundle.base
         # @api private
         def self.wrap_base_in_bundle(input)
-          normalized = { "bundle" => {} }
+          normalized = {"bundle" => {}}
 
           input.each do |key, value|
             key_str = key.to_s

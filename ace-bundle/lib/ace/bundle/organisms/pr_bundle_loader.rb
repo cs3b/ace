@@ -93,13 +93,13 @@ module Ace
             }
           else
             record_error(bundle, "PR fetch failed for '#{pr_ref}': #{result[:error]}")
-            { range: pr_range_identifier(pr_ref), output: "Error: #{result[:error]}", success: false, error: result[:error], source: :pr }
+            {range: pr_range_identifier(pr_ref), output: "Error: #{result[:error]}", success: false, error: result[:error], source: :pr}
           end
         rescue Ace::Git::Error => e
           # Catches all ace-git errors: GitError, GhNotInstalledError, GhAuthenticationError,
           # PrNotFoundError, TimeoutError (all inherit from Ace::Git::Error)
           record_error(bundle, "PR fetch failed for '#{pr_ref}': #{e.message}")
-          { range: pr_range_identifier(pr_ref), output: "Error: #{e.message}", success: false, error: e.message, source: :pr }
+          {range: pr_range_identifier(pr_ref), output: "Error: #{e.message}", success: false, error: e.message, source: :pr}
         rescue ArgumentError => e
           record_error(bundle, "Invalid PR identifier '#{pr_ref}': #{e.message}")
           nil
@@ -137,7 +137,7 @@ module Ace
         # @param processed_diffs [Array<Hash>] Diff results to add
         def add_diffs_to_bundle(bundle, processed_diffs)
           bundle.sections ||= {}
-          bundle.sections["diffs"] ||= { title: "Diffs", _processed_diffs: [] }
+          bundle.sections["diffs"] ||= {title: "Diffs", _processed_diffs: []}
           bundle.sections["diffs"][:_processed_diffs] ||= []
           bundle.sections["diffs"][:_processed_diffs].concat(processed_diffs)
         end
