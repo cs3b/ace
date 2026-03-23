@@ -86,8 +86,8 @@ module Ace
             data = read
             return [] unless data
 
-            data.map do |provider_id, provider_data|
-              models = provider_data["models"] || {}
+            normalize_providers(data).map do |provider_id, provider_data|
+              models = normalize_models(provider_data)
               {
                 id: provider_id,
                 model_count: models.size
@@ -102,10 +102,10 @@ module Ace
             data = read
             return nil unless data
 
-            provider_data = data[provider_id]
+            provider_data = normalize_providers(data)[provider_id]
             return nil unless provider_data
 
-            models = (provider_data["models"] || {}).map do |model_id, model_data|
+            models = normalize_models(provider_data).map do |model_id, model_data|
               {
                 id: model_id,
                 name: model_data["name"] || model_id,
@@ -186,6 +186,49 @@ module Ace
               "last_sync_at" => nil,
               "version" => VERSION
             }
+          end
+
+          def normalize_providers(data)
+            return {} unless data.is_a?(Hash)
+
+            wrapped = data["providers"]
+            return normalize_provider_collection(wrapped) unless wrapped.nil?
+
+            data
+          end
+
+          def normalize_provider_collection(providers)
+            case providers
+            when Hash
+              providers
+            when Array
+              providers.each_with_object({}) do |provider, acc|
+                next unless provider.is_a?(Hash)
+
+                provider_id = provider["id"]
+                acc[provider_id] = provider if provider_id
+              end
+            else
+              {}
+            end
+          end
+
+          def normalize_models(provider_data)
+            models = provider_data["models"]
+
+            case models
+            when Hash
+              models
+            when Array
+              models.each_with_object({}) do |model, acc|
+                next unless model.is_a?(Hash)
+
+                model_id = model["id"]
+                acc[model_id] = model if model_id
+              end
+            else
+              {}
+            end
           end
         end
       end
