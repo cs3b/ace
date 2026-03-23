@@ -19,7 +19,7 @@
 ## How It Works
 
 1. Feed one or more Markdown or text sources into a compression mode (`exact`, `compact`, or `agent`).
-2. The compressor extracts structured records, applies mode-specific reduction policies, and produces a stable `ContextPack/3` artifact.
+2. The compressor extracts structured records, applies mode-specific reduction policies, and produces a stable `ContextPack/3` artifact (a pipe-delimited record format preserving document structure in minimal tokens).
 3. Output goes to a cache-backed path for reuse or inline to stdio, with optional stats summaries and benchmark comparisons.
 
 ## Use Cases
