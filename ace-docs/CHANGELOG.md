@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-03-23
+
+### Added
+- Classify root README as `root_readme` doc-type, separate from package READMEs.
+- Add timeout guard around `ace-nav resolve` subprocess in `DocumentAnalysisPrompt`.
+
+### Changed
+- Update docs config defaults and project override for `root_readme` classification.
+- Refresh documentation guide to reflect `root_readme` handling.
+
 ## [0.30.2] - 2026-03-23
 
 ### Fixed
