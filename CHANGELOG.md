@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.971] - 2026-03-23
+
+### Added
+- **ace-llm v0.30.0**: Documented thinking levels and execution presets for CLI providers in README and usage guide; added missing Anthropic aliases.
+
+### Fixed
+- **ace-llm v0.30.0**: Corrected stale Anthropic model aliases from Claude 3 to Claude 4.5 IDs in provider defaults.
+
+### Changed
+- **ace-llm v0.30.0**: Rewrote README to eliminate repetition and highlight aliases, thinking levels, presets, and file-based prompts; removed obsolete migration doc; re-recorded demo tape.
+- **ace-llm-providers-cli v0.27.0**: Updated gemspec description to list all supported CLI providers.
+
 ## [0.9.970] - 2026-03-23
 
 ### Changed
