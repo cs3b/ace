@@ -1,25 +1,46 @@
-# Ace::Test::EndToEndRunner
+# ace-test-runner-e2e
 
 Agent-executed end-to-end tests with reproducible sandboxes and structured reporting.
 
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+
 ![ace-test-runner-e2e demo](docs/demo/ace-test-runner-e2e-getting-started.gif)
 
-## Why
+`ace-test-runner-e2e` runs realistic workflow scenarios through coding agents so teams can validate behavior beyond unit and integration coverage while keeping execution reproducible and isolated from the working tree.
 
-`ace-test-runner-e2e` helps teams run realistic workflow validation that standard unit and integration suites cannot cover.
+## Use Cases
 
-- It executes scenarios through agents to validate real developer workflows.
-- It keeps setup, execution, and reporting reproducible across runs.
-- It isolates execution in sandboxes so test activity does not leak into your working tree.
-- It supports both single-file (MT) and per-test-case directory (TS) scenario conventions for documentation and migration workflows.
+**Validate real developer workflows end-to-end** - run package-level scenarios with `ace-test-e2e` to confirm instructions, tooling, and outputs behave correctly under agent execution.
+
+**Run broad regression sweeps across packages** - use `ace-test-e2e-suite` for cross-package scenario orchestration with filtering by package, tags, and prior failures.
+
+**Keep execution deterministic and reviewable** - execute in sandboxes with structured outputs that are easy to inspect and compare across runs.
+
+**Support migration and documentation-heavy testing** - run TS-style scenario suites where each case carries explicit metadata and reproducible command flows.
 
 ## Works With
 
-- `ace-test` and `ace-test-runner` for fast package-level/unit-level loops
-- `ace-assign` workflows for structured fan-out and retry orchestration
-- Package-local `test/e2e/` scenario suites across ACE gems
+- **[ace-test](../ace-test)** and **[ace-test-runner](../ace-test-runner)** for fast package/unit loops outside E2E scenario execution.
+- **`ace-assign` workflows** for batched E2E execution, retries, and assignment-driven orchestration.
+- **Package-local `test/e2e/` suites** for TS scenario definitions and package-specific coverage.
+
+## Features
+
+- Agent-executed E2E scenario runs with structured reports.
+- Reproducible sandbox setup and cleanup workflows.
+- Scenario discovery and selective execution by package, scenario ID, and tags.
+- Suite-level execution across packages with parallel controls.
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [CLI Usage Reference](docs/usage.md)
+- [Handbook Reference](docs/handbook.md)
+- [`ace-test-runner-e2e` changelog](CHANGELOG.md)
 
 ## Agent Skills
+
+Package-owned canonical skills:
 
 - `as-e2e-run`
 - `as-e2e-create`
@@ -30,24 +51,6 @@ Agent-executed end-to-end tests with reproducible sandboxes and structured repor
 - `as-e2e-manage`
 - `as-e2e-setup-sandbox`
 
-## Features
-
-- Agent-executed scenario runs with structured test reports.
-- Reproducible sandbox setup and cleanup workflows.
-- Scenario discovery and selective execution by package, ID, and tags.
-- Suite-level execution for broad regression validation.
-
-## Documentation
-
-- [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
-- [Handbook](docs/handbook.md)
-- [Changelog](CHANGELOG.md)
-
-## Cross-Reference
-
-For unit and integration tests, see `ace-test-runner`.
-
 ## Part of ACE
 
-This package is part of the ACE monorepo and follows ACE workflow and documentation conventions.
+`ace-test-runner-e2e` is part of [ACE](../README.md) (Agentic Coding Environment).
