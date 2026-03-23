@@ -74,9 +74,9 @@ ace-assign add fix-links --instructions "Fix broken docs links"
 ace-assign add verify-links --after 020 --child -i "Check all markdown links"
 ```
 
-Use `--child` to insert nested phases under a parent step.
+Use `--child` to insert nested steps under a parent step.
 
-## 4) Work with hierarchical phases
+## 4) Work with hierarchical steps
 
 - Parent steps complete when all children are done.
 - Queue traversal prioritizes pending children before siblings.
