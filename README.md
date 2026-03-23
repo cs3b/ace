@@ -1,20 +1,16 @@
-# ACE - Agentic Coding Environment
+<h1 align="center">ACE - Agentic Coding Environment</h1>
 
 <p align="center">
   <img src="docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
-</p>
 
-<p align="center">
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  CLI tools designed for developers, ready for agents.
 </p>
 
 [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Quick Start Tutorial](docs/quick-start.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-<p align="center">
-  CLI tools designed for developers, ready for agents.
-</p>
-
 
 Developers and AI agents now work side by side, but most tooling was built for one or the other. GUI dashboards lock out agents, verbose APIs overwhelm humans, and scattered tools force both to context-switch. ACE is a set of CLI tools that both developers and agents use the same way - same commands, same config, same file-based output. It gives coding agent harnesses like Claude Code and Codex CLI the workflow infrastructure they need - task pipelines, context bundles, review presets, and skills - without coupling to any single agent platform.
 

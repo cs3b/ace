@@ -1,18 +1,18 @@
-# ace-handbook-integration-pi
+<h1 align="center">ace-handbook-integration-pi</h1>
 
 <p align="center">
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+
+<a href="https://rubygems.org/gems/ace-handbook-integration-pi"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-handbook-integration-pi.svg" /></a>
+<a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+
+  pi-agent provider integration for ACE handbook skills and workflows.
 </p>
 
-<p align="center">
-[![Gem Version](https://img.shields.io/gem/v/ace-handbook-integration-pi.svg)](https://rubygems.org/gems/ace-handbook-integration-pi)
-[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-</p>
+[ace-handbook](../ace-handbook)
 
-> pi-agent provider integration for ACE handbook skills and workflows.
-
-Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 `ace-handbook-integration-pi` translates canonical ACE handbook skills into PI provider assets so that skill invocations from pi-agent resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
