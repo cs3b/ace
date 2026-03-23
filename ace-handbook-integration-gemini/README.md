@@ -23,11 +23,5 @@
 
 **Ship lean provider packs** - support only the provider shims and manifests needed for Gemini compatibility, keeping integration scope minimal.
 
-## Documentation
-
-See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[ace-handbook](../ace-handbook) | Part of ACE

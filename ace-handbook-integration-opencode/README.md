@@ -23,11 +23,5 @@
 
 **Keep provider layers small** - isolate integration glue from core handbook behavior with a focused set of manifests and projection assets.
 
-## Documentation
-
-See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[ace-handbook](../ace-handbook) | Part of ACE

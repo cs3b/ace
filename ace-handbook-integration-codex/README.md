@@ -23,11 +23,5 @@
 
 **Keep integration delivery minimal** - maintain a focused provider shim layer with only the manifests and projection assets needed for Codex compatibility.
 
-## Documentation
-
-See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[ace-handbook](../ace-handbook) | Part of ACE

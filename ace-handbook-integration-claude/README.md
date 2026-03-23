@@ -23,11 +23,5 @@
 
 **Standardize cross-provider behavior** - preserve shared conventions while adapting to Claude Code's command surface, ensuring the same skill intent works across all supported providers.
 
-## Documentation
-
-See [ace-handbook](../ace-handbook) for canonical skill definitions and provider integration patterns.
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[ace-handbook](../ace-handbook) | Part of ACE
