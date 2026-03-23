@@ -23,19 +23,19 @@ module Ace
             resolved = @file_config_resolver.resolve(file, namespace: "git", filename: "commit", project_root: project_root)
             # .ace/ config files always group into "ace-config" scope
             scope_name = if ace_config_file?(file)
-                           "ace-config"
-                         else
-                           # Derive scope name: use path-based derivation for distributed configs,
-                           # otherwise keep the resolved name (path rule name or DEFAULT_SCOPE_NAME)
-                           derive_scope_name(resolved.source, resolved.name, project_root)
-                         end
+              "ace-config"
+            else
+              # Derive scope name: use path-based derivation for distributed configs,
+              # otherwise keep the resolved name (path rule name or DEFAULT_SCOPE_NAME)
+              derive_scope_name(resolved.source, resolved.name, project_root)
+            end
             # Group by scope_name AND config signature to prevent merging scopes with different configs
             # Exception: DEFAULT_SCOPE_NAME always groups together regardless of config (to avoid duplicates)
             # For path rules: use rule_config for grouping (ignores cascade differences like per-package model)
             # For distributed configs: use full config (package-specific configs matter)
             grouping_config = resolved.rule_config || resolved.config
             config_sig = Models::CommitGroup.signature_for(grouping_config)
-            key = scope_name == DEFAULT_SCOPE_NAME ? scope_name : "#{scope_name}::#{config_sig}"
+            key = (scope_name == DEFAULT_SCOPE_NAME) ? scope_name : "#{scope_name}::#{config_sig}"
 
             group = groups[key] ||= Models::CommitGroup.new(
               scope_name: scope_name,
@@ -100,7 +100,7 @@ module Ace
 
         def default_config_resolver
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           Ace::Support::Config::Molecules::FileConfigResolver.new(
             config_dir: ".ace",

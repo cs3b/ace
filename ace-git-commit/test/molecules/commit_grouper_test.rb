@@ -18,8 +18,8 @@ class CommitGrouperTest < TestCase
   end
 
   def test_groups_files_by_config_signature
-    config_a = { "model" => "glite" }
-    config_b = { "model" => "gflash" }
+    config_a = {"model" => "glite"}
+    config_b = {"model" => "gflash"}
 
     group_a = Ace::Support::Config::Models::ConfigGroup.new(
       name: "docs",  # path rule name from root config
@@ -201,7 +201,7 @@ class CommitGrouperTest < TestCase
   # ===== ace-config grouping integration tests =====
 
   def test_groups_all_ace_files_into_single_ace_config_scope
-    config = { "model" => "glite" }
+    config = {"model" => "glite"}
 
     group_bundle = Ace::Support::Config::Models::ConfigGroup.new(
       name: "project default",
@@ -240,7 +240,7 @@ class CommitGrouperTest < TestCase
   end
 
   def test_groups_root_ace_files_into_ace_config_scope
-    config = { "model" => "glite" }
+    config = {"model" => "glite"}
 
     group = Ace::Support::Config::Models::ConfigGroup.new(
       name: "project default",
@@ -259,7 +259,7 @@ class CommitGrouperTest < TestCase
   end
 
   def test_groups_mixed_ace_and_regular_files_separately
-    config = { "model" => "glite" }
+    config = {"model" => "glite"}
 
     ace_group = Ace::Support::Config::Models::ConfigGroup.new(
       name: "project default",
@@ -293,7 +293,7 @@ class CommitGrouperTest < TestCase
   end
 
   def test_no_ace_files_produces_no_ace_config_group
-    config = { "model" => "glite" }
+    config = {"model" => "glite"}
 
     group = Ace::Support::Config::Models::ConfigGroup.new(
       name: "project default",
@@ -316,8 +316,8 @@ class CommitGrouperTest < TestCase
   # ===== Grouping behavior tests =====
 
   def test_groups_project_default_files_with_different_configs_into_one_group
-    config_a = { "model" => "glite", "extra" => "setting" }
-    config_b = { "model" => "glite" }
+    config_a = {"model" => "glite", "extra" => "setting"}
+    config_b = {"model" => "glite"}
 
     # Both resolve to "project default" but with different configs
     group_a = Ace::Support::Config::Models::ConfigGroup.new(
@@ -350,8 +350,8 @@ class CommitGrouperTest < TestCase
   end
 
   def test_groups_named_scopes_with_different_configs_separately
-    config_a = { "model" => "glite" }
-    config_b = { "model" => "gflash" }
+    config_a = {"model" => "glite"}
+    config_b = {"model" => "gflash"}
 
     # Both have "docs" scope but different configs
     group_a = Ace::Support::Config::Models::ConfigGroup.new(
@@ -386,9 +386,9 @@ class CommitGrouperTest < TestCase
     # This is the TC-004-008 scenario: files matching the same path rule
     # should group together even when cascade config differs
     # Note: PathRuleMatcher strips 'glob' from rule_config - it only contains overrides
-    rule_config = { "type_hint" => "chore" }
-    config_a = { "model" => "glite", "type_hint" => "chore" }  # root cascade
-    config_b = { "model" => "gflash", "type_hint" => "chore" } # pkg-a cascade overrides model
+    rule_config = {"type_hint" => "chore"}
+    config_a = {"model" => "glite", "type_hint" => "chore"}  # root cascade
+    config_b = {"model" => "gflash", "type_hint" => "chore"} # pkg-a cascade overrides model
 
     # Same path rule name, same rule_config, but different merged configs
     group_a = Ace::Support::Config::Models::ConfigGroup.new(
@@ -427,20 +427,20 @@ class CommitGrouperTest < TestCase
   def test_groups_path_rule_matches_with_different_rule_configs_separately
     # Different path rules should still be grouped separately
     # Note: PathRuleMatcher strips 'glob' from rule_config - it only contains overrides
-    rule_config_docs = { "type_hint" => "docs" }
-    rule_config_test = { "type_hint" => "test" }
+    rule_config_docs = {"type_hint" => "docs"}
+    rule_config_test = {"type_hint" => "test"}
 
     group_docs = Ace::Support::Config::Models::ConfigGroup.new(
       name: "docs-scope",
       source: "#{@project_root}/.ace/git/commit.yml",
-      config: { "model" => "glite", "type_hint" => "docs" },
+      config: {"model" => "glite", "type_hint" => "docs"},
       rule_config: rule_config_docs,
       files: []
     )
     group_test = Ace::Support::Config::Models::ConfigGroup.new(
       name: "test-scope",
       source: "#{@project_root}/.ace/git/commit.yml",
-      config: { "model" => "glite", "type_hint" => "test" },
+      config: {"model" => "glite", "type_hint" => "test"},
       rule_config: rule_config_test,
       files: []
     )
@@ -461,8 +461,8 @@ class CommitGrouperTest < TestCase
 
   def test_groups_distributed_configs_without_rule_config_by_full_config
     # When rule_config is nil (distributed config), grouping uses full config
-    config_a = { "model" => "glite" }
-    config_b = { "model" => "gflash" }
+    config_a = {"model" => "glite"}
+    config_b = {"model" => "gflash"}
 
     # Distributed configs have nil rule_config
     group_a = Ace::Support::Config::Models::ConfigGroup.new(

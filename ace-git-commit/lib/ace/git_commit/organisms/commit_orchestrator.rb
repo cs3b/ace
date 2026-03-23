@@ -78,7 +78,7 @@ module Ace
         # @return [Hash] Configuration
         def load_config
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           resolver = Ace::Support::Config.create(
             config_dir: ".ace",
@@ -91,7 +91,7 @@ module Ace
 
           # Extract git section if present, otherwise use root
           config.data["git"] || config.data
-        rescue StandardError => e
+        rescue => e
           warn "Error loading git commit config: #{e.message}" if Ace::GitCommit.debug?
           {}
         end
@@ -126,7 +126,7 @@ module Ace
           unless non_glob_paths.empty?
             validation = @path_resolver.validate_paths(non_glob_paths)
             if validation[:invalid].any?
-              puts "\n✗ Invalid path(s): #{validation[:invalid].join(', ')}"
+              puts "\n✗ Invalid path(s): #{validation[:invalid].join(", ")}"
               if @path_resolver.last_error
                 puts "Git error: #{@path_resolver.last_error}"
               else
@@ -157,7 +157,7 @@ module Ace
               # Collect suggestions for simple glob patterns
               suggestions = glob_patterns.filter_map do |pattern|
                 suggested = @path_resolver.suggest_recursive_pattern(pattern)
-                { original: pattern, suggested: suggested } if suggested
+                {original: pattern, suggested: suggested} if suggested
               end
 
               # Output consolidated hint if any suggestions exist

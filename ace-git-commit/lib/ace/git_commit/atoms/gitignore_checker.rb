@@ -35,7 +35,7 @@ module Ace
         #   - :force_add - paths that ARE gitignored but are tracked in git (use git add -f)
         #   - :skipped - paths that ARE gitignored and NOT tracked (skip these)
         def categorize_paths(paths, git_executor)
-          return { valid: [], force_add: [], skipped: [] } if paths.nil? || paths.empty?
+          return {valid: [], force_add: [], skipped: []} if paths.nil? || paths.empty?
 
           valid = []
           force_add = []
@@ -47,17 +47,17 @@ module Ace
               # Path matches gitignore - check if it's tracked
               if tracked?(path, git_executor)
                 # Tracked file in gitignored location - force add it
-                force_add << { path: path, pattern: result[:pattern] }
+                force_add << {path: path, pattern: result[:pattern]}
               else
                 # Untracked and gitignored - skip it
-                skipped << { path: path, pattern: result[:pattern] }
+                skipped << {path: path, pattern: result[:pattern]}
               end
             else
               valid << path
             end
           end
 
-          { valid: valid, force_add: force_add, skipped: skipped }
+          {valid: valid, force_add: force_add, skipped: skipped}
         end
 
         # Legacy method for backward compatibility
@@ -90,10 +90,10 @@ module Ace
             # If we get here, the file IS ignored
             # Output format: "<pattern>:<line>:<source>:<path>"
             pattern = extract_pattern(output)
-            { ignored: true, pattern: pattern }
+            {ignored: true, pattern: pattern}
           rescue GitError
             # If command fails (exit 1), file is NOT ignored
-            { ignored: false, pattern: nil }
+            {ignored: false, pattern: nil}
           end
         end
 

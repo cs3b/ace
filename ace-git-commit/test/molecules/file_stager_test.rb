@@ -113,7 +113,7 @@ class FileStagerTest < TestCase
   def test_staged_files_uses_no_renames_flag_for_directory_renames
     # Simulates output when a directory is renamed: both old (deleted) and new paths appear
     @mock_git.expect :execute, "new_dir/file.txt\nold_dir/file.txt\n",
-                     ["diff", "--cached", "--name-only", "--no-renames"]
+      ["diff", "--cached", "--name-only", "--no-renames"]
 
     staged = @stager.staged_files
 
@@ -182,7 +182,7 @@ class FileStagerTest < TestCase
 
   # Tests for stage_paths
   def test_stage_paths_resets_and_stages_paths
-    @mock_checker.expect :categorize_paths, { valid: ["lib/", "test/"], force_add: [], skipped: [] }, [["lib/", "test/"], @mock_git]
+    @mock_checker.expect :categorize_paths, {valid: ["lib/", "test/"], force_add: [], skipped: []}, [["lib/", "test/"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/"]
     @mock_git.expect :execute, nil, ["add", "test/"]
@@ -207,7 +207,7 @@ class FileStagerTest < TestCase
   end
 
   def test_stage_paths_handles_invalid_paths_via_git
-    @mock_checker.expect :categorize_paths, { valid: ["nonexistent/"], force_add: [], skipped: [] }, [["nonexistent/"], @mock_git]
+    @mock_checker.expect :categorize_paths, {valid: ["nonexistent/"], force_add: [], skipped: []}, [["nonexistent/"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil do |*args|
       raise Ace::GitCommit::GitError, "pathspec 'nonexistent/' did not match any files"
@@ -222,7 +222,7 @@ class FileStagerTest < TestCase
   end
 
   def test_stage_paths_handles_git_errors
-    @mock_checker.expect :categorize_paths, { valid: ["lib/"], force_add: [], skipped: [] }, [["lib/"], @mock_git]
+    @mock_checker.expect :categorize_paths, {valid: ["lib/"], force_add: [], skipped: []}, [["lib/"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil do |*args|
       raise Ace::GitCommit::GitError, "Permission denied"
@@ -238,7 +238,7 @@ class FileStagerTest < TestCase
 
   def test_stage_paths_clears_last_error_on_success
     # First fail with git error (all files pass gitignore check)
-    @mock_checker.expect :categorize_paths, { valid: ["bad/"], force_add: [], skipped: [] }, [["bad/"], @mock_git]
+    @mock_checker.expect :categorize_paths, {valid: ["bad/"], force_add: [], skipped: []}, [["bad/"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil do |*args|
       raise Ace::GitCommit::GitError, "error"
@@ -247,7 +247,7 @@ class FileStagerTest < TestCase
     assert @stager.last_error
 
     # Then succeed
-    @mock_checker.expect :categorize_paths, { valid: ["good/"], force_add: [], skipped: [] }, [["good/"], @mock_git]
+    @mock_checker.expect :categorize_paths, {valid: ["good/"], force_add: [], skipped: []}, [["good/"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "good/"]
     @stager.stage_paths(["good/"])
@@ -260,8 +260,8 @@ class FileStagerTest < TestCase
   def test_stage_paths_skips_untracked_gitignored_files
     # Set up mock to return some skipped files (gitignored and untracked)
     @mock_checker.expect :categorize_paths,
-                         { valid: ["lib/main.rb"], force_add: [], skipped: [{ path: "debug.log", pattern: "*.log" }] },
-                         [["lib/main.rb", "debug.log"], @mock_git]
+      {valid: ["lib/main.rb"], force_add: [], skipped: [{path: "debug.log", pattern: "*.log"}]},
+      [["lib/main.rb", "debug.log"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/main.rb"]
 
@@ -278,8 +278,8 @@ class FileStagerTest < TestCase
   def test_stage_paths_force_adds_tracked_gitignored_files
     # Set up mock with force_add files (gitignored but tracked)
     @mock_checker.expect :categorize_paths,
-                         { valid: [], force_add: [{ path: "tracked.log", pattern: "*.log" }], skipped: [] },
-                         [["tracked.log"], @mock_git]
+      {valid: [], force_add: [{path: "tracked.log", pattern: "*.log"}], skipped: []},
+      [["tracked.log"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "-f", "tracked.log"]
 
@@ -295,8 +295,8 @@ class FileStagerTest < TestCase
   def test_stage_paths_returns_success_when_all_files_skipped
     # All files are gitignored and untracked
     @mock_checker.expect :categorize_paths,
-                         { valid: [], force_add: [], skipped: [{ path: "debug.log", pattern: "*.log" }, { path: "temp.txt", pattern: "temp/" }] },
-                         [["debug.log", "temp.txt"], @mock_git]
+      {valid: [], force_add: [], skipped: [{path: "debug.log", pattern: "*.log"}, {path: "temp.txt", pattern: "temp/"}]},
+      [["debug.log", "temp.txt"], @mock_git]
 
     result = @stager.stage_paths(["debug.log", "temp.txt"], quiet: true)
 
@@ -308,8 +308,8 @@ class FileStagerTest < TestCase
 
   def test_stage_paths_outputs_skipped_files_when_not_quiet
     @mock_checker.expect :categorize_paths,
-                         { valid: ["lib/main.rb"], force_add: [], skipped: [{ path: "debug.log", pattern: "*.log" }] },
-                         [["lib/main.rb", "debug.log"], @mock_git]
+      {valid: ["lib/main.rb"], force_add: [], skipped: [{path: "debug.log", pattern: "*.log"}]},
+      [["lib/main.rb", "debug.log"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/main.rb"]
 
@@ -326,8 +326,8 @@ class FileStagerTest < TestCase
 
   def test_stage_paths_no_output_when_quiet
     @mock_checker.expect :categorize_paths,
-                         { valid: ["lib/main.rb"], force_add: [], skipped: [{ path: "debug.log", pattern: "*.log" }] },
-                         [["lib/main.rb", "debug.log"], @mock_git]
+      {valid: ["lib/main.rb"], force_add: [], skipped: [{path: "debug.log", pattern: "*.log"}]},
+      [["lib/main.rb", "debug.log"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/main.rb"]
 
@@ -342,8 +342,8 @@ class FileStagerTest < TestCase
 
   def test_all_files_skipped_returns_false_when_no_files_skipped
     @mock_checker.expect :categorize_paths,
-                         { valid: ["lib/main.rb"], force_add: [], skipped: [] },
-                         [["lib/main.rb"], @mock_git]
+      {valid: ["lib/main.rb"], force_add: [], skipped: []},
+      [["lib/main.rb"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/main.rb"]
 
@@ -356,8 +356,8 @@ class FileStagerTest < TestCase
 
   def test_stage_paths_handles_mixed_valid_force_add_and_skipped
     @mock_checker.expect :categorize_paths,
-                         { valid: ["lib/main.rb"], force_add: [{ path: "tracked.log", pattern: "*.log" }], skipped: [{ path: "untracked.log", pattern: "*.log" }] },
-                         [["lib/main.rb", "tracked.log", "untracked.log"], @mock_git]
+      {valid: ["lib/main.rb"], force_add: [{path: "tracked.log", pattern: "*.log"}], skipped: [{path: "untracked.log", pattern: "*.log"}]},
+      [["lib/main.rb", "tracked.log", "untracked.log"], @mock_git]
     @mock_git.expect :execute, nil, ["reset", "--quiet"]
     @mock_git.expect :execute, nil, ["add", "lib/main.rb"]
     @mock_git.expect :execute, nil, ["add", "-f", "tracked.log"]

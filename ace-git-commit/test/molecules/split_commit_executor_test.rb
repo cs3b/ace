@@ -23,7 +23,7 @@ class SplitCommitExecutorTest < TestCase
     end
 
     def get_all_diff(files = nil)
-      "diff for files: #{files&.join(', ')}"
+      "diff for files: #{files&.join(", ")}"
     end
 
     def changed_files(staged_only: false)
@@ -57,7 +57,7 @@ class SplitCommitExecutorTest < TestCase
 
     def generate_batch(groups_context, intention: nil, config: nil)
       messages = groups_context.map { |ctx| "feat(#{ctx[:scope_name]}): test changes" }
-      { messages: messages, order: groups_context.map { |ctx| ctx[:scope_name] } }
+      {messages: messages, order: groups_context.map { |ctx| ctx[:scope_name] }}
     end
   end
 
@@ -77,7 +77,7 @@ class SplitCommitExecutorTest < TestCase
     group = Ace::GitCommit::Models::CommitGroup.new(
       scope_name: "docs",
       source: ".ace/git/commit.yml",
-      config: { "model" => "glite" },
+      config: {"model" => "glite"},
       files: ["a.md"]
     )
 
@@ -106,13 +106,13 @@ class SplitCommitExecutorTest < TestCase
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "docs",
         source: ".ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["README.md"]
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
         source: ".ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["task.md"]
       )
     ]
@@ -167,13 +167,13 @@ class SplitCommitExecutorTest < TestCase
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "docs",
         source: ".ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["README.md"]
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
         source: ".ace/git/commit.yml",
-        config: { "model" => "glite" },
+        config: {"model" => "glite"},
         files: ["task.md"]
       )
     ]
@@ -184,7 +184,7 @@ class SplitCommitExecutorTest < TestCase
 
     assert result.failed?, "Should fail when second group commit fails"
     assert git.executed.any? { |args| args == ["reset", "--soft", "original123"] },
-           "Should rollback to original HEAD"
+      "Should rollback to original HEAD"
     assert_equal 2, result.records.length
     assert_equal :success, result.records[0].status
     assert_equal :failure, result.records[1].status
@@ -233,7 +233,7 @@ class SplitCommitExecutorTest < TestCase
 
     assert result.failed?, "Should fail when staging fails"
     assert git.executed.any? { |args| args == ["reset", "--soft", "abc123"] },
-           "Should rollback to original HEAD on staging failure"
+      "Should rollback to original HEAD on staging failure"
   end
 
   def test_skips_commit_when_all_files_gitignored
@@ -247,7 +247,7 @@ class SplitCommitExecutorTest < TestCase
 
       def initialize
         @last_error = nil
-        @last_skipped_files = [{ path: "ignored.log", pattern: "*.log" }]
+        @last_skipped_files = [{path: "ignored.log", pattern: "*.log"}]
       end
 
       def stage_paths(paths, quiet: false)
@@ -312,7 +312,6 @@ class SplitCommitExecutorTest < TestCase
     generator = FakeGenerator.new
 
     # First group has valid files, second has all gitignored
-    stage_count = 0
     stager = Class.new do
       attr_reader :last_error, :last_skipped_files
 
@@ -328,7 +327,7 @@ class SplitCommitExecutorTest < TestCase
           @last_skipped_files = []
           true
         else
-          @last_skipped_files = [{ path: "ignored.log", pattern: "*.log" }]
+          @last_skipped_files = [{path: "ignored.log", pattern: "*.log"}]
           true
         end
       end

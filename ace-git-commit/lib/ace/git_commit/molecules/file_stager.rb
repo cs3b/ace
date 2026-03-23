@@ -120,15 +120,13 @@ module Ace
 
             # Stage normal files (retry with -f if path is ignored)
             normal_paths.each do |path|
-              begin
-                @git.execute("add", path)
-              rescue GitError => e
-                # If git says path is ignored but we expected it to work, try force add
-                if e.message.include?("ignored by one of your .gitignore files")
-                  @git.execute("add", "-f", path)
-                else
-                  raise
-                end
+              @git.execute("add", path)
+            rescue GitError => e
+              # If git says path is ignored but we expected it to work, try force add
+              if e.message.include?("ignored by one of your .gitignore files")
+                @git.execute("add", "-f", path)
+              else
+                raise
               end
             end
 

@@ -9,8 +9,8 @@ class MessageGeneratorTest < TestCase
 
   def test_parse_batch_response_with_strict_json
     groups = [
-      { scope_name: "ace-assign" },
-      { scope_name: "ace-docs" }
+      {scope_name: "ace-assign"},
+      {scope_name: "ace-docs"}
     ]
     response = <<~JSON
       {
@@ -29,7 +29,7 @@ class MessageGeneratorTest < TestCase
   end
 
   def test_parse_batch_response_with_fenced_json
-    groups = [{ scope_name: "ace-review" }, { scope_name: "ace-docs" }]
+    groups = [{scope_name: "ace-review"}, {scope_name: "ace-docs"}]
     response = <<~TXT
       ```json
       {"order":["ace-review","ace-docs"],"messages":[{"scope":"ace-review","message":"fix(ace-review): harden preset lookup"},{"scope":"ace-docs","message":"docs(ace-docs): align examples"}]}
@@ -44,8 +44,8 @@ class MessageGeneratorTest < TestCase
 
   def test_parse_batch_response_rejects_missing_scopes
     groups = [
-      { scope_name: "ace-assign" },
-      { scope_name: "ace-docs" }
+      {scope_name: "ace-assign"},
+      {scope_name: "ace-docs"}
     ]
     bad = '{"order":["ace-assign"],"messages":[{"scope":"ace-assign","message":"feat(ace-assign): add x"}]}'
 
@@ -77,9 +77,9 @@ class MessageGeneratorTest < TestCase
     Ace::LLM::QueryInterface.stub(:query, proc { |_model, _prompt, **_opts|
       call_count += 1
       if call_count == 1
-        { text: "not-json" }
+        {text: "not-json"}
       else
-        { text: '{"order":["ace-assign","ace-docs"],"messages":[{"scope":"ace-assign","message":"feat(ace-assign): add retry-safe parsing"},{"scope":"ace-docs","message":"docs(ace-docs): clarify split behavior"}]}' }
+        {text: '{"order":["ace-assign","ace-docs"],"messages":[{"scope":"ace-assign","message":"feat(ace-assign): add retry-safe parsing"},{"scope":"ace-docs","message":"docs(ace-docs): clarify split behavior"}]}'}
       end
     }) do
       result = @generator.generate_batch(groups, intention: "improve parser")

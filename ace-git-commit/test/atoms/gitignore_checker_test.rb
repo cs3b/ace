@@ -122,7 +122,7 @@ class GitignoreCheckerTest < TestCase
     mock_git = Minitest::Mock.new
     # All files are ignored and untracked
     2.times do |i|
-      file = "#{['a', 'b'][i]}.log"
+      file = "#{["a", "b"][i]}.log"
       mock_git.expect :execute, ".gitignore:1:.gitignore:*.log    #{file}", ["check-ignore", "-v", file]
       mock_git.expect :execute, nil do |*args|
         raise Ace::GitCommit::GitError, "exit 1"
@@ -141,7 +141,7 @@ class GitignoreCheckerTest < TestCase
     mock_git = Minitest::Mock.new
     # All files are ignored but tracked (force add)
     2.times do |i|
-      file = "#{['a', 'b'][i]}.log"
+      file = "#{["a", "b"][i]}.log"
       mock_git.expect :execute, ".gitignore:1:.gitignore:*.log    #{file}", ["check-ignore", "-v", file]
       mock_git.expect :execute, "#{file}\n", ["ls-files", "--error-unmatch", file]
     end

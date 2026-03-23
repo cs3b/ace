@@ -18,7 +18,7 @@ module Ace
           result = Ace::Git::Atoms::CommandExecutor.execute(*cmd)
 
           unless result[:success]
-            error_msg = "Git command failed: #{cmd.join(' ')}"
+            error_msg = "Git command failed: #{cmd.join(" ")}"
             error_msg += "\nError: #{result[:error]}" if result[:error] && !result[:error].empty?
             raise GitError, error_msg
           end

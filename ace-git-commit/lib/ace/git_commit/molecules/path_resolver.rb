@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'set'
+require "pathname"
 
 module Ace
   module GitCommit
@@ -11,8 +10,8 @@ module Ace
         attr_reader :last_error
 
         # Status codes for renames and copies in git porcelain format
-        RENAME_STATUS = 'R'
-        COPY_STATUS = 'C'
+        RENAME_STATUS = "R"
+        COPY_STATUS = "C"
 
         private_constant :RENAME_STATUS, :COPY_STATUS
 
@@ -100,7 +99,7 @@ module Ace
         # @param paths [Array<String>] Paths to validate
         # @return [Hash] Validation result with :valid and :invalid paths
         def validate_paths(paths)
-          return { valid: [], invalid: [] } if paths.nil? || paths.empty?
+          return {valid: [], invalid: []} if paths.nil? || paths.empty?
 
           valid = []
           invalid = []
@@ -113,7 +112,7 @@ module Ace
             else
               # Check if path has git changes (deleted, renamed)
               git_changed_paths ||= paths_with_git_changes
-              git_changed_set ||= git_changed_paths.map { |p| p.chomp('/') }.to_set
+              git_changed_set ||= git_changed_paths.map { |p| p.chomp("/") }.to_set
               if path_has_git_changes?(path, git_changed_paths, git_changed_set)
                 valid << path
               else
@@ -122,7 +121,7 @@ module Ace
             end
           end
 
-          { valid: valid, invalid: invalid }
+          {valid: valid, invalid: invalid}
         end
 
         # Check if all paths exist or have git changes (deleted/renamed files)
@@ -139,7 +138,7 @@ module Ace
         # @return [Boolean] True if path is a glob pattern
         def glob_pattern?(path)
           # Check for common glob metacharacters
-          path.include?('*') || path.include?('?') || path.include?('[') || path.include?('{')
+          path.include?("*") || path.include?("?") || path.include?("[") || path.include?("{")
         end
 
         # Check if pattern is a simple (non-recursive) glob pattern
@@ -147,7 +146,7 @@ module Ace
         # @param pattern [String] Pattern to check
         # @return [Boolean] True if pattern is a simple glob (not recursive)
         def simple_glob_pattern?(pattern)
-          glob_pattern?(pattern) && !pattern.include?('**')
+          glob_pattern?(pattern) && !pattern.include?("**")
         end
 
         # Suggest a recursive alternative for simple glob patterns
@@ -158,16 +157,16 @@ module Ace
 
           # For patterns starting with *, prepend **/ for recursive matching
           # e.g., "*.rb" -> "**/*.rb"
-          return "**/#{pattern}" if pattern.start_with?('*')
+          return "**/#{pattern}" if pattern.start_with?("*")
 
           # For patterns with subdirectory like "dir/*.rb", insert **/ before the glob part
           # e.g., "dir/*.rb" -> "dir/**/*.rb"
-          if pattern.include?('/')
+          if pattern.include?("/")
             # Find the last directory separator before the glob portion
-            last_slash = pattern.rindex('/')
+            last_slash = pattern.rindex("/")
             dir_part = pattern[0..last_slash]
             glob_part = pattern[(last_slash + 1)..]
-            return "#{dir_part}**/#{glob_part}" if glob_part.include?('*')
+            return "#{dir_part}**/#{glob_part}" if glob_part.include?("*")
           end
 
           nil
@@ -199,7 +198,7 @@ module Ace
           filesystem_matches = Dir.glob(pattern, File::FNM_PATHNAME | File::FNM_DOTMATCH)
 
           # Remove . and .. entries
-          filesystem_matches.reject! { |f| f.end_with?('/.') || f.end_with?('/..') }
+          filesystem_matches.reject! { |f| f.end_with?("/.", "/..") }
 
           # Filter to only files (exclude directories)
           filesystem_matches.select! { |f| File.file?(f) }
@@ -209,7 +208,7 @@ module Ace
 
           # Return intersection: files that match glob AND are committable
           filesystem_matches & committable_files
-        rescue StandardError => e
+        rescue => e
           @last_error = "Failed to expand glob pattern '#{pattern}': #{e.message}"
           []
         end
@@ -284,8 +283,8 @@ module Ace
               paths << path  # Old path
               paths << entries[i] if i < entries.length  # New path
               i += 1
-            else
-              paths << path if path
+            elsif path
+              paths << path
             end
           end
           paths.compact
@@ -298,14 +297,14 @@ module Ace
         # @return [Boolean] True if path has git changes
         def path_has_git_changes?(path, git_changed_paths, changed_set)
           # Normalize and strip trailing slashes for consistent comparison
-          normalized = normalize_to_repo_relative(path).chomp('/')
+          normalized = normalize_to_repo_relative(path).chomp("/")
 
           # Check exact match first (O(1))
           return true if changed_set.include?(normalized)
 
           # Check if any changed path is within this directory
           git_changed_paths.any? do |changed|
-            changed.chomp('/').start_with?("#{normalized}/")
+            changed.chomp("/").start_with?("#{normalized}/")
           end
         end
 
@@ -315,20 +314,20 @@ module Ace
         # @return [String] Repo-relative path
         def normalize_to_repo_relative(path)
           # Remove trailing slashes for normalization
-          clean = path.chomp('/')
+          clean = path.chomp("/")
 
           # Remove leading ./ prefix
-          clean = clean.sub(%r{^\./}, '')
+          clean = clean.sub(%r{^\./}, "")
 
           # Handle absolute paths by making them relative to repo root
-          if clean.start_with?('/')
+          if clean.start_with?("/")
             repo_root = fetch_repo_root
             if repo_root
               if clean == repo_root
                 # Exact repo root match returns '.' for current directory
-                clean = '.'
+                clean = "."
               elsif clean.start_with?("#{repo_root}/")
-                clean = clean.sub("#{repo_root}/", '')
+                clean = clean.sub("#{repo_root}/", "")
               end
             end
           end
@@ -354,7 +353,7 @@ module Ace
           return true if file == path
 
           # Normalize path by removing trailing slash for comparison
-          normalized_path = path.chomp('/')
+          normalized_path = path.chomp("/")
 
           # Use Pathname for robust directory checking
           # Ascend through file's directory hierarchy and check for path match

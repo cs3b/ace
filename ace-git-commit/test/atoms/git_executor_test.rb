@@ -9,14 +9,14 @@ class GitExecutorTest < TestCase
   end
 
   def test_execute_runs_git_command_successfully
-    @cmd_executor.stub :execute, { success: true, output: "git version 2.39.0\n", error: "" } do
+    @cmd_executor.stub :execute, {success: true, output: "git version 2.39.0\n", error: ""} do
       result = @git.execute("--version")
       assert_equal "git version 2.39.0\n", result
     end
   end
 
   def test_execute_raises_on_command_failure
-    @cmd_executor.stub :execute, { success: false, output: "", error: "error" } do
+    @cmd_executor.stub :execute, {success: false, output: "", error: "error"} do
       error = assert_raises(Ace::GitCommit::GitError) do
         @git.execute("invalid-command")
       end
@@ -25,14 +25,14 @@ class GitExecutorTest < TestCase
   end
 
   def test_execute_with_capture_stderr
-    @cmd_executor.stub :execute, { success: true, output: "output\n", error: "warning\n" } do
+    @cmd_executor.stub :execute, {success: true, output: "output\n", error: "warning\n"} do
       result = @git.execute("command", capture_stderr: true)
       assert_equal "output\nwarning\n", result
     end
   end
 
   def test_execute_with_capture_stderr_on_failure
-    @cmd_executor.stub :execute, { success: false, output: "", error: "fatal error\n" } do
+    @cmd_executor.stub :execute, {success: false, output: "", error: "fatal error\n"} do
       error = assert_raises(Ace::GitCommit::GitError) do
         @git.execute("bad-command", capture_stderr: true)
       end
