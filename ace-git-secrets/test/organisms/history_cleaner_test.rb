@@ -142,7 +142,7 @@ class HistoryCleanerTest < GitSecretsTestCase
           true
         } do
           @cleaner.rewriter.stub :rewrite, ->(_tokens, **_opts) {
-            { success: true, message: "Mocked", changes: [] }
+            {success: true, message: "Mocked", changes: []}
           } do
             _result = @cleaner.clean(tokens: tokens, force: true, create_backup: true)
             assert backup_created, "Backup should have been created"
@@ -166,7 +166,7 @@ class HistoryCleanerTest < GitSecretsTestCase
           true
         } do
           @cleaner.rewriter.stub :rewrite, ->(_tokens, **_opts) {
-            { success: true, message: "Mocked", changes: [] }
+            {success: true, message: "Mocked", changes: []}
           } do
             _result = @cleaner.clean(tokens: tokens, force: true, create_backup: false)
             refute backup_created, "Backup should not have been created"

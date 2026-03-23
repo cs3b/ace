@@ -29,7 +29,7 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scanner_detects_tokens_from_mocked_findings
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::SCAN, confidence: "high" }
+      {pattern_name: "github-pat", matched_value: TestTokens::SCAN, confidence: "high"}
     ]
 
     with_mocked_gitleaks(findings: findings) do
@@ -47,8 +47,8 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scanner_filters_by_high_confidence
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::HIGH_CONFIDENCE, confidence: "high" },
-      { pattern_name: "generic", matched_value: TestTokens::LOW_CONFIDENCE, confidence: "low" }
+      {pattern_name: "github-pat", matched_value: TestTokens::HIGH_CONFIDENCE, confidence: "high"},
+      {pattern_name: "generic", matched_value: TestTokens::LOW_CONFIDENCE, confidence: "low"}
     ]
 
     with_mocked_gitleaks(findings: findings) do
@@ -65,9 +65,9 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scanner_filters_by_medium_confidence
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::HIGH_CONFIDENCE, confidence: "high" },
-      { pattern_name: "api-key", matched_value: "sk_medium_test", confidence: "medium" },
-      { pattern_name: "generic", matched_value: TestTokens::LOW_CONFIDENCE, confidence: "low" }
+      {pattern_name: "github-pat", matched_value: TestTokens::HIGH_CONFIDENCE, confidence: "high"},
+      {pattern_name: "api-key", matched_value: "sk_medium_test", confidence: "medium"},
+      {pattern_name: "generic", matched_value: TestTokens::LOW_CONFIDENCE, confidence: "low"}
     ]
 
     with_mocked_gitleaks(findings: findings) do
@@ -84,7 +84,7 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scanner_applies_file_exclusions
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::SCAN, file_path: "test/fixtures/tokens.json" }
+      {pattern_name: "github-pat", matched_value: TestTokens::SCAN, file_path: "test/fixtures/tokens.json"}
     ]
 
     exclusions = ["test/**/*"]
@@ -104,7 +104,7 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scanner_includes_files_not_matching_exclusions
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::SCAN, file_path: "config/secrets.yml" }
+      {pattern_name: "github-pat", matched_value: TestTokens::SCAN, file_path: "config/secrets.yml"}
     ]
 
     exclusions = ["test/**/*"]
@@ -149,7 +149,7 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scan_files_mode
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::SCAN }
+      {pattern_name: "github-pat", matched_value: TestTokens::SCAN}
     ]
 
     with_mocked_gitleaks(findings: findings) do
@@ -167,7 +167,7 @@ class HistoryScannerTest < GitSecretsTestCase
 
   def test_scan_files_sets_commit_hash_to_head
     findings = [
-      { pattern_name: "github-pat", matched_value: TestTokens::SCAN, commit_hash: "ignored" }
+      {pattern_name: "github-pat", matched_value: TestTokens::SCAN, commit_hash: "ignored"}
     ]
 
     with_mocked_gitleaks(findings: findings) do

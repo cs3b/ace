@@ -37,7 +37,7 @@ module Ace
             return if available?
 
             raise GitleaksNotFoundError,
-                  "gitleaks is required but not installed. Install with: brew install gitleaks"
+              "gitleaks is required but not installed. Install with: brew install gitleaks"
           end
 
           # Instance method for backward compatibility
@@ -53,7 +53,7 @@ module Ace
 
             stdout, _status = Open3.capture2("gitleaks version")
             stdout.strip
-          rescue StandardError
+          rescue
             nil
           end
 
@@ -80,8 +80,8 @@ module Ace
 
             ver = runner.version || "unknown"
             raise GitleaksNotFoundError,
-                  "gitleaks version #{ver} is not compatible. Version 8.0+ is required. " \
-                  "Upgrade with: brew upgrade gitleaks"
+              "gitleaks version #{ver} is not compatible. Version 8.0+ is required. " \
+              "Upgrade with: brew upgrade gitleaks"
           end
 
           # Run gitleaks scan on current files (no git history)
@@ -124,14 +124,18 @@ module Ace
               cmd = build_command(path: path, no_git: no_git, since: since, verbose: verbose, report_path: report_file.path)
 
               # Use array form to avoid shell injection - stderr captured separately
-              stdout, stderr, status = Open3.capture3(*cmd)
+              _, stderr, status = Open3.capture3(*cmd)
 
               # Read JSON from temp file
-              json_output = File.read(report_file.path) rescue ""
+              json_output = begin
+                File.read(report_file.path)
+              rescue
+                ""
+              end
 
               parse_results(json_output, stderr, status)
             end
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               skipped: false,
@@ -144,10 +148,10 @@ module Ace
           # @return [Array<String>]
           def build_command(path:, no_git:, since:, verbose:, report_path:)
             # Use gitleaks git for history scanning, detect for file-only scanning
-            if no_git
-              cmd = ["gitleaks", "detect", "--no-git"]
+            cmd = if no_git
+              ["gitleaks", "detect", "--no-git"]
             else
-              cmd = ["gitleaks", "git"]
+              ["gitleaks", "git"]
             end
             cmd << path
             cmd << "--report-format=json"
@@ -211,7 +215,7 @@ module Ace
               success: status.exitstatus <= 1,
               clean: status.exitstatus == 0,
               skipped: false,
-              message: status.exitstatus == 0 ? "No secrets detected" : "#{findings.size} secret(s) detected",
+              message: (status.exitstatus == 0) ? "No secrets detected" : "#{findings.size} secret(s) detected",
               findings: findings.map { |f| normalize_finding(f) },
               raw_output: stdout,
               stderr: stderr

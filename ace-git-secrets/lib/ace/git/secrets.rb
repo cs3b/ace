@@ -3,7 +3,7 @@
 require_relative "secrets/version"
 
 # Load ace-config for configuration cascade management
-require 'ace/support/config'
+require "ace/support/config"
 
 # Models
 require_relative "secrets/models/detected_token"
@@ -60,7 +60,7 @@ module Ace
         @config_mutex.synchronize do
           @config ||= begin
             gem_root = Gem.loaded_specs["ace-git-secrets"]&.gem_dir ||
-                       File.expand_path("../../..", __dir__)
+              File.expand_path("../../..", __dir__)
 
             resolver = Ace::Support::Config.create(
               config_dir: ".ace",
@@ -73,7 +73,7 @@ module Ace
 
             # Extract git-secrets section if present
             config.data["git-secrets"] || config.data
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Could not load ace-git-secrets config: #{e.message}"
             fallback_defaults
           end

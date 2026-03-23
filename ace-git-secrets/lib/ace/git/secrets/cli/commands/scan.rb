@@ -20,17 +20,17 @@ module Ace
 
             option :since, type: :string, desc: "Start scanning from commit or date"
             option :format, type: :string, aliases: ["f"], default: "table",
-                   desc: "Stdout format when --verbose is used (table, json, yaml)"
+              desc: "Stdout format when --verbose is used (table, json, yaml)"
             option :report_format, type: :string, aliases: ["r"], default: "json",
-                   desc: "Format for saved report file (json, markdown)"
+              desc: "Format for saved report file (json, markdown)"
             option :confidence, type: :string, aliases: ["c"], default: "low",
-                   desc: "Minimum confidence (high, medium, low)"
+              desc: "Minimum confidence (high, medium, low)"
             option :verbose, type: :boolean, default: false,
-                   desc: "Enable verbose output with full report to stdout"
+              desc: "Enable verbose output with full report to stdout"
             option :quiet, type: :boolean, aliases: ["q"], default: false,
-                   desc: "Suppress non-essential output"
+              desc: "Suppress non-essential output"
             option :debug, type: :boolean, default: false,
-                   desc: "Show debug output"
+              desc: "Show debug output"
 
             def call(**options)
               debug_log("Starting scan with options: #{format_pairs(options)}", options)
@@ -39,7 +39,7 @@ module Ace
               raise Ace::Support::Cli::Error.new("Tokens detected", exit_code: exit_code) if exit_code != 0
             rescue Ace::Support::Cli::Error
               raise
-            rescue StandardError => e
+            rescue => e
               debug_log(e.full_message, options) if debug?(options)
               raise Ace::Support::Cli::Error.new(e.message, exit_code: 2)
             end

@@ -12,7 +12,7 @@ module Ace
         # Represents a complete scan report with detected tokens and metadata
         class ScanReport
           attr_reader :tokens, :repository_path, :scanned_at, :scan_options,
-                      :commits_scanned, :detection_method, :scan_duration, :thread_count
+            :commits_scanned, :detection_method, :scan_duration, :thread_count
 
           # @param tokens [Array<DetectedToken>] Detected tokens
           # @param repository_path [String] Path to scanned repository
@@ -23,8 +23,8 @@ module Ace
           # @param scan_duration [Float, nil] Scan duration in seconds
           # @param thread_count [Integer, nil] Number of threads used for scanning
           def initialize(tokens: [], repository_path: nil, scanned_at: nil,
-                         scan_options: {}, commits_scanned: 0, detection_method: "ruby_patterns",
-                         scan_duration: nil, thread_count: nil)
+            scan_options: {}, commits_scanned: 0, detection_method: "ruby_patterns",
+            scan_duration: nil, thread_count: nil)
             @tokens = tokens.freeze
             @repository_path = repository_path
             @scanned_at = scanned_at || Time.now
@@ -179,7 +179,7 @@ module Ace
               lines << "#{idx + 1}. #{token.token_type} (#{token.confidence})"
               lines << "   Value: #{token.masked_value}"
               lines << "   Commit: #{token.short_commit}"
-              lines << "   File: #{token.file_path}#{token.line_number ? ":#{token.line_number}" : ""}"
+              lines << "   File: #{token.file_path}#{":#{token.line_number}" if token.line_number}"
               lines << "   Detected by: #{token.detected_by}"
               lines << ""
             end
@@ -199,12 +199,12 @@ module Ace
             FileUtils.mkdir_p(sessions_dir)
 
             session_id = Ace::B36ts.encode(scanned_at)
-            ext = format == :markdown ? "md" : "json"
+            ext = (format == :markdown) ? "md" : "json"
             path = File.join(sessions_dir, "#{session_id}-report.#{ext}")
 
             # JSON format includes raw values by default for revoke/rewrite-history workflows
             # Markdown format never includes raw values (human-readable)
-            content = format == :markdown ? to_markdown : to_json(include_raw: include_raw)
+            content = (format == :markdown) ? to_markdown : to_json(include_raw: include_raw)
             File.write(path, content)
 
             # Security warning: remind user that raw secrets are written to disk
@@ -229,7 +229,7 @@ module Ace
             providers_path = File.join(sessions_dir, "#{session_id}-providers.md")
             File.write(providers_path, providers_content)
             providers_path
-          rescue StandardError => e
+          rescue => e
             # Log error but don't fail main report save
             warn "Warning: Could not save providers report: #{e.message}"
             nil
@@ -244,13 +244,13 @@ module Ace
             # Timing and thread info
             timing = scan_duration ? "in #{format_duration(scan_duration)}" : ""
             threads = thread_count ? " (#{thread_count} threads)" : ""
-            lines << "Scan completed#{timing.empty? ? '' : ' ' + timing}#{threads}"
+            lines << "Scan completed#{" " + timing unless timing.empty?}#{threads}"
 
             # Token counts
-            if clean?
-              lines << "No tokens detected. Repository is clean."
+            lines << if clean?
+              "No tokens detected. Repository is clean."
             else
-              lines << "Tokens found: #{token_count} (high: #{high_confidence_count}, medium: #{medium_confidence_count})"
+              "Tokens found: #{token_count} (high: #{high_confidence_count}, medium: #{medium_confidence_count})"
             end
 
             # Report path
@@ -304,14 +304,14 @@ module Ace
             lines = []
             lines << "# Tokens to Revoke"
             lines << ""
-            lines << "**Scan**: #{scanned_at.strftime('%Y-%m-%d %H:%M:%S')} | " \
+            lines << "**Scan**: #{scanned_at.strftime("%Y-%m-%d %H:%M:%S")} | " \
                      "**Unique tokens**: #{deduped.size} | " \
                      "**Providers**: #{by_provider.size}"
             lines << ""
 
             sorted_providers.each do |provider_name|
               provider_tokens = by_provider[provider_name]
-              lines << "## #{provider_name} (#{provider_tokens.size} token#{'s' if provider_tokens.size != 1})"
+              lines << "## #{provider_name} (#{provider_tokens.size} token#{"s" if provider_tokens.size != 1})"
               lines << ""
 
               provider_tokens.each_with_index do |entry, idx|
@@ -345,8 +345,8 @@ module Ace
             lines << "| Repository | `#{repository_path}` |"
             lines << "| Scanned at | #{scanned_at.iso8601} |"
             lines << "| Commits scanned | #{commits_scanned} |"
-            lines << "| Scan duration | #{scan_duration ? format_duration(scan_duration) : 'N/A'} |"
-            lines << "| Thread count | #{thread_count || 'N/A'} |"
+            lines << "| Scan duration | #{scan_duration ? format_duration(scan_duration) : "N/A"} |"
+            lines << "| Thread count | #{thread_count || "N/A"} |"
             lines << "| Detection method | #{detection_method} |"
             lines << ""
             lines << "## Summary"
@@ -369,7 +369,7 @@ module Ace
                 lines << "- **Confidence**: #{token.confidence}"
                 lines << "- **Value**: `#{token.masked_value}`"
                 lines << "- **Commit**: #{token.short_commit}"
-                lines << "- **File**: `#{token.file_path}#{token.line_number ? ":#{token.line_number}" : ""}`"
+                lines << "- **File**: `#{token.file_path}#{":#{token.line_number}" if token.line_number}`"
                 lines << "- **Detected by**: #{token.detected_by}"
                 lines << ""
               end

@@ -55,12 +55,12 @@ module Ace
             response = github_revoke_connection.post do |req|
               req.headers["Content-Type"] = "application/json"
               req.headers["Accept"] = "application/json"
-              req.body = JSON.generate({ credential: token })
+              req.body = JSON.generate({credential: token})
             end
 
             parse_github_response(response)
           rescue Faraday::Error => e
-            { success: false, message: "GitHub API error: #{e.message}", response: nil }
+            {success: false, message: "GitHub API error: #{e.message}", response: nil}
           end
 
           # Get cached GitHub revoke connection for bulk operations
@@ -79,8 +79,8 @@ module Ace
               {
                 method: :post,
                 url: github_revoke_url,
-                headers: { "Content-Type" => "application/json" },
-                body: { credential: token },
+                headers: {"Content-Type" => "application/json"},
+                body: {credential: token},
                 notes: "GitHub tokens can be revoked via API without authentication"
               }
             when "anthropic"
@@ -133,10 +133,10 @@ module Ace
                 reset_at: Time.at(resources["reset"])
               }
             else
-              { limit: 60, remaining: "unknown", reset_at: nil }
+              {limit: 60, remaining: "unknown", reset_at: nil}
             end
-          rescue StandardError
-            { limit: 60, remaining: "unknown", reset_at: nil }
+          rescue
+            {limit: 60, remaining: "unknown", reset_at: nil}
           end
 
           private
@@ -152,7 +152,7 @@ module Ace
               # (Faraday 2.x requires faraday-retry gem for this)
               if retry_count > 0
                 f.request :retry, max: retry_count, interval: 0.5,
-                                  exceptions: [Faraday::TimeoutError, Faraday::ConnectionFailed]
+                  exceptions: [Faraday::TimeoutError, Faraday::ConnectionFailed]
               end
               f.adapter Faraday.default_adapter
             end
@@ -164,21 +164,21 @@ module Ace
           def parse_github_response(response)
             case response.status
             when 200, 204
-              { success: true, message: "Token revoked successfully", response: response }
+              {success: true, message: "Token revoked successfully", response: response}
             when 404
-              { success: false, message: "Token not found or already revoked", response: response }
+              {success: false, message: "Token not found or already revoked", response: response}
             when 422
-              { success: false, message: "Invalid token format", response: response }
+              {success: false, message: "Invalid token format", response: response}
             when 429
-              { success: false, message: "Rate limit exceeded. Try again later.", response: response }
+              {success: false, message: "Rate limit exceeded. Try again later.", response: response}
             else
               body = response.body.to_s
               message = begin
                 JSON.parse(body)["message"]
-              rescue StandardError
+              rescue
                 body
               end
-              { success: false, message: "GitHub API error: #{message}", response: response }
+              {success: false, message: "GitHub API error: #{message}", response: response}
             end
           end
         end

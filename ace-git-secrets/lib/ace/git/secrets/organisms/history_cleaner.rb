@@ -158,9 +158,9 @@ module Ace
             backup_path = custom_path || generate_backup_path
 
             if rewriter.create_backup(backup_path)
-              { success: true, path: backup_path }
+              {success: true, path: backup_path}
             else
-              { success: false, message: "Could not create mirror clone" }
+              {success: false, message: "Could not create mirror clone"}
             end
           end
 

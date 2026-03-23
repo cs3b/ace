@@ -83,7 +83,7 @@ module Ace
               puts "Error: #{result[:message]}"
               1
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
             puts e.backtrace.first(5).join("\n") if ENV["DEBUG"]
             2
@@ -136,7 +136,7 @@ module Ace
           rescue Errno::EACCES
             warn "Permission denied reading scan file: #{file_path}"
             nil
-          rescue StandardError => e
+          rescue => e
             warn "Error loading scan file: #{e.class.name}: #{e.message}"
             nil
           end

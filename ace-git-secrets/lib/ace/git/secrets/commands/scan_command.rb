@@ -80,7 +80,7 @@ module Ace
           rescue Atoms::GitleaksRunner::GitleaksNotFoundError => e
             puts "Error: #{e.message}"
             2
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
             puts e.backtrace.first(5).join("\n") if ENV["DEBUG"]
             2

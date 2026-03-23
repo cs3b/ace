@@ -78,7 +78,7 @@ module Ace
                 success: true,
                 dry_run: true,
                 message: "Dry run: Would remove #{tokens.size} token(s) from history",
-                changes: replacements.map { |r| { original: r[:pattern], replacement: r[:replacement] } }
+                changes: replacements.map { |r| {original: r[:pattern], replacement: r[:replacement]} }
               }
             else
               execute_filter_repo(replacements)
@@ -89,12 +89,12 @@ module Ace
           # @param backup_path [String] Path for backup
           # @return [Boolean] Success status
           def create_backup(backup_path)
-            output, status = Open3.capture2(
+            _, status = Open3.capture2(
               "git", "clone", "--mirror", repository_path, backup_path,
               err: File::NULL
             )
             status.success?
-          rescue StandardError
+          rescue
             false
           end
 
@@ -168,7 +168,7 @@ module Ace
                   {
                     success: true,
                     message: "Successfully removed #{replacements.size} token(s) from history",
-                    changes: replacements.map { |r| { token_type: r[:token_type], status: "removed" } },
+                    changes: replacements.map { |r| {token_type: r[:token_type], status: "removed"} },
                     stdout: stdout,
                     stderr: stderr
                   }
@@ -185,7 +185,7 @@ module Ace
             ensure
               replacement_file.unlink
             end
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               message: "Error executing git-filter-repo: #{e.message}",

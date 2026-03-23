@@ -11,7 +11,7 @@ class TokenRevokerTest < GitSecretsTestCase
   def test_revoke_token_returns_success_for_github_tokens
     token = create_mock_token("github_pat_classic", "ghp_test123456789012345678901234567890AB")
 
-    @mock_client.github_response = { success: true, message: "Token revoked" }
+    @mock_client.github_response = {success: true, message: "Token revoked"}
 
     result = @revoker.revoke_token(token)
 
@@ -23,7 +23,7 @@ class TokenRevokerTest < GitSecretsTestCase
   def test_revoke_token_returns_failure_for_failed_github_revocation
     token = create_mock_token("github_pat_classic", "ghp_test123456789012345678901234567890AB")
 
-    @mock_client.github_response = { success: false, message: "Rate limited" }
+    @mock_client.github_response = {success: false, message: "Rate limited"}
 
     result = @revoker.revoke_token(token)
 
@@ -78,7 +78,7 @@ class TokenRevokerTest < GitSecretsTestCase
       create_mock_token("github_pat_classic", "ghp_test1234567890123456789012345678901B")
     ]
 
-    @mock_client.github_response = { success: true, message: "Revoked" }
+    @mock_client.github_response = {success: true, message: "Revoked"}
 
     results = @revoker.revoke_all(tokens)
 
@@ -92,7 +92,7 @@ class TokenRevokerTest < GitSecretsTestCase
       create_mock_token("anthropic_api_key", "sk-ant-test1234567890123456789012345678901B")
     ]
 
-    @mock_client.github_response = { success: true, message: "Revoked" }
+    @mock_client.github_response = {success: true, message: "Revoked"}
 
     # Only revoke github tokens
     results = @revoker.revoke_all(tokens, services: ["github"])
@@ -150,7 +150,7 @@ class TokenRevokerTest < GitSecretsTestCase
     attr_accessor :github_response
 
     def initialize
-      @github_response = { success: true, message: "Mocked" }
+      @github_response = {success: true, message: "Mocked"}
     end
 
     def revoke_github_token(_token)
@@ -163,7 +163,7 @@ class TokenRevokerTest < GitSecretsTestCase
         {
           method: :post,
           url: "https://api.github.com/credentials/revoke",
-          headers: { "Content-Type" => "application/json" },
+          headers: {"Content-Type" => "application/json"},
           body: {},
           notes: "GitHub tokens can be revoked via API without authentication"
         }

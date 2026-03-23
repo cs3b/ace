@@ -54,8 +54,8 @@ class ServiceApiClientTest < GitSecretsTestCase
 
     assert_equal :post, request[:method]
     assert_equal "https://api.github.com/credentials/revoke", request[:url]
-    assert_equal({ "Content-Type" => "application/json" }, request[:headers])
-    assert_equal({ credential: "ghp_test_token" }, request[:body])
+    assert_equal({"Content-Type" => "application/json"}, request[:headers])
+    assert_equal({credential: "ghp_test_token"}, request[:body])
     assert_match(/GitHub tokens can be revoked via API/, request[:notes])
   end
 
@@ -117,8 +117,8 @@ class ServiceApiClientTest < GitSecretsTestCase
 
     stub_request(:post, "https://api.github.com/credentials/revoke")
       .with(
-        body: { credential: "ghp_test_token_123" }.to_json,
-        headers: { "Content-Type" => "application/json" }
+        body: {credential: "ghp_test_token_123"}.to_json,
+        headers: {"Content-Type" => "application/json"}
       )
       .to_return(status: 204, body: "")
 
@@ -132,8 +132,8 @@ class ServiceApiClientTest < GitSecretsTestCase
     skip "webmock not available" unless WEBMOCK_AVAILABLE
 
     stub_request(:post, "https://api.github.com/credentials/revoke")
-      .with(body: { credential: "ghp_nonexistent" }.to_json)
-      .to_return(status: 404, body: { message: "Not Found" }.to_json)
+      .with(body: {credential: "ghp_nonexistent"}.to_json)
+      .to_return(status: 404, body: {message: "Not Found"}.to_json)
 
     result = webmock_client.revoke_github_token("ghp_nonexistent")
 
@@ -145,8 +145,8 @@ class ServiceApiClientTest < GitSecretsTestCase
     skip "webmock not available" unless WEBMOCK_AVAILABLE
 
     stub_request(:post, "https://api.github.com/credentials/revoke")
-      .with(body: { credential: "invalid" }.to_json)
-      .to_return(status: 422, body: { message: "Invalid credential format" }.to_json)
+      .with(body: {credential: "invalid"}.to_json)
+      .to_return(status: 422, body: {message: "Invalid credential format"}.to_json)
 
     result = webmock_client.revoke_github_token("invalid")
 
@@ -158,8 +158,8 @@ class ServiceApiClientTest < GitSecretsTestCase
     skip "webmock not available" unless WEBMOCK_AVAILABLE
 
     stub_request(:post, "https://api.github.com/credentials/revoke")
-      .with(body: { credential: "ghp_test" }.to_json)
-      .to_return(status: 429, body: { message: "Rate limit exceeded" }.to_json)
+      .with(body: {credential: "ghp_test"}.to_json)
+      .to_return(status: 429, body: {message: "Rate limit exceeded"}.to_json)
 
     result = webmock_client.revoke_github_token("ghp_test")
 
@@ -205,7 +205,7 @@ class ServiceApiClientTest < GitSecretsTestCase
         status: 200,
         body: {
           resources: {
-            core: { limit: 60, remaining: 45, reset: 1_700_000_000 }
+            core: {limit: 60, remaining: 45, reset: 1_700_000_000}
           }
         }.to_json
       )
