@@ -821,7 +821,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes verify_step.instructions, "Action:"
             assert_includes verify_step.instructions, "Identify modified packages"
             assert_includes verify_step.instructions, "ace-test --profile 6"
-            assert_includes review_step.instructions, "run native `/review`"
+            assert_includes review_step.instructions, "review uncommitted changes and find issues"
             assert_includes review_step.instructions, "Allowed native review clients: claude, codex."
             assert_includes review_step.instructions, "pre_commit_review_block"
             assert_includes release_step.instructions, "Action:"
