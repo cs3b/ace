@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-lint demo](docs/demo/ace-lint-getting-started.gif)
 
 `ace-lint` gives developers and coding agents a single Ruby-first lint command that validates docs and code, applies safe auto-fixes, and keeps behavior predictable through config cascade defaults. It covers markdown, YAML, Ruby, and frontmatter without requiring Node.js or Python tooling.
