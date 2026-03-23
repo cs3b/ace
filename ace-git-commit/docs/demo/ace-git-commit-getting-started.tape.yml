@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-git-commit with intention, specific files, and dry-run
+description: Showcase ace-git-commit with specific files and then remaining changes
 tags:
 - ace-git-commit
 - docs
@@ -9,29 +9,34 @@ settings:
   width: 960
   height: 540
   format: gif
+setup:
+- sandbox
+- git-init
+- run: echo "# My Project" > README.md && echo "module App; end" > app.rb && echo "require 'app'" > config.rb
+- run: git add -A && git commit -m "initial commit"
+- run: echo "# My Project\n\nA sample application." > README.md && echo "module App; VERSION = '0.2.0'; end" > app.rb && echo "require 'app'\nrequire 'logger'" > config.rb
 scenes:
 - name: Show current changes
   commands:
   - type: git status --short
     sleep: 3s
-- name: Basic dry-run commit
+- name: Commit specific files with intention
   commands:
-  - type: ace-git-commit --dry-run
-    sleep: 3s
-- name: With intention context
+  - type: clear
+    sleep: 1s
+  - type: ace-git-commit app.rb config.rb -i 'bump version and add logger'
+    sleep: 12s
+- name: Commit remaining changes
   commands:
-  - type: ace-git-commit -i 'fix auth bug' --dry-run
-    sleep: 3s
-- name: Specific files only
+  - type: clear
+    sleep: 1s
+  - type: ace-git-commit
+    sleep: 12s
+- name: Show result
   commands:
-  - type: ace-git-commit ace-review/README.md --dry-run
-    sleep: 3s
-- name: Only staged files
-  commands:
-  - type: ace-git-commit --only-staged --dry-run
+  - type: clear
+    sleep: 1s
+  - type: git log --oneline
     sleep: 3s
 teardown:
 - cleanup
-setup:
-- sandbox
-- copy-fixtures

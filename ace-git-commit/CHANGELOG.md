@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-23
+
+### Added
+- Configuration section in README pointing to `.ace-defaults/git/commit.yml` for model overrides and `.ace-handbook/prompts/` for prompt template customization.
+
+### Changed
+- Aligned gemspec summary with README tagline.
+- Moved Installation from README to Getting Started guide as a proper section.
+- Redesigned getting-started demo tape: sandbox with real commits (specific files, then remaining), replaces dry-run-only scenes.
+- Re-recorded getting-started demo GIF from new tape.
+
 ## [0.22.1] - 2026-03-23
 
 ### Changed

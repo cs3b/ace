@@ -36,5 +36,9 @@
 
 **Preview and control commit behavior safely** - use `--dry-run` to preview, `--only-staged` for strict staging, or `-m` for explicit messages, with configuration cascade from [ace-support-config](../ace-support-config) for project and user overrides.
 
+## Configuration
+
+Override the default LLM model in `.ace/git/commit.yml` (see [defaults](.ace-defaults/git/commit.yml) for all options), or replace any prompt template in `.ace-handbook/prompts/` to match your commit style.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
