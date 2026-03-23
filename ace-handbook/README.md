@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-handbook demo](docs/demo/ace-handbook-getting-started.gif)
 
 `ace-handbook` gives ACE teams a shared way to author, review, and maintain handbook assets with consistent quality gates and repeatable delivery workflows. It covers guides (`.g.md`), workflow instructions (`.wf.md`), and agent definitions (`.ag.md`).
