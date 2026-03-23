@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
 `ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
