@@ -11,10 +11,8 @@
 
 </div>
 
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 ![ace-git-commit demo](docs/demo/ace-git-commit-getting-started.gif)
 
 `ace-git-commit` helps developers and coding agents turn repository changes into clear, scoped conventional commit messages while staying inside the terminal workflow. It analyzes diffs, supports intention hints, and handles monorepo scope-based splitting automatically.
