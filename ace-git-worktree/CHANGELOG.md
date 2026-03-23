@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-03-23
+
+### Changed
+- Refreshed the package README to align with the current ACE layout pattern, including standardized section labels, bullet style, and footer link format.
+
 ## [0.18.2] - 2026-03-22
 
 ### Changed
