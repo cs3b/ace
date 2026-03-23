@@ -1,49 +1,57 @@
 # ace-task
 
-Draft, organize, and tackle tasks — for you and your agents.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-task.svg)](https://rubygems.org/gems/ace-task)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Draft, organize, and tackle tasks - for you and your agents.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-task demo](docs/demo/ace-task-getting-started.gif)
 
-## Why ace-task
+Tasks are markdown specs living in git - attached to branches and worktrees, not trapped in a SaaS dashboard. A task can contain subtasks, prototypes, research notes, and UX specs. Compact B36TS IDs like `8q4` are timestamp-derived, so they stay unique across branches without a central sequence - parallel worktrees rarely conflict.
 
-Lightweight behavioral specs tracked in git, with compact IDs that work in commits, branches, and chat. Break work into subtask trees, generate AI-powered implementation plans on demand, and keep everything healthy with automated doctor checks.
+## How It Works
 
-Built for both human developers and coding agents — same CLI, same task specs, same workflow.
+1. Task specs are created and tracked as markdown files.
+2. Review and planning workflows refine scope before implementation.
+3. Oversee execution through worktrees and assignments until ship-ready.
 
-## Features
+## Use Cases
 
-- **Behavioral specs in git** — tasks are markdown files versioned alongside code, not locked in a SaaS tool
-- **Compact B36TS IDs** — short, unique references like `8q4.t.abc` that fit in commit messages and branch names
-- **Subtask trees** — break large goals into trackable slices without losing parent context
-- **AI-generated plans** — convert specs into step-by-step implementation checklists on demand
-- **Health checks** — detect and auto-fix structural issues across task trees with `doctor`
-- **Folder organization** — next, maybe, archive folders for workflow stages
-- **Status dashboard** — see up-next tasks and recent completions at a glance
+**Draft and structure work** - create a task, split it into subtasks, add new subtasks as work reveals scope. Use `/as-task-draft` to draft from an earlier captured [idea](../ace-idea) or short note, or [`ace-task create`](docs/usage.md#ace-task-create-title) from the CLI.
 
-## Works with
+**Review before building** - validate specs with `/as-task-review` before committing to implementation. The agent can ask you clarification questions to surface missing acceptance criteria, unclear scope, or architectural risks early. Use `/as-task-review-questions` to go through pending reviews across tasks.
 
-- **[ace-idea](../ace-idea)** — ideas flow into tasks: capture with ace-idea, then draft into ace-task specs via `as-task-draft`
-- **[ace-overseer](../ace-overseer)** — orchestrate parallel task execution across isolated worktrees
-- **[ace-git-worktree](../ace-git-worktree)** — create per-task worktrees for branch isolation, tracked in task metadata
-- **[ace-assign](../ace-assign)** — tasks become steps in automated assignment pipelines for end-to-end execution
+**Plan the work** - generate a step-by-step implementation plan with `/as-task-plan` or `ace-task plan`. Define subtasks, configure which agent handles execution, and break scope into assignable units. The plan lives in the task spec so any agent can pick it up.
 
-## Agent Skills
+**Run as dark factory** - hand a task to [ace-overseer](../ace-overseer) and it provisions a worktree, opens a tmux window, creates an assignment, and drives execution through the full lifecycle - onboard, implement, verify, create PR, review, ship. One command kicks it off:
 
-ace-task ships skills for agent-assisted task management:
+```bash
+ace-overseer work-on --task t.tt6 --preset work-on-task
+```
 
-- **Task lifecycle:** `task-draft` → `task-review` → `task-plan` → `task-work` → `task-update`
-- **Discovery:** `task-finder`, `task-review-questions`
-- **Unplanned work:** `task-document-unplanned`
+Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated branch) -> [ace-tmux](../ace-tmux) (dedicated window and panes layout) -> [ace-assign](../ace-assign) (step-by-step execution). Switch to the tmux window and run `/as-assign-drive` to walk through each step.
 
-The handbook also includes cross-domain skills for bugs, ideas, testing, docs, and retrospectives. See [Handbook Reference](docs/handbook.md) for the complete catalog.
+**Track progress** - `ace-task list` shows tasks by status - what is next, what is in progress, and what was recently completed. `ace-task status` gives a focused view of the current task with subtask progress.
+
+**Keep it healthy** - with flexible folder structures and work spread across multiple branches, things can drift. `ace-task doctor` detects structural issues - orphaned subtasks, broken references, inconsistent status. Run it with `--fix` for automatic repairs, or `--fix-with-agent` to let an agent resolve issues that need judgment.
+
+**Organize** - move a task to a folder and it is created automatically. Special folders like `_maybe` and `_anytime` group tasks by intent. `_archive` partitions completed tasks by date so they stay browsable as the project grows. Sort by priority, creation date, or pin position manually.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — end-to-end tutorial
-- [Usage Guide](docs/usage.md) — full command reference
-- [Handbook Reference](docs/handbook.md) — skills, workflows, guides, templates
-- Runtime help: `ace-task --help`
+- [Getting Started](docs/getting-started.md)
+- [Usage Guide](docs/usage.md)
+- [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Part of ACE
+---
 
-`ace-task` is part of [ACE](../README.md) (Agentic Coding Environment), a CLI-first toolkit for agent-assisted development.
+Part of [ACE](../README.md) (Agentic Coding Environment)
