@@ -31,7 +31,7 @@
 
 **Run broad regression sweeps across packages** - use `ace-test-e2e-suite` for cross-package scenario orchestration with filtering by package, tags, and prior failures.
 
-**Keep execution deterministic and reviewable** - execute in sandboxes with structured outputs so results are reproducible and easy to compare across runs, complementing fast loops from [ace-test-runner](../ace-test-runner).
+**Keep execution deterministic and reviewable** - execute in sandboxes with structured outputs so results are reproducible and easy to compare across runs, complementing fast loops from [ace-test-runner](../ace-test-runner). Use `ace-test-e2e-sh` to run ad-hoc commands inside a test sandbox.
 
 **Create and maintain E2E scenarios** - use `/as-e2e-create` to scaffold new scenarios and `/as-e2e-rewrite` or `/as-e2e-fix` to keep existing ones current as workflows evolve.
 
