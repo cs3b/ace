@@ -1,41 +1,55 @@
 # ace-overseer
 
-One command to provision a worktree, open a tmux window, and prepare an assignment for execution.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-overseer.svg)](https://rubygems.org/gems/ace-overseer)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> One command to provision a worktree, open a tmux window, and start working on a task.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-overseer demo](docs/demo/ace-overseer-getting-started.gif)
 
-## Why ace-overseer
+Starting task work means creating a worktree, opening a tmux window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers.
 
-- Remove the setup loop of manually creating worktrees, tmux windows, and assignments.
-- Start focused task execution from a single workflow entrypoint.
-- Keep active task work visible in one dashboard with assignment and git state.
-- Prune completed worktrees safely when work is truly finished.
+## How It Works
 
-## Works With
+1. Resolve task refs and create a scoped worktree.
+2. Open a dedicated tmux window mapped to that worktree.
+3. Start an assignment preset so execution can be driven step-by-step.
 
-- `ace-git-worktree` for isolated task branches.
-- `ace-tmux` for window/session lifecycle.
-- `ace-assign` for assignment queue orchestration.
-- `ace-task` for task metadata and lifecycle state.
-- `ace-git` for repository status context.
+## Use Cases
 
-## Agent Skills
+**Kick off task work** - provisions an isolated worktree via [ace-git-worktree](../ace-git-worktree), opens a dedicated [ace-tmux](../ace-tmux) window, and prepares an [ace-assign](../ace-assign) assignment - all in one shot. Supports regular tasks and subtask trees. Draft tasks are blocked until reviewed. Use `/as-overseer` or from the CLI:
 
-Package-owned canonical skill:
+```bash
+ace-overseer work-on --task 8q4 --preset work-on-task
+```
 
-- `as-overseer`
+**Bundle related tasks** - pass multiple task refs or a task with subtasks and they all land in a single worktree. The refs are expanded and forwarded to the assignment preset, so every step for every task is prepared in one assignment. Drive through them with `/as-assign-drive`.
 
-## Features
+**Monitor active work** - [`ace-overseer status`](docs/usage.md#ace-overseer-status) shows a dashboard of all task worktrees with assignment progress, git state, and PR links. Add `--watch` for a live-refreshing view that updates assignments every 15 seconds and git status every 5 minutes.
 
-- Task-focused worktree provisioning with tmux bootstrap
-- Assignment-aware work orchestration
-- Table or JSON status dashboard for active task worktrees
-- Safe prune flow with preview and explicit confirmation
+```bash
+ace-overseer status --watch
+```
+
+**Clean up finished work** - [`ace-overseer prune`](docs/usage.md#ace-overseer-prune) removes completed worktrees safely. It checks three conditions before removing: assignment completed, task marked done, and git working tree clean. Use `--dry-run` to preview what would be pruned, `--force` for worktrees that fail safety checks, or `--assignment` to prune a single stale assignment.
+
+**Customize the workflow** - the full pipeline is defined in two layers: the [assignment preset](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml) controls which steps run and in what order (onboard, implement, test, release, review, PR), while each step references a [workflow instruction](../ace-task/handbook/workflow-instructions/task/work.wf.md) that defines how it executes. Browse [available presets](../ace-assign/.ace-defaults/assign/presets/) or create your own to tailor the pipeline to your project.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
 - [Usage Guide](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
+- [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-Part of [ACE (Agentic Coding Environment)](https://github.com/cs3b/ace).
+---
+
+Part of [ACE](../README.md) (Agentic Coding Environment)
