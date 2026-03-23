@@ -46,11 +46,11 @@ module Ace
               cached_git_status: prev_ctx.git_status,
               location_type: prev_ctx.location_type
             )
-          rescue StandardError
+          rescue
             nil
           end.compact
 
-          { contexts: contexts }
+          {contexts: contexts}
         end
 
         def to_table(snapshot)
@@ -70,7 +70,7 @@ module Ace
           return nil unless root
 
           @context_collector.collect(root, location_type: :main)
-        rescue StandardError
+        rescue
           nil
         end
 
@@ -84,7 +84,7 @@ module Ace
           return nil if common_dir.empty?
 
           File.dirname(common_dir)
-        rescue StandardError
+        rescue
           nil
         end
 
@@ -102,7 +102,7 @@ module Ace
           return [@context_collector.collect(worktrees.first.path)] if worktrees.size == 1
 
           # Build the worker script that collects context for a single worktree
-          worker_script = <<~'RUBY'
+          worker_script = <<~RUBY
             # frozen_string_literal: true
             require "ace/overseer"
             require "json"
@@ -132,7 +132,7 @@ module Ace
               exit!(1) # unreachable unless exec fails
             end
             pipe_write.close
-            { pid: pid, pipe: pipe_read, worktree: worktree }
+            {pid: pid, pipe: pipe_read, worktree: worktree}
           end
 
           # Collect results, preserving order

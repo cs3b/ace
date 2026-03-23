@@ -8,7 +8,7 @@ module Ace
         SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
 
         def initialize(worktree_provisioner: nil, tmux_window_opener: nil, assignment_launcher: nil,
-                       task_loader: nil, config: nil, assignment_detector: nil)
+          task_loader: nil, config: nil, assignment_detector: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new
@@ -23,7 +23,7 @@ module Ace
           requested_refs = normalize_requested_refs(task_ref, task_refs)
           raise Error, "No valid task references provided" if requested_refs.empty?
 
-          progress.call("Loading task #{requested_refs.join(', ')}...")
+          progress.call("Loading task #{requested_refs.join(", ")}...")
           resolved_refs = resolve_requested_refs(requested_refs)
           primary_ref = requested_refs.first
           primary_task = resolved_refs.first[:task]
@@ -55,28 +55,28 @@ module Ace
 
           progress.call("Checking assignment status...")
           existing = if @assignment_detector
-                       @assignment_detector.call(worktree[:worktree_path])
-                     else
-                       existing_assignment(worktree[:worktree_path])
-                     end
+            @assignment_detector.call(worktree[:worktree_path])
+          else
+            existing_assignment(worktree[:worktree_path])
+          end
           assignment_result = if existing
-                                progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
-                                {
-                                  assignment_id: existing.dig("assignment", "id"),
-                                  first_step: existing.dig("current_step", "number"),
-                                  created: false
-                                }
-                              else
-                                progress.call("Launching assignment (preset: #{preset_name})...")
-                                launched = @assignment_launcher.launch(
-                                  worktree_path: worktree[:worktree_path],
-                                  preset_name: preset_name,
-                                  task_ref: primary_ref.to_s,
-                                  subtask_refs: primary_subtask_refs,
-                                  task_refs: expanded_taskrefs
-                                )
-                                launched.merge(created: true)
-                              end
+            progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
+            {
+              assignment_id: existing.dig("assignment", "id"),
+              first_step: existing.dig("current_step", "number"),
+              created: false
+            }
+          else
+            progress.call("Launching assignment (preset: #{preset_name})...")
+            launched = @assignment_launcher.launch(
+              worktree_path: worktree[:worktree_path],
+              preset_name: preset_name,
+              task_ref: primary_ref.to_s,
+              subtask_refs: primary_subtask_refs,
+              task_refs: expanded_taskrefs
+            )
+            launched.merge(created: true)
+          end
 
           {
             task_ref: primary_ref.to_s,
@@ -101,7 +101,7 @@ module Ace
         end
 
         def normalize_requested_refs(task_ref, task_refs)
-          raw = task_refs && !task_refs.empty? ? task_refs : [task_ref]
+          raw = (task_refs && !task_refs.empty?) ? task_refs : [task_ref]
           raw
             .flat_map { |entry| entry.to_s.split(",") }
             .map(&:strip)
@@ -120,7 +120,7 @@ module Ace
                            "(or ace-bundle wfi://task/review), then retry."
             end
 
-            { ref: ref.to_s, task: task, is_subtask: is_subtask }
+            {ref: ref.to_s, task: task, is_subtask: is_subtask}
           end
         end
 
@@ -150,8 +150,8 @@ module Ace
           return if supports_taskrefs
 
           raise Error,
-                "Preset '#{preset_name}' accepts only single taskref. " \
-                "Use a preset with `taskrefs` (e.g., --preset work-on-task)."
+            "Preset '#{preset_name}' accepts only single taskref. " \
+            "Use a preset with `taskrefs` (e.g., --preset work-on-task)."
         end
 
         def existing_assignment(worktree_path)

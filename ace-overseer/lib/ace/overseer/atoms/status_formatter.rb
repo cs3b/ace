@@ -28,12 +28,12 @@ module Ace
 
         # Assignment state icons
         STATE_DISPLAY = {
-          "completed" => { icon: "\u2713", color: :green },   # ✓
-          "running"   => { icon: "\u25B6", color: :blue },    # ►
-          "failed"    => { icon: "\u2717", color: :red },     # ✗
-          "stalled"   => { icon: "\u25FC", color: :yellow },  # ◼
-          "paused"    => { icon: "\u2016", color: :dim },     # ‖
-          "none"      => { icon: "-",      color: :dim }
+          "completed" => {icon: "\u2713", color: :green},   # ✓
+          "running" => {icon: "\u25B6", color: :blue},    # ►
+          "failed" => {icon: "\u2717", color: :red},     # ✗
+          "stalled" => {icon: "\u25FC", color: :yellow},  # ◼
+          "paused" => {icon: "\u2016", color: :dim},     # ‖
+          "none" => {icon: "-", color: :dim}
         }.freeze
 
         # PR state colors
@@ -63,10 +63,10 @@ module Ace
 
         def self.format_location_row(context)
           location = if context.location_type == :main
-                       colorize("main".ljust(COL_LOCATION), :dim)
-                     else
-                       File.basename(context.worktree_path).ljust(COL_LOCATION)
-                     end
+            colorize("main".ljust(COL_LOCATION), :dim)
+          else
+            File.basename(context.worktree_path).ljust(COL_LOCATION)
+          end
 
           format(
             "%s %s %s",
@@ -97,9 +97,9 @@ module Ace
         def self.sort_contexts(contexts)
           contexts.sort_by do |ctx|
             location_type = ctx.respond_to?(:location_type) ? ctx.location_type : :worktree
-            main_sort = location_type == :main ? 1 : 0
+            main_sort = (location_type == :main) ? 1 : 0
             pr_num = extract_pr_number(ctx)
-            pr_sort = pr_num ? [1, -pr_num] : [0, -(ctx.task_id.to_f)]
+            pr_sort = pr_num ? [1, -pr_num] : [0, -ctx.task_id.to_f]
             [main_sort] + pr_sort
           end
         end
@@ -155,15 +155,15 @@ module Ace
           return nil unless number
 
           state = if pr["isDraft"] || pr[:isDraft]
-                    "DFT"
-                  else
-                    case (pr["state"] || pr[:state]).to_s.upcase
-                    when "OPEN" then "OPN"
-                    when "MERGED" then "MRG"
-                    when "CLOSED" then "CLS"
-                    else "?"
-                    end
-                  end
+            "DFT"
+          else
+            case (pr["state"] || pr[:state]).to_s.upcase
+            when "OPEN" then "OPN"
+            when "MERGED" then "MRG"
+            when "CLOSED" then "CLS"
+            else "?"
+            end
+          end
           [number, state]
         end
         private_class_method :pr_info_parts
@@ -196,18 +196,18 @@ module Ace
         def self.colorized_git(context)
           state, count = git_state_parts(context)
           color = case state
-                  when :clean then :green
-                  when :dirty then :yellow
-                  else :dim
-                  end
+          when :clean then :green
+          when :dirty then :yellow
+          else :dim
+          end
           text = case state
-                 when :clean
-                   "\u2713"
-                 when :dirty
-                   count ? "\u2717 #{count}" : "\u2717"
-                 else
-                   "?"
-                 end
+          when :clean
+            "\u2713"
+          when :dirty
+            count ? "\u2717 #{count}" : "\u2717"
+          else
+            "?"
+          end
           padded = text.ljust(COL_GIT)
           colorize(padded, color)
         end
@@ -215,7 +215,7 @@ module Ace
 
         def self.format_header
           format("  %-#{COL_ASSIGN_ID}s %-#{COL_ASSIGN_NAME}s %-#{COL_STATE}s %-#{COL_PROGRESS}s",
-                 "ID", "Name", "\u2B24", "Progress")
+            "ID", "Name", "\u2B24", "Progress")
         end
         private_class_method :format_header
 
@@ -227,7 +227,7 @@ module Ace
         def self.format_watch_footer(next_full_refresh_secs)
           now = Time.now.strftime("%H:%M:%S")
           mins, secs = next_full_refresh_secs.divmod(60)
-          remaining = mins > 0 ? "#{mins}m #{secs}s" : "#{secs}s"
+          remaining = (mins > 0) ? "#{mins}m #{secs}s" : "#{secs}s"
           colorize("Updated: #{now} \u00B7 full refresh in #{remaining}", :dim)
         end
 

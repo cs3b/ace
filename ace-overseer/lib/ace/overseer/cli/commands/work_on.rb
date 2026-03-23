@@ -10,7 +10,7 @@ module Ace
           desc "Create worktree, open tmux window, and prepare assignment"
 
           option :task, aliases: ["-t"], type: :array, required: true,
-                        desc: "Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232)"
+            desc: "Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232)"
           option :preset, aliases: ["-p"], desc: "Assignment preset name"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -27,7 +27,7 @@ module Ace
             end
 
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
-            result = @orchestrator.call(
+            @orchestrator.call(
               task_ref: task_refs.first,
               task_refs: task_refs,
               cli_preset: preset,
@@ -39,7 +39,7 @@ module Ace
             puts "Done. Switch to tmux window and run /ace-assign-drive"
           rescue Ace::Support::Cli::Error
             raise
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
 

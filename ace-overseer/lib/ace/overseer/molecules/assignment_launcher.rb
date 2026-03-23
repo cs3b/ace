@@ -53,12 +53,12 @@ module Ace
           params["taskref"] = task_ref if param_defs.key?("taskref")
           if param_defs.key?("taskrefs")
             params["taskrefs"] = if task_refs&.any?
-                                   task_refs
-                                 elsif subtask_refs&.any?
-                                   subtask_refs
-                                 else
-                                   [task_ref]
-                                 end
+              task_refs
+            elsif subtask_refs&.any?
+              subtask_refs
+            else
+              [task_ref]
+            end
           end
           params
         end

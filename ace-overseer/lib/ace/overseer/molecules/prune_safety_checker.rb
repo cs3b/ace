@@ -64,7 +64,7 @@ module Ace
           return nil unless status.success?
 
           stdout.to_s.strip.empty?
-        rescue StandardError
+        rescue
           nil
         end
 
@@ -74,7 +74,7 @@ module Ace
             task = manager.show(task_ref.to_s)
             task && task.status == "done"
           end
-        rescue StandardError
+        rescue
           false
         end
 
@@ -88,7 +88,7 @@ module Ace
           return nil if common_dir.empty?
 
           File.dirname(common_dir)
-        rescue StandardError
+        rescue
           nil
         end
       end

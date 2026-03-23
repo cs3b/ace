@@ -20,7 +20,7 @@ class PruneCommandTest < AceOverseerTestCase
 
   def test_progress_output_passed_when_not_quiet
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false }
+      result: {dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,
@@ -38,7 +38,7 @@ class PruneCommandTest < AceOverseerTestCase
 
   def test_force_option_passed_to_orchestrator
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false }
+      result: {dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,
@@ -55,7 +55,7 @@ class PruneCommandTest < AceOverseerTestCase
 
   def test_targets_passed_to_orchestrator
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false }
+      result: {dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,
@@ -80,7 +80,7 @@ class PruneCommandTest < AceOverseerTestCase
       assignment_complete: false, task_done: false, git_clean: false, reasons: ["git not clean"]
     )
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: true, safe: [safe_candidate], unsafe: [forced_candidate], forced: [forced_candidate], pruned: [], failed: [] }
+      result: {dry_run: true, safe: [safe_candidate], unsafe: [forced_candidate], forced: [forced_candidate], pruned: [], failed: []}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,
@@ -153,7 +153,7 @@ class PruneCommandTest < AceOverseerTestCase
 
   def test_no_progress_output_in_quiet_mode
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false }
+      result: {dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,
@@ -170,7 +170,7 @@ class PruneCommandTest < AceOverseerTestCase
 
   def test_quiet_mode_still_executes_orchestrator
     orchestrator = FakePruneOrchestrator.new(
-      result: { dry_run: true, safe: [], unsafe: [], pruned: [], failed: [] }
+      result: {dry_run: true, safe: [], unsafe: [], pruned: [], failed: []}
     )
     command = Ace::Overseer::CLI::Commands::Prune.new(
       orchestrator: orchestrator,

@@ -4,13 +4,13 @@ require_relative "../test_helper"
 
 class WorkContextTest < AceOverseerTestCase
   def test_initializes_with_expected_attributes
-    assignments = [{ "assignment" => { "state" => "running", "id" => "abc123", "name" => "work-on-task-230" } }]
+    assignments = [{"assignment" => {"state" => "running", "id" => "abc123", "name" => "work-on-task-230"}}]
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
       worktree_path: "/tmp/task.230",
       branch: "230-feature",
       assignments: assignments,
-      git_status: { "clean" => true },
+      git_status: {"clean" => true},
       tmux_window: "t230"
     )
 
@@ -36,8 +36,8 @@ class WorkContextTest < AceOverseerTestCase
 
   def test_assignment_status_returns_first_assignment
     assignments = [
-      { "assignment" => { "state" => "running", "id" => "a1" } },
-      { "assignment" => { "state" => "completed", "id" => "a2" } }
+      {"assignment" => {"state" => "running", "id" => "a1"}},
+      {"assignment" => {"state" => "completed", "id" => "a2"}}
     ]
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
@@ -61,9 +61,9 @@ class WorkContextTest < AceOverseerTestCase
 
   def test_assignment_count_derived_from_assignments_size
     assignments = [
-      { "assignment" => { "id" => "a1" } },
-      { "assignment" => { "id" => "a2" } },
-      { "assignment" => { "id" => "a3" } }
+      {"assignment" => {"id" => "a1"}},
+      {"assignment" => {"id" => "a2"}},
+      {"assignment" => {"id" => "a3"}}
     ]
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
@@ -78,7 +78,7 @@ class WorkContextTest < AceOverseerTestCase
   end
 
   def test_to_h_includes_assignments_and_location_type
-    assignments = [{ "assignment" => { "id" => "a1" } }]
+    assignments = [{"assignment" => {"id" => "a1"}}]
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "231",
       worktree_path: "/tmp/task.231",

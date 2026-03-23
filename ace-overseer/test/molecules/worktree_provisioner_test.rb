@@ -33,14 +33,14 @@ class WorktreeProvisionerTest < AceOverseerTestCase
 
     def prune
       @prune_calls += 1
-      { success: true }
+      {success: true}
     end
   end
 
   def test_returns_existing_worktree_without_creation
     Dir.mktmpdir("task.230") do |worktree|
       manager = FakeManager.new(
-        switch_result: { success: true, worktree_path: worktree, branch: "230-feature" }
+        switch_result: {success: true, worktree_path: worktree, branch: "230-feature"}
       )
 
       provisioner = Ace::Overseer::Molecules::WorktreeProvisioner.new(manager: manager)
@@ -57,8 +57,8 @@ class WorktreeProvisionerTest < AceOverseerTestCase
   def test_creates_worktree_when_missing
     Dir.mktmpdir("task.231") do |worktree|
       manager = FakeManager.new(
-        switch_result: { success: false, error: "not found" },
-        create_result: { success: true, worktree_path: worktree, branch: "231-feature" }
+        switch_result: {success: false, error: "not found"},
+        create_result: {success: true, worktree_path: worktree, branch: "231-feature"}
       )
 
       provisioner = Ace::Overseer::Molecules::WorktreeProvisioner.new(manager: manager)
@@ -75,8 +75,8 @@ class WorktreeProvisionerTest < AceOverseerTestCase
   def test_marks_existing_create_result_as_not_created
     Dir.mktmpdir("task.232") do |worktree|
       manager = FakeManager.new(
-        switch_result: { success: false, error: "not found" },
-        create_result: { success: true, existing: true, worktree_path: worktree, branch: "232-feature" }
+        switch_result: {success: false, error: "not found"},
+        create_result: {success: true, existing: true, worktree_path: worktree, branch: "232-feature"}
       )
 
       provisioner = Ace::Overseer::Molecules::WorktreeProvisioner.new(manager: manager)
@@ -90,8 +90,8 @@ class WorktreeProvisionerTest < AceOverseerTestCase
   def test_recovers_when_switch_returns_stale_missing_path
     Dir.mktmpdir("task.233") do |worktree|
       manager = FakeManager.new(
-        switch_result: { success: true, worktree_path: "/missing/task.233", branch: "233-feature" },
-        create_result: { success: true, existing: false, worktree_path: worktree, branch: "233-feature" }
+        switch_result: {success: true, worktree_path: "/missing/task.233", branch: "233-feature"},
+        create_result: {success: true, existing: false, worktree_path: worktree, branch: "233-feature"}
       )
 
       provisioner = Ace::Overseer::Molecules::WorktreeProvisioner.new(manager: manager)
@@ -108,10 +108,10 @@ class WorktreeProvisionerTest < AceOverseerTestCase
   def test_recovers_when_create_returns_stale_missing_path
     Dir.mktmpdir("task.234") do |worktree|
       manager = FakeManager.new(
-        switch_result: { success: false, error: "not found" },
+        switch_result: {success: false, error: "not found"},
         create_results: [
-          { success: true, existing: true, worktree_path: "/missing/task.234", branch: "234-feature" },
-          { success: true, existing: false, worktree_path: worktree, branch: "234-feature" }
+          {success: true, existing: true, worktree_path: "/missing/task.234", branch: "234-feature"},
+          {success: true, existing: false, worktree_path: worktree, branch: "234-feature"}
         ]
       )
 
@@ -128,10 +128,10 @@ class WorktreeProvisionerTest < AceOverseerTestCase
 
   def test_raises_when_worktree_path_still_missing_after_recovery
     manager = FakeManager.new(
-      switch_result: { success: false, error: "not found" },
+      switch_result: {success: false, error: "not found"},
       create_results: [
-        { success: true, existing: true, worktree_path: "/missing/task.235", branch: "235-feature" },
-        { success: true, existing: true, worktree_path: "/missing/task.235", branch: "235-feature" }
+        {success: true, existing: true, worktree_path: "/missing/task.235", branch: "235-feature"},
+        {success: true, existing: true, worktree_path: "/missing/task.235", branch: "235-feature"}
       ]
     )
 

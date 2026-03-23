@@ -31,7 +31,7 @@ module Ace
           return false unless result.success?
 
           result.stdout.split("\n").any? { |w| w.strip == name }
-        rescue StandardError
+        rescue
           false
         end
       end

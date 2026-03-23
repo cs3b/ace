@@ -30,7 +30,7 @@ module Ace
             else
               run_once(format)
             end
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
 

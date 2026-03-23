@@ -7,7 +7,7 @@ require_relative "../test_helper"
 class PruneOrchestratorTest < AceOverseerTestCase
   FakeWorktree = Struct.new(:path, :task_id, :bare) do
     def initialize(path, task_id, bare = false)
-      super(path, task_id, bare)
+      super
     end
 
     def task_associated?
@@ -17,7 +17,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
 
   NonTaskWorktree = Struct.new(:path, :task_id, :bare) do
     def initialize(path, task_id = nil, bare = false)
-      super(path, task_id, bare)
+      super
     end
 
     def task_associated?
@@ -35,17 +35,17 @@ class PruneOrchestratorTest < AceOverseerTestCase
     end
 
     def list_all(**_options)
-      { success: true, worktrees: @worktrees }
+      {success: true, worktrees: @worktrees}
     end
 
     def prune
       @prune_calls += 1
-      { success: true }
+      {success: true}
     end
 
     def remove(path, **options)
-      @remove_calls << { path: path, options: options }
-      { success: true }
+      @remove_calls << {path: path, options: options}
+      {success: true}
     end
   end
 

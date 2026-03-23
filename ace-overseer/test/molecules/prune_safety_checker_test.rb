@@ -33,14 +33,14 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/tmp/task.230",
       branch: "230-feature",
-      assignments: [{ "assignment" => { "state" => "completed" } }],
-      git_status: { "clean" => true }
+      assignments: [{"assignment" => {"state" => "completed"}}],
+      git_status: {"clean" => true}
     )
 
     Dir.mktmpdir("task.230") do |worktree|
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskManager.new({ status: "done" }) }
+        task_loader_factory: -> { FakeTaskManager.new({status: "done"}) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "230")
@@ -55,14 +55,14 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "231",
       worktree_path: "/tmp/task.231",
       branch: "231-feature",
-      assignments: [{ "assignment" => { "state" => "running" } }],
-      git_status: { "clean" => false }
+      assignments: [{"assignment" => {"state" => "running"}}],
+      git_status: {"clean" => false}
     )
 
     Dir.mktmpdir("task.231") do |worktree|
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskManager.new({ status: "in-progress" }) }
+        task_loader_factory: -> { FakeTaskManager.new({status: "in-progress"}) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "231")
@@ -79,8 +79,8 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "232",
       worktree_path: "/tmp/task.232",
       branch: "232-feature",
-      assignments: [{ "assignment" => { "state" => "completed" } }],
-      git_status: { "clean" => false }
+      assignments: [{"assignment" => {"state" => "completed"}}],
+      git_status: {"clean" => false}
     )
 
     Dir.mktmpdir("task.232") do |worktree|
@@ -91,7 +91,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
 
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskManager.new({ status: "done" }) }
+        task_loader_factory: -> { FakeTaskManager.new({status: "done"}) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "232")

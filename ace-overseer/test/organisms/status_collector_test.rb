@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class StatusCollectorTest < AceOverseerTestCase
   FakeWorktree = Struct.new(:path, :task_id, :bare) do
     def initialize(path, task_id, bare = false)
-      super(path, task_id, bare)
+      super
     end
 
     def task_associated?
@@ -15,7 +15,7 @@ class StatusCollectorTest < AceOverseerTestCase
 
   NonTaskWorktree = Struct.new(:path, :task_id, :bare) do
     def initialize(path, task_id = nil, bare = false)
-      super(path, task_id, bare)
+      super
     end
 
     def task_associated?
@@ -29,7 +29,7 @@ class StatusCollectorTest < AceOverseerTestCase
     end
 
     def list_all(**_options)
-      { success: true, worktrees: @worktrees }
+      {success: true, worktrees: @worktrees}
     end
   end
 
@@ -44,19 +44,19 @@ class StatusCollectorTest < AceOverseerTestCase
     end
 
     def collect(path, location_type: :worktree)
-      location_type == :main ? @main_context : @context
+      (location_type == :main) ? @main_context : @context
     end
 
     def collect_assignments_only(path, cached_branch:, cached_git_status:, location_type: :worktree)
-      @collect_assignments_only_calls << { path: path, cached_branch: cached_branch, location_type: location_type }
+      @collect_assignments_only_calls << {path: path, cached_branch: cached_branch, location_type: location_type}
       @quick_context || @context
     end
   end
 
   def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
     {
-      "assignment" => { "state" => state, "id" => id, "name" => name },
-      "step_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
+      "assignment" => {"state" => state, "id" => id, "name" => name},
+      "step_summary" => {"total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending}
     }
   end
 
@@ -66,7 +66,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     collector = Ace::Overseer::Organisms::StatusCollector.new(
@@ -93,7 +93,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     main_context = Ace::Overseer::Models::WorkContext.new(
@@ -104,7 +104,7 @@ class StatusCollectorTest < AceOverseerTestCase
         make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0),
         make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, in_progress: 1, pending: 3)
       ],
-      git_status: { "clean" => true },
+      git_status: {"clean" => true},
       location_type: :main
     )
 
@@ -126,7 +126,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true, "pr_metadata" => { "number" => 99 } }
+      git_status: {"clean" => true, "pr_metadata" => {"number" => 99}}
     )
 
     updated_context = Ace::Overseer::Models::WorkContext.new(
@@ -134,7 +134,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
-      git_status: { "clean" => true, "pr_metadata" => { "number" => 99 } }
+      git_status: {"clean" => true, "pr_metadata" => {"number" => 99}}
     )
 
     context_collector = FakeContextCollector.new(original_context, quick_context: updated_context)
@@ -145,7 +145,7 @@ class StatusCollectorTest < AceOverseerTestCase
       project_root: nil
     )
 
-    previous_snapshot = { contexts: [original_context] }
+    previous_snapshot = {contexts: [original_context]}
     snapshot = collector.collect_quick(previous_snapshot)
 
     assert_equal 1, snapshot[:contexts].length
@@ -161,7 +161,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     collector = Ace::Overseer::Organisms::StatusCollector.new(
@@ -170,7 +170,7 @@ class StatusCollectorTest < AceOverseerTestCase
       project_root: nil
     )
 
-    snapshot = collector.collect_quick({ contexts: [] })
+    snapshot = collector.collect_quick({contexts: []})
 
     assert_equal 1, snapshot[:contexts].length
   end
@@ -181,7 +181,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-e2e-glm",
       branch: "ace-e2e-glm",
       assignments: [make_assignment(id: "glm01", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     collector = Ace::Overseer::Organisms::StatusCollector.new(
@@ -202,7 +202,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-e2e-glm",
       branch: "ace-e2e-glm",
       assignments: [],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     collector = Ace::Overseer::Organisms::StatusCollector.new(
@@ -223,7 +223,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
       assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: { "clean" => true }
+      git_status: {"clean" => true}
     )
 
     main_context = Ace::Overseer::Models::WorkContext.new(
@@ -231,7 +231,7 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/project",
       branch: "main",
       assignments: [],
-      git_status: { "clean" => true },
+      git_status: {"clean" => true},
       location_type: :main
     )
 
