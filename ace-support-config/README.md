@@ -11,10 +11,8 @@
 
 </div>
 
-[Usage Guide](docs/usage.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Usage Guide](docs/usage.md)
 `ace-support-config` provides layered configuration loading and merging for ACE, resolving values from `.ace` project files, user home defaults, and gem-bundled defaults with deterministic precedence. Used by [ace-llm](../ace-llm), [ace-search](../ace-search), [ace-review](../ace-review), and most other ACE packages.
 
 ## How It Works

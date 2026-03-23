@@ -11,10 +11,8 @@
 
 </div>
 
-[Documentation](#documentation)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Documentation](#documentation)
 `ace-support-models` normalizes provider and model metadata into a single canonical source so ACE tools that reason about LLM capabilities, pricing, and compatibility do not duplicate catalogs or drift out of sync.
 
 ## Use Cases

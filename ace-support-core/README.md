@@ -11,10 +11,8 @@
 
 </div>
 
-[Configuration overview](docs/config.md)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Configuration overview](docs/config.md)
 `ace-support-core` centralizes configuration loading, environment handling, and shared runtime behavior used by support libraries. It delegates config resolution through [ace-support-config](../ace-support-config) and exposes stable orchestration points that other `ace-support-*` gems build on.
 
 ## Use Cases

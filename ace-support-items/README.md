@@ -11,10 +11,8 @@
 
 </div>
 
-[Documentation](#documentation)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Documentation](#documentation)
 `ace-support-items` standardizes directory scanning, shortcut resolution, and slug handling for ACE item workflows. It provides the low-level store operations that packages like [ace-task](../ace-task) and [ace-retro](../ace-retro) build their item management on.
 
 ## Use Cases

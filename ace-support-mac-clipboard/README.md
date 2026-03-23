@@ -11,10 +11,8 @@
 
 </div>
 
-[Documentation](#documentation)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Documentation](#documentation)
 `ace-support-mac-clipboard` integrates with macOS `NSPasteboard` so ACE tools can consume richer clipboard inputs than plain text. It handles screenshots, Finder file selections, and formatted content, presenting normalized Ruby structures to downstream packages.
 
 ## Use Cases

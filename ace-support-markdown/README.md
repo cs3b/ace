@@ -11,10 +11,8 @@
 
 </div>
 
-[Documentation](#documentation)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Documentation](#documentation)
 `ace-support-markdown` provides atomic document editing with frontmatter and section-level updates while preserving document integrity. It is the shared editing layer that packages like [ace-task](../ace-task) and [ace-docs](../ace-docs) depend on for safe, repeatable content mutations.
 
 ## Use Cases

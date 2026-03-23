@@ -11,10 +11,8 @@
 
 </div>
 
-[Documentation](#documentation)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[Documentation](#documentation)
 `ace-support-nav` powers the [`ace-nav`](../ace-support-nav) CLI with cascade-aware URI resolution across project, user, and gem sources. It supports protocols like `wfi://`, `guide://`, `tmpl://`, `skill://`, and `task://`, with override targeting, wildcard discovery, and fast cached lookups.
 
 ## How It Works
