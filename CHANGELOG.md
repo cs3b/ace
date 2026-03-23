@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.954] - 2026-03-23
+
+### Changed
+- **ace-assign v0.37.0**: Rewrote README with step/substep terminology, status output example, and step catalog links. Fixed residual "phases" terminology in docs. Normalized code formatting via StandardRB.
+
 ## [0.9.953] - 2026-03-23
 
 ### Changed
