@@ -11,10 +11,8 @@
 
 </div>
 
-[ace-handbook](../ace-handbook)
-
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
-
+[ace-handbook](../ace-handbook)
 `ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets so that skill invocations from Codex CLI resolve correctly while keeping semantics unchanged from the definitions in [ace-handbook](../ace-handbook).
 
 ## Use Cases
