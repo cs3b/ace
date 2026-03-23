@@ -1,48 +1,31 @@
----
-doc-type: package-readme
-title: ace-support-core
-purpose: Core infrastructure for config, env, and runtime helpers across ACE
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-support-core
+
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-support-core.svg)](https://rubygems.org/gems/ace-support-core)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > Core infrastructure primitives shared by ACE support gems.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-core` centralizes configuration loading, environment handling, and shared runtime behavior used by support libraries.
-
-## How It Works
-
-1. Config resolution is delegated through `ace-support-config` with predictable cascade precedence.
-2. Shared environment and filesystem helpers are reused across ACE libraries.
-3. Core modules expose stable orchestration points for package-level tooling.
+`ace-support-core` centralizes configuration loading, environment handling, and shared runtime behavior used by support libraries. It delegates config resolution through [ace-support-config](../ace-support-config) and exposes stable orchestration points that other `ace-support-*` gems build on.
 
 ## Use Cases
 
-**Create consistent package startup behavior** - initialize config, env, and shared context once with shared primitives.
+**Create consistent package startup behavior** - initialize config, env, and shared context once with core primitives, so gems like [ace-support-cli](../ace-support-cli) and [ace-support-fs](../ace-support-fs) share a single bootstrap path.
 
-**Avoid duplicate configuration logic** - reuse one configuration and environment model across many gems.
+**Avoid duplicate configuration logic** - reuse one configuration and environment model across many gems instead of re-implementing loading and resolution in each package.
 
-**Keep support libraries composable** - build package-specific features on top of stable core contracts.
-
-## What It Provides
-
-- Core configuration and environment utilities for ACE packages.
-- Shared support interfaces used across `ace-support-*` gems.
-- Reusable orchestration patterns for command and runtime behavior.
+**Keep support libraries composable** - build package-specific features on top of stable core contracts that provide predictable runtime behavior.
 
 ## Documentation
 
-- [Configuration overview](docs/config.md)
+[Configuration overview](docs/config.md)
 
-## Part of ACE
+---
 
-`ace-support-core` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
+Part of [ACE](../README.md) (Agentic Coding Environment)

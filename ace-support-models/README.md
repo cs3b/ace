@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-support-models
-purpose: Shared model metadata and pricing helpers for ACE provider tooling
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-support-models
 
-> Shared model metadata infrastructure used by ACE tools that reason about providers and models.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-support-models.svg)](https://rubygems.org/gems/ace-support-models)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Shared model metadata and pricing helpers for ACE provider tooling.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-models` normalizes provider/model metadata and pricing helpers for consistent ACE behavior.
-
-## How It Works
-
-1. Provider and model data is loaded into shared model structures.
-2. Metadata lookups are surfaced through helper APIs and validators.
-3. Tooling uses shared pricing and compatibility insights from one canonical source.
+`ace-support-models` normalizes provider and model metadata into a single canonical source so ACE tools that reason about LLM capabilities, pricing, and compatibility do not duplicate catalogs or drift out of sync.
 
 ## Use Cases
 
-**Resolve model metadata consistently** - avoid duplicated model catalogs across ACE features.
+**Resolve model metadata consistently** - avoid duplicated model catalogs across ACE features by querying one shared registry used by [ace-llm](../ace-llm) and [ace-review](../ace-review).
 
-**Calculate usage expectations** - support stable cost and compatibility assumptions during tool workflows.
+**Calculate usage expectations** - support stable cost and compatibility assumptions during tool workflows with shared pricing and capability primitives.
 
-**Share validation rules** - apply one metadata model for provider and model checks.
+**Share validation rules** - apply one metadata model for provider and model checks so that [ace-llm-providers-cli](../ace-llm-providers-cli) and other provider-aware packages stay aligned.
 
-## What It Provides
+## Documentation
 
-- Canonical model and provider metadata helpers.
-- Validation utilities and compatibility lookup support.
-- Shared pricing/capability primitives for higher-level packages.
+API usage is documented inline; see tests and source for integration examples.
 
-## Part of ACE
+---
 
-`ace-support-models` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
+Part of [ACE](../README.md) (Agentic Coding Environment)

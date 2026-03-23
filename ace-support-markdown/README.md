@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-support-markdown
-purpose: Safe markdown and frontmatter editing primitives for ACE
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-support-markdown
+
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-support-markdown.svg)](https://rubygems.org/gems/ace-support-markdown)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > Safe, composable markdown editing tools for ACE libraries and docs.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-markdown` provides atomic document editing with frontmatter and section-level updates while preserving document integrity.
-
-## How It Works
-
-1. Load markdown content and frontmatter through model-driven editing interfaces.
-2. Apply section and metadata updates through atomic write operations.
-3. Persist changes with optional validation and backup/rollback support.
+`ace-support-markdown` provides atomic document editing with frontmatter and section-level updates while preserving document integrity. It is the shared editing layer that packages like [ace-task](../ace-task) and [ace-docs](../ace-docs) depend on for safe, repeatable content mutations.
 
 ## Use Cases
 
-**Safely update task and docs content** - avoid accidental corruption during metadata and section edits.
+**Safely update task and docs content** - use frontmatter and section editing primitives to apply metadata and content changes without risking accidental corruption during automated or agent-driven edits.
 
-**Generate documents programmatically** - use builder-like APIs for reproducible document creation.
+**Generate documents programmatically** - build reproducible markdown output with builder-like APIs used by [ace-task](../ace-task) for spec files and [ace-docs](../ace-docs) for generated documentation.
 
-**Preserve history during edits** - maintain backup and rollback safety for write-heavy operations.
+**Preserve history during edits** - maintain backup and rollback safety for write-heavy operations so that tools like [`ace-task`](../ace-task) can update specs confidently in batch workflows.
 
-## What It Provides
+## Documentation
 
-- Frontmatter and section editing primitives.
-- Atomic write utilities with backup and validation support.
-- Document builder APIs for generated and generated content.
+Command help: `ace-support-markdown` is a library package; see inline API docs and tests for usage.
 
-## Part of ACE
+---
 
-`ace-support-markdown` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-[MIT License](https://opensource.org/licenses/MIT)
+Part of [ACE](../README.md) (Agentic Coding Environment)

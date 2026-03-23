@@ -1,45 +1,31 @@
----
-doc-type: package-readme
-title: ace-support-mac-clipboard
-purpose: Rich macOS clipboard integration for ACE tooling
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-support-mac-clipboard
+
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-support-mac-clipboard.svg)](https://rubygems.org/gems/ace-support-mac-clipboard)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > macOS clipboard support for text, files, and image payloads used by ACE tools.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-mac-clipboard` integrates with macOS `NSPasteboard` so ACE can consume richer clipboard inputs than plain text.
-
-## How It Works
-
-1. Reader utilities ingest clipboard payloads from macOS pasteboard.
-2. Content parsers convert platform types into consistent Ruby structures.
-3. Callers consume normalized output without re-implementing platform glue.
+`ace-support-mac-clipboard` integrates with macOS `NSPasteboard` so ACE tools can consume richer clipboard inputs than plain text. It handles screenshots, Finder file selections, and formatted content, presenting normalized Ruby structures to downstream packages.
 
 ## Use Cases
 
-**Attach image/context content from clipboard** - support screenshot and file-based workflows in ACE tools.
+**Attach image and context content from clipboard** - support screenshot-based and file-based workflows in ACE tools like [ace-prompt-prep](../ace-prompt-prep) without manual file handling.
 
-**Handle Finder selections and formatted text** - process files and rich content without manual conversion.
+**Handle Finder selections and formatted text** - process files and rich content from macOS pasteboard without manual conversion steps.
 
-**Keep platform details isolated** - let one package encapsulate macOS-specific behavior.
+**Keep platform details isolated** - encapsulate macOS-specific clipboard behavior in one package so the rest of ACE stays platform-neutral.
 
-## What It Provides
+## Documentation
 
-- macOS-focused clipboard readers and parsers.
-- Unified attachment and content representations.
-- Stable interface for downstream packages that need native content capture.
+API reference in source: `lib/ace/support/mac_clipboard`
 
-## Part of ACE
+---
 
-`ace-support-mac-clipboard` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-MIT
-
+Part of [ACE](../README.md) (Agentic Coding Environment)

@@ -1,44 +1,31 @@
----
-doc-type: package-readme
-title: ace-support-fs
-purpose: Filesystem utilities for ACE package discovery and path resolution
-ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
----
-
 # ace-support-fs
+
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
+
+[![Gem Version](https://img.shields.io/gem/v/ace-support-fs.svg)](https://rubygems.org/gems/ace-support-fs)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > File system primitives for ACE path resolution and project root discovery.
 
 Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-fs` provides reusable filesystem helpers for path expansion, root detection, and directory traversal.
-
-## How It Works
-
-1. Context-aware path expansion normalizes CLI and environment-driven paths.
-2. Project root discovery identifies workspace boundaries from marker files.
-3. Directory traversal collects config directories in deterministic order.
+`ace-support-fs` provides reusable filesystem helpers for path expansion, root detection, and directory traversal. It handles the platform and context differences so packages like [ace-support-config](../ace-support-config) and [ace-search](../ace-search) can resolve paths safely from any working directory.
 
 ## Use Cases
 
-**Resolve paths safely** - use consistent path expansion for tools that move across subdirectories.
+**Resolve paths safely across subdirectories** - use consistent path expansion for tools that move across project subdirectories, including protocol-aware path handling.
 
-**Detect workspace boundaries** - infer project root without shell-specific assumptions.
+**Detect workspace boundaries** - infer project root from marker files without shell-specific assumptions, so [ace-search](../ace-search) and [ace-support-config](../ace-support-config) scope correctly.
 
-**Build config scans** - discover and rank candidate configuration directories during resolution.
+**Build config scans** - discover and rank candidate configuration directories during resolution, supporting the cascade logic in [ace-support-config](../ace-support-config).
 
-## What It Provides
+## Documentation
 
-- Path expansion and protocol-aware path handling.
-- Project root and directory traversal utilities.
-- Thread-safe helpers for filesystem-heavy operations.
+API reference in source: `lib/ace/support/fs`
 
-## Part of ACE
+---
 
-`ace-support-fs` is part of [ACE](../README.md) (Agentic Coding Environment).
-
-## License
-
-See LICENSE
+Part of [ACE](../README.md) (Agentic Coding Environment)
