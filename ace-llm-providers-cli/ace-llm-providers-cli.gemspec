@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary       = "CLI-based LLM providers for ace-llm"
-  spec.description   = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, and OpenCode"
+  spec.description   = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, Gemini CLI, OpenCode, and pi-agent"
   spec.homepage      = "https://github.com/cs3b/ace"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -41,7 +41,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rubocop", "~> 1.21"
-
-  # For more information and examples about making a new gem, checkout our
-  # guide at: https://bundler.io/guides/creating_gem.html
 end
