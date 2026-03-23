@@ -35,11 +35,5 @@
 
 **Power LLM-enhanced flows in sibling packages** - serve as the execution backend for prompt enhancement in [ace-prompt-prep](../ace-prompt-prep), simulation chains in [ace-sim](../ace-sim), and multi-model review in [ace-review](../ace-review).
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
