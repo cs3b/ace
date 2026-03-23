@@ -34,4 +34,4 @@
 **Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
