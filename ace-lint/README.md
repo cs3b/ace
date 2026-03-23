@@ -34,4 +34,4 @@
 **Process and act on lint reports** - use `/as-lint-process-report` to analyze lint output and coordinate fixes, pairing with [ace-docs](../ace-docs) for documentation maintenance workflows that complement lint validation.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
