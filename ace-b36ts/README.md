@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-b36ts demo](docs/demo/ace-b36ts-getting-started.gif)
 
 `ace-b36ts` encodes UTC timestamps into short Base36 IDs that preserve chronological order in plain string sorting, and decodes them back when you need readable time output. Seven encode formats range from `month` granularity down to `ms`, with a configurable `year_zero` epoch baseline.
