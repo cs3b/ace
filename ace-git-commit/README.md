@@ -33,11 +33,5 @@
 
 **Preview and control commit behavior safely** - use `--dry-run` to preview, `--only-staged` for strict staging, or `-m` for explicit messages, with configuration cascade from [ace-support-config](../ace-support-config) for project and user overrides.
 
-## Documentation
-
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
-
 ---
-
-Part of [ACE](../README.md) (Agentic Coding Environment)
-
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
