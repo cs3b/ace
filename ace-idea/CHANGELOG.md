@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-03-23
+
+### Changed
+- Refreshed `README.md` to match the new package layout pattern with logo/badges, quick links, and use-case-led positioning.
+
 ## [0.17.3] - 2026-03-22
 
 ### Technical
