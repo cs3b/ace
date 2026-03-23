@@ -18,7 +18,7 @@
 
 ![ace-git-worktree demo](docs/demo/ace-git-worktree-getting-started.gif)
 
-`ace-git-worktree` gives each task, PR, or branch its own workspace so you can move faster without carrying local state between changes. It handles naming, hooks, cleanup, and navigation with configurable conventions across the team.
+`ace-git-worktree` gives each task, PR, or branch its own workspace so you can move faster without carrying local state between changes. It handles naming, post-create hooks (commands run after worktree creation), cleanup, and navigation with configurable conventions across the team.
 
 ## How It Works
 
@@ -28,13 +28,13 @@
 
 ## Use Cases
 
-**Start task work in an isolated environment** - run [`ace-git-worktree`](docs/usage.md) with a task ID to create a linked worktree, update task status, and set up the branch. Use `/as-git-worktree-create` for the full agent-driven setup.
+**Start task work in an isolated environment** - run [`ace-git-worktree`](docs/usage.md) with a task ID to create a linked worktree, update task status, and set up the branch. Use the `as-git-worktree-create` agent workflow for guided setup.
 
 **Review pull requests in dedicated directories** - create a worktree from a PR number instead of switching branches in your main checkout, keeping review work cleanly separated.
 
-**Manage worktree lifecycle across a team** - use `/as-git-worktree-manage` with configurable naming, hooks, upstream push, and draft-PR automation to standardize workflows across the team.
+**Manage worktree lifecycle across a team** - use the `as-git-worktree-manage` workflow with configurable naming, hooks, upstream push, and draft-PR automation to standardize workflows across the team.
 
-**Coordinate with git workflow tools** - pair with [ace-task](../ace-task) for task lookup and status updates, [ace-git](../ace-git) for repository context, and [ace-git-commit](../ace-git-commit) for scoped commits inside task worktrees.
+**Orchestrate parallel task work with ace-overseer** - pair with [ace-overseer](../ace-overseer) to spin up worktrees per task, drive agents in parallel, and prune finished worktrees automatically.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
