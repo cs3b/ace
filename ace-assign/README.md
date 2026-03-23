@@ -35,7 +35,7 @@ NUMBER       STATUS       NAME                           FORK   CHILDREN
   |-- 010.01.07 ✓ Done       release-minor
   \-- 010.01.08 ✓ Done       create-retro
 |-- 010.02   ✓ Done       work-on-8qm.t.5nx.1            yes    (8/8 done)
-# ... + mutlitp tasks more
+# ... multiple steps hidden 
 012          ✓ Done       verify-test-suite
 015          ✓ Done       verify-e2e                     yes
 020          ✓ Done       release-minor
