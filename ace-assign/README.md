@@ -1,5 +1,6 @@
 <div align="center" markdown="1">
 <h1> ACE - Assign </h1>
+
 Multi-step assignment execution with nesting, fork delegation, and inspectable traces.
 
 <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480" />
