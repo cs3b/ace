@@ -12,6 +12,7 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [ace-handbook](../ace-handbook)
 `ace-handbook-integration-opencode` provides OpenCode-focused handbook manifests and projection artifacts so that canonical ACE skills invoked from OpenCode resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 

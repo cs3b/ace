@@ -12,6 +12,7 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [ace-handbook](../ace-handbook)
 `ace-handbook-integration-gemini` projects canonical ACE handbook skills into Gemini-native manifest assets so that skill invocations from Gemini CLI resolve to the correct provider entrypoints while preserving shared semantics from [ace-handbook](../ace-handbook).
 
