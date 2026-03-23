@@ -12,6 +12,7 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Usage Guide](docs/usage.md)
 `ace-compressor` provides deterministic context compression for one or more sources, with exact extraction, policy-driven compact output, and agent-assisted payload rewriting while preserving record structure. It integrates with [ace-bundle](../ace-bundle) for input resolution and [ace-llm](../ace-llm) for agent-mode rewriting.
 
