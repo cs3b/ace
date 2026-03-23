@@ -36,4 +36,4 @@
 **Run multi-search research from an agent** - use `/as-search-research` to execute multiple related searches and synthesize findings, or `/as-search-feature-research` to analyze implementation gaps.
 
 ---
-[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of ACE
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
