@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-03-23
+
+### Changed
+- Rewrote README with step/substep terminology, real `ace-assign status` output example, ace-overseer onboarding path, and links to step catalog, presets, and composition rules.
+- Replaced residual "phases" terminology with "steps" in docs/handbook.md, docs/getting-started.md, and e2e fixture directories.
+- Fixed broken "See Also" links in docs/exit-codes.md pointing to non-existent README anchors.
+
+### Technical
+- Normalized code formatting across 40+ lib and test files via StandardRB autofix (style-only, no behavior changes).
+
 ## [0.36.13] - 2026-03-23
 
 ### Changed
