@@ -1,47 +1,57 @@
 # ace-b36ts
 
-**Compact, sortable Base36 timestamp IDs**
+Generate compact, sortable Base36 timestamp IDs for scripts, logs, and path-friendly artifacts.
 
-![Demo](docs/demo/ace-b36ts-getting-started.gif)
+[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
 
-## Why
+![ace-b36ts getting started](docs/demo/ace-b36ts-getting-started.gif)
 
-Convert timestamps into short IDs you can use for IDs, filenames, and logs. A 6-character value keeps data compact while preserving chronological order in normal string sorting.
+`ace-b36ts` encodes UTC timestamps into short IDs that preserve chronological order in plain string sorting, and decodes them back when you need readable time output.
+
+## Use Cases
+
+**Create sortable IDs for automation output** - generate compact IDs for build artifacts, log entries, and task files without long timestamp strings.
+
+**Map IDs to directory paths** - use split output (`--split`) to create hierarchical paths for storage and archival workflows.
+
+**Round-trip between compact IDs and timestamps** - decode IDs during debugging, audits, and incident review flows.
 
 ## Works With
 
-- Ruby scripts and task automation
-- CLI and shell-based workflows
-- CI and release pipelines
-- Agent and bot integrations
-
-## Agent Skills
-
-- `as-b36ts` (`wfi://b36ts`)
+- **[ace-assign](../ace-assign)** for assignment/task workflows that benefit from compact sortable IDs.
+- **[ace-task](../ace-task)** for task references and structured artifact naming.
+- **Shell and CI pipelines** for deterministic, timestamp-derived IDs in scripts.
+- **Ruby automation** through the `Ace::B36ts` API for encode/decode helpers.
 
 ## Features
 
-- **6-character Base36 IDs** as a compact default format
-- **7 format options** from 2-char monthly to 8-char millisecond precision
-- **Chronologically sortable** IDs (`string` order equals time order)
-- Default 108-year coverage with configurable `year_zero`
-- Built-in `encode` and `decode` operations
-- Split output support for hierarchical paths
+- 6-character Base36 IDs by default (`2sec` format).
+- Seven encode formats: `month`, `week`, `day`, `40min`, `2sec`, `50ms`, `ms`.
+- Chronological sortability with plain string order.
+- Configurable `year_zero` to control epoch baseline.
+- Encode/decode commands plus split and JSON path output options.
 
 ## Quick Start
 
+
 ```bash
-ace-b36ts encode now          # generate an ID
-ace-b36ts decode <id>         # decode back to timestamp
-ace-b36ts config              # show resolved configuration
+ace-b36ts encode now
+ace-b36ts decode i50jj3
+ace-b36ts config
+
 ```
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
-- [Usage Reference](docs/usage.md)
+- [CLI Usage Reference](docs/usage.md)
 - [Handbook Reference](docs/handbook.md)
+- Command help: `ace-b36ts --help`
 
----
+## Agent Skills
 
-Part of ACE (Agentic Coding Environment)
+- `as-b36ts`
+
+## Part of ACE
+
+`ace-b36ts` is part of [ACE](../README.md) (Agentic Coding Environment).
