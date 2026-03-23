@@ -12,7 +12,9 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 ![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
 `ace-llm` gives developers and coding agents one command surface for multi-provider prompting, alias-based model selection, fallback routing, and structured output handling. Switch between providers without changing calling conventions, and keep prompt workflows resilient with automatic retry and fallback behavior.
