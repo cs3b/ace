@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.968] - 2026-03-23
+
+### Fixed
+- **ace-idea v0.18.0**: Corrected `--enhance` flag reference to `--llm-enhance` in README.
+
+### Changed
+- **ace-idea v0.18.0**: Aligned gemspec summary, folder documentation, clipboard platform notes, status output example, and re-recorded demo.
+
 ## [0.9.967] - 2026-03-23
 
 ### Changed
