@@ -24,4 +24,4 @@
 **Keep support libraries composable** - build package-specific features on top of stable core contracts that provide predictable runtime behavior.
 
 ---
-[Configuration overview](docs/config.md) | Part of ACE
+[Configuration overview](docs/config.md) | Part of [ACE](https://github.com/cs3b/ace)

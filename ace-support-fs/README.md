@@ -24,4 +24,4 @@
 **Build config scans** - discover and rank candidate configuration directories during resolution, supporting the cascade logic in [ace-support-config](../ace-support-config).
 
 ---
-[Documentation](#documentation) | Part of ACE
+[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)

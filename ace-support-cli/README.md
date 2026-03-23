@@ -30,4 +30,4 @@
 **Keep agent invocations safe** - preserve a stable CLI contract so coding agents can call `ace-*` tools reliably in mixed human/agent workflows.
 
 ---
-[Documentation](#documentation) | Part of ACE
+[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)

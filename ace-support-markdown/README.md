@@ -24,4 +24,4 @@
 **Preserve history during edits** - maintain backup and rollback safety for write-heavy operations so that tools like [`ace-task`](../ace-task) can update specs confidently in batch workflows.
 
 ---
-[Documentation](#documentation) | Part of ACE
+[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)

@@ -24,4 +24,4 @@
 **Normalize metadata safely** - sanitize slugs and arguments before persistence, preventing malformed entries in item stores.
 
 ---
-[Documentation](#documentation) | Part of ACE
+[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)

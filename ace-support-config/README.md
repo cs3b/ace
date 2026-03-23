@@ -30,4 +30,4 @@
 **Resolve namespaces consistently** - access configuration across tools using shared resolver methods, so [ace-llm-providers-cli](../ace-llm-providers-cli) and [ace-search](../ace-search) get the same cascade behavior.
 
 ---
-[Usage Guide](docs/usage.md) | Part of ACE
+[Usage Guide](docs/usage.md) | Part of [ACE](https://github.com/cs3b/ace)

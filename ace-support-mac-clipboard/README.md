@@ -24,4 +24,4 @@
 **Keep platform details isolated** - encapsulate macOS-specific clipboard behavior in one package so the rest of ACE stays platform-neutral.
 
 ---
-[Documentation](#documentation) | Part of ACE
+[Documentation](#documentation) | Part of [ACE](https://github.com/cs3b/ace)
