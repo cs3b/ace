@@ -20,13 +20,13 @@ class IdeaStatusCommandTest < AceIdeaTestCase
     begin
       Ace::Idea::IdeaCLI.start(args)
     rescue Ace::Support::Cli::Error => e
-      $stderr.puts e.message
+      warn e.message
       exit_code = e.exit_code
     rescue SystemExit => e
       exit_code = e.status
     end
 
-    { stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code }
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
   ensure
     $stdout = old_stdout
     $stderr = old_stderr

@@ -119,8 +119,8 @@ module Ace
         # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] e.g. "Ideas: ○ 3 | ▶ 1 | ✓ 2 • 3 of 8"
         def self.format_stats_line(ideas, total_count: nil, global_folder_stats: nil)
-          stats = { total: ideas.size, by_field: Hash.new(0) }
-          folder_stats = { total: ideas.size, by_field: Hash.new(0) }
+          stats = {total: ideas.size, by_field: Hash.new(0)}
+          folder_stats = {total: ideas.size, by_field: Hash.new(0)}
 
           ideas.each do |idea|
             stats[:by_field][normalize_status(idea.status)] += 1

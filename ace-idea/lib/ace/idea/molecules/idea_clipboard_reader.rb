@@ -46,7 +46,7 @@ module Ace
 
         def self.read_macos
           raw = Ace::Support::MacClipboard::Reader.read
-          return { success: false, error: raw[:error] } unless raw[:success]
+          return {success: false, error: raw[:error]} unless raw[:success]
 
           parsed = Ace::Support::MacClipboard::ContentParser.parse(raw)
 
@@ -62,7 +62,7 @@ module Ace
             attachments: parsed[:attachments],
             files: file_attachments.map { |a| a[:source_path] }
           }
-        rescue StandardError
+        rescue
           read_generic
         end
 
@@ -105,7 +105,7 @@ module Ace
             attachments: [],
             files: []
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Unable to read clipboard: #{e.message}"

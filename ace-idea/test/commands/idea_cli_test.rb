@@ -24,13 +24,13 @@ class IdeaCliTest < AceIdeaTestCase
     begin
       Ace::Idea::IdeaCLI.start(args)
     rescue Ace::Support::Cli::Error => e
-      $stderr.puts e.message
+      warn e.message
       exit_code = e.exit_code
     rescue SystemExit => e
       exit_code = e.status
     end
 
-    { stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code }
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
   ensure
     $stdout = old_stdout
     $stderr = old_stderr
@@ -381,7 +381,10 @@ class IdeaCliTest < AceIdeaTestCase
     with_ideas_dir do |root|
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["create", "Idea with gc", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
@@ -424,7 +427,10 @@ class IdeaCliTest < AceIdeaTestCase
       create_idea_fixture(root, id: id, slug: "gc-idea", status: "pending")
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["update", id, "--set", "status=done", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
@@ -441,7 +447,10 @@ class IdeaCliTest < AceIdeaTestCase
       create_idea_fixture(root, id: id, slug: "gc-idea")
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["update", id, "--move-to", "archive", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end

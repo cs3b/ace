@@ -15,8 +15,8 @@ class IdeaIntegrationTest < AceIdeaTestCase
 
       # Step 1: Create
       idea = manager.create("Integration test idea",
-                            title: "Integration Test",
-                            tags: ["test", "integration"])
+        title: "Integration Test",
+        tags: ["test", "integration"])
       refute_nil idea
       assert_equal "pending", idea.status
       assert_equal "Integration Test", idea.title
@@ -37,14 +37,14 @@ class IdeaIntegrationTest < AceIdeaTestCase
       assert_equal id, by_shortcut.id
 
       # Step 4: Update status and add a tag
-      updated = manager.update(id, set: { "status" => "in-progress" }, add: { "tags" => "important" })
+      updated = manager.update(id, set: {"status" => "in-progress"}, add: {"tags" => "important"})
       refute_nil updated
       assert_equal "in-progress", updated.status
       assert_includes updated.tags, "test"
       assert_includes updated.tags, "important"
 
       # Step 5: Remove a tag
-      after_remove = manager.update(id, remove: { "tags" => "integration" })
+      after_remove = manager.update(id, remove: {"tags" => "integration"})
       refute_nil after_remove
       refute_includes after_remove.tags, "integration"
       assert_includes after_remove.tags, "test"
@@ -261,15 +261,14 @@ class IdeaIntegrationTest < AceIdeaTestCase
       special_folders = [nil, "_maybe", "_archive"]
 
       idea_count.times do |i|
-        padded = format("%06d", i)
+        format("%06d", i)
         # Use a deterministic ID-like string (not valid b36ts but sufficient for fixture)
-        id = "#{padded[0]}#{padded[1]}#{padded[2]}#{padded[3]}#{padded[4]}#{padded[5]}"
         # Ensure ids are 6 chars of [0-9a-z]
-        id = "a#{format('%05d', i)}"[0..5]
+        "a#{format("%05d", i)}"[0..5]
         special_folder = special_folders[i % special_folders.size]
         slug = "idea-#{i}"
-        create_idea_fixture(root, id: "t#{format('%05d', i)}"[0..5], slug: slug,
-                            special_folder: special_folder)
+        create_idea_fixture(root, id: "t#{format("%05d", i)}"[0..5], slug: slug,
+          special_folder: special_folder)
       end
 
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
@@ -288,9 +287,9 @@ class IdeaIntegrationTest < AceIdeaTestCase
       # Create ideas spread across multiple special folders
       %w[_maybe _archive _reference _hold].each do |folder|
         25.times do |i|
-          create_idea_fixture(root, id: "x#{format('%05d', i + folder.length)}"[0..5],
-                              slug: "#{folder.tr('_', '')}-idea-#{i}",
-                              special_folder: folder)
+          create_idea_fixture(root, id: "x#{format("%05d", i + folder.length)}"[0..5],
+            slug: "#{folder.tr("_", "")}-idea-#{i}",
+            special_folder: folder)
         end
       end
 

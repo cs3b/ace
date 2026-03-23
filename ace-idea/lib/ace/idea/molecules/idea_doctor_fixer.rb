@@ -144,7 +144,10 @@ module Ace
           # Extract ID from folder name
           dir_name = File.basename(File.dirname(file_path))
           id_match = dir_name.match(/^([0-9a-z]{6})/)
-          return (@skipped_count += 1; false) unless id_match
+          unless id_match
+            return (@skipped_count += 1
+                    false)
+          end
 
           id = id_match[1]
           update_frontmatter_field(file_path, "id", id, "Added missing 'id' field from folder name")
@@ -185,8 +188,14 @@ module Ace
 
           content = File.read(file_path)
           frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
-          return (@skipped_count += 1; false) unless frontmatter.is_a?(Hash)
-          return (@skipped_count += 1; false) unless frontmatter.key?("location")
+          unless frontmatter.is_a?(Hash)
+            return (@skipped_count += 1
+                    false)
+          end
+          unless frontmatter.key?("location")
+            return (@skipped_count += 1
+                    false)
+          end
 
           updated = frontmatter.dup
           updated.delete("location")
@@ -214,14 +223,13 @@ module Ace
           end
 
           created_at = if id && Atoms::IdeaIdFormatter.valid?(id)
-                         Atoms::IdeaIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
-                       else
-                         Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
-                       end
+            Atoms::IdeaIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
+          else
+            Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
+          end
 
           update_frontmatter_field(file_path, "created_at", created_at, "Added missing 'created_at' field decoded from ID")
         end
-
 
         def fix_move_to_archive(file_path)
           return false unless file_path && @root_dir
@@ -238,13 +246,16 @@ module Ace
           end
 
           FileUtils.mkdir_p(archive_dir)
-          return (@skipped_count += 1; false) if File.exist?(target)
+          if File.exist?(target)
+            return (@skipped_count += 1
+                    false)
+          end
 
           FileUtils.mv(idea_dir, target)
           log_fix(idea_dir, "Moved to _archive/")
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -268,13 +279,16 @@ module Ace
           end
 
           FileUtils.mkdir_p(archive_dir)
-          return (@skipped_count += 1; false) if File.exist?(target)
+          if File.exist?(target)
+            return (@skipped_count += 1
+                    false)
+          end
 
           FileUtils.mv(idea_dir, target)
           log_fix(idea_dir, "Moved from _maybe/ to _archive/")
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -328,11 +342,11 @@ module Ace
           title = extract_title_from_content(content) || extract_slug_title(dir_name)
 
           # Build minimal frontmatter
-          created_at = if id && Atoms::IdeaIdFormatter.valid?(id)
-                         Atoms::IdeaIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
-                       else
-                         Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
-                       end
+          if id && Atoms::IdeaIdFormatter.valid?(id)
+            Atoms::IdeaIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
+          else
+            Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
+          end
 
           frontmatter = Atoms::IdeaFrontmatterDefaults.build(
             id: id || Atoms::IdeaIdFormatter.generate,
@@ -361,7 +375,10 @@ module Ace
 
           # Find spec file
           spec_files = Dir.glob(File.join(dir_path, "*.idea.s.md"))
-          return (@skipped_count += 1; false) if spec_files.empty?
+          if spec_files.empty?
+            return (@skipped_count += 1
+                    false)
+          end
 
           spec_file = spec_files.first
 
@@ -394,7 +411,7 @@ module Ace
           log_fix(dir_path, "Renamed folder to #{new_folder_name}")
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -420,10 +437,10 @@ module Ace
           # "2025111-slug-here" -> "slug-here"
 
           # Try to find slug after numeric prefixes
-          slug = name.sub(/^\d+-\d+-\d+-/, '')   # Remove NNN-YYYYMMDD-HHMMSS-
-                   .sub(/^\d{7,}-/, '')          # Remove 7+ digit prefix (like 2025111)
-                   .sub(/^\d{6}-/, '')           # Remove 6-digit date prefix (YYYYMM)
-                   .sub(/^\d+-/, '')             # Remove issue number prefix
+          slug = name.sub(/^\d+-\d+-\d+-/, "")   # Remove NNN-YYYYMMDD-HHMMSS-
+            .sub(/^\d{7,}-/, "")          # Remove 7+ digit prefix (like 2025111)
+            .sub(/^\d{6}-/, "")           # Remove 6-digit date prefix (YYYYMM)
+            .sub(/^\d+-/, "")             # Remove issue number prefix
 
           # Fallback: use the original name cleaned up
           if slug.empty? || slug.match?(/^\d+$/)
@@ -450,7 +467,7 @@ module Ace
           log_fix(file_path, description)
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -469,7 +486,7 @@ module Ace
 
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end

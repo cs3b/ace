@@ -69,7 +69,7 @@ module Ace
             attachments: attachments,
             metadata: extra_metadata
           )
-        rescue StandardError
+        rescue
           nil
         end
 
@@ -108,7 +108,7 @@ module Ace
         def decode_time_from_id(id)
           require "ace/b36ts"
           Ace::B36ts.decode(id)
-        rescue StandardError
+        rescue
           Time.now
         end
 

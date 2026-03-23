@@ -33,11 +33,11 @@ module Ace
         # @param llm_enhance [Boolean] Enhance with LLM
         # @return [Idea] Created idea
         def create(content = nil, title: nil, tags: [], move_to: nil,
-                   clipboard: false, llm_enhance: false)
+          clipboard: false, llm_enhance: false)
           ensure_root_dir
           creator = Molecules::IdeaCreator.new(root_dir: @root_dir, config: @config)
           creator.create(content, title: title, tags: tags, move_to: move_to,
-                         clipboard: clipboard, llm_enhance: llm_enhance)
+            clipboard: clipboard, llm_enhance: llm_enhance)
         end
 
         # Create an idea from clipboard
@@ -147,9 +147,7 @@ module Ace
 
         # Get the root directory
         # @return [String] Absolute path to ideas root
-        def root_dir
-          @root_dir
-        end
+        attr_reader :root_dir
 
         private
 
@@ -212,7 +210,11 @@ module Ace
           File.write(tmp_path, new_content)
           File.rename(tmp_path, idea.file_path)
         ensure
-          File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path) rescue nil
+          begin
+            File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
+          rescue
+            nil
+          end
         end
 
         # Extract archive date from idea frontmatter, falling back to Time.now
@@ -223,7 +225,11 @@ module Ace
           case raw
           when Time then raw
           when DateTime then raw.to_time
-          else Time.parse(raw.to_s) rescue nil
+          else begin
+            Time.parse(raw.to_s)
+          rescue
+            nil
+          end
           end
         end
 

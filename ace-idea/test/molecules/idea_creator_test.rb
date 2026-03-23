@@ -108,7 +108,7 @@ class IdeaCreatorTest < AceIdeaTestCase
 
   def test_attachment_path_traversal_rejected
     with_ideas_dir do |root|
-      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
+      Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
 
       # Simulate attachment with path-traversal filename
       traversal_attachment = {
@@ -127,7 +127,7 @@ class IdeaCreatorTest < AceIdeaTestCase
 
       # Verify no file was written outside the idea directory
       refute File.exist?(File.join(root, "..", "..", "etc", "malicious")),
-             "Path traversal should be rejected"
+        "Path traversal should be rejected"
       assert Dir.exist?(idea.path), "Idea directory should still be created"
     end
   end

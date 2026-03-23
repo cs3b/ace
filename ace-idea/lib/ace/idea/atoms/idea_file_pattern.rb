@@ -7,10 +7,10 @@ module Ace
       # Ideas use the .idea.s.md extension to distinguish from task .s.md files.
       module IdeaFilePattern
         # Glob pattern for idea spec files within a directory
-        FILE_GLOB = "*.idea.s.md".freeze
+        FILE_GLOB = "*.idea.s.md"
 
         # Full file extension for idea spec files
-        FILE_EXTENSION = ".idea.s.md".freeze
+        FILE_EXTENSION = ".idea.s.md"
 
         # Build the spec filename for an idea
         # @param id [String] Raw 6-char b36ts ID

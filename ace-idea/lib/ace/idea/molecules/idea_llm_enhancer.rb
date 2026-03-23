@@ -14,7 +14,7 @@ module Ace
       # - Success Criteria
       class IdeaLlmEnhancer
         # Hardcoded system prompt for 3-Question Brief generation
-        SYSTEM_PROMPT = <<~PROMPT.freeze
+        SYSTEM_PROMPT = <<~PROMPT
           You are an assistant that helps structure raw software development ideas into clear, actionable briefs.
 
           Given a raw idea, produce a structured response as a JSON object with these fields:
@@ -36,8 +36,8 @@ module Ace
         def initialize(config: {})
           @config = config
           @model = config.dig("idea", "llm_model") ||
-                   config["llm_model"] ||
-                   "gflash"
+            config["llm_model"] ||
+            "gflash"
         end
 
         # Enhance content using LLM
@@ -52,7 +52,7 @@ module Ace
           else
             fallback_enhancement(content)
           end
-        rescue StandardError => e
+        rescue => e
           fallback_enhancement(content, error: e.message)
         end
 
@@ -87,14 +87,14 @@ module Ace
             end
 
             data = JSON.parse(text)
-            { success: true, data: data }
+            {success: true, data: data}
           else
-            { success: false, error: "No text in LLM response" }
+            {success: false, error: "No text in LLM response"}
           end
         rescue JSON::ParserError => e
-          { success: false, error: "Invalid JSON from LLM: #{e.message}" }
-        rescue StandardError => e
-          { success: false, error: e.message }
+          {success: false, error: "Invalid JSON from LLM: #{e.message}"}
+        rescue => e
+          {success: false, error: e.message}
         end
 
         def format_enhanced(data, _original_content)
@@ -103,7 +103,7 @@ module Ace
 
           content = "# #{title}\n\n#{enhanced}"
 
-          { success: true, content: content, title: title }
+          {success: true, content: content, title: title}
         end
 
         def fallback_enhancement(content, error: nil)
@@ -134,9 +134,9 @@ module Ace
           enhanced_content = body.join("\n")
 
           if error
-            { success: true, content: enhanced_content, fallback: true, error: error }
+            {success: true, content: enhanced_content, fallback: true, error: error}
           else
-            { success: true, content: enhanced_content, fallback: true }
+            {success: true, content: enhanced_content, fallback: true}
           end
         end
 

@@ -6,7 +6,7 @@ class IdeaLoaderTest < AceIdeaTestCase
   def test_loads_idea_from_directory
     with_ideas_dir do |root|
       idea_dir = create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode",
-                                     tags: ["ux", "design"])
+        tags: ["ux", "design"])
 
       loader = Ace::Idea::Molecules::IdeaLoader.new
       idea = loader.load(idea_dir, id: "8ppq7w")
@@ -69,7 +69,7 @@ class IdeaLoaderTest < AceIdeaTestCase
   def test_loads_idea_with_special_folder
     with_ideas_dir do |root|
       idea_dir = create_idea_fixture(root, id: "9xzr1k", slug: "maybe-idea",
-                                     special_folder: "_maybe")
+        special_folder: "_maybe")
 
       loader = Ace::Idea::Molecules::IdeaLoader.new
       idea = loader.load(idea_dir, id: "9xzr1k", special_folder: "_maybe")

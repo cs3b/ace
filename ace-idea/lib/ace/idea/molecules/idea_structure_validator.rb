@@ -20,7 +20,7 @@ module Ace
           issues = []
 
           unless Dir.exist?(root_dir)
-            issues << { type: :error, message: "Ideas root directory does not exist", location: root_dir }
+            issues << {type: :error, message: "Ideas root directory does not exist", location: root_dir}
             return issues
           end
 

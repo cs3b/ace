@@ -22,8 +22,8 @@ class IdeaLlmEnhancerTest < AceIdeaTestCase
       content = result[:content]
       # Should have the 3-Question Brief structure or stub placeholders
       has_structure = content.include?("What I Hope to Accomplish") ||
-                      content.include?("What") ||
-                      content.include?("Test idea")
+        content.include?("What") ||
+        content.include?("Test idea")
       assert has_structure
     end
   end

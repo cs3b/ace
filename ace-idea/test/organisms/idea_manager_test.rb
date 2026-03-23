@@ -8,8 +8,8 @@ class IdeaManagerTest < AceIdeaTestCase
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
 
       idea = manager.create("Dark mode would be great",
-                            title: "Dark mode",
-                            tags: ["ux"])
+        title: "Dark mode",
+        tags: ["ux"])
 
       refute_nil idea
       id = idea.id
@@ -81,10 +81,10 @@ class IdeaManagerTest < AceIdeaTestCase
 
   def test_update_status
     with_ideas_dir do |root|
-      idea_dir = create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode")
+      create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode")
 
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
-      updated = manager.update("q7w", set: { "status" => "in-progress" })
+      updated = manager.update("q7w", set: {"status" => "in-progress"})
 
       refute_nil updated
       assert_equal "in-progress", updated.status
@@ -93,10 +93,10 @@ class IdeaManagerTest < AceIdeaTestCase
 
   def test_update_add_tags
     with_ideas_dir do |root|
-      idea_dir = create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode", tags: ["ux"])
+      create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode", tags: ["ux"])
 
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
-      updated = manager.update("q7w", add: { "tags" => "design" })
+      updated = manager.update("q7w", add: {"tags" => "design"})
 
       refute_nil updated
       assert_includes updated.tags, "ux"

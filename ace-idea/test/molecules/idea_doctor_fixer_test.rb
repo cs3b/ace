@@ -17,7 +17,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       original = File.read(file)
 
       fixer = Fixer.new(dry_run: true)
-      issue = { type: :warning, message: "Missing required field: status", location: file }
+      issue = {type: :warning, message: "Missing required field: status", location: file}
       fixer.fix_issue(issue)
 
       assert_equal original, File.read(file)
@@ -35,7 +35,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\ntitle: Test\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Missing required field: status", location: file }
+      issue = {type: :warning, message: "Missing required field: status", location: file}
       result = fixer.fix_issue(issue)
 
       assert result
@@ -55,7 +55,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\nstatus: pending\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n\n# Great Idea\n\nContent here.\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Missing required field: title", location: file }
+      issue = {type: :warning, message: "Missing required field: title", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -71,7 +71,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\nstatus: pending\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n\nSome content.\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Missing required field: title", location: file }
+      issue = {type: :warning, message: "Missing required field: title", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -89,7 +89,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nstatus: pending\ntitle: Test\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Missing required field: id", location: file }
+      issue = {type: :error, message: "Missing required field: id", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -107,7 +107,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\nstatus: pending\ntitle: Test\ntags: not-array\ncreated_at: 2026-02-28 12:00:00\n---\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Field 'tags' is not an array", location: file }
+      issue = {type: :warning, message: "Field 'tags' is not an array", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -124,7 +124,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\nstatus: pending\ntitle: Test\nlocation: archived\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: file }
+      issue = {type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -142,7 +142,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: abc123\nstatus: pending\ntitle: Test\ntags: []\n---\n")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Missing recommended field: created_at", location: file }
+      issue = {type: :warning, message: "Missing recommended field: created_at", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -158,7 +158,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(backup, "old content")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Stale backup file (safe to delete)", location: backup }
+      issue = {type: :warning, message: "Stale backup file (safe to delete)", location: backup}
       fixer.fix_issue(issue)
 
       refute File.exist?(backup)
@@ -174,7 +174,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       FileUtils.mkdir_p(empty)
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Empty directory (safe to delete)", location: empty }
+      issue = {type: :warning, message: "Empty directory (safe to delete)", location: empty}
       fixer.fix_issue(issue)
 
       refute Dir.exist?(empty)
@@ -189,7 +189,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(File.join(dir, "notes.txt"), "content")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Empty directory (safe to delete)", location: dir }
+      issue = {type: :warning, message: "Empty directory (safe to delete)", location: dir}
       fixer.fix_issue(issue)
 
       assert Dir.exist?(dir)
@@ -222,7 +222,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
   def test_fix_archive_status
     with_ideas_dir do |root|
       idea_dir = create_idea_fixture(root, id: "abc123", slug: "pending-archive",
-                                     status: "pending", special_folder: "_archive")
+        status: "pending", special_folder: "_archive")
       file = File.join(idea_dir, "abc123-pending-archive.idea.s.md")
 
       fixer = Fixer.new(root_dir: root)
@@ -242,16 +242,16 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
 
   def test_can_fix_returns_true_for_fixable
     fixer = Fixer.new
-    assert fixer.can_fix?({ type: :warning, message: "Missing required field: status", location: "/tmp/x" })
-    assert fixer.can_fix?({ type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/x" })
-    assert fixer.can_fix?({ type: :warning, message: "Empty directory (safe to delete)", location: "/tmp/x" })
-    assert fixer.can_fix?({ type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: "/tmp/x" })
+    assert fixer.can_fix?({type: :warning, message: "Missing required field: status", location: "/tmp/x"})
+    assert fixer.can_fix?({type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/x"})
+    assert fixer.can_fix?({type: :warning, message: "Empty directory (safe to delete)", location: "/tmp/x"})
+    assert fixer.can_fix?({type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: "/tmp/x"})
   end
 
   def test_can_fix_returns_false_for_unfixable
     fixer = Fixer.new
-    refute fixer.can_fix?({ type: :error, message: "Invalid idea ID format: 'bad'", location: "/tmp/x" })
-    refute fixer.can_fix?({ type: :error, message: "YAML syntax error", location: "/tmp/x" })
+    refute fixer.can_fix?({type: :error, message: "Invalid idea ID format: 'bad'", location: "/tmp/x"})
+    refute fixer.can_fix?({type: :error, message: "YAML syntax error", location: "/tmp/x"})
   end
 
   # --- fix missing opening delimiter ---
@@ -265,7 +265,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "# My Great Idea\n\nSome content here.\n\n---\nCaptured: 2025-11-02 10:49:53\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Missing opening '---' delimiter", location: file }
+      issue = {type: :error, message: "Missing opening '---' delimiter", location: file}
       result = fixer.fix_issue(issue)
 
       assert result
@@ -286,7 +286,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "# Extracted Title\n\nBody content.\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Missing opening '---' delimiter", location: file }
+      issue = {type: :error, message: "Missing opening '---' delimiter", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -303,7 +303,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "Just some content without a heading.\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Missing opening '---' delimiter", location: file }
+      issue = {type: :error, message: "Missing opening '---' delimiter", location: file}
       fixer.fix_issue(issue)
 
       content = File.read(file)
@@ -322,7 +322,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: invalid\nstatus: pending\ntitle: Review\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n\nContent.\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-ace-packages-review'", location: dir }
+      issue = {type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-ace-packages-review'", location: dir}
       result = fixer.fix_issue(issue)
 
       assert result
@@ -349,7 +349,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: old-id\nstatus: pending\ntitle: Feature\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n\nContent.\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Folder name does not match '{id}-{slug}' convention: '056-20250930-105556-my-feature-idea'", location: dir }
+      issue = {type: :error, message: "Folder name does not match '{id}-{slug}' convention: '056-20250930-105556-my-feature-idea'", location: dir}
       fixer.fix_issue(issue)
 
       # New folder should exist with valid b36ts ID
@@ -367,7 +367,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(file, "---\nid: bad\nstatus: pending\ntitle: Another\ntags: []\ncreated_at: 2026-02-28 12:00:00\n---\n\nContent.\n")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Folder name does not match '{id}-{slug}' convention: '2025111-another-idea'", location: dir }
+      issue = {type: :error, message: "Folder name does not match '{id}-{slug}' convention: '2025111-another-idea'", location: dir}
       fixer.fix_issue(issue)
 
       # New folder should exist with valid b36ts ID
@@ -386,7 +386,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(attachment, "fake image data")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-with-attachments'", location: dir }
+      issue = {type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-with-attachments'", location: dir}
       fixer.fix_issue(issue)
 
       # Attachment should be preserved in new folder
@@ -405,7 +405,7 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
       File.write(File.join(dir, "notes.txt"), "notes")
 
       fixer = Fixer.new
-      issue = { type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-no-spec'", location: dir }
+      issue = {type: :error, message: "Folder name does not match '{id}-{slug}' convention: '20251013-no-spec'", location: dir}
       result = fixer.fix_issue(issue)
 
       refute result
@@ -419,17 +419,17 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
 
   def test_can_fix_opening_delimiter
     fixer = Fixer.new
-    assert fixer.can_fix?({ type: :error, message: "Missing opening '---' delimiter", location: "/tmp/x" })
+    assert fixer.can_fix?({type: :error, message: "Missing opening '---' delimiter", location: "/tmp/x"})
   end
 
   def test_can_fix_folder_naming
     fixer = Fixer.new
-    assert fixer.can_fix?({ type: :error, message: "Folder name does not match '{id}-{slug}' convention: 'bad'", location: "/tmp/x" })
+    assert fixer.can_fix?({type: :error, message: "Folder name does not match '{id}-{slug}' convention: 'bad'", location: "/tmp/x"})
   end
 
   def test_can_fix_requires_location
     fixer = Fixer.new
-    refute fixer.can_fix?({ type: :warning, message: "Stale backup file (safe to delete)" })
+    refute fixer.can_fix?({type: :warning, message: "Stale backup file (safe to delete)"})
   end
 
   # --- batch fix ---
@@ -443,9 +443,9 @@ class IdeaDoctorFixerTest < AceIdeaTestCase
 
       fixer = Fixer.new
       issues = [
-        { type: :warning, message: "Stale backup file (safe to delete)", location: backup1 },
-        { type: :warning, message: "Stale backup file (safe to delete)", location: backup2 },
-        { type: :error, message: "Invalid idea ID format", location: "/tmp/unfixable" }
+        {type: :warning, message: "Stale backup file (safe to delete)", location: backup1},
+        {type: :warning, message: "Stale backup file (safe to delete)", location: backup2},
+        {type: :error, message: "Invalid idea ID format", location: "/tmp/unfixable"}
       ]
 
       results = fixer.fix_issues(issues)

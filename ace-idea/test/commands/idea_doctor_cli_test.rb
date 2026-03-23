@@ -21,13 +21,13 @@ class IdeaDoctorCliTest < AceIdeaTestCase
     begin
       Ace::Idea::IdeaCLI.start(args)
     rescue Ace::Support::Cli::Error => e
-      $stderr.puts e.message
+      warn e.message
       exit_code = e.exit_code
     rescue SystemExit => e
       exit_code = e.status
     end
 
-    { stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code }
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
   ensure
     $stdout = old_stdout
     $stderr = old_stderr
@@ -39,7 +39,7 @@ class IdeaDoctorCliTest < AceIdeaTestCase
     original_root = loader.method(:root_dir)
 
     loader.define_singleton_method(:load) do |**_opts|
-      { "idea" => { "root_dir" => root_dir } }
+      {"idea" => {"root_dir" => root_dir}}
     end
     loader.define_singleton_method(:root_dir) do |_config = nil|
       root_dir
