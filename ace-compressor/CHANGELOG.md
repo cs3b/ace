@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-03-23
+
+### Changed
+- Refreshed the package README to the current ACE layout pattern with use-case-led structure, integration links, feature summary, and updated quick-start guidance aligned to the current CLI surface.
+
 ## [0.23.2] - 2026-03-22
 
 ### Changed
