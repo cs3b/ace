@@ -33,7 +33,7 @@ Developers and AI agents now work side by side, but most tooling was built for o
 
 **Generate commits from changes** - stage your work and get a structured commit message derived from the actual diff, scoped per package. [`ace-git-commit`](ace-git-commit/)
 
-**Load context on demand** - pull project context, workflow instructions, and guides through a protocol system (`wfi://`, `guide://`, `tmpl://`). Discover available resources, resolve them to files, and bundle them for agents or developers. [`ace-bundle`](ace-bundle/), [`ace-nav`](ace-nav/), and [`ace-search`](ace-search/)
+**Load context on demand** - pull project context, workflow instructions, and guides through a protocol system (`wfi://`, `guide://`, `tmpl://`). Discover available resources, resolve them to files, and bundle them for agents or developers. [`ace-bundle`](ace-bundle/), [`ace-nav`](ace-support-nav/), and [`ace-search`](ace-search/)
 
 **Test consistently** - run tests across the monorepo with a single command that handles dependency resolution, profiling, and reporting. [`ace-test`](ace-test/) and [`ace-test-runner`](ace-test-runner/)
 
