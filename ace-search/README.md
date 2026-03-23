@@ -1,53 +1,45 @@
 # ace-search
 
-Unified codebase search -- one command that auto-detects files or content.
+<p align="center">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.S.png" alt="ACE Logo" width="480">
+</p>
 
-[Getting Started](docs/getting-started.md) | [CLI Usage Reference](docs/usage.md) | [Handbook Reference](docs/handbook.md)
+[![Gem Version](https://img.shields.io/gem/v/ace-search.svg)](https://rubygems.org/gems/ace-search)
+[![Ruby](https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby)](https://www.ruby-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> Unified codebase search -- one command that auto-detects files or content.
+
+Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
-`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically, keeps search scope predictable from any directory, and exposes fast output modes for workflow automation.
+`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
+
+## How It Works
+
+1. Submit a query to [`ace-search`](docs/usage.md) and DWIM detection picks content search (ripgrep) or file search (fd) based on the pattern.
+2. Scope filters like `--staged`, `--tracked`, or `--changed` constrain results to Git-relevant files via [ace-git](../ace-git).
+3. Results are returned in your chosen format (text, JSON, YAML, count, or files-with-matches) for human review or downstream automation.
 
 ## Use Cases
 
-**Find code patterns quickly without deciding tooling first** - run `ace-search "TODO"` or `ace-search "*.rb"` and let DWIM detection pick content vs file search.
+**Find code patterns without deciding tooling first** - run `ace-search "TODO"` or `ace-search "*.rb"` and let DWIM detection pick the right backend automatically.
 
-**Constrain investigations to meaningful working sets** - combine `--staged`, `--tracked`, or `--changed` to inspect only Git-relevant files during reviews and refactors.
+**Constrain investigations to meaningful working sets** - combine `--staged`, `--tracked`, or `--changed` to inspect only [ace-git](../ace-git)-relevant files during reviews and refactors.
 
 **Feed downstream tooling and automation** - use `--json`, `--yaml`, `--count`, or `--files-with-matches` for machine-readable pipelines and scripted checks.
 
-**Standardize repeat searches across teams** - apply named presets with `--preset` for consistent daily scans and focused research queries.
+**Standardize repeat searches across teams** - apply named presets with `--preset` via [ace-support-config](../ace-support-config) for consistent daily scans and focused research queries.
 
-## Works With
-
-- **[ace-git](../ace-git)** for staged/tracked/changed scope filters in Git-aware search flows.
-- **[ace-support-config](../ace-support-config)** for configuration cascade and user/project defaults.
-- **[ace-support-nav](../ace-support-nav)** for protocol-backed navigation used by search workflows.
-
-## Features
-
-- DWIM mode by default for automatic file-vs-content detection.
-- Project-wide search root resolution for consistent results from subdirectories.
-- Dual backend execution using ripgrep for content and fd for files.
-- Preset system for reusable named search configurations.
-- Git-aware filters for staged, tracked, and changed file scopes.
-- Flexible output modes: text, JSON, YAML, count, and files-with-matches.
+**Run multi-search research from an agent** - use `/as-search-research` to execute multiple related searches and synthesize findings, or `/as-search-feature-research` to analyze implementation gaps.
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [CLI Usage Reference](docs/usage.md)
-- [Handbook Reference](docs/handbook.md)
-- Command help: `ace-search --help`
+[Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-## Agent Skills
+---
 
-Package-owned canonical skills:
-
-- `as-search-run`
-- `as-search-research`
-- `as-search-feature-research`
-
-## Part of ACE
-
-`ace-search` is part of [ACE](../README.md) (Agentic Coding Environment).
+Part of [ACE](../README.md) (Agentic Coding Environment)
