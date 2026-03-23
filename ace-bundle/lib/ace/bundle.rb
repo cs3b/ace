@@ -114,7 +114,16 @@ module Ace
           cache_dir: cache_dir,
           max_lines: max_lines
         )
-        writer.write_with_chunking(bundle, output_path, options)
+        result = writer.write_with_chunking(bundle, output_path, options)
+
+        # Write compression metadata sidecar for downstream tools (e.g., ace-compressor)
+        stats = bundle.respond_to?(:metadata) && bundle.metadata&.dig(:compression_stats)
+        if stats && result[:success]
+          require "json"
+          File.write("#{output_path}.meta.json", JSON.generate(stats))
+        end
+
+        result
       end
 
       # Get configuration for ace-bundle
