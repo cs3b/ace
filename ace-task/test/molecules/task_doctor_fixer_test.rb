@@ -10,25 +10,25 @@ class TaskDoctorFixerTest < AceTaskTestCase
 
   def test_can_fix_missing_status
     fixer = Fixer.new
-    issue = { message: "Missing required field: status", location: "/tmp/test.md" }
+    issue = {message: "Missing required field: status", location: "/tmp/test.md"}
     assert fixer.can_fix?(issue)
   end
 
   def test_can_fix_stale_backup
     fixer = Fixer.new
-    issue = { message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md" }
+    issue = {message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md"}
     assert fixer.can_fix?(issue)
   end
 
   def test_cannot_fix_unknown_issue
     fixer = Fixer.new
-    issue = { message: "Some unknown issue", location: "/tmp/test.md" }
+    issue = {message: "Some unknown issue", location: "/tmp/test.md"}
     refute fixer.can_fix?(issue)
   end
 
   def test_cannot_fix_without_location
     fixer = Fixer.new
-    issue = { message: "Missing required field: status" }
+    issue = {message: "Missing required field: status"}
     refute fixer.can_fix?(issue)
   end
 
@@ -44,7 +44,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       CONTENT
 
       fixer = Fixer.new(dry_run: true, root_dir: root)
-      result = fixer.fix_issue({ message: "Missing required field: status", location: file })
+      result = fixer.fix_issue({message: "Missing required field: status", location: file})
       assert result
       assert_equal 1, fixer.fixed_count
 
@@ -66,7 +66,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       CONTENT
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Missing required field: status", location: file })
+      result = fixer.fix_issue({message: "Missing required field: status", location: file})
       assert result
 
       content = File.read(file)
@@ -82,7 +82,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       File.write(backup_file, "old content")
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Stale backup file (safe to delete)", location: backup_file })
+      result = fixer.fix_issue({message: "Stale backup file (safe to delete)", location: backup_file})
       assert result
       refute File.exist?(backup_file)
     end
@@ -94,7 +94,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       File.write(backup_file, "old content")
 
       fixer = Fixer.new(dry_run: true, root_dir: root)
-      result = fixer.fix_issue({ message: "Stale backup file (safe to delete)", location: backup_file })
+      result = fixer.fix_issue({message: "Stale backup file (safe to delete)", location: backup_file})
       assert result
       assert File.exist?(backup_file)
     end
@@ -108,7 +108,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       FileUtils.mkdir_p(empty_dir)
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Empty directory (safe to delete)", location: empty_dir })
+      result = fixer.fix_issue({message: "Empty directory (safe to delete)", location: empty_dir})
       assert result
       refute Dir.exist?(empty_dir)
     end
@@ -121,7 +121,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       File.write(File.join(dir, "file.txt"), "content")
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Empty directory (safe to delete)", location: dir })
+      result = fixer.fix_issue({message: "Empty directory (safe to delete)", location: dir})
       refute result
       assert Dir.exist?(dir)
     end
@@ -135,8 +135,8 @@ class TaskDoctorFixerTest < AceTaskTestCase
       File.write(backup, "content")
 
       issues = [
-        { message: "Stale backup file (safe to delete)", location: backup },
-        { message: "Unknown issue", location: "/tmp/unknown" }
+        {message: "Stale backup file (safe to delete)", location: backup},
+        {message: "Unknown issue", location: "/tmp/unknown"}
       ]
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
@@ -160,7 +160,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       CONTENT
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Missing required field: id", location: file })
+      result = fixer.fix_issue({message: "Missing required field: id", location: file})
       assert result
 
       content = File.read(file)
@@ -181,7 +181,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       CONTENT
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Missing recommended field: tags", location: file })
+      result = fixer.fix_issue({message: "Missing recommended field: tags", location: file})
       assert result
 
       content = File.read(file)
@@ -197,7 +197,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       spec_file = File.join(task_dir, "8pp.t.q7w-done-task.s.md")
 
       fixer = Fixer.new(dry_run: true, root_dir: root)
-      result = fixer.fix_issue({ message: "Task with terminal status 'done' not in _archive/", location: spec_file })
+      result = fixer.fix_issue({message: "Task with terminal status 'done' not in _archive/", location: spec_file})
       assert result
       assert Dir.exist?(task_dir), "Task dir should still exist in dry-run"
     end
@@ -209,7 +209,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       spec_file = File.join(task_dir, "8pp.t.q7w-done-task.s.md")
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Task with terminal status 'done' not in _archive/", location: spec_file })
+      result = fixer.fix_issue({message: "Task with terminal status 'done' not in _archive/", location: spec_file})
       assert result
 
       archived_dirs = Dir.glob(File.join(root, "_archive", "**", "8pp.t.q7w-done-task"))
@@ -246,7 +246,7 @@ class TaskDoctorFixerTest < AceTaskTestCase
       CONTENT
 
       fixer = Fixer.new(dry_run: false, root_dir: root)
-      result = fixer.fix_issue({ message: "Task with terminal status 'done' not in _archive/", location: sub_done_file })
+      result = fixer.fix_issue({message: "Task with terminal status 'done' not in _archive/", location: sub_done_file})
       refute result
 
       assert Dir.exist?(parent_dir), "Parent should remain in place when siblings are not terminal"

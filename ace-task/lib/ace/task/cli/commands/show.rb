@@ -17,23 +17,23 @@ module Ace
           DESC
 
           example [
-            'q7w                           # Show by suffix shortcut',
-            '8pp.t.q7w                     # Show by full ID',
-            't.q7w                         # Show by short reference',
-            'q7w --path                    # Print file path only',
-            'q7w --content                 # Print raw markdown content',
-            'q7w --tree                    # Show parent + subtask tree'
+            "q7w                           # Show by suffix shortcut",
+            "8pp.t.q7w                     # Show by full ID",
+            "t.q7w                         # Show by short reference",
+            "q7w --path                    # Print file path only",
+            "q7w --content                 # Print raw markdown content",
+            "q7w --tree                    # Show parent + subtask tree"
           ]
 
           argument :ref, required: true, desc: "Task reference (full ID, short ref, or suffix)"
 
-          option :path,    type: :boolean, desc: "Print file path only"
+          option :path, type: :boolean, desc: "Print file path only"
           option :content, type: :boolean, desc: "Print raw markdown content"
-          option :tree,    type: :boolean, desc: "Show parent + subtask tree view"
+          option :tree, type: :boolean, desc: "Show parent + subtask tree view"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref:, **options)
             manager = Ace::Task::Organisms::TaskManager.new

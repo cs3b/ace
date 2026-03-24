@@ -12,7 +12,7 @@ class TaskDoctorReporterTest < AceTaskTestCase
       valid: true,
       health_score: 100,
       issues: [],
-      stats: { tasks_scanned: 5, folders_checked: 5, errors: 0, warnings: 0, info: 0 },
+      stats: {tasks_scanned: 5, folders_checked: 5, errors: 0, warnings: 0, info: 0},
       duration: 0.05,
       root_path: "/tmp/test"
     }
@@ -21,10 +21,10 @@ class TaskDoctorReporterTest < AceTaskTestCase
       valid: false,
       health_score: 70,
       issues: [
-        { type: :error, message: "Missing required field: id", location: "/tmp/test/spec.md" },
-        { type: :warning, message: "Stale backup file", location: "/tmp/test/old.backup.md" }
+        {type: :error, message: "Missing required field: id", location: "/tmp/test/spec.md"},
+        {type: :warning, message: "Stale backup file", location: "/tmp/test/old.backup.md"}
       ],
-      stats: { tasks_scanned: 3, folders_checked: 3, errors: 1, warnings: 1, info: 0 },
+      stats: {tasks_scanned: 3, folders_checked: 3, errors: 1, warnings: 1, info: 0},
       duration: 0.1,
       root_path: "/tmp/test"
     }
@@ -84,7 +84,7 @@ class TaskDoctorReporterTest < AceTaskTestCase
       skipped: 1,
       dry_run: false,
       fixes_applied: [
-        { file: "/tmp/test/spec.md", description: "Fixed ID", timestamp: Time.now }
+        {file: "/tmp/test/spec.md", description: "Fixed ID", timestamp: Time.now}
       ]
     }
     output = Reporter.format_fix_results(fix_results, colors: false)
@@ -107,11 +107,11 @@ class TaskDoctorReporterTest < AceTaskTestCase
 
   def test_terminal_truncates_warnings_without_verbose
     many_warnings = (1..15).map do |i|
-      { type: :warning, message: "Warning #{i}", location: "/tmp/test/file#{i}.md" }
+      {type: :warning, message: "Warning #{i}", location: "/tmp/test/file#{i}.md"}
     end
     results = @healthy_results.merge(
       issues: many_warnings,
-      stats: { tasks_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0 }
+      stats: {tasks_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0}
     )
     output = Reporter.format_results(results, format: :terminal, verbose: false, colors: false)
     assert_includes output, "more warnings (use --verbose to see all)"
@@ -119,11 +119,11 @@ class TaskDoctorReporterTest < AceTaskTestCase
 
   def test_terminal_shows_all_warnings_with_verbose
     many_warnings = (1..15).map do |i|
-      { type: :warning, message: "Warning #{i}", location: "/tmp/test/file#{i}.md" }
+      {type: :warning, message: "Warning #{i}", location: "/tmp/test/file#{i}.md"}
     end
     results = @healthy_results.merge(
       issues: many_warnings,
-      stats: { tasks_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0 }
+      stats: {tasks_scanned: 15, folders_checked: 15, errors: 0, warnings: 15, info: 0}
     )
     output = Reporter.format_results(results, format: :terminal, verbose: true, colors: false)
     refute_includes output, "more warnings"

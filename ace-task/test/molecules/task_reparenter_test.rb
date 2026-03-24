@@ -27,7 +27,7 @@ class TaskReparenterTest < AceTaskTestCase
     subtask = load_task(subtask_dir, "8pp.t.q7w.a")
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
-    result = reparenter.reparent(subtask, target: "none", resolve_ref: ->(_) { nil })
+    result = reparenter.reparent(subtask, target: "none", resolve_ref: ->(_) {})
 
     # Should now be at root level with base ID
     assert_equal "8pp.t.q7w", result.id
@@ -47,7 +47,7 @@ class TaskReparenterTest < AceTaskTestCase
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
     assert_raises(ArgumentError) do
-      reparenter.reparent(task, target: "none", resolve_ref: ->(_) { nil })
+      reparenter.reparent(task, target: "none", resolve_ref: ->(_) {})
     end
   end
 
@@ -60,7 +60,7 @@ class TaskReparenterTest < AceTaskTestCase
     task = load_task(task_dir, "8pp.t.q7w")
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
-    result = reparenter.reparent(task, target: "self", resolve_ref: ->(_) { nil })
+    result = reparenter.reparent(task, target: "self", resolve_ref: ->(_) {})
 
     # Should now have a subtask dir
     assert_equal "8pp.t.q7w", result.id
@@ -94,7 +94,7 @@ class TaskReparenterTest < AceTaskTestCase
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
     assert_raises(ArgumentError) do
-      reparenter.reparent(subtask, target: "self", resolve_ref: ->(_) { nil })
+      reparenter.reparent(subtask, target: "self", resolve_ref: ->(_) {})
     end
   end
 
@@ -112,7 +112,7 @@ class TaskReparenterTest < AceTaskTestCase
     parent_task = load_task(parent_dir, "8pp.t.abc")
     task = load_task(task_dir, "8pp.t.q7w")
 
-    resolve_fn = ->(ref) { ref == "abc" ? parent_task : nil }
+    resolve_fn = ->(ref) { (ref == "abc") ? parent_task : nil }
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
     result = reparenter.reparent(task, target: "abc", resolve_ref: resolve_fn)
@@ -134,7 +134,7 @@ class TaskReparenterTest < AceTaskTestCase
 
     reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
     assert_raises(ArgumentError) do
-      reparenter.reparent(task, target: "zzz", resolve_ref: ->(_) { nil })
+      reparenter.reparent(task, target: "zzz", resolve_ref: ->(_) {})
     end
   end
 

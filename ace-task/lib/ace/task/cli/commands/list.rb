@@ -20,36 +20,36 @@ module Ace
           remove_const(:C)
 
           example [
-            '                           # Active tasks (root only, default)',
-            '--in all                   # All tasks including archived/maybe',
-            '--in maybe                 # Tasks in _maybe/',
-            '--status pending           # Filter by status',
-            '--tags ux,design           # Tasks matching any tag',
-            '--in next --status pending # Combined filters',
-            '--filter status:pending --filter tags:ux|design  # Generic filters',
-            '--sort id                   # Sort by ID (chronological)',
-            '--sort priority             # Sort by priority level'
+            "                           # Active tasks (root only, default)",
+            "--in all                   # All tasks including archived/maybe",
+            "--in maybe                 # Tasks in _maybe/",
+            "--status pending           # Filter by status",
+            "--tags ux,design           # Tasks matching any tag",
+            "--in next --status pending # Combined filters",
+            "--filter status:pending --filter tags:ux|design  # Generic filters",
+            "--sort id                   # Sort by ID (chronological)",
+            "--sort priority             # Sort by priority level"
           ]
 
-          option :status, type: :string,  aliases: %w[-s], desc: "Filter by status (pending, in-progress, done, blocked)"
-          option :tags,   type: :string,  aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
-          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, maybe, archive)"
-          option :root,   type: :string,  aliases: %w[-r], desc: "Override root path (subpath within tasks root)"
-          option :filter, type: :array,   aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
-          option :sort,   type: :string,  aliases: %w[-S], desc: "Sort order: smart (default), id, priority, created"
+          option :status, type: :string, aliases: %w[-s], desc: "Filter by status (pending, in-progress, done, blocked)"
+          option :tags, type: :string, aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
+          option :in, type: :string, aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, maybe, archive)"
+          option :root, type: :string, aliases: %w[-r], desc: "Override root path (subpath within tasks root)"
+          option :filter, type: :array, aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
+          option :sort, type: :string, aliases: %w[-S], desc: "Sort order: smart (default), id, priority, created"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
-            status    = options[:status]
+            status = options[:status]
             in_folder = options[:in]
-            root      = options[:root]
-            tags_str  = options[:tags]
-            tags      = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
-            filters   = options[:filter]
-            sort      = options[:sort] || "smart"
+            root = options[:root]
+            tags_str = options[:tags]
+            tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
+            filters = options[:filter]
+            sort = options[:sort] || "smart"
 
             manager = if root
               Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(root))
@@ -57,7 +57,7 @@ module Ace
               Ace::Task::Organisms::TaskManager.new
             end
 
-            list_opts = { status: status, tags: tags, filters: filters, sort: sort }
+            list_opts = {status: status, tags: tags, filters: filters, sort: sort}
             list_opts[:in_folder] = in_folder if in_folder
             tasks = manager.list(**list_opts)
 

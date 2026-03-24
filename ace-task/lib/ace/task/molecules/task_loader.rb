@@ -31,8 +31,8 @@ module Ace
 
           # Extract title from body
           title = Ace::Support::Items::Atoms::TitleExtractor.extract(body) ||
-                  frontmatter["title"] ||
-                  File.basename(dir_path)
+            frontmatter["title"] ||
+            File.basename(dir_path)
 
           # Decode creation time from raw b36ts
           created_at = decode_created_at(id)
@@ -78,7 +78,7 @@ module Ace
         def decode_created_at(id)
           raw_b36ts = Ace::Support::Items::Atoms::ItemIdFormatter.reconstruct(id)
           Ace::B36ts.decode(raw_b36ts)
-        rescue StandardError
+        rescue
           nil
         end
 
@@ -109,7 +109,6 @@ module Ace
               results << [subtask_id, full_path]
               next
             end
-
           end
 
           results

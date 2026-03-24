@@ -27,34 +27,34 @@ module Ace
 
           argument :title, required: true, desc: "Task title"
 
-          option :priority,   type: :string,  aliases: %w[-p], desc: "Priority (critical, high, medium, low)"
-          option :tags,       type: :string,  aliases: %w[-T], desc: "Tags (comma-separated)"
-          option :status,     type: :string,  aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
-          option :estimate,   type: :string,  aliases: %w[-e], desc: "Effort estimate (e.g. TBD, 2h, 1d)"
-          option :"child-of", type: :string,  desc: "Parent task reference (creates subtask)"
-          option :in,         type: :string,  aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
-          option :"dry-run",  type: :boolean, aliases: %w[-n], desc: "Preview without writing"
+          option :priority, type: :string, aliases: %w[-p], desc: "Priority (critical, high, medium, low)"
+          option :tags, type: :string, aliases: %w[-T], desc: "Tags (comma-separated)"
+          option :status, type: :string, aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
+          option :estimate, type: :string, aliases: %w[-e], desc: "Effort estimate (e.g. TBD, 2h, 1d)"
+          option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
+          option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
+          option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(title:, **options)
-            dry_run   = options[:"dry-run"]
-            priority  = options[:priority]
-            tags_str  = options[:tags]
-            tags      = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
-            status    = options[:status]
-            estimate  = options[:estimate]
-            child_of  = options[:"child-of"]
+            dry_run = options[:"dry-run"]
+            priority = options[:priority]
+            tags_str = options[:tags]
+            tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
+            status = options[:status]
+            estimate = options[:estimate]
+            child_of = options[:"child-of"]
             in_folder = options[:in]
 
             if status
               valid = Ace::Task::Atoms::TaskValidationRules::VALID_STATUSES
               unless valid.include?(status)
-                raise Ace::Support::Cli::Error.new("Invalid status '#{status}'. Valid: #{valid.join(', ')}")
+                raise Ace::Support::Cli::Error.new("Invalid status '#{status}'. Valid: #{valid.join(", ")}")
               end
             end
 
@@ -64,7 +64,7 @@ module Ace
               puts "  Status:   #{status}" if status
               puts "  Priority: #{priority}" if priority
               puts "  Estimate: #{estimate}" if estimate
-              puts "  Tags:     #{tags.join(', ')}" if tags.any?
+              puts "  Tags:     #{tags.join(", ")}" if tags.any?
               puts "  Parent:   #{child_of}" if child_of
               puts "  Folder:   #{in_folder}" if in_folder
               return

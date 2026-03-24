@@ -21,12 +21,12 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["create", "Create a new task"],
-        ["show",   "Show task details"],
-        ["list",   "List tasks"],
+        ["show", "Show task details"],
+        ["list", "List tasks"],
         ["update", "Update task metadata (fields, move, reparent)"],
         ["doctor", "Run health checks on tasks"],
         ["status", "Show task status overview"],
-        ["plan",   "Resolve or generate implementation plan"]
+        ["plan", "Resolve or generate implementation plan"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -49,18 +49,18 @@ module Ace
       ].freeze
 
       register "create", CLI::Commands::Create
-      register "show",   CLI::Commands::Show
-      register "list",   CLI::Commands::List
+      register "show", CLI::Commands::Show
+      register "list", CLI::Commands::List
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
-      register "plan",   CLI::Commands::Plan
+      register "plan", CLI::Commands::Plan
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-task",
         version: Ace::Task::VERSION
       )
-      register "version",   version_cmd
+      register "version", version_cmd
       register "--version", version_cmd
 
       help_cmd = Ace::Support::Cli::HelpCommand.build(
@@ -69,9 +69,9 @@ module Ace
         commands: REGISTERED_COMMANDS,
         examples: HELP_EXAMPLES
       )
-      register "help",   help_cmd
+      register "help", help_cmd
       register "--help", help_cmd
-      register "-h",     help_cmd
+      register "-h", help_cmd
 
       # Entry point for CLI invocation
       # @param args [Array<String>] Command-line arguments

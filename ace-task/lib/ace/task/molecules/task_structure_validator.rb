@@ -22,7 +22,7 @@ module Ace
           issues = []
 
           unless Dir.exist?(root_dir)
-            issues << { type: :error, message: "Tasks root directory does not exist", location: root_dir }
+            issues << {type: :error, message: "Tasks root directory does not exist", location: root_dir}
             return issues
           end
 
@@ -60,7 +60,7 @@ module Ace
             next if folder_name.start_with?("_")
 
             spec_files = Dir.glob(File.join(dir, Atoms::TaskFilePattern::SPEC_PATTERN))
-                            .reject { |f| f.end_with?(".idea.s.md") }
+              .reject { |f| f.end_with?(".idea.s.md") }
 
             if spec_files.empty?
               issues << {

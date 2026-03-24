@@ -20,25 +20,25 @@ module Ace
           DESC
 
           example [
-            'q7w --set status=done',
-            'q7w --set status=done,priority=high',
-            'q7w --add tags=shipped --remove tags=pending-review',
-            'q7w --set worktree.branch=my-branch',
-            'q7w --set status=done --move-to archive',
-            'q7w --move-to next',
-            'q7w.a --move-as-child-of none    # Promote subtask to standalone',
-            'q7w --move-as-child-of self      # Convert to orchestrator',
-            'q7w --move-as-child-of abc       # Demote to subtask of abc',
-            'q7w --position first             # Pin to sort before all tasks',
-            'q7w --position last              # Pin to sort after existing tasks',
-            'q7w --position after:abc         # Pin to sort after task abc',
-            'q7w --remove position            # Remove pin, return to auto-sort'
+            "q7w --set status=done",
+            "q7w --set status=done,priority=high",
+            "q7w --add tags=shipped --remove tags=pending-review",
+            "q7w --set worktree.branch=my-branch",
+            "q7w --set status=done --move-to archive",
+            "q7w --move-to next",
+            "q7w.a --move-as-child-of none    # Promote subtask to standalone",
+            "q7w --move-as-child-of self      # Convert to orchestrator",
+            "q7w --move-as-child-of abc       # Demote to subtask of abc",
+            "q7w --position first             # Pin to sort before all tasks",
+            "q7w --position last              # Pin to sort after existing tasks",
+            "q7w --position after:abc         # Pin to sort after task abc",
+            "q7w --remove position            # Remove pin, return to auto-sort"
           ]
 
           argument :ref, required: true, desc: "Task reference (full ID, short ref, or suffix)"
 
-          option :set,    type: :array, desc: "Set field: key=value (comma-separated for multiple)"
-          option :add,    type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
+          option :set, type: :array, desc: "Set field: key=value (comma-separated for multiple)"
+          option :add, type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
           option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, maybe, anytime, next)"
           option :move_as_child_of, type: :string, desc: "Reparent: <parent_ref>, 'none' (promote), 'self' (orchestrator)"
@@ -46,20 +46,20 @@ module Ace
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref:, **options)
-            set_args        = Array(options[:set])
-            add_args        = Array(options[:add])
-            remove_args     = Array(options[:remove])
-            move_to         = options[:move_to]
-            move_as_child   = options[:move_as_child_of]
-            position_arg    = options[:position]
+            set_args = Array(options[:set])
+            add_args = Array(options[:add])
+            remove_args = Array(options[:remove])
+            move_to = options[:move_to]
+            move_as_child = options[:move_as_child_of]
+            position_arg = options[:position]
 
             has_any_op = !set_args.empty? || !add_args.empty? || !remove_args.empty? ||
-                         move_to || move_as_child || position_arg
+              move_to || move_as_child || position_arg
             unless has_any_op
               warn "Error: at least one of --set, --add, --remove, --move-to, --move-as-child-of, or --position is required"
               warn ""
@@ -71,8 +71,8 @@ module Ace
               raise Ace::Support::Cli::Error.new("Cannot use --move-to and --move-as-child-of together")
             end
 
-            set_hash    = parse_kv_pairs(set_args)
-            add_hash    = parse_kv_pairs(add_args)
+            set_hash = parse_kv_pairs(set_args)
+            add_hash = parse_kv_pairs(add_args)
             remove_hash = parse_kv_pairs(remove_args)
 
             manager = Ace::Task::Organisms::TaskManager.new
@@ -84,7 +84,7 @@ module Ace
             end
 
             task = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash,
-                                  move_to: move_to, move_as_child_of: move_as_child)
+              move_to: move_to, move_as_child_of: move_as_child)
 
             unless task
               raise Ace::Support::Cli::Error.new("Task '#{ref}' not found")
@@ -165,10 +165,10 @@ module Ace
 
               parsed = Ace::Support::Items::Atoms::FieldArgumentParser.parse([arg])
               parsed.each do |key, value|
-                if result.key?(key)
-                  result[key] = Array(result[key]) + Array(value)
+                result[key] = if result.key?(key)
+                  Array(result[key]) + Array(value)
                 else
-                  result[key] = value
+                  value
                 end
               end
             rescue Ace::Support::Items::Atoms::FieldArgumentParser::ParseError => e

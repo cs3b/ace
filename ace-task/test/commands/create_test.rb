@@ -80,7 +80,10 @@ class CreateCommandTest < AceTaskTestCase
 
   def test_create_with_git_commit_calls_committer
     commit_args = nil
-    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+      commit_args = kwargs
+      true
+    }) do
       capture_io do
         Ace::Task::TaskCLI.start(["create", "Git commit task", "--git-commit"])
       end
