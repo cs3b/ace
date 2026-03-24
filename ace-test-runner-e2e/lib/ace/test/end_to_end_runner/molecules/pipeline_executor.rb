@@ -73,7 +73,7 @@ module Ace
               started_at: started_at,
               completed_at: Time.now
             )
-          rescue StandardError => e
+          rescue => e
             begin
               @report_generator.write_failure_report(
                 scenario: scenario,
@@ -83,7 +83,7 @@ module Ace
                 completed_at: Time.now,
                 error_message: "#{e.class}: #{e.message}"
               )
-            rescue StandardError => write_error
+            rescue => write_error
               Models::TestResult.new(
                 test_id: scenario.test_id,
                 status: "error",

@@ -70,9 +70,9 @@ class PipelinePromptBundlerTest < Minitest::Test
       dir_path: scenario_dir,
       test_cases: [
         TestCase.new(tc_id: "TC-001", title: "Goal 1", content: "", file_path: File.join(scenario_dir, "TC-001-one.runner.md"),
-                     goal_format: "standalone"),
+          goal_format: "standalone"),
         TestCase.new(tc_id: "TC-002", title: "Goal 2", content: "", file_path: File.join(scenario_dir, "TC-002-two.runner.md"),
-                     goal_format: "standalone")
+          goal_format: "standalone")
       ]
     )
   end

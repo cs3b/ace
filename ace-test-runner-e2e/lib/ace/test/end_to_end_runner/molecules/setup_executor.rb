@@ -38,9 +38,9 @@ module Ace
               steps_completed += 1
             end
 
-            { success: true, steps_completed: steps_completed, error: nil, env: env, tmux_session: @tmux_session }
-          rescue StandardError => e
-            { success: false, steps_completed: steps_completed, error: e.message, env: env, tmux_session: @tmux_session }
+            {success: true, steps_completed: steps_completed, error: nil, env: env, tmux_session: @tmux_session}
+          rescue => e
+            {success: false, steps_completed: steps_completed, error: e.message, env: env, tmux_session: @tmux_session}
           end
 
           # Clean up resources created during setup (e.g. tmux session)
@@ -97,10 +97,10 @@ module Ace
           def handle_tmux_session(env, config = nil)
             name_source = config.is_a?(Hash) ? config["name-source"] : nil
             session_name = if name_source == "run-id" && @run_id && !@run_id.to_s.empty?
-                             @run_id
-                           else
-                             @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
-                           end
+              @run_id
+            else
+              @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
+            end
             _stdout, stderr, status = Open3.capture3("tmux", "new-session", "-d", "-s", session_name)
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 
@@ -171,7 +171,7 @@ module Ace
             _stdout, stderr, status = Open3.capture3(merged_environment(env), *args, chdir: chdir)
 
             unless status.success?
-              raise "Command failed (exit #{status.exitstatus}): #{args.join(' ')}\n#{stderr}"
+              raise "Command failed (exit #{status.exitstatus}): #{args.join(" ")}\n#{stderr}"
             end
           end
         end

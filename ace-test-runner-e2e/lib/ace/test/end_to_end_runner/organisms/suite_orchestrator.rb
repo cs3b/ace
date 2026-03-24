@@ -29,8 +29,8 @@ module Ace
           # @param scenario_loader Scenario loader (injectable)
           # @param timestamp_generator Timestamp generator (injectable)
           def initialize(max_parallel: 4, base_dir: nil, discoverer: nil, affected_detector: nil,
-                         failure_finder: nil, output: $stdout, use_color: nil, progress: false,
-                         suite_report_writer: nil, scenario_loader: nil, timestamp_generator: nil)
+            failure_finder: nil, output: $stdout, use_color: nil, progress: false,
+            suite_report_writer: nil, scenario_loader: nil, timestamp_generator: nil)
             @max_parallel = max_parallel
             @base_dir = base_dir || Dir.pwd
             @discoverer = discoverer || Molecules::TestDiscoverer.new
@@ -61,28 +61,28 @@ module Ace
 
             if packages.empty?
               @output.puts "No packages with E2E tests found"
-              return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+              return {total: 0, passed: 0, failed: 0, errors: 0, packages: {}}
             end
 
             # Filter to specific packages if requested
             if options[:packages]
               requested = options[:packages].split(",").map(&:strip)
-              packages = packages & requested
+              packages &= requested
 
               if packages.empty?
                 @output.puts "No matching packages with E2E tests found"
-                return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+                return {total: 0, passed: 0, failed: 0, errors: 0, packages: {}}
               end
             end
 
             # Filter to affected packages if requested
             if options[:affected]
               affected = @affected_detector.detect(base_dir: @base_dir)
-              packages = packages & affected
+              packages &= affected
 
               if packages.empty?
                 @output.puts "No affected packages with E2E tests"
-                return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+                return {total: 0, passed: 0, failed: 0, errors: 0, packages: {}}
               end
 
               @output.puts "Affected packages: #{packages.join(", ")}"
@@ -97,11 +97,11 @@ module Ace
 
               if scenario_failures.empty?
                 @output.puts "No failed test scenarios found in cache"
-                return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+                return {total: 0, passed: 0, failed: 0, errors: 0, packages: {}}
               end
 
               # Filter packages to only those with failures
-              packages = packages & scenario_failures.keys
+              packages &= scenario_failures.keys
               @output.puts "Packages with failed scenarios: #{packages.join(", ")}"
               packages.each do |pkg|
                 scenario_failures[pkg].each_key do |test_id|
@@ -211,7 +211,7 @@ module Ace
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
           def run_sequential(package_tests, options)
-            results = { total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {} }
+            results = {total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {}}
             start_time = Time.now
 
             # Pre-generate unique run IDs for all tests
@@ -244,8 +244,8 @@ module Ace
 
                 # Update totals
                 results[:total] += 1
-                results[:total_cases] += (result[:total_cases] || 0)
-                results[:passed_cases] += (result[:passed_cases] || 0)
+                results[:total_cases] += result[:total_cases] || 0
+                results[:passed_cases] += result[:passed_cases] || 0
                 case result[:status]
                 when "pass"
                   results[:passed] += 1
@@ -274,7 +274,7 @@ module Ace
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
           def run_parallel(package_tests, options)
-            results = { total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {} }
+            results = {total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {}}
             queue = build_test_queue(package_tests)
             run_ids = generate_run_ids(queue.size)
             queue.each_with_index { |item, i| item[:run_id] = run_ids[i] }
@@ -308,7 +308,7 @@ module Ace
             queue = []
             package_tests.each do |package, tests|
               tests.each do |test_file|
-                queue << { package: package, test_file: test_file }
+                queue << {package: package, test_file: test_file}
               end
             end
             queue
@@ -330,8 +330,8 @@ module Ace
             # Spawn process with array form (no shell invocation)
             stdin, stdout, stderr, thread = Open3.popen3(*cmd_array, chdir: @base_dir)
 
-            { pid: thread.pid, thread: thread, stdout: stdout, stderr: stderr,
-              stdin: stdin, package: package, test_file: test_file, output: String.new }
+            {pid: thread.pid, thread: thread, stdout: stdout, stderr: stderr,
+             stdin: stdin, package: package, test_file: test_file, output: String.new}
           end
 
           # Build the command to run a single test
@@ -439,17 +439,27 @@ module Ace
               unless thread.alive?
                 # Get remaining output from both streams
                 [process[:stdout], process[:stderr]].each do |stream|
-                  begin
-                    process[:output] << stream.read
-                  rescue IOError
-                    # Stream already closed
-                  end
+                  process[:output] << stream.read
+                rescue IOError
+                  # Stream already closed
                 end
 
                 # Close streams
-                process[:stdout].close rescue nil
-                process[:stderr].close rescue nil
-                process[:stdin].close rescue nil
+                begin
+                  process[:stdout].close
+                rescue
+                  nil
+                end
+                begin
+                  process[:stderr].close
+                rescue
+                  nil
+                end
+                begin
+                  process[:stdin].close
+                rescue
+                  nil
+                end
 
                 # Parse result
                 result = parse_subprocess_result(process)
@@ -457,8 +467,8 @@ module Ace
 
                 # Update results
                 results[:total] += 1
-                results[:total_cases] += (result[:total_cases] || 0)
-                results[:passed_cases] += (result[:passed_cases] || 0)
+                results[:total_cases] += result[:total_cases] || 0
+                results[:passed_cases] += result[:passed_cases] || 0
                 results[:packages][process[:package]] ||= []
                 results[:packages][process[:package]] << result
 
@@ -497,7 +507,7 @@ module Ace
 
             result
           rescue => e
-            { status: "error", error: "Failed to parse result: #{e.message}" }
+            {status: "error", error: "Failed to parse result: #{e.message}"}
           end
 
           # Override result from agent-written metadata.yml when subprocess exit code is misleading
@@ -552,8 +562,8 @@ module Ace
             passed_cases = cases_match ? cases_match[1].to_i : nil
             total_cases = cases_match ? cases_match[2].to_i : nil
 
-            base = { report_dir: report_dir, passed_cases: passed_cases, total_cases: total_cases,
-                     test_name: test_name }
+            base = {report_dir: report_dir, passed_cases: passed_cases, total_cases: total_cases,
+                    test_name: test_name}
 
             if exit_status == 0
               if passed_cases && total_cases && passed_cases < total_cases
@@ -570,7 +580,7 @@ module Ace
               base.merge(status: "fail", summary: summary)
             end
           rescue => e
-            { status: "error", error: "Failed to parse result: #{e.message}" }
+            {status: "error", error: "Failed to parse result: #{e.message}"}
           end
 
           # Finalize a test run: show summary, generate report, return results
@@ -717,8 +727,8 @@ module Ace
             failed = [total - passed, 0].max
 
             test_cases = []
-            passed.times { |i| test_cases << { id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass" } }
-            failed.times { |i| test_cases << { id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail" } }
+            passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass"} }
+            failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail"} }
 
             Models::TestResult.new(
               test_id: result_hash[:test_name] || "unknown",
@@ -784,7 +794,7 @@ module Ace
 
             @output.puts "Warning: Detected lingering claude -p processes (#{lines.size})"
             lines.each { |line| @output.puts "  #{line}" }
-          rescue StandardError => e
+          rescue => e
             @output.puts "Warning: Failed to scan lingering Claude processes: #{e.message}" if ENV["DEBUG"]
           end
 
@@ -811,7 +821,7 @@ module Ace
             save_subprocess_output(result)
             result
           rescue => e
-            { status: "error", error: e.message }
+            {status: "error", error: e.message}
           end
         end
       end

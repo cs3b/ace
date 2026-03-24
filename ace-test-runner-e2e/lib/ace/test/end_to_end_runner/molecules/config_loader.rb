@@ -55,7 +55,7 @@ module Ace
           # @return [Hash] Configuration with string keys
           def load
             gem_root = Gem.loaded_specs["ace-test-runner-e2e"]&.gem_dir ||
-                       File.expand_path("../../../../..", __dir__)
+              File.expand_path("../../../../..", __dir__)
 
             resolver = Ace::Support::Config.create(
               config_dir: ".ace",
@@ -64,7 +64,7 @@ module Ace
             )
 
             resolver.resolve_namespace("e2e-runner").data
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Could not load e2e-runner config: #{e.message}" if ENV["DEBUG"]
             {}
           end

@@ -33,7 +33,8 @@ module Ace
           end
 
           # No-op — simple mode doesn't show start events
-          def test_started(_package, _test_file); end
+          def test_started(_package, _test_file)
+          end
 
           # Print a columnar result line
           # @param result [Hash] with :status, :passed_cases, :total_cases
@@ -59,7 +60,8 @@ module Ace
           end
 
           # No-op — simple mode doesn't need refresh
-          def refresh; end
+          def refresh
+          end
 
           # Print structured summary block
           # @param results [Hash] with :total, :passed, :failed, :errors, :packages
@@ -102,7 +104,7 @@ module Ace
                 else
                   result[:error] || result[:summary] || "failed"
                 end
-                failed_details << { package: package, test_name: test_name, cases: cases }
+                failed_details << {package: package, test_name: test_name, cases: cases}
               end
             end
             failed_details

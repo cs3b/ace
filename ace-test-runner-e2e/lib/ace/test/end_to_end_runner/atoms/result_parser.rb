@@ -54,7 +54,7 @@ module Ace
             required = %i[test_id status]
             missing = required.reject { |field| result.key?(field) }
             unless missing.empty?
-              raise ParseError, "Missing required fields in result: #{missing.join(', ')}"
+              raise ParseError, "Missing required fields in result: #{missing.join(", ")}"
             end
           end
 
@@ -132,7 +132,7 @@ module Ace
             required = %i[test_id tc_id status]
             missing = required.reject { |field| result.key?(field) }
             unless missing.empty?
-              raise ParseError, "Missing required fields in TC result: #{missing.join(', ')}"
+              raise ParseError, "Missing required fields in TC result: #{missing.join(", ")}"
             end
           end
 
@@ -155,7 +155,7 @@ module Ace
           end
 
           private_class_method :validate_result, :normalize_result, :normalize_test_cases,
-                              :normalize_criteria, :validate_tc_result, :normalize_tc_result
+            :normalize_criteria, :validate_tc_result, :normalize_tc_result
 
           # Error raised when parsing LLM response fails
           class ParseError < StandardError; end

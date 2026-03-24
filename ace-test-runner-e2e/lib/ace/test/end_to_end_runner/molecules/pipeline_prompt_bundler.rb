@@ -2,7 +2,6 @@
 
 require "date"
 require "fileutils"
-require "set"
 require "yaml"
 
 module Ace

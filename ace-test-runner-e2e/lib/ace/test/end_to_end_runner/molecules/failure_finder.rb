@@ -128,8 +128,8 @@ module Ace
             data = YAML.safe_load_file(path, permitted_classes: [Date])
             return nil unless data.is_a?(Hash)
 
-            { path: path, data: data }
-          rescue StandardError => e
+            {path: path, data: data}
+          rescue => e
             warn "Warning: Could not parse #{path}: #{e.message}" if ENV["DEBUG"]
             nil
           end

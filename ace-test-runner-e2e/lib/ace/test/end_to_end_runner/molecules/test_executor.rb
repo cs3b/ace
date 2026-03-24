@@ -35,7 +35,7 @@ module Ace
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult] Test execution result
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                      env_vars: nil, report_dir: nil, timeout: nil, verify: false)
+            env_vars: nil, report_dir: nil, timeout: nil, verify: false)
             resolved_timeout = timeout || @timeout
             if Atoms::CliProviderAdapter.cli_provider?(@provider)
               execute_via_pipeline(
@@ -74,7 +74,7 @@ module Ace
 
           # Execute standalone scenarios with the deterministic pipeline.
           def execute_via_pipeline(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                                   env_vars: nil, report_dir: nil, timeout: nil)
+            env_vars: nil, report_dir: nil, timeout: nil)
             started_at = Time.now
             resolved_report_dir = report_dir || default_report_dir_for(scenario, run_id)
             resolved_sandbox_path = sandbox_path || resolve_sandbox_path(nil, resolved_report_dir)
@@ -178,7 +178,7 @@ module Ace
               started_at: started_at || Time.now,
               completed_at: Time.now
             )
-          rescue StandardError => e
+          rescue => e
             Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
@@ -275,7 +275,7 @@ module Ace
               summary: "TC execution failed",
               error: e.message, started_at: started_at, completed_at: Time.now
             )
-          rescue StandardError => e
+          rescue => e
             Models::TestResult.new(
               test_id: scenario.test_id, status: "error",
               summary: "Unexpected TC execution error",

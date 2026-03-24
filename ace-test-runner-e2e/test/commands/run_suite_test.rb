@@ -34,7 +34,7 @@ class RunSuiteTest < Minitest::Test
     command = RunSuite.new
 
     # Use the protected coerce_types method via the Base module
-    result = command.send(:coerce_types, { parallel: "4", timeout: "120" }, parallel: :integer, timeout: :integer)
+    result = command.send(:coerce_types, {parallel: "4", timeout: "120"}, parallel: :integer, timeout: :integer)
 
     assert_equal 4, result[:parallel]
     assert_equal 120, result[:timeout]
@@ -43,7 +43,7 @@ class RunSuiteTest < Minitest::Test
   def test_coerce_types_leaves_non_converted_options_alone
     command = RunSuite.new
 
-    result = command.send(:coerce_types, { parallel: "4", other: "string" }, parallel: :integer)
+    result = command.send(:coerce_types, {parallel: "4", other: "string"}, parallel: :integer)
 
     assert_equal 4, result[:parallel]
     assert_equal "string", result[:other]

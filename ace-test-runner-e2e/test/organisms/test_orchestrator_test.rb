@@ -84,13 +84,13 @@ class TestOrchestratorTest < Minitest::Test
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "Check A", status: "pass" },
-          { id: "TC-002", description: "Check B", status: "pass" }
+          {id: "TC-001", description: "Check A", status: "pass"},
+          {id: "TC-002", description: "Check B", status: "pass"}
         ]
       )
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
 
-      results = orchestrator.run(
+      orchestrator.run(
         package: "my-pkg",
         test_id: "TS-TEST-001",
         output: @output
@@ -106,7 +106,7 @@ class TestOrchestratorTest < Minitest::Test
       executor = StubExecutor.new(status: "error", test_cases: [])
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
 
-      results = orchestrator.run(
+      orchestrator.run(
         package: "my-pkg",
         test_id: "TS-TEST-001",
         output: @output
@@ -156,8 +156,8 @@ class TestOrchestratorTest < Minitest::Test
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "Check", status: "pass" },
-          { id: "TC-002", description: "Check", status: "pass" }
+          {id: "TC-001", description: "Check", status: "pass"},
+          {id: "TC-002", description: "Check", status: "pass"}
         ]
       )
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
@@ -175,8 +175,8 @@ class TestOrchestratorTest < Minitest::Test
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "Check", status: "pass" },
-          { id: "TC-002", description: "Check", status: "pass" }
+          {id: "TC-001", description: "Check", status: "pass"},
+          {id: "TC-002", description: "Check", status: "pass"}
         ]
       )
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
@@ -1001,7 +1001,7 @@ class TestOrchestratorTest < Minitest::Test
       executed_scenarios = []
       executor = Object.new
       executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
-        executed_scenarios << { test_id: scenario.test_id, test_cases: test_cases }
+        executed_scenarios << {test_id: scenario.test_id, test_cases: test_cases}
         TestResult.new(
           test_id: scenario.test_id,
           status: "pass",
@@ -1091,24 +1091,24 @@ class TestOrchestratorTest < Minitest::Test
     verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
 
     File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{runner_files}
-      ---
-
-      # Runner
-      Workspace root: (current directory)
+            ---
+            bundle:
+              files:
+      #{runner_files}
+            ---
+      
+            # Runner
+            Workspace root: (current directory)
     MD
 
     File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{verify_files}
-      ---
-
-      # Verifier
+            ---
+            bundle:
+              files:
+      #{verify_files}
+            ---
+      
+            # Verifier
     MD
 
     tc_ids.each do |tc_id|
@@ -1145,24 +1145,24 @@ class TestOrchestratorTest < Minitest::Test
     verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
 
     File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{runner_files}
-      ---
-
-      # Runner
-      Workspace root: (current directory)
+            ---
+            bundle:
+              files:
+      #{runner_files}
+            ---
+      
+            # Runner
+            Workspace root: (current directory)
     MD
 
     File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{verify_files}
-      ---
-
-      # Verifier
+            ---
+            bundle:
+              files:
+      #{verify_files}
+            ---
+      
+            # Verifier
     MD
 
     tc_ids.each do |tc_id|
@@ -1198,24 +1198,24 @@ class TestOrchestratorTest < Minitest::Test
     verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
 
     File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{runner_files}
-      ---
-
-      # Runner
-      Workspace root: (current directory)
+            ---
+            bundle:
+              files:
+      #{runner_files}
+            ---
+      
+            # Runner
+            Workspace root: (current directory)
     MD
 
     File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{verify_files}
-      ---
-
-      # Verifier
+            ---
+            bundle:
+              files:
+      #{verify_files}
+            ---
+      
+            # Verifier
     MD
 
     tc_ids.each do |tc_id|

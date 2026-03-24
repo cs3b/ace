@@ -30,8 +30,7 @@ class AffectedDetectorTest < Minitest::Test
   def test_extract_package_from_ace_package_path
     package = @detector.send(:extract_package,
       "ace-lint/lib/ace/lint/cli.rb",
-      @base_dir
-    )
+      @base_dir)
 
     # Will return nil if ace-lint doesn't exist in current dir
     # but the logic should work correctly
@@ -41,8 +40,7 @@ class AffectedDetectorTest < Minitest::Test
   def test_extract_package_from_non_ace_path
     package = @detector.send(:extract_package,
       "some-other-dir/lib/file.rb",
-      @base_dir
-    )
+      @base_dir)
 
     assert_nil package
   end
@@ -50,8 +48,7 @@ class AffectedDetectorTest < Minitest::Test
   def test_extract_package_from_nested_path
     package = @detector.send(:extract_package,
       "ace-review/test/e2e/TS-REVIEW-001/scenario.yml",
-      @base_dir
-    )
+      @base_dir)
 
     assert_nil_or_equal "ace-review", package
   end
@@ -59,8 +56,7 @@ class AffectedDetectorTest < Minitest::Test
   def test_extract_package_returns_nil_for_nonexistent_package
     package = @detector.send(:extract_package,
       "ace-nonexistent/lib/file.rb",
-      @base_dir
-    )
+      @base_dir)
 
     assert_nil package
   end

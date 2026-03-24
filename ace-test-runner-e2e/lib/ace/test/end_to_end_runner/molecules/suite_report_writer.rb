@@ -77,7 +77,7 @@ module Ace
             total_passed = results.sum(&:passed_count)
             total_tc = results.sum(&:total_count)
             validate_overall_line(response[:text], total_passed, total_tc)
-          rescue StandardError => e
+          rescue => e
             # LLM failed — fall back to static report
             warn "Warning: LLM synthesis failed (#{e.class}: #{e.message}), using static report" if ENV["DEBUG"]
             executed_date = Time.now.utc.strftime("%Y-%m-%d")
@@ -135,7 +135,7 @@ module Ace
           # Validate the LLM-generated Overall line against deterministic totals.
           # If the LLM hallucinated wrong numbers, replace the line with correct values.
           def validate_overall_line(report_text, expected_passed, expected_total)
-            expected_pct = expected_total > 0 ? (expected_passed * 100.0 / expected_total).round(0) : 0
+            expected_pct = (expected_total > 0) ? (expected_passed * 100.0 / expected_total).round(0) : 0
             correct_line = "**Overall:** #{expected_passed}/#{expected_total} test cases passed (#{expected_pct}%)"
 
             # Match patterns like "**Overall:** X/Y test cases passed (Z%)"
@@ -165,7 +165,7 @@ module Ace
 
           # Static fallback report (original template-based approach)
           def build_static_report(results, scenarios, package:, timestamp:, overall_status:,
-                                  executed_at:, executed_date:, total_passed:, total_failed:, total_tc:)
+            executed_at:, executed_date:, total_passed:, total_failed:, total_tc:)
             total_skipped = results.count(&:skipped?)
 
             parts = []
@@ -182,7 +182,7 @@ module Ace
           end
 
           def build_frontmatter(timestamp:, package:, overall_status:, tests_run:, executed_at:, skipped: 0)
-            skipped_line = skipped > 0 ? "\nskipped: #{skipped}" : ""
+            skipped_line = (skipped > 0) ? "\nskipped: #{skipped}" : ""
             <<~FRONTMATTER
               ---
               suite-id: #{timestamp}
@@ -195,7 +195,7 @@ module Ace
           end
 
           def build_header(package:, tests_run:, executed_date:, skipped: 0)
-            skipped_info = skipped > 0 ? " (#{skipped} skipped)" : ""
+            skipped_info = (skipped > 0) ? " (#{skipped} skipped)" : ""
             <<~HEADER
               # E2E Test Suite Report
 
@@ -225,7 +225,7 @@ module Ace
           end
 
           def build_overall_line(total_passed:, total_tc:)
-            pct = total_tc > 0 ? (total_passed * 100.0 / total_tc).round(0) : 0
+            pct = (total_tc > 0) ? (total_passed * 100.0 / total_tc).round(0) : 0
             "**Overall:** #{total_passed}/#{total_tc} test cases passed (#{pct}%)\n"
           end
 

@@ -73,10 +73,10 @@ module Ace
           # @return [String] Skill invocation prompt
           def build_skill_prompt(scenario, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
             cmd = "/as-e2e-run #{scenario.package} #{scenario.test_id}"
-            cmd += " #{test_cases.join(',')}" if test_cases&.any?
+            cmd += " #{test_cases.join(",")}" if test_cases&.any?
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --sandbox #{sandbox_path}" if sandbox_path
-            cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
+            cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(",")}" if env_vars&.any?
             cmd += " --report-dir #{report_dir}" if report_dir
             build_execution_prompt(command: cmd, tc_mode: false)
           end
@@ -92,7 +92,7 @@ module Ace
           def build_tc_skill_prompt(test_case:, scenario:, sandbox_path:, run_id: nil, env_vars: nil)
             cmd = "/as-e2e-run #{scenario.package} #{scenario.test_id} #{test_case.tc_id} --tc-mode --sandbox #{sandbox_path}"
             cmd += " --run-id #{run_id}" if run_id
-            cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
+            cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(",")}" if env_vars&.any?
             build_execution_prompt(command: cmd, tc_mode: true)
           end
 
@@ -156,7 +156,6 @@ module Ace
           def self.reset_default_instance!
             @default_instance = nil
           end
-
         end
 
         # Backward-compatible alias while callers migrate off the legacy name.

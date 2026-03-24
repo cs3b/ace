@@ -27,10 +27,10 @@ class SuiteReportPromptBuilderTest < Minitest::Test
     results_data = [make_result_data("TS-TEST-001", "Test One", "pass")]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "abc123",
-                            overall_status: "pass",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "abc123",
+      overall_status: "pass",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/ace-lint/, prompt)
     assert_match(/abc123/, prompt)
@@ -44,10 +44,10 @@ class SuiteReportPromptBuilderTest < Minitest::Test
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "partial",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "partial",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/TS-TEST-001/, prompt)
     assert_match(/First Test/, prompt)
@@ -59,14 +59,14 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   def test_prompt_includes_summary_content_when_present
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "pass",
-                       summary_content: "## Summary\nAll tests passed successfully.")
+        summary_content: "## Summary\nAll tests passed successfully.")
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "pass",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "pass",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/Summary Report/, prompt)
     assert_match(/All tests passed successfully/, prompt)
@@ -75,14 +75,14 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   def test_prompt_includes_experience_content_when_present
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "pass",
-                       experience_content: "## Experience\nSmooth execution, no friction.")
+        experience_content: "## Experience\nSmooth execution, no friction.")
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "pass",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "pass",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/Experience Report/, prompt)
     assert_match(/Smooth execution, no friction/, prompt)
@@ -91,14 +91,14 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   def test_prompt_omits_nil_content_fields
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "pass",
-                       summary_content: nil, experience_content: nil)
+        summary_content: nil, experience_content: nil)
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "pass",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "pass",
+      executed_at: "2025-01-01T00:00:00Z")
 
     refute_match(/Summary Report/, prompt)
     refute_match(/Experience Report/, prompt)
@@ -106,19 +106,19 @@ class SuiteReportPromptBuilderTest < Minitest::Test
 
   def test_prompt_includes_test_cases
     test_cases = [
-      { id: "TC-001", description: "Check output", status: "pass" },
-      { id: "TC-002", description: "Verify format", status: "fail" }
+      {id: "TC-001", description: "Check output", status: "pass"},
+      {id: "TC-002", description: "Verify format", status: "fail"}
     ]
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "fail",
-                       passed: 1, failed: 1, total: 2, test_cases: test_cases)
+        passed: 1, failed: 1, total: 2, test_cases: test_cases)
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "fail",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "fail",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/TC-001.*Check output.*pass/, prompt)
     assert_match(/TC-002.*Verify format.*fail/, prompt)
@@ -127,14 +127,14 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   def test_prompt_includes_report_dir_name
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "pass",
-                       report_dir_name: "ts1234-lint-ts001-reports")
+        report_dir_name: "ts1234-lint-ts001-reports")
     ]
 
     prompt = @builder.build(results_data,
-                            package: "ace-lint",
-                            timestamp: "ts1234",
-                            overall_status: "pass",
-                            executed_at: "2025-01-01T00:00:00Z")
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "pass",
+      executed_at: "2025-01-01T00:00:00Z")
 
     assert_match(/ts1234-lint-ts001-reports/, prompt)
   end
@@ -142,9 +142,9 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   private
 
   def make_result_data(test_id, title, status,
-                       passed: 1, failed: 0, total: 1,
-                       test_cases: [], report_dir_name: nil,
-                       summary_content: nil, experience_content: nil)
+    passed: 1, failed: 0, total: 1,
+    test_cases: [], report_dir_name: nil,
+    summary_content: nil, experience_content: nil)
     {
       test_id: test_id,
       title: title,

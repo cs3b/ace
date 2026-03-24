@@ -95,8 +95,8 @@ module Ace
 
             unless missing.empty?
               raise ArgumentError,
-                    "Test case(s) not found: #{missing.join(', ')}. " \
-                    "Available: #{available_ids.join(', ')}"
+                "Test case(s) not found: #{missing.join(", ")}. " \
+                "Available: #{available_ids.join(", ")}"
             end
 
             requested_ids

@@ -18,7 +18,7 @@ class PipelineSandboxBuilderTest < Minitest::Test
 
       write_fake_tool(File.join(project_root, "bin"), "fake-tool")
       original_path = ENV["PATH"]
-      ENV["PATH"] = "#{File.join(project_root, 'bin')}:#{original_path}"
+      ENV["PATH"] = "#{File.join(project_root, "bin")}:#{original_path}"
 
       builder = SandboxBuilder.new(config_root: project_root)
       env = builder.build(

@@ -17,7 +17,7 @@ class SuiteOrchestratorTest < Minitest::Test
       @packages
     end
 
-    def find_tests(package:, test_id: nil, base_dir:, **_filters)
+    def find_tests(package:, base_dir:, test_id: nil, **_filters)
       @tests.fetch(package, [])
     end
   end
@@ -84,7 +84,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_run_displays_test_count
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     affected_detector = StubAffectedDetector.new(affected: ["ace-lint"])
 
@@ -99,7 +99,7 @@ class SuiteOrchestratorTest < Minitest::Test
       "echo 'PASS' && exit 0"
     end
 
-    results = orchestrator.run(parallel: false)
+    orchestrator.run(parallel: false)
 
     assert_match(/ACE E2E Test Suite - Running 1 tests across 1 packages/, @output.string)
   end
@@ -125,7 +125,7 @@ class SuiteOrchestratorTest < Minitest::Test
       "echo 'PASS' && exit 0"
     end
 
-    results = orchestrator.run(affected: true, parallel: false)
+    orchestrator.run(affected: true, parallel: false)
 
     assert_match(/Affected packages: ace-lint/, @output.string)
     assert_match(/ACE E2E Test Suite - Running 1 tests across 1 packages/, @output.string)
@@ -134,11 +134,11 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_run_passes_tag_filters_to_discoverer
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     captured = []
 
-    discoverer.define_singleton_method(:find_tests) do |package:, test_id: nil, base_dir:, **filters|
+    discoverer.define_singleton_method(:find_tests) do |package:, base_dir:, test_id: nil, **filters|
       captured << filters
       @tests.fetch(package, [])
     end
@@ -192,8 +192,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      { provider: "claude:sonnet", timeout: 120, cli_args: "test-arg" }
-    )
+      {provider: "claude:sonnet", timeout: 120, cli_args: "test-arg"})
 
     assert_kind_of Array, cmd
     assert_equal "ace-test-e2e", File.basename(cmd.first)
@@ -238,9 +237,8 @@ class SuiteOrchestratorTest < Minitest::Test
       cmd = orchestrator.send(:build_test_command,
         "ace-lint",
         File.join(scenario_dir, "scenario.yml"),
-        { provider: "claude:sonnet", timeout: 120 },
-        run_id: "abc123"
-      )
+        {provider: "claude:sonnet", timeout: 120},
+        run_id: "abc123")
 
       timeout_idx = cmd.index("--timeout")
       refute_nil timeout_idx
@@ -258,8 +256,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     assert_kind_of Array, cmd
     # Find --parallel and its value
@@ -286,8 +283,7 @@ class SuiteOrchestratorTest < Minitest::Test
       cmd = orchestrator.send(:build_test_command,
         "ace-lint",
         "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-        {}
-      )
+        {})
 
       assert_equal local_exe, cmd.first
     end
@@ -303,8 +299,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      { verify: true }
-    )
+      {verify: true})
 
     assert_includes cmd, "--verify"
   end
@@ -317,13 +312,11 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     test_id = orchestrator.send(:extract_test_id,
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml"
-    )
+      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml")
     assert_equal "TS-LINT-001", test_id
 
     test_id = orchestrator.send(:extract_test_id,
-      "/path/to/ace-lint/test/e2e/cli-api-parity/scenario.yml"
-    )
+      "/path/to/ace-lint/test/e2e/cli-api-parity/scenario.yml")
     assert_equal "cli-api-parity", test_id
   end
 
@@ -340,7 +333,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_progress_flag_selects_progress_display_manager
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     orchestrator = SuiteOrchestrator.new(
       discoverer: discoverer,
@@ -350,10 +343,10 @@ class SuiteOrchestratorTest < Minitest::Test
 
     # Run uses progress display manager — verify by checking for ANSI clear screen in output
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3, test_name: "TS-LINT-001" }
+      {status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3, test_name: "TS-LINT-001"}
     end
 
-    results = orchestrator.run(parallel: false)
+    orchestrator.run(parallel: false)
     out = @output.string
 
     # Progress display manager clears screen
@@ -364,7 +357,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_default_uses_simple_display_manager
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     orchestrator = SuiteOrchestrator.new(
       discoverer: discoverer,
@@ -372,10 +365,10 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3, test_name: "TS-LINT-001" }
+      {status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3, test_name: "TS-LINT-001"}
     end
 
-    results = orchestrator.run(parallel: false)
+    orchestrator.run(parallel: false)
     out = @output.string
 
     # Simple display manager does NOT clear screen
@@ -488,7 +481,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_partial_status_counted_as_failed_in_sequential
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -500,8 +493,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "partial", summary: "3/5 passed", passed_cases: 3, total_cases: 5,
-        test_name: "TS-LINT-001-test" }
+      {status: "partial", summary: "3/5 passed", passed_cases: 3, total_cases: 5,
+       test_name: "TS-LINT-001-test"}
     end
 
     results = orchestrator.run(parallel: false)
@@ -516,10 +509,10 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_case_counts_accumulated_across_tests
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => [
+      tests: {"ace-lint" => [
         "/path/to/TS-LINT-001-test/scenario.yml",
         "/path/to/TS-LINT-002-test/scenario.yml"
-      ] }
+      ]}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -534,11 +527,11 @@ class SuiteOrchestratorTest < Minitest::Test
     orchestrator.define_singleton_method(:run_single_test) do |package, test_file, options, run_id: nil|
       call_count += 1
       if call_count == 1
-        { status: "pass", summary: "Test passed", passed_cases: 5, total_cases: 5,
-          test_name: "TS-LINT-001-test" }
+        {status: "pass", summary: "Test passed", passed_cases: 5, total_cases: 5,
+         test_name: "TS-LINT-001-test"}
       else
-        { status: "fail", summary: "3/8 passed", passed_cases: 3, total_cases: 8,
-          test_name: "TS-LINT-002-test" }
+        {status: "fail", summary: "3/8 passed", passed_cases: 3, total_cases: 8,
+         test_name: "TS-LINT-002-test"}
       end
     end
 
@@ -561,8 +554,8 @@ class SuiteOrchestratorTest < Minitest::Test
     end
 
     def write(results, scenarios, package:, timestamp:, base_dir:)
-      @calls << { results: results, scenarios: scenarios, package: package,
-                  timestamp: timestamp, base_dir: base_dir }
+      @calls << {results: results, scenarios: scenarios, package: package,
+                  timestamp: timestamp, base_dir: base_dir}
       @report_path
     end
   end
@@ -589,7 +582,7 @@ class SuiteOrchestratorTest < Minitest::Test
     report_writer = StubSuiteReportWriter.new(report_path: "/tmp/test-final-report.md")
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -601,8 +594,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3,
-        test_name: "TS-LINT-001-test", report_dir: "/tmp/reports/lint" }
+      {status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3,
+       test_name: "TS-LINT-001-test", report_dir: "/tmp/reports/lint"}
     end
 
     results = orchestrator.run(parallel: false)
@@ -624,7 +617,7 @@ class SuiteOrchestratorTest < Minitest::Test
     report_writer = StubSuiteReportWriter.new
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001/scenario.yml"]}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -636,8 +629,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "fail", summary: "Test failed", passed_cases: 2, total_cases: 5,
-        test_name: "TS-LINT-001", report_dir: "/tmp/reports/lint" }
+      {status: "fail", summary: "Test failed", passed_cases: 2, total_cases: 5,
+       test_name: "TS-LINT-001", report_dir: "/tmp/reports/lint"}
     end
 
     orchestrator.run(parallel: false)
@@ -661,7 +654,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -673,8 +666,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3,
-        test_name: "TS-LINT-001-test" }
+      {status: "pass", summary: "Test passed", passed_cases: 3, total_cases: 3,
+       test_name: "TS-LINT-001-test"}
     end
 
     # Capture stderr to verify warning
@@ -714,8 +707,8 @@ class SuiteOrchestratorTest < Minitest::Test
     results = {
       packages: {
         "ace-lint" => [
-          { status: "pass", test_name: "TS-LINT-001-test", passed_cases: 5, total_cases: 5, report_dir: "/tmp/r" },
-          { status: "fail", test_name: "TS-LINT-002-test", passed_cases: 3, total_cases: 5, report_dir: "/tmp/r2" }
+          {status: "pass", test_name: "TS-LINT-001-test", passed_cases: 5, total_cases: 5, report_dir: "/tmp/r"},
+          {status: "fail", test_name: "TS-LINT-002-test", passed_cases: 3, total_cases: 5, report_dir: "/tmp/r2"}
         ]
       }
     }
@@ -775,8 +768,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     results = orchestrator.run(packages: "ace-lint", parallel: false)
@@ -804,8 +797,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     results = orchestrator.run(packages: "ace-lint,ace-review", parallel: false)
@@ -849,8 +842,7 @@ class SuiteOrchestratorTest < Minitest::Test
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
       {},
-      run_id: "batch01"
-    )
+      run_id: "batch01")
 
     assert_kind_of Array, cmd
     run_id_idx = cmd.index("--run-id")
@@ -868,8 +860,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd, "--run-id", "Command should not include --run-id when nil"
   end
@@ -885,15 +876,14 @@ class SuiteOrchestratorTest < Minitest::Test
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
       {},
-      run_id: "batch01"
-    )
+      run_id: "batch01")
 
     assert_kind_of Array, cmd
     report_dir_idx = cmd.index("--report-dir")
     refute_nil report_dir_idx, "Command should include --report-dir flag when run_id is provided"
     report_dir_value = cmd[report_dir_idx + 1]
     assert_includes report_dir_value, "batch01-lint-ts001-reports",
-                    "Report dir should use scenario dir_name with -reports suffix"
+      "Report dir should use scenario dir_name with -reports suffix"
   end
 
   def test_build_test_command_omits_report_dir_when_no_run_id
@@ -906,8 +896,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd, "--report-dir", "Command should not include --report-dir when no run_id"
   end
@@ -929,19 +918,17 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_run_sequential_passes_run_ids_to_single_test
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml", "/path/to/TS-LINT-002-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml", "/path/to/TS-LINT-002-test/scenario.yml"]}
     )
 
     orchestrator = SuiteOrchestrator.new(
       discoverer: discoverer,
       output: @output
     )
-
-    received_run_ids = []
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
       (@received_run_ids ||= []) << run_id
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     # Access the instance variable via a reader
@@ -976,8 +963,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     # Request ace-lint and ace-review, but only ace-lint is affected
@@ -1001,7 +988,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
     failure_finder = StubFailureFinder.new(
-      failures_by_scenario: { "ace-lint" => { "TS-LINT-001" => ["TC-001", "TC-003"] } }
+      failures_by_scenario: {"ace-lint" => {"TS-LINT-001" => ["TC-001", "TC-003"]}}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -1011,8 +998,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     results = orchestrator.run(only_failures: true, parallel: false)
@@ -1030,7 +1017,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_run_with_only_failures_returns_empty_when_no_failures
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     failure_finder = StubFailureFinder.new(failures_by_scenario: {})
 
@@ -1049,10 +1036,10 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_run_with_only_failures_does_not_add_test_case_filters_to_command
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
-      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
     failure_finder = StubFailureFinder.new(
-      failures_by_scenario: { "ace-lint" => { "TS-LINT-001" => ["TC-001", "TC-003"] } }
+      failures_by_scenario: {"ace-lint" => {"TS-LINT-001" => ["TC-001", "TC-003"]}}
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -1063,13 +1050,12 @@ class SuiteOrchestratorTest < Minitest::Test
 
     # Set up @scenario_failures directly to test build_test_command
     orchestrator.instance_variable_set(:@scenario_failures,
-      { "ace-lint" => { "TS-LINT-001" => ["TC-001", "TC-003"] } })
+      {"ace-lint" => {"TS-LINT-001" => ["TC-001", "TC-003"]}})
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd, "--test-cases"
   end
@@ -1085,8 +1071,7 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd, "--test-cases",
       "Command should not include --test-cases when not in only-failures mode"
@@ -1106,8 +1091,8 @@ class SuiteOrchestratorTest < Minitest::Test
     # ace-lint and ace-bundle have failures (but ace-bundle is not affected)
     failure_finder = StubFailureFinder.new(
       failures_by_scenario: {
-        "ace-lint" => { "TS-LINT-001" => ["TC-001"] },
-        "ace-bundle" => { "TS-BUNDLE-001" => ["TC-002"] }
+        "ace-lint" => {"TS-LINT-001" => ["TC-001"]},
+        "ace-bundle" => {"TS-BUNDLE-001" => ["TC-002"]}
       }
     )
 
@@ -1119,8 +1104,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     results = orchestrator.run(affected: true, only_failures: true, parallel: false)
@@ -1146,8 +1131,8 @@ class SuiteOrchestratorTest < Minitest::Test
     # ace-lint and ace-bundle have failures
     failure_finder = StubFailureFinder.new(
       failures_by_scenario: {
-        "ace-lint" => { "TS-LINT-001" => ["TC-001"] },
-        "ace-bundle" => { "TS-BUNDLE-001" => ["TC-002"] }
+        "ace-lint" => {"TS-LINT-001" => ["TC-001"]},
+        "ace-bundle" => {"TS-BUNDLE-001" => ["TC-002"]}
       }
     )
 
@@ -1158,8 +1143,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     # Request only ace-lint,ace-review with only-failures
@@ -1184,8 +1169,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     failure_finder = StubFailureFinder.new(
       failures_by_scenario: {
-        "ace-lint" => { "TS-LINT-001" => ["TC-001"] },
-        "ace-review" => { "TS-REVIEW-001" => ["TC-002", "TC-003"] }
+        "ace-lint" => {"TS-LINT-001" => ["TC-001"]},
+        "ace-review" => {"TS-REVIEW-001" => ["TC-002", "TC-003"]}
       }
     )
 
@@ -1196,8 +1181,8 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     results = orchestrator.run(only_failures: true, parallel: false)
@@ -1219,13 +1204,12 @@ class SuiteOrchestratorTest < Minitest::Test
 
     # Scenario-level failures always re-run full scenario, no --test-cases filter
     orchestrator.instance_variable_set(:@scenario_failures,
-      { "ace-lint" => { "TS-LINT-001" => ["*"] } })
+      {"ace-lint" => {"TS-LINT-001" => ["*"]}})
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd, "--test-cases",
       "Command should not include --test-cases when failures contain wildcard"
@@ -1245,7 +1229,7 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     failure_finder = StubFailureFinder.new(
       failures_by_scenario: {
-        "ace-git-secrets" => { "TS-SECRETS-001" => ["TC-001"] }
+        "ace-git-secrets" => {"TS-SECRETS-001" => ["TC-001"]}
       }
     )
 
@@ -1254,13 +1238,12 @@ class SuiteOrchestratorTest < Minitest::Test
       failure_finder: failure_finder,
       output: @output
     )
-
-    executed_tests = []
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
       (@executed_tests ||= []) << File.basename(File.dirname(test_file))
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
+
     def orchestrator.executed_tests
       @executed_tests || []
     end
@@ -1309,13 +1292,11 @@ class SuiteOrchestratorTest < Minitest::Test
     cmd1 = orchestrator.send(:build_test_command,
       "ace-git-secrets",
       "/path/to/TS-SECRETS-001-test/scenario.yml",
-      {}
-    )
+      {})
     cmd2 = orchestrator.send(:build_test_command,
       "ace-git-secrets",
       "/path/to/TS-SECRETS-002-test/scenario.yml",
-      {}
-    )
+      {})
 
     refute_includes cmd1, "--test-cases"
     refute_includes cmd2, "--test-cases"
@@ -1355,7 +1336,7 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     failure_finder = StubFailureFinder.new(
       failures_by_scenario: {
-        "ace-git-secrets" => { "TS-SECRETS-001" => ["TC-001"] }
+        "ace-git-secrets" => {"TS-SECRETS-001" => ["TC-001"]}
       }
     )
 
@@ -1364,13 +1345,12 @@ class SuiteOrchestratorTest < Minitest::Test
       failure_finder: failure_finder,
       output: @output
     )
-
-    executed_tests = []
     def orchestrator.run_single_test(package, test_file, options, run_id: nil)
       (@executed_tests ||= []) << File.basename(File.dirname(test_file))
-      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
-        test_name: File.basename(File.dirname(test_file)) }
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
+
     def orchestrator.executed_tests
       @executed_tests || []
     end
@@ -1386,14 +1366,13 @@ class SuiteOrchestratorTest < Minitest::Test
     orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
     orchestrator.instance_variable_set(:@scenario_failures, {
-      "ace-git-commit" => { "TS-COMMIT-002" => ["TC-001", "TC-003"] }
+      "ace-git-commit" => {"TS-COMMIT-002" => ["TC-001", "TC-003"]}
     })
 
     cmd = orchestrator.send(:build_test_command,
       "ace-git-commit",
       "/path/to/TS-COMMIT-002-specific-file-commit/scenario.yml",
-      {}
-    )
+      {})
 
     assert_equal "ace-test-e2e", File.basename(cmd.first)
     refute_includes cmd, "--test-cases"
@@ -1409,7 +1388,7 @@ class SuiteOrchestratorTest < Minitest::Test
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-      result = { report_dir: report_dir, raw_output: "test output here" }
+      result = {report_dir: report_dir, raw_output: "test output here"}
       orchestrator.send(:save_subprocess_output, result)
 
       log_path = File.join(report_dir, "subprocess_output.log")
@@ -1427,7 +1406,7 @@ class SuiteOrchestratorTest < Minitest::Test
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-      result = { report_dir: file_path, raw_output: "output data" }
+      result = {report_dir: file_path, raw_output: "output data"}
       orchestrator.send(:save_subprocess_output, result)
 
       log_path = File.join(report_dir, "subprocess_output.log")
@@ -1441,7 +1420,7 @@ class SuiteOrchestratorTest < Minitest::Test
     orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
     # Should not raise
-    orchestrator.send(:save_subprocess_output, { report_dir: nil, raw_output: "data" })
+    orchestrator.send(:save_subprocess_output, {report_dir: nil, raw_output: "data"})
   end
 
   def test_save_subprocess_output_skips_when_empty_output
@@ -1449,7 +1428,7 @@ class SuiteOrchestratorTest < Minitest::Test
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-      orchestrator.send(:save_subprocess_output, { report_dir: tmpdir, raw_output: "" })
+      orchestrator.send(:save_subprocess_output, {report_dir: tmpdir, raw_output: ""})
 
       refute File.exist?(File.join(tmpdir, "subprocess_output.log")),
         "Should not write empty subprocess output"
@@ -1465,13 +1444,13 @@ class SuiteOrchestratorTest < Minitest::Test
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), YAML.dump({
         "status" => "fail",
-        "results" => { "passed" => 3, "total" => 3 }
+        "results" => {"passed" => 3, "total" => 3}
       }))
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-      result = { status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0 }
+      result = {status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0}
       overridden = orchestrator.send(:override_from_metadata, result)
 
       assert_equal "pass", overridden[:status]
@@ -1486,13 +1465,13 @@ class SuiteOrchestratorTest < Minitest::Test
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), YAML.dump({
         "status" => "fail",
-        "results" => { "passed" => 2, "total" => 3 }
+        "results" => {"passed" => 2, "total" => 3}
       }))
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-      result = { status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0 }
+      result = {status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0}
       overridden = orchestrator.send(:override_from_metadata, result)
 
       assert_equal "fail", overridden[:status]
@@ -1505,17 +1484,20 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"] }
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
       ts_counter = 0
-      timestamp_gen = -> { ts_counter += 1; "stub#{format("%03d", ts_counter)}" }
+      timestamp_gen = -> {
+        ts_counter += 1
+        "stub#{format("%03d", ts_counter)}"
+      }
 
       orchestrator = SuiteOrchestrator.new(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
-          timestamp_generator: timestamp_gen,
+        timestamp_generator: timestamp_gen,
         suite_report_writer: StubSuiteReportWriter.new,
         scenario_loader: StubScenarioLoader.new
       )
@@ -1524,8 +1506,8 @@ class SuiteOrchestratorTest < Minitest::Test
       results = {
         packages: {
           "ace-lint" => [
-            { status: "error", error: "Provider 503", test_name: "TS-LINT-001",
-              report_dir: nil, passed_cases: nil, total_cases: nil }
+            {status: "error", error: "Provider 503", test_name: "TS-LINT-001",
+             report_dir: nil, passed_cases: nil, total_cases: nil}
           ]
         }
       }
@@ -1551,11 +1533,14 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"] }
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
       ts_counter = 0
-      timestamp_gen = -> { ts_counter += 1; "stub#{format("%03d", ts_counter)}" }
+      timestamp_gen = -> {
+        ts_counter += 1
+        "stub#{format("%03d", ts_counter)}"
+      }
 
       orchestrator = SuiteOrchestrator.new(
         discoverer: discoverer,
@@ -1570,9 +1555,9 @@ class SuiteOrchestratorTest < Minitest::Test
       results = {
         packages: {
           "ace-lint" => [
-            { status: "error", error: "Provider 503", test_name: "TS-LINT-001",
-              report_dir: nil, passed_cases: nil, total_cases: nil,
-              raw_output: raw_output }
+            {status: "error", error: "Provider 503", test_name: "TS-LINT-001",
+             report_dir: nil, passed_cases: nil, total_cases: nil,
+             raw_output: raw_output}
           ]
         }
       }
@@ -1593,14 +1578,14 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"] }
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
       orchestrator = SuiteOrchestrator.new(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
-          timestamp_generator: -> { "stub001" },
+        timestamp_generator: -> { "stub001" },
         suite_report_writer: StubSuiteReportWriter.new,
         scenario_loader: StubScenarioLoader.new
       )
@@ -1608,8 +1593,8 @@ class SuiteOrchestratorTest < Minitest::Test
       results = {
         packages: {
           "ace-lint" => [
-            { status: "pass", summary: "Test passed", test_name: "TS-LINT-001",
-              report_dir: nil, passed_cases: 3, total_cases: 3 }
+            {status: "pass", summary: "Test passed", test_name: "TS-LINT-001",
+             report_dir: nil, passed_cases: 3, total_cases: 3}
           ]
         }
       }
@@ -1639,14 +1624,14 @@ class SuiteOrchestratorTest < Minitest::Test
 
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"] }
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
       orchestrator = SuiteOrchestrator.new(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
-          timestamp_generator: -> { "stub001" },
+        timestamp_generator: -> { "stub001" },
         suite_report_writer: StubSuiteReportWriter.new,
         scenario_loader: StubScenarioLoader.new
       )
@@ -1655,8 +1640,8 @@ class SuiteOrchestratorTest < Minitest::Test
       results = {
         packages: {
           "ace-lint" => [
-            { status: "fail", summary: "Test failed", test_name: "TS-LINT-001",
-              report_dir: existing_report_dir, passed_cases: 2, total_cases: 3 }
+            {status: "fail", summary: "Test failed", test_name: "TS-LINT-001",
+             report_dir: existing_report_dir, passed_cases: 2, total_cases: 3}
           ]
         }
       }

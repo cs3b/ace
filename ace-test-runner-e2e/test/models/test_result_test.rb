@@ -30,26 +30,26 @@ class TestResultTest < Minitest::Test
 
   def test_passed_count
     result = create_result(test_cases: [
-      { id: "TC-001", status: "pass" },
-      { id: "TC-002", status: "fail" },
-      { id: "TC-003", status: "pass" }
+      {id: "TC-001", status: "pass"},
+      {id: "TC-002", status: "fail"},
+      {id: "TC-003", status: "pass"}
     ])
     assert_equal 2, result.passed_count
   end
 
   def test_failed_count
     result = create_result(test_cases: [
-      { id: "TC-001", status: "pass" },
-      { id: "TC-002", status: "fail" },
-      { id: "TC-003", status: "fail" }
+      {id: "TC-001", status: "pass"},
+      {id: "TC-002", status: "fail"},
+      {id: "TC-003", status: "fail"}
     ])
     assert_equal 2, result.failed_count
   end
 
   def test_total_count
     result = create_result(test_cases: [
-      { id: "TC-001", status: "pass" },
-      { id: "TC-002", status: "fail" }
+      {id: "TC-001", status: "pass"},
+      {id: "TC-002", status: "fail"}
     ])
     assert_equal 2, result.total_count
   end
@@ -84,17 +84,17 @@ class TestResultTest < Minitest::Test
 
   def test_failed_test_case_ids_with_failures
     result = create_result(test_cases: [
-      { id: "TC-001", status: "pass" },
-      { id: "TC-002", status: "fail" },
-      { id: "TC-003", status: "fail" }
+      {id: "TC-001", status: "pass"},
+      {id: "TC-002", status: "fail"},
+      {id: "TC-003", status: "fail"}
     ])
     assert_equal ["TC-002", "TC-003"], result.failed_test_case_ids
   end
 
   def test_failed_test_case_ids_all_passing
     result = create_result(test_cases: [
-      { id: "TC-001", status: "pass" },
-      { id: "TC-002", status: "pass" }
+      {id: "TC-001", status: "pass"},
+      {id: "TC-002", status: "pass"}
     ])
     assert_equal [], result.failed_test_case_ids
   end

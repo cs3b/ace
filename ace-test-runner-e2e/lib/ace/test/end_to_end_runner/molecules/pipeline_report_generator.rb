@@ -114,7 +114,7 @@ module Ace
             scenario_test_cases = scenario.test_cases || []
 
             headers.each_with_index.map do |(start_idx, goal_number, title), index|
-              end_idx = index + 1 < headers.size ? headers[index + 1][0] : lines.size
+              end_idx = (index + 1 < headers.size) ? headers[index + 1][0] : lines.size
               block = lines[start_idx...end_idx].join
 
               verdict = normalize_verdict(extract_field_token(block, %w[Verdict Status]))
@@ -127,9 +127,9 @@ module Ace
               {
                 id: tc_id,
                 description: title,
-                status: verdict == "PASS" ? "pass" : "fail",
+                status: (verdict == "PASS") ? "pass" : "fail",
                 notes: evidence,
-                category: (verdict == "FAIL" ? category : nil)
+                category: ((verdict == "FAIL") ? category : nil)
               }
             end.compact
           end
@@ -244,7 +244,7 @@ module Ace
             summary = text.to_s.lines.map(&:strip).reject(&:empty?).first(3).join(" ")
             return nil if summary.empty?
 
-            summary.length > 240 ? "#{summary[0, 237]}..." : summary
+            (summary.length > 240) ? "#{summary[0, 237]}..." : summary
           end
 
           def write_goal_report(path:, scenario:, provider:, result:)

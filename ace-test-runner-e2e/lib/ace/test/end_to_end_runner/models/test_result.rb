@@ -10,7 +10,7 @@ module Ace
         # from executing a test scenario via LLM.
         class TestResult
           attr_reader :test_id, :status, :test_cases, :summary,
-                      :started_at, :completed_at, :report_dir, :error
+            :started_at, :completed_at, :report_dir, :error
 
           # @param test_id [String] Test identifier
           # @param status [String] Overall status: "pass", "fail", "partial", "error"
@@ -21,7 +21,7 @@ module Ace
           # @param report_dir [String, nil] Path to the reports directory
           # @param error [String, nil] Error message if execution failed
           def initialize(test_id:, status:, test_cases: [], summary: "",
-                         started_at: nil, completed_at: nil, report_dir: nil, error: nil)
+            started_at: nil, completed_at: nil, report_dir: nil, error: nil)
             @test_id = test_id
             @status = status
             @test_cases = test_cases
