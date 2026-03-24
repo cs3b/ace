@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.49.0] - 2026-03-24
+
+### Fixed
+- Added missing `ace-review-feedback` executable to gemspec — gem consumers now get both CLIs installed.
+
+### Changed
+- Removed stale task-symlink documentation from feedback workflow guide (task-linking was removed in v0.46.0).
+- Updated stale code comment in review manager referencing removed symlink architecture.
+- Re-recorded getting-started demo with live review execution.
+
 ## [0.48.1] - 2026-03-23
 
 ### Changed
