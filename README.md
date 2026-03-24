@@ -59,20 +59,16 @@ ace-bundle wfi://task/work
 
 [`ace-bundle`](ace-bundle/) | [`ace-handbook`](ace-handbook/) | [`ace-search`](ace-search/)
 
-## Your First Five Minutes
+## Quick Start
 
-The fastest way to see ACE work is smart commits — zero config, immediate result:
+Start fast with a quick win:
 
 ```bash
 gem install ace-git-commit
-
-# Stage your changes, then:
 ace-git-commit -i "fix auth token refresh"
-# Analyzes the diff. Considers your intention. Generates a scoped conventional commit.
-# Same command whether you type it or your agent runs it.
 ```
 
-For the full pipeline — idea to shipped PR — see the [Quick Start](docs/quick-start.md).
+For the full idea → task → assignment → verify → ship flow, read the [Quick Start guide](docs/quick-start.md).
 
 ## Install
 
