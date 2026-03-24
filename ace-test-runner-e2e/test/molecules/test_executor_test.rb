@@ -27,8 +27,8 @@ class TestExecutorTest < Minitest::Test
 
       captured_timeouts = []
       responses = [
-        { text: "Runner completed." },
-        { text: <<~OUT }
+        {text: "Runner completed."},
+        {text: <<~OUT}
           ### Goal 1 - First
           - **Verdict**: PASS
           - **Evidence**: ok
@@ -41,18 +41,20 @@ class TestExecutorTest < Minitest::Test
         OUT
       ]
 
-      Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **kwargs|
-        captured_timeouts << kwargs[:timeout]
-        responses.shift
-      }) do
-        result = executor.execute(
-          scenario,
-          timeout: 900,
-          sandbox_path: sandbox_path,
-          report_dir: report_dir
-        )
-        assert_equal "pass", result.status
-        assert_equal report_dir, result.report_dir
+      stub_sandbox_builder do
+        Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **kwargs|
+          captured_timeouts << kwargs[:timeout]
+          responses.shift
+        }) do
+          result = executor.execute(
+            scenario,
+            timeout: 900,
+            sandbox_path: sandbox_path,
+            report_dir: report_dir
+          )
+          assert_equal "pass", result.status
+          assert_equal report_dir, result.report_dir
+        end
       end
 
       assert_equal 2, captured_timeouts.size
@@ -70,8 +72,8 @@ class TestExecutorTest < Minitest::Test
 
       calls = []
       responses = [
-        { text: "Runner completed." },
-        { text: <<~OUT }
+        {text: "Runner completed."},
+        {text: <<~OUT}
           ### Goal 1 - First
           - **Verdict**: PASS
           - **Evidence**: ok
@@ -85,21 +87,23 @@ class TestExecutorTest < Minitest::Test
         OUT
       ]
 
-      Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
-        calls << { prompt: args[1], kwargs: kwargs }
-        responses.shift
-      }) do
-        result = executor.execute(
-          scenario,
-          sandbox_path: sandbox_path,
-          report_dir: report_dir,
-          env_vars: { "CUSTOM" => "value" }
-        )
+      stub_sandbox_builder do
+        Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
+          calls << {prompt: args[1], kwargs: kwargs}
+          responses.shift
+        }) do
+          result = executor.execute(
+            scenario,
+            sandbox_path: sandbox_path,
+            report_dir: report_dir,
+            env_vars: {"CUSTOM" => "value"}
+          )
 
-        assert_equal "partial", result.status
-        assert_equal 2, result.total_count
-        assert_equal 1, result.failed_count
-        assert_equal report_dir, result.report_dir
+          assert_equal "partial", result.status
+          assert_equal 2, result.total_count
+          assert_equal 1, result.failed_count
+          assert_equal report_dir, result.report_dir
+        end
       end
 
       assert_equal 2, calls.size, "runner and verifier should both execute"
@@ -141,21 +145,23 @@ class TestExecutorTest < Minitest::Test
       executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
 
       responses = [
-        { text: "Runner completed." },
-        { text: "Verifier output was malformed and had no contract fields." }
+        {text: "Runner completed."},
+        {text: "Verifier output was malformed and had no contract fields."}
       ]
 
-      Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **_kwargs|
-        responses.shift
-      }) do
-        result = executor.execute(
-          scenario,
-          sandbox_path: sandbox_path,
-          report_dir: report_dir
-        )
+      stub_sandbox_builder do
+        Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **_kwargs|
+          responses.shift
+        }) do
+          result = executor.execute(
+            scenario,
+            sandbox_path: sandbox_path,
+            report_dir: report_dir
+          )
 
-        assert_equal "error", result.status
-        assert_equal report_dir, result.report_dir
+          assert_equal "error", result.status
+          assert_equal report_dir, result.report_dir
+        end
       end
 
       metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
@@ -241,10 +247,13 @@ class TestExecutorTest < Minitest::Test
     executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
     scenario = create_scenario(test_id: "TS-LINT-001")
     tc = create_test_case
-    env_vars = { "ACE_TMUX_SESSION" => "TS-TEST-001-e2e" }
+    env_vars = {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"}
 
     captured_kwargs = nil
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **kw) { captured_kwargs = kw; { text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None" } }) do
+    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **kw) {
+      captured_kwargs = kw
+      {text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None"}
+    }) do
       executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario, env_vars: env_vars)
     end
 
@@ -253,6 +262,21 @@ class TestExecutorTest < Minitest::Test
   end
 
   private
+
+  PipelineSandboxBuilder = Ace::Test::EndToEndRunner::Molecules::PipelineSandboxBuilder
+
+  # Stub PipelineSandboxBuilder#build to skip real filesystem validation (git init, package copy, etc.)
+  def stub_sandbox_builder(&block)
+    fake_build = lambda { |scenario:, sandbox_path:, test_cases: nil|
+      FileUtils.mkdir_p(sandbox_path)
+      {"PROJECT_ROOT_PATH" => File.expand_path(sandbox_path)}
+    }
+    PipelineSandboxBuilder.stub(:new, ->(*_a, **_kw) {
+      builder = Object.new
+      builder.define_singleton_method(:build) { |**kwargs| fake_build.call(**kwargs) }
+      builder
+    }, &block)
+  end
 
   def create_scenario(overrides = {})
     defaults = {
