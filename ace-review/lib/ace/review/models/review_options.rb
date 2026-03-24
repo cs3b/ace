@@ -6,13 +6,13 @@ module Ace
       # Options for code review execution
       class ReviewOptions
         attr_accessor :preset, :output_dir, :output, :context, :subject,
-                      :prompt_base, :prompt_format, :prompt_focus, :add_focus,
-                      :prompt_guidelines, :model, :models, :dry_run, :verbose,
-                      :auto_execute, :save_session, :session_dir,
-                      :pr, :post_comment, :pr_metadata, :gh_timeout,
-                      :pr_comments, :pr_comment_data,
-                      :no_feedback, :feedback_model,
-                      :list_presets, :list_prompts, :help
+          :prompt_base, :prompt_format, :prompt_focus, :add_focus,
+          :prompt_guidelines, :model, :models, :dry_run, :verbose,
+          :auto_execute, :save_session, :session_dir,
+          :pr, :post_comment, :pr_metadata, :gh_timeout,
+          :pr_comments, :pr_comment_data,
+          :no_feedback, :feedback_model,
+          :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
           # Core options
@@ -37,12 +37,12 @@ module Ace
           @dry_run = hash[:dry_run] || false
           @verbose = hash[:verbose] || false
           @auto_execute = if @dry_run
-                            false
-                          elsif hash[:auto_execute].nil?
-                            Ace::Review.get("defaults", "auto_execute") || false
-                          else
-                            hash[:auto_execute]
-                          end
+            false
+          elsif hash[:auto_execute].nil?
+            Ace::Review.get("defaults", "auto_execute") || false
+          else
+            hash[:auto_execute]
+          end
 
           # Session options
           @save_session = hash.fetch(:save_session, true)
@@ -71,7 +71,7 @@ module Ace
         # Convert back to hash for compatibility
         def to_h
           instance_variables.each_with_object({}) do |var, hash|
-            key = var.to_s.delete_prefix('@').to_sym
+            key = var.to_s.delete_prefix("@").to_sym
             value = instance_variable_get(var)
             hash[key] = value unless value.nil?
           end
@@ -102,7 +102,7 @@ module Ace
 
           # Check config default (defaults to true for PR reviews)
           config_default = Ace::Review.get("defaults", "pr_comments")
-          config_default.nil? ? true : config_default
+          config_default.nil? || config_default
         end
 
         # Check if output should be saved

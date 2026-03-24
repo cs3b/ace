@@ -193,7 +193,7 @@ module Ace
             sorted_dirs.each do |dir|
               dir_blocks = grouped[dir]
               counts = count_by_change_type(dir_blocks)
-              dir_display = dir == "." ? "(root)" : "#{dir}/"
+              dir_display = (dir == ".") ? "(root)" : "#{dir}/"
 
               parts = []
               parts << "#{counts[:modified]} modified" if counts[:modified] > 0
@@ -222,7 +222,7 @@ module Ace
 
             lines << "Top directories:"
             sorted_dirs.each do |dir|
-              dir_display = dir == "." ? "(root)" : "#{dir}/"
+              dir_display = (dir == ".") ? "(root)" : "#{dir}/"
               lines << "- `#{dir_display}`: #{grouped[dir].length} files"
             end
 
@@ -250,7 +250,7 @@ module Ace
           # @param blocks [Array<Hash>] File blocks
           # @return [Hash] Counts by type
           def count_by_change_type(blocks)
-            counts = { added: 0, deleted: 0, modified: 0 }
+            counts = {added: 0, deleted: 0, modified: 0}
             blocks.each do |block|
               type = block[:change_type] || :modified
               counts[type] += 1
@@ -389,7 +389,7 @@ module Ace
 
             if total > 1
               content_parts << "---"
-              content_parts << "**Chunk #{index + 1} of #{total}** (files: #{files.join(', ')})"
+              content_parts << "**Chunk #{index + 1} of #{total}** (files: #{files.join(", ")})"
               content_parts << "---"
               content_parts << ""
             end
@@ -410,7 +410,7 @@ module Ace
             if has_overflow
               metadata[:overflow] = true
               overflow_info = chunk_blocks.select { |b| b[:overflow] }.map do |b|
-                { path: b[:path], truncated_lines: b[:truncated_lines] }
+                {path: b[:path], truncated_lines: b[:truncated_lines]}
               end
               metadata[:overflow_files] = overflow_info
             end

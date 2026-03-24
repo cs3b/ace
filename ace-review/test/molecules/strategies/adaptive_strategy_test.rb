@@ -117,7 +117,7 @@ class AdaptiveStrategyTest < AceReviewTest
   # prepare tests - full integration
   def test_prepare_uses_full_strategy_for_small_subject
     subject = "def hello\n  puts 'world'\nend"
-    context = { model: "gemini-2.5-pro" }
+    context = {model: "gemini-2.5-pro"}
 
     result = @strategy.prepare(subject, context)
 
@@ -130,7 +130,7 @@ class AdaptiveStrategyTest < AceReviewTest
   def test_prepare_uses_chunked_strategy_for_large_subject
     # Create a large diff that will trigger chunked strategy
     large_diff = build_large_diff(10, 5000)  # 10 files, 5000 chars each
-    context = { model: "claude-3-sonnet", model_context_limit: 10_000 }
+    context = {model: "claude-3-sonnet", model_context_limit: 10_000}
 
     result = @strategy.prepare(large_diff, context)
 
@@ -142,7 +142,7 @@ class AdaptiveStrategyTest < AceReviewTest
   def test_prepare_uses_explicit_model_context_limit
     subject = "a" * 4000  # ~1000 tokens
     # Explicit limit of 500 tokens forces chunked
-    context = { model: "gemini-2.5-pro", model_context_limit: 500 }
+    context = {model: "gemini-2.5-pro", model_context_limit: 500}
 
     result = @strategy.prepare(subject, context)
 
@@ -153,7 +153,7 @@ class AdaptiveStrategyTest < AceReviewTest
 
   def test_prepare_resolves_model_limit_from_model_name
     subject = "a" * 1000  # ~250 tokens
-    context = { model: "claude-3-sonnet" }  # 200k limit
+    context = {model: "claude-3-sonnet"}  # 200k limit
 
     result = @strategy.prepare(subject, context)
 
@@ -163,7 +163,7 @@ class AdaptiveStrategyTest < AceReviewTest
 
   def test_prepare_handles_string_keys_in_context
     subject = "a" * 1000
-    context = { "model" => "gemini-2.5-pro" }
+    context = {"model" => "gemini-2.5-pro"}
 
     result = @strategy.prepare(subject, context)
 
@@ -172,7 +172,7 @@ class AdaptiveStrategyTest < AceReviewTest
 
   def test_prepare_handles_explicit_limit_with_string_key
     subject = "a" * 4000
-    context = { "model_context_limit" => 500 }
+    context = {"model_context_limit" => 500}
 
     result = @strategy.prepare(subject, context)
 
@@ -184,7 +184,7 @@ class AdaptiveStrategyTest < AceReviewTest
     # Gemini 2.5-pro has 1M context, 850k available
     # Most PRs are < 850k tokens
     subject = "a" * 100_000  # ~25,000 tokens
-    context = { model: "google:gemini-2.5-pro" }
+    context = {model: "google:gemini-2.5-pro"}
 
     result = @strategy.prepare(subject, context)
 
@@ -195,7 +195,7 @@ class AdaptiveStrategyTest < AceReviewTest
     # Claude has 1M context, ~850k available
     # PRs > 850k tokens should chunk
     subject = "a" * 4_000_000  # ~1,000,000 tokens
-    context = { model: "anthropic:claude-3-sonnet" }
+    context = {model: "anthropic:claude-3-sonnet"}
 
     result = @strategy.prepare(subject, context)
 
@@ -205,7 +205,7 @@ class AdaptiveStrategyTest < AceReviewTest
   def test_claude_1m_uses_full_for_small_prs
     # Small PRs should use full even with Claude
     subject = "a" * 10_000  # ~2,500 tokens
-    context = { model: "anthropic:claude-3-sonnet" }
+    context = {model: "anthropic:claude-3-sonnet"}
 
     result = @strategy.prepare(subject, context)
 
@@ -219,7 +219,7 @@ class AdaptiveStrategyTest < AceReviewTest
 
   # Configuration tests
   def test_accepts_config_in_constructor
-    config = { headroom: 0.20, max_tokens_per_chunk: 50_000 }
+    config = {headroom: 0.20, max_tokens_per_chunk: 50_000}
     strategy = Ace::Review::Molecules::Strategies::AdaptiveStrategy.new(config)
 
     assert_kind_of Ace::Review::Molecules::Strategies::AdaptiveStrategy, strategy
@@ -243,7 +243,7 @@ class AdaptiveStrategyTest < AceReviewTest
 
     # Force chunked selection with small limit
     large_diff = build_large_diff(5, 10_000)
-    context = { model_context_limit: 1000 }
+    context = {model_context_limit: 1000}
 
     result = strategy.prepare(large_diff, context)
 

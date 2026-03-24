@@ -17,7 +17,7 @@ module Ace
           # Normalize context configuration following ace-docs pattern
           normalized_config = normalize_context_config(context_config)
 
-          frontmatter = { "bundle" => normalized_config }
+          frontmatter = {"bundle" => normalized_config}
 
           # Build review scope section if subject config provided
           scope_section = build_review_scope_section(subject_config) if subject_config
@@ -41,17 +41,15 @@ module Ace
         # @param context_file_path [String] Path to context.md file
         # @return [String] Content with embedded files and context
         def self.load_context_via_ace_bundle(context_file_path)
-          begin
-            require "ace/bundle"
+          require "ace/bundle"
 
-            # Use ace-bundle to load context.md - processes presets and files from frontmatter
-            result = Ace::Bundle.load_file(context_file_path)
-            result.content
-          rescue LoadError
-            raise Ace::Review::Errors::ContextComposerError, "ace-bundle not available - required for context.md pattern"
-          rescue StandardError => e
-            raise Ace::Review::Errors::ContextComposerError, "ace-bundle loading failed: #{e.message}"
-          end
+          # Use ace-bundle to load context.md - processes presets and files from frontmatter
+          result = Ace::Bundle.load_file(context_file_path)
+          result.content
+        rescue LoadError
+          raise Ace::Review::Errors::ContextComposerError, "ace-bundle not available - required for context.md pattern"
+        rescue => e
+          raise Ace::Review::Errors::ContextComposerError, "ace-bundle loading failed: #{e.message}"
         end
 
         private
@@ -62,7 +60,7 @@ module Ace
         def self.normalize_context_config(config)
           # Start with base context config following ace-docs pattern
           normalized = {
-            "params" => { "format" => "markdown-xml" },
+            "params" => {"format" => "markdown-xml"},
             "embed_document_source" => true
           }
 
@@ -119,7 +117,6 @@ module Ace
             "- Repository changes"
           end
         end
-
       end
     end
   end

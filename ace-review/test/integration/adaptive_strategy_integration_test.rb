@@ -24,7 +24,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
   end
 
   def test_factory_passes_config_to_adaptive_strategy
-    config = { headroom: 0.20 }
+    config = {headroom: 0.20}
     strategy = @factory.for(:adaptive, config)
 
     # Verify config is used by checking behavior
@@ -44,7 +44,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # 850k tokens available (85% of 1M)
     # A "large" diff of 100k chars = 25k tokens, easily fits
     large_diff = build_realistic_diff(50, 2000)  # 50 files, 2k chars each = 100k
-    context = { model: "google:gemini-2.5-pro" }
+    context = {model: "google:gemini-2.5-pro"}
 
     result = strategy.prepare(large_diff, context)
 
@@ -60,7 +60,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # Need > 850k tokens = > 3.4M chars
     # Use larger file content to exceed the limit
     huge_diff = build_realistic_diff(500, 15_000)  # 500 files, ~15k chars each = ~7.5M chars
-    context = { model: "anthropic:claude-3-sonnet" }
+    context = {model: "anthropic:claude-3-sonnet"}
 
     result = strategy.prepare(huge_diff, context)
 
@@ -75,7 +75,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # Normal PR: 20 files, 500 chars each = 10k chars = 2.5k tokens
     # This fits easily in Claude's 170k available tokens
     normal_pr = build_realistic_diff(20, 500)
-    context = { model: "anthropic:claude-3-sonnet" }
+    context = {model: "anthropic:claude-3-sonnet"}
 
     result = strategy.prepare(normal_pr, context)
 
@@ -90,7 +90,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # 108.8k tokens available (85% of 128k)
     # Medium-large PR: 200k chars = 50k tokens, fits in GPT-4o
     medium_pr = build_realistic_diff(40, 5000)
-    context = { model: "openai:gpt-4o" }
+    context = {model: "openai:gpt-4o"}
 
     result = strategy.prepare(medium_pr, context)
 
@@ -104,7 +104,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # Small subject that would normally use full
     subject = "a" * 1000  # 250 tokens
     # But with explicit tiny limit, must chunk
-    context = { model: "gemini-2.5-pro", model_context_limit: 100 }
+    context = {model: "gemini-2.5-pro", model_context_limit: 100}
 
     result = strategy.prepare(subject, context)
 
@@ -131,7 +131,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
     # Unknown model defaults to 128k context
     # 108.8k available
     subject = "a" * 100_000  # 25k tokens
-    context = { model: "unknown-future-model" }
+    context = {model: "unknown-future-model"}
 
     result = strategy.prepare(subject, context)
 
@@ -216,7 +216,7 @@ class AdaptiveStrategyIntegrationTest < AceReviewTest
 
       files << <<~DIFF
         diff --git a/lib/module_#{i}/file_#{i}.rb b/lib/module_#{i}/file_#{i}.rb
-        index abc#{format('%04d', i)}..def#{format('%04d', i)} 100644
+        index abc#{format("%04d", i)}..def#{format("%04d", i)} 100644
         --- a/lib/module_#{i}/file_#{i}.rb
         +++ b/lib/module_#{i}/file_#{i}.rb
         @@ -1,10 +1,#{lines_needed + 10} @@

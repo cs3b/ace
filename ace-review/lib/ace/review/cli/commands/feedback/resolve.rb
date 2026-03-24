@@ -91,7 +91,7 @@ module Ace
 
               if files.length > 1
                 raise Ace::Support::Cli::Error.new(
-                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
+                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split("-").first }.join(", ")}. " \
                   "Please provide more characters."
                 )
               end
@@ -99,7 +99,7 @@ module Ace
               return nil if files.empty?
 
               # Extract full ID from filename
-              File.basename(files.first).split('-').first
+              File.basename(files.first).split("-").first
             end
           end
         end

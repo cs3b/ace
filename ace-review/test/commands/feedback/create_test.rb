@@ -31,7 +31,7 @@ class FeedbackCreateCommandTest < AceReviewTest
         File.join(@session_dir, "feedback", "abc123-first-issue.s.md"),
         File.join(@session_dir, "feedback", "abc124-second-issue.s.md")
       ],
-      metadata: { consensus_findings: 1 }
+      metadata: {consensus_findings: 1}
     }, [], report_paths: Array, base_path: String, model: nil, session_dir: String)
 
     output = capture_cli_output do

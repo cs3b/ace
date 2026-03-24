@@ -320,8 +320,8 @@ class FeedbackSynthesizerTest < AceReviewTest
 
     response = {
       findings: [
-        { title: "", finding: "Some finding" },
-        { title: "Valid title", finding: "Another finding" }
+        {title: "", finding: "Some finding"},
+        {title: "Valid title", finding: "Another finding"}
       ]
     }.to_json
 
@@ -386,10 +386,10 @@ class FeedbackSynthesizerTest < AceReviewTest
 
     response = {
       findings: [
-        { title: "Critical issue", finding: "test", priority: "CRITICAL" },
-        { title: "High issue", finding: "test", priority: "High" },
-        { title: "Medium issue", finding: "test", priority: "medium" },
-        { title: "Low issue", finding: "test", priority: "LOW" }
+        {title: "Critical issue", finding: "test", priority: "CRITICAL"},
+        {title: "High issue", finding: "test", priority: "High"},
+        {title: "Medium issue", finding: "test", priority: "medium"},
+        {title: "Low issue", finding: "test", priority: "LOW"}
       ]
     }.to_json
 
@@ -410,8 +410,8 @@ class FeedbackSynthesizerTest < AceReviewTest
 
     response = {
       findings: [
-        { title: "Unknown priority", finding: "test", priority: "urgent" },
-        { title: "Missing priority", finding: "test" }
+        {title: "Unknown priority", finding: "test", priority: "urgent"},
+        {title: "Missing priority", finding: "test"}
       ]
     }.to_json
 
@@ -674,11 +674,11 @@ class FeedbackSynthesizerTest < AceReviewTest
       @call_count += 1
 
       if @error
-        { success: false, error: @error }
+        {success: false, error: @error}
       else
         response = @responses.empty? ? nil : @responses.shift
         File.write(output_file, response.to_s) if output_file
-        { success: true, response: response }
+        {success: true, response: response}
       end
     end
   end

@@ -19,7 +19,7 @@ module Ace
         def self.reply(pr_identifier, commit_sha, message: nil, options: {})
           # Guard: require either commit_sha or custom message
           if (commit_sha.nil? || commit_sha.to_s.strip.empty?) && (message.nil? || message.strip.empty?)
-            return { success: false, error: "Commit SHA or message required" }
+            return {success: false, error: "Commit SHA or message required"}
           end
 
           # Parse identifier using ace-git
@@ -56,7 +56,7 @@ module Ace
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to post reply: #{e.message}"
@@ -77,11 +77,11 @@ module Ace
         # @option options [Integer] :timeout Timeout in seconds (default: 30)
         # @return [Hash] Result with :success, :resolved, :error
         def self.resolve_thread(thread_id, options: {})
-          return { success: false, error: "Thread ID required" } if thread_id.nil? || thread_id.empty?
+          return {success: false, error: "Thread ID required"} if thread_id.nil? || thread_id.empty?
 
           # Validate thread_id format to prevent GraphQL injection
           unless thread_id.match?(THREAD_ID_PATTERN)
-            return { success: false, error: "Invalid thread ID format. Expected PRRT_xxx pattern." }
+            return {success: false, error: "Invalid thread ID format. Expected PRRT_xxx pattern."}
           end
 
           # Default timeout
@@ -103,14 +103,14 @@ module Ace
               is_resolved = response.dig("data", "resolveReviewThread", "thread", "isResolved")
 
               if is_resolved
-                { success: true, resolved: true }
+                {success: true, resolved: true}
               elsif response["errors"]
-                { success: false, error: response["errors"].first["message"] }
+                {success: false, error: response["errors"].first["message"]}
               else
-                { success: false, error: "Thread not resolved" }
+                {success: false, error: "Thread not resolved"}
               end
             rescue JSON::ParserError => e
-              { success: false, error: "Failed to parse response: #{e.message}" }
+              {success: false, error: "Failed to parse response: #{e.message}"}
             end
           else
             {
@@ -120,7 +120,7 @@ module Ace
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to resolve thread: #{e.message}"
@@ -136,7 +136,7 @@ module Ace
         # @param options [Hash] Options
         # @return [Hash] Result with :success, :reply_result, :resolve_result, :error
         def self.reply_and_resolve(pr_identifier, commit_sha, thread_id: nil, message: nil, options: {})
-          results = { success: true }
+          results = {success: true}
 
           # Step 1: Reply with commit reference
           reply_result = reply(pr_identifier, commit_sha, message: message, options: options)

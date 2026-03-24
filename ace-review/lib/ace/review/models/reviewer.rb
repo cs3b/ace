@@ -25,7 +25,7 @@ module Ace
         DEFAULT_WEIGHT = 1.0
 
         attr_reader :name, :model, :focus, :system_prompt_additions,
-                    :file_patterns, :weight, :critical
+          :file_patterns, :weight, :critical
 
         # Initialize a new Reviewer from a configuration hash
         #
@@ -136,7 +136,7 @@ module Ace
             critical == other.critical
         end
 
-        alias eql? ==
+        alias_method :eql?, :==
 
         # Hash code for use in hash tables
         #

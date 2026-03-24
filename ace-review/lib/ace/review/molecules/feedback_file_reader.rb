@@ -38,13 +38,13 @@ module Ace
           content = File.read(file_path)
           parse_content(content, file_path)
         rescue Errno::ENOENT
-          { success: false, error: "File not found: #{file_path}" }
+          {success: false, error: "File not found: #{file_path}"}
         rescue Errno::EACCES
-          { success: false, error: "Permission denied: #{file_path}" }
+          {success: false, error: "Permission denied: #{file_path}"}
         rescue ArgumentError => e
-          { success: false, error: e.message }
+          {success: false, error: e.message}
         rescue SystemCallError, IOError => e
-          { success: false, error: "Failed to read file: #{e.message}" }
+          {success: false, error: "Failed to read file: #{e.message}"}
         end
 
         # Read all .s.md files in a directory
@@ -93,7 +93,7 @@ module Ace
           # Extract frontmatter
           frontmatter_match = content.match(FRONTMATTER_PATTERN)
           unless frontmatter_match
-            return { success: false, error: "Missing YAML frontmatter in: #{file_path}" }
+            return {success: false, error: "Missing YAML frontmatter in: #{file_path}"}
           end
 
           frontmatter_yaml = frontmatter_match[1]
@@ -111,11 +111,11 @@ module Ace
 
           # Create FeedbackItem
           feedback_item = Models::FeedbackItem.new(attrs)
-          { success: true, feedback_item: feedback_item }
+          {success: true, feedback_item: feedback_item}
         rescue ArgumentError => e
-          { success: false, error: "Invalid feedback item in #{file_path}: #{e.message}" }
+          {success: false, error: "Invalid feedback item in #{file_path}: #{e.message}"}
         rescue Psych::SyntaxError, TypeError, KeyError => e
-          { success: false, error: "Failed to parse #{file_path}: #{e.message}" }
+          {success: false, error: "Failed to parse #{file_path}: #{e.message}"}
         end
 
         # Parse YAML frontmatter
@@ -127,12 +127,12 @@ module Ace
           data = YAML.safe_load(yaml_content, permitted_classes: [Time, Date])
 
           unless data.is_a?(Hash)
-            return { error: "Invalid YAML frontmatter in #{file_path}: expected Hash" }
+            return {error: "Invalid YAML frontmatter in #{file_path}: expected Hash"}
           end
 
-          { data: data }
+          {data: data}
         rescue Psych::SyntaxError => e
-          { error: "YAML syntax error in #{file_path}: #{e.message}" }
+          {error: "YAML syntax error in #{file_path}: #{e.message}"}
         end
 
         # Parse markdown sections from the body

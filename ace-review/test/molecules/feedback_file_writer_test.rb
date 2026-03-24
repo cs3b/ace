@@ -207,7 +207,7 @@ class FeedbackFileWriterTest < AceReviewTest
   def test_concurrent_writes_succeed
     items = 5.times.map do |i|
       Ace::Review::Models::FeedbackItem.new(
-        id: "item#{i.to_s.rjust(2, '0')}",
+        id: "item#{i.to_s.rjust(2, "0")}",
         title: "Concurrent test item #{i}",
         reviewer: "test",
         finding: "Finding #{i}"

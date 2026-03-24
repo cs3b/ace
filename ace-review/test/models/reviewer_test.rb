@@ -96,8 +96,8 @@ module Ace
         def test_from_preset_config_with_reviewers_array
           config = {
             "reviewers" => [
-              { "name" => "quality", "model" => "google:gemini-2.5-pro", "focus" => "code_quality" },
-              { "name" => "security", "model" => "openai:gpt-4o", "focus" => "security", "critical" => true }
+              {"name" => "quality", "model" => "google:gemini-2.5-pro", "focus" => "code_quality"},
+              {"name" => "security", "model" => "openai:gpt-4o", "focus" => "security", "critical" => true}
             ]
           }
           reviewers = Reviewer.from_preset_config(config)
@@ -166,7 +166,7 @@ module Ace
         end
 
         def test_has_file_patterns_with_empty_arrays
-          config = @valid_config.merge(file_patterns: { include: [], exclude: [] })
+          config = @valid_config.merge(file_patterns: {include: [], exclude: []})
           reviewer = Reviewer.new(config)
           refute reviewer.has_file_patterns?
         end
@@ -194,7 +194,7 @@ module Ace
         end
 
         def test_matches_file_with_only_exclude
-          config = @valid_config.merge(file_patterns: { exclude: ["**/*_test.rb"] })
+          config = @valid_config.merge(file_patterns: {exclude: ["**/*_test.rb"]})
           reviewer = Reviewer.new(config)
 
           assert reviewer.matches_file?("lib/models/user.rb")
@@ -272,7 +272,7 @@ module Ace
         end
 
         def test_to_h_excludes_nil_values
-          config = { model: "google:gemini-2.5-flash" }
+          config = {model: "google:gemini-2.5-flash"}
           reviewer = Reviewer.new(config)
           hash = reviewer.to_h
 

@@ -181,7 +181,7 @@ class ContextExtractorTest < AceReviewTest
   def test_extract_with_preset_context
     # Mock preset manager to return context
     preset_manager_mock = Minitest::Mock.new
-    preset_manager_mock.expect(:load_preset, { "bundle" => { "files" => ["test.rb"] } }, ["test-preset"])
+    preset_manager_mock.expect(:load_preset, {"bundle" => {"files" => ["test.rb"]}}, ["test-preset"])
 
     @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
 
@@ -194,11 +194,11 @@ class ContextExtractorTest < AceReviewTest
   def test_extract_with_preset_reference_in_hash
     # Mock preset manager to return context
     preset_manager_mock = Minitest::Mock.new
-    preset_manager_mock.expect(:load_preset, { "bundle" => { "files" => ["test.rb"] } }, ["test-preset"])
+    preset_manager_mock.expect(:load_preset, {"bundle" => {"files" => ["test.rb"]}}, ["test-preset"])
 
     @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
 
-    config = { "preset" => "test-preset" }
+    config = {"preset" => "test-preset"}
     result = @extractor.extract(config)
     refute_empty result
 
@@ -210,7 +210,7 @@ class ContextExtractorTest < AceReviewTest
     Ace::Review::Molecules::ContextComposer.stub(:create_context_md, ->(*) {
       raise Ace::Review::Errors::ContextComposerError, "Mock error"
     }) do
-      config = { "files" => ["test.rb"] }
+      config = {"files" => ["test.rb"]}
 
       error = assert_raises(Ace::Review::Molecules::ContextExtractor::ContextExtractorError) do
         @extractor.extract(config, @temp_dir)
@@ -252,7 +252,7 @@ class ContextExtractorTest < AceReviewTest
 
   def test_backward_compatibility_without_cache_dir
     # Test that existing code works without cache_dir parameter
-    config = { "files" => ["test.rb"] }
+    config = {"files" => ["test.rb"]}
 
     result = @extractor.extract(config)
     refute_empty result
@@ -291,7 +291,7 @@ class ContextExtractorTest < AceReviewTest
 
   def test_extract_project_context_uses_fallback_when_config_unavailable
     # Verify the fallback path (failure path)
-    Ace::Review.stub(:get, ->(_key) { nil }) do
+    Ace::Review.stub(:get, ->(_key) {}) do
       Dir.chdir(@temp_dir) do
         # Create README.md which is in fallback defaults
         File.write(File.join(@temp_dir, "README.md"), "# Test Project")

@@ -70,9 +70,9 @@ module Ace
       # @param index [Integer] Current index
       # @return [String] Extracted value
       def self.extract_flag_value(arg, args, index)
-        if arg.include?('=')
-          arg.split('=', 2)[1]
-        elsif index + 1 < args.length && !args[index + 1].start_with?('--')
+        if arg.include?("=")
+          arg.split("=", 2)[1]
+        elsif index + 1 < args.length && !args[index + 1].start_with?("--")
           args[index + 1]
         else
           ""
@@ -85,7 +85,7 @@ module Ace
       # @param index [Integer] Current index
       # @return [Integer] Next index to process
       def self.skip_to_next_arg(args, index)
-        if args[index].include?('=') || (index + 1 < args.length && !args[index + 1].start_with?('--'))
+        if args[index].include?("=") || (index + 1 < args.length && !args[index + 1].start_with?("--"))
           index + 2
         else
           index + 1

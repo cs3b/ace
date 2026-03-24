@@ -316,7 +316,7 @@ class ChunkedStrategyTest < AceReviewTest
       user_prompt: "Check for bugs",
       model: "gpt-4",
       model_context_limit: 128_000,
-      preset: { name: "security" },
+      preset: {name: "security"},
       file_list: ["foo.rb", "bar.rb"]
     }
 
@@ -334,7 +334,7 @@ class ChunkedStrategyTest < AceReviewTest
 
   # Configuration tests
   def test_accepts_config_in_constructor
-    config = { max_tokens_per_chunk: 50_000, include_change_summary: false }
+    config = {max_tokens_per_chunk: 50_000, include_change_summary: false}
     strategy = Ace::Review::Molecules::Strategies::ChunkedStrategy.new(config)
 
     assert_kind_of Ace::Review::Molecules::Strategies::ChunkedStrategy, strategy
@@ -343,7 +343,7 @@ class ChunkedStrategyTest < AceReviewTest
   # YAML config keys are strings - verify they work
   def test_accepts_string_keyed_config
     # Simulating config loaded from YAML (string keys)
-    config = { "max_tokens_per_chunk" => 25_000, "include_change_summary" => false }
+    config = {"max_tokens_per_chunk" => 25_000, "include_change_summary" => false}
     strategy = Ace::Review::Molecules::Strategies::ChunkedStrategy.new(config)
 
     # Verify config is honored by checking behavior
@@ -375,7 +375,7 @@ class ChunkedStrategyTest < AceReviewTest
 
     # Header lines should be present (diff --git, index, ---, +++)
     assert_match(/diff --git/, content, "Header should include diff --git line")
-    assert_match(/\-\-\- a\//, content, "Header should include --- line")
+    assert_match(/--- a\//, content, "Header should include --- line")
     assert_match(/\+\+\+ b\//, content, "Header should include +++ line")
   end
 

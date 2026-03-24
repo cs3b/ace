@@ -345,43 +345,43 @@ class PresetManagerTest < AceReviewTest
   # deep_stringify_keys tests
   def test_deep_stringify_keys_simple_hash
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    input = { a: 1, b: 2 }
+    input = {a: 1, b: 2}
     result = manager.send(:deep_stringify_keys, input)
 
-    assert_equal({ "a" => 1, "b" => 2 }, result)
+    assert_equal({"a" => 1, "b" => 2}, result)
   end
 
   def test_deep_stringify_keys_nested_hash
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    input = { a: { b: { c: 1 } } }
+    input = {a: {b: {c: 1}}}
     result = manager.send(:deep_stringify_keys, input)
 
-    assert_equal({ "a" => { "b" => { "c" => 1 } } }, result)
+    assert_equal({"a" => {"b" => {"c" => 1}}}, result)
   end
 
   def test_deep_stringify_keys_hash_in_array
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    input = [{ a: 1 }, { b: 2 }]
+    input = [{a: 1}, {b: 2}]
     result = manager.send(:deep_stringify_keys, input)
 
-    assert_equal([{ "a" => 1 }, { "b" => 2 }], result)
+    assert_equal([{"a" => 1}, {"b" => 2}], result)
   end
 
   def test_deep_stringify_keys_mixed_keys
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    input = { :symbol_key => 1, "string_key" => 2 }
+    input = {:symbol_key => 1, "string_key" => 2}
     result = manager.send(:deep_stringify_keys, input)
 
-    assert_equal({ "symbol_key" => 1, "string_key" => 2 }, result)
+    assert_equal({"symbol_key" => 1, "string_key" => 2}, result)
   end
 
   def test_deep_stringify_keys_complex_nested
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
     input = {
-      :bundle => {
-        :sections => [
-          { :name => "code", :files => ["a.rb"] },
-          { :name => "docs", :files => ["README.md"] }
+      bundle: {
+        sections: [
+          {name: "code", files: ["a.rb"]},
+          {name: "docs", files: ["README.md"]}
         ]
       }
     }
@@ -390,8 +390,8 @@ class PresetManagerTest < AceReviewTest
     expected = {
       "bundle" => {
         "sections" => [
-          { "name" => "code", "files" => ["a.rb"] },
-          { "name" => "docs", "files" => ["README.md"] }
+          {"name" => "code", "files" => ["a.rb"]},
+          {"name" => "docs", "files" => ["README.md"]}
         ]
       }
     }

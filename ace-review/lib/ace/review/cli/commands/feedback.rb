@@ -51,11 +51,11 @@ module Ace
           DESC
 
           example [
-            'create                   # Create from most recent session',
-            'list --status pending    # List pending items',
-            'show abc123              # Show item details',
-            'verify abc123 --valid    # Mark as valid',
-            'verify abc123 --skip    # Skip (not applicable)',
+            "create                   # Create from most recent session",
+            "list --status pending    # List pending items",
+            "show abc123              # Show item details",
+            "verify abc123 --valid    # Mark as valid",
+            "verify abc123 --skip    # Skip (not applicable)",
             'resolve abc123 --resolution "Fixed"'
           ]
 

@@ -15,7 +15,7 @@ module Ace
       # Main orchestrator for code review workflow
       class ReviewManager
         attr_reader :preset_manager, :prompt_resolver, :prompt_composer,
-                    :subject_extractor, :context_extractor
+          :subject_extractor, :context_extractor
 
         def initialize(project_root: nil)
           @project_root = project_root
@@ -134,7 +134,7 @@ module Ace
           # Merge options with config
           options.merge_config(config)
 
-          { success: true, config: config }
+          {success: true, config: config}
         end
 
         # Step 2: Extract subject and context
@@ -192,7 +192,7 @@ module Ace
           subject = extract_subject(subject_config)
 
           if subject.nil? || subject.empty?
-            return { success: false, error: "No code to review" }
+            return {success: false, error: "No code to review"}
           end
 
           # Extract context (background info)
@@ -214,11 +214,11 @@ module Ace
         # Extract PR content (diff and metadata)
         def extract_pr_content(pr_identifier, config, options)
           # Fetch PR diff and metadata
-          fetch_options = options.gh_timeout ? { timeout: options.gh_timeout } : {}
+          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
           result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
 
           unless result[:success]
-            return { success: false, error: result[:error] }
+            return {success: false, error: result[:error]}
           end
 
           # Store PR metadata in options for later use
@@ -268,34 +268,34 @@ module Ace
 
           case context_config
           when nil, false, "none"
-            { "files" => [spec_path] }
+            {"files" => [spec_path]}
           when String
-            { "presets" => [context_config], "files" => [spec_path] }
+            {"presets" => [context_config], "files" => [spec_path]}
           when Hash
-            deep_merge_context(context_config, { "files" => [spec_path] })
+            deep_merge_context(context_config, {"files" => [spec_path]})
           else
-            { "files" => [spec_path] }
+            {"files" => [spec_path]}
           end
         end
 
         # Format PR metadata for context
         def format_pr_metadata(metadata)
           info = "## Pull Request Information\n\n"
-          info += "- **Title**: #{metadata['title']}\n"
-          info += "- **Number**: ##{metadata['number']}\n"
-          info += "- **Author**: #{metadata['author']['login']}\n" if metadata['author']
-          info += "- **State**: #{metadata['state']}\n"
-          info += "- **Draft**: #{metadata['isDraft'] ? 'Yes' : 'No'}\n"
-          info += "- **Base**: #{metadata['baseRefName']}\n"
-          info += "- **Head**: #{metadata['headRefName']}\n"
-          info += "- **URL**: #{metadata['url']}\n"
+          info += "- **Title**: #{metadata["title"]}\n"
+          info += "- **Number**: ##{metadata["number"]}\n"
+          info += "- **Author**: #{metadata["author"]["login"]}\n" if metadata["author"]
+          info += "- **State**: #{metadata["state"]}\n"
+          info += "- **Draft**: #{metadata["isDraft"] ? "Yes" : "No"}\n"
+          info += "- **Base**: #{metadata["baseRefName"]}\n"
+          info += "- **Head**: #{metadata["headRefName"]}\n"
+          info += "- **URL**: #{metadata["url"]}\n"
           info
         end
 
         # Step 3: Generate system and user prompts via ace-bundle
         def compose_review_prompt(config, context, subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
-          system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
+          config[:system_prompt] || config["system_prompt"] || {}
           context_config = config[:context] || config["context"] || "project"
 
           # Step 3a: Create system.context.md with instructions configuration
@@ -330,7 +330,7 @@ module Ace
           begin
             execute_ace_context(system_context_path, system_prompt_path)
           rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
-            return { success: false, error: "Failed to generate system prompt: #{e.message}" }
+            return {success: false, error: "Failed to generate system prompt: #{e.message}"}
           end
 
           # Step 3d: Generate user.prompt.md via ace-bundle
@@ -338,7 +338,7 @@ module Ace
           begin
             execute_ace_context(user_context_path, user_prompt_path)
           rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
-            return { success: false, error: "Failed to generate user prompt: #{e.message}" }
+            return {success: false, error: "Failed to generate user prompt: #{e.message}"}
           end
 
           # Load the generated prompts
@@ -346,7 +346,7 @@ module Ace
           user_prompt = File.read(user_prompt_path) if File.exist?(user_prompt_path)
 
           if system_prompt.nil? || system_prompt.empty?
-            return { success: false, error: "Failed to generate system prompt" }
+            return {success: false, error: "Failed to generate system prompt"}
           end
 
           {
@@ -449,7 +449,6 @@ module Ace
           presets.uniq
         end
 
-
         # Execute ace-bundle to generate prompts using Ruby API
         # @param input_file [String] Path to context configuration file
         # @param output_file [String] Path to write rendered context
@@ -459,8 +458,8 @@ module Ace
         def execute_ace_context(input_file, output_file)
           # Ensure ace-bundle is available
           begin
-            require 'ace/bundle'
-          rescue LoadError => e
+            require "ace/bundle"
+          rescue LoadError
             raise Errors::MissingDependencyError.new(
               "ace-bundle",
               "gem install ace-bundle"
@@ -484,7 +483,7 @@ module Ace
               error_message = context_result.metadata[:error]
               raise Errors::BundleProcessingError.new(
                 "Failed to process context file: #{error_message}",
-                { input_file: input_file, error: error_message }
+                {input_file: input_file, error: error_message}
               )
             end
 
@@ -502,10 +501,10 @@ module Ace
           rescue Errors::BundleProcessingError
             # Re-raise our own errors
             raise
-          rescue StandardError => e
+          rescue => e
             raise Errors::BundleProcessingError.new(
               "ace-bundle processing failed: #{e.message}",
-              { input_file: input_file, error: e.message, backtrace: e.backtrace.first(5) }
+              {input_file: input_file, error: e.message, backtrace: e.backtrace.first(5)}
             )
           end
         end
@@ -643,7 +642,7 @@ module Ace
 
         # Execute multi-model review (new capability)
         def execute_multi_model(review_data, session_dir, options, models)
-          require_relative '../molecules/multi_model_executor'
+          require_relative "../molecules/multi_model_executor"
           executor = Ace::Review::Molecules::MultiModelExecutor.new
 
           # Execute all models concurrently
@@ -679,7 +678,7 @@ module Ace
 
         # Post review comment to PR
         def post_pr_comment(options, review_file, review_data)
-          return { success: false, error: "No review file to post" } unless File.exist?(review_file)
+          return {success: false, error: "No review file to post"} unless File.exist?(review_file)
 
           # Read review content
           review_content = File.read(review_file)
@@ -759,7 +758,6 @@ module Ace
           base_cache_path
         end
 
-
         def copy_to_release(session_dir, review_data)
           # Copy final review reports to release folder
           release_base_path = @preset_manager.review_base_path
@@ -780,7 +778,6 @@ module Ace
 
           nil
         end
-
 
         def create_metadata(review_data)
           {
@@ -921,7 +918,7 @@ module Ace
 
           # Build a result structure compatible with extract_feedback (multi-model format)
           single_model_result = {
-            results: { model => { success: true, output_file: result[:output_file] } }
+            results: {model => {success: true, output_file: result[:output_file]}}
           }
 
           extract_feedback(single_model_result, session_dir, review_data, options)
@@ -934,7 +931,7 @@ module Ace
         # @param options [ReviewOptions, nil] review options
         # @return [Hash, nil] feedback extraction result or nil on failure
         def extract_feedback(result, session_dir, review_data, options)
-          require_relative 'feedback_manager'
+          require_relative "feedback_manager"
 
           # Collect successful report paths
           report_paths = collect_report_paths(result, session_dir)
@@ -968,10 +965,10 @@ module Ace
           end
 
           # All models failed
-          { success: false, error: last_error, models_tried: models_to_try }
+          {success: false, error: last_error, models_tried: models_to_try}
         rescue => e
           warn "Feedback extraction error: #{e.message}"
-          { success: false, error: e.message }
+          {success: false, error: e.message}
         end
 
         # Build ordered list of synthesis models: primary + fallbacks
@@ -980,8 +977,8 @@ module Ace
         # @return [Array<String>] ordered list of models to try
         def build_synthesis_model_list(options, review_data)
           primary = options&.feedback_model ||
-                    Ace::Review.get("feedback", "synthesis_model") ||
-                    review_data[:model]
+            Ace::Review.get("feedback", "synthesis_model") ||
+            review_data[:model]
 
           fallbacks = Ace::Review.get("feedback", "fallback_models") || []
 
@@ -1015,9 +1012,7 @@ module Ace
 
         # Determine the base path for feedback storage
         #
-        # With session-symlink architecture, feedback always lives in the session
-        # directory. The session is symlinked into task/reviews/, making feedback
-        # accessible via: task/reviews/{session_name}/feedback/
+        # Feedback lives in the session directory under .ace-local/review/sessions/.
         #
         # @param review_data [Hash] review metadata (unused, kept for API compatibility)
         # @param session_dir [String] session directory
@@ -1060,5 +1055,5 @@ module Ace
         end
       end
     end
-    end
   end
+end

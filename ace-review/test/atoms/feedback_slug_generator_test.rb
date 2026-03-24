@@ -221,8 +221,8 @@ module Ace
           feedback_slug = @generator.generate(feedback_title)
 
           # Both should be lowercase and hyphenated
-          assert_match(/\A[a-z0-9\-]+\z/, model_slug)
-          assert_match(/\A[a-z0-9\-]+\z/, feedback_slug)
+          assert_match(/\A[a-z0-9-]+\z/, model_slug)
+          assert_match(/\A[a-z0-9-]+\z/, feedback_slug)
         end
       end
     end

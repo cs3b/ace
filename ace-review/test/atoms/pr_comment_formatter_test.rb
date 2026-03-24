@@ -19,11 +19,11 @@ module Ace
             pr_number: 123,
             pr_title: "Add new feature",
             comments: [
-              { type: "issue_comment", id: "IC_123", author: "bob", body: "Please add tests", created_at: "2025-12-08T10:00:00Z" }
+              {type: "issue_comment", id: "IC_123", author: "bob", body: "Please add tests", created_at: "2025-12-08T10:00:00Z"}
             ],
             reviews: [
-              { type: "review", id: "PRR_456", author: "alice", state: "CHANGES_REQUESTED", body: "Needs refactoring", created_at: "2025-12-08T11:00:00Z" },
-              { type: "review", id: "PRR_789", author: "charlie", state: "APPROVED", body: "LGTM!", created_at: "2025-12-08T12:00:00Z" }
+              {type: "review", id: "PRR_456", author: "alice", state: "CHANGES_REQUESTED", body: "Needs refactoring", created_at: "2025-12-08T11:00:00Z"},
+              {type: "review", id: "PRR_789", author: "charlie", state: "APPROVED", body: "LGTM!", created_at: "2025-12-08T12:00:00Z"}
             ]
           }
 
@@ -57,7 +57,7 @@ module Ace
           result = @formatter.format(nil)
           assert_nil result
 
-          result = @formatter.format({ success: false })
+          result = @formatter.format({success: false})
           assert_nil result
         end
 
@@ -87,7 +87,7 @@ module Ace
             pr_title: "Test",
             comments: [],
             reviews: [
-              { type: "review", id: "PRR_1", author: "alice", state: "CHANGES_REQUESTED", body: "fix this", created_at: "2025-12-08T10:00:00Z" }
+              {type: "review", id: "PRR_1", author: "alice", state: "CHANGES_REQUESTED", body: "fix this", created_at: "2025-12-08T10:00:00Z"}
             ]
           }
 
@@ -106,7 +106,7 @@ module Ace
             pr_title: "Test",
             comments: [],
             reviews: [
-              { type: "review", id: "PRR_1", author: "alice", state: "APPROVED", body: "lgtm", created_at: "2025-12-08T10:00:00Z" }
+              {type: "review", id: "PRR_1", author: "alice", state: "APPROVED", body: "lgtm", created_at: "2025-12-08T10:00:00Z"}
             ]
           }
 
@@ -132,8 +132,8 @@ module Ace
                 line: 42,
                 is_resolved: false,
                 comments: [
-                  { id: "C1", author: "alice", body: "This needs null checking", created_at: "2025-12-08T10:00:00Z" },
-                  { id: "C2", author: "bob", body: "Agreed, will fix", created_at: "2025-12-08T10:30:00Z" }
+                  {id: "C1", author: "alice", body: "This needs null checking", created_at: "2025-12-08T10:00:00Z"},
+                  {id: "C2", author: "bob", body: "Agreed, will fix", created_at: "2025-12-08T10:30:00Z"}
                 ]
               }
             ]
@@ -165,7 +165,7 @@ module Ace
                 line: 15,
                 is_resolved: true,
                 comments: [
-                  { id: "C1", author: "alice", body: "Typo in variable name", created_at: "2025-12-08T10:00:00Z" }
+                  {id: "C1", author: "alice", body: "Typo in variable name", created_at: "2025-12-08T10:00:00Z"}
                 ]
               }
             ]
@@ -187,8 +187,8 @@ module Ace
             comments: [],
             reviews: [],
             review_threads: [
-              { id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{ author: "x", body: "y" }] },
-              { id: "T2", path: "b.rb", line: 2, is_resolved: false, comments: [{ author: "z", body: "w" }] }
+              {id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{author: "x", body: "y"}]},
+              {id: "T2", path: "b.rb", line: 2, is_resolved: false, comments: [{author: "z", body: "w"}]}
             ]
           }
 
@@ -203,11 +203,11 @@ module Ace
             success: true,
             pr_number: 123,
             pr_title: "Test",
-            comments: [{ type: "issue_comment", id: "IC_1", author: "a", body: "Please fix this issue" }],
+            comments: [{type: "issue_comment", id: "IC_1", author: "a", body: "Please fix this issue"}],
             reviews: [],
             review_threads: [
-              { id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{ author: "x", body: "y" }] },
-              { id: "T2", path: "b.rb", line: 2, is_resolved: true, comments: [{ author: "z", body: "w" }] }
+              {id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{author: "x", body: "y"}]},
+              {id: "T2", path: "b.rb", line: 2, is_resolved: true, comments: [{author: "z", body: "w"}]}
             ]
           }
 
@@ -223,10 +223,10 @@ module Ace
             success: true,
             pr_number: 123,
             pr_title: "Test",
-            comments: [{ type: "issue_comment", id: "IC_1", author: "alice", body: "Can you check this?" }],
+            comments: [{type: "issue_comment", id: "IC_1", author: "alice", body: "Can you check this?"}],
             reviews: [],
             review_threads: [
-              { id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{ author: "bob", body: "y" }] }
+              {id: "T1", path: "a.rb", line: 1, is_resolved: false, comments: [{author: "bob", body: "y"}]}
             ]
           }
 

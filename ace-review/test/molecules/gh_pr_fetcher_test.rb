@@ -17,7 +17,7 @@ module Ace
         # ====================================
 
         def test_handle_fetch_error_raises_diff_too_large_on_406
-          result = { stderr: "HTTP 406: diff too large", exit_code: 1 }
+          result = {stderr: "HTTP 406: diff too large", exit_code: 1}
 
           assert_raises(Ace::Review::Errors::DiffTooLargeError) do
             GhPrFetcher.send(:handle_fetch_error, result, "42")
@@ -25,7 +25,7 @@ module Ace
         end
 
         def test_handle_fetch_error_raises_diff_too_large_on_exceeded_maximum
-          result = { stderr: "exceeded the maximum number of files", exit_code: 1 }
+          result = {stderr: "exceeded the maximum number of files", exit_code: 1}
 
           assert_raises(Ace::Review::Errors::DiffTooLargeError) do
             GhPrFetcher.send(:handle_fetch_error, result, "42")
@@ -33,7 +33,7 @@ module Ace
         end
 
         def test_handle_fetch_error_still_raises_pr_not_found
-          result = { stderr: "not found", exit_code: 1 }
+          result = {stderr: "not found", exit_code: 1}
 
           assert_raises(Ace::Review::Errors::PrNotFoundError) do
             GhPrFetcher.send(:handle_fetch_error, result, "42")
@@ -54,10 +54,10 @@ module Ace
             call_count += 1
             if call_count == 1
               # pr diff → 406
-              { success: false, stdout: "", stderr: "HTTP 406", exit_code: 1 }
+              {success: false, stdout: "", stderr: "HTTP 406", exit_code: 1}
             else
               # pr view (metadata fetch for fallback)
-              { success: true, stdout: '{"baseRefName":"main","number":42}' }
+              {success: true, stdout: '{"baseRefName":"main","number":42}'}
             end
           end
 
@@ -65,13 +65,13 @@ module Ace
           mock_local = lambda do |*args|
             commands << args
             if args.include?("fetch")
-              { success: true, stdout: "", stderr: "" }
+              {success: true, stdout: "", stderr: ""}
             elsif args.include?("merge-base")
-              { success: true, stdout: "abc123\n", stderr: "" }
+              {success: true, stdout: "abc123\n", stderr: ""}
             elsif args.include?("update-ref")
-              { success: true, stdout: "", stderr: "" }
+              {success: true, stdout: "", stderr: ""}
             else
-              { success: true, stdout: "diff --git a/f b/f\n+hello", stderr: "" }
+              {success: true, stdout: "diff --git a/f b/f\n+hello", stderr: ""}
             end
           end
 
@@ -97,7 +97,7 @@ module Ace
           parse_stub = ->(_id) { @parsed }
 
           mock_executor = lambda do |_cmd, _args, **_opts|
-            { success: false, stdout: "", stderr: "not found", exit_code: 1 }
+            {success: false, stdout: "", stderr: "not found", exit_code: 1}
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
@@ -114,14 +114,14 @@ module Ace
           parse_stub = ->(_id) { @parsed }
 
           mock_executor = lambda do |_cmd, _args, **_opts|
-            { success: true, stdout: '{"baseRefName":"main","number":42}' }
+            {success: true, stdout: '{"baseRefName":"main","number":42}'}
           end
 
           mock_local = lambda do |*args|
             if args.include?("fetch") || args.include?("update-ref")
-              { success: true, stdout: "", stderr: "" }
+              {success: true, stdout: "", stderr: ""}
             else
-              { success: false, stdout: "", stderr: "fatal: not a git repo" }
+              {success: false, stdout: "", stderr: "fatal: not a git repo"}
             end
           end
 
@@ -141,20 +141,20 @@ module Ace
           parse_stub = ->(_id) { @parsed }
 
           mock_executor = lambda do |_cmd, _args, **_opts|
-            { success: true, stdout: '{"baseRefName":"main","number":42}' }
+            {success: true, stdout: '{"baseRefName":"main","number":42}'}
           end
 
           commands = []
           mock_local = lambda do |*args|
             commands << args
             if args.include?("fetch")
-              { success: true, stdout: "", stderr: "" }
+              {success: true, stdout: "", stderr: ""}
             elsif args.include?("merge-base")
-              { success: true, stdout: "deadbeef\n", stderr: "" }
+              {success: true, stdout: "deadbeef\n", stderr: ""}
             elsif args.include?("update-ref")
-              { success: true, stdout: "", stderr: "" }
+              {success: true, stdout: "", stderr: ""}
             else
-              { success: true, stdout: "diff --git a/lib/foo.rb b/lib/foo.rb\n+new line", stderr: "" }
+              {success: true, stdout: "diff --git a/lib/foo.rb b/lib/foo.rb\n+new line", stderr: ""}
             end
           end
 

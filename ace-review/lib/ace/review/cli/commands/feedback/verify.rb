@@ -37,15 +37,15 @@ module Ace
             DESC
 
             example [
-              'abc123 --valid                                    # Correct issue, needs fix',
-              'abc123 --invalid                                  # False positive (incorrect)',
-              'abc123 --skip                                     # Correct but not fixing',
+              "abc123 --valid                                    # Correct issue, needs fix",
+              "abc123 --invalid                                  # False positive (incorrect)",
+              "abc123 --skip                                     # Correct but not fixing",
               'abc123 --valid --research "Confirmed: missing null check at line 42"',
               'abc123 --invalid --research "False positive: validation exists in middleware"',
               'abc123 --skip --research "Design: using polling for simplicity"',
               'abc123 --skip --research "Tracked in task 253"',
               'abc123 --skip --research "Duplicate of abc120"',
-              'abc123 --valid --session .ace-local/review/sessions/review-xyz'
+              "abc123 --valid --session .ace-local/review/sessions/review-xyz"
             ]
 
             argument :id, required: true, desc: "Feedback ID"
@@ -93,19 +93,23 @@ module Ace
               result = manager.verify(
                 base_path,
                 resolved_id,
-                valid: options[:valid] == true ? true : (options[:invalid] == true ? false : nil),
-                skip: options[:skip] == true ? true : nil,
+                valid: if options[:valid] == true
+                         true
+                       else
+                         ((options[:invalid] == true) ? false : nil)
+                       end,
+                skip: (options[:skip] == true) ? true : nil,
                 research: options[:research]
               )
 
               if result[:success]
                 status = if options[:valid]
-                           "valid (pending)"
-                         elsif options[:invalid]
-                           "invalid (archived)"
-                         else
-                           "skipped (archived)"
-                         end
+                  "valid (pending)"
+                elsif options[:invalid]
+                  "invalid (archived)"
+                else
+                  "skipped (archived)"
+                end
                 puts "Feedback #{resolved_id} marked as #{status}."
                 puts "Research: #{options[:research]}" if options[:research] && !quiet?(options)
               else
@@ -127,7 +131,7 @@ module Ace
 
               if files.length > 1
                 raise Ace::Support::Cli::Error.new(
-                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
+                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split("-").first }.join(", ")}. " \
                   "Please provide more characters."
                 )
               end
@@ -135,7 +139,7 @@ module Ace
               return nil if files.empty?
 
               # Extract full ID from filename
-              File.basename(files.first).split('-').first
+              File.basename(files.first).split("-").first
             end
           end
         end

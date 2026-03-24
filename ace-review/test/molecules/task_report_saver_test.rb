@@ -25,7 +25,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_save_creates_reviews_directory
-    review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    review_data = {preset: "pr", model: "google:gemini-2.5-flash"}
 
     result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @review_file, review_data)
 
@@ -34,7 +34,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_save_copies_review_file
-    review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    review_data = {preset: "pr", model: "google:gemini-2.5-flash"}
 
     result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @review_file, review_data)
 
@@ -47,7 +47,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_generate_filename_with_provider_prefix
-    review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    review_data = {preset: "pr", model: "google:gemini-2.5-flash"}
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
@@ -57,7 +57,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_generate_filename_with_model_name
-    review_data = { preset: "security", model: "gpt-4" }
+    review_data = {preset: "security", model: "gpt-4"}
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
@@ -68,16 +68,16 @@ class TaskReportSaverTest < Minitest::Test
 
   def test_generate_filename_unique_for_same_provider_models
     # This tests the fix for multi-model runs with same provider
-    review_data_flash = { preset: "pr", model: "google:gemini-2.5-flash" }
-    review_data_pro = { preset: "pr", model: "google:gemini-2.5-pro" }
+    review_data_flash = {preset: "pr", model: "google:gemini-2.5-flash"}
+    review_data_pro = {preset: "pr", model: "google:gemini-2.5-pro"}
 
     filename_flash = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data_flash)
     filename_pro = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data_pro)
 
     # Remove compact ID prefix to compare model portions
     # Compact ID is 6 chars Base36 (0-9, a-z)
-    flash_suffix = filename_flash.sub(/^[0-9a-z]{6}-/, '')
-    pro_suffix = filename_pro.sub(/^[0-9a-z]{6}-/, '')
+    flash_suffix = filename_flash.sub(/^[0-9a-z]{6}-/, "")
+    pro_suffix = filename_pro.sub(/^[0-9a-z]{6}-/, "")
 
     # Filenames should be different (different model slugs)
     refute_equal flash_suffix, pro_suffix, "Same-provider models should produce different filenames"
@@ -86,7 +86,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_generate_filename_sanitizes_preset
-    review_data = { preset: "my custom/preset!", model: "claude-3" }
+    review_data = {preset: "my custom/preset!", model: "claude-3"}
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
@@ -111,7 +111,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_save_returns_error_for_missing_task_dir
-    review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    review_data = {preset: "pr", model: "google:gemini-2.5-flash"}
     non_existent_dir = File.join(@temp_dir, "nonexistent")
 
     result = Ace::Review::Molecules::TaskReportSaver.save(non_existent_dir, @review_file, review_data)
@@ -121,7 +121,7 @@ class TaskReportSaverTest < Minitest::Test
   end
 
   def test_save_returns_error_for_missing_review_file
-    review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    review_data = {preset: "pr", model: "google:gemini-2.5-flash"}
     non_existent_file = File.join(@session_dir, "nonexistent.md")
 
     result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, non_existent_file, review_data)
@@ -276,7 +276,7 @@ class TaskReportSaverTest < Minitest::Test
     result = Ace::Review::Molecules::TaskReportSaver.save_feedback(
       @task_dir,
       feedback_file,
-      { priority: "high", category: "security" }
+      {priority: "high", category: "security"}
     )
 
     assert result[:success], "Should accept metadata parameter"

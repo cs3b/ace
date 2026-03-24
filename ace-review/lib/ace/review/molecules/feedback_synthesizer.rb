@@ -59,7 +59,7 @@ module Ace
 
           # Synthesize (handles both single and multiple reports uniformly)
           synthesize_reports(reports, session_dir, model)
-        rescue StandardError => e
+        rescue => e
           error_result("Synthesis failed: #{e.message}", backtrace: e.backtrace.first(5))
         end
 
@@ -85,7 +85,7 @@ module Ace
               content: content,
               size: content.bytesize
             }
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Failed to read report #{path}: #{e.message}" if Ace::Review.debug?
           end
 
@@ -194,9 +194,9 @@ module Ace
           total_size = reports.sum { |r| r[:size] }
 
           content = "Synthesize these #{reports.size} code review report"
-          content += reports.size == 1 ? "." : "s into unique, deduplicated findings."
+          content += (reports.size == 1) ? "." : "s into unique, deduplicated findings."
           content += "\n\n"
-          content += "**Reviewers**: #{reports.map { |r| r[:reviewer] }.join(', ')}\n\n"
+          content += "**Reviewers**: #{reports.map { |r| r[:reviewer] }.join(", ")}\n\n"
 
           reports.each_with_index do |report, idx|
             content += "---\n"
@@ -258,7 +258,7 @@ module Ace
 
           display_synthesis_complete(items.length, metadata[:consensus_findings])
 
-          { success: true, items: items, metadata: metadata }
+          {success: true, items: items, metadata: metadata}
         end
 
         # Extract JSON from LLM response
@@ -299,16 +299,14 @@ module Ace
           last_error = nil
 
           candidates.each_with_index do |candidate, idx|
-            begin
-              return {
-                success: true,
-                data: JSON.parse(candidate),
-                cleaned: candidate,
-                stage: idx.zero? ? stage : "#{stage}/sanitized"
-              }
-            rescue JSON::ParserError => e
-              last_error = e
-            end
+            return {
+              success: true,
+              data: JSON.parse(candidate),
+              cleaned: candidate,
+              stage: idx.zero? ? stage : "#{stage}/sanitized"
+            }
+          rescue JSON::ParserError => e
+            last_error = e
           end
 
           error_message = last_error ? last_error.message : "no JSON object found"
@@ -346,7 +344,7 @@ module Ace
             return error_result("Invalid JSON response and repair failed: #{result[:error]}")
           end
 
-          { success: true, response: result[:response] }
+          {success: true, response: result[:response]}
         end
 
         def repair_system_prompt
@@ -380,7 +378,7 @@ module Ace
             File.join(session_dir, "feedback-synthesis.cleaned.json"),
             JSON.pretty_generate(data)
           )
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to persist cleaned synthesis JSON: #{e.message}" if Ace::Review.debug?
         end
 
@@ -525,7 +523,11 @@ module Ace
         # @return [String] Resolved file path
         def resolve_prompt_path(prompt_name)
           # Try ace-nav first if available
-          nav_result = `ace-nav prompt://#{prompt_name} 2>/dev/null`.strip rescue ""
+          nav_result = begin
+            `ace-nav prompt://#{prompt_name} 2>/dev/null`.strip
+          rescue
+            ""
+          end
           return nav_result unless nav_result.empty?
 
           # Fallback to direct path
@@ -554,8 +556,8 @@ module Ace
         # @param model [String] Model being used
         def display_synthesis_start(report_count, model)
           $stderr.puts
-          $stderr.puts "Synthesizing feedback from #{report_count} review reports..."
-          $stderr.puts "  Using model: #{model}"
+          warn "Synthesizing feedback from #{report_count} review reports..."
+          warn "  Using model: #{model}"
           $stderr.flush
         end
 
@@ -564,9 +566,9 @@ module Ace
         # @param item_count [Integer] Number of items extracted
         # @param consensus_count [Integer] Number with consensus
         def display_synthesis_complete(item_count, consensus_count)
-          $stderr.puts "✓ Synthesis complete"
-          $stderr.puts "  Unique findings: #{item_count}"
-          $stderr.puts "  Consensus items: #{consensus_count}" if consensus_count > 0
+          warn "✓ Synthesis complete"
+          warn "  Unique findings: #{item_count}"
+          warn "  Consensus items: #{consensus_count}" if consensus_count > 0
           $stderr.flush
         end
 
@@ -576,7 +578,7 @@ module Ace
         # @param backtrace [Array<String>, nil] Optional backtrace
         # @return [Hash] Error result
         def error_result(message, backtrace: nil)
-          result = { success: false, error: message }
+          result = {success: false, error: message}
           result[:backtrace] = backtrace if backtrace
           result
         end

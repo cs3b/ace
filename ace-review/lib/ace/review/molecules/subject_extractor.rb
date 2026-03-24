@@ -3,7 +3,7 @@
 require "yaml"
 require "open3"
 require "timeout"
-require 'ace/support/config'
+require "ace/support/config"
 require "ace/core/atoms/process_terminator" # Keep from ace-support-core for process cleanup
 require "ace/git"
 require_relative "../errors"
@@ -31,12 +31,12 @@ module Ace
           @taskflow_timeout = options[:taskflow_timeout] || TASKFLOW_TIMEOUT
         end
 
-      # Extract subject from configuration
+        # Extract subject from configuration
         # @param subject_config [String, Hash] subject configuration
         # @return [String] extracted subject content
         # @note Prefer parse_typed_subject_config or merge_typed_subject_configs for new code
-      def extract(subject_config)
-        return "" unless subject_config
+        def extract(subject_config)
+          return "" unless subject_config
 
           case subject_config
           when String
@@ -98,10 +98,10 @@ module Ace
         def resolve_single_subject(subject)
           case subject
           when String
-          parse_typed_subject(subject) || parse_keyword_or_pattern(subject)
-        when Hash
-          subject
-        else
+            parse_typed_subject(subject) || parse_keyword_or_pattern(subject)
+          when Hash
+            subject
+          else
             {}
           end
         end
@@ -129,13 +129,13 @@ module Ace
         def parse_keyword_or_pattern(input)
           case input.downcase
           when "staged"
-            { "diffs" => ["--staged"] }
+            {"diffs" => ["--staged"]}
           when "working", "unstaged"
-            { "diffs" => [""] }
+            {"diffs" => [""]}
           when "pr", "pull-request"
             tracking = Ace::Git::Molecules::BranchReader.tracking_branch
             range = tracking ? "#{tracking}...HEAD" : "origin/main...HEAD"
-            { "diffs" => [range] }
+            {"diffs" => [range]}
           else
             auto_detect_pattern(input)
           end
@@ -146,12 +146,12 @@ module Ace
         # @return [Hash] ace-bundle config hash
         def auto_detect_pattern(input)
           if looks_like_git_range?(input)
-            { "diffs" => [input] }
+            {"diffs" => [input]}
           elsif input.include?("*") || input.include?("/")
-            { "files" => [input] }
+            {"files" => [input]}
           else
             # Default to git diff
-            { "diffs" => [input] }
+            {"diffs" => [input]}
           end
         end
 
@@ -167,9 +167,9 @@ module Ace
           # structure (bundle: { diffs: [...] }) for typed subject compatibility
           context_md = "#{YAML.dump(config).strip}\n---\n\n"
 
-          result = Ace::Bundle.load_auto(context_md, format: 'markdown')
+          result = Ace::Bundle.load_auto(context_md, format: "markdown")
           result.content
-        rescue StandardError => e
+        rescue => e
           warn "ace-bundle extraction failed: #{e.message}" if Ace::Review.debug?
           ""
         end
@@ -177,7 +177,7 @@ module Ace
         def parse_typed_subject(input)
           case input
           when /^diff:(.+)$/
-            { "bundle" => { "diffs" => [::Regexp.last_match(1)] } }
+            {"bundle" => {"diffs" => [::Regexp.last_match(1)]}}
           when /^diff:$/
             raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)"
           when /^pr:(.+)$/
@@ -190,7 +190,7 @@ module Ace
             pr_refs.each do |ref|
               Ace::Git::Atoms::PrIdentifierParser.parse(ref)
             end
-            { "bundle" => { "pr" => pr_refs } }
+            {"bundle" => {"pr" => pr_refs}}
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
           when /^files:(.+)$/
@@ -198,7 +198,7 @@ module Ace
             if file_patterns.empty?
               raise ArgumentError, "No valid file patterns provided. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
             end
-            { "bundle" => { "files" => file_patterns } }
+            {"bundle" => {"files" => file_patterns}}
           when /^files:$/
             raise ArgumentError, "Empty value for files: subject. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
           when /^commit:(.+)$/
@@ -212,7 +212,7 @@ module Ace
             unless commit_hash.match?(/\A[a-f0-9]{6,40}\z/)
               raise ArgumentError, "Invalid commit hash format: '#{commit_hash}'. Must be 6-40 hexadecimal characters."
             end
-            { "bundle" => { "diffs" => ["#{commit_hash}~1..#{commit_hash}"] } }
+            {"bundle" => {"diffs" => ["#{commit_hash}~1..#{commit_hash}"]}}
           when /^commit:$/
             raise ArgumentError, "Empty value for commit: subject. Usage: commit:HASH"
           when /^task:(.+)$/
@@ -253,7 +253,7 @@ module Ace
           # We use File.dirname to get the task's directory and glob for all
           # solution files (*.s.md) within it - this includes the main task
           # and any subtasks (145.01.s.md, 145.02.s.md, etc.)
-          { "bundle" => { "files" => ["#{File.dirname(task_path)}/**/*.s.md"] } }
+          {"bundle" => {"files" => ["#{File.dirname(task_path)}/**/*.s.md"]}}
         end
 
         # Execute ace-task with timeout and proper process cleanup

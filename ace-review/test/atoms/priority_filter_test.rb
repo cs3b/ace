@@ -10,49 +10,49 @@ class PriorityFilterTest < AceReviewTest
   def test_parse_exact_match_critical
     result = Ace::Review::Atoms::PriorityFilter.parse("critical")
 
-    assert_equal({ priority: "critical", inclusive: false }, result)
+    assert_equal({priority: "critical", inclusive: false}, result)
   end
 
   def test_parse_exact_match_high
     result = Ace::Review::Atoms::PriorityFilter.parse("high")
 
-    assert_equal({ priority: "high", inclusive: false }, result)
+    assert_equal({priority: "high", inclusive: false}, result)
   end
 
   def test_parse_exact_match_medium
     result = Ace::Review::Atoms::PriorityFilter.parse("medium")
 
-    assert_equal({ priority: "medium", inclusive: false }, result)
+    assert_equal({priority: "medium", inclusive: false}, result)
   end
 
   def test_parse_exact_match_low
     result = Ace::Review::Atoms::PriorityFilter.parse("low")
 
-    assert_equal({ priority: "low", inclusive: false }, result)
+    assert_equal({priority: "low", inclusive: false}, result)
   end
 
   def test_parse_range_match_critical_plus
     result = Ace::Review::Atoms::PriorityFilter.parse("critical+")
 
-    assert_equal({ priority: "critical", inclusive: true }, result)
+    assert_equal({priority: "critical", inclusive: true}, result)
   end
 
   def test_parse_range_match_high_plus
     result = Ace::Review::Atoms::PriorityFilter.parse("high+")
 
-    assert_equal({ priority: "high", inclusive: true }, result)
+    assert_equal({priority: "high", inclusive: true}, result)
   end
 
   def test_parse_range_match_medium_plus
     result = Ace::Review::Atoms::PriorityFilter.parse("medium+")
 
-    assert_equal({ priority: "medium", inclusive: true }, result)
+    assert_equal({priority: "medium", inclusive: true}, result)
   end
 
   def test_parse_range_match_low_plus
     result = Ace::Review::Atoms::PriorityFilter.parse("low+")
 
-    assert_equal({ priority: "low", inclusive: true }, result)
+    assert_equal({priority: "low", inclusive: true}, result)
   end
 
   def test_parse_invalid_priority

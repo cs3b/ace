@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Load ace-config for configuration cascade management
-require 'ace/support/config'
+require "ace/support/config"
 
 # Try to load ace-bundle if available (required for full functionality)
 begin
@@ -77,7 +77,7 @@ module Ace
       def config
         @config ||= begin
           gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
-                     File.expand_path("../..", __dir__)
+            File.expand_path("../..", __dir__)
 
           resolver = Ace::Support::Config.create(
             config_dir: ".ace",
@@ -88,7 +88,7 @@ module Ace
           # Resolve config for review namespace
           config = resolver.resolve_namespace("review")
           config.data
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Could not load ace-review config: #{e.message}" if debug?
           # Fall back to gem defaults instead of empty hash to prevent silent config erasure
           load_gem_defaults_fallback
@@ -102,7 +102,7 @@ module Ace
       # or user config issues
       def load_gem_defaults_fallback
         gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
         defaults_path = File.join(gem_root, ".ace-defaults", "review", "config.yml")
 
         return {} unless File.exist?(defaults_path)

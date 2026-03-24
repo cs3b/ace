@@ -83,7 +83,7 @@ module Ace
           summary += "- Total comments: #{total_comments}\n"
           summary += "- Inline code comments: #{inline_thread_count}\n" if inline_thread_count > 0
           summary += "- Unresolved items: #{unresolved_count}\n"
-          summary += "- Reviewers: #{reviewers.map { |r| "@#{r}" }.join(', ')}\n" if reviewers.any?
+          summary += "- Reviewers: #{reviewers.map { |r| "@#{r}" }.join(", ")}\n" if reviewers.any?
           summary
         end
 
@@ -317,8 +317,8 @@ module Ace
         end
 
         private_class_method :build_frontmatter, :build_summary, :build_inline_comments_section,
-                             :build_unresolved_section, :build_resolved_section, :build_comments_table,
-                             :extract_reviewers, :count_unresolved, :actionable_comment?, :format_body, :truncate_body
+          :build_unresolved_section, :build_resolved_section, :build_comments_table,
+          :extract_reviewers, :count_unresolved, :actionable_comment?, :format_body, :truncate_body
       end
     end
   end

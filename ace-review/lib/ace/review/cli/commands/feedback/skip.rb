@@ -33,12 +33,12 @@ module Ace
             DESC
 
             example [
-              '[DEPRECATED] Use: verify --skip instead',
-              'abc123                                                   # Skip without reason',
+              "[DEPRECATED] Use: verify --skip instead",
+              "abc123                                                   # Skip without reason",
               'abc123 --reason "Design: using polling for simplicity"  # Design decision',
               'abc123 --reason "Tracked in task 253"                    # Deferred to separate task',
               'abc123 --reason "Duplicate of abc120"                    # Already covered',
-              'abc123 --session .ace-local/review/sessions/review-xyz'
+              "abc123 --session .ace-local/review/sessions/review-xyz"
             ]
 
             argument :id, required: true, desc: "Feedback ID"
@@ -107,7 +107,7 @@ module Ace
 
               if files.length > 1
                 raise Ace::Support::Cli::Error.new(
-                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
+                  "Multiple items match '#{partial_id}': #{files.map { |f| File.basename(f).split("-").first }.join(", ")}. " \
                   "Please provide more characters."
                 )
               end
@@ -115,7 +115,7 @@ module Ace
               return nil if files.empty?
 
               # Extract full ID from filename
-              File.basename(files.first).split('-').first
+              File.basename(files.first).split("-").first
             end
           end
         end

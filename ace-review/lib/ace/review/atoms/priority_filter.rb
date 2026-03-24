@@ -64,7 +64,7 @@ module Ace
           # Validate priority
           return nil unless VALID_PRIORITIES.include?(priority)
 
-          { priority: priority, inclusive: inclusive }
+          {priority: priority, inclusive: inclusive}
         end
 
         # Check if an item priority matches a filter string

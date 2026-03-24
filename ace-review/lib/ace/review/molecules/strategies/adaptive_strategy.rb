@@ -177,7 +177,7 @@ module Ace
           def format_log_message(details)
             parts = [
               "[ace-review] Strategy selection:",
-              "model=#{details[:model] || 'unknown'}",
+              "model=#{details[:model] || "unknown"}",
               "subject_tokens=#{details[:subject_tokens]}",
               "model_limit=#{details[:model_limit]}",
               "available=#{details[:available]}",

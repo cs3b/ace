@@ -32,10 +32,10 @@ module Ace
           return @cache[cache_key] if @cache.key?(cache_key)
 
           content = if reference.start_with?(PROTOCOL_PREFIX)
-                      resolve_protocol_uri(reference)
-                    else
-                      resolve_file_path(reference, config_dir)
-                    end
+            resolve_protocol_uri(reference)
+          else
+            resolve_file_path(reference, config_dir)
+          end
 
           @cache[cache_key] = content
           content
@@ -47,9 +47,9 @@ module Ace
 
           # Collect from all locations
           locations = [
-            { path: project_prompt_dir, label: "project" },
-            { path: user_prompt_dir, label: "user" },
-            { path: gem_prompt_dir, label: "built-in" }
+            {path: project_prompt_dir, label: "project"},
+            {path: user_prompt_dir, label: "user"},
+            {path: gem_prompt_dir, label: "built-in"}
           ]
 
           locations.each do |location|
@@ -127,7 +127,7 @@ module Ace
           return nil unless path && File.exist?(path)
 
           File.read(path).strip
-        rescue StandardError => e
+        rescue => e
           warn "Failed to read prompt file #{path}: #{e.message}" if Ace::Review.debug?
           nil
         end
@@ -155,7 +155,7 @@ module Ace
               category = parts[0]
               name = parts[1..-1].join("/")
               collection[category] ||= []
-              collection[category] << { name: name, source: label }
+              collection[category] << {name: name, source: label}
             else
               # Top-level prompt
               collection[rel_path] = label

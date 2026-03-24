@@ -7,10 +7,10 @@ module Ace
     module Atoms
       class RetryWithBackoffTest < Minitest::Test
         def setup
-          @success_result = { success: true, stdout: "output" }
-          @network_error = { success: false, stderr: "Network timeout occurred" }
-          @connection_error = { success: false, stderr: "Connection refused" }
-          @not_found_error = { success: false, stderr: "Could not resolve to a PullRequest" }
+          @success_result = {success: true, stdout: "output"}
+          @network_error = {success: false, stderr: "Network timeout occurred"}
+          @connection_error = {success: false, stderr: "Connection refused"}
+          @not_found_error = {success: false, stderr: "Could not resolve to a PullRequest"}
         end
 
         # Test: Successful execution on first attempt
@@ -32,7 +32,7 @@ module Ace
           RetryWithBackoff.stub :sleep, ->(_time) {} do
             result = RetryWithBackoff.execute do
               call_count += 1
-              call_count < 2 ? @network_error : @success_result
+              (call_count < 2) ? @network_error : @success_result
             end
 
             assert_equal @success_result, result
@@ -79,7 +79,7 @@ module Ace
           RetryWithBackoff.stub :sleep, ->(time) { sleep_times << time } do
             RetryWithBackoff.execute(max_retries: 3, initial_backoff: 2, max_backoff: 10) do
               call_count += 1
-              call_count < 3 ? @network_error : @success_result
+              (call_count < 3) ? @network_error : @success_result
             end
           end
 
@@ -94,7 +94,7 @@ module Ace
 
           RetryWithBackoff.stub :sleep, ->(time) { sleep_times << time } do
             RetryWithBackoff.execute(max_retries: 4, initial_backoff: 10, max_backoff: 20) do
-              sleep_times.size < 3 ? @network_error : @success_result
+              (sleep_times.size < 3) ? @network_error : @success_result
             end
           end
 
@@ -104,7 +104,7 @@ module Ace
 
         # Test: Custom retryable check
         def test_execute_uses_custom_retryable_check
-          custom_error = { success: false, stderr: "CUSTOM_RETRY_ME" }
+          custom_error = {success: false, stderr: "CUSTOM_RETRY_ME"}
           call_count = 0
 
           custom_check = lambda do |result|
@@ -117,7 +117,7 @@ module Ace
               retryable_check: custom_check
             ) do
               call_count += 1
-              call_count < 2 ? custom_error : @success_result
+              (call_count < 2) ? custom_error : @success_result
             end
 
             assert_equal @success_result, result
@@ -145,43 +145,43 @@ module Ace
 
         # Test: Default retryable check for timeout errors
         def test_default_retryable_check_detects_timeout
-          timeout_error = { success: false, stderr: "Request timeout" }
+          timeout_error = {success: false, stderr: "Request timeout"}
           assert RetryWithBackoff.default_retryable_check(timeout_error)
         end
 
         # Test: Default retryable check for connection errors
         def test_default_retryable_check_detects_connection_errors
-          connection_error = { success: false, stderr: "Connection failed" }
+          connection_error = {success: false, stderr: "Connection failed"}
           assert RetryWithBackoff.default_retryable_check(connection_error)
         end
 
         # Test: Default retryable check for network errors
         def test_default_retryable_check_detects_network_errors
-          network_error = { success: false, stderr: "Network error occurred" }
+          network_error = {success: false, stderr: "Network error occurred"}
           assert RetryWithBackoff.default_retryable_check(network_error)
         end
 
         # Test: Default retryable check for temporary failures
         def test_default_retryable_check_detects_temporary_failures
-          temp_error = { success: false, stderr: "Temporary failure in name resolution" }
+          temp_error = {success: false, stderr: "Temporary failure in name resolution"}
           assert RetryWithBackoff.default_retryable_check(temp_error)
         end
 
         # Test: Default retryable check rejects non-retryable errors
         def test_default_retryable_check_rejects_non_retryable_errors
-          not_found = { success: false, stderr: "Could not resolve to a PullRequest" }
+          not_found = {success: false, stderr: "Could not resolve to a PullRequest"}
           refute RetryWithBackoff.default_retryable_check(not_found)
         end
 
         # Test: Default retryable check handles :error key
         def test_default_retryable_check_handles_error_key
-          error_with_error_key = { success: false, error: "Network timeout" }
+          error_with_error_key = {success: false, error: "Network timeout"}
           assert RetryWithBackoff.default_retryable_check(error_with_error_key)
         end
 
         # Test: Default retryable check handles missing error message
         def test_default_retryable_check_handles_missing_error
-          no_error_msg = { success: false }
+          no_error_msg = {success: false}
           refute RetryWithBackoff.default_retryable_check(no_error_msg)
         end
 
@@ -212,7 +212,7 @@ module Ace
               initial_backoff: 5,
               max_backoff: 15
             ) do
-              sleep_times.size < 2 ? @network_error : @success_result
+              (sleep_times.size < 2) ? @network_error : @success_result
             end
           end
 

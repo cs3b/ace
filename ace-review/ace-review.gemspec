@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
     Rakefile
   ]).select { |f| File.file?(f) }
   spec.bindir = 'exe'
-  spec.executables = ['ace-review']
+  spec.executables = ['ace-review', 'ace-review-feedback']
   spec.require_paths = ['lib']
 
   # Runtime dependencies
