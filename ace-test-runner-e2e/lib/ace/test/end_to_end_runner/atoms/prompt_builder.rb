@@ -149,7 +149,7 @@ module Ace
           # @return [String] The user prompt containing the test scenario
           def build(scenario, test_cases: nil)
             filter_instruction = if test_cases&.any?
-              "\n**IMPORTANT:** Execute ONLY the following test cases: #{test_cases.join(', ')}. Skip all other test cases.\n"
+              "\n**IMPORTANT:** Execute ONLY the following test cases: #{test_cases.join(", ")}. Skip all other test cases.\n"
             else
               ""
             end
@@ -157,7 +157,7 @@ module Ace
             pending_instruction = build_pending_tc_skip_instruction(scenario)
 
             execute_instruction = if test_cases&.any?
-              "Execute only the specified test cases (#{test_cases.join(', ')}) and return the JSON results as specified in your instructions."
+              "Execute only the specified test cases (#{test_cases.join(", ")}) and return the JSON results as specified in your instructions."
             else
               "Execute all test cases in this scenario and return the JSON results as specified in your instructions."
             end

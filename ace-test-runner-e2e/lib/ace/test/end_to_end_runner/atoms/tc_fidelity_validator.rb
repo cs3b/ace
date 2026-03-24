@@ -26,7 +26,7 @@ module Ace
 
             {
               error: "TC fidelity mismatch: agent reported #{reported_count} test cases " \
-                     "but scenario has #{expected_count} (#{expected_ids.join(', ')})",
+                     "but scenario has #{expected_count} (#{expected_ids.join(", ")})",
               expected_count: expected_count,
               reported_count: reported_count,
               expected_ids: expected_ids

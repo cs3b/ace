@@ -173,10 +173,10 @@ module Ace
             end
 
             lines << ""
-            if results_data[:failed] + results_data[:errors] == 0
-              lines << color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
+            lines << if results_data[:failed] + results_data[:errors] == 0
+              color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
             else
-              lines << color("\u2717 SOME TESTS FAILED", :red, use_color: use_color)
+              color("\u2717 SOME TESTS FAILED", :red, use_color: use_color)
             end
             lines << double_separator
             lines
@@ -207,10 +207,10 @@ module Ace
             lines << "Report:       #{report_path}"
             lines << ""
 
-            if failed == 0
-              lines << color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
+            lines << if failed == 0
+              color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
             else
-              lines << color("\u2717 SOME TESTS FAILED", :red, use_color: use_color)
+              color("\u2717 SOME TESTS FAILED", :red, use_color: use_color)
             end
 
             lines << separator

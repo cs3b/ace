@@ -42,24 +42,24 @@ module Ace
             argument :test_id, required: false, desc: "Test ID (e.g., TS-LINT-001)"
 
             option :provider, type: :string, default: Molecules::ConfigLoader.default_provider,
-                   desc: "LLM provider:model (e.g., claude:sonnet, gemini:flash)"
+              desc: "LLM provider:model (e.g., claude:sonnet, gemini:flash)"
             option :cli_args, type: :string,
-                   desc: "Extra args for CLI-based LLM providers"
+              desc: "Extra args for CLI-based LLM providers"
             option :timeout, type: :string, default: Molecules::ConfigLoader.default_timeout.to_s,
-                   desc: "Timeout per test in seconds"
+              desc: "Timeout per test in seconds"
             option :parallel, type: :string, default: Molecules::ConfigLoader.default_parallel.to_s,
-                   desc: "Number of tests to run in parallel (1 = sequential)"
+              desc: "Number of tests to run in parallel (1 = sequential)"
             option :progress, type: :boolean, desc: "Enable live animated display"
             option :run_id, type: :string,
-                   desc: "Pre-generated run ID for deterministic report paths"
+              desc: "Pre-generated run ID for deterministic report paths"
             option :report_dir, type: :string,
-                   desc: "Explicit report directory path (overrides computed path)"
+              desc: "Explicit report directory path (overrides computed path)"
             option :dry_run, type: :boolean,
-                   desc: "Preview which scenarios would run without executing"
+              desc: "Preview which scenarios would run without executing"
             option :tags, type: :string,
-                   desc: "Comma-separated scenario tags to include"
+              desc: "Comma-separated scenario tags to include"
             option :verify, type: :boolean,
-                   desc: "Run independent verifier pass after runner execution"
+              desc: "Run independent verifier pass after runner execution"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"

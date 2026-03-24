@@ -9,8 +9,8 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
   def setup
     @output = StringIO.new
     @queue = [
-      { package: "ace-lint", test_file: "/path/to/TS-LINT-001-basic/scenario.yml" },
-      { package: "ace-review", test_file: "/path/to/TS-REVIEW-001-pr/scenario.yml" }
+      {package: "ace-lint", test_file: "/path/to/TS-LINT-001-basic/scenario.yml"},
+      {package: "ace-review", test_file: "/path/to/TS-REVIEW-001-pr/scenario.yml"}
     ]
     @display = SuiteProgressDisplayManager.new(
       @queue, output: @output, use_color: false, pkg_width: 12, name_width: 25
@@ -54,7 +54,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic" }
+    result = {status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic"}
     @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 10.2)
     out = @output.string
 
@@ -69,7 +69,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "fail", passed_cases: 2, total_cases: 5, test_name: "TS-LINT-001-basic" }
+    result = {status: "fail", passed_cases: 2, total_cases: 5, test_name: "TS-LINT-001-basic"}
     @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 8.0)
     out = @output.string
 
@@ -86,8 +86,8 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_show_summary_outputs_after_table
     @display.show_header(2, 2)
-    result1 = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic" }
-    result2 = { status: "fail", passed_cases: 2, total_cases: 4, test_name: "TS-REVIEW-001-pr" }
+    result1 = {status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic"}
+    result2 = {status: "fail", passed_cases: 2, total_cases: 4, test_name: "TS-REVIEW-001-pr"}
     @display.test_completed(result1, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 10.0)
     @display.test_completed(result2, "ace-review", "/path/to/TS-REVIEW-001-pr/scenario.yml", 15.0)
     @output.truncate(0)
@@ -96,8 +96,8 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
     results = {
       total: 2, passed: 1, failed: 1, errors: 0,
       packages: {
-        "ace-lint" => [{ status: "pass", test_name: "TS-LINT-001-basic", passed_cases: 5, total_cases: 5 }],
-        "ace-review" => [{ status: "fail", test_name: "TS-REVIEW-001-pr", passed_cases: 2, total_cases: 4 }]
+        "ace-lint" => [{status: "pass", test_name: "TS-LINT-001-basic", passed_cases: 5, total_cases: 5}],
+        "ace-review" => [{status: "fail", test_name: "TS-REVIEW-001-pr", passed_cases: 2, total_cases: 4}]
       }
     }
     @display.show_summary(results, 25.0)
@@ -132,7 +132,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "pass", passed_cases: nil, total_cases: nil, test_name: "TS-LINT-001-basic" }
+    result = {status: "pass", passed_cases: nil, total_cases: nil, test_name: "TS-LINT-001-basic"}
     @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 5.0)
     out = @output.string
 

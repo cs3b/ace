@@ -211,7 +211,7 @@ module Ace
                 else
                   result[:error] || result[:summary] || "failed"
                 end
-                failed_details << { package: package, test_name: test_name, cases: cases }
+                failed_details << {package: package, test_name: test_name, cases: cases}
               end
             end
             failed_details

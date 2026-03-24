@@ -83,8 +83,8 @@ class ReportWriterTest < Minitest::Test
       report_dir = File.join(tmpdir, "reports")
       scenario = create_scenario
       result = create_result(test_cases: [
-        { id: "TC-001", description: "Valid file", status: "pass" },
-        { id: "TC-002", description: "Style issues", status: "fail" }
+        {id: "TC-001", description: "Valid file", status: "pass"},
+        {id: "TC-002", description: "Style issues", status: "fail"}
       ])
 
       paths = @writer.write(result, scenario, report_dir: report_dir)
@@ -106,7 +106,7 @@ class ReportWriterTest < Minitest::Test
           description: "Goal mode case",
           status: "pass",
           criteria: [
-            { description: "Artifact exists", status: "pass", evidence: "results/tc/01/output.txt" }
+            {description: "Artifact exists", status: "pass", evidence: "results/tc/01/output.txt"}
           ]
         }
       ])
@@ -146,8 +146,8 @@ class ReportWriterTest < Minitest::Test
       report_dir = File.join(tmpdir, "reports")
       scenario = create_scenario
       result = create_result(status: "pass", test_cases: [
-        { id: "TC-001", description: "First", status: "pass" },
-        { id: "TC-002", description: "Second", status: "pass" }
+        {id: "TC-001", description: "First", status: "pass"},
+        {id: "TC-002", description: "Second", status: "pass"}
       ])
 
       paths = @writer.write(result, scenario, report_dir: report_dir)
@@ -162,9 +162,9 @@ class ReportWriterTest < Minitest::Test
       report_dir = File.join(tmpdir, "reports")
       scenario = create_scenario
       result = create_result(status: "fail", test_cases: [
-        { id: "TC-001", description: "Valid file", status: "pass" },
-        { id: "TC-002", description: "Style issues", status: "fail" },
-        { id: "TC-003", description: "Syntax errors", status: "fail" }
+        {id: "TC-001", description: "Valid file", status: "pass"},
+        {id: "TC-002", description: "Style issues", status: "fail"},
+        {id: "TC-003", description: "Syntax errors", status: "fail"}
       ])
 
       paths = @writer.write(result, scenario, report_dir: report_dir)
@@ -317,8 +317,8 @@ class ReportWriterTest < Minitest::Test
       test_id: "TS-LINT-001",
       status: "pass",
       test_cases: [
-        { id: "TC-001", description: "First", status: "pass" },
-        { id: "TC-002", description: "Second", status: "pass" }
+        {id: "TC-001", description: "First", status: "pass"},
+        {id: "TC-002", description: "Second", status: "pass"}
       ],
       summary: "All passed",
       started_at: Time.utc(2026, 2, 6, 12, 0, 0),

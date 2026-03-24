@@ -105,15 +105,15 @@ module Ace
             required = %w[test-id title area]
             missing = required.reject { |field| frontmatter&.key?(field) }
             unless missing.empty?
-              raise ArgumentError, "Missing required fields in #{path}: #{missing.join(', ')}"
+              raise ArgumentError, "Missing required fields in #{path}: #{missing.join(", ")}"
             end
 
             legacy = LEGACY_FIELDS.select { |field| frontmatter.key?(field) }
             return if legacy.empty?
 
             raise ArgumentError,
-                  "Legacy field(s) not supported in #{path}: #{legacy.join(', ')}. " \
-                  "Remove these fields; standalone runner/verify scenarios are the only supported format."
+              "Legacy field(s) not supported in #{path}: #{legacy.join(", ")}. " \
+              "Remove these fields; standalone runner/verify scenarios are the only supported format."
           end
 
           # Discover and parse standalone TC files in the scenario directory.
@@ -146,9 +146,9 @@ module Ace
             return if inline_files.empty?
 
             raise ArgumentError,
-                  "Inline TC files are no longer supported in #{scenario_dir}. " \
-                  "Replace #{inline_files.map { |f| File.basename(f) }.join(', ')} with standalone " \
-                  "TC-*.runner.md and TC-*.verify.md pairs."
+              "Inline TC files are no longer supported in #{scenario_dir}. " \
+              "Replace #{inline_files.map { |f| File.basename(f) }.join(", ")} with standalone " \
+              "TC-*.runner.md and TC-*.verify.md pairs."
           end
 
           def parse_standalone_test_case(tc_id, runner_file, verify_file)
@@ -201,12 +201,12 @@ module Ace
 
             unless missing_runner_ids.empty?
               raise ArgumentError,
-                    "Missing standalone runner file(s) for: #{missing_runner_ids.join(', ')} in #{scenario_dir}"
+                "Missing standalone runner file(s) for: #{missing_runner_ids.join(", ")} in #{scenario_dir}"
             end
 
             unless missing_verify_ids.empty?
               raise ArgumentError,
-                    "Missing standalone verify file(s) for: #{missing_verify_ids.join(', ')} in #{scenario_dir}"
+                "Missing standalone verify file(s) for: #{missing_verify_ids.join(", ")} in #{scenario_dir}"
             end
 
             runner_yml = File.join(scenario_dir, "runner.yml.md")

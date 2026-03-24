@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "thread"
 require "date"
 require "yaml"
 require "ace/b36ts"
@@ -54,7 +53,7 @@ module Ace
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
           def run(package:, test_id: nil, test_cases: nil, verify: false, tags: nil,
-                  cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
+            cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
@@ -65,7 +64,7 @@ module Ace
 
             if files.empty?
               output.puts "No E2E tests found in #{package}" +
-                          (test_id ? " matching #{test_id}" : "")
+                (test_id ? " matching #{test_id}" : "")
               return []
             end
 
@@ -142,9 +141,9 @@ module Ace
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
             if test_cases
-              output.puts "Filtering test cases: #{test_cases.join(', ')}"
+              output.puts "Filtering test cases: #{test_cases.join(", ")}"
             end
-            output.puts "Executing via #{@provider}#{cli_provider? ? " (pipeline mode: runner+verifier)" : ""}..."
+            output.puts "Executing via #{@provider}#{" (pipeline mode: runner+verifier)" if cli_provider?}..."
 
             run_id = cli_provider? ? timestamp : nil
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
@@ -171,14 +170,14 @@ module Ace
             if cli_provider?
               # CLI providers write reports via workflow at a deterministic path.
               # Do not fall back to older report directories from other runs.
-              if Dir.exist?(expected_dir)
-                result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
+              result = if Dir.exist?(expected_dir)
+                verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
               else
-                result = missing_agent_report_result(scenario, expected_dir, result)
+                missing_agent_report_result(scenario, expected_dir, result)
               end
             else
               # API providers: write reports via ReportWriter
-              report_paths = @report_writer.write(result, scenario, report_dir: expected_dir)
+              @report_writer.write(result, scenario, report_dir: expected_dir)
               result = result.with_report_dir(expected_dir)
             end
 
@@ -269,10 +268,10 @@ module Ace
 
                   if cli_provider?
                     expected_dir = report_dir_for(scenario, run_id || timestamp)
-                    if Dir.exist?(expected_dir)
-                      result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
+                    result = if Dir.exist?(expected_dir)
+                      verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
                     else
-                      result = missing_agent_report_result(scenario, expected_dir, result)
+                      missing_agent_report_result(scenario, expected_dir, result)
                     end
                   else
                     @report_writer.write(result, scenario, report_dir: report_dir)
@@ -369,8 +368,8 @@ module Ace
 
             # Build synthetic test cases from counts
             test_cases = []
-            passed.times { |i| test_cases << { id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass", actual: "", notes: "" } }
-            failed.times { |i| test_cases << { id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: "" } }
+            passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass", actual: "", notes: ""} }
+            failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: ""} }
 
             Models::TestResult.new(
               test_id: scenario.test_id,
@@ -381,7 +380,7 @@ module Ace
               completed_at: fallback_result.completed_at,
               report_dir: agent_dir
             )
-          rescue => e
+          rescue
             fallback_result.with_report_dir(agent_dir)
           end
 
@@ -436,7 +435,6 @@ module Ace
 
             @executor.execute(scenario, **kwargs)
           end
-
         end
       end
     end

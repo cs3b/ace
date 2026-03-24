@@ -53,7 +53,8 @@ module Ace
           end
 
           # No-op — simple mode doesn't need refresh
-          def refresh; end
+          def refresh
+          end
 
           # Print structured summary block
           # @param results [Array<Models::TestResult>]

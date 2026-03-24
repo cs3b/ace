@@ -30,7 +30,7 @@ module Ace
             DESC
 
             argument :packages, required: false,
-                     desc: "Comma-separated package names (e.g., ace-bundle,ace-lint)"
+              desc: "Comma-separated package names (e.g., ace-bundle,ace-lint)"
 
             example [
               "                              # Run all tests sequentially",
@@ -46,21 +46,21 @@ module Ace
             ]
 
             option :parallel, type: :string, default: Molecules::ConfigLoader.default_parallel.to_s,
-                   desc: "Number of parallel workers (0 = sequential)"
+              desc: "Number of parallel workers (0 = sequential)"
             option :affected, type: :boolean, desc: "Only test affected packages"
             option :only_failures, type: :boolean,
-                   desc: "Re-run only previously failed scenarios"
+              desc: "Re-run only previously failed scenarios"
             option :cli_args, type: :string,
-                   desc: "Extra args for CLI-based LLM providers"
+              desc: "Extra args for CLI-based LLM providers"
             option :provider, type: :string, default: Molecules::ConfigLoader.default_provider,
-                   desc: "LLM provider:model (e.g., claude:sonnet, gemini:flash)"
+              desc: "LLM provider:model (e.g., claude:sonnet, gemini:flash)"
             option :timeout, type: :string, default: Molecules::ConfigLoader.default_timeout.to_s,
-                   desc: "Timeout per test in seconds"
+              desc: "Timeout per test in seconds"
             option :tags, type: :string, desc: "Comma-separated scenario tags to include"
             option :exclude_tags, type: :string, desc: "Comma-separated scenario tags to exclude"
             option :progress, type: :boolean, desc: "Enable live animated display"
             option :verify, type: :boolean,
-                   desc: "Run independent verifier pass for each scenario"
+              desc: "Run independent verifier pass for each scenario"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -122,7 +122,6 @@ module Ace
 
               raw.split(",").map(&:strip).reject(&:empty?).map(&:downcase)
             end
-
           end
         end
       end

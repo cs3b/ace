@@ -12,7 +12,7 @@ class TestDiscovererTest < Minitest::Test
     files = @discoverer.find_tests(package: "ace-lint", base_dir: @base_dir)
     refute_empty files, "Should find E2E tests in ace-lint"
     assert files.all? { |f| f.end_with?("scenario.yml") },
-           "All files should be scenario.yml"
+      "All files should be scenario.yml"
   end
 
   def test_find_tests_for_nonexistent_package
@@ -235,7 +235,7 @@ class TestDiscovererTest < Minitest::Test
 
     test_id = scenario_name.split("-")[0..2].join("-")
     extra = []
-    extra << "tags: [#{tags.join(', ')}]" if tags
+    extra << "tags: [#{tags.join(", ")}]" if tags
 
     File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
       test-id: #{test_id}
@@ -250,24 +250,24 @@ class TestDiscovererTest < Minitest::Test
     verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-test.verify.md" }.join("\n")
 
     File.write(File.join(scenario_dir, "runner.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{runner_files}
-      ---
-
-      # Runner
-      Workspace root: (current directory)
+            ---
+            bundle:
+              files:
+      #{runner_files}
+            ---
+      
+            # Runner
+            Workspace root: (current directory)
     MD
 
     File.write(File.join(scenario_dir, "verifier.yml.md"), <<~MD)
-      ---
-      bundle:
-        files:
-#{verify_files}
-      ---
-
-      # Verifier
+            ---
+            bundle:
+              files:
+      #{verify_files}
+            ---
+      
+            # Verifier
     MD
 
     tc_ids.each do |tc_id|

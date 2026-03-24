@@ -96,7 +96,7 @@ class TestScenarioTest < Minitest::Test
       test_cases: [tc],
       tags: ["smoke", "happy-path"],
       tool_under_test: "ace-lint",
-      sandbox_layout: { "output/" => "Report output" }
+      sandbox_layout: {"output/" => "Report output"}
     )
     assert_equal 900, scenario.timeout
     assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
@@ -105,7 +105,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal [tc], scenario.test_cases
     assert_equal ["smoke", "happy-path"], scenario.tags
     assert_equal "ace-lint", scenario.tool_under_test
-    assert_equal({ "output/" => "Report output" }, scenario.sandbox_layout)
+    assert_equal({"output/" => "Report output"}, scenario.sandbox_layout)
   end
 
   # test_case_ids from test_cases array

@@ -184,9 +184,9 @@ class PipelineReportGeneratorTest < Minitest::Test
       content: "",
       test_cases: [
         TestCase.new(tc_id: "TC-001", title: "Help Survey", content: "", file_path: File.join(tmpdir, "TC-001.runner.md"),
-                     goal_format: "standalone"),
+          goal_format: "standalone"),
         TestCase.new(tc_id: "TC-002", title: "Roundtrip", content: "", file_path: File.join(tmpdir, "TC-002.runner.md"),
-                     goal_format: "standalone")
+          goal_format: "standalone")
       ]
     )
   end

@@ -57,7 +57,7 @@ module Ace
             parts << ""
 
             total_passed = results_data.sum { |r| r[:passed] }
-            total_failed = results_data.sum { |r| r[:failed] }
+            results_data.sum { |r| r[:failed] }
             total_tc = results_data.sum { |r| r[:total] }
             parts << "**Overall:** #{total_passed}/#{total_tc} test cases passed"
             parts << ""

@@ -43,8 +43,8 @@ class DisplayHelpersTest < Minitest::Test
       test_id: "TS-TEST-001",
       status: "fail",
       test_cases: [
-        { id: "TC-001", status: "pass" },
-        { id: "TC-002", status: "fail" }
+        {id: "TC-001", status: "pass"},
+        {id: "TC-002", status: "fail"}
       ]
     )
 
@@ -121,7 +121,7 @@ class DisplayHelpersTest < Minitest::Test
 
   def test_format_suite_summary_all_passed
     lines = DisplayHelpers.format_suite_summary(
-      { total: 5, passed: 5, failed: 0, errors: 0, duration: 265, failed_details: [] },
+      {total: 5, passed: 5, failed: 0, errors: 0, duration: 265, failed_details: []},
       use_color: false
     )
     text = lines.join("\n")
@@ -164,7 +164,7 @@ class DisplayHelpersTest < Minitest::Test
       {
         total: 5, passed: 3, failed: 2, errors: 0, duration: 120,
         failed_details: [
-          { package: "ace-lint", test_name: "TS-LINT-002", cases: "3/5 cases" }
+          {package: "ace-lint", test_name: "TS-LINT-002", cases: "3/5 cases"}
         ]
       },
       use_color: false

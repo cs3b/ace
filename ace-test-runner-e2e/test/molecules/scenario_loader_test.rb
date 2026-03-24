@@ -41,7 +41,7 @@ class ScenarioLoaderTest < Minitest::Test
       assert_equal "lint", scenario.area
       assert_equal "ace-lint", scenario.package
       assert_equal "high", scenario.priority
-      assert_equal({ "tools" => ["standardrb", "rubocop"] }, scenario.requires)
+      assert_equal({"tools" => ["standardrb", "rubocop"]}, scenario.requires)
       assert_equal 3, scenario.setup_steps.length
       assert_equal "git-init", scenario.setup_steps[0]
       assert_equal File.expand_path(scenario_dir), scenario.dir_path
@@ -59,9 +59,9 @@ class ScenarioLoaderTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-TEST-001-sorting",
         standalone_tcs: {
-          "TC-003-third" => { runner: "# Third", verify: "# Third Verify" },
-          "TC-001-first" => { runner: "# First", verify: "# First Verify" },
-          "TC-002-second" => { runner: "# Second", verify: "# Second Verify" }
+          "TC-003-third" => {runner: "# Third", verify: "# Third Verify"},
+          "TC-001-first" => {runner: "# First", verify: "# First Verify"},
+          "TC-002-second" => {runner: "# Second", verify: "# Second Verify"}
         })
 
       scenario = @loader.load(scenario_dir)
@@ -170,7 +170,7 @@ class ScenarioLoaderTest < Minitest::Test
   def test_load_with_fixtures_dir
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-FIX-001",
-        fixtures: { "valid.rb" => "puts 'ok'" })
+        fixtures: {"valid.rb" => "puts 'ok'"})
 
       scenario = @loader.load(scenario_dir)
       assert_equal File.expand_path(File.join(scenario_dir, "fixtures")), scenario.fixture_path
@@ -209,10 +209,10 @@ class ScenarioLoaderTest < Minitest::Test
       assert_equal 5, scenario.setup_steps.length
       assert_equal "git-init", scenario.setup_steps[0]
       assert_equal "copy-fixtures", scenario.setup_steps[1]
-      assert_equal({ "run" => "echo hello" }, scenario.setup_steps[2])
-      assert_equal({ "write-file" => { "path" => "config.yml", "content" => "key: value" } },
+      assert_equal({"run" => "echo hello"}, scenario.setup_steps[2])
+      assert_equal({"write-file" => {"path" => "config.yml", "content" => "key: value"}},
         scenario.setup_steps[3])
-      assert_equal({ "agent-env" => { "FOO" => "bar" } }, scenario.setup_steps[4])
+      assert_equal({"agent-env" => {"FOO" => "bar"}}, scenario.setup_steps[4])
     end
   end
 
@@ -234,7 +234,7 @@ class ScenarioLoaderTest < Minitest::Test
 
       assert_equal ["smoke", "use-case:lint", "happy-path"], scenario.tags
       assert_equal "ace-test-e2e", scenario.tool_under_test
-      assert_equal({ "output/" => "Results", "cache/" => "Cached files" }, scenario.sandbox_layout)
+      assert_equal({"output/" => "Results", "cache/" => "Cached files"}, scenario.sandbox_layout)
     end
   end
 
@@ -273,7 +273,7 @@ class ScenarioLoaderTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-PAIR-001",
         standalone_tcs: {
-          "TC-001-first" => { runner: "# Goal 1", verify: "# Verify 1" }
+          "TC-001-first" => {runner: "# Goal 1", verify: "# Verify 1"}
         },
         include_runner_config: false)
 
@@ -287,7 +287,7 @@ class ScenarioLoaderTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-PAIR-002",
         standalone_tcs: {
-          "TC-001-first" => { runner: "# Goal 1", verify: "# Verify 1" }
+          "TC-001-first" => {runner: "# Goal 1", verify: "# Verify 1"}
         })
       FileUtils.rm_f(File.join(scenario_dir, "TC-001-first.verify.md"))
 
@@ -332,7 +332,7 @@ class ScenarioLoaderTest < Minitest::Test
   private
 
   def create_scenario_dir(tmpdir, name, scenario_yml: nil, standalone_tcs: {}, inline_tcs: {}, fixtures: nil,
-                          include_runner_config: true, include_verifier_config: true)
+    include_runner_config: true, include_verifier_config: true)
     scenario_dir = File.join(tmpdir, name)
     FileUtils.mkdir_p(scenario_dir)
 

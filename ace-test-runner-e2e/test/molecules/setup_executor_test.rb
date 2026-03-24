@@ -64,7 +64,7 @@ class SetupExecutorTest < Minitest::Test
   def test_run_executes_command
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "run" => "echo hello > file.txt" }],
+        setup_steps: [{"run" => "echo hello > file.txt"}],
         sandbox_dir: sandbox
       )
 
@@ -76,7 +76,7 @@ class SetupExecutorTest < Minitest::Test
   def test_run_failure_raises
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "run" => "false" }],
+        setup_steps: [{"run" => "false"}],
         sandbox_dir: sandbox
       )
 
@@ -89,8 +89,8 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "agent-env" =>{ "MY_VAR" => "hello_world" } },
-          { "run" => "echo $MY_VAR > env_out.txt" }
+          {"agent-env" => {"MY_VAR" => "hello_world"}},
+          {"run" => "echo $MY_VAR > env_out.txt"}
         ],
         sandbox_dir: sandbox
       )
@@ -103,7 +103,7 @@ class SetupExecutorTest < Minitest::Test
   def test_write_file_creates_file
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "write-file" => { "path" => "config.yml", "content" => "key: value\n" } }],
+        setup_steps: [{"write-file" => {"path" => "config.yml", "content" => "key: value\n"}}],
         sandbox_dir: sandbox
       )
 
@@ -115,7 +115,7 @@ class SetupExecutorTest < Minitest::Test
   def test_write_file_creates_parent_dirs
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "write-file" => { "path" => "deep/nested/file.txt", "content" => "hello" } }],
+        setup_steps: [{"write-file" => {"path" => "deep/nested/file.txt", "content" => "hello"}}],
         sandbox_dir: sandbox
       )
 
@@ -128,8 +128,8 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "agent-env" =>{ "GREETING" => "hi", "NAME" => "world" } },
-          { "run" => "echo \"$GREETING $NAME\" > out.txt" }
+          {"agent-env" => {"GREETING" => "hi", "NAME" => "world"}},
+          {"run" => "echo \"$GREETING $NAME\" > out.txt"}
         ],
         sandbox_dir: sandbox
       )
@@ -150,8 +150,8 @@ class SetupExecutorTest < Minitest::Test
         setup_steps: [
           "git-init",
           "copy-fixtures",
-          { "write-file" => { "path" => ".config/settings.yml", "content" => "verbose: true\n" } },
-          { "run" => "git add -A && git commit -m 'initial' --quiet" }
+          {"write-file" => {"path" => ".config/settings.yml", "content" => "verbose: true\n"}},
+          {"run" => "git add -A && git commit -m 'initial' --quiet"}
         ],
         sandbox_dir: sandbox,
         fixture_source: fixture_dir
@@ -172,8 +172,8 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "run" => "false" },
-          { "run" => "echo should_not_run > marker.txt" }
+          {"run" => "false"},
+          {"run" => "echo should_not_run > marker.txt"}
         ],
         sandbox_dir: sandbox
       )
@@ -198,21 +198,21 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "agent-env" =>{ "FOO" => "bar", "BAZ" => "qux" } },
-          { "run" => "echo ok" }
+          {"agent-env" => {"FOO" => "bar", "BAZ" => "qux"}},
+          {"run" => "echo ok"}
         ],
         sandbox_dir: sandbox
       )
 
       assert result[:success]
-      assert_equal({ "FOO" => "bar", "BAZ" => "qux" }, result[:env])
+      assert_equal({"FOO" => "bar", "BAZ" => "qux"}, result[:env])
     end
   end
 
   def test_env_empty_when_no_env_steps
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "run" => "echo ok" }],
+        setup_steps: [{"run" => "echo ok"}],
         sandbox_dir: sandbox
       )
 
@@ -244,7 +244,7 @@ class SetupExecutorTest < Minitest::Test
 
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "tmux-session" => { "name-source" => "run-id" } }],
+        setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001",
         run_id: "8pny7t0"
@@ -263,7 +263,7 @@ class SetupExecutorTest < Minitest::Test
 
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
-        setup_steps: [{ "tmux-session" => { "name-source" => "run-id" } }],
+        setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001"
       )
@@ -321,8 +321,8 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "agent-env" =>{ "PROJECT_ROOT_PATH" => "/custom/path" } },
-          { "run" => "echo $PROJECT_ROOT_PATH > prp_out.txt" }
+          {"agent-env" => {"PROJECT_ROOT_PATH" => "/custom/path"}},
+          {"run" => "echo $PROJECT_ROOT_PATH > prp_out.txt"}
         ],
         sandbox_dir: sandbox
       )
@@ -339,7 +339,7 @@ class SetupExecutorTest < Minitest::Test
 
       result = @executor.execute(
         setup_steps: [
-          { "run" => "echo $PROJECT_ROOT_PATH > prp_out.txt" }
+          {"run" => "echo $PROJECT_ROOT_PATH > prp_out.txt"}
         ],
         sandbox_dir: sandbox
       )

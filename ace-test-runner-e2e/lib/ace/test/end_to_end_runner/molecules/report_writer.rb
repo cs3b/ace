@@ -46,16 +46,16 @@ module Ace
 
             goal_criteria_sections = build_goal_criteria_sections(result.test_cases)
             failed_entries = result.test_cases
-                                   .select { |tc| tc[:status] == "fail" }
-                                   .map do |tc|
-              {
-                "tc" => tc[:id],
-                "category" => tc[:category] || "runner-error",
-                "evidence" => tc[:notes].to_s
-              }
+              .select { |tc| tc[:status] == "fail" }
+              .map do |tc|
+                {
+                  "tc" => tc[:id],
+                  "category" => tc[:category] || "runner-error",
+                  "evidence" => tc[:notes].to_s
+                }
             end
             verdict = if result.failed_count.zero?
-              result.status == "error" ? "fail" : "pass"
+              (result.status == "error") ? "fail" : "pass"
             elsif result.passed_count.zero?
               "fail"
             else
@@ -105,7 +105,7 @@ module Ace
               #{tc_info_rows}| Title | #{scenario.title} |
               | Package | #{scenario.package} |
               | Agent | ace-test-e2e |
-              | Executed | #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')} |
+              | Executed | #{result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ")} |
               | Duration | #{result.duration_display} |
 
               ## Results Summary
@@ -141,8 +141,8 @@ module Ace
               "test-title: #{scenario.title}",
               "package: #{scenario.package}",
               "agent: ace-test-e2e",
-              "executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}",
-              "status: #{result.status == 'pass' ? 'complete' : 'incomplete'}"
+              "executed: #{result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}",
+              "status: #{(result.status == "pass") ? "complete" : "incomplete"}"
             ])
 
             content = <<~REPORT
@@ -155,7 +155,7 @@ module Ace
               ## Summary
 
               Executed via ace-test-e2e CLI using LLM provider.
-              #{result.status == "pass" ? "No significant friction encountered." : "Test execution completed with issues noted below."}
+              #{(result.status == "pass") ? "No significant friction encountered." : "Test execution completed with issues noted below."}
 
               ## Friction Points
 
@@ -191,7 +191,15 @@ module Ace
               "duration" => "#{result.duration.round(0)}s",
               "status" => result.status,
               "score" => (result.total_count.zero? ? 0.0 : (result.passed_count.to_f / result.total_count).round(3)),
-              "verdict" => (result.status == "error" ? "fail" : (result.failed_count.zero? ? "pass" : (result.passed_count.zero? ? "fail" : "partial"))),
+              "verdict" => (if result.status == "error"
+                              "fail"
+                            else
+                              (if result.failed_count.zero?
+                                 "pass"
+                               else
+                                 (result.passed_count.zero? ? "fail" : "partial")
+                               end)
+                            end),
               "tcs-passed" => result.passed_count,
               "tcs-failed" => result.failed_count,
               "tcs-total" => result.total_count,
@@ -201,13 +209,13 @@ module Ace
                 "total" => result.total_count
               },
               "failed" => result.test_cases
-                                .select { |tc| tc[:status] == "fail" }
-                                .map do |tc|
-                {
-                  "tc" => tc[:id],
-                  "category" => tc[:category] || "runner-error",
-                  "evidence" => tc[:notes].to_s
-                }
+                .select { |tc| tc[:status] == "fail" }
+                .map do |tc|
+                  {
+                    "tc" => tc[:id],
+                    "category" => tc[:category] || "runner-error",
+                    "evidence" => tc[:notes].to_s
+                  }
               end,
               "failed_test_cases" => result.failed_test_case_ids
             }

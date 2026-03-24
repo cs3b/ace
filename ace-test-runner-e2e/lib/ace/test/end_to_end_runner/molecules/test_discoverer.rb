@@ -29,9 +29,9 @@ module Ace
           def find_tests(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
             test_ids = test_id ? test_id.split(",").map(&:strip) : [nil]
             scenario_files = test_ids
-                             .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
-                             .uniq
-                             .sort
+              .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
+              .uniq
+              .sort
 
             return scenario_files if no_filters?(tags, exclude_tags)
 

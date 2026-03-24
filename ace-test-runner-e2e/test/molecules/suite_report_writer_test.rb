@@ -17,7 +17,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query("# LLM Report")
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "abc123", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "abc123", base_dir: tmpdir)
 
       assert_equal File.join(tmpdir, ".ace-local", "test-e2e", "abc123-final-report.md"), path
       assert File.exist?(path), "Report file should exist"
@@ -30,7 +30,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query("# Synthesized Report\n\n**Overall:** 3/4 test cases passed (75%)\n\nRich analysis.")
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/Synthesized Report/, content)
@@ -46,7 +46,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("LLM unavailable"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       # Static template assertions
@@ -66,7 +66,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("timeout"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/^suite-id: ts1234$/, content)
@@ -83,7 +83,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("network error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/## Summary/, content)
@@ -99,7 +99,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
@@ -112,7 +112,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/## Failed Tests/, content)
@@ -128,7 +128,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       refute_match(/## Failed Tests/, content)
@@ -141,7 +141,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/^status: pass$/, content)
@@ -152,14 +152,14 @@ class SuiteReportWriterTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       results = [
         TestResult.new(test_id: "TS-TEST-001", status: "fail",
-                       test_cases: [{ id: "TC-001", description: "Check", status: "fail" }],
-                       summary: "Failed")
+          test_cases: [{id: "TC-001", description: "Check", status: "fail"}],
+          summary: "Failed")
       ]
       scenarios = [make_scenario("TS-TEST-001", "Test One")]
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/^status: fail$/, content)
@@ -177,7 +177,7 @@ class SuiteReportWriterTest < Minitest::Test
       results = [
         TestResult.new(
           test_id: "TS-TEST-001", status: "pass",
-          test_cases: [{ id: "TC-001", description: "Check", status: "pass" }],
+          test_cases: [{id: "TC-001", description: "Check", status: "pass"}],
           summary: "Passed",
           report_dir: report_dir
         )
@@ -188,11 +188,11 @@ class SuiteReportWriterTest < Minitest::Test
       captured_prompt = nil
       Ace::LLM::QueryInterface.define_singleton_method(:query) do |_model, prompt, **_opts|
         captured_prompt = prompt
-        { text: "# LLM Report" }
+        {text: "# LLM Report"}
       end
 
       @writer.write(results, scenarios,
-                    package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       assert_match(/Test passed cleanly/, captured_prompt)
       assert_match(/Smooth run/, captured_prompt)
@@ -210,7 +210,7 @@ class SuiteReportWriterTest < Minitest::Test
       results = [
         TestResult.new(
           test_id: "TS-TEST-001", status: "pass",
-          test_cases: [{ id: "TC-001", description: "Check", status: "pass" }],
+          test_cases: [{id: "TC-001", description: "Check", status: "pass"}],
           summary: "Passed",
           report_dir: report_dir
         )
@@ -220,11 +220,11 @@ class SuiteReportWriterTest < Minitest::Test
       captured_prompt = nil
       Ace::LLM::QueryInterface.define_singleton_method(:query) do |_model, prompt, **_opts|
         captured_prompt = prompt
-        { text: "# LLM Report" }
+        {text: "# LLM Report"}
       end
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       assert File.exist?(path)
       # Should not include summary/experience sections since files don't exist
@@ -236,7 +236,7 @@ class SuiteReportWriterTest < Minitest::Test
   end
 
   def test_configurable_model_passed_through
-    config = { "reporting" => { "model" => "gflash", "timeout" => 120 } }
+    config = {"reporting" => {"model" => "gflash", "timeout" => 120}}
     writer = SuiteReportWriter.new(config: config)
 
     Dir.mktmpdir do |tmpdir|
@@ -247,11 +247,11 @@ class SuiteReportWriterTest < Minitest::Test
       Ace::LLM::QueryInterface.define_singleton_method(:query) do |model, _prompt, **opts|
         captured_model = model
         captured_timeout = opts[:timeout]
-        { text: "# Report" }
+        {text: "# Report"}
       end
 
       writer.write(results, scenarios,
-                   package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       assert_equal "gflash", captured_model
       assert_equal 120, captured_timeout
@@ -267,7 +267,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query("# Report\n\n**Overall:** 6/27 test cases passed (22%)\n\nAnalysis.")
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       # Wrong numbers must be replaced with correct deterministic values
@@ -284,7 +284,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query("# Report\n\nSome analysis without overall line.")
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
@@ -297,7 +297,7 @@ class SuiteReportWriterTest < Minitest::Test
       stub_llm_query("# Report\n\n**Overall:** 3/4 test cases passed (75%)\n\nCorrect analysis.")
 
       path = @writer.write(results, scenarios,
-                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
       assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
@@ -313,7 +313,7 @@ class SuiteReportWriterTest < Minitest::Test
       refute Dir.exist?(cache_dir), "Cache dir should not exist before write"
 
       @writer.write(results, scenarios,
-                    package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       assert Dir.exist?(cache_dir), "Cache dir should be created"
     end
@@ -324,7 +324,7 @@ class SuiteReportWriterTest < Minitest::Test
   # Stub LLM to return a successful response
   def stub_llm_query(text)
     Ace::LLM::QueryInterface.define_singleton_method(:query) do |_model, _prompt, **_opts|
-      { text: text }
+      {text: text}
     end
   end
 
@@ -364,8 +364,8 @@ class SuiteReportWriterTest < Minitest::Test
         test_id: "TS-TEST-001",
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "First check", status: "pass" },
-          { id: "TC-002", description: "Second check", status: "pass" }
+          {id: "TC-001", description: "First check", status: "pass"},
+          {id: "TC-002", description: "Second check", status: "pass"}
         ],
         summary: "All passed",
         report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
@@ -374,8 +374,8 @@ class SuiteReportWriterTest < Minitest::Test
         test_id: "TS-TEST-002",
         status: "fail",
         test_cases: [
-          { id: "TC-001", description: "First check", status: "pass" },
-          { id: "TC-002", description: "Second check", status: "fail" }
+          {id: "TC-001", description: "First check", status: "pass"},
+          {id: "TC-002", description: "Second check", status: "fail"}
         ],
         summary: "One failed",
         report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-mt002-reports")
@@ -396,7 +396,7 @@ class SuiteReportWriterTest < Minitest::Test
         test_id: "TS-TEST-001",
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "First check", status: "pass" }
+          {id: "TC-001", description: "First check", status: "pass"}
         ],
         summary: "Passed",
         report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
@@ -405,7 +405,7 @@ class SuiteReportWriterTest < Minitest::Test
         test_id: "TS-TEST-002",
         status: "pass",
         test_cases: [
-          { id: "TC-001", description: "First check", status: "pass" }
+          {id: "TC-001", description: "First check", status: "pass"}
         ],
         summary: "Passed",
         report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-mt002-reports")

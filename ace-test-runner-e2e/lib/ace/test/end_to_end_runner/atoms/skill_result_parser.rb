@@ -66,8 +66,8 @@ module Ace
 
             # Build synthetic test cases from counts
             test_cases = []
-            passed.times { |i| test_cases << { id: "TC-#{format('%03d', i + 1)}", description: "", status: "pass", actual: "", notes: "" } }
-            failed.times { |i| test_cases << { id: "TC-#{format('%03d', passed + i + 1)}", description: "", status: "fail", actual: "", notes: "" } }
+            passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass", actual: "", notes: ""} }
+            failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: ""} }
 
             issues = parsed[:issues]
             observations = (issues && issues.downcase != "none") ? issues : ""
@@ -132,7 +132,7 @@ module Ace
             fields[:issues] = extract_field(text, "Issues")
 
             return parse(text) unless fields[:test_id] && fields[:status] &&
-                                      fields[:tcs_passed] && fields[:tcs_failed] && fields[:tcs_total]
+              fields[:tcs_passed] && fields[:tcs_failed] && fields[:tcs_total]
 
             passed = fields[:tcs_passed].to_i
             failed = fields[:tcs_failed].to_i
@@ -145,12 +145,12 @@ module Ace
             pass_index = 0
             passed.times do
               pass_index += 1
-              pass_index += 1 while failed_ids.include?("TC-#{format('%03d', pass_index)}")
-              test_cases << { id: "TC-#{format('%03d', pass_index)}", description: "", status: "pass", actual: "", notes: "" }
+              pass_index += 1 while failed_ids.include?("TC-#{format("%03d", pass_index)}")
+              test_cases << {id: "TC-#{format("%03d", pass_index)}", description: "", status: "pass", actual: "", notes: ""}
             end
             if failed_entries.empty?
               failed.times do |i|
-                test_cases << { id: "TC-#{format('%03d', passed + i + 1)}", description: "", status: "fail", actual: "", notes: "" }
+                test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: ""}
               end
             else
               failed_entries.each do |entry|
@@ -230,13 +230,13 @@ module Ace
               tc, category = entry.split(":", 2).map { |part| part.to_s.strip }
               next if tc.empty?
 
-              { tc: tc.upcase, category: (category.to_s.empty? ? "unknown" : category) }
+              {tc: tc.upcase, category: (category.to_s.empty? ? "unknown" : category)}
             end
           end
 
           private_class_method :parse_markdown, :to_normalized, :extract_field,
-                              :parse_tc_markdown, :to_tc_normalized, :normalize_status,
-                              :parse_failed_tcs
+            :parse_tc_markdown, :to_tc_normalized, :normalize_status,
+            :parse_failed_tcs
         end
       end
     end

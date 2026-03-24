@@ -108,8 +108,8 @@ class ProgressDisplayManagerTest < Minitest::Test
   def create_result(test_id:, status:, cases: 0, failed: 0)
     passed = cases - failed
     test_cases = []
-    passed.times { |i| test_cases << { id: "TC-#{format("%03d", i + 1)}", status: "pass" } }
-    failed.times { |i| test_cases << { id: "TC-#{format("%03d", passed + i + 1)}", status: "fail" } }
+    passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", status: "pass"} }
+    failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", status: "fail"} }
 
     TestResult.new(
       test_id: test_id,

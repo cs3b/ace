@@ -107,7 +107,7 @@ module Ace
               return selected_from_layout unless selected_from_layout.empty?
             end
 
-            selected_positions.map { |idx| "results/tc/#{format('%02d', idx)}" }
+            selected_positions.map { |idx| "results/tc/#{format("%02d", idx)}" }
           end
 
           def extract_result_dir_index(path)
