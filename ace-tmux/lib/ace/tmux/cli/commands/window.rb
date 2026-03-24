@@ -65,7 +65,7 @@ module Ace
             puts "Window '#{effective_name}' added." unless options[:quiet]
           rescue Ace::Tmux::PresetNotFoundError => e
             raise Ace::Support::Cli::Error.new(e.message)
-          rescue Organisms::NotInTmuxError => e
+          rescue Ace::Tmux::NotInTmuxError => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
         end

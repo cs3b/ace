@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.982] - 2026-03-24
+
+### Fixed
+- **ace-tmux v0.11.1**: Fixed `ace-tmux window` error handling to rescue the correct `Ace::Tmux::NotInTmuxError` class.
+
 ## [0.9.981] - 2026-03-24
 
 ### Changed
