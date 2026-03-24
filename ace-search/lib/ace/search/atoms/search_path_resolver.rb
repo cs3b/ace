@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/support/fs'
+require "ace/support/fs"
 
 module Ace
   module Search
@@ -53,7 +53,7 @@ module Ace
         #
         # @return [String, nil] Environment variable value
         def env_project_root
-          ENV['PROJECT_ROOT_PATH']
+          ENV["PROJECT_ROOT_PATH"]
         end
 
         # Find project root using ProjectRootFinder

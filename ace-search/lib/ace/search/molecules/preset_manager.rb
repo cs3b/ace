@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module Search

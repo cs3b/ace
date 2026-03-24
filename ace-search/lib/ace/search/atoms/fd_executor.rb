@@ -26,7 +26,7 @@ module Ace
           # Debug output
           DebugLogger.section("FdExecutor") do
             DebugLogger.log("Command: #{command}")
-            DebugLogger.log("Will chdir to: #{options[:search_path] || '(current directory)'}")
+            DebugLogger.log("Will chdir to: #{options[:search_path] || "(current directory)"}")
           end
 
           begin

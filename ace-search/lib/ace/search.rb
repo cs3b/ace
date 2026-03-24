@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "search/version"
-require 'ace/support/config'
+require "ace/support/config"
 
 # CLI and commands
 require_relative "search/cli"
@@ -25,7 +25,7 @@ module Ace
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -38,7 +38,7 @@ module Ace
         # Extract the ace.search section from defaults (for backward compatibility)
         raw_data = config.data
         raw_data.dig("ace", "search") || raw_data
-      rescue StandardError => e
+      rescue => e
         warn "ace-search: Could not load config: #{e.class} - #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback
@@ -55,7 +55,7 @@ module Ace
     # @return [Hash] Gem defaults hash
     def self.load_gem_defaults
       gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "search", "config.yml")
 
       return {} unless File.exist?(defaults_path)
@@ -71,7 +71,7 @@ module Ace
     # @return [Hash] Defaults hash or empty hash if defaults also fail
     def self.load_gem_defaults_fallback
       gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "search", "config.yml")
 
       return {} unless File.exist?(defaults_path)
@@ -79,7 +79,7 @@ module Ace
       data = YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
       # Extract the ace.search section for backward compatibility
       data.dig("ace", "search") || data
-    rescue StandardError
+    rescue
       {} # Only return empty hash if even defaults fail to load
     end
     private_class_method :load_gem_defaults_fallback

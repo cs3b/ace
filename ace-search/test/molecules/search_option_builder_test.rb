@@ -34,63 +34,63 @@ module Ace
         end
 
         def test_build_with_type_option
-          builder = SearchOptionBuilder.new({ type: "content" }, config: @default_config)
+          builder = SearchOptionBuilder.new({type: "content"}, config: @default_config)
           options = builder.build
 
           assert_equal :content, options[:type]
         end
 
         def test_build_with_files_alias
-          builder = SearchOptionBuilder.new({ files: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({files: true}, config: @default_config)
           options = builder.build
 
           assert_equal :file, options[:type]
         end
 
         def test_build_with_content_alias
-          builder = SearchOptionBuilder.new({ content: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({content: true}, config: @default_config)
           options = builder.build
 
           assert_equal :content, options[:type]
         end
 
         def test_build_with_json_format
-          builder = SearchOptionBuilder.new({ json: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({json: true}, config: @default_config)
           options = builder.build
 
           assert_equal :json, options[:format]
         end
 
         def test_build_with_yaml_format
-          builder = SearchOptionBuilder.new({ yaml: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({yaml: true}, config: @default_config)
           options = builder.build
 
           assert_equal :yaml, options[:format]
         end
 
         def test_build_with_scope_staged
-          builder = SearchOptionBuilder.new({ staged: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({staged: true}, config: @default_config)
           options = builder.build
 
           assert_equal :staged, options[:scope]
         end
 
         def test_build_with_scope_tracked
-          builder = SearchOptionBuilder.new({ tracked: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({tracked: true}, config: @default_config)
           options = builder.build
 
           assert_equal :tracked, options[:scope]
         end
 
         def test_build_with_scope_changed
-          builder = SearchOptionBuilder.new({ changed: true }, config: @default_config)
+          builder = SearchOptionBuilder.new({changed: true}, config: @default_config)
           options = builder.build
 
           assert_equal :changed, options[:scope]
         end
 
         def test_build_with_include_option
-          builder = SearchOptionBuilder.new({ include: "src,lib" }, config: @default_config)
+          builder = SearchOptionBuilder.new({include: "src,lib"}, config: @default_config)
           options = builder.build
 
           assert_includes options[:include], "src"
@@ -98,7 +98,7 @@ module Ace
         end
 
         def test_build_with_exclude_option
-          builder = SearchOptionBuilder.new({ exclude: "vendor,tmp" }, config: @default_config)
+          builder = SearchOptionBuilder.new({exclude: "vendor,tmp"}, config: @default_config)
           options = builder.build
 
           assert_includes options[:exclude], "vendor"
@@ -109,7 +109,7 @@ module Ace
         end
 
         def test_build_with_exclude_none_clears_defaults
-          builder = SearchOptionBuilder.new({ exclude: "none" }, config: @default_config)
+          builder = SearchOptionBuilder.new({exclude: "none"}, config: @default_config)
           options = builder.build
 
           assert_empty options[:exclude]
@@ -117,7 +117,7 @@ module Ace
 
         def test_build_merges_config_include
           config = @default_config.merge("include" => ["default_path"])
-          builder = SearchOptionBuilder.new({ include: "extra" }, config: config)
+          builder = SearchOptionBuilder.new({include: "extra"}, config: config)
           options = builder.build
 
           assert_includes options[:include], "default_path"
@@ -126,7 +126,7 @@ module Ace
 
         def test_build_with_context_options
           builder = SearchOptionBuilder.new(
-            { context: 5, after_context: 3, before_context: 2 },
+            {context: 5, after_context: 3, before_context: 2},
             config: @default_config
           )
           options = builder.build
@@ -138,7 +138,7 @@ module Ace
 
         def test_build_with_boolean_options
           builder = SearchOptionBuilder.new(
-            { case_insensitive: true, whole_word: true, multiline: true, hidden: true, count: true },
+            {case_insensitive: true, whole_word: true, multiline: true, hidden: true, count: true},
             config: @default_config
           )
           options = builder.build
@@ -156,7 +156,7 @@ module Ace
             "max_results" => 100
           )
           builder = SearchOptionBuilder.new(
-            { case_insensitive: false, max_results: 50 },
+            {case_insensitive: false, max_results: 50},
             config: config
           )
           options = builder.build
