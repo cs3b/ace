@@ -357,7 +357,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.5.2)
+    ace-test (0.6.0)
 
 PATH
   remote: ace-tmux
