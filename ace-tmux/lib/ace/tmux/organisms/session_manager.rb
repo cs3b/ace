@@ -156,7 +156,7 @@ module Ace
         def setup_nested_panes(session, window, window_target)
           tree = window.layout_tree
           leaves = tree.leaves
-          leaf_count = leaves.length
+          leaves.length
 
           # Create leaf_count - 1 additional panes via flat splits
           # Use per-leaf root when available, falling back to window/session root
@@ -261,10 +261,10 @@ module Ace
 
         def select_startup_window(session, first_window_target: nil)
           target = if session.startup_window
-                     "#{session.name}:#{session.startup_window}"
-                   else
-                     first_window_target || "#{session.name}:#{session.windows.first&.name || 0}"
-                   end
+            "#{session.name}:#{session.startup_window}"
+          else
+            first_window_target || "#{session.name}:#{session.windows.first&.name || 0}"
+          end
 
           cmd = Atoms::TmuxCommandBuilder.select_window(target, tmux: @tmux)
           @executor.run(cmd)

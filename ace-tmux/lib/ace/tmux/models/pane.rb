@@ -25,7 +25,7 @@ module Ace
         end
 
         def to_h
-          hash = { "commands" => @commands, "focus" => @focus }
+          hash = {"commands" => @commands, "focus" => @focus}
           hash["root"] = @root if @root
           hash["name"] = @name if @name
           hash["options"] = @options unless @options.empty?

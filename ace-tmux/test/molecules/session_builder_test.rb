@@ -11,22 +11,22 @@ class SessionBuilderTest < Minitest::Test
       "root" => "~/projects/app",
       "startup_window" => "editor",
       "windows" => [
-        { "name" => "editor", "preset" => "code-editor", "root" => "./src" },
-        { "name" => "server", "preset" => "rails-server" },
-        { "name" => "logs", "panes" => ["tail -f log/dev.log"] }
+        {"name" => "editor", "preset" => "code-editor", "root" => "./src"},
+        {"name" => "server", "preset" => "rails-server"},
+        {"name" => "logs", "panes" => ["tail -f log/dev.log"]}
       ]
     })
 
     write_preset(@temp_dir, "windows", "code-editor", {
       "layout" => "main-vertical",
       "panes" => [
-        { "preset" => "vim-editor" },
-        { "commands" => ["bash"] }
+        {"preset" => "vim-editor"},
+        {"commands" => ["bash"]}
       ]
     })
 
     write_preset(@temp_dir, "windows", "rails-server", {
-      "panes" => [{ "commands" => ["bundle exec rails server"] }]
+      "panes" => [{"commands" => ["bundle exec rails server"]}]
     })
 
     write_preset(@temp_dir, "panes", "vim-editor", {
@@ -125,15 +125,15 @@ class SessionBuilderTest < Minitest::Test
       "name" => "dev",
       "direction" => "horizontal",
       "panes" => [
-        { "commands" => ["claude"], "size" => "40%" },
+        {"commands" => ["claude"], "size" => "40%"},
         {
           "direction" => "vertical",
           "panes" => [
-            { "commands" => ["bash"] },
-            { "commands" => ["htop"] }
+            {"commands" => ["bash"]},
+            {"commands" => ["htop"]}
           ]
         },
-        { "commands" => ["nvim ."], "focus" => true }
+        {"commands" => ["nvim ."], "focus" => true}
       ]
     })
 
@@ -182,8 +182,8 @@ class SessionBuilderTest < Minitest::Test
           "name" => "main",
           "direction" => "horizontal",
           "panes" => [
-            { "commands" => ["claude"] },
-            { "commands" => ["bash"] }
+            {"commands" => ["claude"]},
+            {"commands" => ["bash"]}
           ]
         }
       ]
@@ -210,12 +210,12 @@ class SessionBuilderTest < Minitest::Test
     write_preset(@temp_dir, "windows", "implicit-nested", {
       "name" => "implicit",
       "panes" => [
-        { "commands" => ["claude"] },
+        {"commands" => ["claude"]},
         {
           "direction" => "vertical",
           "panes" => [
-            { "commands" => ["bash"] },
-            { "commands" => ["htop"] }
+            {"commands" => ["bash"]},
+            {"commands" => ["htop"]}
           ]
         }
       ]
@@ -232,8 +232,8 @@ class SessionBuilderTest < Minitest::Test
       "name" => "editor",
       "direction" => "horizontal",
       "panes" => [
-        { "preset" => "vim-editor", "size" => "50%" },
-        { "commands" => ["bash"] }
+        {"preset" => "vim-editor", "size" => "50%"},
+        {"commands" => ["bash"]}
       ]
     })
 

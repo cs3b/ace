@@ -71,13 +71,13 @@ class WindowModelTest < Minitest::Test
   end
 
   def test_options_passthrough
-    opts = { "main-pane-width" => "40%" }
+    opts = {"main-pane-width" => "40%"}
     window = Ace::Tmux::Models::Window.new(options: opts)
     assert_equal opts, window.options
   end
 
   def test_to_h_includes_options
-    opts = { "main-pane-width" => "40%" }
+    opts = {"main-pane-width" => "40%"}
     window = Ace::Tmux::Models::Window.new(name: "main", options: opts)
     assert_equal opts, window.to_h["options"]
   end

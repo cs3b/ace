@@ -70,7 +70,7 @@ class PaneModelTest < Minitest::Test
   end
 
   def test_options_passthrough
-    opts = { "remain-on-exit" => "on" }
+    opts = {"remain-on-exit" => "on"}
     pane = Ace::Tmux::Models::Pane.new(options: opts)
     assert_equal opts, pane.options
   end
