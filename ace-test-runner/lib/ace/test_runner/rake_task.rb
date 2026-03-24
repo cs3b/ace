@@ -9,7 +9,7 @@ module Ace
     # This allows seamless integration with existing Rake workflows
     class RakeTask < Rake::TaskLib
       attr_accessor :name, :description, :libs, :pattern, :verbose, :format,
-                    :warning, :loader, :options, :test_files
+        :warning, :loader, :options, :test_files
 
       def initialize(name = :test)
         @name = name
@@ -85,7 +85,6 @@ module Ace
 
         cmd.join(" ")
       end
-
     end
   end
 end

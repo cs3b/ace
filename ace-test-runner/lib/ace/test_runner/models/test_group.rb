@@ -76,7 +76,7 @@ module Ace
             },
             "system" => {
               "patterns" => ["test/system/**/*_test.rb"],
-              "options" => { "timeout" => 60 }
+              "options" => {"timeout" => 60}
             },
             "all" => {
               "patterns" => ["test/**/*_test.rb"],

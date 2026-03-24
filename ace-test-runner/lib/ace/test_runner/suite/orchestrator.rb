@@ -19,7 +19,7 @@ module Ace
           @failed_packages = []
 
           # Use ace-config's project root detection
-          require 'ace/support/config'
+          require "ace/support/config"
           @project_root = Ace::Support::Config.find_project_root
 
           # Resolve package paths relative to project root
@@ -75,7 +75,7 @@ module Ace
           display_manager.show_summary(summary)
 
           # Return exit code based on results
-          summary[:packages_failed] > 0 ? 1 : 0
+          (summary[:packages_failed] > 0) ? 1 : 0
         end
 
         private
@@ -83,7 +83,7 @@ module Ace
         def validate_packages!
           @packages.each do |package|
             unless Dir.exist?(package["path"])
-              raise "Package directory not found: #{package['path']} for #{package['name']}"
+              raise "Package directory not found: #{package["path"]} for #{package["name"]}"
             end
           end
         end

@@ -20,33 +20,33 @@ module Ace
           validate_environment!
 
           if already_integrated?
-            return { success: true, message: "ace-test is already set as default rake test runner" }
+            return {success: true, message: "ace-test is already set as default rake test runner"}
           end
 
           backup_rakefile
           inject_ace_test_config
 
-          { success: true, message: "Successfully set ace-test as default rake test runner" }
+          {success: true, message: "Successfully set ace-test as default rake test runner"}
         rescue => e
           restore_from_backup if backup_exists?
-          { success: false, message: "Failed to set ace-test as default: #{e.message}" }
+          {success: false, message: "Failed to set ace-test as default: #{e.message}"}
         end
 
         # Remove ace-test as the default rake test runner
         def unset_default
           unless already_integrated?
-            return { success: true, message: "ace-test is not currently set as default" }
+            return {success: true, message: "ace-test is not currently set as default"}
           end
 
           if backup_exists?
             restore_from_backup
-            { success: true, message: "Successfully restored original Rakefile" }
+            {success: true, message: "Successfully restored original Rakefile"}
           else
             remove_ace_test_config
-            { success: true, message: "Successfully removed ace-test configuration" }
+            {success: true, message: "Successfully removed ace-test configuration"}
           end
         rescue => e
-          { success: false, message: "Failed to unset ace-test as default: #{e.message}" }
+          {success: false, message: "Failed to unset ace-test as default: #{e.message}"}
         end
 
         # Check if ace-test is currently set as default
@@ -137,7 +137,7 @@ module Ace
           content = File.read(@rakefile_path)
 
           # Remove ace-test configuration block
-          content = content.gsub(/#{Regexp.escape(MARKER_COMMENT)}.*?# End of ace-test-runner integration/m, "")
+          content = content.gsub(/#{Regexp.escape(MARKER_COMMENT)}.*?# End of ace-test-runner integration/mo, "")
 
           # Uncomment original test task if it was commented
           content = uncomment_original_test_task(content)
@@ -153,21 +153,17 @@ module Ace
           end
 
           # Comment out simple task :test definitions
-          content = content.gsub(/^(task\s+:test\s+do.*?)^end/m) do |match|
+          content.gsub(/^(task\s+:test\s+do.*?)^end/m) do |match|
             match.split("\n").map { |line| "# #{line}" }.join("\n")
           end
-
-          content
         end
 
         def uncomment_original_test_task(content)
           # Uncomment lines that were commented by ace-test
-          content = content.gsub(/^# (.*) # Commented by ace-test$/, '\1')
+          content.gsub(/^# (.*) # Commented by ace-test$/, '\1')
 
           # Uncomment task blocks (more complex - would need proper parsing)
           # For now, just leave them commented as user can manually uncomment if needed
-
-          content
         end
 
         def create_basic_rakefile

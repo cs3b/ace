@@ -51,9 +51,7 @@ module Ace
 
         # Get the project root
         # @return [String, nil] Project root path
-        def project_root
-          @project_root
-        end
+        attr_reader :project_root
 
         private
 

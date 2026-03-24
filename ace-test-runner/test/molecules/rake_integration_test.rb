@@ -21,7 +21,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
 
     refute status[:integrated]
     refute status[:rakefile_exists]
-    assert_match /No Rakefile found/, status[:message]
+    assert_match(/No Rakefile found/, status[:message])
   end
 
   def test_check_status_with_rakefile_no_integration
@@ -31,7 +31,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
 
     refute status[:integrated]
     assert status[:rakefile_exists]
-    assert_match /not set as default/, status[:message]
+    assert_match(/not set as default/, status[:message])
   end
 
   def test_check_status_with_integration
@@ -41,7 +41,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
 
     assert status[:integrated]
     assert status[:rakefile_exists]
-    assert_match /currently set as default/, status[:message]
+    assert_match(/currently set as default/, status[:message])
   end
 
   def test_set_default_creates_rakefile_if_missing
@@ -49,7 +49,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
 
     assert result[:success]
     assert File.exist?(@rakefile_path)
-    assert_match /Successfully set ace-test/, result[:message]
+    assert_match(/Successfully set ace-test/, result[:message])
   end
 
   def test_set_default_with_existing_rakefile
@@ -62,8 +62,8 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
     assert File.exist?("#{@rakefile_path}.ace-backup")
 
     content = File.read(@rakefile_path)
-    assert_match /ace-test-runner integration/, content
-    assert_match /Ace::TestRunner::RakeTask/, content
+    assert_match(/ace-test-runner integration/, content)
+    assert_match(/Ace::TestRunner::RakeTask/, content)
   end
 
   def test_set_default_with_existing_test_task
@@ -74,10 +74,10 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
     assert result[:success]
 
     content = File.read(@rakefile_path)
-    assert_match /ace-test-runner integration/, content
-    assert_match /Ace::TestRunner::RakeTask/, content
+    assert_match(/ace-test-runner integration/, content)
+    assert_match(/Ace::TestRunner::RakeTask/, content)
     # Original test task should be commented out
-    assert_match /# Rake::TestTask\.new/, content
+    assert_match(/# Rake::TestTask\.new/, content)
   end
 
   def test_set_default_idempotent
@@ -86,7 +86,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
 
     result2 = @integration.set_default
     assert result2[:success]
-    assert_match /already set as default/, result2[:message]
+    assert_match(/already set as default/, result2[:message])
   end
 
   def test_unset_default_with_no_integration
@@ -95,7 +95,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
     result = @integration.unset_default
 
     assert result[:success]
-    assert_match /not currently set as default/, result[:message]
+    assert_match(/not currently set as default/, result[:message])
   end
 
   def test_unset_default_with_integration_and_backup
@@ -106,7 +106,7 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
     result = @integration.unset_default
 
     assert result[:success]
-    assert_match /restored original Rakefile/, result[:message]
+    assert_match(/restored original Rakefile/, result[:message])
     assert_equal original_content, File.read(@rakefile_path)
     refute File.exist?("#{@rakefile_path}.ace-backup")
   end
@@ -117,28 +117,28 @@ class Ace::TestRunner::Molecules::RakeIntegrationTest < Minitest::Test
     result = @integration.unset_default
 
     assert result[:success]
-    assert_match /removed ace-test configuration/, result[:message]
+    assert_match(/removed ace-test configuration/, result[:message])
 
     content = File.read(@rakefile_path)
-    refute_match /ace-test-runner integration/, content
-    refute_match /Ace::TestRunner::RakeTask/, content
+    refute_match(/ace-test-runner integration/, content)
+    refute_match(/Ace::TestRunner::RakeTask/, content)
   end
 
   def test_integration_config_includes_fallback
     @integration.set_default
 
     content = File.read(@rakefile_path)
-    assert_match /rescue LoadError/, content
-    assert_match /Fallback to standard Rake::TestTask/, content
+    assert_match(/rescue LoadError/, content)
+    assert_match(/Fallback to standard Rake::TestTask/, content)
   end
 
   def test_integration_config_respects_environment_variables
     @integration.set_default
 
     content = File.read(@rakefile_path)
-    assert_match /ENV\["PATTERN"\]/, content
-    assert_match /ENV\["VERBOSE"\]/, content
-    assert_match /ENV\["FORMAT"\]/, content
+    assert_match(/ENV\["PATTERN"\]/, content)
+    assert_match(/ENV\["VERBOSE"\]/, content)
+    assert_match(/ENV\["FORMAT"\]/, content)
   end
 
   private

@@ -117,13 +117,13 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_validate_config_version
-    config = { patterns: {}, groups: {} }
+    config = {patterns: {}, groups: {}}
     validated = @loader.send(:validate_config, config)
     assert_equal 1, validated[:version]
   end
 
   def test_normalize_config_ensures_all_sections
-    config = { version: 1 }
+    config = {version: 1}
     normalized = @loader.send(:normalize_config, config)
     assert normalized[:patterns]
     assert normalized[:groups]

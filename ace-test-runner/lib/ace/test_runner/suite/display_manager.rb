@@ -34,7 +34,7 @@ module Ace
           # Reserve lines for each package
           @packages.each_with_index do |package, index|
             @lines[package["name"]] = index + 5  # Account for header lines
-            @package_status[package["name"]] = { status: :waiting }
+            @package_status[package["name"]] = {status: :waiting}
             print_package_line(package["name"])
           end
 
@@ -70,7 +70,7 @@ module Ace
         end
 
         # Alias for backward compatibility
-        alias show_final_results finalize_display
+        alias_method :show_final_results, :finalize_display
 
         # Display the summary section using shared helpers
         def show_summary(summary)
@@ -101,10 +101,10 @@ module Ace
             duration = status.dig(:results, :duration) || status[:elapsed] || 0
             elapsed = sprintf("%5.2fs", duration)
             progress_bar = build_progress_bar(status)
-            if status[:total] && status[:total] > 0
-              count = "#{status[:progress]}/#{status[:total]}"
+            count = if status[:total] && status[:total] > 0
+              "#{status[:progress]}/#{status[:total]}"
             else
-              count = "running"
+              "running"
             end
             print "#{icon}  #{elapsed}  #{pkg_name}  #{progress_bar}  #{count}"
 
@@ -145,7 +145,7 @@ module Ace
         # Returns ✗ (red) for failed packages
         def package_status_icon(success, skipped_count)
           return color("✗", :red) unless success
-          skipped_count > 0 ? color("?", :yellow) : color("✓", :green)
+          (skipped_count > 0) ? color("?", :yellow) : color("✓", :green)
         end
 
         def build_progress_bar(status)
@@ -162,8 +162,7 @@ module Ace
           filled = [filled, bar_width].min
           empty = bar_width - filled
 
-          bar = "[" + color("▓" * filled, :green) + "░" * empty + "]"
-          bar
+          "[" + color("▓" * filled, :green) + "░" * empty + "]"
         end
 
         def update_footer

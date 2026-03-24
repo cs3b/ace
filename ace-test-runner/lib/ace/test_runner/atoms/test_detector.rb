@@ -33,7 +33,7 @@ module Ace
           end
 
           # Filter out helper files that aren't actual test files
-          files = files.reject { |f| f.end_with?("/test_helper.rb") || f.end_with?("/spec_helper.rb") }
+          files = files.reject { |f| f.end_with?("/test_helper.rb", "/spec_helper.rb") }
 
           files.uniq.sort
         end

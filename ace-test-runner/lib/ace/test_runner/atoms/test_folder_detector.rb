@@ -35,17 +35,17 @@ module Ace
         #   # => "ace-taskflow/test"
         def find_test_folder(file_path)
           # Remove line number suffix if present (file:line format)
-          file_path = file_path.sub(/:\d+$/, '')
+          file_path = file_path.sub(/:\d+$/, "")
 
           # Split path into parts
-          parts = file_path.split('/')
+          parts = file_path.split("/")
 
           # Find index of "test" directory
-          test_index = parts.index('test')
+          test_index = parts.index("test")
           return nil unless test_index
 
           # Return path up to and including test directory
-          parts[0..test_index].join('/')
+          parts[0..test_index].join("/")
         end
       end
     end

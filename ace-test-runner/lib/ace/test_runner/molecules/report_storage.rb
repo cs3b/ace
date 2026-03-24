@@ -104,12 +104,12 @@ module Ace
         def list_reports(limit: 10)
           ensure_base_directory
 
-          reports = report_directories
-                       .map { |d| report_info(d) }
-                       .compact
-                       .sort_by { |r| r[:timestamp] }
-                       .reverse
-                       .take(limit)
+          report_directories
+            .map { |d| report_info(d) }
+            .compact
+            .sort_by { |r| r[:timestamp] }
+            .reverse
+            .take(limit)
         end
 
         def latest_report_path

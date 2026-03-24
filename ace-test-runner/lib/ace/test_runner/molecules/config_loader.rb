@@ -2,7 +2,7 @@
 
 require "yaml"
 require "ostruct"
-require 'ace/support/config'
+require "ace/support/config"
 
 module Ace
   module TestRunner
@@ -21,7 +21,7 @@ module Ace
         # @return [Hash] Default configuration with symbol keys
         def self.load_gem_defaults
           gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           resolver = Ace::Support::Config.create(
             config_dir: ".ace",
@@ -40,7 +40,7 @@ module Ace
 
         def load(config_path = nil)
           gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
-                     File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
 
           resolver = Ace::Support::Config.create(
             config_dir: ".ace",
@@ -62,10 +62,10 @@ module Ace
 
           validate_config(config)
           normalize_config(config)
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Could not load ace-test-runner config: #{e.message}" if ENV["DEBUG"]
           # Return minimal valid config on error
-          normalize_config({ version: 1 })
+          normalize_config({version: 1})
         end
 
         def merge_with_options(config, options)
@@ -105,7 +105,7 @@ module Ace
 
         def load_from_file(path)
           YAML.safe_load_file(path, permitted_classes: [], aliases: true) || {}
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
         end

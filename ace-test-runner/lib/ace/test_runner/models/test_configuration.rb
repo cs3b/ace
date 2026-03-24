@@ -6,10 +6,10 @@ module Ace
       # Configuration for test execution
       class TestConfiguration
         attr_accessor :format, :report_dir, :save_reports, :fail_fast,
-                      :verbose, :filter, :fix_deprecations, :patterns,
-                      :timeout, :parallel, :color, :per_file, :groups,
-                      :target, :config_path, :failure_limits, :profile,
-                      :execution, :files, :run_in_single_batch
+          :verbose, :filter, :fix_deprecations, :patterns,
+          :timeout, :parallel, :color, :per_file, :groups,
+          :target, :config_path, :failure_limits, :profile,
+          :execution, :files, :run_in_single_batch
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
@@ -27,7 +27,7 @@ module Ace
           @parallel = attributes[:parallel] || false
           @color = attributes.fetch(:color, true)
           @per_file = attributes[:per_file] || false  # Default to grouped execution for performance
-          @failure_limits = attributes[:failure_limits] || { max_display: 7 }
+          @failure_limits = attributes[:failure_limits] || {max_display: 7}
           @profile = attributes[:profile]  # nil means no profiling, number means show N slowest tests
           @execution = attributes[:execution] || {}
           @files = attributes[:files]  # Specific files to test (overrides target/patterns)
@@ -65,7 +65,7 @@ module Ace
           # Use fetch to handle false values correctly (|| would treat false as falsy)
           mode = @execution&.[](:group_isolation)
           mode = @execution&.dig("group_isolation") if mode.nil?
-          mode.nil? ? true : mode
+          mode.nil? || mode
         end
 
         def formatter_class

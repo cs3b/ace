@@ -211,5 +211,4 @@ class CliArgumentParserTest < Minitest::Test
       assert_includes argv, "10"
     end
   end
-
 end

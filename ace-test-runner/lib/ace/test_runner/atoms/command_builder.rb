@@ -39,7 +39,7 @@ module Ace
               # Build a Ruby script that requires each file and fails on LoadError
               requires_script = files.map do |f|
                 # Add ./ prefix if it's a relative path without one
-                path = f.start_with?('/') || f.start_with?('./') ? f : "./#{f}"
+                path = f.start_with?("/", "./") ? f : "./#{f}"
                 # Escape the path for shell safety
                 escaped_path = path.gsub("'", "\\\\'")
                 "begin; require '#{escaped_path}'; rescue LoadError => e; STDERR.puts \\\"Failed to load #{escaped_path}: \\\" + e.message; exit(1); end"
@@ -59,23 +59,19 @@ module Ace
               # Use double quotes to wrap the entire script
               cmd_parts << "\"#{script_parts.join("; ")}\""
             end
-          else
+          elsif files.match?(/:\d+$/)
             # Check if single file has line number
-            if files.match?(/:\d+$/)
-              build_line_number_command(cmd_parts, [files], options)
-            else
-              # Single file without line number
-              if options[:profile]
-                # Inject ARGV with --verbose for Minitest profiling
-                cmd_parts << "-e"
-                escaped_path = files.gsub("'", "\\\\'")
-                path = files.start_with?('/') || files.start_with?('./') ? escaped_path : "./#{escaped_path}"
-                cmd_parts << "\"ARGV.replace(['--verbose']); require '#{path}'; exit_code = Minitest.autorun; exit(exit_code)\""
-              else
-                # Just pass file as argument (Minitest autoruns)
-                cmd_parts << files
-              end
-            end
+            build_line_number_command(cmd_parts, [files], options)
+          elsif options[:profile]
+            # Single file without line number
+            cmd_parts << "-e"
+            escaped_path = files.gsub("'", "\\\\'")
+            path = files.start_with?("/", "./") ? escaped_path : "./#{escaped_path}"
+            cmd_parts << "\"ARGV.replace(['--verbose']); require '#{path}'; exit_code = Minitest.autorun; exit(exit_code)\""
+          # Inject ARGV with --verbose for Minitest profiling
+          else
+            # Just pass file as argument (Minitest autoruns)
+            cmd_parts << files
           end
 
           # Add any extra arguments
@@ -97,7 +93,7 @@ module Ace
           cmd << @ruby_command
           cmd << "-Ilib:test"
           cmd << "-e"
-          cmd << %Q{'Dir.glob("#{pattern}").each { |f| require f }'}
+          cmd << %{'Dir.glob("#{pattern}").each { |f| require f }'}
 
           cmd.join(" ")
         end
@@ -119,7 +115,7 @@ module Ace
             line_number = parsed[:line]
 
             # Add ./ prefix if it's a relative path without one
-            path = file_path.start_with?('/') || file_path.start_with?('./') ? file_path : "./#{file_path}"
+            path = file_path.start_with?("/", "./") ? file_path : "./#{file_path}"
             escaped_path = path.gsub("'", "\\\\'")
 
             # Always require the file
@@ -161,9 +157,7 @@ module Ace
         end
 
         def bundler_available?
-          @bundler_available ||= begin
-            system("which bundle > /dev/null 2>&1")
-          end
+          @bundler_available ||= system("which bundle > /dev/null 2>&1")
         end
       end
     end

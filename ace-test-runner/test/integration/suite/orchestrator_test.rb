@@ -9,7 +9,7 @@ module Ace
       class OrchestratorTest < Minitest::Test
         def setup
           @packages = [
-            { "name" => "ace-support-core", "path" => File.expand_path("../../..", __dir__) }
+            {"name" => "ace-support-core", "path" => File.expand_path("../../..", __dir__)}
           ]
         end
 

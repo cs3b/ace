@@ -29,7 +29,7 @@ module Ace
 
         def parse_output(output)
           # Clean ANSI color codes once for all parsing methods
-          clean_output = output.gsub(/\e\[[0-9;]*m/, '')
+          clean_output = output.gsub(/\e\[[0-9;]*m/, "")
 
           summary = parse_summary(clean_output)
           failures = parse_failures(clean_output)
@@ -50,7 +50,6 @@ module Ace
         def parse_summary(clean_output)
           # clean_output already has ANSI codes removed
           match = clean_output.match(PATTERNS[:summary])
-
 
           return default_summary unless match
 
@@ -76,7 +75,7 @@ module Ace
 
           # If no failures found, try inline verbose format
           # But ONLY if the output contains FAIL or ERROR to avoid expensive processing on success
-          if failures.empty? && (clean_output.include?(' FAIL ') || clean_output.include?(' ERROR '))
+          if failures.empty? && (clean_output.include?(" FAIL ") || clean_output.include?(" ERROR "))
             # Split by test headers and process each block
             test_blocks = clean_output.split(/(?=^\s+test_[\w_]+)/).select { |s| s.match?(/^\s+test_/) }
 
@@ -84,7 +83,7 @@ module Ace
               # Check if this block contains a FAIL or ERROR
               if block =~ /^\s+(test_[\w_]+).*?(ERROR|FAIL).*?\(([\d.]+)s\)\n(.*)/m
                 test_name = $1
-                type = $2 == 'ERROR' ? :error : :failure
+                type = ($2 == "ERROR") ? :error : :failure
                 content = $4
 
                 failure = parse_inline_failure(test_name, content, type)
@@ -138,12 +137,12 @@ module Ace
           if test_times.empty?
             clean_output.scan(PATTERNS[:test_time_standard]) do |class_name, test_name, time, status_char|
               status = case status_char
-                       when "." then "PASS"
-                       when "F" then "FAIL"
-                       when "E" then "ERROR"
-                       when "S" then "SKIP"
-                       else "UNKNOWN"
-                       end
+              when "." then "PASS"
+              when "F" then "FAIL"
+              when "E" then "ERROR"
+              when "S" then "SKIP"
+              else "UNKNOWN"
+              end
               test_times << {
                 name: test_name,
                 class_name: class_name,

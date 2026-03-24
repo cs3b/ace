@@ -100,7 +100,7 @@ module Ace
           failures.each do |failure|
             COMMON_PATTERNS.each do |issue_type, config|
               if failure.message&.match?(config[:pattern])
-                issues[issue_type] ||= { count: 0, failures: [], suggestion: config[:suggestion] }
+                issues[issue_type] ||= {count: 0, failures: [], suggestion: config[:suggestion]}
                 issues[issue_type][:count] += 1
                 issues[issue_type][:failures] << failure
               end
@@ -187,7 +187,7 @@ module Ace
               }
             else
               # Keep unparseable lines as-is
-              formatted << { raw: clean_line }
+              formatted << {raw: clean_line}
             end
           end
 
@@ -211,8 +211,6 @@ module Ace
             "Check input validation and data format"
           when /not found/i
             "Resource doesn't exist. Check paths and names"
-          else
-            nil
           end
         end
 

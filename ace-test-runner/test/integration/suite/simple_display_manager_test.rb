@@ -7,12 +7,12 @@ require "stringio"
 class SimpleDisplayManagerTest < Minitest::Test
   def setup
     @packages = [
-      { "name" => "ace-support-core", "path" => "/path/to/ace-support-core" },
-      { "name" => "ace-bundle", "path" => "/path/to/ace-bundle" }
+      {"name" => "ace-support-core", "path" => "/path/to/ace-support-core"},
+      {"name" => "ace-bundle", "path" => "/path/to/ace-bundle"}
     ]
     @config = {
       "test_suite" => {
-        "display" => { "color" => false }
+        "display" => {"color" => false}
       }
     }
   end
@@ -28,7 +28,7 @@ class SimpleDisplayManagerTest < Minitest::Test
   def test_update_package_does_not_print_when_not_completed
     manager = Ace::TestRunner::Suite::SimpleDisplayManager.new(@packages, @config)
 
-    status = { status: :running, elapsed: 1.5 }
+    status = {status: :running, elapsed: 1.5}
     output = capture_output { manager.update_package(@packages[0], status) }
 
     assert_empty output
@@ -154,7 +154,7 @@ class SimpleDisplayManagerTest < Minitest::Test
       total_assertions: 300,
       assertions_failed: 2,
       failed_packages: [
-        { name: "ace-bundle", path: "/path/to/ace-bundle", failures: 2, errors: 0, failed_tests: [] }
+        {name: "ace-bundle", path: "/path/to/ace-bundle", failures: 2, errors: 0, failed_tests: []}
       ],
       results: []
     }
@@ -179,7 +179,7 @@ class SimpleDisplayManagerTest < Minitest::Test
       total_assertions: 290,
       assertions_failed: 0,
       results: [
-        { package: "ace-bundle", skipped: 3 }
+        {package: "ace-bundle", skipped: 3}
       ]
     }
     output = capture_output { manager.show_summary(summary) }

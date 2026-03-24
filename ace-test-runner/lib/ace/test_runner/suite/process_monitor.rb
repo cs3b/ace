@@ -19,8 +19,8 @@ module Ace
         def start_package(package, test_options, &callback)
           # Queue the package if we're at max capacity
           if @processes.size >= @max_parallel
-            @queue << { package: package, options: test_options, callback: callback }
-            callback.call(package, { status: :waiting }, nil) if callback
+            @queue << {package: package, options: test_options, callback: callback}
+            callback.call(package, {status: :waiting}, nil) if callback
             return
           end
 
@@ -52,7 +52,7 @@ module Ace
           }
 
           # Initial callback
-          callback.call(package, { status: :running, start_time: start_time }, nil) if callback
+          callback.call(package, {status: :running, start_time: start_time}, nil) if callback
         end
 
         def check_processes
@@ -92,7 +92,11 @@ module Ace
               exit_status = thread.value.exitstatus
 
               # Get final output
-              remaining_output = process_info[:stdout].read rescue ""
+              remaining_output = begin
+                process_info[:stdout].read
+              rescue
+                ""
+              end
               process_info[:output] << remaining_output
 
               # Try to get accurate results from summary.json first
@@ -132,15 +136,27 @@ module Ace
               results ||= parse_results(process_info[:output])
 
               # Close streams
-              process_info[:stdout].close rescue nil
-              process_info[:stderr].close rescue nil
-              process_info[:stdin].close rescue nil
+              begin
+                process_info[:stdout].close
+              rescue
+                nil
+              end
+              begin
+                process_info[:stderr].close
+              rescue
+                nil
+              end
+              begin
+                process_info[:stdin].close
+              rescue
+                nil
+              end
 
               # Final callback
               if callback
                 # Use results[:success] from summary.json if available, otherwise check exit code
                 # This ensures the package status matches what ace-test actually reported
-                success_status = results[:success] != nil ? results[:success] : (exit_status == 0)
+                success_status = (!results[:success].nil?) ? results[:success] : (exit_status == 0)
 
                 callback.call(package, {
                   status: :completed,
@@ -206,12 +222,12 @@ module Ace
           # Build command string
           # Note: Do NOT set CI=true here - respect the existing environment
           # Tests that need CI-aware behavior should check ENV['CI'] directly
-          cmd = cmd_parts.join(" ")
+          cmd_parts.join(" ")
         end
 
         def parse_progress(process_info, chunk)
           # Count dots, F, E, S in the output for progress
-          dots = chunk.scan(/[\.FES]/).join
+          dots = chunk.scan(/[.FES]/).join
           process_info[:dots] << dots
           process_info[:tests_run] += dots.length
 
@@ -236,7 +252,7 @@ module Ace
             }
           else
             # Fallback to counting dots/F/E/S
-            dots = output.scan(/[\.FES]/).join
+            dots = output.scan(/[.FES]/).join
             {
               tests: dots.length,
               failures: dots.count("F"),

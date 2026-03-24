@@ -215,7 +215,7 @@ module Ace
         end
 
         def explicit_path?(arg)
-          arg.start_with?("./") || arg.start_with?("../") || arg.start_with?("/")
+          arg.start_with?("./", "../", "/")
         end
 
         def file_with_line?(arg)
@@ -246,14 +246,14 @@ module Ace
 
         def raise_package_not_found_error(arg)
           message = "Package not found: #{arg}\n"
-          if Dir.exist?(arg)
-            message += "Directory exists but has no test/ subdirectory.\n"
+          message += if Dir.exist?(arg)
+            "Directory exists but has no test/ subdirectory.\n"
           else
-            message += "Directory does not exist.\n"
+            "Directory does not exist.\n"
           end
 
           available = @package_resolver.available_packages
-          message += "Available packages: #{available.join(', ')}" if available.any?
+          message += "Available packages: #{available.join(", ")}" if available.any?
 
           raise ArgumentError, message
         end

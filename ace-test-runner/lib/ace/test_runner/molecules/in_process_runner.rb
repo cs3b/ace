@@ -27,7 +27,7 @@ module Ace
 
           # Store original verbose setting
           original_verbose = $VERBOSE
-          original_mt_no_autorun = ENV['MT_NO_AUTORUN']
+          original_mt_no_autorun = ENV["MT_NO_AUTORUN"]
 
           begin
             $stdout = stdout_io
@@ -35,11 +35,11 @@ module Ace
             $VERBOSE = nil if options[:suppress_warnings]
 
             # Prevent Minitest from auto-running
-            ENV['MT_NO_AUTORUN'] = '1'
+            ENV["MT_NO_AUTORUN"] = "1"
 
             # Add test directory to load path if not already there
-            test_dir = File.expand_path('test')
-            lib_dir = File.expand_path('lib')
+            test_dir = File.expand_path("test")
+            lib_dir = File.expand_path("lib")
             $LOAD_PATH.unshift(test_dir) unless $LOAD_PATH.include?(test_dir)
             $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 
@@ -82,7 +82,7 @@ module Ace
             # Setup Minitest::Reporters BEFORE loading test files
             # For in-process mode, we need to handle reporter state carefully
             # because Minitest::Reporters.use! only works properly on first call
-            require 'minitest/reporters'
+            require "minitest/reporters"
 
             # Create a fresh reporter for this group
             reporter = Minitest::Reporters::DefaultReporter.new(io: $stdout)
@@ -126,12 +126,11 @@ module Ace
             end
 
             success = exit_code == true || exit_code == 0
-
           rescue Timeout::Error
             stderr_io.puts "Test execution timed out after #{@timeout} seconds"
             success = false
             exit_code = 124
-          rescue LoadError => e
+          rescue LoadError
             # LoadError already logged in the loop above
             stderr_io.puts "Test run aborted due to load error"
             success = false
@@ -148,9 +147,9 @@ module Ace
 
             # Restore original MT_NO_AUTORUN value
             if original_mt_no_autorun
-              ENV['MT_NO_AUTORUN'] = original_mt_no_autorun
+              ENV["MT_NO_AUTORUN"] = original_mt_no_autorun
             else
-              ENV.delete('MT_NO_AUTORUN')
+              ENV.delete("MT_NO_AUTORUN")
             end
           end
 
@@ -159,8 +158,12 @@ module Ace
           {
             stdout: stdout_io.string,
             stderr: stderr_io.string,
-            status: OpenStruct.new(success?: success, exitstatus: exit_code.is_a?(Integer) ? exit_code : (success ? 0 : 1)),
-            command: "in-process:#{files.join(',')}",
+            status: OpenStruct.new(success?: success, exitstatus: if exit_code.is_a?(Integer)
+                                                                    exit_code
+                                                                  else
+                                                                    (success ? 0 : 1)
+                                                                  end),
+            command: "in-process:#{files.join(",")}",
             start_time: start_time,
             end_time: end_time,
             duration: end_time - start_time,
@@ -178,13 +181,13 @@ module Ace
 
           # Send stdout event for per-test progress parsing
           if block_given? && result[:stdout]
-            yield({ type: :stdout, content: result[:stdout] })
+            yield({type: :stdout, content: result[:stdout]})
           end
 
           # Simulate progress callbacks for compatibility
           if block_given?
-            files.each { |file| yield({ type: :start, file: file }) }
-            files.each { |file| yield({ type: :complete, file: file, success: result[:success], duration: result[:duration] / files.size }) }
+            files.each { |file| yield({type: :start, file: file}) }
+            files.each { |file| yield({type: :complete, file: file, success: result[:success], duration: result[:duration] / files.size}) }
           end
 
           result

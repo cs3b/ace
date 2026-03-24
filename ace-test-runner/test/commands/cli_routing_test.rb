@@ -30,11 +30,9 @@ class CliRoutingTest < Minitest::Test
       File.write("test/sample_test.rb", "# empty test file")
 
       output, _err = capture_io do
-        begin
-          Ace::Support::Cli::Runner.new(Ace::TestRunner::CLI::Commands::Test).call(args: ["atoms"])
-        rescue StandardError => e
-          puts "Routed to test: #{e.class}"
-        end
+        Ace::Support::Cli::Runner.new(Ace::TestRunner::CLI::Commands::Test).call(args: ["atoms"])
+      rescue => e
+        puts "Routed to test: #{e.class}"
       end
       refute_nil output
     end

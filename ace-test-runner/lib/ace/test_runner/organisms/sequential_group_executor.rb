@@ -85,7 +85,7 @@ module Ace
         def aggregate_results(combined_output, parser)
           # Split output by test file executions
           individual_outputs = combined_output.split(/^Started with run options/)
-          individual_outputs.shift if individual_outputs.first&.empty?
+          individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
 
           aggregated = {
             summary: {

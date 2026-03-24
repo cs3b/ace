@@ -60,7 +60,7 @@ module Ace
 
         def fix_file(file_path, dry_run: false)
           unless File.exist?(file_path)
-            return { success: false, error: "File not found: #{file_path}" }
+            return {success: false, error: "File not found: #{file_path}"}
           end
 
           original_content = File.read(file_path)

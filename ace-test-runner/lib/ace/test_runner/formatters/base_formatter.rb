@@ -62,7 +62,7 @@ module Ace
 
         def pluralize(count, singular, plural = nil)
           plural ||= "#{singular}s"
-          count == 1 ? "#{count} #{singular}" : "#{count} #{plural}"
+          (count == 1) ? "#{count} #{singular}" : "#{count} #{plural}"
         end
 
         def format_duration(seconds)
