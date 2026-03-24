@@ -59,17 +59,6 @@ ace-bundle wfi://task/work
 
 [`ace-bundle`](ace-bundle/) | [`ace-handbook`](ace-handbook/) | [`ace-search`](ace-search/)
 
-## Quick Start
-
-Start fast with a quick win:
-
-```bash
-gem install ace-git-commit
-ace-git-commit -i "fix auth token refresh"
-```
-
-For the full idea → task → assignment → verify → ship flow, read the [Quick Start guide](docs/quick-start.md).
-
 ## Install
 
 ```bash
@@ -77,7 +66,7 @@ gem install ace-git-commit    # smart commits, zero config
 gem install ace-overseer      # full orchestrator stack
 ```
 
-Ruby 3.2+ required. Each ace-* gem installs independently — start with one tool and add more as you need them. See the [Quick Start](docs/quick-start.md) for a complete walkthrough.
+Ruby 3.2+ required. Each ace-* gem installs independently — start with one tool and add more as you need them.
 
 ## Principles
 
