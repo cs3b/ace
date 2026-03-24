@@ -10,15 +10,15 @@ class WindowManagerTest < Minitest::Test
       "name" => "code-editor",
       "layout" => "main-vertical",
       "panes" => [
-        { "commands" => ["vim"], "focus" => true },
-        { "commands" => ["bash"] }
+        {"commands" => ["vim"], "focus" => true},
+        {"commands" => ["bash"]}
       ]
     })
 
     write_preset(@temp_dir, "windows", "with-pre-window", {
       "name" => "dev-window",
       "pre_window" => "nvm use 18",
-      "panes" => [{ "commands" => ["node"] }]
+      "panes" => [{"commands" => ["node"]}]
     })
 
     loader = Ace::Tmux::Molecules::PresetLoader.new(
@@ -184,12 +184,12 @@ class WindowManagerTest < Minitest::Test
       "name" => "nested-editor",
       "direction" => "horizontal",
       "panes" => [
-        { "commands" => ["claude"], "size" => "40%" },
-        { "direction" => "vertical", "panes" => [
-          { "commands" => ["bash"] },
-          { "commands" => ["htop"] }
-        ] },
-        { "commands" => ["nvim ."], "focus" => true }
+        {"commands" => ["claude"], "size" => "40%"},
+        {"direction" => "vertical", "panes" => [
+          {"commands" => ["bash"]},
+          {"commands" => ["htop"]}
+        ]},
+        {"commands" => ["nvim ."], "focus" => true}
       ]
     })
 
@@ -244,7 +244,7 @@ class WindowManagerTest < Minitest::Test
   def test_add_window_failure_includes_stderr_in_error
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
-        :default => mock_result(stdout: "", stderr: "session not found: bad-session\n", success: false, exit_code: 1)
+        default: mock_result(stdout: "", stderr: "session not found: bad-session\n", success: false, exit_code: 1)
       }
     )
 
@@ -282,9 +282,9 @@ class WindowManagerTest < Minitest::Test
       "root" => "~/projects",
       "direction" => "horizontal",
       "panes" => [
-        { "commands" => ["vim"], "root" => "~/custom-root" },
-        { "commands" => ["bash"] },
-        { "commands" => ["htop"], "root" => "~/logs" }
+        {"commands" => ["vim"], "root" => "~/custom-root"},
+        {"commands" => ["bash"]},
+        {"commands" => ["htop"], "root" => "~/logs"}
       ]
     })
 

@@ -6,35 +6,35 @@ class PresetResolverTest < Minitest::Test
   Resolver = Ace::Tmux::Atoms::PresetResolver
 
   def test_resolve_preset_without_preset_key
-    hash = { "name" => "editor", "layout" => "tiled" }
-    result = Resolver.resolve_preset(hash, lookup: ->(_) { nil })
+    hash = {"name" => "editor", "layout" => "tiled"}
+    result = Resolver.resolve_preset(hash, lookup: ->(_) {})
     assert_equal hash, result
   end
 
   def test_resolve_preset_merges_base_and_overlay
-    base = { "layout" => "main-vertical", "panes" => [{ "commands" => ["vim"] }] }
-    overlay = { "preset" => "code-editor", "layout" => "tiled" }
-    lookup = ->(name) { name == "code-editor" ? base : nil }
+    base = {"layout" => "main-vertical", "panes" => [{"commands" => ["vim"]}]}
+    overlay = {"preset" => "code-editor", "layout" => "tiled"}
+    lookup = ->(name) { (name == "code-editor") ? base : nil }
 
     result = Resolver.resolve_preset(overlay, lookup: lookup)
 
     assert_equal "tiled", result["layout"]
-    assert_equal [{ "commands" => ["vim"] }], result["panes"]
+    assert_equal [{"commands" => ["vim"]}], result["panes"]
     refute result.key?("preset")
   end
 
   def test_resolve_preset_returns_overlay_without_preset_key_when_not_found
-    hash = { "preset" => "missing", "name" => "editor" }
-    result = Resolver.resolve_preset(hash, lookup: ->(_) { nil })
+    hash = {"preset" => "missing", "name" => "editor"}
+    result = Resolver.resolve_preset(hash, lookup: ->(_) {})
 
-    assert_equal({ "name" => "editor" }, result)
+    assert_equal({"name" => "editor"}, result)
     refute result.key?("preset")
   end
 
   def test_resolve_preset_handles_chained_presets
-    base_base = { "layout" => "tiled", "panes" => [{ "commands" => ["bash"] }] }
-    base = { "preset" => "base-base", "name" => "mid" }
-    overlay = { "preset" => "mid", "root" => "~/src" }
+    base_base = {"layout" => "tiled", "panes" => [{"commands" => ["bash"]}]}
+    base = {"preset" => "base-base", "name" => "mid"}
+    overlay = {"preset" => "mid", "root" => "~/src"}
 
     lookup = lambda { |name|
       case name
@@ -51,7 +51,7 @@ class PresetResolverTest < Minitest::Test
   end
 
   def test_resolve_preset_guards_against_circular_references
-    circular = { "preset" => "self" }
+    circular = {"preset" => "self"}
     lookup = ->(_) { circular.dup }
 
     assert_raises(Ace::Tmux::Atoms::CircularPresetError) do
@@ -60,36 +60,36 @@ class PresetResolverTest < Minitest::Test
   end
 
   def test_normalize_window_hash_passthrough
-    hash = { "name" => "editor" }
+    hash = {"name" => "editor"}
     assert_equal hash, Resolver.normalize_window(hash)
   end
 
   def test_normalize_window_string_shorthand
     result = Resolver.normalize_window("tail -f log.txt")
-    assert_equal({ "panes" => ["tail -f log.txt"] }, result)
+    assert_equal({"panes" => ["tail -f log.txt"]}, result)
   end
 
   def test_normalize_pane_hash_passthrough
-    hash = { "commands" => ["vim"] }
+    hash = {"commands" => ["vim"]}
     assert_equal hash, Resolver.normalize_pane(hash)
   end
 
   def test_normalize_pane_string_shorthand
     result = Resolver.normalize_pane("vim .")
-    assert_equal({ "commands" => ["vim ."] }, result)
+    assert_equal({"commands" => ["vim ."]}, result)
   end
 
   def test_resolve_session_resolves_window_presets
-    window_preset = { "layout" => "main-vertical", "panes" => [{ "commands" => ["vim"] }] }
+    window_preset = {"layout" => "main-vertical", "panes" => [{"commands" => ["vim"]}]}
     session_hash = {
       "name" => "dev",
       "windows" => [
-        { "preset" => "code-editor", "name" => "editor" }
+        {"preset" => "code-editor", "name" => "editor"}
       ]
     }
 
-    window_lookup = ->(name) { name == "code-editor" ? window_preset : nil }
-    pane_lookup = ->(_) { nil }
+    window_lookup = ->(name) { (name == "code-editor") ? window_preset : nil }
+    pane_lookup = ->(_) {}
 
     result = Resolver.resolve_session(session_hash, window_lookup: window_lookup, pane_lookup: pane_lookup)
 
@@ -100,19 +100,19 @@ class PresetResolverTest < Minitest::Test
   end
 
   def test_resolve_session_resolves_pane_presets_within_windows
-    pane_preset = { "commands" => ["vim"], "focus" => true }
+    pane_preset = {"commands" => ["vim"], "focus" => true}
     session_hash = {
       "name" => "dev",
       "windows" => [
         {
           "name" => "editor",
-          "panes" => [{ "preset" => "vim-editor" }]
+          "panes" => [{"preset" => "vim-editor"}]
         }
       ]
     }
 
-    window_lookup = ->(_) { nil }
-    pane_lookup = ->(name) { name == "vim-editor" ? pane_preset : nil }
+    window_lookup = ->(_) {}
+    pane_lookup = ->(name) { (name == "vim-editor") ? pane_preset : nil }
 
     result = Resolver.resolve_session(session_hash, window_lookup: window_lookup, pane_lookup: pane_lookup)
 
@@ -125,25 +125,25 @@ class PresetResolverTest < Minitest::Test
     session_hash = {
       "name" => "dev",
       "windows" => [
-        { "name" => "logs", "panes" => ["tail -f log/dev.log"] }
+        {"name" => "logs", "panes" => ["tail -f log/dev.log"]}
       ]
     }
 
-    result = Resolver.resolve_session(session_hash, window_lookup: ->(_) { nil }, pane_lookup: ->(_) { nil })
+    result = Resolver.resolve_session(session_hash, window_lookup: ->(_) {}, pane_lookup: ->(_) {})
 
     pane = result["windows"][0]["panes"][0]
     assert_equal ["tail -f log/dev.log"], pane["commands"]
   end
 
   def test_resolve_window_resolves_pane_presets
-    pane_preset = { "commands" => ["vim"], "focus" => true }
+    pane_preset = {"commands" => ["vim"], "focus" => true}
     window_hash = {
       "name" => "editor",
       "layout" => "main-vertical",
-      "panes" => [{ "preset" => "vim-editor" }, { "commands" => ["bash"] }]
+      "panes" => [{"preset" => "vim-editor"}, {"commands" => ["bash"]}]
     }
 
-    pane_lookup = ->(name) { name == "vim-editor" ? pane_preset : nil }
+    pane_lookup = ->(name) { (name == "vim-editor") ? pane_preset : nil }
 
     result = Resolver.resolve_window(window_hash, pane_lookup: pane_lookup)
 
@@ -154,23 +154,23 @@ class PresetResolverTest < Minitest::Test
   end
 
   def test_resolve_window_panes_with_nested_containers
-    pane_preset = { "commands" => ["vim"], "focus" => true }
+    pane_preset = {"commands" => ["vim"], "focus" => true}
     window_hash = {
       "name" => "dev",
       "direction" => "horizontal",
       "panes" => [
-        { "preset" => "vim-editor" },
+        {"preset" => "vim-editor"},
         {
           "direction" => "vertical",
           "panes" => [
-            { "commands" => ["bash"] },
-            { "preset" => "vim-editor" }
+            {"commands" => ["bash"]},
+            {"preset" => "vim-editor"}
           ]
         }
       ]
     }
 
-    pane_lookup = ->(name) { name == "vim-editor" ? pane_preset : nil }
+    pane_lookup = ->(name) { (name == "vim-editor") ? pane_preset : nil }
 
     result = Resolver.resolve_window(window_hash, pane_lookup: pane_lookup)
 
@@ -189,7 +189,7 @@ class PresetResolverTest < Minitest::Test
   end
 
   def test_resolve_session_with_nested_containers
-    pane_preset = { "commands" => ["vim"], "focus" => true }
+    pane_preset = {"commands" => ["vim"], "focus" => true}
     session_hash = {
       "name" => "dev",
       "windows" => [
@@ -197,15 +197,15 @@ class PresetResolverTest < Minitest::Test
           "name" => "main",
           "direction" => "horizontal",
           "panes" => [
-            { "preset" => "vim-editor" },
-            { "direction" => "vertical", "panes" => [{ "commands" => ["bash"] }] }
+            {"preset" => "vim-editor"},
+            {"direction" => "vertical", "panes" => [{"commands" => ["bash"]}]}
           ]
         }
       ]
     }
 
-    window_lookup = ->(_) { nil }
-    pane_lookup = ->(name) { name == "vim-editor" ? pane_preset : nil }
+    window_lookup = ->(_) {}
+    pane_lookup = ->(name) { (name == "vim-editor") ? pane_preset : nil }
 
     result = Resolver.resolve_session(session_hash, window_lookup: window_lookup, pane_lookup: pane_lookup)
 

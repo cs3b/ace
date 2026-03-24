@@ -24,16 +24,12 @@ module TmuxTestHelper
       key = cmd.join(" ")
       response = @capture_responses[key] || @capture_responses[:default]
 
-      if response
-        response
-      else
-        Ace::Tmux::Molecules::ExecutionResult.new(
-          stdout: "",
-          stderr: "",
-          success: true,
-          exit_code: 0
-        )
-      end
+      response || Ace::Tmux::Molecules::ExecutionResult.new(
+        stdout: "",
+        stderr: "",
+        success: true,
+        exit_code: 0
+      )
     end
 
     def run(cmd)

@@ -77,7 +77,7 @@ module Ace
         def normalize_window(window)
           return window if window.is_a?(Hash)
 
-          { "panes" => [window.to_s] }
+          {"panes" => [window.to_s]}
         end
 
         # Normalize pane entry: string shorthand becomes commands array
@@ -87,7 +87,7 @@ module Ace
         def normalize_pane(pane)
           return pane if pane.is_a?(Hash)
 
-          { "commands" => [pane.to_s] }
+          {"commands" => [pane.to_s]}
         end
 
         # @api private

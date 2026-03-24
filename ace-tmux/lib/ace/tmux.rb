@@ -41,7 +41,7 @@ module Ace
     # @return [String] Path to the gem root directory
     def self.gem_root
       @gem_root ||= Gem.loaded_specs["ace-tmux"]&.gem_dir ||
-                    File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
     end
 
     # Check if debug mode is enabled
@@ -79,7 +79,7 @@ module Ace
 
       config = resolver.resolve_namespace("tmux")
       config.data
-    rescue StandardError => e
+    rescue => e
       warn "ace-tmux: Could not load config: #{e.class} - #{e.message}" if debug?
       load_gem_defaults_fallback
     end
@@ -93,7 +93,7 @@ module Ace
 
       require "yaml"
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue StandardError
+    rescue
       {}
     end
     private_class_method :load_gem_defaults_fallback

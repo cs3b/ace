@@ -96,7 +96,7 @@ module Ace
               next s unless s.nil?
 
               # Give extra cells to the first auto children
-              cell_size = base + (auto_index < extra ? 1 : 0)
+              cell_size = base + ((auto_index < extra) ? 1 : 0)
               auto_index += 1
               cell_size
             end
@@ -136,17 +136,17 @@ module Ace
 
         # @api private
         def brackets_for(direction)
-          direction == :horizontal ? ["{", "}"] : ["[", "]"]
+          (direction == :horizontal) ? ["{", "}"] : ["[", "]"]
         end
 
         # @api private — the dimension we split along
         def split_dimension(direction, width, height)
-          direction == :horizontal ? width : height
+          (direction == :horizontal) ? width : height
         end
 
         # @api private — starting offset along split axis
         def split_offset(direction, x, y)
-          direction == :horizontal ? x : y
+          (direction == :horizontal) ? x : y
         end
 
         # @api private — child dimensions given parent dimensions and allocated size

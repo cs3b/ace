@@ -11,8 +11,8 @@ class SessionManagerTest < Minitest::Test
       "root" => "~/projects/app",
       "startup_window" => "editor",
       "windows" => [
-        { "name" => "editor", "panes" => [{ "commands" => ["vim"] }] },
-        { "name" => "server", "panes" => [{ "commands" => ["rails s"] }] }
+        {"name" => "editor", "panes" => [{"commands" => ["vim"]}]},
+        {"name" => "server", "panes" => [{"commands" => ["rails s"]}]}
       ]
     })
 
@@ -22,11 +22,11 @@ class SessionManagerTest < Minitest::Test
         {
           "name" => "main",
           "layout" => "main-vertical",
-          "options" => { "main-pane-width" => "40%" },
+          "options" => {"main-pane-width" => "40%"},
           "panes" => [
-            { "commands" => ["claude"] },
-            { "commands" => [], "options" => { "remain-on-exit" => "on" } },
-            { "commands" => ["nvim ."], "focus" => true }
+            {"commands" => ["claude"]},
+            {"commands" => [], "options" => {"remain-on-exit" => "on"}},
+            {"commands" => ["nvim ."], "focus" => true}
           ]
         }
       ]
@@ -36,7 +36,7 @@ class SessionManagerTest < Minitest::Test
       "name" => "hooked",
       "pre_window" => "nvm use 18",
       "windows" => [
-        { "name" => "shell", "panes" => [{ "commands" => ["bash"] }] }
+        {"name" => "shell", "panes" => [{"commands" => ["bash"]}]}
       ]
     })
 
@@ -225,12 +225,12 @@ class SessionManagerTest < Minitest::Test
           "name" => "main",
           "direction" => "horizontal",
           "panes" => [
-            { "commands" => ["claude"], "size" => "40%" },
-            { "direction" => "vertical", "panes" => [
-              { "commands" => ["bash"] },
-              { "commands" => ["htop"] }
-            ] },
-            { "commands" => ["nvim ."], "focus" => true }
+            {"commands" => ["claude"], "size" => "40%"},
+            {"direction" => "vertical", "panes" => [
+              {"commands" => ["bash"]},
+              {"commands" => ["htop"]}
+            ]},
+            {"commands" => ["nvim ."], "focus" => true}
           ]
         }
       ]
@@ -291,7 +291,7 @@ class SessionManagerTest < Minitest::Test
           "name" => "main",
           "direction" => "horizontal",
           "panes" => [
-            { "commands" => ["bash"] }
+            {"commands" => ["bash"]}
           ]
         }
       ]
@@ -363,7 +363,7 @@ class SessionManagerTest < Minitest::Test
     write_preset(@temp_dir, "sessions", "no-root", {
       "name" => "no-root",
       "windows" => [
-        { "name" => "shell", "panes" => [{ "commands" => ["bash"] }] }
+        {"name" => "shell", "panes" => [{"commands" => ["bash"]}]}
       ]
     })
 
@@ -435,9 +435,9 @@ class SessionManagerTest < Minitest::Test
           "name" => "main",
           "direction" => "horizontal",
           "panes" => [
-            { "commands" => ["vim"], "root" => "~/custom-root" },
-            { "commands" => ["bash"] },
-            { "commands" => ["htop"], "root" => "~/logs" }
+            {"commands" => ["vim"], "root" => "~/custom-root"},
+            {"commands" => ["bash"]},
+            {"commands" => ["htop"], "root" => "~/logs"}
           ]
         }
       ]

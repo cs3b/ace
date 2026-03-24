@@ -50,13 +50,13 @@ class CliTest < Minitest::Test
   def test_version_output
     output = capture_io { CLI.start(["version"]) }[0]
     assert_match(/ace-tmux/, output)
-    assert_match(/#{Ace::Tmux::VERSION}/, output)
+    assert_match(/#{Ace::Tmux::VERSION}/o, output)
   end
 
   def test_version_flag_output
     output = capture_io { CLI.start(["--version"]) }[0]
     assert_match(/ace-tmux/, output)
-    assert_match(/#{Ace::Tmux::VERSION}/, output)
+    assert_match(/#{Ace::Tmux::VERSION}/o, output)
   end
 
   def test_list_command_runs

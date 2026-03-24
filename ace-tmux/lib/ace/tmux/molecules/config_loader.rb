@@ -22,7 +22,7 @@ module Ace
 
           config = resolver.resolve_namespace("tmux")
           config.data
-        rescue StandardError => e
+        rescue => e
           warn "ace-tmux: Could not load config: #{e.class} - #{e.message}" if Tmux.debug?
           load_fallback(gem_root)
         end
@@ -37,7 +37,7 @@ module Ace
 
           require "yaml"
           YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-        rescue StandardError
+        rescue
           {}
         end
       end

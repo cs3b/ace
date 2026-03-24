@@ -46,7 +46,7 @@ module Ace
           )
           result = @executor.capture(cmd)
           unless result.success?
-            detail = result.respond_to?(:stderr) && !result.stderr.to_s.empty? ? ": #{result.stderr.strip}" : ""
+            detail = (result.respond_to?(:stderr) && !result.stderr.to_s.empty?) ? ": #{result.stderr.strip}" : ""
             raise "Failed to create window#{detail}"
           end
 
@@ -124,7 +124,7 @@ module Ace
         def setup_nested_panes(window, window_target, base_root = nil)
           tree = window.layout_tree
           leaves = tree.leaves
-          leaf_count = leaves.length
+          leaves.length
 
           # Create leaf_count - 1 additional panes via flat splits
           # Use per-leaf root when available, falling back to base/window root

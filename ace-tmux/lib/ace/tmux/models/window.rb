@@ -36,7 +36,7 @@ module Ace
         end
 
         def to_h
-          hash = { "name" => @name, "panes" => @panes.map(&:to_h) }
+          hash = {"name" => @name, "panes" => @panes.map(&:to_h)}
           hash["layout"] = @layout if @layout
           hash["root"] = @root if @root
           hash["pre_window"] = @pre_window if @pre_window

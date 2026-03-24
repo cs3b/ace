@@ -10,13 +10,13 @@ class PresetLoaderTest < Minitest::Test
     write_preset(@temp_dir, "sessions", "dev", {
       "name" => "dev",
       "root" => "~/projects",
-      "windows" => [{ "name" => "editor" }]
+      "windows" => [{"name" => "editor"}]
     })
 
     write_preset(@temp_dir, "windows", "code-editor", {
       "name" => "code-editor",
       "layout" => "main-vertical",
-      "panes" => [{ "commands" => ["vim"] }]
+      "panes" => [{"commands" => ["vim"]}]
     })
 
     write_preset(@temp_dir, "panes", "vim-editor", {

@@ -131,7 +131,7 @@ module Ace
         end
 
         def parse_direction(str)
-          str.to_s == "vertical" ? :vertical : :horizontal
+          (str.to_s == "vertical") ? :vertical : :horizontal
         end
 
         def build_pane_model(hash)
