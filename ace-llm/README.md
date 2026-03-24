@@ -3,7 +3,7 @@
 
   Query any LLM from the terminal with one interface across API and CLI providers.
 
-  <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
 
   <a href="https://rubygems.org/gems/ace-llm"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-llm.svg" /></a>
