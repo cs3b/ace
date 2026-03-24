@@ -15,7 +15,7 @@ class StageExecutorTest < AceSimTestCase
         output_path = args[args.index("--output") + 1]
         File.write(output_path, "result: ok\n")
       end
-      { success: true, stdout: "", stderr: "", exit_code: 0 }
+      {success: true, stdout: "", stderr: "", exit_code: 0}
     end
   end
 
@@ -29,13 +29,13 @@ class StageExecutorTest < AceSimTestCase
         output_path = args[args.index("--output") + 1]
         File.write(output_path, "")
       end
-      { success: true, stdout: "", stderr: "", exit_code: 0 }
+      {success: true, stdout: "", stderr: "", exit_code: 0}
     end
   end
 
   class FailingBundleRunner
     def call(_args)
-      { success: false, stdout: "", stderr: "bundle failed", exit_code: 1 }
+      {success: false, stdout: "", stderr: "bundle failed", exit_code: 1}
     end
   end
 

@@ -17,12 +17,12 @@ class SimulationRunnerTest < AceSimTestCase
       when "ace-bundle"
         output_path = args[args.index("--output") + 1]
         File.write(output_path, "Prompt")
-        { success: true, stdout: "", stderr: "", exit_code: 0 }
+        {success: true, stdout: "", stderr: "", exit_code: 0}
       when "ace-llm"
         provider = args[1]
         output_path = args[args.index("--output") + 1]
         if output_path.end_with?("output.sequence.md")
-          return { success: false, stdout: "", stderr: "forced final failure", exit_code: 1 } if @fail_final
+          return {success: false, stdout: "", stderr: "forced final failure", exit_code: 1} if @fail_final
 
           File.write(
             output_path,
@@ -36,26 +36,26 @@ class SimulationRunnerTest < AceSimTestCase
               </source-revised>
             MD
           )
-          return { success: true, stdout: "", stderr: "", exit_code: 0 }
+          return {success: true, stdout: "", stderr: "", exit_code: 0}
         end
 
         step_name = File.basename(File.dirname(output_path)).split("-", 2).last
 
         if provider == @fail_provider && step_name == @fail_step
-          { success: false, stdout: "", stderr: "forced failure", exit_code: 1 }
+          {success: false, stdout: "", stderr: "forced failure", exit_code: 1}
         else
           File.write(output_path, "step: #{step_name}\n")
-          { success: true, stdout: "", stderr: "", exit_code: 0 }
+          {success: true, stdout: "", stderr: "", exit_code: 0}
         end
       else
-        { success: false, stdout: "", stderr: "unsupported", exit_code: 1 }
+        {success: false, stdout: "", stderr: "unsupported", exit_code: 1}
       end
     end
   end
 
   def build_session(source:, run_id: "runtest", providers: ["codex:mini"], repeat: 1,
-                    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true,
-                    steps: %w[draft plan], step_bundles: nil)
+    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true,
+    steps: %w[draft plan], step_bundles: nil)
     default_step_bundles = {
       "draft" => File.expand_path("../../.ace-defaults/sim/steps/draft.md", __dir__),
       "plan" => File.expand_path("../../.ace-defaults/sim/steps/plan.md", __dir__),

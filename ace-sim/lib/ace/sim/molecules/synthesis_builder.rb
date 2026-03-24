@@ -22,7 +22,7 @@ module Ace
         end
 
         def chain_status(step_results)
-          step_results.any? { |step| step["status"] == "failed" } ? "failed" : "ok"
+          (step_results.any? { |step| step["status"] == "failed" }) ? "failed" : "ok"
         end
 
         private

@@ -40,17 +40,23 @@ module Ace
           write_bundle(bundle_path, workflow_ref: session.synthesis_workflow)
 
           bundle_result = command_runner.call(["ace-bundle", bundle_path, "--output", prompt_path])
-          return failure("ace-bundle failed", bundle_result, report_path: report_path, raw_output_path: raw_output_path,
-                         revised_source_path: revised_source_path) unless bundle_result[:success]
+          unless bundle_result[:success]
+            return failure("ace-bundle failed", bundle_result, report_path: report_path, raw_output_path: raw_output_path,
+              revised_source_path: revised_source_path)
+          end
 
           provider = session.synthesis_provider.to_s.strip.empty? ? session.providers.first : session.synthesis_provider
           llm_result = command_runner.call(["ace-llm", provider, "--prompt", prompt_path, "--output", raw_output_path])
-          return failure("ace-llm failed", llm_result, report_path: report_path, raw_output_path: raw_output_path,
-                         revised_source_path: revised_source_path) unless llm_result[:success]
+          unless llm_result[:success]
+            return failure("ace-llm failed", llm_result, report_path: report_path, raw_output_path: raw_output_path,
+              revised_source_path: revised_source_path)
+          end
 
           sequence = read_non_empty(raw_output_path)
-          return missing_output_failure("Final synthesis sequence missing or empty", provider, report_path, raw_output_path,
-                                        revised_source_path) if sequence.nil?
+          if sequence.nil?
+            return missing_output_failure("Final synthesis sequence missing or empty", provider, report_path, raw_output_path,
+              revised_source_path)
+          end
 
           parsed = parse_sequence(sequence)
           unless parsed
@@ -84,7 +90,7 @@ module Ace
             "revised_source_path" => revised_source_path,
             "output_path" => report_path
           }
-        rescue StandardError => e
+        rescue => e
           {
             "status" => "failed",
             "error" => e.message,
@@ -111,9 +117,9 @@ module Ace
           content << "## Chain outputs\n\n"
 
           chains.each do |chain|
-            content << "### Chain #{chain['provider']}##{chain['iteration']} (#{chain['status']})\n\n"
+            content << "### Chain #{chain["provider"]}##{chain["iteration"]} (#{chain["status"]})\n\n"
             chain.fetch("steps", []).each do |step|
-              content << "#### Step #{step['step']} (#{step['status']})\n\n"
+              content << "#### Step #{step["step"]} (#{step["status"]})\n\n"
               if step["output_path"] && File.exist?(step["output_path"])
                 content << "```markdown\n"
                 content << File.read(step["output_path"])
