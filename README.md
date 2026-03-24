@@ -1,14 +1,14 @@
-<h1 align="center">ACE - Agentic Coding Environment</h1>
+<div align="center">
+  <h1>ACE - Agentic Coding Environment</h1>
 
-<p align="center">
+  Workflow harness for coding agents — and the developers who work with them.
+
   <img src="docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
 
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
-
-  Workflow infrastructure for coding agents — and the developers who work with them.
-</p>
+</div>
 
 [Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
@@ -113,5 +113,3 @@ ACE skills project natively to multiple agent platforms. Install an integration 
 ---
 
 [Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
-
-MIT License
