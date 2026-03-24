@@ -5,11 +5,17 @@ tags:
 - docs
 - getting-started
 settings:
-  font_size: 16
+  font_size: 12
   width: 960
   height: 540
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
+- name: Switch to project root
+  commands:
+  - type: cd $PROJECT_ROOT_PATH && clear
+    sleep: 1s
 - name: List available presets
   commands:
   - type: ace-review --list-presets
@@ -17,10 +23,6 @@ scenes:
 - name: Review branch diff with preset
   commands:
   - type: ace-review --preset code-fit --subject diff:origin/main..HEAD --dry-run
-    sleep: 3s
-- name: Review a PR
-  commands:
-  - type: ace-review --pr 251 --dry-run
     sleep: 3s
 - name: Run a review
   commands:
