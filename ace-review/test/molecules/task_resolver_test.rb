@@ -8,6 +8,7 @@ require "ace/review/molecules/task_resolver"
 module Ace
   module Task
     class Error < StandardError; end
+
     module Organisms
       class TaskManager
         def show(task_ref)
@@ -99,7 +100,7 @@ class TaskResolverTest < Minitest::Test
   def test_resolve_handles_unexpected_error_gracefully
     mock_task_manager = Minitest::Mock.new
     mock_task_manager.expect(:show, nil) do |_ref|
-      raise RuntimeError, "Something unexpected happened"
+      raise "Something unexpected happened"
     end
 
     captured_output = nil

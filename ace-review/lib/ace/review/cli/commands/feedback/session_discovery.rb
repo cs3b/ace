@@ -59,8 +59,8 @@ module Ace
               return [] unless Dir.exist?(cache_dir)
 
               Dir.glob(File.join(cache_dir, "review-*"))
-                 .select { |p| File.directory?(p) }
-                 .sort_by { |p| -File.mtime(p).to_i }
+                .select { |p| File.directory?(p) }
+                .sort_by { |p| -File.mtime(p).to_i }
             end
           end
         end

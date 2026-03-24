@@ -21,7 +21,7 @@ module Ace
         # @param session_dir [String] the session directory for output
         # @param output_file [String, nil] optional custom output file path
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil, timeout: nil)
+        def execute(system_prompt:, user_prompt:, session_dir:, model: nil, output_file: nil, timeout: nil)
           model ||= @default_model
 
           # Warn if prompt is large
@@ -45,7 +45,7 @@ module Ace
             output_file,
             timeout
           )
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             response: nil,
@@ -84,12 +84,12 @@ module Ace
         def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil, timeout = nil)
           # Use custom output file if provided, otherwise generate default
           output_file = if custom_output_file
-                         custom_output_file
-                       else
-                         # Extract model short name for output filename
-                         model_short = model.include?(":") ? model.split(":", 2).last : model
-                         File.join(session_dir, "review-report-#{model_short}.md")
-                       end
+            custom_output_file
+          else
+            # Extract model short name for output filename
+            model_short = model.include?(":") ? model.split(":", 2).last : model
+            File.join(session_dir, "review-report-#{model_short}.md")
+          end
 
           # Build file paths for providers that support file-based prompts (e.g., Gemini CLI)
           # These files are already saved by ReviewManager in the session directory

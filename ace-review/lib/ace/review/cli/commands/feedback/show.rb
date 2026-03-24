@@ -25,9 +25,9 @@ module Ace
             DESC
 
             example [
-              'abc123                     # Show by full ID (latest session)',
-              'abc                        # Show by partial ID (min 3 chars)',
-              'abc123 --session .ace-local/review/sessions/review-xyz  # From specific session'
+              "abc123                     # Show by full ID (latest session)",
+              "abc                        # Show by partial ID (min 3 chars)",
+              "abc123 --session .ace-local/review/sessions/review-xyz  # From specific session"
             ]
 
             argument :id, required: true, desc: "Feedback ID (minimum 3 characters for partial match)"
@@ -101,7 +101,7 @@ module Ace
               # If multiple matches, require more specific ID
               if files.length > 1
                 raise Ace::Support::Cli::Error.new(
-                  "Multiple items match '#{id}': #{files.map { |f| File.basename(f).split('-').first }.join(', ')}. " \
+                  "Multiple items match '#{id}': #{files.map { |f| File.basename(f).split("-").first }.join(", ")}. " \
                   "Please provide more characters."
                 )
               end
@@ -160,13 +160,13 @@ module Ace
             # Status with emoji icon
             def status_with_icon(status)
               icon = case status
-                     when "draft" then "[D]"
-                     when "pending" then "[P]"
-                     when "invalid" then "[X]"
-                     when "skip" then "[S]"
-                     when "done" then "[+]"
-                     else "[?]"
-                     end
+              when "draft" then "[D]"
+              when "pending" then "[P]"
+              when "invalid" then "[X]"
+              when "skip" then "[S]"
+              when "done" then "[+]"
+              else "[?]"
+              end
               "#{icon} #{status}"
             end
           end

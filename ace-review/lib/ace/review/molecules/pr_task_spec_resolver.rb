@@ -18,7 +18,7 @@ module Ace
           return nil unless spec_path.end_with?(".s.md")
 
           spec_path
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to resolve PR task spec: #{e.message}" if Ace::Review.debug?
           nil
         end

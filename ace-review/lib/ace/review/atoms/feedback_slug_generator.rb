@@ -49,8 +49,7 @@ module Ace
             .unicode_normalize(:nfkd)           # Decompose unicode (e.g., é -> e + combining accent)
             .encode("ASCII", undef: :replace, replace: "") # Strip non-ASCII
             .gsub(/[^a-zA-Z0-9\-_\s]/, "")      # Remove special chars (keep spaces for now)
-            .gsub(/[\s_]+/, "-")                 # Replace spaces/underscores with hyphens
-            .gsub(/-+/, "-")                     # Collapse consecutive hyphens
+            .gsub(/[\s_]+/, "-").squeeze("-")                     # Collapse consecutive hyphens
             .gsub(/\A-|-\z/, "")                 # Remove leading/trailing hyphens
             .downcase
             .slice(0, max_length)                # Truncate to max length

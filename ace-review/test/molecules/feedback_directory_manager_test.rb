@@ -300,13 +300,13 @@ class FeedbackDirectoryManagerTest < AceReviewTest
 
     counts = @manager.count_files(feedback_dir)
 
-    assert_equal({ active: 0, archived: 0, total: 0 }, counts)
+    assert_equal({active: 0, archived: 0, total: 0}, counts)
   end
 
   def test_count_files_returns_zeros_for_nonexistent_directory
     counts = @manager.count_files("/nonexistent")
 
-    assert_equal({ active: 0, archived: 0, total: 0 }, counts)
+    assert_equal({active: 0, archived: 0, total: 0}, counts)
   end
 
   private

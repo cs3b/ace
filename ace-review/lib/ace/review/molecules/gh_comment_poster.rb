@@ -55,7 +55,7 @@ module Ace
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to post comment: #{e.message}"
@@ -89,7 +89,7 @@ module Ace
             raise Ace::Review::Errors::PrStateError.new(number, state.downcase)
           end
 
-          { success: true }
+          {success: true}
         rescue JSON::ParserError => e
           {
             success: false,
@@ -198,7 +198,7 @@ module Ace
         end
 
         private_class_method :check_pr_state, :format_review_comment, :sanitize_markdown,
-                            :post_via_gh, :extract_comment_url
+          :post_via_gh, :extract_comment_url
       end
     end
   end

@@ -35,7 +35,7 @@ module Ace
             "PRRT_abc\n123",       # Contains newline
             "PRRT_abc 123",        # Contains space
             " PRRT_abc123",        # Leading space
-            "PRRT_abc123 ",        # Trailing space
+            "PRRT_abc123 "        # Trailing space
           ]
 
           invalid_ids.each do |invalid_id|
@@ -54,7 +54,7 @@ module Ace
             "PRRT_kwDOPzGJW85lJfEC",
             "PRRT_abc-def",
             "PRRT_abc_def",
-            "PRRT_A-B_C",
+            "PRRT_A-B_C"
           ]
 
           # Mock GhCliExecutor to simulate successful API response
@@ -218,18 +218,6 @@ module Ace
         end
 
         def test_reply_truncates_commit_sha
-          mock_executor = lambda do |cmd, args, **opts|
-            # Capture the body argument to verify SHA truncation
-            body_idx = args.index("--body")
-            body = args[body_idx + 1] if body_idx
-
-            {
-              success: true,
-              stdout: "https://github.com/owner/repo/pull/69#issuecomment-12345",
-              captured_body: body
-            }
-          end
-
           captured_body = nil
           custom_executor = lambda do |cmd, args, **opts|
             body_idx = args.index("--body")

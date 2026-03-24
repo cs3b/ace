@@ -111,7 +111,7 @@ class FullStrategyTest < AceReviewTest
       user_prompt: "Check for bugs",
       model: "gpt-4",
       model_context_limit: 128_000,
-      preset: { name: "security" },
+      preset: {name: "security"},
       file_list: ["foo.rb", "bar.rb"]
     }
 
@@ -146,7 +146,7 @@ class FullStrategyTest < AceReviewTest
 
   # Configuration tests
   def test_accepts_config_in_constructor
-    config = { some_option: true }
+    config = {some_option: true}
     strategy = Ace::Review::Molecules::Strategies::FullStrategy.new(config)
 
     assert_kind_of Ace::Review::Molecules::Strategies::FullStrategy, strategy

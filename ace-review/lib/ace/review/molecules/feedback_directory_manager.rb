@@ -92,13 +92,13 @@ module Ace
           # Move file to archive
           FileUtils.mv(file_path, dest_path)
 
-          { success: true, path: dest_path }
+          {success: true, path: dest_path}
         rescue Errno::ENOENT
-          { success: false, error: "File not found: #{file_path}" }
+          {success: false, error: "File not found: #{file_path}"}
         rescue Errno::EACCES
-          { success: false, error: "Permission denied: #{file_path}" }
+          {success: false, error: "Permission denied: #{file_path}"}
         rescue => e
-          { success: false, error: "Failed to archive file: #{e.message}" }
+          {success: false, error: "Failed to archive file: #{e.message}"}
         end
 
         # List all feedback files in a directory
@@ -149,7 +149,7 @@ module Ace
         # @param include_archived [Boolean] Whether to include archived files
         # @return [Hash] Counts with :active, :archived, and :total keys
         def count_files(directory)
-          return { active: 0, archived: 0, total: 0 } unless Dir.exist?(directory)
+          return {active: 0, archived: 0, total: 0} unless Dir.exist?(directory)
 
           active = Dir.glob(File.join(directory, "*#{FILE_EXTENSION}")).count
           archived = 0
@@ -159,7 +159,7 @@ module Ace
             archived = Dir.glob(File.join(archive_dir, "*#{FILE_EXTENSION}")).count
           end
 
-          { active: active, archived: archived, total: active + archived }
+          {active: active, archived: archived, total: active + archived}
         end
 
         private

@@ -85,7 +85,7 @@ class LlmExecutorTest < AceReviewTest
     captured_kwargs = nil
     query_stub = lambda do |_model, _prompt, **kwargs|
       captured_kwargs = kwargs
-      { text: "ok", metadata: {}, usage: {} }
+      {text: "ok", metadata: {}, usage: {}}
     end
 
     Ace::LLM::QueryInterface.stub(:query, query_stub) do

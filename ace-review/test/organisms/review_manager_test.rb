@@ -75,7 +75,7 @@ class ReviewManagerTest < AceReviewTest
     options = {
       preset: "pr",  # Use built-in preset that exists
       subject: "def test; end",
-      bundle: { "files" => [] },  # Empty files list to avoid file not found errors
+      bundle: {"files" => []},  # Empty files list to avoid file not found errors
       auto_execute: false,
       session_dir: File.join(@temp_dir, "test_session")
     }
@@ -215,7 +215,7 @@ class ReviewManagerTest < AceReviewTest
   def test_execute_review_with_invalid_preset
     options = {
       preset: "nonexistent-preset",
-      subject: { "content" => "def test; end" },
+      subject: {"content" => "def test; end"},
       auto_execute: false
     }
 
@@ -283,7 +283,7 @@ class ReviewManagerTest < AceReviewTest
     }
 
     assert @manager.send(:uses_instructions_format?, config_with_instructions),
-           "Should detect instructions format"
+      "Should detect instructions format"
 
     # Test format detection with legacy system_prompt config
     config_with_system_prompt = {
@@ -294,13 +294,13 @@ class ReviewManagerTest < AceReviewTest
     }
 
     refute @manager.send(:uses_instructions_format?, config_with_system_prompt),
-           "Should not detect instructions format for system_prompt"
+      "Should not detect instructions format for system_prompt"
 
     # Test format detection with neither
     config_empty = {}
 
     refute @manager.send(:uses_instructions_format?, config_empty),
-           "Should not detect instructions format for empty config"
+      "Should not detect instructions format for empty config"
   end
 
   def test_system_context_file_creation_with_instructions
@@ -379,7 +379,7 @@ class ReviewManagerTest < AceReviewTest
     }
 
     # Test with additional context config
-    context_config = { "presets" => ["base", "team"] }
+    context_config = {"presets" => ["base", "team"]}
 
     system_context_path = @manager.send(
       :create_context_file,
@@ -393,7 +393,7 @@ class ReviewManagerTest < AceReviewTest
 
     # Should merge additional presets
     assert_match(/presets:\s*\n\s*-\s*base\s*\n\s*-\s*team/, content,
-                  "Should merge additional context presets")
+      "Should merge additional context presets")
   end
 
   def skip_test_instructions_format_integration_in_compose_review_prompt
@@ -413,7 +413,7 @@ class ReviewManagerTest < AceReviewTest
           }
         }
       },
-      "bundle" => { "files" => [] },  # Simple context without preset dependencies
+      "bundle" => {"files" => []},  # Simple context without preset dependencies
       "subject" => {  # Add subject configuration
         "content" => "def test; end"
       },
@@ -732,27 +732,27 @@ class ReviewManagerTest < AceReviewTest
 
   # Deep merge tests - now use deep_merge_context which delegates to centralized DeepMerger
   def test_deep_merge_context_simple
-    base = { "a" => 1 }
-    overlay = { "b" => 2 }
+    base = {"a" => 1}
+    overlay = {"b" => 2}
     result = @manager.send(:deep_merge_context, base, overlay)
 
-    assert_equal({ "a" => 1, "b" => 2 }, result)
+    assert_equal({"a" => 1, "b" => 2}, result)
   end
 
   def test_deep_merge_context_nested_hash
-    base = { "a" => { "b" => 1 } }
-    overlay = { "a" => { "c" => 2 } }
+    base = {"a" => {"b" => 1}}
+    overlay = {"a" => {"c" => 2}}
     result = @manager.send(:deep_merge_context, base, overlay)
 
-    assert_equal({ "a" => { "b" => 1, "c" => 2 } }, result)
+    assert_equal({"a" => {"b" => 1, "c" => 2}}, result)
   end
 
   def test_deep_merge_context_scalar_override
-    base = { "model" => "gpt-4", "other" => "value" }
-    overlay = { "model" => "claude" }
+    base = {"model" => "gpt-4", "other" => "value"}
+    overlay = {"model" => "claude"}
     result = @manager.send(:deep_merge_context, base, overlay)
 
-    assert_equal({ "model" => "claude", "other" => "value" }, result)
+    assert_equal({"model" => "claude", "other" => "value"}, result)
   end
 
   # ============================================================================
@@ -875,7 +875,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_build_pr_context_with_task_spec_adds_spec_to_string_context
     context_config = "project"
-    metadata = { "headRefName" => "281.05-review-spec-context" }
+    metadata = {"headRefName" => "281.05-review-spec-context"}
 
     resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
     Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
@@ -892,7 +892,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_build_pr_context_with_task_spec_adds_spec_when_context_none
     context_config = "none"
-    metadata = { "headRefName" => "281.05-review-spec-context" }
+    metadata = {"headRefName" => "281.05-review-spec-context"}
     resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
 
     Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
@@ -907,8 +907,8 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_build_pr_context_with_task_spec_returns_original_when_spec_not_found
-    context_config = { "presets" => ["project"] }
-    metadata = { "headRefName" => "non-task-branch" }
+    context_config = {"presets" => ["project"]}
+    metadata = {"headRefName" => "non-task-branch"}
 
     Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, nil) do
       result = @manager.send(
@@ -927,7 +927,7 @@ class ReviewManagerTest < AceReviewTest
       pr: "123",
       pr_comments: false
     )
-    config = { context: "project" }
+    config = {context: "project"}
 
     fetch_result = {
       success: true,
@@ -946,7 +946,10 @@ class ReviewManagerTest < AceReviewTest
 
     Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetch_result) do
       Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, spec_path) do
-        @manager.stub(:extract_context, ->(ctx, _cache_dir) { captured_context_config = ctx; "context" }) do
+        @manager.stub(:extract_context, ->(ctx, _cache_dir) {
+          captured_context_config = ctx
+          "context"
+        }) do
           result = @manager.send(:extract_pr_content, "123", config, options)
 
           assert result[:success], "Expected PR extraction to succeed"
@@ -962,8 +965,8 @@ class ReviewManagerTest < AceReviewTest
     session_dir = File.join(@temp_dir, "resolve_test")
     FileUtils.mkdir_p(session_dir)
 
-    typed_config = { "bundle" => { "diffs" => ["HEAD~3"], "files" => ["*.md"] } }
-    config = { "subject" => { "diffs" => ["default"] } }
+    typed_config = {"bundle" => {"diffs" => ["HEAD~3"], "files" => ["*.md"]}}
+    config = {"subject" => {"diffs" => ["default"]}}
 
     result = @manager.send(
       :resolve_subject_config,
@@ -984,7 +987,7 @@ class ReviewManagerTest < AceReviewTest
 
     config = {
       "subject" => {
-        "bundle" => { "diffs" => ["default-diff"] }
+        "bundle" => {"diffs" => ["default-diff"]}
       }
     }
 
@@ -998,7 +1001,7 @@ class ReviewManagerTest < AceReviewTest
     )
 
     # Should fall back to preset subject config
-    expected = { "bundle" => { "diffs" => ["default-diff"] } }
+    expected = {"bundle" => {"diffs" => ["default-diff"]}}
     assert_equal expected, result
   end
 
@@ -1015,13 +1018,13 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/to/report1.md" },
-        "model2" => { success: true, output_file: "/path/to/report2.md" }
+        "model1" => {success: true, output_file: "/path/to/report1.md"},
+        "model2" => {success: true, output_file: "/path/to/report2.md"}
       }
     }
 
     assert @manager.send(:should_extract_feedback?, result, options),
-           "Should extract feedback by default"
+      "Should extract feedback by default"
   end
 
   def test_should_extract_feedback_returns_false_with_no_feedback_flag
@@ -1032,12 +1035,12 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/to/report1.md" }
+        "model1" => {success: true, output_file: "/path/to/report1.md"}
       }
     }
 
     refute @manager.send(:should_extract_feedback?, result, options),
-           "Should not extract feedback when --no-feedback flag is set"
+      "Should not extract feedback when --no-feedback flag is set"
   end
 
   def test_should_extract_feedback_returns_false_with_no_successful_results
@@ -1047,13 +1050,13 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: false, error: "Failed" },
-        "model2" => { success: false, error: "Also failed" }
+        "model1" => {success: false, error: "Failed"},
+        "model2" => {success: false, error: "Also failed"}
       }
     }
 
     refute @manager.send(:should_extract_feedback?, result, options),
-           "Should not extract feedback when no successful results"
+      "Should not extract feedback when no successful results"
   end
 
   def test_collect_report_paths_includes_model_reports
@@ -1062,9 +1065,9 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/to/report1.md" },
-        "model2" => { success: true, output_file: "/path/to/report2.md" },
-        "model3" => { success: false, error: "Failed" }
+        "model1" => {success: true, output_file: "/path/to/report1.md"},
+        "model2" => {success: true, output_file: "/path/to/report2.md"},
+        "model3" => {success: false, error: "Failed"}
       }
     }
 
@@ -1083,7 +1086,7 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/to/report1.md" }
+        "model1" => {success: true, output_file: "/path/to/report1.md"}
       }
     }
 
@@ -1103,7 +1106,7 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/to/report1.md" }
+        "model1" => {success: true, output_file: "/path/to/report1.md"}
       }
     }
 
@@ -1114,7 +1117,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_determine_feedback_path_always_returns_session_dir
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     session_dir = File.join(@temp_dir, "session")
     FileUtils.mkdir_p(session_dir)
 
@@ -1123,7 +1126,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_determine_feedback_path_returns_session_dir_without_task
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     session_dir = File.join(@temp_dir, "session")
     FileUtils.mkdir_p(session_dir)
 
@@ -1143,12 +1146,12 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: report1_path },
-        "model2" => { success: true, output_file: report2_path }
+        "model1" => {success: true, output_file: report1_path},
+        "model2" => {success: true, output_file: report2_path}
       }
     }
 
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(
       preset: "pr",
       feedback_model: "extraction-model"
@@ -1183,11 +1186,11 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: "/nonexistent/path.md" }
+        "model1" => {success: true, output_file: "/nonexistent/path.md"}
       }
     }
 
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     # Mock FeedbackManager to raise an error
@@ -1218,18 +1221,18 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: report_path }
+        "model1" => {success: true, output_file: report_path}
       }
     }
 
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     call_count = 0
     mock_feedback_manager = Minitest::Mock.new
 
     # First call fails (primary model)
-    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary model failed" }) do |**kwargs|
+    mock_feedback_manager.expect(:extract_and_save, {success: false, error: "Primary model failed"}) do |**kwargs|
       call_count += 1
       kwargs[:model] == "google:gemini-2.5-flash" &&
         kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
@@ -1276,21 +1279,21 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: report_path }
+        "model1" => {success: true, output_file: report_path}
       }
     }
 
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     mock_feedback_manager = Minitest::Mock.new
 
     # Both models fail
-    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary failed" }) do |**kwargs|
+    mock_feedback_manager.expect(:extract_and_save, {success: false, error: "Primary failed"}) do |**kwargs|
       kwargs[:model] == "google:gemini-2.5-flash" &&
         kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
-    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Fallback failed" }) do |**kwargs|
+    mock_feedback_manager.expect(:extract_and_save, {success: false, error: "Fallback failed"}) do |**kwargs|
       kwargs[:model] == "claude:glm" &&
         kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
@@ -1315,7 +1318,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_build_synthesis_model_list_with_config
-    review_data = { model: "review-model" }
+    review_data = {model: "review-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     Ace::Review.stub :get, ->(section, key) {
@@ -1338,11 +1341,11 @@ class ReviewManagerTest < AceReviewTest
 
     result = {
       results: {
-        "model1" => { success: true, output_file: report_path }
+        "model1" => {success: true, output_file: report_path}
       }
     }
 
-    review_data = { preset: "pr", model: "test-model" }
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     mock_feedback_manager = Minitest::Mock.new
@@ -1355,7 +1358,7 @@ class ReviewManagerTest < AceReviewTest
         kwargs[:session_dir] == File.join(session_dir, "feedback-synthesis")
     end
 
-    Ace::Review.stub :get, ->(_section, _key) { nil } do
+    Ace::Review.stub :get, ->(_section, _key) {} do
       Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
         feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
 
@@ -1368,7 +1371,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_build_synthesis_model_list_with_option_override
-    review_data = { model: "review-model" }
+    review_data = {model: "review-model"}
     options = Ace::Review::Models::ReviewOptions.new(
       preset: "pr",
       feedback_model: "override-model"
@@ -1386,7 +1389,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_build_synthesis_model_list_deduplicates
-    review_data = { model: "same-model" }
+    review_data = {model: "same-model"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     Ace::Review.stub :get, ->(section, key) {
@@ -1403,10 +1406,10 @@ class ReviewManagerTest < AceReviewTest
   def test_build_multi_model_response_includes_feedback_info
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/report1.md" },
-        "model2" => { success: true, output_file: "/path/report2.md" }
+        "model1" => {success: true, output_file: "/path/report1.md"},
+        "model2" => {success: true, output_file: "/path/report2.md"}
       },
-      summary: { total_models: 2, success_count: 2 }
+      summary: {total_models: 2, success_count: 2}
     }
 
     session_dir = "/path/to/session"
@@ -1429,9 +1432,9 @@ class ReviewManagerTest < AceReviewTest
   def test_build_multi_model_response_includes_feedback_error
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/report1.md" }
+        "model1" => {success: true, output_file: "/path/report1.md"}
       },
-      summary: { total_models: 1, success_count: 1 }
+      summary: {total_models: 1, success_count: 1}
     }
 
     session_dir = "/path/to/session"
@@ -1454,9 +1457,9 @@ class ReviewManagerTest < AceReviewTest
   def test_build_multi_model_response_without_feedback
     result = {
       results: {
-        "model1" => { success: true, output_file: "/path/report1.md" }
+        "model1" => {success: true, output_file: "/path/report1.md"}
       },
-      summary: { total_models: 1, success_count: 1 }
+      summary: {total_models: 1, success_count: 1}
     }
 
     session_dir = "/path/to/session"
@@ -1550,8 +1553,8 @@ class ReviewManagerTest < AceReviewTest
       no_feedback: true
     )
 
-    result = { success: true, output_file: "/path/to/report.md" }
-    review_data = { preset: "pr", model: "test-model" }
+    result = {success: true, output_file: "/path/to/report.md"}
+    review_data = {preset: "pr", model: "test-model"}
     session_dir = @temp_dir
 
     feedback_result = @manager.send(
@@ -1570,8 +1573,8 @@ class ReviewManagerTest < AceReviewTest
     report_path = File.join(session_dir, "review.md")
     File.write(report_path, "# Review Report\nSome finding here")
 
-    result = { success: true, output_file: report_path }
-    review_data = { preset: "pr", model: "test-model" }
+    result = {success: true, output_file: report_path}
+    review_data = {preset: "pr", model: "test-model"}
     options = Ace::Review::Models::ReviewOptions.new(
       preset: "pr",
       feedback_model: "extraction-model"
@@ -1615,8 +1618,8 @@ class ReviewManagerTest < AceReviewTest
     report_path = File.join(session_dir, "review.md")
     File.write(report_path, "# Review")
 
-    result = { success: true, output_file: report_path }
-    review_data = { preset: "pr", model: "claude-3" }
+    result = {success: true, output_file: report_path}
+    review_data = {preset: "pr", model: "claude-3"}
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     # Capture the arguments passed to extract_feedback
@@ -1629,7 +1632,7 @@ class ReviewManagerTest < AceReviewTest
       # Stub extract_feedback to capture its arguments
       @manager.stub :extract_feedback, ->(result_arg, *_rest) {
         captured_result = result_arg
-        { success: true, items_count: 0, paths: [] }
+        {success: true, items_count: 0, paths: []}
       } do
         @manager.send(
           :maybe_extract_single_model_feedback,
@@ -1674,7 +1677,7 @@ class ReviewManagerTest < AceReviewTest
 
     # Track if feedback extraction was called
     feedback_called = false
-    feedback_result = { success: true, items_count: 3, paths: ["/fb1.s.md"] }
+    feedback_result = {success: true, items_count: 3, paths: ["/fb1.s.md"]}
 
     Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
       # Mock preset manager for copy_to_release
@@ -1780,7 +1783,7 @@ class ReviewManagerTest < AceReviewTest
     end
 
     # Return a failure result from feedback extraction
-    feedback_result = { success: false, error: "Extraction failed" }
+    feedback_result = {success: false, error: "Extraction failed"}
 
     Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
       @manager.instance_variable_get(:@preset_manager).stub :review_base_path, @temp_dir do

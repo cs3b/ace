@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module Ace
   module Review
     module Atoms
@@ -15,10 +13,10 @@ module Ace
         # Returns { success: true } if valid
         # Returns { success: false, error: "..." } if invalid
         def self.validate_preset_name(preset_name)
-          return { success: false, error: "Preset name cannot be nil or empty" } if preset_name.nil? || preset_name.empty?
+          return {success: false, error: "Preset name cannot be nil or empty"} if preset_name.nil? || preset_name.empty?
 
           # Check for path traversal attempts
-          if preset_name.start_with?("/") || preset_name.start_with?("\\")
+          if preset_name.start_with?("/", "\\")
             return {
               success: false,
               error: "Invalid preset name '#{preset_name}': absolute paths are not allowed"
@@ -40,7 +38,7 @@ module Ace
             }
           end
 
-          { success: true }
+          {success: true}
         end
 
         # Check if a preset exists in the preset manager
@@ -55,15 +53,15 @@ module Ace
           if preset_chain.include?(preset_name)
             {
               success: false,
-              error: "Circular dependency detected: #{(preset_chain + [preset_name]).join(' -> ')}"
+              error: "Circular dependency detected: #{(preset_chain + [preset_name]).join(" -> ")}"
             }
           elsif preset_chain.size >= MAX_DEPTH
             {
               success: false,
-              error: "Maximum preset nesting depth (#{MAX_DEPTH}) exceeded: #{preset_chain.join(' -> ')}"
+              error: "Maximum preset nesting depth (#{MAX_DEPTH}) exceeded: #{preset_chain.join(" -> ")}"
             }
           else
-            { success: true }
+            {success: true}
           end
         end
 

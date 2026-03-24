@@ -3,7 +3,7 @@ doc-type: guide
 title: Feedback-Based Review Workflow
 purpose: User guide for feedback-based review workflow
 ace-docs:
-  last-updated: 2026-03-04
+  last-updated: 2026-03-23
   last-checked: 2026-03-21
 ---
 
@@ -263,8 +263,6 @@ Feedback is stored within session directories and discovered via:
 2. **`.ace-review-session` cache file**: Auto-created after reviews, remembers the latest session
 3. **Current working directory**: Fallback to pwd
 
-Session directories are automatically symlinked to task directories for organization.
-
 ## File Format
 
 Feedback items are stored as markdown files with YAML frontmatter:
@@ -313,10 +311,9 @@ Examples:
 
 ## Directory Structure
 
-Review sessions are stored in a cache directory and symlinked into task directories:
+Review sessions are stored under `.ace-local/review/sessions/`:
 
 ```
-# Cache directory (gitignored)
 .ace-local/review/sessions/
   review-8p2h11/              # Session directory
     review.md                  # Review output
@@ -333,30 +330,9 @@ Review sessions are stored in a cache directory and symlinked into task director
     pr-diff.patch              # If PR review
   review-8p2fo1/
     ...
-
-# Task directory (tracked in git)
-task-dir/
-  reviews/
-    review-8p2h11 → ../../../../../.ace-local/review/sessions/review-8p2h11
-    review-8p2fo1 → ../../../../../.ace-local/review/sessions/review-8p2fo1
 ```
 
-Multiple review sessions can be linked to the same task, allowing for iterative reviews across PR cycles.
-
-Within `.ace-taskflow` task directories:
-
-```
-.ace-taskflow/
-  v.0.36.0/
-    tasks/
-      227-feedback-architecture/
-        227.s.md                    # Task spec
-        reviews/                    # Symlinks to session directories
-          review-8p2h11 → ../../../../../../.ace-local/review/sessions/review-8p2h11
-          review-8p2fo1 → ../../../../../../.ace-local/review/sessions/review-8p2fo1
-```
-
-Each symlinked session contains:
+Each session contains:
 - Review outputs (`review.md`, `review-report-*.md`, `synthesis.md`)
 - Feedback items in `feedback/` subdirectory
 - Prompts and metadata for reproducibility
@@ -395,21 +371,19 @@ Solutions:
 - Remove `--no-feedback` if set
 - Check review session directory for report content
 
-### Feedback not saved to task
+### Feedback not found
 
-Feedback is stored within session directories, which are symlinked to task directories.
+Feedback is stored in each session's `feedback/` directory under `.ace-local/review/sessions/`.
 
 Possible causes:
-- No review session found in cache
-- Session directory doesn't exist
-- Permission issues accessing session
+- No review session created yet
+- Session directory doesn't exist or isn't writable
+- Looking in the wrong session
 
 Solutions:
 - Run a review first to create a session
 - Specify session explicitly with `--session .ace-local/review/sessions/review-xyz`
-- Ensure .ace-local/review/sessions/ exists and is writable
-
-Note: Feedback is stored in each session's `feedback/` directory.
+- Ensure `.ace-local/review/sessions/` exists and is writable
 
 ### Partial ID matching fails
 
@@ -436,7 +410,7 @@ ace-review-feedback list --archived
 
 Archived items are in `feedback/_archived/` subdirectory within each session.
 
-### Multiple sessions for the same task
+### Multiple sessions
 
 Each review execution creates a new session:
 

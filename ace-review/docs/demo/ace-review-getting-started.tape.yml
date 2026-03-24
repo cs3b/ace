@@ -16,18 +16,15 @@ scenes:
     sleep: 3s
 - name: Review branch diff with preset
   commands:
-  - type: ace-review --preset code --subject diff:origin/main..HEAD --dry-run
+  - type: ace-review --preset code-fit --subject diff:origin/main..HEAD --dry-run
     sleep: 3s
 - name: Review a PR
   commands:
   - type: ace-review --pr 251 --dry-run
     sleep: 3s
-- name: List feedback items
+- name: Run a review
   commands:
-  - type: ace-review-feedback list --status draft
-    sleep: 3s
+  - type: ace-review --preset code-fit --subject "files:ace-retro/**/*.rb"
+    sleep: 10s
 teardown:
 - cleanup
-setup:
-- sandbox
-- copy-fixtures

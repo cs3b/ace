@@ -50,7 +50,7 @@ module Ace
           unless class_name
             available = STRATEGIES.keys.join(", ")
             raise Ace::Review::Errors::UnknownStrategyError,
-                  "Unknown strategy type '#{type}'. Available strategies: #{available}"
+              "Unknown strategy type '#{type}'. Available strategies: #{available}"
           end
 
           # Lazy require the strategy class

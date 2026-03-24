@@ -11,8 +11,8 @@ module Ace
         def self.resolve(task_reference)
           # Try to load ace-task
           begin
-            require 'ace/task'
-            require 'ace/task/organisms/task_manager'
+            require "ace/task"
+            require "ace/task/organisms/task_manager"
           rescue LoadError
             return nil
           end
@@ -36,7 +36,7 @@ module Ace
           # Handle known ace-task errors
           warn "Warning: Task '#{task_reference}' could not be resolved: #{e.message}"
           nil
-        rescue StandardError => e
+        rescue => e
           # Graceful degradation for unexpected errors
           warn "Warning: Failed to resolve task '#{task_reference}': #{e.class} - #{e.message}"
           warn e.backtrace.join("\n") if $DEBUG

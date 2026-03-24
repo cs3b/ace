@@ -25,14 +25,14 @@ module Ace
             DESC
 
             example [
-              '                           # List all active items (latest session)',
-              '--status pending           # Filter by status',
-              '--priority high            # Filter by priority',
-              '--status pending --priority critical',
-              '--archived                 # Include archived items',
-              '--format json              # Output as JSON',
-              '--session .ace-local/review/sessions/review-abc123  # From specific session',
-              '--session all              # List from all sessions'
+              "                           # List all active items (latest session)",
+              "--status pending           # Filter by status",
+              "--priority high            # Filter by priority",
+              "--status pending --priority critical",
+              "--archived                 # Include archived items",
+              "--format json              # Output as JSON",
+              "--session .ace-local/review/sessions/review-abc123  # From specific session",
+              "--session all              # List from all sessions"
             ]
 
             option :status, type: :string, desc: "Filter by status (draft/pending/invalid/skip/done)"
@@ -218,7 +218,7 @@ module Ace
 
               # Summary with archived hint
               puts
-              archived_hint = archived_count > 0 && !options[:archived] ? " (#{archived_count} archived)" : ""
+              archived_hint = (archived_count > 0 && !options[:archived]) ? " (#{archived_count} archived)" : ""
               puts "Total: #{items.length} item(s)#{archived_hint}"
             end
 
@@ -259,7 +259,7 @@ module Ace
 
               # Summary with archived hint
               puts
-              archived_hint = archived_count > 0 && !options[:archived] ? " (#{archived_count} archived)" : ""
+              archived_hint = (archived_count > 0 && !options[:archived]) ? " (#{archived_count} archived)" : ""
               puts "Total: #{items.length} item(s)#{archived_hint}"
             end
 

@@ -57,8 +57,8 @@ class ContextComposerTest < AceReviewTest
   end
 
   def test_create_context_md_with_subject_config
-    context_config = { "presets" => ["project"] }
-    subject_config = { "files" => ["src/test.rb"] }
+    context_config = {"presets" => ["project"]}
+    subject_config = {"files" => ["src/test.rb"]}
 
     result = Ace::Review::Molecules::ContextComposer.create_context_md(
       @base_instructions,
@@ -88,7 +88,7 @@ class ContextComposerTest < AceReviewTest
 
   def test_create_context_md_with_diff_subject
     context_config = {}
-    subject_config = { "diff" => "some diff content" }
+    subject_config = {"diff" => "some diff content"}
 
     result = Ace::Review::Molecules::ContextComposer.create_context_md(
       @base_instructions,
@@ -101,7 +101,7 @@ class ContextComposerTest < AceReviewTest
 
   def test_create_context_md_with_content_subject
     context_config = {}
-    subject_config = { "content" => "some inline content" }
+    subject_config = {"content" => "some inline content"}
 
     result = Ace::Review::Molecules::ContextComposer.create_context_md(
       @base_instructions,
@@ -181,7 +181,7 @@ class ContextComposerTest < AceReviewTest
   end
 
   def test_extract_subject_description_single_file
-    subject_config = { "files" => "src/main.rb" }
+    subject_config = {"files" => "src/main.rb"}
 
     result = Ace::Review::Molecules::ContextComposer.send(:extract_subject_description, subject_config)
 

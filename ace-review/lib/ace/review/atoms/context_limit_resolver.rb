@@ -29,32 +29,32 @@ module Ace
         # Patterns use regex for flexible matching
         MODEL_LIMITS = [
           # Gemini models
-          { pattern: /gemini-1\.5-pro/i, limit: 2_000_000 },
-          { pattern: /gemini-1\.5-flash/i, limit: 1_000_000 },
-          { pattern: /gemini-2\.5-pro/i, limit: 1_000_000 },
-          { pattern: /gemini-2\.5-flash/i, limit: 1_000_000 },
-          { pattern: /gemini-2\.0/i, limit: 1_000_000 },
+          {pattern: /gemini-1\.5-pro/i, limit: 2_000_000},
+          {pattern: /gemini-1\.5-flash/i, limit: 1_000_000},
+          {pattern: /gemini-2\.5-pro/i, limit: 1_000_000},
+          {pattern: /gemini-2\.5-flash/i, limit: 1_000_000},
+          {pattern: /gemini-2\.0/i, limit: 1_000_000},
           # Fallback for any other gemini model
-          { pattern: /gemini/i, limit: 1_000_000 },
+          {pattern: /gemini/i, limit: 1_000_000},
 
           # Claude models (all variants: opus, sonnet, haiku)
-          { pattern: /claude.*opus/i, limit: 1_000_000 },
-          { pattern: /claude.*sonnet/i, limit: 1_000_000 },
-          { pattern: /claude.*haiku/i, limit: 1_000_000 },
+          {pattern: /claude.*opus/i, limit: 1_000_000},
+          {pattern: /claude.*sonnet/i, limit: 1_000_000},
+          {pattern: /claude.*haiku/i, limit: 1_000_000},
           # Fallback for any other claude model
-          { pattern: /claude/i, limit: 1_000_000 },
+          {pattern: /claude/i, limit: 1_000_000},
 
           # OpenAI models
-          { pattern: /gpt-5\.\d/i, limit: 1_050_000 },
-          { pattern: /o4-/i, limit: 1_050_000 },
-          { pattern: /gpt-4o/i, limit: 128_000 },
-          { pattern: /gpt-4-turbo/i, limit: 128_000 },
-          { pattern: /gpt-4-32k/i, limit: 32_768 },
-          { pattern: /gpt-4-\d+-preview/i, limit: 128_000 }, # gpt-4-1106-preview, gpt-4-0125-preview
-          { pattern: /gpt-4-\d+$/i, limit: 8_192 }, # legacy gpt-4-0613, etc.
-          { pattern: /gpt-4$/i, limit: 8_192 }, # base gpt-4 model
-          { pattern: /o1-/i, limit: 200_000 },
-          { pattern: /o3-/i, limit: 200_000 }
+          {pattern: /gpt-5\.\d/i, limit: 1_050_000},
+          {pattern: /o4-/i, limit: 1_050_000},
+          {pattern: /gpt-4o/i, limit: 128_000},
+          {pattern: /gpt-4-turbo/i, limit: 128_000},
+          {pattern: /gpt-4-32k/i, limit: 32_768},
+          {pattern: /gpt-4-\d+-preview/i, limit: 128_000}, # gpt-4-1106-preview, gpt-4-0125-preview
+          {pattern: /gpt-4-\d+$/i, limit: 8_192}, # legacy gpt-4-0613, etc.
+          {pattern: /gpt-4$/i, limit: 8_192}, # base gpt-4 model
+          {pattern: /o1-/i, limit: 200_000},
+          {pattern: /o3-/i, limit: 200_000}
         ].freeze
 
         # Resolve context limit for a model
@@ -116,7 +116,7 @@ module Ace
           # Get context_limit from provider config
           limit = config["context_limit"]
           limit.is_a?(Integer) ? limit : nil
-        rescue StandardError
+        rescue
           nil # Fall back to hardcoded on any error
         end
         private_class_method :load_from_ace_llm
@@ -137,7 +137,7 @@ module Ace
 
           config = resolver.resolve_namespace("llm", filename: "providers/#{provider}")
           config.to_h
-        rescue StandardError
+        rescue
           nil
         end
         private_class_method :load_provider_config

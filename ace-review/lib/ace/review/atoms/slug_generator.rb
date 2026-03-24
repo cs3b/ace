@@ -38,8 +38,7 @@ module Ace
           return "" if text.nil? || text.empty?
 
           text
-            .gsub(/[^a-zA-Z0-9\-_]/, "-") # Replace invalid chars with hyphens
-            .gsub(/-+/, "-")              # Collapse consecutive hyphens
+            .gsub(/[^a-zA-Z0-9\-_]/, "-").squeeze("-")              # Collapse consecutive hyphens
             .gsub(/\A-|-\z/, "")          # Remove leading/trailing hyphens
             .downcase
             .slice(0, max_length)         # Truncate to max length

@@ -234,10 +234,10 @@ class DiffBoundaryFinderTest < AceReviewTest
   # group_by_directory tests
   def test_group_by_directory_groups_correctly
     blocks = [
-      { path: "lib/atoms/foo.rb", content: "...", lines: 10, change_type: :modified },
-      { path: "lib/atoms/bar.rb", content: "...", lines: 20, change_type: :added },
-      { path: "test/atoms/foo_test.rb", content: "...", lines: 15, change_type: :modified },
-      { path: "lib/molecules/baz.rb", content: "...", lines: 25, change_type: :deleted }
+      {path: "lib/atoms/foo.rb", content: "...", lines: 10, change_type: :modified},
+      {path: "lib/atoms/bar.rb", content: "...", lines: 20, change_type: :added},
+      {path: "test/atoms/foo_test.rb", content: "...", lines: 15, change_type: :modified},
+      {path: "lib/molecules/baz.rb", content: "...", lines: 25, change_type: :deleted}
     ]
 
     result = @finder.group_by_directory(blocks)
@@ -256,7 +256,7 @@ class DiffBoundaryFinderTest < AceReviewTest
 
   def test_group_by_directory_handles_root_level_files
     blocks = [
-      { path: "README.md", content: "...", lines: 5, change_type: :modified }
+      {path: "README.md", content: "...", lines: 5, change_type: :modified}
     ]
 
     result = @finder.group_by_directory(blocks)

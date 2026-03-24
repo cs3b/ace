@@ -45,7 +45,7 @@ module Ace
         end
 
         def test_has_patterns_with_empty_arrays
-          refute SubjectFilter.has_patterns?({ "include" => [], "exclude" => [] })
+          refute SubjectFilter.has_patterns?({"include" => [], "exclude" => []})
         end
 
         def test_has_patterns_with_non_hash
@@ -101,7 +101,7 @@ module Ace
         end
 
         def test_filter_dispatches_hash_to_filter_hash
-          subject = { "files" => ["lib/models/user.rb", "app/models/post.rb"] }
+          subject = {"files" => ["lib/models/user.rb", "app/models/post.rb"]}
 
           result = SubjectFilter.filter(subject, @patterns_with_only_include)
 
@@ -257,7 +257,7 @@ module Ace
         end
 
         def test_filter_hash_returns_unchanged_without_patterns
-          subject = { "files" => ["any.rb"] }
+          subject = {"files" => ["any.rb"]}
 
           result = SubjectFilter.filter_hash(subject, nil)
 
@@ -268,8 +268,8 @@ module Ace
 
         def test_filter_bundle_sections_filters_files
           sections = {
-            "code" => { "files" => ["lib/user.rb", "lib/user_test.rb"] },
-            "config" => { "files" => ["config.yml"] }
+            "code" => {"files" => ["lib/user.rb", "lib/user_test.rb"]},
+            "config" => {"files" => ["config.yml"]}
           }
 
           result = SubjectFilter.filter_bundle_sections(sections, @patterns_with_include_and_exclude)
@@ -280,17 +280,17 @@ module Ace
 
         def test_filter_bundle_sections_keeps_non_file_sections
           sections = {
-            "metadata" => { "title" => "Review" }
+            "metadata" => {"title" => "Review"}
           }
 
           result = SubjectFilter.filter_bundle_sections(sections, @patterns_with_only_include)
 
-          assert_equal({ "title" => "Review" }, result["metadata"])
+          assert_equal({"title" => "Review"}, result["metadata"])
         end
 
         def test_filter_bundle_sections_normalizes_section_keys
           sections = {
-            "code" => { files: ["lib/user.rb"] }
+            "code" => {files: ["lib/user.rb"]}
           }
 
           result = SubjectFilter.filter_bundle_sections(sections, @patterns_with_only_include)

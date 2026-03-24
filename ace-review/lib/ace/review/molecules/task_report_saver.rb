@@ -16,15 +16,15 @@ module Ace
         # @return [Hash] Result with :success, :path, or :error
         def self.save(task_dir, review_file, review_data)
           # Validate inputs
-          return { success: false, error: "Task directory not found: #{task_dir}" } unless Dir.exist?(task_dir)
-          return { success: false, error: "Review file not found: #{review_file}" } unless File.exist?(review_file)
+          return {success: false, error: "Task directory not found: #{task_dir}"} unless Dir.exist?(task_dir)
+          return {success: false, error: "Review file not found: #{review_file}"} unless File.exist?(review_file)
 
           # Create reviews/ subdirectory if it doesn't exist
           reviews_dir = File.join(task_dir, "reviews")
           begin
             FileUtils.mkdir_p(reviews_dir)
           rescue SystemCallError, IOError => e
-            return { success: false, error: "Cannot create reviews directory: #{e.message}" }
+            return {success: false, error: "Cannot create reviews directory: #{e.message}"}
           end
 
           # Generate filename
@@ -34,9 +34,9 @@ module Ace
           # Copy review to task directory
           begin
             FileUtils.cp(review_file, output_path)
-            { success: true, path: output_path }
+            {success: true, path: output_path}
           rescue SystemCallError, IOError => e
-            { success: false, error: "Failed to save review: #{e.message}" }
+            {success: false, error: "Failed to save review: #{e.message}"}
           end
         end
 
@@ -65,7 +65,7 @@ module Ace
           # Check for provider prefix (e.g., "google:", "openai:")
           if model.include?(":")
             provider = model.split(":").first
-            provider.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase
+            provider.gsub(/[^a-zA-Z0-9\-_]/, "-").downcase
           else
             # Use first part of model name (e.g., "gpt-4" -> "gpt", "claude-3" -> "claude")
             parts = model.split("-")
@@ -73,7 +73,7 @@ module Ace
               parts.first.downcase
             else
               # Fallback: sanitize entire model name
-              model.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase.split('-').first
+              model.gsub(/[^a-zA-Z0-9\-_]/, "-").downcase.split("-").first
             end
           end
         end
@@ -103,15 +103,15 @@ module Ace
         # @return [Hash] Result with :success, :path, or :error
         def self.save_feedback(task_path, feedback_file, feedback_data = {})
           # Validate inputs
-          return { success: false, error: "Task directory not found: #{task_path}" } unless Dir.exist?(task_path)
-          return { success: false, error: "Feedback file not found: #{feedback_file}" } unless File.exist?(feedback_file)
+          return {success: false, error: "Task directory not found: #{task_path}"} unless Dir.exist?(task_path)
+          return {success: false, error: "Feedback file not found: #{feedback_file}"} unless File.exist?(feedback_file)
 
           # Create feedback/ subdirectory if it doesn't exist
           feedback_dir = feedback_path(task_path)
           begin
             FileUtils.mkdir_p(feedback_dir)
           rescue SystemCallError, IOError => e
-            return { success: false, error: "Cannot create feedback directory: #{e.message}" }
+            return {success: false, error: "Cannot create feedback directory: #{e.message}"}
           end
 
           # Use original filename for feedback files (they already have meaningful names)
@@ -121,9 +121,9 @@ module Ace
           # Copy feedback file to task directory
           begin
             FileUtils.cp(feedback_file, output_path)
-            { success: true, path: output_path }
+            {success: true, path: output_path}
           rescue SystemCallError, IOError => e
-            { success: false, error: "Failed to save feedback: #{e.message}" }
+            {success: false, error: "Failed to save feedback: #{e.message}"}
           end
         end
 
@@ -133,15 +133,15 @@ module Ace
         # @return [Hash] Result with :success, :path, or :error
         def self.archive_feedback(task_path, feedback_file)
           # Validate inputs
-          return { success: false, error: "Task directory not found: #{task_path}" } unless Dir.exist?(task_path)
-          return { success: false, error: "Feedback file not found: #{feedback_file}" } unless File.exist?(feedback_file)
+          return {success: false, error: "Task directory not found: #{task_path}"} unless Dir.exist?(task_path)
+          return {success: false, error: "Feedback file not found: #{feedback_file}"} unless File.exist?(feedback_file)
 
           # Create feedback/_archived/ subdirectory if it doesn't exist
           archive_dir = feedback_archive_path(task_path)
           begin
             FileUtils.mkdir_p(archive_dir)
           rescue SystemCallError, IOError => e
-            return { success: false, error: "Cannot create archive directory: #{e.message}" }
+            return {success: false, error: "Cannot create archive directory: #{e.message}"}
           end
 
           # Move feedback file to archive
@@ -150,9 +150,9 @@ module Ace
 
           begin
             FileUtils.mv(feedback_file, archive_path)
-            { success: true, path: archive_path }
+            {success: true, path: archive_path}
           rescue SystemCallError, IOError => e
-            { success: false, error: "Failed to archive feedback: #{e.message}" }
+            {success: false, error: "Failed to archive feedback: #{e.message}"}
           end
         end
       end

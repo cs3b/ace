@@ -36,7 +36,7 @@ module Ace
         CONSENSUS_THRESHOLD = 3
 
         attr_reader :id, :title, :files, :reviewers, :status, :priority,
-                    :created, :updated, :finding, :context, :research, :resolution, :consensus
+          :created, :updated, :finding, :context, :research, :resolution, :consensus
 
         # Initialize a new FeedbackItem from a hash of attributes
         #
@@ -150,7 +150,7 @@ module Ace
             finding == other.finding
         end
 
-        alias eql? ==
+        alias_method :eql?, :==
 
         # Hash code for use in hash tables
         #
@@ -166,11 +166,11 @@ module Ace
         # @raise [ArgumentError] If values are invalid
         def validate!
           unless VALID_STATUSES.include?(status)
-            raise ArgumentError, "Invalid status '#{status}'. Must be one of: #{VALID_STATUSES.join(', ')}"
+            raise ArgumentError, "Invalid status '#{status}'. Must be one of: #{VALID_STATUSES.join(", ")}"
           end
 
           unless VALID_PRIORITIES.include?(priority)
-            raise ArgumentError, "Invalid priority '#{priority}'. Must be one of: #{VALID_PRIORITIES.join(', ')}"
+            raise ArgumentError, "Invalid priority '#{priority}'. Must be one of: #{VALID_PRIORITIES.join(", ")}"
           end
         end
 

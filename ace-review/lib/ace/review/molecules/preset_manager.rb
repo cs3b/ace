@@ -2,8 +2,7 @@
 
 require "yaml"
 require "pathname"
-require "set"
-require_relative '../atoms/preset_validator'
+require_relative "../atoms/preset_validator"
 
 module Ace
   module Review
@@ -38,7 +37,7 @@ module Ace
           unless result && result["success"]
             # Log composition failure for debugging
             if result && result["error"]
-              warn "Failed to compose preset '#{preset_name}': #{result['error']}" if Ace::Review.debug?
+              warn "Failed to compose preset '#{preset_name}': #{result["error"]}" if Ace::Review.debug?
             end
             return nil
           end
@@ -151,7 +150,7 @@ module Ace
           preset = load_preset_from_file(name) || load_preset_from_config(name)
           unless preset
             return {
-              "error" => "Preset '#{name}' not found. Available presets: #{available_presets.join(', ')}",
+              "error" => "Preset '#{name}' not found. Available presets: #{available_presets.join(", ")}",
               "success" => false
             }
           end
@@ -186,7 +185,7 @@ module Ace
           # If there were errors loading dependencies, return error
           if errors.any?
             return {
-              "error" => "Failed to load preset dependencies: #{errors.join(', ')}",
+              "error" => "Failed to load preset dependencies: #{errors.join(", ")}",
               "success" => false,
               "partial_presets" => composed_presets
             }
@@ -289,7 +288,7 @@ module Ace
           content = File.read(config_path)
           config_data = YAML.safe_load(content, permitted_classes: [Symbol]) || {}
           deep_stringify_keys(config_data)
-        rescue StandardError => e
+        rescue => e
           warn "Failed to load configuration from #{config_path}: #{e.message}" if Ace::Review.debug?
           {}
         end
@@ -324,7 +323,7 @@ module Ace
         rescue ArgumentError
           # Re-raise validation errors (don't suppress security checks)
           raise
-        rescue StandardError => e
+        rescue => e
           warn "Failed to load preset from #{preset_name}: #{e.message}" if Ace::Review.debug?
           nil
         end
@@ -350,7 +349,7 @@ module Ace
           end
 
           presets.uniq
-        rescue StandardError => e
+        rescue => e
           warn "Failed to find preset files: #{e.message}" if Ace::Review.debug?
           []
         end
@@ -372,7 +371,7 @@ module Ace
 
         def gem_root
           @gem_root ||= Gem.loaded_specs["ace-review"]&.gem_dir ||
-                        File.expand_path("../../../..", __dir__)
+            File.expand_path("../../../..", __dir__)
         end
 
         def merge_with_defaults(preset)

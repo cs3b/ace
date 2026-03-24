@@ -45,7 +45,7 @@ module Ace
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           # Re-raise authentication and installation errors
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to fetch PR diff: #{e.message}"
@@ -91,7 +91,7 @@ module Ace
           }
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to fetch PR metadata: #{e.message}"
@@ -170,7 +170,7 @@ module Ace
           temp_ref = "refs/ace/review/pr-#{pull_number}-#{Process.pid}"
 
           fetch_result = run_local_command("git", "fetch", "--no-tags", "origin",
-                                           "+refs/pull/#{pull_number}/head:#{temp_ref}")
+            "+refs/pull/#{pull_number}/head:#{temp_ref}")
           unless fetch_result[:success]
             return {
               success: false,
@@ -221,7 +221,7 @@ module Ace
             stdout: stdout,
             stderr: stderr
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             stdout: "",

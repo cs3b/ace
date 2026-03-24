@@ -22,7 +22,7 @@ class SubjectStrategyTest < AceReviewTest
   end
 
   def test_for_accepts_config_hash
-    strategy = @factory.for(:full, { custom_option: true })
+    strategy = @factory.for(:full, {custom_option: true})
 
     assert_kind_of Ace::Review::Molecules::Strategies::FullStrategy, strategy
   end
@@ -80,7 +80,7 @@ class SubjectStrategyTest < AceReviewTest
   end
 
   def test_for_chunked_accepts_config_hash
-    strategy = @factory.for(:chunked, { max_tokens_per_chunk: 50_000 })
+    strategy = @factory.for(:chunked, {max_tokens_per_chunk: 50_000})
 
     assert_kind_of Ace::Review::Molecules::Strategies::ChunkedStrategy, strategy
   end
@@ -107,7 +107,7 @@ class SubjectStrategyTest < AceReviewTest
   end
 
   def test_for_adaptive_accepts_config_hash
-    strategy = @factory.for(:adaptive, { headroom: 0.20 })
+    strategy = @factory.for(:adaptive, {headroom: 0.20})
 
     assert_kind_of Ace::Review::Molecules::Strategies::AdaptiveStrategy, strategy
   end

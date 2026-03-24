@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
-require "set"
 require "ace/core"
 require_relative "../version"
 

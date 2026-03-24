@@ -212,7 +212,7 @@ module Ace
         # Display execution header
         def display_header(models)
           $stderr.puts
-          $stderr.puts "Executing reviews (#{models.size} model#{'s' if models.size > 1}):"
+          warn "Executing reviews (#{models.size} model#{"s" if models.size > 1}):"
           $stderr.flush
         end
 
@@ -223,17 +223,17 @@ module Ace
         # @param error [String, nil] error message if failed
         def display_progress(model, status, duration = nil, error = nil)
           message = case status
-                    when :querying
-                      "  ⏳ #{model}: querying..."
-                    when :success
-                      "  ✓ #{model}: complete (#{duration}s)"
-                    when :failure
-                      error_msg = error ? " (#{error})" : ""
-                      "  ✗ #{model}: failed#{error_msg}"
-                    end
+          when :querying
+            "  ⏳ #{model}: querying..."
+          when :success
+            "  ✓ #{model}: complete (#{duration}s)"
+          when :failure
+            error_msg = error ? " (#{error})" : ""
+            "  ✗ #{model}: failed#{error_msg}"
+          end
 
           @mutex.synchronize do
-            $stderr.puts message
+            warn message
             $stderr.flush
           end
         end
@@ -243,7 +243,7 @@ module Ace
         # @param timeout [Integer] timeout duration in seconds
         def display_progress_killed(model, timeout)
           @mutex.synchronize do
-            $stderr.puts "  ⚠ #{model}: killed after #{timeout}s timeout"
+            warn "  ⚠ #{model}: killed after #{timeout}s timeout"
             $stderr.flush
           end
         end

@@ -31,9 +31,9 @@ module Ace
             DESC
 
             example [
-              '                              # Use most recent session (default)',
-              '--session .ace-local/review/sessions/review-abc123',
-              '--model gemini-2.5-flash      # Use specific model for synthesis'
+              "                              # Use most recent session (default)",
+              "--session .ace-local/review/sessions/review-abc123",
+              "--model gemini-2.5-flash      # Use specific model for synthesis"
             ]
 
             option :session, type: :string, desc: "Session directory containing review reports"
@@ -104,12 +104,10 @@ module Ace
               ]
 
               # Collect all matching files, exclude non-report files
-              report_paths = patterns.flat_map { |pattern| Dir.glob(pattern) }
-                                     .uniq
-                                     .reject { |p| exclude_file?(p) }
-                                     .sort
-
-              report_paths
+              patterns.flat_map { |pattern| Dir.glob(pattern) }
+                .uniq
+                .reject { |p| exclude_file?(p) }
+                .sort
             end
 
             # Check if a file should be excluded from report collection

@@ -51,7 +51,7 @@ module Ace
             end
 
             parse_listing(resources, category)
-          rescue StandardError => e
+          rescue => e
             warn "Error listing prompts: #{e.message}" if ENV["DEBUG"]
             {}
           end
@@ -65,7 +65,7 @@ module Ace
           begin
             # Use ace-nav to resolve and get content
             @engine.resolve(reference, content: true)
-          rescue StandardError => e
+          rescue => e
             warn "Error resolving #{reference}: #{e.message}" if ENV["DEBUG"]
             nil
           end
@@ -84,7 +84,7 @@ module Ace
             path = File.join(@project_root, reference)
             File.exist?(path) ? File.read(path) : nil
           end
-        rescue StandardError => e
+        rescue => e
           warn "Error reading file #{reference}: #{e.message}" if ENV["DEBUG"]
           nil
         end

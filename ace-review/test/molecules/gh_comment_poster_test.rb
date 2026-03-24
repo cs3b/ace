@@ -189,7 +189,7 @@ module Ace
         # Test: extract_comment_url with URL in output
         def test_extract_comment_url_from_output
           output = "https://github.com/owner/repo/pull/123#issuecomment-456789"
-          parsed = { number: "123", repo: "owner/repo", gh_format: "owner/repo#123" }
+          parsed = {number: "123", repo: "owner/repo", gh_format: "owner/repo#123"}
 
           result = GhCommentPoster.send(:extract_comment_url, output, parsed)
 
@@ -199,7 +199,7 @@ module Ace
         # Test: extract_comment_url fallback with repo in combined format
         def test_extract_comment_url_fallback_with_combined_repo
           output = ""  # No URL in output
-          parsed = { number: "123", repo: "owner/repo", gh_format: "owner/repo#123" }
+          parsed = {number: "123", repo: "owner/repo", gh_format: "owner/repo#123"}
 
           result = GhCommentPoster.send(:extract_comment_url, output, parsed)
 
@@ -209,7 +209,7 @@ module Ace
         # Test: extract_comment_url fallback using gh_format when repo is nil
         def test_extract_comment_url_fallback_from_gh_format
           output = ""  # No URL in output
-          parsed = { number: "123", repo: nil, gh_format: "owner/repo#123" }
+          parsed = {number: "123", repo: nil, gh_format: "owner/repo#123"}
 
           result = GhCommentPoster.send(:extract_comment_url, output, parsed)
 
@@ -219,7 +219,7 @@ module Ace
         # Test: extract_comment_url fallback with simple PR number (no repo)
         def test_extract_comment_url_fallback_simple_number
           output = ""  # No URL in output
-          parsed = { number: "123", repo: nil, gh_format: "123" }
+          parsed = {number: "123", repo: nil, gh_format: "123"}
 
           result = GhCommentPoster.send(:extract_comment_url, output, parsed)
 

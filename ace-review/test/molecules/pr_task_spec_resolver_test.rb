@@ -48,8 +48,8 @@ class PrTaskSpecResolverTest < AceReviewTest
   end
 
   def test_resolve_spec_path_returns_nil_when_spec_missing
-    metadata = { "headRefName" => "281.05-review-spec-context" }
-    task_info = { spec_path: "/tmp/does-not-exist.s.md" }
+    metadata = {"headRefName" => "281.05-review-spec-context"}
+    task_info = {spec_path: "/tmp/does-not-exist.s.md"}
 
     Ace::Review::Molecules::TaskResolver.stub(:resolve, task_info) do
       result = Ace::Review::Molecules::PrTaskSpecResolver.resolve_spec_path(metadata)
@@ -58,10 +58,10 @@ class PrTaskSpecResolverTest < AceReviewTest
   end
 
   def test_resolve_spec_path_returns_resolved_spec
-    metadata = { "headRefName" => "281.05-review-spec-context" }
+    metadata = {"headRefName" => "281.05-review-spec-context"}
     spec_path = File.join(@test_dir, "281.05-review-spec-context.s.md")
     File.write(spec_path, "# spec")
-    task_info = { spec_path: spec_path }
+    task_info = {spec_path: spec_path}
 
     Ace::Review::Molecules::TaskResolver.stub(:resolve, task_info) do
       result = Ace::Review::Molecules::PrTaskSpecResolver.resolve_spec_path(metadata)

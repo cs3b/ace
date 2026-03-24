@@ -33,8 +33,7 @@ class FeedbackFileReaderTest < AceReviewTest
     create_feedback_file("test01", "SQL Injection Bug",
       status: "pending",
       priority: "critical",
-      reviewer: "google:gemini-2.5-flash"
-    )
+      reviewer: "google:gemini-2.5-flash")
     file_path = File.join(@temp_dir, "test01-sql-injection-bug.s.md")
 
     result = @reader.read(file_path)
@@ -50,8 +49,7 @@ class FeedbackFileReaderTest < AceReviewTest
 
   def test_read_parses_files_array
     create_feedback_file("files1", "Multi file issue",
-      files: ["src/a.rb:10", "src/b.rb:20-30"]
-    )
+      files: ["src/a.rb:10", "src/b.rb:20-30"])
     file_path = File.join(@temp_dir, "files1-multi-file-issue.s.md")
 
     result = @reader.read(file_path)

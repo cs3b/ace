@@ -100,11 +100,11 @@ module Ace
           )
 
           unless synthesis_result[:success]
-            return { success: false, error: synthesis_result[:error] }
+            return {success: false, error: synthesis_result[:error]}
           end
 
           items = synthesis_result[:items]
-          return { success: true, items_count: 0, paths: [], metadata: synthesis_result[:metadata] } if items.empty?
+          return {success: true, items_count: 0, paths: [], metadata: synthesis_result[:metadata]} if items.empty?
 
           # Step 2: Ensure feedback directory exists
           feedback_dir = @directory_manager.ensure_directory(base_path)
@@ -124,7 +124,7 @@ module Ace
           end
 
           if errors.any? && saved_paths.empty?
-            return { success: false, error: errors.join("; ") }
+            return {success: false, error: errors.join("; ")}
           end
 
           {
@@ -247,32 +247,32 @@ module Ace
         def verify(base_path, id, valid: nil, skip: nil, research: nil)
           # Validate mutually exclusive options
           if valid.nil? && skip.nil?
-            return { success: false, error: "Must specify either valid: or skip:" }
+            return {success: false, error: "Must specify either valid: or skip:"}
           end
           if !valid.nil? && !skip.nil?
-            return { success: false, error: "Cannot specify both valid: and skip:" }
+            return {success: false, error: "Cannot specify both valid: and skip:"}
           end
 
           target_status = if skip
-                            "skip"
-                          elsif valid
-                            "pending"
-                          else
-                            "invalid"
-                          end
+            "skip"
+          elsif valid
+            "pending"
+          else
+            "invalid"
+          end
 
           allowed_from = if skip
-                           %w[draft pending]
-                         else
-                           ["draft"]
-                         end
+            %w[draft pending]
+          else
+            ["draft"]
+          end
 
           transition(
             base_path: base_path,
             id: id,
             to_status: target_status,
             allowed_from: allowed_from,
-            updates: research ? { research: research } : {}
+            updates: research ? {research: research} : {}
           )
         end
 
@@ -306,7 +306,7 @@ module Ace
             id: id,
             to_status: "done",
             allowed_from: ["pending"],
-            updates: { resolution: resolution }
+            updates: {resolution: resolution}
           )
         end
 
@@ -323,14 +323,14 @@ module Ace
         def transition(base_path:, id:, to_status:, allowed_from:, updates: {})
           # Find the item
           item = find(base_path, id)
-          return { success: false, error: "Feedback item not found: #{id}" } unless item
+          return {success: false, error: "Feedback item not found: #{id}"} unless item
 
           # Validate transition
           unless Atoms::FeedbackStateValidator.valid_transition?(item.status, to_status)
             return {
               success: false,
               error: "Invalid transition from '#{item.status}' to '#{to_status}'. " \
-                     "Allowed: #{Atoms::FeedbackStateValidator.allowed_transitions(item.status).join(', ')}"
+                     "Allowed: #{Atoms::FeedbackStateValidator.allowed_transitions(item.status).join(", ")}"
             }
           end
 
@@ -338,7 +338,7 @@ module Ace
           unless allowed_from.include?(item.status)
             return {
               success: false,
-              error: "Cannot #{to_status} from '#{item.status}'. Must be: #{allowed_from.join(' or ')}"
+              error: "Cannot #{to_status} from '#{item.status}'. Must be: #{allowed_from.join(" or ")}"
             }
           end
 
@@ -348,14 +348,14 @@ module Ace
           # Find the file path
           feedback_dir = @directory_manager.feedback_path(base_path)
           files = Dir.glob(File.join(feedback_dir, "#{id}-*.s.md"))
-          return { success: false, error: "Feedback file not found: #{id}" } if files.empty?
+          return {success: false, error: "Feedback file not found: #{id}"} if files.empty?
 
           file_path = files.first
 
           # Write updated item
           write_result = @file_writer.write(updated_item, feedback_dir)
           unless write_result[:success]
-            return { success: false, error: write_result[:error] }
+            return {success: false, error: write_result[:error]}
           end
 
           # Archive if terminal state
@@ -372,13 +372,13 @@ module Ace
           if File.exist?(file_path) && file_path != write_result[:path]
             begin
               FileUtils.rm(file_path)
-            rescue StandardError => e
+            rescue => e
               # Log warning but don't fail - file will remain in active directory
               warn "Warning: Failed to remove old file #{file_path}: #{e.message}" if Ace::Review.debug?
             end
           end
 
-          { success: true, item: updated_item }
+          {success: true, item: updated_item}
         end
       end
     end

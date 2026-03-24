@@ -33,9 +33,9 @@ module Ace
 
           write_atomic(file_path, content)
         rescue ArgumentError => e
-          { success: false, error: e.message }
+          {success: false, error: e.message}
         rescue SystemCallError, IOError => e
-          { success: false, error: "Failed to write feedback file: #{e.message}" }
+          {success: false, error: "Failed to write feedback file: #{e.message}"}
         end
 
         private
@@ -141,7 +141,7 @@ module Ace
           File.open(lock_file_path, File::RDWR | File::CREAT) do |lock_file|
             # Acquire exclusive lock with retry
             unless acquire_lock(lock_file)
-              return { success: false, error: "Could not acquire file lock" }
+              return {success: false, error: "Could not acquire file lock"}
             end
 
             begin
@@ -156,7 +156,7 @@ module Ace
               # Atomic rename
               File.rename(temp_path, file_path)
 
-              result = { success: true, path: file_path }
+              result = {success: true, path: file_path}
             ensure
               temp_file.close! if temp_file && !temp_file.closed?
             end
@@ -164,12 +164,12 @@ module Ace
 
           result
         rescue Errno::EAGAIN, Errno::EACCES => e
-          { success: false, error: "File lock timeout: #{e.message}" }
+          {success: false, error: "File lock timeout: #{e.message}"}
         ensure
           # Clean up lock file after write completes
           begin
             FileUtils.rm_f(lock_file_path)
-          rescue StandardError => e
+          rescue => e
             warn "Failed to clean up lock file #{lock_file_path}: #{e.message}"
           end
         end

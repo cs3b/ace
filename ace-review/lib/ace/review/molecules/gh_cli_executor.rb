@@ -22,8 +22,8 @@ module Ace
           check_installed
 
           timeout_seconds = options[:timeout] ||
-                            Ace::Review.get("defaults", "gh_timeout") ||
-                            DEFAULT_GH_TIMEOUT
+            Ace::Review.get("defaults", "gh_timeout") ||
+            DEFAULT_GH_TIMEOUT
           command = ["gh", subcommand] + args
 
           run_command(command, timeout_seconds)

@@ -118,7 +118,7 @@ module Ace
           }
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
           raise
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to fetch PR comments: #{e.message}"
@@ -160,7 +160,7 @@ module Ace
 
             {
               type: "issue_comment",
-              id: comment["id"] || "IC_#{comment['databaseId']}",
+              id: comment["id"] || "IC_#{comment["databaseId"]}",
               author: author,
               body: body,
               created_at: comment["createdAt"],
@@ -205,7 +205,7 @@ module Ace
 
             {
               type: "review",
-              id: review["id"] || "PRR_#{review['databaseId']}",
+              id: review["id"] || "PRR_#{review["databaseId"]}",
               author: author,
               state: state,
               body: effective_body,
@@ -277,7 +277,7 @@ module Ace
         rescue JSON::ParserError => e
           warn "Warning: Failed to parse review threads response: #{e.message}"
           []
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to fetch review threads: #{e.message}"
           []
         end
@@ -311,7 +311,7 @@ module Ace
             # Warn if thread comments are truncated
             if comments_data.dig("pageInfo", "hasNextPage")
               total = comments_data["totalCount"]
-              warn "Warning: Thread #{thread['id']} has #{total} comments, only #{MAX_COMMENTS_PER_THREAD} fetched"
+              warn "Warning: Thread #{thread["id"]} has #{total} comments, only #{MAX_COMMENTS_PER_THREAD} fetched"
             end
 
             # Skip threads with no comments
@@ -400,8 +400,8 @@ module Ace
         end
 
         private_class_method :extract_comments, :extract_reviews, :fetch_review_threads,
-                             :extract_review_threads, :check_pagination_limits,
-                             :bot_author?, :handle_fetch_error, :discover_repo_from_remote
+          :extract_review_threads, :check_pagination_limits,
+          :bot_author?, :handle_fetch_error, :discover_repo_from_remote
       end
     end
   end

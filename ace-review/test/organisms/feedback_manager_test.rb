@@ -39,7 +39,7 @@ class FeedbackManagerTest < AceReviewTest
         create_test_item(id: "abc123", title: "Missing error handling"),
         create_test_item(id: "def456", title: "SQL injection vulnerability")
       ],
-      metadata: { total_findings: 2, consensus_findings: 0, reviewers_count: 1 }
+      metadata: {total_findings: 2, consensus_findings: 0, reviewers_count: 1}
     }) do |**kwargs|
       kwargs[:report_paths] == [report_path] &&
         kwargs[:model].nil?
@@ -75,7 +75,7 @@ class FeedbackManagerTest < AceReviewTest
     mock_synthesizer.expect(:synthesize, {
       success: true,
       items: [],
-      metadata: { total_findings: 0, consensus_findings: 0, reviewers_count: 1 }
+      metadata: {total_findings: 0, consensus_findings: 0, reviewers_count: 1}
     }) do |**kwargs|
       kwargs[:report_paths] == ["/fake/path.md"]
     end
@@ -121,7 +121,7 @@ class FeedbackManagerTest < AceReviewTest
     mock_synthesizer.expect(:synthesize, {
       success: true,
       items: [create_test_item(id: "abc123", title: "Test finding")],
-      metadata: { total_findings: 1, consensus_findings: 0, reviewers_count: 1 }
+      metadata: {total_findings: 1, consensus_findings: 0, reviewers_count: 1}
     }) do |**kwargs|
       kwargs[:report_paths] == ["/fake/path.md"] &&
         kwargs[:model] == "openai:gpt-4"
@@ -495,7 +495,7 @@ class FeedbackManagerTest < AceReviewTest
 
     # Create mock file writer that fails
     mock_writer = Minitest::Mock.new
-    mock_writer.expect(:write, { success: false, error: "Permission denied" }) do |item, dir|
+    mock_writer.expect(:write, {success: false, error: "Permission denied"}) do |item, dir|
       item.is_a?(Ace::Review::Models::FeedbackItem) && dir == feedback_dir
     end
 
@@ -503,7 +503,7 @@ class FeedbackManagerTest < AceReviewTest
     mock_synthesizer.expect(:synthesize, {
       success: true,
       items: [create_test_item(id: "abc123", title: "Test")],
-      metadata: { total_findings: 1, consensus_findings: 0, reviewers_count: 1 }
+      metadata: {total_findings: 1, consensus_findings: 0, reviewers_count: 1}
     }) do |**kwargs|
       kwargs[:report_paths] == ["/fake/path.md"]
     end
@@ -541,9 +541,9 @@ class FeedbackManagerTest < AceReviewTest
       define_method(:write) do |item, dir|
         # Fail on second call
         if item.id == "abc222"
-          { success: false, error: "Disk full" }
+          {success: false, error: "Disk full"}
         else
-          original_write.bind(self).call(item, dir)
+          original_write.bind_call(self, item, dir)
         end
       end
     end.new
@@ -552,7 +552,7 @@ class FeedbackManagerTest < AceReviewTest
     mock_synthesizer.expect(:synthesize, {
       success: true,
       items: [item1, item2],
-      metadata: { total_findings: 2, consensus_findings: 0, reviewers_count: 1 }
+      metadata: {total_findings: 2, consensus_findings: 0, reviewers_count: 1}
     }) do |**kwargs|
       kwargs[:report_paths] == ["/fake/path.md"]
     end
