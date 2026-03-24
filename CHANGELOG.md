@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.977] - 2026-03-24
+
+### Changed
+- **ace-sim v0.13.0**: Rewrote docs to emphasize chained step feedback and synthesis; aligned tagline with gemspec; added experimental note; removed broken demo GIF reference.
+
 ## [0.9.976] - 2026-03-24
 
 ### Fixed
