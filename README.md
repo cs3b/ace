@@ -7,47 +7,111 @@
   <a href="https://www.ruby-lang.org"><img alt="Ruby" src="https://img.shields.io/badge/Ruby-3.2+-CC342D?logo=ruby" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 
-  CLI tools designed for developers, ready for agents.
+  Workflow infrastructure for coding agents — and the developers who work with them.
 </p>
 
-[Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Quick Start Tutorial](docs/quick-start.md)
+[Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-Developers and AI agents now work side by side, but most tooling was built for one or the other. GUI dashboards lock out agents, verbose APIs overwhelm humans, and scattered tools force both to context-switch. ACE is a set of CLI tools that both developers and agents use the same way - same commands, same config, same file-based output. It gives coding agent harnesses like Claude Code and Codex CLI the workflow infrastructure they need - task pipelines, context bundles, review presets, and skills - without coupling to any single agent platform.
+## The Problem
 
-## Values
+Coding agents can write code, but they operate in a vacuum. They can't manage tasks, load project context, run structured reviews, or follow multi-step pipelines — you end up doing all of that manually:
 
-- **CLI-first, agent-agnostic** - every tool is a standard CLI command that any agent can run - if it can run bash, it can use ACE
-- **Everything lives in git** - tasks, workflows, guides, templates, skills, and configuration are markdown or YAML files in your repo, not locked in a SaaS dashboard
-- **Agent-friendly output** - commands produce concise, progressive output with file paths for details - agents read only what they need instead of parsing walls of text
-- **Transparent and inspectable** - dry-run support, readable YAML configs, review sessions saved as files
-- **Customizable at every level** - each package ships with defaults; override configuration, prompts, workflows, or skills at user (`~/.ace/`) or project (`.ace/`) level without forking
-- **Provider freedom** - swap LLM providers or CLI agents without changing your workflow
+- Your tasks live in a SaaS dashboard your agent can't see
+- Context is scattered across files the agent doesn't know to load
+- Review feedback is verbal and untracked — nothing saved, nothing actionable
+- Multi-step workflows require you to babysit every transition
+
+ACE gives agent harnesses like Claude Code and Codex CLI the workflow layer they're missing — task pipelines, context bundles, review presets, and skills — as standard CLI commands both you and your agents run the same way.
 
 ## What ACE Does
 
-**Plan and track work** - capture ideas, draft them into task specs, break them into subtask trees, generate implementation plans, and track progress - all as markdown files in your repo. [`ace-idea`](ace-idea/) and [`ace-task`](ace-task/)
+**Tasks and ideas as files your agent can read** — capture ideas, draft them into task specs with subtask trees, and track progress — all as markdown files in your repo that any agent can read and act on.
 
-**Run a full task pipeline** - one command provisions an isolated worktree, opens a tmux window, and starts a multi-step assignment that walks through implement, test, release, review, and ship. Generates a retrospective when done. [`ace-overseer`](ace-overseer/) orchestrates [`ace-git-worktree`](ace-git-worktree/), [`ace-tmux`](ace-tmux/), [`ace-assign`](ace-assign/), and [`ace-retro`](ace-retro/).
+```bash
+ace-idea create "Add retry logic to webhook delivery" --tags reliability
+ace-task create "Implement webhook retry" --priority high
+```
 
-**Review code across models** - run the same diff through multiple LLM providers, compare their feedback, and apply the best suggestions. Configurable presets control what each review cycle focuses on - correctness, quality, or polish. [`ace-review`](ace-review/)
+[`ace-task`](ace-task/) | [`ace-idea`](ace-idea/)
 
-**Generate commits from changes** - stage your work and get a structured commit message derived from the actual diff, scoped per package. [`ace-git-commit`](ace-git-commit/)
+**One command from task to shipped PR** — provision an isolated worktree, open a tmux window, and kick off a multi-step assignment that walks through implement, test, review, and ship. A retrospective is generated when done.
 
-**Load context on demand** - pull project context, workflow instructions, and guides through a protocol system (`wfi://`, `guide://`, `tmpl://`). Discover available resources, resolve them to files, and bundle them for agents or developers. [`ace-bundle`](ace-bundle/), [`ace-nav`](ace-support-nav/), and [`ace-search`](ace-search/)
+```bash
+ace-overseer work-on --task 8r3
+```
 
-**Test consistently** - run tests across the monorepo with a single command that handles dependency resolution, profiling, and reporting. [`ace-test`](ace-test/) and [`ace-test-runner`](ace-test-runner/)
+[`ace-overseer`](ace-overseer/) orchestrates [`ace-assign`](ace-assign/), [`ace-git-worktree`](ace-git-worktree/), and [`ace-tmux`](ace-tmux/)
 
-**Maintain documentation** - track document freshness, analyze what needs updating after code changes, and lint markdown files. [`ace-docs`](ace-docs/) and [`ace-lint`](ace-lint/)
+**Multi-model code review with tracked feedback** — run the same diff through multiple LLM providers, compare their analysis, and track suggestions through a verified/pending/resolved lifecycle. Presets control what each review focuses on — correctness, security, or polish.
 
-**Organize project knowledge** - a handbook system ships workflows, guides, templates, and skills per package, with agent platform integrations that project skills to Claude Code, Codex, Gemini, and others. [`ace-handbook`](ace-handbook/)
+```bash
+ace-review --preset code-deep --pr 123
+```
 
-## Tools
+[`ace-review`](ace-review/)
 
-**Git and security** - [`ace-git`](ace-git/) branch and PR context | [`ace-git-secrets`](ace-git-secrets/) token leak scanning
+**Context loading on demand** — pull project context, workflow instructions, and guides through a protocol system (`wfi://`, `guide://`, `tmpl://`). Bundle them for agents or load them yourself.
 
-**LLM and prompts** - [`ace-llm`](ace-llm/) provider queries | [`ace-prompt-prep`](ace-prompt-prep/) prompt context assembly | [`ace-compressor`](ace-compressor/) context compression
+```bash
+ace-bundle wfi://task/work
+```
 
-**Simulation and demos** - [`ace-sim`](ace-sim/) scenario simulation | [`ace-demo`](ace-demo/) demo recording
+[`ace-bundle`](ace-bundle/) | [`ace-handbook`](ace-handbook/) | [`ace-search`](ace-search/)
 
-**Internals** - [`ace-b36ts`](ace-b36ts/) compact timestamp IDs
+## Your First Five Minutes
+
+The fastest way to see ACE work is smart commits — zero config, immediate result:
+
+```bash
+gem install ace-git-commit
+
+# Stage your changes, then:
+ace-git-commit -i "fix auth token refresh"
+# Analyzes the diff. Considers your intention. Generates a scoped conventional commit.
+# Same command whether you type it or your agent runs it.
+```
+
+For the full pipeline — idea to shipped PR — see the [Quick Start](docs/quick-start.md).
+
+## Install
+
+```bash
+gem install ace-git-commit    # smart commits, zero config
+gem install ace-overseer      # full orchestrator stack
+```
+
+Ruby 3.2+ required. Each ace-* gem installs independently — start with one tool and add more as you need them. See the [Quick Start](docs/quick-start.md) for a complete walkthrough.
+
+## Principles
+
+- **CLI-first, agent-agnostic** — every tool is a standard CLI command; if it can run bash, it can use ACE
+- **Everything in git** — tasks, workflows, configs, and review sessions are markdown and YAML files in your repo
+- **Transparent and inspectable** — dry-run support, readable configs, saved sessions; when something breaks, you can trace it
+- **Customizable cascade** — each package ships defaults; override at user (`~/.ace/`) or project (`.ace/`) level without forking
+
+## The Toolkit
+
+**Plan** — [`ace-idea`](ace-idea/) capture and shape ideas | [`ace-task`](ace-task/) markdown task specs with subtasks | [`ace-retro`](ace-retro/) retrospectives
+
+**Build** — [`ace-overseer`](ace-overseer/) orchestrate full task pipelines | [`ace-assign`](ace-assign/) multi-step assignments | [`ace-git-worktree`](ace-git-worktree/) isolated worktrees | [`ace-git-commit`](ace-git-commit/) intention-aware commits
+
+**Review** — [`ace-review`](ace-review/) multi-model preset reviews | [`ace-test-runner`](ace-test-runner/) smart test execution | [`ace-lint`](ace-lint/) linting | [`ace-docs`](ace-docs/) doc freshness tracking
+
+**Context** — [`ace-bundle`](ace-bundle/) context assembly | [`ace-handbook`](ace-handbook/) workflows, guides, templates, skills | [`ace-search`](ace-search/) codebase search | [`ace-llm`](ace-llm/) multi-provider LLM queries
+
+**Secure** — [`ace-git-secrets`](ace-git-secrets/) credential leak scanning and revocation
+
+40+ packages total, including shared libraries and [agent platform integrations](ace-handbook-integration-claude/). See [Tools Reference](docs/tools.md) for the complete inventory.
+
+## Agent Platform Support
+
+ACE skills project natively to multiple agent platforms. Install an integration package and workflows, guides, and skills appear in your agent's expected directory structure:
+
+[Claude Code](ace-handbook-integration-claude/) | [Codex CLI](ace-handbook-integration-codex/) | [Gemini CLI](ace-handbook-integration-gemini/) | [OpenCode](ace-handbook-integration-opencode/) | [pi-agent](ace-handbook-integration-pi/)
+
+---
+
+[Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
+
+MIT License
