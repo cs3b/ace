@@ -73,7 +73,7 @@ module Ace
             assertions_failed: 5,
             results: [],
             failed_packages: [
-              { name: "ace-test", path: "/path/to/ace-test", failures: 3, errors: 2, output: "error details", failed_tests: [] }
+              {name: "ace-test", path: "/path/to/ace-test", failures: 3, errors: 2, output: "error details", failed_tests: []}
             ]
           }
           start_time = Time.now - 10
@@ -98,8 +98,8 @@ module Ace
             total_assertions: 200,
             assertions_failed: 0,
             results: [
-              { package: "ace-test", skipped: 3 },
-              { package: "ace-lint", skipped: 2 }
+              {package: "ace-test", skipped: 3},
+              {package: "ace-lint", skipped: 2}
             ],
             failed_packages: []
           }

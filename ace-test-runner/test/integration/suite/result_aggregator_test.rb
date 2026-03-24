@@ -19,11 +19,11 @@ module Ace
               total: 3, passed: 3, failed: 0, errors: 0, skipped: 0, duration: 0.4, success: true
             }))
             File.write(File.join(latest_dir, "report.json"), JSON.generate({
-              result: { assertions: 9 }
+              result: {assertions: 9}
             }))
 
             summary = ResultAggregator.new(
-              [{ "name" => "ace-sample", "path" => package_path }],
+              [{"name" => "ace-sample", "path" => package_path}],
               report_root: report_root
             ).aggregate
 
@@ -45,7 +45,7 @@ module Ace
             }))
 
             summary = ResultAggregator.new(
-              [{ "name" => "ace-legacy", "path" => package_path }],
+              [{"name" => "ace-legacy", "path" => package_path}],
               report_root: File.join(tmpdir, ".ace-local", "test", "reports")
             ).aggregate
 

@@ -31,7 +31,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     # Manually set execution_mode and groups to simulate grouped execution
     configuration.instance_variable_set(:@execution_mode, "grouped")
-    configuration.instance_variable_set(:@groups, { "smoke" => ["test/atoms/test_detector_test.rb"] })
+    configuration.instance_variable_set(:@groups, {"smoke" => ["test/atoms/test_detector_test.rb"]})
 
     # Should execute sequentially when no files but groups and target are configured
     assert orchestrator.send(:should_execute_sequentially?),

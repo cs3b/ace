@@ -38,7 +38,7 @@ module Ace
           render_failed_packages(summary)
 
           # Duration
-          puts "Duration:    #{sprintf('%.2f', total_duration)}s"
+          puts "Duration:    #{sprintf("%.2f", total_duration)}s"
 
           # Stats (packages, tests, assertions)
           puts "Packages:    #{summary[:packages_passed]} passed, #{summary[:packages_failed]} failed"
@@ -100,7 +100,7 @@ module Ace
           return if packages_with_skips.empty?
 
           skip_parts = packages_with_skips.map { |pkg| "#{pkg[:package]} (#{pkg[:skipped]})" }
-          puts "Skipped: #{skip_parts.join(', ')}"
+          puts "Skipped: #{skip_parts.join(", ")}"
           puts
         end
 

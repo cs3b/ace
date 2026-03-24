@@ -15,7 +15,7 @@ module Ace
           /`.*`/,                      # Backtick command execution
           /\$\(.*\)/,                  # Command substitution
           /run_in_subprocess/,         # Explicit subprocess test helpers
-          /run_in_clean_env/,          # Environment isolation helpers
+          /run_in_clean_env/          # Environment isolation helpers
         ].freeze
 
         # Test directories that typically need isolation
@@ -73,7 +73,7 @@ module Ace
 
           content = File.read(file_path)
           SUBPROCESS_PATTERNS.any? { |pattern| content.match?(pattern) }
-        rescue => e
+        rescue
           # If we can't read the file, assume it doesn't need isolation
           false
         end

@@ -15,7 +15,7 @@ module Ace
           @report_root = File.join(@temp_dir, ".ace-local", "test", "reports")
           @reports_dir = File.join(@report_root, "my-package", "latest")
           FileUtils.mkdir_p(@reports_dir)
-          @package = { path: @package_path, name: "ace-my-package", report_root: @report_root }
+          @package = {path: @package_path, name: "ace-my-package", report_root: @report_root}
         end
 
         def teardown
@@ -24,32 +24,32 @@ module Ace
 
         def test_format_for_display_with_existing_report
           File.write(File.join(@reports_dir, "failures.json"), "{}")
-          
+
           output = FailedPackageReporter.format_for_display(@package)
-          
+
           # Should contain the path to failures.json
           assert_match(/→ See .*failures\.json/, output)
         end
 
         def test_format_for_display_fallback
           # No report files created
-          
+
           output = FailedPackageReporter.format_for_display(@package)
-          
+
           assert_match(/→ Check .*\.ace-local\/test\/reports\/my-package\/ for details/, output)
         end
 
         def test_format_for_markdown_with_existing_report
           File.write(File.join(@reports_dir, "summary.json"), "{}")
-          
+
           output = FailedPackageReporter.format_for_markdown(@package)
-          
+
           assert_match(/- Report: `.*summary\.json`/, output)
         end
 
         def test_format_for_markdown_fallback
           output = FailedPackageReporter.format_for_markdown(@package)
-          
+
           assert_match(/- Report: Check `.*\.ace-local\/test\/reports\/my-package\/` for details/, output)
         end
 

@@ -126,16 +126,16 @@ module Ace
           report << "## Summary"
           report << ""
 
-          if summary[:packages_failed] == 0
-            report << "✅ **All tests passed!**"
+          report << if summary[:packages_failed] == 0
+            "✅ **All tests passed!**"
           else
-            report << "❌ **Some tests failed**"
+            "❌ **Some tests failed**"
           end
 
           report << ""
           report << "- Packages: #{summary[:packages_passed]} passed, #{summary[:packages_failed]} failed"
           report << "- Tests: #{summary[:total_tests]} total, #{summary[:total_passed]} passed, #{summary[:total_failed]} failed"
-          report << "- Duration: #{sprintf('%.2f', summary[:total_duration])}s"
+          report << "- Duration: #{sprintf("%.2f", summary[:total_duration])}s"
           report << ""
 
           if summary[:failed_packages] && !summary[:failed_packages].empty?
@@ -160,7 +160,7 @@ module Ace
 
           summary[:results].each do |result|
             status = result[:success] ? "✅ Pass" : "❌ Fail"
-            report << "| #{result[:package]} | #{status} | #{result[:total]} | #{result[:passed]} | #{result[:failed] || 0} | #{result[:skipped] || 0} | #{sprintf('%.2f', result[:duration] || 0)}s |"
+            report << "| #{result[:package]} | #{status} | #{result[:total]} | #{result[:passed]} | #{result[:failed] || 0} | #{result[:skipped] || 0} | #{sprintf("%.2f", result[:duration] || 0)}s |"
           end
 
           report.join("\n")

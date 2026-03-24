@@ -69,9 +69,9 @@ module Ace
         def generate_performance_report(result)
           {
             total_duration: result.duration,
-            average_per_test: result.total_tests > 0 ? result.duration / result.total_tests : 0,
-            tests_per_second: result.duration > 0 ? result.total_tests / result.duration : 0,
-            assertions_per_second: result.duration > 0 ? result.assertions / result.duration : 0
+            average_per_test: (result.total_tests > 0) ? result.duration / result.total_tests : 0,
+            tests_per_second: (result.duration > 0) ? result.total_tests / result.duration : 0,
+            assertions_per_second: (result.duration > 0) ? result.assertions / result.duration : 0
           }
         end
 
@@ -141,9 +141,9 @@ module Ace
 
         def group_failures_by_file(failures)
           failures.group_by(&:file_path)
-                  .transform_values(&:count)
-                  .sort_by { |_, count| -count }
-                  .to_h
+            .transform_values(&:count)
+            .sort_by { |_, count| -count }
+            .to_h
         end
       end
     end

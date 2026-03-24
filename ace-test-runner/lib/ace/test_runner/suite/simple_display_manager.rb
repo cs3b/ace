@@ -92,7 +92,7 @@ module Ace
 
         def package_status_icon(success, skipped_count)
           return color("✗", :red) unless success
-          skipped_count > 0 ? color("?", :yellow) : color("✓", :green)
+          (skipped_count > 0) ? color("?", :yellow) : color("✓", :green)
         end
 
         def separator

@@ -8,7 +8,7 @@ module Ace
       # Represents a complete test report
       class TestReport
         attr_accessor :result, :configuration, :timestamp, :report_path,
-                      :files_tested, :environment, :metadata
+          :files_tested, :environment, :metadata
 
         def initialize(attributes = {})
           @result = attributes[:result] || TestResult.new
@@ -74,8 +74,8 @@ module Ace
           lines = []
           lines << "# Test Report"
           lines << ""
-          lines << "**Generated:** #{timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
-          lines << "**Status:** #{success? ? '✅ Success' : '❌ Failed'}"
+          lines << "**Generated:** #{timestamp.strftime("%Y-%m-%d %H:%M:%S")}"
+          lines << "**Status:** #{success? ? "✅ Success" : "❌ Failed"}"
           lines << ""
 
           lines << "## Summary"

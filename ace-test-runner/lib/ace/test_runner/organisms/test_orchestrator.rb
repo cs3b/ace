@@ -92,9 +92,9 @@ module Ace
           execution_result = execute_tests(test_files)
 
           # Check if execution failed with LoadError (stdout is empty means tests didn't run)
-          if !execution_result[:success] && execution_result[:stdout].to_s.empty? && execution_result[:stderr] && !execution_result[:stderr].empty?
+          @parsed_result = if !execution_result[:success] && execution_result[:stdout].to_s.empty? && execution_result[:stderr] && !execution_result[:stderr].empty?
             # Handle load errors or other failures that prevented test execution
-            @parsed_result = {
+            {
               summary: {
                 runs: 0,
                 assertions: 0,
@@ -114,10 +114,10 @@ module Ace
             }
           elsif execution_result[:commands] && execution_result[:commands].is_a?(Array)
             # Each file was executed separately, parse and sum them all
-            @parsed_result = aggregate_individual_results(execution_result[:stdout])
+            aggregate_individual_results(execution_result[:stdout])
           else
             # Single command execution (grouped)
-            @parsed_result = @result_parser.parse_output(execution_result[:stdout])
+            @result_parser.parse_output(execution_result[:stdout])
           end
 
           # Build result object
@@ -140,7 +140,7 @@ module Ace
                   files: error[:files]
                 }
               end
-              all_failures = all_failures + error_failures
+              all_failures += error_failures
             end
 
             analyzed_failures = @failure_analyzer.analyze_all(
@@ -181,7 +181,11 @@ module Ace
 
           # Use SmartTestExecutor for intelligent subprocess/direct execution choice
           require_relative "../molecules/smart_test_executor"
-          force_mode = @options[:direct] ? :direct : (@options[:subprocess] ? :subprocess : nil)
+          force_mode = if @options[:direct]
+            :direct
+          else
+            (@options[:subprocess] ? :subprocess : nil)
+          end
           @test_executor = Molecules::SmartTestExecutor.new(
             timeout: @configuration.timeout,
             force_mode: force_mode
@@ -266,7 +270,7 @@ module Ace
                   files: error[:files]
                 }
               end
-              all_failures = all_failures + error_failures
+              all_failures += error_failures
             end
 
             analyzed_failures = @failure_analyzer.analyze_all(
@@ -362,7 +366,7 @@ module Ace
             config_path: options[:config_path],
             timeout: options[:timeout],
             parallel: options[:parallel],
-            color: config_with_options.defaults[:color] == "auto" ? true : config_with_options.defaults[:color],
+            color: (config_with_options.defaults[:color] == "auto") ? true : config_with_options.defaults[:color],
             per_file: options[:per_file],
             failure_limits: config_with_options.failure_limits,
             profile: options[:profile],
@@ -397,15 +401,15 @@ module Ace
 
           # Otherwise, use PatternResolver for consistency
           begin
-            if @configuration.target
-              files = @pattern_resolver.resolve_target(@configuration.target)
+            files = if @configuration.target
+              @pattern_resolver.resolve_target(@configuration.target)
             else
               # When no target specified, resolve all files
-              files = @pattern_resolver.resolve_target(nil)
+              @pattern_resolver.resolve_target(nil)
             end
           rescue ArgumentError => e
             puts "Error: #{e.message}"
-            puts "Available targets: #{@pattern_resolver.available_targets.join(', ')}"
+            puts "Available targets: #{@pattern_resolver.available_targets.join(", ")}"
             exit 1
           end
 
@@ -491,7 +495,7 @@ module Ace
         def aggregate_individual_results(combined_output)
           # Split output by test file executions
           individual_outputs = combined_output.split(/^Started with run options/)
-          individual_outputs.shift if individual_outputs.first&.empty?
+          individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
 
           aggregated = {
             raw_output: combined_output,
@@ -629,8 +633,7 @@ module Ace
             puts format("%2d. %-50s %8s",
               index + 1,
               test[:name][0..49],  # Truncate long test names
-              duration
-            )
+              duration)
             puts "    #{location}" if test[:location]
           end
 

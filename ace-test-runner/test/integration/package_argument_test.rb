@@ -82,7 +82,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_package_with_verbose_option
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("ace-bundle", "atoms", "--verbose")
+      _, status = run_ace_test_with_mock("ace-bundle", "atoms", "--verbose")
 
       assert status.success?, "Should run with verbose option"
     end
@@ -156,7 +156,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_specific_file_still_works
     Dir.chdir(File.join(@project_root, "ace-bundle")) do
-      output, status = run_ace_test_with_mock("test/atoms/content_checker_test.rb")
+      _, status = run_ace_test_with_mock("test/atoms/content_checker_test.rb")
 
       assert status.success?, "Should run specific file"
     end

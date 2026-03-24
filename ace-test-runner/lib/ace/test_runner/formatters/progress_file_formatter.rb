@@ -25,7 +25,7 @@ module Ace
           if @report_path
             lines << "Details: #{@report_path}/"
           elsif @configuration && @configuration[:save_reports]
-            lines << "Details: #{@configuration[:report_dir] || '.ace-local/test/reports'}/latest/"
+            lines << "Details: #{@configuration[:report_dir] || ".ace-local/test/reports"}/latest/"
           end
 
           # Compact single-line summary with emoji status
@@ -38,7 +38,7 @@ module Ace
           end
 
           summary = "#{status} #{result.total_tests} tests, #{result.assertions} assertions, " +
-                   "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
+            "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
           lines << summary
 
           # Add failure details if there are any
@@ -51,7 +51,7 @@ module Ace
 
             # Show failure count header with reference to full report if needed
             if total_failures > @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
+              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
               lines << "FAILURES (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
             else
               lines << "FAILURES (#{total_failures}):"
@@ -87,8 +87,8 @@ module Ace
             # If there are more failures than displayed
             if result.failures_detail.size > @max_failures_to_display
               remaining = result.failures_detail.size - @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
-              lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report: #{report_path}/failures.json"
+              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
+              lines << "  ... and #{remaining} more #{(remaining == 1) ? "failure" : "failures"}. See full report: #{report_path}/failures.json"
             end
           end
 
@@ -143,7 +143,7 @@ module Ace
         def truncate_message(message, max_length = 100)
           return "" unless message
 
-          msg = message.strip.gsub(/\n/, " ")
+          msg = message.strip.tr("\n", " ")
           if msg.length > max_length
             "#{msg[0...max_length - 3]}..."
           else

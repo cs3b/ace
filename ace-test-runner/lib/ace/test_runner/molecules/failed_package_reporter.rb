@@ -18,12 +18,12 @@ module Ace
             report_root: report_root,
             package_name: package_name
           )
-          
+
           if report_path
             begin
               relative_path = Pathname.new(report_path).relative_path_from(Dir.pwd)
               "    → See #{relative_path}"
-            rescue StandardError => e
+            rescue => e
               warn "Failed to calculate relative path: #{e.message}" if debug_mode?
               "    → See #{report_path}"
             end
@@ -32,7 +32,7 @@ module Ace
             begin
               relative_path = Pathname.new(reports_path).relative_path_from(Dir.pwd)
               "    → Check #{relative_path}/ for details"
-            rescue StandardError => e
+            rescue => e
               warn "Failed to calculate relative path: #{e.message}" if debug_mode?
               "    → Check #{reports_path}/ for details"
             end
@@ -89,7 +89,7 @@ module Ace
 
           def relative_or_absolute(path)
             Pathname.new(path).relative_path_from(Dir.pwd).to_s
-          rescue StandardError => e
+          rescue => e
             warn "Failed to calculate relative path: #{e.message}" if debug_mode?
             path
           end

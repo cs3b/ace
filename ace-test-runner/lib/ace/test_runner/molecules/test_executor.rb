@@ -42,7 +42,7 @@ module Ace
           })
 
           # Remove MT_NO_AUTORUN=1 from command if it's there
-          command = command.sub(/^MT_NO_AUTORUN=1\s+/, '')
+          command = command.sub(/^MT_NO_AUTORUN=1\s+/, "")
 
           begin
             if @timeout
@@ -58,7 +58,6 @@ module Ace
           end
 
           end_time = Time.now
-
 
           {
             stdout: stdout,
@@ -83,13 +82,13 @@ module Ace
 
             # Send stdout event for per-test progress parsing
             if block_given? && result[:stdout]
-              yield({ type: :stdout, content: result[:stdout] })
+              yield({type: :stdout, content: result[:stdout]})
             end
 
             # Simulate progress callbacks for compatibility
             if block_given?
-              files.each { |file| yield({ type: :start, file: file }) }
-              files.each { |file| yield({ type: :complete, file: file, success: result[:success], duration: result[:duration] / files.size }) }
+              files.each { |file| yield({type: :start, file: file}) }
+              files.each { |file| yield({type: :complete, file: file, success: result[:success], duration: result[:duration] / files.size}) }
             end
 
             result
@@ -100,7 +99,7 @@ module Ace
           results = []
 
           files.each do |file|
-            yield({ type: :start, file: file }) if block_given?
+            yield({type: :start, file: file}) if block_given?
 
             result = execute_single_file(file, options)
             results << result

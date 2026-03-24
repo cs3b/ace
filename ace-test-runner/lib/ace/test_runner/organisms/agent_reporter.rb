@@ -28,7 +28,7 @@ module Ace
           lines = []
 
           # Status indicator
-          lines << "TEST_EXECUTION_STATUS: #{result.success? ? 'SUCCESS' : 'FAILURE'}"
+          lines << "TEST_EXECUTION_STATUS: #{result.success? ? "SUCCESS" : "FAILURE"}"
           lines << "TEST_METRICS: passed=#{result.passed} failed=#{result.failed} errors=#{result.errors} skipped=#{result.skipped}"
 
           # Actionable failures
@@ -40,7 +40,7 @@ module Ace
               lines << "    TEST: #{failure.full_test_name}"
               lines << "    FILE: #{failure.file_path}"
               lines << "    LINE: #{failure.line_number}"
-              lines << "    FIX_SUGGESTION: #{failure.fix_suggestion || 'Review test logic'}"
+              lines << "    FIX_SUGGESTION: #{failure.fix_suggestion || "Review test logic"}"
             end
           end
 
@@ -280,7 +280,7 @@ module Ace
 
         def estimate_coverage(result)
           # Rough estimation based on assertion density
-          assertion_density = result.total_tests > 0 ? result.assertions.to_f / result.total_tests : 0
+          assertion_density = (result.total_tests > 0) ? result.assertions.to_f / result.total_tests : 0
 
           if assertion_density > 10
             "high"
@@ -325,7 +325,7 @@ module Ace
             uses_assertions: result.assertions > 0,
             has_skipped_tests: result.skipped > 0,
             has_error_tests: result.errors > 0,
-            average_assertions_per_test: result.total_tests > 0 ? result.assertions.to_f / result.total_tests : 0
+            average_assertions_per_test: (result.total_tests > 0) ? result.assertions.to_f / result.total_tests : 0
           }
         end
 
@@ -372,7 +372,7 @@ module Ace
           # Sort by priority: errors first, then by file to fix related issues together
           failures.sort_by do |failure|
             [
-              failure.type == :error ? 0 : 1,
+              (failure.type == :error) ? 0 : 1,
               failure.file_path || "",
               failure.line_number || 0
             ]

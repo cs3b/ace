@@ -49,7 +49,7 @@ module Ace
           mode = determine_execution_mode(files, options)
 
           # Add mode information to progress callback
-          yield({ type: :execution_mode, mode: mode }) if block_given?
+          yield({type: :execution_mode, mode: mode}) if block_given?
 
           if mode == :direct
             @in_process_runner.execute_with_progress(files, options, &block)

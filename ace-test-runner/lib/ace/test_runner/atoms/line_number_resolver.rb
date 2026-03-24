@@ -28,7 +28,6 @@ module Ace
         def extract_test_methods(lines)
           test_methods = []
           current_test = nil
-          indent_stack = []
 
           lines.each_with_index do |line, index|
             line_number = index + 1
@@ -38,7 +37,7 @@ module Ace
               test_name = $2 || $3 # Either def test_name or test "name"
 
               # Convert test "name" to test_name format for minitest --name option
-              test_name = test_name.gsub(/\s+/, '_') if test_name && test_name.include?(' ')
+              test_name = test_name.gsub(/\s+/, "_") if test_name && test_name.include?(" ")
 
               # Close previous test if any
               if current_test

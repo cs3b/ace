@@ -30,14 +30,14 @@ module Ace
           if @report_path
             lines << "Details: #{@report_path}/"
           elsif @configuration && @configuration[:save_reports]
-            lines << "Details: #{@configuration[:report_dir] || '.ace-local/test/reports'}/latest/"
+            lines << "Details: #{@configuration[:report_dir] || ".ace-local/test/reports"}/latest/"
           end
 
           # Compact single-line summary with emoji status
           status = status_icon(result)
 
           summary = "#{status} #{result.total_tests} tests, #{result.assertions} assertions, " +
-                   "#{result.failed} failures, #{result.errors} errors"
+            "#{result.failed} failures, #{result.errors} errors"
           summary += ", #{result.skipped} skipped" if result.has_skips?
           summary += " (#{format_duration(result.duration)})"
           lines << summary
@@ -64,7 +64,7 @@ module Ace
 
             # Show failure count header with reference to full report if needed
             if total_failures > @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
+              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
               lines << "#{label} (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
             else
               lines << "#{label} (#{total_failures}):"
@@ -100,8 +100,8 @@ module Ace
             # If there are more failures than displayed
             if result.failures_detail.size > @max_failures_to_display
               remaining = result.failures_detail.size - @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
-              lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report: #{report_path}/failures.json"
+              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
+              lines << "  ... and #{remaining} more #{(remaining == 1) ? "failure" : "failures"}. See full report: #{report_path}/failures.json"
             end
           end
 
@@ -162,16 +162,16 @@ module Ace
             # ANSI codes are: \e[32m (color start), \e[0m (reset)
             if line =~ /^\s*test_[\w_]+.*\s+(PASS|FAIL|ERROR|SKIP).*\([0-9.]+s\)/
               result = case $1
-              when 'PASS'
-                '.'
-              when 'FAIL'
-                'F'
-              when 'ERROR'
-                'E'
-              when 'SKIP'
-                'S'
+              when "PASS"
+                "."
+              when "FAIL"
+                "F"
+              when "ERROR"
+                "E"
+              when "SKIP"
+                "S"
               else
-                '.'
+                "."
               end
 
               print colorize(result, result_color(result))
@@ -234,7 +234,7 @@ module Ace
           # Print visual separator before group
           puts "" unless @test_count == 0
           puts ""
-          puts "Running #{group_name} (#{file_count} #{file_count == 1 ? 'file' : 'files'})..."
+          puts "Running #{group_name} (#{file_count} #{(file_count == 1) ? "file" : "files"})..."
           @test_count = 0
         end
 
@@ -248,7 +248,7 @@ module Ace
           failure_count = summary[:failures] || 0
 
           status_line = "#{status_icon} #{group_name} complete " +
-                       "(#{format_duration(duration)}, #{test_count} tests, #{failure_count} failures)"
+            "(#{format_duration(duration)}, #{test_count} tests, #{failure_count} failures)"
 
           puts colorize(status_line, success ? :green : :red)
           puts ""
@@ -263,7 +263,7 @@ module Ace
             puts ""
             puts colorize("═══ Group Summary ═══", :cyan)
             @group_counts.each do |group, count|
-              puts "  #{group.to_s.capitalize}: #{count} #{count == 1 ? 'file' : 'files'}"
+              puts "  #{group.to_s.capitalize}: #{count} #{(count == 1) ? "file" : "files"}"
             end
           end
 
@@ -291,13 +291,13 @@ module Ace
 
         def result_color(result)
           case result
-          when '.'
+          when "."
             :green
-          when 'F'
+          when "F"
             :red
-          when 'E'
+          when "E"
             :yellow
-          when 'S'
+          when "S"
             :cyan
           else
             :default
@@ -307,7 +307,7 @@ module Ace
         def truncate_message(message, max_length = 100)
           return "" unless message
 
-          msg = message.strip.gsub(/\n/, " ")
+          msg = message.strip.tr("\n", " ")
           if msg.length > max_length
             "#{msg[0...max_length - 3]}..."
           else

@@ -6,8 +6,8 @@ module Ace
       # Represents the result of a test run
       class TestResult
         attr_accessor :passed, :failed, :skipped, :errors, :assertions,
-                      :duration, :start_time, :end_time, :failures_detail,
-                      :deprecations, :raw_output, :stderr
+          :duration, :start_time, :end_time, :failures_detail,
+          :deprecations, :raw_output, :stderr
 
         def initialize(attributes = {})
           @passed = attributes[:passed] || 0

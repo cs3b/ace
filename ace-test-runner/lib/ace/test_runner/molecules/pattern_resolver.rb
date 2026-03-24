@@ -28,7 +28,7 @@ module Ace
             raise ArgumentError, "File not found: #{target}. " \
               "Make sure you're running from the correct directory or use an absolute path."
           else
-            raise ArgumentError, "Unknown target: #{target}. Available targets: #{available_targets.join(', ')}"
+            raise ArgumentError, "Unknown target: #{target}. Available targets: #{available_targets.join(", ")}"
           end
         end
 
@@ -50,11 +50,11 @@ module Ace
             elsif @patterns.key?(member_key)
               # Pattern found - return as a group
               files = expand_pattern(@patterns[member_key])
-              files.empty? ? [] : [{ name: member_key, files: files }]
+              files.empty? ? [] : [{name: member_key, files: files}]
             else
               # Direct pattern - expand and wrap
               files = expand_pattern(member)
-              files.empty? ? [] : [{ name: "other", files: files }]
+              files.empty? ? [] : [{name: "other", files: files}]
             end
           end
         end
