@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-03-24
+
+### Added
+- Documented `ace-test-e2e-sh` sandbox shell command in usage reference (previously undocumented executable).
+
+### Changed
+- Re-recorded getting-started demo with real `ace-test-e2e-suite --progress` execution at 8x playback speed.
+- Fixed demo tape YAML structure (duplicate `commands:` key caused `cd` to be silently dropped).
+- Normalized gemspec homepage and changelog URIs to use consistent interpolation pattern.
+
 ## [0.28.0] - 2026-03-23
 
 ### Changed
