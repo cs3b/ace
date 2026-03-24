@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-24
+
+### Changed
+- Rewrote "How It Works" and docs to emphasize chained feedback: each step's output feeds the next, and synthesis gathers all stage feedback to propose improvements and produce revised source artifacts.
+- Aligned README tagline and gemspec summary/description to unified framing.
+- Added experimental status note to README.
+- Removed demo GIF reference from README (dry-run hangs due to unguarded provider calls; tape has TODO).
+- Updated demo tape with sandbox-free layout and TODO for dry-run fix.
+
 ## [0.12.0] - 2026-03-23
 
 ### Changed

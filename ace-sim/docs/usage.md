@@ -109,8 +109,9 @@ Final directory:
 
 ## Behavior notes
 
-- Provider step execution runs one chain per provider and repeat iteration.
+- Steps run sequentially within each chain — each step's output becomes the next step's input, so later steps build on earlier reasoning.
 - `draft`, `plan`, `work` are common defaults; custom step order is supported via `--steps`.
+- After all chains complete, the synthesis stage gathers feedback from every stage to propose improvements and produce a revised source artifact.
 - Synthesis is optional; enable via preset or explicit `--synthesis-workflow`.
 - `--dry-run` does not perform provider calls.
 

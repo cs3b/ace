@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Sim </h1>
 
-  Run multi-provider simulation chains for ideas and task specs before implementation.
+  Multi-provider LLM simulation chains for validating ideas and reviewing tasks before implementation.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -14,17 +14,17 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+> **Experimental** — its already proof its worth, but need some more work.
+ 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-![ace-sim demo](docs/demo/ace-sim-run.gif)
-
-`ace-sim` executes preset-driven simulation steps (draft, plan, work) across one or more providers via [ace-llm](../ace-llm), then optionally synthesizes suggestions and revised source artifacts for follow-up work. Use `/as-sim-run` to launch simulations from inside a coding agent.
+`ace-sim` executes preset-driven simulation chains (sequential step runs per provider) across one or more providers via [ace-llm](../ace-llm), then optionally synthesizes suggestions and revised source artifacts for follow-up work. Use `/as-sim-run` to launch simulations from inside a coding agent.
 
 ## How It Works
 
 1. Select a simulation preset (`validate-idea` or `validate-task`) and provide a source file, with context assembled by [ace-bundle](../ace-bundle).
-2. The simulation engine runs each step across the configured providers and iteration counts through [ace-llm](../ace-llm).
-3. Results are saved as deterministic run artifacts under `.ace-local/sim/simulations/<run-id>/`, with optional synthesis and writeback to source files.
+2. The simulation engine runs each step (draft, plan, work) sequentially — each step's output feeds as input into the next, building on prior reasoning through [ace-llm](../ace-llm).
+3. After all steps complete, a final synthesis stage gathers feedback from every stage to propose improvements, surface questions, and produce a revised source artifact — feeding better specs back into [ace-task](../ace-taskflow) or sharper ideas into [ace-idea](../ace-idea).
 
 ## Use Cases
 
