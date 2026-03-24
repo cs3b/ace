@@ -3,7 +3,7 @@
 
   Compress Markdown and text into ContextPack/3 artifacts for efficient LLM context loading.
 
-  <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
 
   <a href="https://rubygems.org/gems/ace-compressor"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-compressor.svg" /></a>
