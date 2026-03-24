@@ -4,349 +4,95 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.982] - 2026-03-24
-
-### Fixed
-- **ace-tmux v0.11.1**: Fixed `ace-tmux window` error handling to rescue the correct `Ace::Tmux::NotInTmuxError` class.
-
-## [0.9.981] - 2026-03-24
-
-### Changed
-- **ace-test-runner-e2e v0.29.0**: Documented `ace-test-e2e-sh` in usage reference, re-recorded demo with real suite execution at 8x playback, fixed gemspec URIs.
-
-## [0.9.980] - 2026-03-24
-
-### Changed
-- **ace-test-runner v0.18.0**: Updated README and gemspec to highlight Minitest wrapping; streamlined handbook; re-recorded demo with real test runs.
-
-## [0.9.979] - 2026-03-24
-
-### Changed
-- **ace-test v0.6.0**: Refreshed README tagline and fixed stale verify-suite link to reference ace-test-runner.
-
-## [0.9.978] - 2026-03-24
-
-### Changed
-- **ace-tmux v0.11.0**: Removed demo GIF from README to streamline the landing page.
-
-## [0.9.977] - 2026-03-24
-
-### Changed
-- **ace-sim v0.13.0**: Rewrote docs to emphasize chained step feedback and synthesis; aligned tagline with gemspec; added experimental note; removed broken demo GIF reference.
-
-## [0.9.976] - 2026-03-24
-
-### Fixed
-- **ace-task v0.31.0**: Fixed stale CLI flag references in README; corrected skill count in handbook; aligned tagline with gemspec; reworked demo tape with fixture seed data and added status/doctor scenes.
-
-## [0.9.975] - 2026-03-24
-
-### Fixed
-- **ace-search v0.24.0**: Expanded DWIM acronym in README; corrected preset path in getting-started guide; re-recorded demo with shipped `code` preset.
-
-## [0.9.974] - 2026-03-24
-
-### Fixed
-- **ace-review v0.49.0**: Added missing `ace-review-feedback` executable to gemspec; removed stale task-symlink documentation from feedback workflow guide; re-recorded getting-started demo.
-
-## [0.9.973] - 2026-03-24
-
-### Changed
-- **ace-retro v0.16.0**: Removed `task_ref` feature (CLI flag, model field, frontmatter key, display); aligned README tagline with gemspec; re-recorded demo with dynamic ID capture; added VHS backtick quoting for commands with special characters.
-
-## [0.9.972] - 2026-03-23
-
-### Changed
-- **ace-prompt-prep v0.23.0**: Removed stale security documentation with outdated module paths and package references; re-recorded getting-started demo.
-
-## [0.9.971] - 2026-03-23
-
-### Added
-- **ace-llm v0.30.0**: Documented thinking levels and execution presets for CLI providers in README and usage guide; added missing Anthropic aliases.
-
-### Fixed
-- **ace-llm v0.30.0**: Corrected stale Anthropic model aliases from Claude 3 to Claude 4.5 IDs in provider defaults.
-
-### Changed
-- **ace-llm v0.30.0**: Rewrote README to eliminate repetition and highlight aliases, thinking levels, presets, and file-based prompts; removed obsolete migration doc; re-recorded demo tape.
-- **ace-llm-providers-cli v0.27.0**: Updated gemspec description to list all supported CLI providers.
-
-## [0.9.970] - 2026-03-23
-
-### Changed
-- **ace-overseer v0.11.0**: Clarified README intro and How It Works to describe assignment expansion and agent-driven orchestration; re-recorded demo GIF with live dashboard.
-
-## [0.9.969] - 2026-03-23
-
-### Fixed
-- **ace-lint v0.25.0**: Aligned gemspec summary to "Ruby-native" matching README tagline.
-
-### Changed
-- **ace-lint v0.25.0**: Added example output to usage docs, rewrote demo tape with real files and separate scenes, re-recorded demo GIF.
-
-## [0.9.968] - 2026-03-23
-
-### Fixed
-- **ace-idea v0.18.0**: Corrected `--enhance` flag reference to `--llm-enhance` in README.
-
-### Changed
-- **ace-idea v0.18.0**: Aligned gemspec summary, folder documentation, clipboard platform notes, status output example, and re-recorded demo.
-
-## [0.9.967] - 2026-03-23
-
-### Changed
-- **ace-support-core v0.29.0**: Refreshed README with "How It Works" section and `ace-framework` CLI reference.
-- **ace-support-models v0.9.0**: Added `ace-models` and `ace-llm-providers` CLI references and Quick Start section to README.
-- **ace-support-nav v0.25.0**: Added Quick Start section with `ace-nav` CLI examples, handbook footer link, demo tape, and `docs/**/*` gemspec glob.
-
-### Fixed
-- **ace-support-test-helpers v0.13.0**: Corrected `source_code_uri` gemspec metadata to point to package-specific path.
-
-### Technical
-- **ace-support-config v0.9.0**, **ace-support-core v0.29.0**, **ace-support-fs v0.3.0**, **ace-support-mac-clipboard v0.3.0**, **ace-support-markdown v0.3.0**, **ace-support-models v0.9.0**, **ace-support-test-helpers v0.13.0**: Removed phantom `handbook/**/*` glob from gemspecs where no handbook directory exists.
-
-## [0.9.966] - 2026-03-23
-
-### Fixed
-- **ace-demo v0.18.1**: Normalize `settings.env` values to strings and validate map structure in YAML tape parser.
-
-## [0.9.965] - 2026-03-23
-
-### Changed
-- **ace-git-worktree v0.19.0**: Moved Installation to Getting Started, replaced coordination paragraph with ace-overseer integration, clarified workflow references, redesigned demo tape.
-
-## [0.9.964] - 2026-03-23
-
-### Added
-- **ace-git-secrets v0.13.0**: Arch Linux install instructions for gitleaks and git-filter-repo.
-
-### Changed
-- **ace-git-secrets v0.13.0**: Moved Installation to Getting Started, fixed handbook guide links, redesigned demo with scan-rewrite-verify flow.
-
-## [0.9.963] - 2026-03-23
-
-### Added
-- **ace-handbook v0.19.0**: Documented `ace-handbook sync` and `ace-handbook status` CLI commands in README use cases; added release skills to handbook reference.
-
-### Fixed
-- **ace-handbook v0.19.0**: Corrected broken `ace-nav` cross-link and `ace-integration-*` package reference in README.
-
-### Changed
-- **ace-handbook v0.19.0**: Removed stale `mise` prerequisite, re-recorded demo GIF for provider status and sync.
-
-## [0.9.962] - 2026-03-23
-
-### Added
-- **ace-git-commit v0.23.0**: Configuration section in README for model and prompt template overrides.
-
-### Changed
-- **ace-git-commit v0.23.0**: Aligned gemspec, moved Installation to Getting Started, redesigned demo with real sandbox commits.
-
-## [0.9.961] - 2026-03-23
-
-### Changed
-- **ace-git v0.18.0**: Added Installation section, aligned gemspec with README, clarified agent workflow references, expanded handbook template paths, re-recorded demo GIF.
-
-## [0.9.960] - 2026-03-23
-
-### Changed
-- **ace-docs v0.31.0**: Sharpened README "How It Works" with bold labels and inline command names; cleaned up usage guide.
-
-## [0.9.959] - 2026-03-23
-
-### Added
-- **ace-demo v0.18.0**: Tape Format section in README and comprehensive YAML tape tutorial in getting-started with setup/scenes/teardown documentation.
-
-### Changed
-- **ace-demo v0.18.0**: Reframed README and gemspec around proof-of-work evidence delivery; re-recorded demo GIF with sandbox-based YAML tape.
-
-### Fixed
-- **ace-demo v0.18.0**: Corrected `.tape` → `.tape.yml` extension in usage.md to match implementation.
-
-## [0.9.958] - 2026-03-23
-
-### Added
-- **ace-bundle v0.40.2**: Write `.meta.json` compression sidecar for downstream tool integration.
+## [0.9.925] - 2026-03-23
 
 ### Fixed
 - **ace-compressor v0.24.1**: Report true compression gains by reading ace-bundle sidecar stats; skip re-compression of pre-compressed content.
-
-## [0.9.957] - 2026-03-23
+- **ace-demo v0.18.0**: Corrected `.tape` → `.tape.yml` extension in usage.md to match implementation.
+- **ace-demo v0.18.1**: Normalize `settings.env` values to strings and validate map structure in YAML tape parser.
+- **ace-docs v0.30.2**: Fixed README type inference and template/guide protocol resolution (`ace-nav resolve`) so README-specific analysis and update behavior works as configured.
+- **ace-handbook v0.19.0**: Corrected broken `ace-nav` cross-link and `ace-integration-*` package reference in README.
+- **ace-idea v0.18.0**: Corrected `--enhance` flag reference to `--llm-enhance` in README.
+- **ace-lint v0.25.0**: Aligned gemspec summary to "Ruby-native" matching README tagline.
+- **ace-llm v0.30.0**: Corrected stale Anthropic model aliases from Claude 3 to Claude 4.5 IDs in provider defaults.
+- **ace-review v0.49.0**: Added missing `ace-review-feedback` executable to gemspec; removed stale task-symlink documentation from feedback workflow guide; re-recorded getting-started demo.
+- **ace-search v0.24.0**: Expanded DWIM acronym in README; corrected preset path in getting-started guide; re-recorded demo with shipped `code` preset.
+- **ace-support-models v0.8.2**: Normalize provider/model data shapes in cache manager to handle wrapped, array, and flat hash formats.
+- **ace-support-test-helpers v0.13.0**: Corrected `source_code_uri` gemspec metadata to point to package-specific path.
+- **ace-task v0.31.0**: Fixed stale CLI flag references in README; corrected skill count in handbook; aligned tagline with gemspec; reworked demo tape with fixture seed data and added status/doctor scenes.
+- **ace-tmux v0.11.1**: Fixed `ace-tmux window` error handling to rescue the correct `Ace::Tmux::NotInTmuxError` class.
 
 ### Added
 - **ace-bundle v0.40.1**: Display compression statistics in CLI output when compression is active.
-
-## [0.9.956] - 2026-03-23
-
-### Changed
-- **ace-bundle v0.40.0**: Rewrote README and gemspec to describe ace-bundle as a general-purpose source bundler. Updated demo tape with preset caching, protocol loading, and task bundling scenes.
-
-## [0.9.955] - 2026-03-23
-
-### Changed
-- **ace-b36ts v0.13.0**: Added format examples table to README with all 7 encode formats, fixed "6-character" claim, expanded demo tape and re-recorded GIF.
-
-## [0.9.954] - 2026-03-23
-
-### Changed
-- **ace-assign v0.37.0**: Rewrote README with step/substep terminology, status output example, and step catalog links. Fixed residual "phases" terminology in docs. Normalized code formatting via StandardRB.
-
-## [0.9.953] - 2026-03-23
-
-### Changed
-- **ace-test-runner-e2e v0.28.0**: Refreshed package README layout, navigation links, and section flow to align with the current package pattern.
-
-## [0.9.952] - 2026-03-23
-
-### Changed
-- **ace-llm-providers-cli v0.26.2**: Refreshed package README to align with the current package layout pattern and concise package-level guidance.
-
-## [0.9.951] - 2026-03-23
-
-### Added
+- **ace-bundle v0.40.2**: Write `.meta.json` compression sidecar for downstream tool integration.
+- **ace-demo v0.18.0**: Tape Format section in README and comprehensive YAML tape tutorial in getting-started with setup/scenes/teardown documentation.
+- **ace-docs v0.30.0**: Dedicated `readme` document type split from `user` to apply README-specific template/guide without affecting other doc types.
+- **ace-docs v0.30.0**: Template/guide embedding in document analysis - `ace-docs analyze` now resolves and injects the correct template and guide for each document type, and the LLM verifies compliance.
 - **ace-docs v0.30.3**: Classify root README as `root_readme` doc-type and add timeout guard for nav resolution in document analysis.
-
-### Changed
-- **ace-bundle v0.39.1**: Polish README presentation after shine review.
-
-## [0.9.950] - 2026-03-23
-
-### Fixed
-- **ace-support-models v0.8.2**: Normalize provider/model data shapes in cache manager to handle wrapped, array, and flat hash formats.
-
-## [0.9.949] - 2026-03-23
-
-### Fixed
-- **ace-docs v0.30.2**: Fixed README type inference and template/guide protocol resolution (`ace-nav resolve`) so README-specific analysis and update behavior works as configured.
-
-### Changed
-- **ace-docs v0.30.2**: Limited package README matching to `*/README.md`, excluding the repository root README from package README rules.
-
-## [0.9.948] - 2026-03-23
-
-### Changed
-- **ace-overseer v0.10.3**: Refreshed package README layout and navigation to align with the current package pattern.
-- **ace-task v0.30.7**: Refreshed package README layout and navigation to align with the current package pattern.
-- **ace-tmux v0.10.2**: Refreshed package README layout and navigation to align with the current package pattern.
-
-## [0.9.947] - 2026-03-23
-
-### Changed
-- **ace-b36ts v0.12.2**: Refreshed package README layout, quick-link navigation, use-case framing, and section flow to align with the current package pattern.
-
-## [0.9.946] - 2026-03-23
-
-### Changed
-- **ace-demo v0.17.4**: Refreshed package README layout, top-level docs navigation, use-case framing, and quick-start flow to align with the current package pattern.
-
-## [0.9.945] - 2026-03-23
-
-### Changed
-- **ace-sim v0.12.0**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
-
-## [0.9.944] - 2026-03-23
-
-### Changed
-- **ace-compressor v0.24.0**: Refreshed package README layout, integration links, feature framing, and quick-start flow to align with the current package pattern.
-
-## [0.9.943] - 2026-03-23
-
-### Changed
-- **ace-prompt-prep v0.22.3**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
-
-## [0.9.942] - 2026-03-23
-
-### Changed
-- **ace-llm v0.29.5**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
-
-## [0.9.941] - 2026-03-23
-
-### Changed
-- **ace-git-secrets v0.12.2**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
-
-## [0.9.940] - 2026-03-23
-
-### Changed
-- **ace-git v0.17.2**: Refreshed package README layout, quick-link navigation, and section structure to align with the current package pattern.
-
-## [0.9.939] - 2026-03-23
-
-### Changed
-- **ace-lint v0.24.3**: Refreshed package README layout, quick-link navigation, and canonical skill section formatting to match the current package pattern.
-
-## [0.9.938] - 2026-03-23
-
-### Changed
-- **ace-docs v0.30.1**: Refreshed package README structure, quick-link navigation, and use-case-led section flow to align with the current package layout pattern.
-
-## [0.9.937] - 2026-03-23
-
-### Changed
-- **ace-handbook v0.18.3**: Refreshed package README structure and navigation to align with the current package layout pattern.
-
-## [0.9.936] - 2026-03-23
-
-### Changed
-- **ace-test-runner v0.17.2**: Refreshed package README structure and navigation links to align with the current package layout pattern.
-
-## [0.9.935] - 2026-03-23
-
-### Changed
-- **ace-test v0.5.2**: Refreshed package README structure and navigation to align with the current package layout pattern.
-
-## [0.9.934] - 2026-03-23
-
-### Changed
-- **ace-search v0.23.2**: Refreshed package README overview, navigation links, and use-case-led section flow to align with the current package layout pattern.
-
-## [0.9.933] - 2026-03-23
-
-### Changed
-- **ace-support-nav v0.24.0**: Refreshed package README structure, quick-link navigation, and usage/configuration flow for `ace-nav`.
-
-## [0.9.932] - 2026-03-23
-
-### Changed
-- **ace-bundle v0.39.0**: Refreshed package README structure, quick-link navigation, and section flow to align with the current package layout pattern.
-
-## [0.9.931] - 2026-03-23
-
-### Changed
-- **ace-git-commit v0.22.1**: Refreshed package README structure and navigation links to align with the current package layout pattern.
-
-## [0.9.930] - 2026-03-23
-
-### Changed
-- **ace-review v0.48.1**: Refreshed package README overview, quick-link navigation, and section flow to match the current package layout pattern.
-
-## [0.9.929] - 2026-03-23
-
-### Changed
-- **ace-retro v0.15.4**: Refreshed package README overview and navigation to align with the current package layout pattern.
-
-## [0.9.928] - 2026-03-23
-
-### Changed
-- **ace-git-worktree v0.18.3**: Refreshed package README wording and section labels to match the current package layout pattern.
-
-## [0.9.927] - 2026-03-23
+- **ace-git-commit v0.23.0**: Configuration section in README for model and prompt template overrides.
+- **ace-git-secrets v0.13.0**: Arch Linux install instructions for gitleaks and git-filter-repo.
+- **ace-handbook v0.19.0**: Documented `ace-handbook sync` and `ace-handbook status` CLI commands in README use cases; added release skills to handbook reference.
+- **ace-llm v0.30.0**: Documented thinking levels and execution presets for CLI providers in README and usage guide; added missing Anthropic aliases.
 
 ### Changed
 - **ace-assign v0.36.13**: Refreshed package README to the current layout pattern and synchronized canonical skill/footer references.
-
-## [0.9.926] - 2026-03-23
-
-### Changed
-- **ace-idea v0.17.4**: Refreshed package README structure to the new layout pattern with logo/badges header, quick links, and use-case-led content.
-
-## [0.9.925] - 2026-03-23
-
-### Added
-- **ace-docs v0.30.0**: Template/guide embedding in document analysis - `ace-docs analyze` now resolves and injects the correct template and guide for each document type, and the LLM verifies compliance.
-- **ace-docs v0.30.0**: Dedicated `readme` document type split from `user` to apply README-specific template/guide without affecting other doc types.
-
-### Changed
+- **ace-assign v0.37.0**: Rewrote README with step/substep terminology, status output example, and step catalog links. Fixed residual "phases" terminology in docs. Normalized code formatting via StandardRB.
+- **ace-b36ts v0.12.2**: Refreshed package README layout, quick-link navigation, use-case framing, and section flow to align with the current package pattern.
+- **ace-b36ts v0.13.0**: Added format examples table to README with all 7 encode formats, fixed "6-character" claim, expanded demo tape and re-recorded GIF.
+- **ace-bundle v0.39.0**: Refreshed package README structure, quick-link navigation, and section flow to align with the current package layout pattern.
+- **ace-bundle v0.39.1**: Polish README presentation after shine review.
+- **ace-bundle v0.40.0**: Rewrote README and gemspec to describe ace-bundle as a general-purpose source bundler. Updated demo tape with preset caching, protocol loading, and task bundling scenes.
+- **ace-compressor v0.24.0**: Refreshed package README layout, integration links, feature framing, and quick-start flow to align with the current package pattern.
+- **ace-demo v0.17.4**: Refreshed package README layout, top-level docs navigation, use-case framing, and quick-start flow to align with the current package pattern.
+- **ace-demo v0.18.0**: Reframed README and gemspec around proof-of-work evidence delivery; re-recorded demo GIF with sandbox-based YAML tape.
 - **ace-docs v0.30.0**: Rewrote README template and documentation guide to match the proven ace-task pattern (logo, nav row, intro paragraph, Use Cases with inline skill/CLI refs).
+- **ace-docs v0.30.1**: Refreshed package README structure, quick-link navigation, and use-case-led section flow to align with the current package layout pattern.
+- **ace-docs v0.30.2**: Limited package README matching to `*/README.md`, excluding the repository root README from package README rules.
+- **ace-docs v0.31.0**: Sharpened README "How It Works" with bold labels and inline command names; cleaned up usage guide.
+- **ace-git v0.17.2**: Refreshed package README layout, quick-link navigation, and section structure to align with the current package pattern.
+- **ace-git v0.18.0**: Added Installation section, aligned gemspec with README, clarified agent workflow references, expanded handbook template paths, re-recorded demo GIF.
+- **ace-git-commit v0.22.1**: Refreshed package README structure and navigation links to align with the current package layout pattern.
+- **ace-git-commit v0.23.0**: Aligned gemspec, moved Installation to Getting Started, redesigned demo with real sandbox commits.
+- **ace-git-secrets v0.12.2**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+- **ace-git-secrets v0.13.0**: Moved Installation to Getting Started, fixed handbook guide links, redesigned demo with scan-rewrite-verify flow.
+- **ace-git-worktree v0.18.3**: Refreshed package README wording and section labels to match the current package layout pattern.
+- **ace-git-worktree v0.19.0**: Moved Installation to Getting Started, replaced coordination paragraph with ace-overseer integration, clarified workflow references, redesigned demo tape.
+- **ace-handbook v0.18.3**: Refreshed package README structure and navigation to align with the current package layout pattern.
+- **ace-handbook v0.19.0**: Removed stale `mise` prerequisite, re-recorded demo GIF for provider status and sync.
+- **ace-idea v0.17.4**: Refreshed package README structure to the new layout pattern with logo/badges header, quick links, and use-case-led content.
+- **ace-idea v0.18.0**: Aligned gemspec summary, folder documentation, clipboard platform notes, status output example, and re-recorded demo.
+- **ace-lint v0.24.3**: Refreshed package README layout, quick-link navigation, and canonical skill section formatting to match the current package pattern.
+- **ace-lint v0.25.0**: Added example output to usage docs, rewrote demo tape with real files and separate scenes, re-recorded demo GIF.
+- **ace-llm v0.29.5**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+- **ace-llm v0.30.0**: Rewrote README to eliminate repetition and highlight aliases, thinking levels, presets, and file-based prompts; removed obsolete migration doc; re-recorded demo tape.
+- **ace-llm-providers-cli v0.26.2**: Refreshed package README to align with the current package layout pattern and concise package-level guidance.
+- **ace-llm-providers-cli v0.27.0**: Updated gemspec description to list all supported CLI providers.
+- **ace-overseer v0.10.3**: Refreshed package README layout and navigation to align with the current package pattern.
+- **ace-overseer v0.11.0**: Clarified README intro and How It Works to describe assignment expansion and agent-driven orchestration; re-recorded demo GIF with live dashboard.
+- **ace-prompt-prep v0.22.3**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+- **ace-prompt-prep v0.23.0**: Removed stale security documentation with outdated module paths and package references; re-recorded getting-started demo.
+- **ace-retro v0.15.4**: Refreshed package README overview and navigation to align with the current package layout pattern.
+- **ace-retro v0.16.0**: Removed `task_ref` feature (CLI flag, model field, frontmatter key, display); aligned README tagline with gemspec; re-recorded demo with dynamic ID capture; added VHS backtick quoting for commands with special characters.
+- **ace-review v0.48.1**: Refreshed package README overview, quick-link navigation, and section flow to match the current package layout pattern.
+- **ace-search v0.23.2**: Refreshed package README overview, navigation links, and use-case-led section flow to align with the current package layout pattern.
+- **ace-sim v0.12.0**: Refreshed package README layout, quick-link navigation, and section flow to align with the current package pattern.
+- **ace-sim v0.13.0**: Rewrote docs to emphasize chained step feedback and synthesis; aligned tagline with gemspec; added experimental note; removed broken demo GIF reference.
+- **ace-support-core v0.29.0**: Refreshed README with "How It Works" section and `ace-framework` CLI reference.
+- **ace-support-models v0.9.0**: Added `ace-models` and `ace-llm-providers` CLI references and Quick Start section to README.
+- **ace-support-nav v0.24.0**: Refreshed package README structure, quick-link navigation, and usage/configuration flow for `ace-nav`.
+- **ace-support-nav v0.25.0**: Added Quick Start section with `ace-nav` CLI examples, handbook footer link, demo tape, and `docs/**/*` gemspec glob.
+- **ace-task v0.30.7**: Refreshed package README layout and navigation to align with the current package pattern.
+- **ace-test v0.5.2**: Refreshed package README structure and navigation to align with the current package layout pattern.
+- **ace-test v0.6.0**: Refreshed README tagline and fixed stale verify-suite link to reference ace-test-runner.
+- **ace-test-runner v0.17.2**: Refreshed package README structure and navigation links to align with the current package layout pattern.
+- **ace-test-runner v0.18.0**: Updated README and gemspec to highlight Minitest wrapping; streamlined handbook; re-recorded demo with real test runs.
+- **ace-test-runner-e2e v0.28.0**: Refreshed package README layout, navigation links, and section flow to align with the current package pattern.
+- **ace-test-runner-e2e v0.29.0**: Documented `ace-test-e2e-sh` in usage reference, re-recorded demo with real suite execution at 8x playback, fixed gemspec URIs.
+- **ace-tmux v0.10.2**: Refreshed package README layout and navigation to align with the current package pattern.
+- **ace-tmux v0.11.0**: Removed demo GIF from README to streamline the landing page.
+
+### Technical
+- **ace-support-config v0.9.0**, **ace-support-core v0.29.0**, **ace-support-fs v0.3.0**, **ace-support-mac-clipboard v0.3.0**, **ace-support-markdown v0.3.0**, **ace-support-models v0.9.0**, **ace-support-test-helpers v0.13.0**: Removed phantom `handbook/**/*` glob from gemspecs where no handbook directory exists.
 
 ## [0.9.924] - 2026-03-22
 
