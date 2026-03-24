@@ -17,14 +17,13 @@ ace-docs:
 
 ## Installation
 
-`ace-test-runner` is available in the ACE repository through command tooling.
+`ace-test-runner` is part of this monorepo. From repo root:
 
 ```bash
-cd /path/to/ace-t.unq
-bundle exec ace-test
+ace-test --help
 ```
 
-If the gem is installed globally, you can run `ace-test` directly.
+If the command resolves and prints help, your setup is ready.
 
 ## Running your first tests
 
