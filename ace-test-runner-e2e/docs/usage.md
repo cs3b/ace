@@ -99,6 +99,27 @@ ace-test-e2e-suite --exclude-tags deep
 ace-test-e2e-suite --cli-args dangerously-skip-permissions
 ```
 
+## `ace-test-e2e-sh`
+
+```bash
+ace-test-e2e-sh <test-dir> [command...]
+```
+
+Opens a shell or runs a command inside an E2E sandbox directory. Useful for inspecting sandbox state, running ad-hoc commands against test fixtures, or debugging failed scenarios.
+
+- `test-dir` (required): sandbox directory path (must be under `.ace-local/test-e2e/`)
+- `command` (optional): command to execute; omit for an interactive bash session
+
+The tool validates that the path is inside `.ace-local/test-e2e/` and sets `PROJECT_ROOT_PATH` to the sandbox directory.
+
+### Examples
+
+```bash
+ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports bash
+ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports git status
+ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports ls results/
+```
+
 ## Notes
 
 - `ace-test-e2e` targets package-local TS scenarios and reads scenario metadata from `scenario.yml`.

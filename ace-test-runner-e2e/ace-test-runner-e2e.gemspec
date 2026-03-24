@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Agent-executed end-to-end tests with reproducible sandboxes and structured reporting"
   spec.description = "Runs package E2E scenarios through agents with reproducible setup, " \
                      "sandbox isolation, and structured reports for reliable validation workflows."
-  spec.homepage = "https://github.com/cs3b/ace/tree/main/ace-test-runner-e2e"
+  spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
@@ -39,5 +39,5 @@ Gem::Specification.new do |spec|
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-test-runner-e2e/"
-  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-test-runner-e2e/CHANGELOG.md"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-test-runner-e2e/CHANGELOG.md"
 end

@@ -1,17 +1,23 @@
 ---
-description: Run ace-test-e2e on TS-LINT-001
+# Record with: ace-demo record docs/demo/ace-test-runner-e2e-getting-started.tape.yml --playback_speed 8x
+description: Run a real E2E scenario with ace-test-e2e
 tags:
-- e2e
+- ace-test-runner-e2e
 - docs
+- getting-started
 settings:
-  font_size: 16
+  font_size: 10
   width: 960
-  height: 480
+  height: 640
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
-- name: Main flow
+- name: Switch to project root and run suite
   commands:
-  - type: ace-test-e2e ace-lint TS-LINT-001
+  - type: cd $PROJECT_ROOT_PATH && clear
     sleep: 2s
+  - type: ace-test-e2e-suite --progress --parallel 16
+    sleep: 120s
 teardown:
 - cleanup
