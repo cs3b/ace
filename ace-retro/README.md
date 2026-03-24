@@ -3,7 +3,7 @@
 
   Lightweight retrospective management — create, tag, and archive retros from the command line.
 
-  <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
 
   <a href="https://rubygems.org/gems/ace-retro"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-retro.svg" /></a>
