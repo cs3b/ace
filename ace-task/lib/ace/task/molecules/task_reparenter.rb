@@ -209,7 +209,7 @@ module Ace
           tmp_path = "#{file_path}.tmp.#{Process.pid}"
           File.write(tmp_path, new_content)
           File.rename(tmp_path, file_path)
-        rescue StandardError
+        rescue
           File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
           raise
         end

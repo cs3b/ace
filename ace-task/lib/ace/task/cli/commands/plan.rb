@@ -91,7 +91,7 @@ module Ace
             resolved = expanded.select { |path| File.file?(path) }
 
             missing = expanded - resolved
-            missing.each { |path| $stderr.puts "Warning: context file not found: #{path}" } if missing.any?
+            missing.each { |path| warn "Warning: context file not found: #{path}" } if missing.any?
 
             resolved
           end

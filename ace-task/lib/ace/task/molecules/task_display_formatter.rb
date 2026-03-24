@@ -200,15 +200,15 @@ module Ace
           priority_sym = PRIORITY_LABELS[task.priority] || ""
           priority_color = PRIORITY_COLORS[task.priority]
           priority_prefix = if priority_sym.empty?
-                              "  "
-                            elsif priority_color
-                              "#{c.colorize(priority_sym, priority_color)} "
-                            else
-                              "#{priority_sym} "
-                            end
+            "  "
+          elsif priority_color
+            "#{c.colorize(priority_sym, priority_color)} "
+          else
+            "#{priority_sym} "
+          end
           id_str = c.colorize(task.id, c::DIM)
           subtask_str = task.has_subtasks? ? c.colorize(" \u203a#{task.subtasks.length}", c::DIM) : ""
-          tags_str = task.tags && task.tags.any? ? c.colorize(" [#{task.tags.join(", ")}]", c::DIM) : ""
+          tags_str = (task.tags && task.tags.any?) ? c.colorize(" [#{task.tags.join(", ")}]", c::DIM) : ""
           folder_str = task.special_folder ? c.colorize(" (#{task.special_folder})", c::DIM) : ""
 
           "#{status_sym} #{priority_prefix}#{id_str}  #{task.title}#{subtask_str}#{tags_str}#{folder_str}"

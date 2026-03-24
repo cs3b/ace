@@ -90,7 +90,7 @@ module Ace
         end
 
         def generate_slugs(title)
-          { folder: generate_folder_slug(title), file: generate_file_slug(title) }
+          {folder: generate_folder_slug(title), file: generate_file_slug(title)}
         end
 
         def generate_llm_slugs(title)
@@ -100,8 +100,8 @@ module Ace
 
           folder_slug = result[:folder_slug] || generate_folder_slug(title)
           file_slug = result[:file_slug] || generate_file_slug(title)
-          { folder: folder_slug, file: file_slug }
-        rescue StandardError
+          {folder: folder_slug, file: file_slug}
+        rescue
           nil
         end
 

@@ -25,13 +25,13 @@ module Ace
         def self.scope_consistent?(status, special_folder)
           issues = []
           if terminal_status?(status) && special_folder != "_archive"
-            issues << { type: :warning, message: "Task with terminal status '#{status}' not in _archive/" }
+            issues << {type: :warning, message: "Task with terminal status '#{status}' not in _archive/"}
           end
           if special_folder == "_archive" && !terminal_status?(status) && status
-            issues << { type: :warning, message: "Task in _archive/ but status is '#{status}' (expected terminal status)" }
+            issues << {type: :warning, message: "Task in _archive/ but status is '#{status}' (expected terminal status)"}
           end
           if special_folder == "_maybe" && terminal_status?(status)
-            issues << { type: :warning, message: "Task in _maybe/ with terminal status '#{status}' (should be in _archive/)" }
+            issues << {type: :warning, message: "Task in _maybe/ with terminal status '#{status}' (should be in _archive/)"}
           end
           issues
         end

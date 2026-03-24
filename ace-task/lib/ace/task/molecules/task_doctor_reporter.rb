@@ -53,10 +53,10 @@ module Ace
         def self.format_fix_results(fix_results, colors: true)
           output = []
 
-          if fix_results[:dry_run]
-            output << "\n#{colorize("#{ICONS[:search]} DRY RUN MODE", :cyan, colors)} - No changes applied"
+          output << if fix_results[:dry_run]
+            "\n#{colorize("#{ICONS[:search]} DRY RUN MODE", :cyan, colors)} - No changes applied"
           else
-            output << "\n#{colorize("#{ICONS[:fix]} Auto-Fix Applied", :green, colors)}"
+            "\n#{colorize("#{ICONS[:fix]} Auto-Fix Applied", :green, colors)}"
           end
 
           if fix_results[:fixed] > 0
@@ -126,14 +126,14 @@ module Ace
             output = []
 
             health_status = if results[:health_score] >= 90
-                              colorize("Excellent", :green, colors)
-                            elsif results[:health_score] >= 70
-                              colorize("Good", :yellow, colors)
-                            elsif results[:health_score] >= 50
-                              colorize("Fair", :yellow, colors)
-                            else
-                              colorize("Poor", :red, colors)
-                            end
+              colorize("Excellent", :green, colors)
+            elsif results[:health_score] >= 70
+              colorize("Good", :yellow, colors)
+            elsif results[:health_score] >= 50
+              colorize("Fair", :yellow, colors)
+            else
+              colorize("Poor", :red, colors)
+            end
 
             output << "Health: #{health_status} (#{results[:health_score]}/100)"
 
@@ -163,10 +163,10 @@ module Ace
             if results[:issues]
               results[:issues].each do |issue|
                 category = case issue[:type]
-                           when :error then :errors
-                           when :warning then :warnings
-                           else :info
-                           end
+                when :error then :errors
+                when :warning then :warnings
+                else :info
+                end
                 clean[category] << {
                   message: issue[:message],
                   location: issue[:location]
@@ -212,22 +212,22 @@ module Ace
 
           def format_health_score(score, colors)
             color = if score >= 90
-                       :green
-                     elsif score >= 70
-                       :yellow
-                     else
-                       :red
-                     end
+              :green
+            elsif score >= 70
+              :yellow
+            else
+              :red
+            end
 
             status = if score >= 90
-                       "Excellent"
-                     elsif score >= 70
-                       "Good"
-                     elsif score >= 50
-                       "Fair"
-                     else
-                       "Poor"
-                     end
+              "Excellent"
+            elsif score >= 70
+              "Good"
+            elsif score >= 50
+              "Fair"
+            else
+              "Poor"
+            end
 
             "#{colorize("#{score}/100", color, colors)} (#{status})"
           end

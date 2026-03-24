@@ -39,7 +39,7 @@ module Ace
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           creator.create(title, status: status, priority: priority, tags: tags,
-                         dependencies: dependencies, use_llm_slug: use_llm_slug, estimate: estimate)
+            dependencies: dependencies, use_llm_slug: use_llm_slug, estimate: estimate)
         end
 
         # Show (load) a single task by reference, including subtasks.
@@ -176,9 +176,7 @@ module Ace
 
         # Get the root directory.
         # @return [String] Absolute path to tasks root
-        def root_dir
-          @root_dir
-        end
+        attr_reader :root_dir
 
         private
 
@@ -209,7 +207,7 @@ module Ace
           when "id"
             tasks.sort_by(&:id)
           when "priority"
-            priority_order = { "critical" => 0, "high" => 1, "medium" => 2, "low" => 3 }
+            priority_order = {"critical" => 0, "high" => 1, "medium" => 2, "low" => 3}
             tasks.sort_by { |t| priority_order[t.priority] || 99 }
           when "created"
             tasks.sort_by { |t| t.created_at || Time.at(0) }
@@ -276,7 +274,11 @@ module Ace
           case raw
           when Time then raw
           when DateTime then raw.to_time
-          else Time.parse(raw.to_s) rescue nil
+          else begin
+            Time.parse(raw.to_s)
+          rescue
+            nil
+          end
           end
         end
 
@@ -312,7 +314,7 @@ module Ace
 
           unless Atoms::TaskValidationRules.terminal_status?(parent.status.to_s.downcase)
             Ace::Support::Items::Molecules::FieldUpdater.update(
-              parent.file_path, set: { "status" => "done" }
+              parent.file_path, set: {"status" => "done"}
             )
             parent = loader.load(parent.path, id: parent.id, special_folder: parent.special_folder)
           end

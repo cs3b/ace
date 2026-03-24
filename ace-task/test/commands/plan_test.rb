@@ -13,7 +13,7 @@ class TaskPlanCommandTest < AceTaskTestCase
     def initialize(model:, cli_args: nil)
       @model = model
       @cli_args = cli_args
-      self.class.last_init_kwargs = { model: model, cli_args: cli_args }
+      self.class.last_init_kwargs = {model: model, cli_args: cli_args}
     end
 
     def prompt_paths
@@ -120,7 +120,8 @@ class TaskPlanCommandTest < AceTaskTestCase
 
   def test_backend_failure_is_reported
     failing_class = Class.new do
-      def initialize(model:, cli_args: nil); end
+      def initialize(model:, cli_args: nil)
+      end
 
       def prompt_paths
         nil
@@ -150,13 +151,13 @@ class TaskPlanCommandTest < AceTaskTestCase
     begin
       Ace::Task::TaskCLI.start(args)
     rescue Ace::Support::Cli::Error => e
-      $stderr.puts e.message
+      warn e.message
       exit_code = e.exit_code
     rescue SystemExit => e
       exit_code = e.status
     end
 
-    { stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code }
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
   ensure
     $stdout = old_stdout
     $stderr = old_stderr
@@ -165,7 +166,7 @@ class TaskPlanCommandTest < AceTaskTestCase
   def inject_bundle_files(task_file, files)
     content = File.read(task_file)
     frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
-    frontmatter["bundle"] = { "files" => files }
+    frontmatter["bundle"] = {"files" => files}
 
     File.write(task_file, "#{frontmatter.to_yaml}---\n\n#{body}")
   end

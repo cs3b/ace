@@ -243,7 +243,7 @@ class TaskPlanPromptBuilderTest < AceTaskTestCase
 
   def stub_ace_bundle(builder, content: "stubbed ace-bundle output", recorder: nil)
     builder.define_singleton_method(:run_ace_bundle) do |input, output_path|
-      recorder&.push({ input: input, output_path: output_path })
+      recorder&.push({input: input, output_path: output_path})
       File.write(output_path, content)
     end
     yield

@@ -135,7 +135,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_update_sets_fields
     task = @manager.create("Updatable task")
 
-    updated = @manager.update(task.id, set: { "status" => "done" })
+    updated = @manager.update(task.id, set: {"status" => "done"})
 
     assert_equal "done", updated.status
   end
@@ -143,7 +143,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_update_adds_to_arrays
     task = @manager.create("Taggable task", tags: ["api"])
 
-    updated = @manager.update(task.id, add: { "tags" => "urgent" })
+    updated = @manager.update(task.id, add: {"tags" => "urgent"})
 
     assert_includes updated.tags, "api"
     assert_includes updated.tags, "urgent"
@@ -152,7 +152,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_update_removes_from_arrays
     task = @manager.create("Removable task", tags: ["api", "urgent"])
 
-    updated = @manager.update(task.id, remove: { "tags" => "urgent" })
+    updated = @manager.update(task.id, remove: {"tags" => "urgent"})
 
     assert_includes updated.tags, "api"
     refute_includes updated.tags, "urgent"
@@ -161,13 +161,13 @@ class TaskManagerTest < AceTaskTestCase
   def test_update_with_nested_dot_key
     task = @manager.create("Nested update task")
 
-    updated = @manager.update(task.id, set: { "update.frequency" => "weekly" })
+    updated = @manager.update(task.id, set: {"update.frequency" => "weekly"})
 
     assert_equal "weekly", updated.metadata.dig("update", "frequency")
   end
 
   def test_update_returns_nil_for_unknown_ref
-    result = @manager.update("zzz", set: { "status" => "done" })
+    result = @manager.update("zzz", set: {"status" => "done"})
 
     assert_nil result
   end
@@ -223,7 +223,7 @@ class TaskManagerTest < AceTaskTestCase
     assert_match(/Archived parent task #{parent.id}/, @manager.last_update_note)
 
     archived_parent_dirs = Dir.glob(File.join(@tmpdir, "_archive", "**", "#{parent.id}-*"))
-                              .select { |path| File.directory?(path) }
+      .select { |path| File.directory?(path) }
     assert_equal 1, archived_parent_dirs.length
 
     reloaded_parent = @manager.show(parent.id)

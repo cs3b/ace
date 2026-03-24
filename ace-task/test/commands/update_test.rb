@@ -135,7 +135,10 @@ class UpdateCommandTest < AceTaskTestCase
 
   def test_update_with_git_commit_calls_committer
     commit_args = nil
-    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+      commit_args = kwargs
+      true
+    }) do
       capture_io do
         Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done", "--git-commit"])
       end

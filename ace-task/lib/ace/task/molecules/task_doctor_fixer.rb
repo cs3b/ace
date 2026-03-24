@@ -141,7 +141,10 @@ module Ace
           # Extract ID from folder name using task pattern (xxx.t.yyy)
           dir_name = File.basename(File.dirname(file_path))
           id_and_slug = TaskScanner::TASK_ID_EXTRACTOR.call(dir_name)
-          return (@skipped_count += 1; false) unless id_and_slug
+          unless id_and_slug
+            return (@skipped_count += 1
+                    false)
+          end
 
           id = id_and_slug[0]
           update_frontmatter_field(file_path, "id", id, "Added missing 'id' field from folder name")
@@ -168,10 +171,10 @@ module Ace
             dir_name = File.basename(File.dirname(file_path))
             id_and_slug = TaskScanner::TASK_ID_EXTRACTOR.call(dir_name)
             title = if id_and_slug
-                      id_and_slug[1].tr("-", " ").capitalize
-                    else
-                      "Untitled"
-                    end
+              id_and_slug[1].tr("-", " ").capitalize
+            else
+              "Untitled"
+            end
           end
 
           update_frontmatter_field(file_path, "title", title, "Added missing 'title' field: '#{title}'")
@@ -199,11 +202,11 @@ module Ace
           end
 
           created_at = if id && Atoms::TaskValidationRules.valid_id?(id)
-                         raw = Atoms::TaskIdFormatter.reconstruct(id)
-                         Ace::B36ts.decode(raw).strftime("%Y-%m-%d %H:%M:%S")
-                       else
-                         Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
-                       end
+            raw = Atoms::TaskIdFormatter.reconstruct(id)
+            Ace::B36ts.decode(raw).strftime("%Y-%m-%d %H:%M:%S")
+          else
+            Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
+          end
 
           update_frontmatter_field(file_path, "created_at", created_at, "Added missing 'created_at' field decoded from ID")
         end
@@ -224,7 +227,7 @@ module Ace
           move_issue_to_archive(file_path, from_maybe: true)
         end
 
-        BACKUP_EXTENSIONS = /\.(backup\.\w+|tmp)$|~$/.freeze
+        BACKUP_EXTENSIONS = /\.(backup\.\w+|tmp)$|~$/
 
         def fix_stale_backup(file_path)
           return false unless file_path && File.exist?(file_path)
@@ -307,8 +310,11 @@ module Ace
 
           # Find spec file
           spec_files = Dir.glob(File.join(dir_path, "*.s.md"))
-                          .reject { |f| f.end_with?(".idea.s.md") }
-          return (@skipped_count += 1; false) if spec_files.empty?
+            .reject { |f| f.end_with?(".idea.s.md") }
+          if spec_files.empty?
+            return (@skipped_count += 1
+                    false)
+          end
 
           spec_file = spec_files.first
 
@@ -340,7 +346,7 @@ module Ace
           log_fix(dir_path, "Renamed folder to #{new_folder_name}")
           @fixed_count += 1
           true
-        rescue StandardError => e
+        rescue => e
           log_fix(e.message, "Error: #{e.class}")
           @skipped_count += 1
           false
@@ -360,10 +366,10 @@ module Ace
         def extract_slug_from_folder_name(name)
           # Remove task ID prefix patterns
           slug = name.sub(/^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}-/, "") # Remove xxx.t.yyy-
-                   .sub(/^\d+-\d+-\d+-/, "")                        # Remove NNN-YYYYMMDD-HHMMSS-
-                   .sub(/^\d{7,}-/, "")                              # Remove 7+ digit prefix
-                   .sub(/^\d{6}-/, "")                               # Remove 6-digit date prefix
-                   .sub(/^\d+-/, "")                                 # Remove issue number prefix
+            .sub(/^\d+-\d+-\d+-/, "")                        # Remove NNN-YYYYMMDD-HHMMSS-
+            .sub(/^\d{7,}-/, "")                              # Remove 7+ digit prefix
+            .sub(/^\d{6}-/, "")                               # Remove 6-digit date prefix
+            .sub(/^\d+-/, "")                                 # Remove issue number prefix
 
           if slug.empty? || slug.match?(/^\d+$/)
             slug = name.gsub(/[^a-zA-Z0-9]+/, "-").downcase
@@ -389,7 +395,7 @@ module Ace
           log_fix(file_path, description)
           @fixed_count += 1
           true
-        rescue StandardError => e
+        rescue => e
           log_fix(e.message, "Error: #{e.class}")
           @skipped_count += 1
           false
@@ -409,7 +415,7 @@ module Ace
 
           @fixed_count += 1
           true
-        rescue StandardError => e
+        rescue => e
           log_fix(e.message, "Error: #{e.class}")
           @skipped_count += 1
           false
@@ -425,7 +431,10 @@ module Ace
 
         def move_issue_to_archive(file_path, from_maybe:)
           task_file = File.directory?(file_path) ? find_primary_spec(file_path) : file_path
-          return (@skipped_count += 1; false) unless task_file && File.exist?(task_file)
+          unless task_file && File.exist?(task_file)
+            return (@skipped_count += 1
+                    false)
+          end
 
           task_dir = File.dirname(task_file)
           content = File.read(task_file)
@@ -458,7 +467,7 @@ module Ace
           log_fix(source_dir, description)
           @fixed_count += 1
           true
-        rescue StandardError => e
+        rescue => e
           log_fix(e.message, "Error: #{e.class}")
           @skipped_count += 1
           false
@@ -466,8 +475,8 @@ module Ace
 
         def find_primary_spec(dir_path)
           Dir.glob(File.join(dir_path, "*.s.md"))
-             .reject { |path| path.end_with?(".idea.s.md") }
-             .first
+            .reject { |path| path.end_with?(".idea.s.md") }
+            .first
         end
 
         def parse_archive_time(frontmatter)

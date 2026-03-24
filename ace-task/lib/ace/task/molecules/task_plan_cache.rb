@@ -74,7 +74,7 @@ module Ace
             }
           end
 
-          body = +"#{YAML.dump(metadata)}---\n\n"
+          body = "#{YAML.dump(metadata)}---\n\n"
           body << content.to_s.rstrip
           body << "\n"
           File.write(plan_path, body)
@@ -118,7 +118,7 @@ module Ace
           return [] unless Dir.exist?(cache_dir)
 
           Dir.glob(File.join(cache_dir, "*-plan.md"))
-             .select { |path| valid_plan_file?(path) }
+            .select { |path| valid_plan_file?(path) }
         end
 
         def valid_plan_file?(path)
@@ -129,7 +129,7 @@ module Ace
           content = File.read(plan_path)
           frontmatter, = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
           frontmatter.is_a?(Hash) ? frontmatter : nil
-        rescue StandardError
+        rescue
           nil
         end
 

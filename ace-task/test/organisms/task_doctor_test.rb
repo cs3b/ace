@@ -125,7 +125,7 @@ class TaskDoctorTest < AceTaskTestCase
   def test_auto_fixable_returns_true_for_fixable_issue
     with_tasks_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.md" }
+      issue = {type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.md"}
       assert doctor.auto_fixable?(issue)
     end
   end
@@ -133,7 +133,7 @@ class TaskDoctorTest < AceTaskTestCase
   def test_auto_fixable_returns_false_for_info
     with_tasks_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :info, message: "Stale backup file (safe to delete)", location: "/tmp/test.md" }
+      issue = {type: :info, message: "Stale backup file (safe to delete)", location: "/tmp/test.md"}
       refute doctor.auto_fixable?(issue)
     end
   end
@@ -141,7 +141,7 @@ class TaskDoctorTest < AceTaskTestCase
   def test_auto_fixable_returns_false_for_unknown_issue
     with_tasks_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :error, message: "Some unrecognized issue" }
+      issue = {type: :error, message: "Some unrecognized issue"}
       refute doctor.auto_fixable?(issue)
     end
   end

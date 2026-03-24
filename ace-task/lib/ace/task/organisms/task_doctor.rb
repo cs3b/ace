@@ -36,7 +36,7 @@ module Ace
             return {
               valid: false,
               health_score: 0,
-              issues: [{ type: :error, message: "Tasks root directory not found: #{@root_path}" }],
+              issues: [{type: :error, message: "Tasks root directory not found: #{@root_path}"}],
               stats: @stats,
               duration: 0,
               root_path: @root_path
@@ -166,24 +166,24 @@ module Ace
           Dir.glob(File.join(@root_path, "*")).each do |path|
             next unless File.directory?(path)
 
-            if File.basename(path).start_with?("_")
-              count += Dir.glob(File.join(path, "*")).count { |p| File.directory?(p) }
+            count += if File.basename(path).start_with?("_")
+              Dir.glob(File.join(path, "*")).count { |p| File.directory?(p) }
             else
-              count += 1
+              1
             end
           end
           count
         end
 
         def add_issue(type, message, location = nil)
-          issue = { type: type, message: message }
+          issue = {type: type, message: message}
           issue[:location] = location if location
           @issues << issue
 
           case type
-          when :error   then @stats[:errors] += 1
+          when :error then @stats[:errors] += 1
           when :warning then @stats[:warnings] += 1
-          when :info    then @stats[:info] += 1
+          when :info then @stats[:info] += 1
           end
         end
 

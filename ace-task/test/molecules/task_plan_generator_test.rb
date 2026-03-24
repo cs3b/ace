@@ -45,13 +45,13 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_returns_text_from_backend
-    @client.next_response = { text: "# Generated Plan\n" }
+    @client.next_response = {text: "# Generated Plan\n"}
     result = @generator.generate(task: @task, context_files: [])
     assert_equal "# Generated Plan", result
   end
 
   def test_generate_raises_when_backend_returns_empty
-    @client.next_response = { text: "  " }
+    @client.next_response = {text: "  "}
     error = assert_raises(Ace::Support::Cli::Error) do
       @generator.generate(task: @task, context_files: [])
     end
@@ -60,7 +60,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_with_cache_dir_uses_file_based_prompts
-    @client.next_response = { text: "# Plan from files\n" }
+    @client.next_response = {text: "# Plan from files\n"}
     cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")
 
     result = @generator.generate(task: @task, context_files: [], cache_dir: cache_dir)
@@ -72,7 +72,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_threads_cli_args_to_file_based_query
-    @client.next_response = { text: "# Plan from files\n" }
+    @client.next_response = {text: "# Plan from files\n"}
     generator = Ace::Task::Molecules::TaskPlanGenerator.new(
       model: "gemini:flash-latest",
       client: @client,
@@ -86,7 +86,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_with_cache_dir_stores_prompt_paths
-    @client.next_response = { text: "# Plan\n" }
+    @client.next_response = {text: "# Plan\n"}
     cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")
 
     @generator.generate(task: @task, context_files: [], cache_dir: cache_dir)
@@ -97,7 +97,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_without_cache_dir_uses_inline_prompt
-    @client.next_response = { text: "# Inline plan\n" }
+    @client.next_response = {text: "# Inline plan\n"}
 
     result = @generator.generate(task: @task, context_files: [])
 
@@ -109,7 +109,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_generate_threads_cli_args_to_inline_query
-    @client.next_response = { text: "# Inline plan\n" }
+    @client.next_response = {text: "# Inline plan\n"}
     generator = Ace::Task::Molecules::TaskPlanGenerator.new(
       model: "gemini:flash-latest",
       client: @client,
@@ -122,7 +122,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
   end
 
   def test_prompt_files_written_to_prompts_subdirectory
-    @client.next_response = { text: "# Plan\n" }
+    @client.next_response = {text: "# Plan\n"}
     cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")
 
     @generator.generate(task: @task, context_files: [], cache_dir: cache_dir)

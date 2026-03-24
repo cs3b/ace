@@ -26,25 +26,25 @@ module Ace
           DESC
 
           example [
-            '                          # Run all health checks',
-            '--auto-fix                # Auto-fix safe issues',
-            '--auto-fix --dry-run      # Preview fixes without applying',
-            '--auto-fix-with-agent     # Auto-fix then launch agent for remaining',
-            '--check frontmatter       # Run specific check (frontmatter|structure|scope)',
-            '--json                    # Output as JSON',
-            '--verbose                 # Show all warnings'
+            "                          # Run all health checks",
+            "--auto-fix                # Auto-fix safe issues",
+            "--auto-fix --dry-run      # Preview fixes without applying",
+            "--auto-fix-with-agent     # Auto-fix then launch agent for remaining",
+            "--check frontmatter       # Run specific check (frontmatter|structure|scope)",
+            "--json                    # Output as JSON",
+            "--verbose                 # Show all warnings"
           ]
 
-          option :quiet,    type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
-          option :verbose,  type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :auto_fix, type: :boolean, aliases: %w[-f], desc: "Auto-fix safe issues"
           option :auto_fix_with_agent, type: :boolean, desc: "Auto-fix then launch agent for remaining"
-          option :model,    type: :string, desc: "Provider:model for agent session"
+          option :model, type: :string, desc: "Provider:model for agent session"
           option :errors_only, type: :boolean, desc: "Show only errors, not warnings"
           option :no_color, type: :boolean, desc: "Disable colored output"
-          option :json,     type: :boolean, desc: "Output in JSON format"
-          option :dry_run,  type: :boolean, aliases: %w[-n], desc: "Preview fixes without applying"
-          option :check,    type: :string, desc: "Run specific check (frontmatter, structure, scope)"
+          option :json, type: :boolean, desc: "Output in JSON format"
+          option :dry_run, type: :boolean, aliases: %w[-n], desc: "Preview fixes without applying"
+          option :check, type: :string, desc: "Run specific check (frontmatter, structure, scope)"
 
           def call(**options)
             execute_doctor(options)
@@ -102,7 +102,7 @@ module Ace
             raise Ace::Support::Cli::Error.new("Health check failed") unless results[:valid]
           rescue Ace::Support::Cli::Error
             raise
-          rescue StandardError => e
+          rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
 
@@ -161,8 +161,8 @@ module Ace
             end
 
             issue_list = remaining.map { |i|
-              prefix = i[:type] == :error ? "ERROR" : "WARNING"
-              "- [#{prefix}] #{i[:message]}#{i[:location] ? " (#{i[:location]})" : ""}"
+              prefix = (i[:type] == :error) ? "ERROR" : "WARNING"
+              "- [#{prefix}] #{i[:message]}#{" (#{i[:location]})" if i[:location]}"
             }.join("\n")
 
             provider_model = options[:model] || config.dig("task", "doctor_agent_model") || "gemini:flash-latest@yolo"
