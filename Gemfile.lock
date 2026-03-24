@@ -236,7 +236,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.23.2)
+    ace-search (0.24.0)
       ace-git (~> 0.10)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
