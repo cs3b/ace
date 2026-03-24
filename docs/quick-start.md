@@ -1,17 +1,27 @@
 # Quick Start
 
-Walk through the full ACE workflow: from capturing an idea to shipping a reviewed PR. ACE provides the workflow layer that coding agent harnesses (Claude Code, Codex CLI, Gemini CLI) operate on - structured tasks, context bundles, review cycles, and skills that any harness can consume through standard CLI commands.
+By the end of this walkthrough you will have captured an idea, turned it into a task spec, run a full implement-test-review-ship pipeline in an isolated worktree, and understood how to customize every part of it. Total time: about 15 minutes of reading, then one command to start real work.
 
 ## Install
 
-Ruby 3.2+ required. Install the orchestrator stack used in this walkthrough:
+Ruby 3.2+ required.
+
+**Quick win** — try smart commits with zero setup:
+
+```bash
+gem install ace-git-commit
+
+ace-git-commit -i "fix auth token refresh"
+# Analyzes the diff, considers your intention, generates a scoped conventional commit.
+```
+
+**Full stack** — install the orchestrator used in this walkthrough:
 
 ```bash
 gem install ace-overseer
 ```
 
-This installs `ace-overseer` plus its workflow dependencies (`ace-assign`, `ace-task`, `ace-git`, `ace-git-worktree`, and `ace-tmux`).
-If you want the full ACE toolkit command surface, install additional gems or work from the monorepo with `bundle install`.
+This pulls in `ace-assign`, `ace-task`, `ace-git`, `ace-git-worktree`, and `ace-tmux`. For the complete ACE command surface, install additional gems individually or work from the monorepo with `bundle install`.
 
 ## 1. Capture an idea
 
@@ -26,13 +36,13 @@ This creates a markdown file in `.ace-ideas/`:
   8r2f4-add-retry-logic-to-webhook-delivery.idea.s.md
 ```
 
-The file has YAML front matter (id, status, tags, timestamps) and a markdown body with the description. You can edit it directly — it's just a file in your repo.
+The file has YAML front matter (id, status, tags, timestamps) and a markdown body. Edit it directly — it's just a file in your repo.
 
 ```bash
-ace-idea list                          # list all ideas
-ace-idea list --in next --status pending  # filter by location and status
-ace-idea show 8r2f4                    # show one idea
-ace-idea update 8r2f4 --move-to next   # move between buckets
+ace-idea list                              # list all ideas
+ace-idea list --in next --status pending   # filter by location and status
+ace-idea show 8r2f4                        # show one idea
+ace-idea update 8r2f4 --move-to next       # move between buckets
 ```
 
 Idea locations: `_next/` (up next), `_maybe/` (considering), `_review/` (needs review), `_archive/` (done).
@@ -45,7 +55,7 @@ In Claude Code:
 /as-task-draft
 ```
 
-Or from the CLI:
+Or from the terminal:
 
 ```bash
 ace-task create "Implement webhook retry with exponential backoff" \
@@ -60,7 +70,7 @@ This creates a task spec in `.ace-tasks/`:
   8r3.t.0k7-implement-webhook-retry-with-exponential-backoff.s.md
 ```
 
-The spec file includes front matter (id, status, priority, dependencies, estimate) and structured sections:
+The spec file includes front matter (id, status, priority, dependencies) and structured sections:
 
 - **Behavioral Specification** — what the feature does, expected behavior, success criteria
 - **Scope of Work** — deliverables, affected packages
@@ -74,9 +84,9 @@ ace-task create "Implement backoff calculator" --child-of 8r3
 ```
 
 ```bash
-ace-task list                  # list all tasks
-ace-task show 8r3              # show task details
-ace-task show 8r3 --format full  # show with full spec content
+ace-task list                      # list all tasks
+ace-task show 8r3                  # show task details
+ace-task show 8r3 --format full    # show with full spec content
 ```
 
 ## 3. Review the spec
@@ -98,16 +108,16 @@ Generate an implementation plan:
 ## 4. Run it in a worktree
 
 ```bash
-ace-overseer work-on 8r3
+ace-overseer work-on -t 8r3
 ```
 
 This does three things:
 
 1. **Creates an isolated worktree** via `ace-git-worktree` — a separate checkout so your main branch stays clean
-2. **Opens a tmux window** via `ace-tmux` — dedicated terminal session for the task
+2. **Opens a tmux window** via `ace-tmux` — a dedicated terminal session for the task
 3. **Starts an assignment** via `ace-assign` — loads the `work-on-task` preset and begins stepping through it
 
-Inside the tmux session, use `/as-assign-drive` in Claude Code to walk through each step of the assignment.
+Inside the tmux session, use `/as-assign-drive` in Claude Code to walk through each assignment step.
 
 Check on active worktrees:
 
@@ -116,51 +126,53 @@ ace-overseer status    # list active task worktrees
 ace-overseer prune     # clean up finished worktrees
 ```
 
-## 5. What the preset does
+## 5. What happens inside the pipeline
 
-The `work-on-task` preset ([ace-assign/.ace-defaults/assign/presets/work-on-task.yml](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml)) runs a multi-step pipeline. Here's what happens in order:
+The `work-on-task` preset ([source](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml)) runs a 15-step pipeline. Here is what each phase does:
 
 ### Implement
 
-1. **onboard** — Load project context via `wfi://onboard`. Orients the agent on repo structure, conventions, and the task spec.
-2. **work-on-{task}** — For each task in the batch, fork a context and run `wfi://task/work`. This is where the actual code gets written.
+- **onboard** — Load project context via `wfi://onboard`. Orients the agent on repo structure, conventions, and the task spec.
+- **work-on-{task}** — For each task in the batch, fork a sub-agent context and run `wfi://task/work`. This is where the actual code gets written.
 
 ### Verify
 
-3. **verify-test-suite** — Run `wfi://test/verify-suite` across affected packages. Skippable for docs-only changes.
-4. **verify-e2e** — Run E2E tests for modified packages. Auto-detects which packages changed.
+- **verify-test-suite** — Run `wfi://test/verify-suite` across affected packages. Skipped for docs-only changes.
+- **verify-e2e** — Run E2E tests for modified packages. Auto-detects which packages changed.
 
 ### Release
 
-5. **release-minor** — Bump versions (minor or patch) and update CHANGELOGs for all modified packages.
-6. **update-docs** — Run `wfi://docs/update` if any public API contracts changed.
+- **release-minor** — Bump versions and update CHANGELOGs for all modified packages.
+- **update-docs** — Run `wfi://docs/update` if any public API contracts changed.
 
 ### Ship
 
-7. **create-pr** — Create a pull request via `wfi://github/pr/create`, summarizing all tasks in the batch.
+- **create-pr** — Create a pull request summarizing all tasks in the batch.
 
 ### Review cycles
 
-Three review rounds, each progressively more focused:
+Three progressively focused review rounds, each running review → apply-feedback → release:
 
-8. **review-valid** — Correctness review. Catches bugs, logic errors, missing edge cases. Runs: review-pr (code-valid preset) → apply-feedback → release patch.
-9. **review-fit** — Quality review. Checks architecture, performance, standards compliance. Same sub-steps with code-fit preset.
-10. **review-shine** — Polish review. Simplifies code, improves naming, tightens documentation. Same sub-steps with code-shine preset.
+- **review-valid** — Correctness. Catches bugs, logic errors, missing edge cases. Uses `code-valid` preset.
+- **review-fit** — Quality. Checks architecture, performance, standards compliance. Uses `code-fit` preset.
+- **review-shine** — Polish. Simplifies code, improves naming, tightens documentation. Uses `code-shine` preset.
 
 ### Finalize
 
-11. **reorganize-commits** — Rewrite history via `wfi://git/reorganize-commits` to group changes by concern (one commit per logical change).
-12. **push-to-remote** — Force-push (with lease) the cleaned-up history.
-13. **update-pr-desc** — Update the PR description with the final diff summary.
-14. **mark-tasks-done** — Archive completed tasks, commit the file moves.
-15. **create-retro** — Generate a retrospective for the batch.
+- **reorganize-commits** — Rewrite history to group changes by concern (one commit per logical change).
+- **push-to-remote** — Force-push (with lease) the cleaned-up history.
+- **update-pr-desc** — Update the PR description with the final diff summary.
+- **mark-tasks-done** — Archive completed tasks.
+- **create-retro** — Generate a retrospective capturing what went well and what to improve.
 
-## 6. How the handbook works
+Other presets are available for different workflows: `fix-bug`, `quick-implement`, `release-only`, and `work-on-docs`.
+
+## 6. The protocol system
 
 ACE organizes all content — workflows, guides, templates, prompts, skills — through a protocol system. Each protocol maps to a file type:
 
-| Protocol | File extension | Purpose | Example |
-|----------|---------------|---------|---------|
+| Protocol | Extension | Purpose | Example |
+|----------|-----------|---------|---------|
 | `wfi://` | `.wf.md` | Workflow instructions | `wfi://task/work` |
 | `guide://` | `.g.md` | Guides and references | `guide://changelog` |
 | `tmpl://` | `.template.md` | Templates | `tmpl://test-report` |
@@ -172,66 +184,57 @@ Each package ships content in its `handbook/` directory:
 ```
 ace-review/
   handbook/
-    workflow-instructions/
-      review/
-        run.wf.md
-        apply-feedback.wf.md
+    workflow-instructions/review/
+      run.wf.md
+      apply-feedback.wf.md
     guides/
       review-presets.g.md
-    skills/
-      as-review-pr/
-        SKILL.md
+    skills/as-review-pr/
+      SKILL.md
 ```
 
-Load any resource with `ace-bundle`:
+Load any resource:
 
 ```bash
 ace-bundle wfi://task/work       # load a workflow
 ace-bundle guide://changelog     # load a guide
 ```
 
-Discover available resources with `ace-nav`:
+Discover what's available:
 
 ```bash
 ace-nav list 'wfi://*'           # list all workflows
 ace-nav list 'guide://*'         # list all guides
-ace-nav sources                  # list where resources come from
+ace-nav sources                  # show where resources come from
 ```
 
 The nav system resolves protocols by scanning registered sources in priority order. When multiple packages provide the same protocol resource, the highest-priority source wins.
 
-## 7. How to customize
+## 7. Customization
 
-ACE uses a three-level cascade. Higher levels override lower ones:
+ACE uses a three-level configuration cascade. Higher levels override lower ones:
 
 ```
-Gem defaults          (lowest priority)
-  └─ User overrides
-       └─ Project overrides   (highest priority)
+Gem defaults            (lowest priority)
+  └─ User overrides     (~/.ace/, ~/.ace-handbook/)
+       └─ Project       (.ace/, .ace-handbook/)    (highest priority)
 ```
 
-### Where each level lives
+### Override a commit prompt
 
-| Level | Config | Handbook content |
-|-------|--------|-----------------|
-| Gem defaults | `<gem>/.ace-defaults/` | `<gem>/handbook/` |
-| User overrides | `~/.ace/` | `~/.ace-handbook/` |
-| Project overrides | `.ace/` | `.ace-handbook/` |
-
-### Override examples
-
-**Override a commit prompt** — create a project-level prompt that replaces the gem default:
+Create a project-level prompt that replaces the gem default:
 
 ```bash
 mkdir -p .ace-handbook/prompts
-# Write your custom prompt:
 cat > .ace-handbook/prompts/git-commit.system.md << 'EOF'
 You are a commit message generator.
 Always use conventional commits format.
 EOF
 ```
 
-**Override git commit config** — change commit settings for this project:
+### Override config
+
+Change settings for this project:
 
 ```bash
 mkdir -p .ace/git
@@ -241,7 +244,9 @@ body_wrap: 80
 EOF
 ```
 
-**Add a custom workflow** — create a project-specific workflow:
+### Add a custom workflow
+
+Create a project-specific workflow that's immediately available as `wfi://deploy`:
 
 ```bash
 mkdir -p .ace-handbook/workflow-instructions
@@ -249,7 +254,6 @@ cat > .ace-handbook/workflow-instructions/deploy.wf.md << 'EOF'
 # Deploy Workflow
 
 ## Steps
-
 1. Run the test suite
 2. Build the container image
 3. Push to registry
@@ -257,28 +261,13 @@ cat > .ace-handbook/workflow-instructions/deploy.wf.md << 'EOF'
 EOF
 ```
 
-The new workflow is immediately available as `wfi://deploy`.
-
-**Override a review preset** — customize what a review cycle checks:
-
-```bash
-mkdir -p .ace/review/presets
-# Your project-level preset overrides the gem default
-```
-
 ### Agent platform skills
 
-Skills project to agent-specific directories:
-
-- Claude Code: `.claude/skills/`
-- Codex CLI: `.codex/skills/`
-- Gemini CLI: `.gemini/skills/`
-
-The `ace-handbook-integration-*` gems handle this projection. Run `ace-handbook sync` to project skills to all configured agent platforms.
+Skills project to agent-specific directories — `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`. The `ace-handbook-integration-*` gems handle this projection. Run `ace-handbook sync` to project skills to all configured agent platforms.
 
 ## Next steps
 
-- Read the [Architecture](architecture.md) doc for how packages fit together
-- Browse [Tools Reference](tools.md) for the full command inventory
-- Run `ace-bundle project` to see the full project context bundle
-- Run `ace-nav sources` to see all registered content sources
+- [Architecture](architecture.md) — how packages fit together and the ATOM pattern
+- [Tools Reference](tools.md) — full command inventory for all 40+ packages
+- `ace-bundle project` — load the complete project context bundle
+- `ace-nav sources` — see all registered content sources
