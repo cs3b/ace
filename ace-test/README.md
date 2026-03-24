@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Test </h1>
 
-  Testing strategy handbook -- planning, reviewing, and improving test quality across ACE projects.
+  Testing knowledge base for ACE — guides, patterns, and workflows for fast, reliable tests.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -15,6 +15,7 @@
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
+
 `ace-test` is the handbook and workflow package for testing in ACE. It centralizes strategy guides, workflow instructions, and skill entry points for agents and developers. Use [ace-test-runner](../ace-test-runner) when you need to execute tests; use `ace-test` when you need to plan, review, or improve them.
 
 ## How It Works
@@ -33,7 +34,7 @@
 
 **Standardize review quality for test code** - use `/as-test-review` for dedicated test review workflows covering mock quality, layering fit, and maintainability.
 
-**Verify full-suite health** - use `/as-test-verify-suite` to confirm that the complete test suite passes after changes, coordinating with [`ace-test`](docs/usage.md) CLI commands for execution.
+**Verify full-suite health** - use `/as-test-verify-suite` to confirm that the complete test suite passes after changes, coordinating with [`ace-test-runner`](../ace-test-runner) for execution.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
