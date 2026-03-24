@@ -30,7 +30,7 @@ class FinalSynthesisExecutorTest < AceSimTestCase
           MD
         )
       end
-      { success: true, stdout: "", stderr: "", exit_code: 0 }
+      {success: true, stdout: "", stderr: "", exit_code: 0}
     end
   end
 
@@ -39,12 +39,12 @@ class FinalSynthesisExecutorTest < AceSimTestCase
       if args[0] == "ace-bundle"
         output_path = args[args.index("--output") + 1]
         File.write(output_path, "Prompt")
-        return { success: true, stdout: "", stderr: "", exit_code: 0 }
+        return {success: true, stdout: "", stderr: "", exit_code: 0}
       end
 
       output_path = args[args.index("--output") + 1]
       File.write(output_path, "# Missing required tags")
-      { success: true, stdout: "", stderr: "", exit_code: 0 }
+      {success: true, stdout: "", stderr: "", exit_code: 0}
     end
   end
 
@@ -53,10 +53,10 @@ class FinalSynthesisExecutorTest < AceSimTestCase
       if args[0] == "ace-bundle"
         output_path = args[args.index("--output") + 1]
         File.write(output_path, "Prompt")
-        return { success: true, stdout: "", stderr: "", exit_code: 0 }
+        return {success: true, stdout: "", stderr: "", exit_code: 0}
       end
 
-      { success: false, stdout: "", stderr: "llm failed", exit_code: 1 }
+      {success: false, stdout: "", stderr: "llm failed", exit_code: 1}
     end
   end
 
@@ -95,7 +95,7 @@ class FinalSynthesisExecutorTest < AceSimTestCase
         "provider" => "codex:mini",
         "iteration" => 1,
         "status" => "ok",
-        "steps" => [{ "step" => "draft", "status" => "ok", "output_path" => chain_output }]
+        "steps" => [{"step" => "draft", "status" => "ok", "output_path" => chain_output}]
       }]
 
       result = Ace::Sim::Molecules::FinalSynthesisExecutor.new(command_runner: HappyRunner.new).execute(

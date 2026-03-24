@@ -62,7 +62,7 @@ module Ace
             "prompt_path" => prompt_path,
             "output_path" => output_path
           }
-        rescue StandardError => e
+        rescue => e
           {
             "step" => step,
             "provider" => provider,

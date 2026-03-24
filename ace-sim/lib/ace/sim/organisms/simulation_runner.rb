@@ -5,7 +5,7 @@ module Ace
     module Organisms
       class SimulationRunner
         def initialize(session_store: nil, stage_executor: nil, synthesis_builder: nil,
-                       final_synthesis_executor: nil, source_bundler: nil)
+          final_synthesis_executor: nil, source_bundler: nil)
           @session_store = session_store || Molecules::SessionStore.new
           @stage_executor = stage_executor || Molecules::StageExecutor.new
           @synthesis_builder = synthesis_builder || Molecules::SynthesisBuilder.new
@@ -77,7 +77,7 @@ module Ace
             chains: chains,
             final_stage: final_stage,
             synthesis: synthesis,
-            error: synthesis["status"] == "failed" ? failure_reason(chains, final_stage) : nil
+            error: (synthesis["status"] == "failed") ? failure_reason(chains, final_stage) : nil
           }
         rescue Ace::Sim::ValidationError => e
           {
@@ -89,7 +89,7 @@ module Ace
             synthesis: nil,
             error: e.message
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             status: "failed",
@@ -104,7 +104,7 @@ module Ace
         private
 
         attr_reader :session_store, :stage_executor, :synthesis_builder, :final_synthesis_executor,
-                    :source_bundler
+          :source_bundler
 
         def run_chain(session:, run_dir:, provider:, iteration:, bundled_input_path:)
           current_input_path = bundled_input_path

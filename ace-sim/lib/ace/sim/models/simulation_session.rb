@@ -5,10 +5,10 @@ module Ace
     module Models
       class SimulationSession
         attr_reader :preset, :source, :steps, :providers, :repeat, :dry_run, :writeback, :run_id, :verbose,
-                    :step_bundles, :synthesis_workflow, :synthesis_provider
+          :step_bundles, :synthesis_workflow, :synthesis_provider
 
         def initialize(preset:, source:, steps:, providers:, repeat:, dry_run:, writeback:, verbose: false,
-                       run_id: nil, step_bundles: {}, synthesis_workflow: nil, synthesis_provider: nil)
+          run_id: nil, step_bundles: {}, synthesis_workflow: nil, synthesis_provider: nil)
           @preset = preset.to_s.strip
           @source = Array(source).map(&:to_s).map(&:strip).reject(&:empty?)
           @steps = Ace::Sim.normalize_list(steps)
@@ -71,7 +71,7 @@ module Ace
           missing_bundles = steps.reject { |step| step_bundles.key?(step) && !step_bundles[step].to_s.strip.empty? }
           return if missing_bundles.empty?
 
-          raise Ace::Sim::ValidationError, "Missing step configs for: #{missing_bundles.join(', ')}"
+          raise Ace::Sim::ValidationError, "Missing step configs for: #{missing_bundles.join(", ")}"
         end
 
         def stringify_step_bundles(raw)

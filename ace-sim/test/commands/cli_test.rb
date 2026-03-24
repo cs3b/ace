@@ -17,6 +17,6 @@ class CliTest < AceSimTestCase
   def test_version_output
     output = capture_io { CLI.start(["version"]) }[0]
     assert_match(/ace-sim/, output)
-    assert_match(/#{Ace::Sim::VERSION}/, output)
+    assert_match(/#{Ace::Sim::VERSION}/o, output)
   end
 end

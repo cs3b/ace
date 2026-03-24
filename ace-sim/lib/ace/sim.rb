@@ -107,7 +107,7 @@ module Ace
 
     def next_run_id
       Ace::B36ts.now
-    rescue StandardError
+    rescue
       timestamp = Time.now.utc.to_i.to_s(36)
       entropy = rand(36**2).to_s(36).rjust(2, "0")
       "#{timestamp}#{entropy}"

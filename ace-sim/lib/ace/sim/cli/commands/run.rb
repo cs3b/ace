@@ -47,7 +47,7 @@ module Ace
             preset_name = pick_value(options[:preset], Ace::Sim.default_preset_name)
             preset_data = Ace::Sim.load_preset(preset_name)
             if preset_data.nil?
-              raise Ace::Support::Cli::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
+              raise Ace::Support::Cli::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(", ")}")
             end
 
             if !options[:synthesis_provider].to_s.strip.empty? && options[:synthesis_workflow].nil?

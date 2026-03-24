@@ -44,7 +44,7 @@ class SimulationSessionTest < AceSimTestCase
 
   def test_rejects_missing_step_bundle
     err = assert_raises(Ace::Sim::ValidationError) do
-      Ace::Sim::Models::SimulationSession.new(**base_args.merge(step_bundles: { "draft" => "draft.md" }))
+      Ace::Sim::Models::SimulationSession.new(**base_args.merge(step_bundles: {"draft" => "draft.md"}))
     end
 
     assert_match(/Missing step configs/, err.message)
