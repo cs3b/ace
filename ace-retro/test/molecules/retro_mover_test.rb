@@ -25,7 +25,7 @@ class RetroMoverTest < AceRetroTestCase
   def test_moves_retro_to_root
     with_retros_dir do |root|
       retro_dir = create_retro_fixture(root, id: "8ppq7w", slug: "sprint-review",
-                                       special_folder: "_archive")
+        special_folder: "_archive")
 
       loader = Ace::Retro::Molecules::RetroLoader.new
       retro = loader.load(retro_dir, id: "8ppq7w", special_folder: "_archive")

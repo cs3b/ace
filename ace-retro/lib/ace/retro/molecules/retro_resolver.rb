@@ -44,11 +44,11 @@ module Ace
           matches = resolver.all_matches(ref)
 
           if matches.empty?
-            { result: nil, ambiguous: false, matches: [] }
+            {result: nil, ambiguous: false, matches: []}
           elsif matches.size == 1
-            { result: matches.first, ambiguous: false, matches: matches }
+            {result: matches.first, ambiguous: false, matches: matches}
           else
-            { result: matches.last, ambiguous: true, matches: matches }
+            {result: matches.last, ambiguous: true, matches: matches}
           end
         end
       end

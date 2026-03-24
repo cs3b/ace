@@ -135,7 +135,7 @@ class RetroCreatorTest < AceRetroTestCase
 
   def test_default_type_from_config
     with_retros_dir do |root|
-      config = { "retro" => { "default_type" => "self-review" } }
+      config = {"retro" => {"default_type" => "self-review"}}
       creator = Ace::Retro::Molecules::RetroCreator.new(root_dir: root, config: config)
       retro = creator.create("My Review")
 

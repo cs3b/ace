@@ -42,7 +42,7 @@ module Ace
           FileUtils.mkdir_p(target_dir)
 
           # Create retro folder (ensure unique name if ID collision occurs)
-          folder_name, folder_slug = unique_folder_name(id, folder_slug, target_dir)
+          folder_name, _ = unique_folder_name(id, folder_slug, target_dir)
           retro_dir = File.join(target_dir, folder_name)
           FileUtils.mkdir_p(retro_dir)
 

@@ -29,8 +29,7 @@ module Ace
         def load
           config = load_defaults
           config = deep_merge(config, load_user_config)
-          config = deep_merge(config, load_project_config)
-          config
+          deep_merge(config, load_project_config)
         end
 
         # Get the root directory for retros
@@ -80,10 +79,10 @@ module Ace
 
           result = base.dup
           override.each do |key, value|
-            if result[key].is_a?(Hash) && value.is_a?(Hash)
-              result[key] = deep_merge(result[key], value)
+            result[key] = if result[key].is_a?(Hash) && value.is_a?(Hash)
+              deep_merge(result[key], value)
             else
-              result[key] = value
+              value
             end
           end
           result

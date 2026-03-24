@@ -19,7 +19,7 @@ module Ace
           issues = []
 
           unless File.exist?(file_path)
-            issues << { type: :error, message: "File does not exist", location: file_path }
+            issues << {type: :error, message: "File does not exist", location: file_path}
             return issues
           end
 
@@ -46,13 +46,13 @@ module Ace
             lines = content.lines
 
             unless lines.first&.strip == "---"
-              issues << { type: :error, message: "Missing opening '---' delimiter", location: file_path }
+              issues << {type: :error, message: "Missing opening '---' delimiter", location: file_path}
               return
             end
 
             has_closing = lines[1..].any? { |line| line.strip == "---" }
             unless has_closing
-              issues << { type: :error, message: "Missing closing '---' delimiter", location: file_path }
+              issues << {type: :error, message: "Missing closing '---' delimiter", location: file_path}
             end
           end
 
@@ -60,13 +60,13 @@ module Ace
             frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
 
             if frontmatter.nil? || !frontmatter.is_a?(Hash)
-              issues << { type: :error, message: "Failed to parse YAML frontmatter", location: file_path }
+              issues << {type: :error, message: "Failed to parse YAML frontmatter", location: file_path}
               return nil
             end
 
             frontmatter
           rescue Psych::SyntaxError => e
-            issues << { type: :error, message: "YAML syntax error: #{e.message}", location: file_path }
+            issues << {type: :error, message: "YAML syntax error: #{e.message}", location: file_path}
             nil
           end
 
@@ -75,21 +75,21 @@ module Ace
 
             missing.each do |field|
               severity = (field == "title") ? :warning : :error
-              issues << { type: severity, message: "Missing required field: #{field}", location: file_path }
+              issues << {type: severity, message: "Missing required field: #{field}", location: file_path}
             end
           end
 
           def validate_field_values(frontmatter, file_path, issues)
             if frontmatter["id"] && !Atoms::RetroValidationRules.valid_id?(frontmatter["id"].to_s)
-              issues << { type: :error, message: "Invalid retro ID format: '#{frontmatter["id"]}'", location: file_path }
+              issues << {type: :error, message: "Invalid retro ID format: '#{frontmatter["id"]}'", location: file_path}
             end
 
             if frontmatter["status"] && !Atoms::RetroValidationRules.valid_status?(frontmatter["status"])
-              issues << { type: :error, message: "Invalid status value: '#{frontmatter["status"]}'", location: file_path }
+              issues << {type: :error, message: "Invalid status value: '#{frontmatter["status"]}'", location: file_path}
             end
 
             if frontmatter.key?("tags") && !frontmatter["tags"].is_a?(Array)
-              issues << { type: :warning, message: "Field 'tags' is not an array", location: file_path }
+              issues << {type: :warning, message: "Field 'tags' is not an array", location: file_path}
             end
           end
 
@@ -97,7 +97,7 @@ module Ace
             missing = Atoms::RetroValidationRules.missing_recommended_fields(frontmatter)
 
             missing.each do |field|
-              issues << { type: :warning, message: "Missing recommended field: #{field}", location: file_path }
+              issues << {type: :warning, message: "Missing recommended field: #{field}", location: file_path}
             end
           end
 

@@ -21,8 +21,8 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["create", "Create a new retro"],
-        ["show",   "Show retro details"],
-        ["list",   "List retros"],
+        ["show", "Show retro details"],
+        ["list", "List retros"],
         ["update", "Update retro metadata (fields and move)"],
         ["doctor", "Run health checks on retros"]
       ].freeze
@@ -38,8 +38,8 @@ module Ace
       ].freeze
 
       register "create", CLI::Commands::Create
-      register "show",   CLI::Commands::Show
-      register "list",   CLI::Commands::List
+      register "show", CLI::Commands::Show
+      register "list", CLI::Commands::List
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
 
@@ -47,7 +47,7 @@ module Ace
         gem_name: "ace-retro",
         version: Ace::Retro::VERSION
       )
-      register "version",   version_cmd
+      register "version", version_cmd
       register "--version", version_cmd
 
       help_cmd = Ace::Support::Cli::HelpCommand.build(
@@ -56,9 +56,9 @@ module Ace
         commands: REGISTERED_COMMANDS,
         examples: HELP_EXAMPLES
       )
-      register "help",   help_cmd
+      register "help", help_cmd
       register "--help", help_cmd
-      register "-h",     help_cmd
+      register "-h", help_cmd
 
       # Entry point for CLI invocation
       # @param args [Array<String>] Command-line arguments

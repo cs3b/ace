@@ -24,13 +24,13 @@ class RetroCliTest < AceRetroTestCase
     begin
       Ace::Retro::RetroCLI.start(args)
     rescue Ace::Support::Cli::Error => e
-      $stderr.puts e.message
+      warn e.message
       exit_code = e.exit_code
     rescue SystemExit => e
       exit_code = e.status
     end
 
-    { stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code }
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
   ensure
     $stdout = old_stdout
     $stderr = old_stderr
@@ -373,7 +373,10 @@ class RetroCliTest < AceRetroTestCase
     with_retros_dir do |root|
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["create", "Retro with gc", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
@@ -416,7 +419,10 @@ class RetroCliTest < AceRetroTestCase
       create_retro_fixture(root, id: id, slug: "gc-retro", status: "active")
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["update", id, "--set", "status=done", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
@@ -433,7 +439,10 @@ class RetroCliTest < AceRetroTestCase
       create_retro_fixture(root, id: id, slug: "gc-retro")
       with_cli_root(root) do
         commit_args = nil
-        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) {
+          commit_args = kwargs
+          true
+        }) do
           result = run_cli(["update", id, "--move-to", "archive", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end

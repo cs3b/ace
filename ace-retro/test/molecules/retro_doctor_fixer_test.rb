@@ -8,25 +8,25 @@ class RetroDoctorFixerTest < AceRetroTestCase
 
   def test_can_fix_missing_status
     fixer = Fixer.new
-    issue = { type: :error, message: "Missing required field: status", location: "/tmp/test.md" }
+    issue = {type: :error, message: "Missing required field: status", location: "/tmp/test.md"}
     assert fixer.can_fix?(issue)
   end
 
   def test_can_fix_stale_backup
     fixer = Fixer.new
-    issue = { type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md" }
+    issue = {type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md"}
     assert fixer.can_fix?(issue)
   end
 
   def test_cannot_fix_invalid_id
     fixer = Fixer.new
-    issue = { type: :error, message: "Invalid retro ID format: 'bad'", location: "/tmp/test.md" }
+    issue = {type: :error, message: "Invalid retro ID format: 'bad'", location: "/tmp/test.md"}
     refute fixer.can_fix?(issue)
   end
 
   def test_cannot_fix_without_location
     fixer = Fixer.new
-    issue = { type: :error, message: "Missing required field: status" }
+    issue = {type: :error, message: "Missing required field: status"}
     refute fixer.can_fix?(issue)
   end
 
@@ -37,7 +37,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
       original = File.read(file)
 
       fixer = Fixer.new(dry_run: true)
-      issue = { type: :warning, message: "Missing recommended field: tags", location: file }
+      issue = {type: :warning, message: "Missing recommended field: tags", location: file}
       fixer.fix_issue(issue)
 
       assert_equal original, File.read(file)
@@ -51,7 +51,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
       File.write(backup, "stale content")
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Stale backup file (safe to delete)", location: backup }
+      issue = {type: :warning, message: "Stale backup file (safe to delete)", location: backup}
       fixer.fix_issue(issue)
 
       refute File.exist?(backup)
@@ -65,7 +65,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
       FileUtils.mkdir_p(empty)
 
       fixer = Fixer.new
-      issue = { type: :warning, message: "Empty directory (safe to delete)", location: empty }
+      issue = {type: :warning, message: "Empty directory (safe to delete)", location: empty}
       fixer.fix_issue(issue)
 
       refute Dir.exist?(empty)
@@ -76,7 +76,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
   def test_fix_issues_returns_summary
     fixer = Fixer.new(dry_run: true)
     issues = [
-      { type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/nonexistent" }
+      {type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/nonexistent"}
     ]
     result = fixer.fix_issues(issues)
 
@@ -91,7 +91,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
     with_retros_dir do |root|
       # Create a retro in an invalid calendar-month partition
       create_retro_fixture(root, id: "abc123", slug: "old-retro", status: "done",
-                           special_folder: "_archive/2025-09")
+        special_folder: "_archive/2025-09")
 
       fixer = Fixer.new(root_dir: root)
       issue = {
@@ -119,7 +119,7 @@ class RetroDoctorFixerTest < AceRetroTestCase
       file = Dir.glob(File.join(dir, "*.retro.md")).first
 
       fixer = Fixer.new(root_dir: root)
-      issue = { type: :warning, message: "Retro with terminal status 'done' not in _archive/", location: file }
+      issue = {type: :warning, message: "Retro with terminal status 'done' not in _archive/", location: file}
       fixer.fix_issue(issue)
 
       # Should be in _archive/{partition}/abc123-done-retro (date-partitioned)

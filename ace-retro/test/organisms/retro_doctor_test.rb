@@ -130,7 +130,7 @@ class RetroDoctorTest < AceRetroTestCase
   def test_detects_archive_non_terminal
     with_retros_dir do |root|
       create_retro_fixture(root, id: "abc123", slug: "active-archive",
-                          status: "active", special_folder: "_archive")
+        status: "active", special_folder: "_archive")
 
       doctor = Doctor.new(root)
       results = doctor.run_diagnosis
@@ -202,7 +202,7 @@ class RetroDoctorTest < AceRetroTestCase
   def test_auto_fixable_missing_status
     with_retros_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :error, message: "Missing required field: status", location: "/tmp/test.md" }
+      issue = {type: :error, message: "Missing required field: status", location: "/tmp/test.md"}
       assert doctor.auto_fixable?(issue)
     end
   end
@@ -210,7 +210,7 @@ class RetroDoctorTest < AceRetroTestCase
   def test_auto_fixable_stale_backup
     with_retros_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md" }
+      issue = {type: :warning, message: "Stale backup file (safe to delete)", location: "/tmp/test.backup.md"}
       assert doctor.auto_fixable?(issue)
     end
   end
@@ -218,7 +218,7 @@ class RetroDoctorTest < AceRetroTestCase
   def test_not_auto_fixable_invalid_id_format
     with_retros_dir do |root|
       doctor = Doctor.new(root)
-      issue = { type: :error, message: "Invalid retro ID format: 'bad'", location: "/tmp/test.md" }
+      issue = {type: :error, message: "Invalid retro ID format: 'bad'", location: "/tmp/test.md"}
       refute doctor.auto_fixable?(issue)
     end
   end

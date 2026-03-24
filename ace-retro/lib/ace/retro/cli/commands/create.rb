@@ -26,22 +26,22 @@ module Ace
 
           argument :title, required: false, desc: "Retro title"
 
-          option :type,      type: :string,  aliases: %w[-t], desc: "Retro type (standard, conversation-analysis, self-review)"
-          option :tags,      type: :string,  aliases: %w[-T], desc: "Comma-separated tags"
-          option :"move-to", type: :string,  aliases: %w[-m], desc: "Target folder (e.g. archive)"
+          option :type, type: :string, aliases: %w[-t], desc: "Retro type (standard, conversation-analysis, self-review)"
+          option :tags, type: :string, aliases: %w[-T], desc: "Comma-separated tags"
+          option :"move-to", type: :string, aliases: %w[-m], desc: "Target folder (e.g. archive)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(title: nil, **options)
-            type     = options[:type]
+            type = options[:type]
             tags_str = options[:tags]
-            move_to  = options[:"move-to"]
-            dry_run  = options[:"dry-run"]
+            move_to = options[:"move-to"]
+            dry_run = options[:"dry-run"]
 
             tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
 
@@ -55,9 +55,9 @@ module Ace
             if dry_run
               puts "Would create retro:"
               puts "  Title:    #{title}"
-              puts "  Type:     #{type || 'standard'}"
-              puts "  Tags:     #{tags.any? ? tags.join(', ') : '(none)'}"
-              puts "  Folder:   #{move_to ? "_#{move_to.delete_prefix('_')}" : '(root)'}"
+              puts "  Type:     #{type || "standard"}"
+              puts "  Tags:     #{tags.any? ? tags.join(", ") : "(none)"}"
+              puts "  Folder:   #{move_to ? "_#{move_to.delete_prefix("_")}" : "(root)"}"
               return
             end
 
