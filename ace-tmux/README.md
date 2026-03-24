@@ -16,8 +16,6 @@
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-![ace-tmux demo](docs/demo/ace-tmux-getting-started.gif)
-
 `ace-tmux` helps you standardize terminal workspaces with preset-driven sessions, reusable windows, and nested pane layouts. You can spin up a full workspace from a session preset or inject a focused window into an already-running tmux session, with config cascade across project, user, and gem defaults.
 
 ## How It Works
