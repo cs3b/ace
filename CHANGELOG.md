@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.973] - 2026-03-24
+
+### Changed
+- **ace-retro v0.16.0**: Removed `task_ref` feature (CLI flag, model field, frontmatter key, display); aligned README tagline with gemspec; re-recorded demo with dynamic ID capture; added VHS backtick quoting for commands with special characters.
+
 ## [0.9.972] - 2026-03-23
 
 ### Changed
