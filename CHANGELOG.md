@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.981] - 2026-03-24
+
+### Changed
+- **ace-test-runner-e2e v0.29.0**: Documented `ace-test-e2e-sh` in usage reference, re-recorded demo with real suite execution at 8x playback, fixed gemspec URIs.
+
 ## [0.9.980] - 2026-03-24
 
 ### Changed
