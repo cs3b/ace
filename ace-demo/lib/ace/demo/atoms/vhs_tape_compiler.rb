@@ -26,8 +26,12 @@ module Ace
             lines << "# Scene: #{scene_name}" unless scene_name.to_s.strip.empty?
 
             scene.fetch("commands", []).each do |command|
-              escaped = command.fetch("type").gsub("\\", "\\\\\\\\").gsub('"', '\\"')
-              lines << "Type \"#{escaped}\""
+              type_text = command.fetch("type")
+              if type_text.include?('"') || type_text.include?("$") || type_text.include?("\\")
+                lines << "Type `#{type_text}`"
+              else
+                lines << "Type \"#{type_text}\""
+              end
               lines << "Enter"
               lines << "Sleep #{command["sleep"] || default_timeout}"
               lines << ""
