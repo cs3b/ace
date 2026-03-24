@@ -6,7 +6,7 @@ class RetroLoaderTest < AceRetroTestCase
   def test_loads_retro_from_directory
     with_retros_dir do |root|
       retro_dir = create_retro_fixture(root, id: "8ppq7w", slug: "sprint-review",
-                                       type: "standard", tags: ["sprint"])
+        type: "standard", tags: ["sprint"])
 
       loader = Ace::Retro::Molecules::RetroLoader.new
       retro = loader.load(retro_dir, id: "8ppq7w")

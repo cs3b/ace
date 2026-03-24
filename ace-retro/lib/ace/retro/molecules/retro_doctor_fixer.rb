@@ -164,7 +164,10 @@ module Ace
 
           dir_name = File.basename(File.dirname(file_path))
           id_match = dir_name.match(/^([0-9a-z]{6})/)
-          return (@skipped_count += 1; false) unless id_match
+          unless id_match
+            return (@skipped_count += 1
+                    false)
+          end
 
           id = id_match[1]
           update_frontmatter_field(file_path, "id", id, "Added missing 'id' field from folder name")
@@ -211,10 +214,10 @@ module Ace
           end
 
           created_at = if id && Atoms::RetroIdFormatter.valid?(id)
-                         Atoms::RetroIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
-                       else
-                         Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
-                       end
+            Atoms::RetroIdFormatter.decode_time(id).strftime("%Y-%m-%d %H:%M:%S")
+          else
+            Time.now.utc.strftime("%Y-%m-%d %H:%M:%S")
+          end
 
           update_frontmatter_field(file_path, "created_at", created_at, "Added missing 'created_at' field")
         end
@@ -243,13 +246,16 @@ module Ace
           end
 
           FileUtils.mkdir_p(archive_dir)
-          return (@skipped_count += 1; false) if File.exist?(target)
+          if File.exist?(target)
+            return (@skipped_count += 1
+                    false)
+          end
 
           FileUtils.mv(retro_dir, target)
           log_fix(retro_dir, "Moved to _archive/#{partition}/")
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -296,7 +302,7 @@ module Ace
             @skipped_count += 1
             false
           end
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -361,7 +367,7 @@ module Ace
           log_fix(file_path, description)
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end
@@ -380,7 +386,7 @@ module Ace
 
           @fixed_count += 1
           true
-        rescue StandardError
+        rescue
           @skipped_count += 1
           false
         end

@@ -55,7 +55,7 @@ class RetroManagerTest < AceRetroTestCase
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       manager.create("Active Retro")
       retro2 = manager.create("Done Retro")
-      manager.update(retro2.id, set: { "status" => "done" })
+      manager.update(retro2.id, set: {"status" => "done"})
 
       active_retros = manager.list(status: "active")
       assert_equal 1, active_retros.length
@@ -92,7 +92,7 @@ class RetroManagerTest < AceRetroTestCase
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       retro = manager.create("Sprint Review")
 
-      updated = manager.update(retro.id, set: { "status" => "done" })
+      updated = manager.update(retro.id, set: {"status" => "done"})
       refute_nil updated
       assert_equal "done", updated.status
     end
@@ -103,7 +103,7 @@ class RetroManagerTest < AceRetroTestCase
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       retro = manager.create("Sprint Review", tags: ["sprint"])
 
-      updated = manager.update(retro.id, add: { "tags" => "reviewed" })
+      updated = manager.update(retro.id, add: {"tags" => "reviewed"})
       refute_nil updated
       assert_includes updated.tags, "sprint"
       assert_includes updated.tags, "reviewed"
@@ -115,7 +115,7 @@ class RetroManagerTest < AceRetroTestCase
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       retro = manager.create("Sprint Review", tags: ["sprint", "team"])
 
-      updated = manager.update(retro.id, remove: { "tags" => "team" })
+      updated = manager.update(retro.id, remove: {"tags" => "team"})
       refute_nil updated
       assert_includes updated.tags, "sprint"
       refute_includes updated.tags, "team"
@@ -125,7 +125,7 @@ class RetroManagerTest < AceRetroTestCase
   def test_update_returns_nil_for_unknown
     with_retros_dir do |root|
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
-      assert_nil manager.update("zzz", set: { "status" => "done" })
+      assert_nil manager.update("zzz", set: {"status" => "done"})
     end
   end
 

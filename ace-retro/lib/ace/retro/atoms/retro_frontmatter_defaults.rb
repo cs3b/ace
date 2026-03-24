@@ -17,7 +17,7 @@ module Ace
         # @param created_at [Time] Creation time (default: now)
         # @return [Hash] Frontmatter hash ready for YAML serialization
         def self.build(id:, title:, type: "standard", tags: [], status: "active",
-                       created_at: Time.now.utc)
+          created_at: Time.now.utc)
           {
             "id" => id,
             "title" => title,

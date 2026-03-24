@@ -118,9 +118,7 @@ module Ace
 
         # Get the root directory
         # @return [String] Absolute path to retros root
-        def root_dir
-          @root_dir
-        end
+        attr_reader :root_dir
 
         private
 
@@ -184,7 +182,11 @@ module Ace
           File.write(tmp_path, new_content)
           File.rename(tmp_path, retro.file_path)
         ensure
-          File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path) rescue nil
+          begin
+            File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
+          rescue
+            nil
+          end
         end
 
         # Extract archive date from retro frontmatter, falling back to Time.now
@@ -195,7 +197,11 @@ module Ace
           case raw
           when Time then raw
           when DateTime then raw.to_time
-          else Time.parse(raw.to_s) rescue nil
+          else begin
+            Time.parse(raw.to_s)
+          rescue
+            nil
+          end
           end
         end
       end

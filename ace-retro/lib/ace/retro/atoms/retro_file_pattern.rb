@@ -7,10 +7,10 @@ module Ace
       # Retros use the .retro.md extension.
       module RetroFilePattern
         # Glob pattern for retro files within a directory
-        FILE_GLOB = "*.retro.md".freeze
+        FILE_GLOB = "*.retro.md"
 
         # Full file extension for retro files
-        FILE_EXTENSION = ".retro.md".freeze
+        FILE_EXTENSION = ".retro.md"
 
         # Build the retro filename
         # @param id [String] Raw 6-char b36ts ID

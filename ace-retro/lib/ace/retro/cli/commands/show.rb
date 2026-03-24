@@ -18,19 +18,19 @@ module Ace
           DESC
 
           example [
-            'q7w                    # Formatted display (default)',
-            '8ppq7w --path          # Print file path only',
-            'q7w --content          # Print raw markdown content'
+            "q7w                    # Formatted display (default)",
+            "8ppq7w --path          # Print file path only",
+            "q7w --content          # Print raw markdown content"
           ]
 
           argument :ref, required: true, desc: "Retro reference (6-char ID or 3-char shortcut)"
 
-          option :path,    type: :boolean, desc: "Print file path only"
+          option :path, type: :boolean, desc: "Print file path only"
           option :content, type: :boolean, desc: "Print raw markdown content"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref:, **options)
             manager = Ace::Retro::Organisms::RetroManager.new

@@ -75,7 +75,7 @@ class RetroValidationRulesTest < AceRetroTestCase
   # --- missing_required_fields ---
 
   def test_missing_required_fields_all_present
-    fm = { "id" => "abc123", "status" => "active", "title" => "Test", "type" => "standard", "created_at" => "2026-01-01" }
+    fm = {"id" => "abc123", "status" => "active", "title" => "Test", "type" => "standard", "created_at" => "2026-01-01"}
     assert_empty Rules.missing_required_fields(fm)
   end
 
@@ -94,7 +94,7 @@ class RetroValidationRulesTest < AceRetroTestCase
   end
 
   def test_missing_required_fields_blank_values
-    fm = { "id" => "", "status" => "active", "title" => " ", "type" => "standard", "created_at" => "2026-01-01" }
+    fm = {"id" => "", "status" => "active", "title" => " ", "type" => "standard", "created_at" => "2026-01-01"}
     missing = Rules.missing_required_fields(fm)
     assert_includes missing, "id"
     assert_includes missing, "title"
@@ -104,7 +104,7 @@ class RetroValidationRulesTest < AceRetroTestCase
   # --- missing_recommended_fields ---
 
   def test_missing_recommended_fields_all_present
-    fm = { "tags" => ["a"] }
+    fm = {"tags" => ["a"]}
     assert_empty Rules.missing_recommended_fields(fm)
   end
 

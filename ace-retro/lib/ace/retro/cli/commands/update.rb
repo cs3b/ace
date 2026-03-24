@@ -20,32 +20,32 @@ module Ace
           DESC
 
           example [
-            'q7w --set status=done',
+            "q7w --set status=done",
             'q7w --set status=done --set title="Refined title"',
-            'q7w --add tags=reviewed --remove tags=in-progress',
-            'q7w --set status=done --add tags=shipped',
-            'q7w --set status=done --move-to archive',
-            'q7w --move-to next'
+            "q7w --add tags=reviewed --remove tags=in-progress",
+            "q7w --set status=done --add tags=shipped",
+            "q7w --set status=done --move-to archive",
+            "q7w --move-to next"
           ]
 
           argument :ref, required: true, desc: "Retro reference (6-char ID or 3-char shortcut)"
 
-          option :set,    type: :string, repeat: true, desc: "Set field: key=value (can repeat)"
-          option :add,    type: :string, repeat: true, desc: "Add to array field: key=value (can repeat)"
+          option :set, type: :string, repeat: true, desc: "Set field: key=value (can repeat)"
+          option :add, type: :string, repeat: true, desc: "Add to array field: key=value (can repeat)"
           option :remove, type: :string, repeat: true, desc: "Remove from array field: key=value (can repeat)"
           option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, next)"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
-          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
-          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref:, **options)
-            set_args    = Array(options[:set])
-            add_args    = Array(options[:add])
+            set_args = Array(options[:set])
+            add_args = Array(options[:add])
             remove_args = Array(options[:remove])
-            move_to     = options[:move_to]
+            move_to = options[:move_to]
 
             if set_args.empty? && add_args.empty? && remove_args.empty? && move_to.nil?
               warn "Error: at least one of --set, --add, --remove, or --move-to is required"
@@ -54,8 +54,8 @@ module Ace
               raise Ace::Support::Cli::Error.new("No update operations specified")
             end
 
-            set_hash    = parse_kv_pairs(set_args)
-            add_hash    = parse_kv_pairs(add_args)
+            set_hash = parse_kv_pairs(set_args)
+            add_hash = parse_kv_pairs(add_args)
             remove_hash = parse_kv_pairs(remove_args)
 
             manager = Ace::Retro::Organisms::RetroManager.new
@@ -99,10 +99,10 @@ module Ace
 
               parsed = Ace::Support::Items::Atoms::FieldArgumentParser.parse([arg])
               parsed.each do |key, value|
-                if result.key?(key)
-                  result[key] = Array(result[key]) + Array(value)
+                result[key] = if result.key?(key)
+                  Array(result[key]) + Array(value)
                 else
-                  result[key] = value
+                  value
                 end
               end
             rescue Ace::Support::Items::Atoms::FieldArgumentParser::ParseError => e
