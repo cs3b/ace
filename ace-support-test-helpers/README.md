@@ -3,7 +3,7 @@
 
   Shared test harness and environment helpers for ACE packages.
 
-  <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
+  <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
 
   <a href="https://rubygems.org/gems/ace-support-test-helpers"><img alt="Gem Version" src="https://img.shields.io/gem/v/ace-support-test-helpers.svg" /></a>
