@@ -18,7 +18,7 @@
 
 ![ace-test-runner demo](docs/demo/ace-test-runner-getting-started.gif)
 
-`ace-test-runner` streamlines test execution so both developers and coding agents can run focused checks quickly, diagnose failures with context, and retain searchable execution history. It handles the execution side of testing; use [ace-test](../ace-test) for planning, review, and suite improvement workflows.
+`ace-test-runner` wraps [Minitest](https://github.com/minitest/minitest) with smart grouping, cross-package resolution, and persistent reports so both developers and coding agents can run focused checks quickly, diagnose failures with context, and retain searchable execution history. It handles the execution side of testing; use [ace-test](../ace-test) for planning, review, and suite improvement workflows.
 
 ## How It Works
 

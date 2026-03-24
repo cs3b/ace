@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "AI-friendly test runner with smart grouping, failure analysis, and persistent reports"
-  spec.description = "Runs ACE package tests with layered grouping, failure analysis context, and persistent run history for reproducible debugging."
+  spec.description = "Wraps Minitest with smart grouping, cross-package resolution, and persistent reports so developers and coding agents can run focused checks, diagnose failures with context, and retain searchable execution history."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

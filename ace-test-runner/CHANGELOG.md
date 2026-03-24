@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-24
+
+### Changed
+- Updated README intro to highlight Minitest wrapping, smart grouping, and cross-package resolution.
+- Updated gemspec description to mention Minitest explicitly.
+- Streamlined handbook to defer skill catalog to ace-test; fixed capitalization in workflow table.
+- Re-recorded getting-started demo with real `ace-b36ts` test runs and suite execution.
+- Simplified getting-started guide installation section.
+
 ## [0.17.2] - 2026-03-23
 
 ### Changed

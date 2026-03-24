@@ -11,18 +11,9 @@ ace-docs:
 
 ## Skills and workflows
 
-| Skill | What it does |
-|-------|-------------|
-| `as-test-plan` | Create task-level test execution plans |
-| `as-test-create-cases` | Convert behaviors into test cases |
-| `as-test-fix` | Execute structured test-failure repair workflows |
-| `as-test-improve-coverage` | Surface and plan coverage gaps |
-| `as-test-verify-suite` | Run suite health checks |
-| `as-test-optimize` | Profile and improve slow tests |
-| `as-test-performance-audit` | Run focused test performance analysis |
-| `as-test-review` | Apply quality review templates to test deliverables |
+Skills and workflows for test planning, review, and improvement are shipped by [ace-test](../ace-test). `ace-test-runner` provides the execution runtime that those workflows invoke. See the [ace-test handbook](../ace-test/docs/handbook.md) for the full skill and workflow catalog.
 
-## Workflow protocols
+## Workflow protocols (from ace-test)
 
 | Protocol | Purpose |
 |----------|---------|
@@ -34,7 +25,7 @@ ace-docs:
 | `wfi://test/optimize` | Reduce slow or unstable tests |
 | `wfi://test/performance-audit` | Produce a structured performance profile |
 | `wfi://test/review` | Review test and execution work |
-| `wfi://test/analyze-failures` | triage repeated failure patterns |
+| `wfi://test/analyze-failures` | Triage repeated failure patterns |
 
 ## Source paths
 

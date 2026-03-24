@@ -1,20 +1,40 @@
 ---
-description: Demonstrate ace-test in-progress and group runs
+description: Run real unit tests with ace-test from project root
 tags:
-- ace-test-runner
-- docs
-- getting-started
+    - ace-test-runner
+    - docs
+    - getting-started
 settings:
-  font_size: 16
-  width: 960
-  height: 540
-  format: gif
+    font_size: 12
+    width: 960
+    height: 540
+    format: gif
+    env:
+        PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
-- name: Main flow
-  commands:
-  - type: ace-test --help
-    sleep: 2s
-  - type: ace-test ace-demo atoms --max-display 3
-    sleep: 2s
+    - name: Switch to project root
+      commands:
+          - type: cd $PROJECT_ROOT_PATH && clear
+            sleep: 1s
+    - name: Run all package tests
+      commands:
+          - type: ace-test ace-b36ts
+            sleep: 5s
+          - type: clear
+            sleep: 1s
+    - name: Run targeted group
+      commands:
+          - type: ace-test ace-b36ts atoms
+            sleep: 3s
+    - name: Profile slowest tests
+      commands:
+          - type: ace-test ace-b36ts --profile 5
+            sleep: 5s
+          - type: clear
+            sleep: 1s
+    - name: Run the suite
+      commands:
+          - type: ace-test-suite --progress
+            sleep: 10s
 teardown:
-- cleanup
+    - cleanup
