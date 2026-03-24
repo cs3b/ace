@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-03-24
+
+### Fixed
+- Fixed stale `--fix` and `--fix-with-agent` flag references in README to match actual `--auto-fix` and `--auto-fix-with-agent` CLI flags.
+- Corrected skill count in handbook reference from 12 to 10 (actual shipped count).
+- Aligned README tagline with gemspec summary (removed `(specs)` parenthetical, consistent em-dash).
+
+### Changed
+- Reworked demo tape to remove shell piping anti-pattern and add `status` and `doctor` scene coverage.
+- Added fixture task seed data for predictable sandbox-based demo recordings.
+
 ## [0.30.7] - 2026-03-23
 
 ### Changed

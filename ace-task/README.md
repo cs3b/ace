@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Task </h1>
 
-  Draft, organize, and tackle tasks (specs) - for you and your agents.
+  Draft, organize, and tackle tasks — for you and your agents.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -44,7 +44,7 @@ Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated bra
 
 **Track progress** - `ace-task list` shows tasks by status - what is next, what is in progress, and what was recently completed. `ace-task status` gives a focused view of the current task with subtask progress.
 
-**Keep it healthy** - with flexible folder structures and work spread across multiple branches, things can drift. `ace-task doctor` detects structural issues - orphaned subtasks, broken references, inconsistent status. Run it with `--fix` for automatic repairs, or `--fix-with-agent` to let an agent resolve issues that need judgment.
+**Keep it healthy** - with flexible folder structures and work spread across multiple branches, things can drift. `ace-task doctor` detects structural issues - orphaned subtasks, broken references, inconsistent status. Run it with `--auto-fix` for automatic repairs, or `--auto-fix-with-agent` to let an agent resolve issues that need judgment.
 
 **Organize** - move a task to a folder and it is created automatically. Special folders like `_maybe` and `_anytime` group tasks by intent. `_archive` partitions completed tasks by date so they stay browsable as the project grows. Sort by priority, creation date, or pin position manually.
 

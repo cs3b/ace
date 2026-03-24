@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-task list, create, show, and archive workflow
+description: Showcase ace-task list, create, show, status, and doctor
 tags:
 - ace-task
 - docs
@@ -16,22 +16,25 @@ scenes:
     sleep: 3s
   - type: ace-task list --status pending
     sleep: 3s
-- name: Create a task with all key options
+- name: Create a new task
   commands:
-  - type: TASK_ID=$(ace-task create "Add health check endpoint" --priority high --tags ops,infra --status pending | grep -Eo '[a-z0-9]+\.t\.[a-z0-9]+' | tail -n 1) && echo "Created ${TASK_ID}"
+  - type: ace-task create "Add health check endpoint" --priority high --tags ops,infra
     sleep: 3s
-- name: Show task details and tree view
+- name: Show task with subtask tree
   commands:
-  - type: ace-task show "$TASK_ID"
+  - type: ace-task show 002 --tree
     sleep: 3s
-  - type: ace-task show "$TASK_ID" --tree
-    sleep: 3s
-- name: Archive task
+- name: Status dashboard
   commands:
-  - type: ace-task update "$TASK_ID" --set status=done --move-to archive
+  - type: ace-task status
+    sleep: 3s
+- name: Health checks
+  commands:
+  - type: ace-task doctor
     sleep: 3s
 teardown:
 - cleanup
 setup:
 - sandbox
 - copy-fixtures
+- git-init

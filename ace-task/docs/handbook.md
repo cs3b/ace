@@ -13,7 +13,7 @@ The `handbook/` directory powers agent-assisted workflows. Skills are invoked by
 
 ## Skills
 
-ace-task ships 12 skills for task and bug management. Each skill wraps a workflow instruction and can be invoked via `/as-<name>` in agent conversations.
+ace-task ships 10 skills for task and bug management. Each skill wraps a workflow instruction and can be invoked via `/as-<name>` in agent conversations.
 
 ### Task Lifecycle
 
