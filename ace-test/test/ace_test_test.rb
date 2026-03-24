@@ -142,7 +142,7 @@ module Ace
         assert Dir.exist?(workflows_path), "Workflow path #{workflows_path} should exist"
 
         pattern = content.match(/pattern:\s*"(\S+)"/)&.[](1) || "*.wf.md"
-        workflow_files = Dir.glob(File.join(workflows_path, pattern))
+        workflow_files = Dir.glob(File.join(workflows_path, "**", pattern))
         refute_empty workflow_files, "Should find at least one workflow file matching #{pattern}"
       end
     end
