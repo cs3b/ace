@@ -16,7 +16,6 @@ class RetroModelTest < AceRetroTestCase
         file_path: "/tmp/8ppq7w-sprint-review/8ppq7w-sprint-review.retro.md",
         special_folder: nil,
         created_at: Time.now,
-        task_ref: nil,
         folder_contents: [],
         metadata: {}
       }.merge(overrides)
@@ -50,11 +49,6 @@ class RetroModelTest < AceRetroTestCase
   def test_special_when_in_special_folder
     retro = make_retro(special_folder: "_archive")
     assert retro.special?
-  end
-
-  def test_with_task_ref
-    retro = make_retro(task_ref: "292.01")
-    assert_equal "292.01", retro.task_ref
   end
 
   def test_with_folder_contents

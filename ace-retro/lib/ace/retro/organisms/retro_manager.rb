@@ -28,13 +28,12 @@ module Ace
         # @param title [String] Retro title
         # @param type [String, nil] Retro type (standard, conversation-analysis, self-review)
         # @param tags [Array<String>] Tags
-        # @param task_ref [String, nil] Optional task reference
         # @param move_to [String, nil] Target folder
         # @return [Retro] Created retro
-        def create(title, type: nil, tags: [], task_ref: nil, move_to: nil)
+        def create(title, type: nil, tags: [], move_to: nil)
           ensure_root_dir
           creator = Molecules::RetroCreator.new(root_dir: @root_dir, config: @config)
-          creator.create(title, type: type, tags: tags, task_ref: task_ref, move_to: move_to)
+          creator.create(title, type: type, tags: tags, move_to: move_to)
         end
 
         # Show (load) a single retro by reference

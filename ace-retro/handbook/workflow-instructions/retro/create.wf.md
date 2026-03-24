@@ -44,9 +44,6 @@ ace-retro create "topic-slug"
 
 # With type and tags
 ace-retro create "topic-slug" --type standard --tags sprint,team
-
-# With task reference
-ace-retro create "topic-slug" --task-ref 148
 ```
 
 Read the created file path from the command output.

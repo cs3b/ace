@@ -13,14 +13,13 @@ module Ace
           desc <<~DESC.strip
             Create a new retro
 
-            Creates a new retrospective with title, type, tags, and optional task linkage.
+            Creates a new retrospective with title, type, and tags.
 
           DESC
 
           example [
             '"Sprint Review" --type standard --tags sprint,team        # Standard retro',
             '"Quick self-review" --type self-review                    # Self-review retro',
-            '"Sprint Review" --task-ref q7w                            # Link to task',
             '"Sprint Review" --move-to archive                        # Create in _archive/',
             '"Sprint Review" --dry-run                                # Preview without writing'
           ]
@@ -29,7 +28,6 @@ module Ace
 
           option :type,      type: :string,  aliases: %w[-t], desc: "Retro type (standard, conversation-analysis, self-review)"
           option :tags,      type: :string,  aliases: %w[-T], desc: "Comma-separated tags"
-          option :"task-ref", type: :string,  aliases: %w[-r], desc: "Link to task reference"
           option :"move-to", type: :string,  aliases: %w[-m], desc: "Target folder (e.g. archive)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
@@ -42,7 +40,6 @@ module Ace
           def call(title: nil, **options)
             type     = options[:type]
             tags_str = options[:tags]
-            task_ref = options[:"task-ref"]
             move_to  = options[:"move-to"]
             dry_run  = options[:"dry-run"]
 
@@ -51,7 +48,7 @@ module Ace
             unless title
               warn "Error: title is required"
               warn ""
-              warn "Usage: ace-retro create TITLE [--type TYPE] [--tags T1,T2] [--task-ref REF] [--move-to FOLDER]"
+              warn "Usage: ace-retro create TITLE [--type TYPE] [--tags T1,T2] [--move-to FOLDER]"
               raise Ace::Support::Cli::Error.new("Title required")
             end
 
@@ -60,7 +57,6 @@ module Ace
               puts "  Title:    #{title}"
               puts "  Type:     #{type || 'standard'}"
               puts "  Tags:     #{tags.any? ? tags.join(', ') : '(none)'}"
-              puts "  Task ref: #{task_ref || '(none)'}"
               puts "  Folder:   #{move_to ? "_#{move_to.delete_prefix('_')}" : '(root)'}"
               return
             end
@@ -70,7 +66,6 @@ module Ace
               title,
               type: type,
               tags: tags,
-              task_ref: task_ref,
               move_to: move_to
             )
 

@@ -72,18 +72,6 @@ class RetroLoaderTest < AceRetroTestCase
     end
   end
 
-  def test_loads_task_ref_from_frontmatter
-    with_retros_dir do |root|
-      retro_dir = create_retro_fixture(root, id: "8ppq7w", slug: "sprint-review",
-                                       task_ref: "292.01")
-
-      loader = Ace::Retro::Molecules::RetroLoader.new
-      retro = loader.load(retro_dir, id: "8ppq7w")
-
-      assert_equal "292.01", retro.task_ref
-    end
-  end
-
   def test_from_scan_result
     with_retros_dir do |root|
       create_retro_fixture(root, id: "8ppq7w", slug: "sprint-review")

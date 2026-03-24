@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Retro </h1>
 
-  Structured retrospective management for ACE workflows, from capture to archive.
+  Lightweight retrospective management — create, tag, and archive retros from the command line.
 
   <img src="https://raw.githubusercontent.com/cs3b/ace/main/docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -18,19 +18,17 @@
 
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
-`ace-retro` helps teams capture learning while context is still fresh, keep retros connected to tasks, and maintain a searchable archive for follow-up improvements. Use `/as-retro-create` to start a retro from inside a coding agent, or `/as-retro-synthesize` to distill patterns across multiple retros.
+`ace-retro` helps teams capture learning while context is still fresh and maintain a searchable archive for follow-up improvements. Use [`ace-retro create`](docs/usage.md) to start a retro from the CLI (or `/as-retro-create` from an interactive agent session), and `/as-retro-synthesize` to distill patterns across multiple retros.
 
 ## How It Works
 
 1. Create a retrospective from type-aware templates (standard, conversation-analysis, or self-review) with [`ace-retro create`](docs/usage.md).
-2. Link retros to [ace-task](../ace-task) references and enrich metadata with tags and status updates.
+2. Enrich metadata with tags and status updates.
 3. Archive completed retros to preserve history while keeping the active workspace clean.
 
 ## Use Cases
 
 **Capture retros quickly after delivery** - use `/as-retro-create` or [`ace-retro create`](docs/usage.md) to initialize a retro from templates while the work is still fresh.
-
-**Keep retros connected to delivery work** - link retros to [ace-task](../ace-task) references and [ace-assign](../ace-assign) follow-up actions so findings stay tied to concrete changes.
 
 **Synthesize patterns across retros** - use `/as-retro-synthesize` to distill recurring themes and improvement opportunities from multiple retrospectives.
 

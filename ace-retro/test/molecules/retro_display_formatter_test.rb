@@ -16,7 +16,6 @@ class RetroDisplayFormatterTest < AceRetroTestCase
         file_path: "/tmp/test/file.retro.md",
         special_folder: nil,
         created_at: Time.now,
-        task_ref: nil,
         folder_contents: [],
         metadata: {}
       }.merge(overrides)
@@ -35,12 +34,6 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     retro = make_retro(tags: ["sprint", "team"])
     output = Ace::Retro::Molecules::RetroDisplayFormatter.format(retro)
     assert_includes output, "[sprint, team]"
-  end
-
-  def test_format_with_task_ref
-    retro = make_retro(task_ref: "292.01")
-    output = Ace::Retro::Molecules::RetroDisplayFormatter.format(retro)
-    assert_includes output, "292.01"
   end
 
   def test_format_with_special_folder

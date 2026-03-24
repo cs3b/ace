@@ -36,7 +36,6 @@ Create a new retrospective.
 |--------|-------|-------------|
 | `--type` | `-t` | Retro type: `standard`, `conversation-analysis`, `self-review` |
 | `--tags` | `-T` | Comma-separated tags |
-| `--task-ref` | `-r` | Link retro to task reference |
 | `--move-to` | `-m` | Create directly in a target folder (for example `archive`) |
 | `--dry-run` | `-n` | Preview without writing |
 | `--gc`, `--git-commit` | | Auto-commit changes |
@@ -44,7 +43,6 @@ Create a new retrospective.
 ```bash
 ace-retro create "Sprint Review" --type standard --tags sprint,team
 ace-retro create "Session Review" --type conversation-analysis
-ace-retro create "Task Wrap-up" --task-ref 8q4.t.umu.3
 ace-retro create "Release Retro" --move-to archive
 ```
 
@@ -114,7 +112,7 @@ Run health checks across retros.
 | `--no-color` | | Disable colored output |
 | `--json` | | Emit JSON output |
 | `--dry-run` | `-n` | Preview fixes without applying |
-| `--check` | | Limit to check: `frontmatter`, `structure`, `scope` |
+| `--check` | | Limit to check: `frontmatter` (YAML metadata block at file top), `structure`, `scope` |
 
 ```bash
 ace-retro doctor

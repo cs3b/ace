@@ -11,7 +11,7 @@ module Ace
   module Retro
     module Molecules
       # Creates new retros with b36ts IDs, folder+file creation.
-      # Supports --type, --task-ref, and --move-to options.
+      # Supports --type and --move-to options.
       class RetroCreator
         # @param root_dir [String] Root directory for retros
         # @param config [Hash] Configuration hash
@@ -24,11 +24,10 @@ module Ace
         # @param title [String] Retro title
         # @param type [String] Retro type (standard, conversation-analysis, self-review)
         # @param tags [Array<String>] Tags for the retro
-        # @param task_ref [String, nil] Optional task reference
         # @param move_to [String, nil] Target folder for the retro
         # @param time [Time] Creation time (default: now)
         # @return [Retro] Created retro object
-        def create(title, type: nil, tags: [], task_ref: nil, move_to: nil, time: Time.now.utc)
+        def create(title, type: nil, tags: [], move_to: nil, time: Time.now.utc)
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
           effective_type = type || @config.dig("retro", "default_type") || "standard"
@@ -54,8 +53,7 @@ module Ace
             type: effective_type,
             tags: tags,
             status: "active",
-            created_at: time,
-            task_ref: task_ref
+            created_at: time
           )
 
           # Write retro file

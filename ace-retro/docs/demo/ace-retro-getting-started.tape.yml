@@ -14,7 +14,7 @@ scenes:
   commands:
   - type: RETRO_ID=$(ace-retro create "Sprint Review" --type standard --tags sprint,team | ruby -ne 'if $_ =~ /\b([a-z0-9]{6})-[a-z0-9-]+\.retro\.md\b/; puts $1; break; end') && echo "Created ${RETRO_ID}"
     sleep: 4s
-- name: List active retros with tags and task references
+- name: List active retros with tags
   commands:
   - type: ace-retro list
     sleep: 6s

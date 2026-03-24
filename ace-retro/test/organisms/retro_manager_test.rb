@@ -159,15 +159,6 @@ class RetroManagerTest < AceRetroTestCase
     end
   end
 
-  def test_create_with_task_ref
-    with_retros_dir do |root|
-      manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
-      retro = manager.create("Sprint Review", task_ref: "q7w")
-
-      assert_equal "q7w", retro.task_ref
-    end
-  end
-
   def test_create_with_move_to
     with_retros_dir do |root|
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
