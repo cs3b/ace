@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.979] - 2026-03-24
+
+### Changed
+- **ace-test v0.6.0**: Refreshed README tagline and fixed stale verify-suite link to reference ace-test-runner.
+
 ## [0.9.978] - 2026-03-24
 
 ### Changed
