@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.974] - 2026-03-24
+
+### Fixed
+- **ace-review v0.49.0**: Added missing `ace-review-feedback` executable to gemspec; removed stale task-symlink documentation from feedback workflow guide; re-recorded getting-started demo.
+
 ## [0.9.973] - 2026-03-24
 
 ### Changed
