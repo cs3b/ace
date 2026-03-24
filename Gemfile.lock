@@ -193,7 +193,7 @@ PATH
       ace-support-core (~> 0.25)
       ace-support-fs (~> 0.2)
       ace-task (~> 0.18)
-      ace-tmux (~> 0.10)
+      ace-tmux (~> 0.11)
 
 PATH
   remote: ace-prompt-prep
@@ -362,7 +362,7 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.10.2)
+    ace-tmux (0.11.0)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
       ace-support-core (~> 0.25)
