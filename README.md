@@ -15,7 +15,7 @@
 
 ## The Problem
 
-Coding agents can write code, but they operate in a vacuum. They can't manage tasks, load project context, run structured reviews, or follow multi-step pipelines — you end up doing all of that manually:
+Coding agents can write code, but they still lack the workflow layer around the code:
 
 - Your tasks live in a SaaS dashboard your agent can't see
 - Context is scattered across files the agent doesn't know to load
@@ -26,7 +26,11 @@ ACE gives agent harnesses like Claude Code and Codex CLI the workflow layer they
 
 ## What ACE Does
 
-**Tasks and ideas as files your agent can read** — capture ideas, draft them into task specs with subtask trees, and track progress — all as markdown files in your repo that any agent can read and act on.
+**Tasks and ideas as files your agent can read**
+
+- Capture ideas and turn them into task specs with subtasks.
+- Track progress in markdown files that live in your repo.
+- Let any agent read the same task state you do.
 
 ```bash
 ace-idea create "Add retry logic to webhook delivery" --tags reliability
@@ -35,7 +39,11 @@ ace-task create "Implement webhook retry" --priority high
 
 [`ace-task`](ace-task/) | [`ace-idea`](ace-idea/)
 
-**One command from task to shipped PR** — provision an isolated worktree, open a tmux window, and kick off a multi-step assignment that walks through implement, test, review, and ship. A retrospective is generated when done.
+**One command from task to shipped PR**
+
+- Provision an isolated worktree.
+- Open a tmux window for focused execution.
+- Kick off a multi-step assignment that runs implement, test, review, and ship.
 
 ```bash
 ace-overseer work-on --task 8r3
@@ -43,7 +51,11 @@ ace-overseer work-on --task 8r3
 
 [`ace-overseer`](ace-overseer/) orchestrates [`ace-assign`](ace-assign/), [`ace-git-worktree`](ace-git-worktree/), and [`ace-tmux`](ace-tmux/)
 
-**Multi-model code review with tracked feedback** — run the same diff through multiple LLM providers, compare their analysis, and track suggestions through a verified/pending/resolved lifecycle. Presets control what each review focuses on — correctness, security, or polish.
+**Multi-model code review with tracked feedback**
+
+- Run the same diff through multiple LLM providers.
+- Compare review output side by side.
+- Track suggestions through a verified, pending, and resolved lifecycle.
 
 ```bash
 ace-review --preset code-deep --pr 123
@@ -51,7 +63,10 @@ ace-review --preset code-deep --pr 123
 
 [`ace-review`](ace-review/)
 
-**Context loading on demand** — pull project context, workflow instructions, and guides through a protocol system (`wfi://`, `guide://`, `tmpl://`). Bundle them for agents or load them yourself.
+**Context loading on demand**
+
+- Load project context, workflow instructions, and guides through `wfi://`, `guide://`, and `tmpl://`.
+- Bundle context for agents or load it directly yourself.
 
 ```bash
 ace-bundle wfi://task/work
@@ -61,12 +76,14 @@ ace-bundle wfi://task/work
 
 ## Install
 
+Start small with smart commits, or install the full orchestration stack:
+
 ```bash
 gem install ace-git-commit    # smart commits, zero config
 gem install ace-overseer      # full orchestrator stack
 ```
 
-Ruby 3.2+ required. Each ace-* gem installs independently — start with one tool and add more as you need them.
+Ruby 3.2+ required. Each ace-* gem installs independently, so you can start with one tool and add more as needed.
 
 ## Principles
 
@@ -77,23 +94,23 @@ Ruby 3.2+ required. Each ace-* gem installs independently — start with one too
 
 ## The Toolkit
 
-**Plan** — [`ace-idea`](ace-idea/) capture and shape ideas | [`ace-task`](ace-task/) markdown task specs with subtasks | [`ace-retro`](ace-retro/) retrospectives
-
-**Build** — [`ace-overseer`](ace-overseer/) orchestrate full task pipelines | [`ace-assign`](ace-assign/) multi-step assignments | [`ace-git-worktree`](ace-git-worktree/) isolated worktrees | [`ace-git-commit`](ace-git-commit/) intention-aware commits
-
-**Review** — [`ace-review`](ace-review/) multi-model preset reviews | [`ace-test-runner`](ace-test-runner/) smart test execution | [`ace-lint`](ace-lint/) linting | [`ace-docs`](ace-docs/) doc freshness tracking
-
-**Context** — [`ace-bundle`](ace-bundle/) context assembly | [`ace-handbook`](ace-handbook/) workflows, guides, templates, skills | [`ace-search`](ace-search/) codebase search | [`ace-llm`](ace-llm/) multi-provider LLM queries
-
-**Secure** — [`ace-git-secrets`](ace-git-secrets/) credential leak scanning and revocation
+- **Plan**: [`ace-idea`](ace-idea/) to capture and shape ideas, [`ace-task`](ace-task/) for markdown task specs with subtasks, [`ace-retro`](ace-retro/) for retrospectives.
+- **Build**: [`ace-overseer`](ace-overseer/) to orchestrate task pipelines, [`ace-assign`](ace-assign/) for multi-step assignments, [`ace-git-worktree`](ace-git-worktree/) for isolated worktrees, [`ace-git-commit`](ace-git-commit/) for intention-aware commits.
+- **Review**: [`ace-review`](ace-review/) for multi-model preset reviews, [`ace-test-runner`](ace-test-runner/) for smart test execution, [`ace-lint`](ace-lint/) for linting, [`ace-docs`](ace-docs/) for doc freshness tracking.
+- **Context**: [`ace-bundle`](ace-bundle/) for context assembly, [`ace-handbook`](ace-handbook/) for workflows, guides, templates, and skills, [`ace-search`](ace-search/) for codebase search, [`ace-llm`](ace-llm/) for multi-provider LLM queries.
+- **Secure**: [`ace-git-secrets`](ace-git-secrets/) for credential leak scanning and revocation.
 
 40+ packages total, including shared libraries and [agent platform integrations](ace-handbook-integration-claude/). See [Tools Reference](docs/tools.md) for the complete inventory.
 
 ## Agent Platform Support
 
-ACE skills project natively to multiple agent platforms. Install an integration package and workflows, guides, and skills appear in your agent's expected directory structure:
+ACE skills project natively to multiple agent platforms. Install an integration package and workflows, guides, and skills appear in your agent's expected directory structure.
 
-[Claude Code](ace-handbook-integration-claude/) | [Codex CLI](ace-handbook-integration-codex/) | [Gemini CLI](ace-handbook-integration-gemini/) | [OpenCode](ace-handbook-integration-opencode/) | [pi-agent](ace-handbook-integration-pi/)
+- [Claude Code](ace-handbook-integration-claude/)
+- [Codex CLI](ace-handbook-integration-codex/)
+- [Gemini CLI](ace-handbook-integration-gemini/)
+- [OpenCode](ace-handbook-integration-opencode/)
+- [pi-agent](ace-handbook-integration-pi/)
 
 ---
 
