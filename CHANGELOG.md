@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.975] - 2026-03-24
+
+### Fixed
+- **ace-search v0.24.0**: Expanded DWIM acronym in README; corrected preset path in getting-started guide; re-recorded demo with shipped `code` preset.
+
 ## [0.9.974] - 2026-03-24
 
 ### Fixed
