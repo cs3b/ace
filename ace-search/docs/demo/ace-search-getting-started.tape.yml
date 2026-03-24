@@ -18,7 +18,7 @@ scenes:
     sleep: 3s
   - type: ace-search "TODO" --tracked
     sleep: 3s
-  - type: ace-search "class" --preset my-preset
+  - type: ace-search "class" --preset code
     sleep: 3s
 teardown:
 - cleanup

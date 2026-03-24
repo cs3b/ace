@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-03-24
+
+### Fixed
+- Expanded "DWIM" acronym to "Do What I Mean" on first use in README for clarity.
+- Corrected preset path in getting-started guide from `.ace/search/config.yml` to `.ace/search/presets/<name>.yml`.
+
+### Changed
+- Updated demo tape to use shipped `code` preset instead of non-existent `my-preset`; re-recorded getting-started GIF.
+
 ## [0.23.2] - 2026-03-23
 
 ### Changed

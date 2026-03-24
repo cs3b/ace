@@ -18,7 +18,7 @@
 
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
-`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
+`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM — Do What I Mean), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
 
 ## How It Works
 
