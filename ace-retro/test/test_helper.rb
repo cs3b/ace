@@ -16,14 +16,12 @@ class AceRetroTestCase < AceTestCase
 
   # Helper to create a minimal retro in a directory
   def create_retro_fixture(root_dir, id:, slug:, status: "active", type: "standard",
-                           tags: [], task_ref: nil, special_folder: nil)
+                           tags: [], special_folder: nil)
     parent = special_folder ? File.join(root_dir, special_folder) : root_dir
     FileUtils.mkdir_p(parent)
     folder_name = "#{id}-#{slug}"
     retro_dir = File.join(parent, folder_name)
     FileUtils.mkdir_p(retro_dir)
-
-    task_ref_line = task_ref ? "task_ref: \"#{task_ref}\"" : ""
 
     content = <<~CONTENT
       ---
@@ -33,7 +31,6 @@ class AceRetroTestCase < AceTestCase
       tags: [#{tags.join(", ")}]
       created_at: 2026-02-28 12:00:00
       status: #{status}
-      #{task_ref_line}
       ---
 
       # #{slug.tr("-", " ").capitalize}

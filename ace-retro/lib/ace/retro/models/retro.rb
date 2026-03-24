@@ -16,7 +16,6 @@ module Ace
         :file_path,       # Full path to the .retro.md file
         :special_folder,  # Special folder if any (e.g., "_archive", nil)
         :created_at,      # Time object for creation time
-        :task_ref,        # Optional linked task ID
         :folder_contents, # Array of additional filenames in the retro folder
         :metadata,        # Additional frontmatter fields as Hash
         keyword_init: true

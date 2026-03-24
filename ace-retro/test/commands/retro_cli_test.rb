@@ -73,22 +73,6 @@ class RetroCliTest < AceRetroTestCase
     end
   end
 
-  def test_create_with_task_ref
-    with_retros_dir do |root|
-      with_cli_root(root) do
-        result = run_cli(["create", "Task retro", "--task-ref", "q7w"])
-        assert_equal 0, result[:exit_code], result[:stderr]
-        assert_match(/Retro created:/, result[:stdout])
-
-        # Verify task_ref was stored
-        manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
-        retros = manager.list
-        assert_equal 1, retros.size
-        assert_equal "q7w", retros.first.task_ref
-      end
-    end
-  end
-
   def test_create_with_move_to
     with_retros_dir do |root|
       with_cli_root(root) do

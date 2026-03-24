@@ -34,15 +34,6 @@ class RetroCreatorTest < AceRetroTestCase
     end
   end
 
-  def test_creates_retro_with_task_ref
-    with_retros_dir do |root|
-      creator = Ace::Retro::Molecules::RetroCreator.new(root_dir: root)
-      retro = creator.create("Sprint Review", task_ref: "292.01")
-
-      assert_equal "292.01", retro.task_ref
-    end
-  end
-
   def test_creates_retro_in_move_to_folder
     with_retros_dir do |root|
       creator = Ace::Retro::Molecules::RetroCreator.new(root_dir: root)
@@ -89,7 +80,7 @@ class RetroCreatorTest < AceRetroTestCase
   def test_retro_file_has_valid_frontmatter
     with_retros_dir do |root|
       creator = Ace::Retro::Molecules::RetroCreator.new(root_dir: root)
-      retro = creator.create("Sprint Review", type: "standard", task_ref: "q7w")
+      retro = creator.create("Sprint Review", type: "standard")
 
       content = File.read(retro.file_path)
       assert content.start_with?("---\n")
@@ -103,7 +94,6 @@ class RetroCreatorTest < AceRetroTestCase
       assert_equal retro.id, fm["id"]
       assert_equal "active", fm["status"]
       assert_equal "standard", fm["type"]
-      assert_equal "q7w", fm["task_ref"]
     end
   end
 

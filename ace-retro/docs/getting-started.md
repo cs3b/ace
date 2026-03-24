@@ -35,7 +35,7 @@ ace-retro create "Weekly Self Review" --type self-review
 
 ## 2) View and list retros
 
-Use the ID printed by `create` (e.g. `q7w`) to inspect a specific retro:
+Every retro gets a short ID (last 3 characters of a timestamp-based identifier). Use the ID printed by `create` (e.g. `q7w`) to inspect a specific retro:
 
 ```bash
 ace-retro show q7w          # replace q7w with the ID from step 1
@@ -51,15 +51,7 @@ ace-retro list --type standard
 ace-retro list --tags sprint,team
 ```
 
-## 3) Link retros to tasks
-
-```bash
-ace-retro create "Task Wrap-up" --task-ref 8q4.t.umu.3
-```
-
-This keeps reflections attached to the work item they describe.
-
-## 4) Archive completed retros
+## 3) Archive completed retros
 
 ```bash
 ace-retro update q7w --set status=done --move-to archive   # replace q7w with your retro ID

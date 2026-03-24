@@ -41,10 +41,8 @@ module Ace
           tags_str = retro.tags.any? ? c.colorize(" [#{retro.tags.join(", ")}]", c::DIM) : ""
           folder_str = retro.special_folder ? c.colorize(" (#{retro.special_folder})", c::DIM) : ""
           type_str = c.colorize(" <#{TYPE_LABELS[retro.type] || retro.type}>", c::DIM)
-          task_str = retro.task_ref ? c.colorize(" \u2192 #{retro.task_ref}", c::DIM) : ""
-
           lines = []
-          lines << "#{status_sym} #{id_str} #{retro.title}#{type_str}#{tags_str}#{task_str}#{folder_str}"
+          lines << "#{status_sym} #{id_str} #{retro.title}#{type_str}#{tags_str}#{folder_str}"
 
           if show_content && retro.content && !retro.content.strip.empty?
             lines << ""

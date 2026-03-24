@@ -54,7 +54,7 @@ module Ace
           created_at = parse_created_at(frontmatter["created_at"], id)
 
           # Extract known fields, preserve others in metadata
-          known_keys = %w[id status title type tags created_at task_ref]
+          known_keys = %w[id status title type tags created_at]
           extra_metadata = frontmatter.reject { |k, _| known_keys.include?(k) }
 
           Models::Retro.new(
@@ -68,7 +68,6 @@ module Ace
             file_path: retro_file,
             special_folder: special_folder,
             created_at: created_at,
-            task_ref: frontmatter["task_ref"],
             folder_contents: folder_contents,
             metadata: extra_metadata
           )

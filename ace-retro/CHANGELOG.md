@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-24
+
+### Changed
+- Removed `task_ref` feature: dropped `--task-ref` CLI flag, model field, frontmatter key, and display formatting.
+- Aligned README tagline with gemspec summary; added CLI-first onboarding language.
+- Re-recorded getting-started demo with dynamic ID capture.
+
+### Fixed
+- VHS tape compiler now uses backtick quoting for commands containing quotes, `$`, or backslashes.
+
+### Technical
+- Cleaned task_ref references from docs, handbook workflow, test helper, and all test layers.
+- Added inline jargon definitions for short IDs and frontmatter in docs.
+
 ## [0.15.4] - 2026-03-23
 
 ### Changed

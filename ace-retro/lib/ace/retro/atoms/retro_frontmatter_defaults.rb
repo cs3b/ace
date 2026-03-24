@@ -15,11 +15,10 @@ module Ace
         # @param tags [Array<String>] List of tags (default: [])
         # @param status [String] Initial status (default: "active")
         # @param created_at [Time] Creation time (default: now)
-        # @param task_ref [String, nil] Optional task reference
         # @return [Hash] Frontmatter hash ready for YAML serialization
         def self.build(id:, title:, type: "standard", tags: [], status: "active",
-                       created_at: Time.now.utc, task_ref: nil)
-          fm = {
+                       created_at: Time.now.utc)
+          {
             "id" => id,
             "title" => title,
             "type" => type,
@@ -27,8 +26,6 @@ module Ace
             "created_at" => created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "status" => status
           }
-          fm["task_ref"] = task_ref if task_ref
-          fm
         end
 
         # Serialize frontmatter hash to YAML block string.

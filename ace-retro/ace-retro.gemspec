@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Lightweight retrospective management -- create, tag, and archive retros from the command line"
+  spec.summary = "Lightweight retrospective management — create, tag, and archive retros from the command line"
   spec.description = "Create, review, and archive retrospectives from the command line with type-aware templates, " \
                      "task linkage, and health checks for long-running retrospective work."
   spec.homepage = "https://github.com/cs3b/ace"

@@ -18,26 +18,6 @@ class RetroFrontmatterDefaultsTest < AceRetroTestCase
     assert_equal ["sprint"], fm["tags"]
     assert_equal "active", fm["status"]
     assert_equal "2026-02-28 12:00:00", fm["created_at"]
-    refute fm.key?("task_ref")
-  end
-
-  def test_build_includes_task_ref_when_provided
-    fm = Ace::Retro::Atoms::RetroFrontmatterDefaults.build(
-      id: "8ppq7w",
-      title: "Sprint Review",
-      task_ref: "q7w"
-    )
-
-    assert_equal "q7w", fm["task_ref"]
-  end
-
-  def test_build_omits_task_ref_when_nil
-    fm = Ace::Retro::Atoms::RetroFrontmatterDefaults.build(
-      id: "8ppq7w",
-      title: "Sprint Review"
-    )
-
-    refute fm.key?("task_ref")
   end
 
   def test_serialize_returns_yaml_string

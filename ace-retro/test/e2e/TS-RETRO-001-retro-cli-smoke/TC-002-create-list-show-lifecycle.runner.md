@@ -10,7 +10,7 @@ separate CLI invocations.
 Save artifacts to `results/tc/02/`.
 
 Capture:
-- `results/tc/02/create.stdout`, `.stderr`, `.exit` from a create command with tags and task-ref
+- `results/tc/02/create.stdout`, `.stderr`, `.exit` from a create command with tags
 - `results/tc/02/retro-id.txt` containing the created retro ID parsed from output
 - `results/tc/02/list.stdout`, `.stderr`, `.exit` from `ace-retro list`
 - `results/tc/02/show.stdout`, `.stderr`, `.exit` from `ace-retro show <id>`
