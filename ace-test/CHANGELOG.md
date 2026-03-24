@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-24
+
+### Changed
+- Refreshed README tagline to emphasize knowledge-base role and fast, reliable tests.
+- Fixed verify-suite use-case to reference `ace-test-runner` instead of stale `ace-test` CLI link.
+
 ## [0.5.2] - 2026-03-23
 
 ### Changed
