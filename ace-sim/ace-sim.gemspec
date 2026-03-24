@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Multi-provider LLM simulations for validating ideas and reviewing tasks"
-  spec.description = "ace-sim runs file-chained simulations across multiple providers so teams can validate ideas, review tasks, and compare synthesis outcomes before taking action."
+  spec.summary = "Multi-provider LLM simulation chains for validating ideas and reviewing tasks before implementation"
+  spec.description = "ace-sim executes preset-driven simulation chains across multiple providers so teams can validate ideas, review tasks, and compare synthesis outcomes before taking action."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

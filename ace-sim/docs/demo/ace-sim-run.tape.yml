@@ -1,17 +1,24 @@
 ---
-description: Showcase ace-sim-run
+# TODO: --dry-run does not skip ace-llm provider calls (flag is metadata-only),
+#   so the run scene hangs. Fix ace-sim dry-run to skip stage execution, then re-enable.
+description: Showcase ace-sim CLI help and dry-run
 tags:
-- demo
+- ace-sim
+- docs
 - getting-started
 settings:
-  font_size: 16
-  width: 900
-  height: 500
+  font_size: 12
+  width: 960
+  height: 540
   format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.5nx
 scenes:
-- name: Main flow
+- name: Switch to project root for gem resolution
   commands:
-  - type: ace-sim run --preset validate-idea --source idea.md --dry-run
-    sleep: 2s
-teardown:
-- cleanup
+  - type: cd $PROJECT_ROOT_PATH && clear
+    sleep: 1s
+- name: Show help
+  commands:
+  - type: ace-sim run --help
+    sleep: 4s

@@ -42,13 +42,13 @@ Expected behavior:
 
 ## 4. Understand the output
 
-Use one run directory for source + per-chain outputs:
+Each run produces a directory under `.ace-local/sim/simulations/<run-id>/`:
 
-- `input.md` and `input.bundle.md` at the run root
-- `chains/<provider>-<iteration>/..` for each step output
-- `final/` directory for synthesis results when enabled
+- `input.md` and `input.bundle.md` — the bundled source used as initial input
+- `chains/<provider>-<iteration>/` — step-by-step outputs where each step's result feeds into the next (draft -> plan -> work)
+- `final/` — synthesis results that gather feedback from all stages, propose improvements, and produce a revised source artifact
 
-For a single simulation idea validation, the chain order follows preset steps (`draft`, `plan`, `work` by default).
+The chain is sequential: each step builds on the previous step's output, so the final work step has the benefit of the draft and plan reasoning before it. The synthesis stage then reviews everything to surface questions and actionable suggestions.
 
 ## 5. Run for real
 
