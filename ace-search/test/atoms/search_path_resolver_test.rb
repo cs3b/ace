@@ -205,7 +205,7 @@ module Ace
 
         def test_valid_path_expands_tilde_in_path
           # Skip if HOME is not set
-          skip "HOME not set" unless ENV['HOME']
+          skip "HOME not set" unless ENV["HOME"]
 
           # HOME directory should exist
           assert @resolver.send(:valid_path?, "~")
@@ -214,7 +214,7 @@ module Ace
         # Edge case tests
 
         def test_resolve_with_symlink_path
-          require 'tmpdir'
+          require "tmpdir"
           Dir.mktmpdir do |tmpdir|
             real_dir = File.join(tmpdir, "real")
             link_dir = File.join(tmpdir, "link")

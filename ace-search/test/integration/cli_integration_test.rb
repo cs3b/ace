@@ -77,7 +77,7 @@ module Ace
       def test_case_insensitive_search
         skip_unless_rg_available
 
-        stdout, _stderr, status = Open3.capture3(
+        _, _stderr, status = Open3.capture3(
           @exe_path, "TODO", "-i", "--max-results", "1",
           chdir: File.expand_path("../../..", __dir__)
         )
@@ -157,7 +157,7 @@ module Ace
         test_dir = File.expand_path("../../..", __dir__)
 
         stdout, _stderr, status = Open3.capture3(
-          { "PROJECT_ROOT_PATH" => test_dir },
+          {"PROJECT_ROOT_PATH" => test_dir},
           @exe_path, "test", "--max-results", "1",
           chdir: Dir.tmpdir  # Run from unrelated directory
         )
@@ -179,7 +179,7 @@ module Ace
         # Use a path that definitely doesn't exist
         nonexistent_path = "/nonexistent/path/#{rand(100000)}"
 
-        stdout, stderr, status = Open3.capture3(
+        _, stderr, _ = Open3.capture3(
           @exe_path, "test", nonexistent_path
         )
 

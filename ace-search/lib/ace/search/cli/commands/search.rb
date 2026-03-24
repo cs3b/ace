@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "json"
-require "set"
 require_relative "../../../search/models/search_options"
 require_relative "../../../search/models/search_preset"
 require_relative "../../../search/models/search_result"
@@ -40,13 +39,13 @@ module Ace
 
           # Examples shown in help output for single-command usage
           example [
-            'TODO                      # Content search (auto-detect)',
+            "TODO                      # Content search (auto-detect)",
             '"*.rb"                    # File search (glob pattern)',
-            'pattern --staged          # Search staged files only',
+            "pattern --staged          # Search staged files only",
             '"class.*Manager" -c       # Explicit content search',
             '"todo" -i -C 3            # Case insensitive with context',
             'pattern --glob "**/*.rb"  # Filter by file pattern',
-            'TODO --preset daily-scan  # Use search preset'
+            "TODO --preset daily-scan  # Use search preset"
           ]
 
           # Define positional arguments
@@ -116,10 +115,10 @@ module Ace
             # coerce_types uses Integer() which raises ArgumentError on invalid input
             # (unlike .to_i which silently returns 0)
             coerce_types(clean_options,
-                          max_results: :integer,
-                          context: :integer,
-                          after_context: :integer,
-                          before_context: :integer)
+              max_results: :integer,
+              context: :integer,
+              after_context: :integer,
+              before_context: :integer)
 
             # Build search options from CLI options using dedicated molecule
             @options = Ace::Search::Molecules::SearchOptionBuilder.new(clean_options).build
@@ -171,8 +170,8 @@ module Ace
             if search_path && search_path.strip != "" && resolved_path != "."
               expanded_path = File.expand_path(resolved_path)
               unless Dir.exist?(expanded_path)
-                $stderr.puts "Warning: Search path '#{resolved_path}' not found (resolved to: #{expanded_path})."
-                $stderr.puts "         The underlying search tool may return errors or no results."
+                warn "Warning: Search path '#{resolved_path}' not found (resolved to: #{expanded_path})."
+                warn "         The underlying search tool may return errors or no results."
               end
             end
 

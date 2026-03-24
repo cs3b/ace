@@ -32,7 +32,7 @@ module Ace
         # @return [void]
         def self.log(message, prefix: "DEBUG")
           return unless enabled?
-          $stderr.puts "#{prefix}: #{message}"
+          warn "#{prefix}: #{message}"
         end
 
         # Log a section with title and optional block for grouped output
@@ -43,10 +43,10 @@ module Ace
         def self.section(title)
           return unless enabled?
 
-          $stderr.puts "=" * 60
-          $stderr.puts "DEBUG: #{title}"
+          warn "=" * 60
+          warn "DEBUG: #{title}"
           yield if block_given?
-          $stderr.puts "=" * 60
+          warn "=" * 60
         end
 
         # Reset the enabled cache (useful for testing)
