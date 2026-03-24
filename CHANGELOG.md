@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.980] - 2026-03-24
+
+### Changed
+- **ace-test-runner v0.18.0**: Updated README and gemspec to highlight Minitest wrapping; streamlined handbook; re-recorded demo with real test runs.
+
 ## [0.9.979] - 2026-03-24
 
 ### Changed
