@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.976] - 2026-03-24
+
+### Fixed
+- **ace-task v0.31.0**: Fixed stale CLI flag references in README; corrected skill count in handbook; aligned tagline with gemspec; reworked demo tape with fixture seed data and added status/doctor scenes.
+
 ## [0.9.975] - 2026-03-24
 
 ### Fixed
