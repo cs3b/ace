@@ -47,10 +47,10 @@ ace-search "**/*search*.rb"
 
 ## Using presets
 
-Run a named preset from your config (after defining one in `.ace/search/config.yml`):
+Run a named preset (ace-search ships a `code` preset in `.ace-defaults/search/presets/code.yml`; add your own under `.ace/search/presets/<name>.yml`):
 
 ```bash
-ace-search "class" --preset my-preset
+ace-search "class" --preset code
 ```
 
 ## Configuring defaults
