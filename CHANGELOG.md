@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.978] - 2026-03-24
+
+### Changed
+- **ace-tmux v0.11.0**: Removed demo GIF from README to streamline the landing page.
+
 ## [0.9.977] - 2026-03-24
 
 ### Changed
