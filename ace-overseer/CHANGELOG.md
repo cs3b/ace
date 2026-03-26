@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-26
+
+### Added
+- Terminal task filtering in `WorkOnOrchestrator`: tasks with `done`, `skipped`, or `cancelled` status are automatically excluded before assignment creation, with user-visible skip reporting via progress callbacks.
+
+### Changed
+- `resolve_requested_refs` now returns skipped terminal refs alongside resolved refs, raising an error when all requested refs are terminal.
+- `expand_task_refs_in_order` and `extract_subtask_refs` filter out terminal subtasks during parent-to-subtask expansion.
+
+### Technical
+- Added 4 tests covering single-terminal rejection, all-terminal rejection, mixed-set filtering, and subtask-level terminal filtering.
+
 ## [0.11.0] - 2026-03-23
 
 ### Changed
