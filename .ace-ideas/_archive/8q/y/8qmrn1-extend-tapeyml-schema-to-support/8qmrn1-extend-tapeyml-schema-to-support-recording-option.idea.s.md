@@ -1,6 +1,6 @@
 ---
 id: 8qmrn1
-status: pending
+status: done
 title: Extend tape.yml schema to support recording option
 tags: [ace-demo, dx, tape-format]
 created_at: "2026-03-23 18:25:37"
