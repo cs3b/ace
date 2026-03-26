@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.0vy
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 00:35:31"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-task/lib/ace/task/molecules/task_display_formatter.rb, ace-task/test/molecules/task_display_formatter_test.rb, ace-idea/lib/ace/idea/molecules/idea_display_formatter.rb]
   commands: []
 needs_review: false
+worktree:
+  branch: 0vy-show-stats-footer-in-ace-task-list-for-empty-results
+  path: ../ace-t.0vy
+  created_at: "2026-03-26 00:43:24"
+  updated_at: "2026-03-26 00:43:24"
+  target_branch: main
 ---
 
 # Show Stats Footer in ace-task list for Empty Results
