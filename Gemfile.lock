@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.37.0)
+    ace-assign (0.38.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.26)
       ace-support-cli (~> 0.3)
@@ -41,7 +41,7 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.19.3)
+    ace-demo (0.19.4)
       ace-b36ts (~> 0.3)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
@@ -97,7 +97,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.18.0)
+    ace-git (0.18.1)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -323,7 +323,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.31.3)
+    ace-task (0.31.4)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)

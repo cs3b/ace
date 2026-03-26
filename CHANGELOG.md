@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.930] - 2026-03-26
+
+### Added
+- **ace-assign v0.38.0**: Added `record-demo` assignment step for recording and attaching terminal demos to PRs, with composition rules and recipe integration.
+- **ace-demo v0.19.4**: Added recording-options demo tape with fixtures showing `playback_speed` and `output` settings in action.
+- **ace-task v0.31.4**: Added optional "Demo Scenario" section to the task draft template for upfront demo scene definitions.
+
+### Changed
+- **ace-git v0.18.1**: Updated PR update workflow to reference recorded demo GIFs when attached via `ace-demo record --pr`.
+
 ## [0.9.929] - 2026-03-26
 
 ### Fixed
