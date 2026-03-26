@@ -45,11 +45,18 @@ status: active
 - **Lesson**: Demo tapes require deliberate design — the three-scene pattern (show input → run feature → verify output) with proper fixtures is the proven approach
 - **Nested VHS risk**: Running `ace-demo record` inside a VHS session (nested recording) is untested — may need fallback to dry-run-only demos
 
+### Round 3: Demo scenario belongs in the task spec, not improvised at recording time
+- **Problem**: Agent improvised demo content 3 times — wrong tape, broken fixtures, bad timing. No pre-defined scenario.
+- **Root cause**: Demo was treated as a recording problem. It's actually a design/review problem.
+- **Fix 1**: Added "Demo Scenario" section to task draft template (`ace-task/handbook/templates/task/draft.template.md`) — defines scenes, commands, and fixtures upfront for user-facing features
+- **Fix 2**: Updated step 145 instructions to read the task spec's Demo Scenario first, validate with dry-run before recording, and use proper fixture/sandbox patterns
+
 ## Action Items
 
-- **Continue**: Including `record-demo` in future assignments; use feature-relevant tapes not generic ones
-- **Start**: Always create fixtures/ directory with input data before writing tape scenes
-- **Start**: Always dry-run tapes before recording to catch path/fixture errors
-- **Stop**: Using playback_speed in demo tapes meant for PR review — record at normal speed for readability
-- **Monitor**: Whether nested VHS invocations work reliably (Scene 3 in this demo)
+- **Continue**: Including `record-demo` in future assignments
+- **Start**: Define demo scenarios in task specs during draft/review for user-facing features
+- **Start**: Always create `fixtures/` directory and dry-run before recording
+- **Stop**: Improvising demo content at recording time — follow the pre-defined scenario
+- **Stop**: Using `playback_speed` in demo tapes meant for PR review — record at normal speed
+- **Monitor**: Whether nested VHS invocations work reliably
 
