@@ -1,6 +1,6 @@
 ---
 id: 8qmykd
-status: pending
+status: done
 title: Show stats footer in ace-task list when empty
 tags: []
 created_at: "2026-03-23 23:02:38"
