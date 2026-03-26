@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-03-26
+
+### Changed
+- Updated PR update workflow (`wfi://github/pr/update`) to reference recorded demo GIFs when attached via `ace-demo record --pr`.
+
 ## [0.18.0] - 2026-03-23
 
 ### Added
