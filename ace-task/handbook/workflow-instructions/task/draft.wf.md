@@ -215,7 +215,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * Use `ace-git-commit` to commit all idea file movements together
      * Clear commit message: "Mark source ideas as done after creating task"
    * **Validation Requirements:**
-     * [ ] All source idea files marked as done and moved to _archive/
+     * [ ] All source idea files marked as done and moved to _archive/ — verify: `ace-idea list --status done` should return zero results (done ideas must be in archive, not active)
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
