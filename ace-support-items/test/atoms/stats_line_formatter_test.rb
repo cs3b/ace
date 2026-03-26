@@ -68,6 +68,19 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
     assert_equal "Tasks: ✓ 5 • 5 total", line
   end
 
+  def test_format_with_no_status_parts
+    stats = {total: 0, by_field: {}}
+
+    line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
+      label: "Tasks",
+      stats: stats,
+      status_order: %w[pending done],
+      status_icons: {"pending" => "○", "done" => "✓"}
+    )
+
+    assert_equal "Tasks: • 0 total", line
+  end
+
   def test_format_includes_unknown_statuses
     stats = {total: 5, by_field: {"pending" => 2, "draft" => 3}}
 

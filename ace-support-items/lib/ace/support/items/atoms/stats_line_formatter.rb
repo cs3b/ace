@@ -35,7 +35,11 @@ module Ace
               parts << "#{icon} #{count}"
             end
 
-            line = "#{label}: #{parts.join(" | ")}"
+            line = if parts.empty?
+              "#{label}:"
+            else
+              "#{label}: #{parts.join(" | ")}"
+            end
 
             shown = stats[:total]
             total = total_count || shown

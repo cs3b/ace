@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-03-26
+
+### Fixed
+- `StatsLineFormatter`: corrected empty-status output formatting to avoid the malformed `Tasks:  • 0 total` footer when no status buckets are present.
+
+### Technical
+- Added regression coverage for zero-status summary formatting in `stats_line_formatter_test.rb`.
+
 ## [0.15.3] - 2026-03-22
 
 ### Technical
