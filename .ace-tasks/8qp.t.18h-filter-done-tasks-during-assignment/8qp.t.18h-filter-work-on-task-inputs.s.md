@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.18h
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 00:49:25"
 estimate: TBD
@@ -8,15 +8,11 @@ dependencies: []
 tags: [assign, workflow, ux]
 bundle:
   presets: [project]
-  files:
-    - ace-assign/handbook/workflow-instructions/assign/prepare.wf.md
-    - ace-assign/handbook/workflow-instructions/assign/create.wf.md
-    - ace-assign/.ace-defaults/assign/presets/work-on-task.yml
-    - ace-assign/lib/ace/assign/atoms/preset_expander.rb
-    - ace-task/lib/ace/task/organisms/task_manager.rb
+  files: [ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, ace-assign/handbook/workflow-instructions/assign/create.wf.md, ace-assign/docs/usage.md, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/lib/ace/assign/atoms/preset_expander.rb, ace-task/lib/ace/task/organisms/task_manager.rb]
   commands: []
 review_completed: 2026-03-26
 reviewed_by: User
+needs_review: false
 ---
 
 # Filter Done Tasks from work-on-task Assignment Creation
@@ -187,13 +183,14 @@ This is a **single standalone task**.
 
 - `ace-test ace-assign` -> assignment preparation / creation tests pass
 - `ace-test ace-task` -> task lookup/status behavior relied on by filtering remains green
-- Review prepared/create workflow docs and `work-on-task` preset examples for skipped-done-task language
+- Review prepare/create workflow docs and `ace-assign/docs/usage.md` for skipped-done-task language
 
 ## Scope of Work
 
 - **User experience scope**: Assignment preparation and creation for `work-on-task`
 - **System behavior scope**: Taskref resolution, filtering, hidden spec rendering, and queue generation
 - **Interface scope**: Existing `--taskref` / `--taskrefs` inputs with new done-task filtering semantics
+- **Docs scope**: `ace-assign` usage/help text for skipped done tasks and no-assignment outcomes
 
 ## Deliverables
 
