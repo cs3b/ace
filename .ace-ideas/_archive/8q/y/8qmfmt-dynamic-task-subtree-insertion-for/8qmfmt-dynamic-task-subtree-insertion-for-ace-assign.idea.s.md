@@ -1,6 +1,6 @@
 ---
 id: 8qmfmt
-status: pending
+status: done
 title: Dynamic Task Subtree Insertion for ace-assign
 tags: []
 created_at: "2026-03-23 10:25:21"
