@@ -38,6 +38,9 @@ steps:
     required: false
   - name: push-to-remote
     required: true
+  - name: record-demo
+    required: false
+    note: "Record demos for modified packages with tapes; skip if no tapes or VHS unavailable"
   - name: update-pr-desc
     required: false
 
@@ -46,3 +49,4 @@ customization_hints:
   - "Add security-audit for security-sensitive changes"
   - "Reduce review cycles to 1 for simple changes"
   - "Skip reorganize-commits if commit history is already clean"
+  - "Skip record-demo if VHS is not available or no tape files exist"

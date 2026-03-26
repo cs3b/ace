@@ -1,0 +1,33 @@
+name: record-demo
+skill: as-demo-record
+description: Record terminal demos for modified packages and attach to PR
+intent:
+  phrases:
+    - "record demo"
+    - "record demos for pr"
+    - "attach demo to pr"
+    - "create demo recording"
+
+prerequisites:
+  - name: push-to-remote
+    strength: required
+    reason: "Code must be pushed so demo reflects what reviewers see"
+  - name: create-pr
+    strength: required
+    reason: "PR number needed for demo attachment"
+
+produces: [demo-recording, pr-comment]
+consumes: [pull-request, remote-sync]
+
+context:
+  default: null
+  reason: "Demo recording needs VHS and FFmpeg in the local environment"
+
+when_to_skip:
+  - "No modified packages have tape files at <package>/docs/demo/"
+  - "VHS is not available in the environment"
+  - "Changes are documentation-only (no runnable code changed)"
+  - "No user-facing CLI changes"
+
+effort: medium
+tags: [demo, pr, documentation, recording]

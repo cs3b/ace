@@ -113,6 +113,17 @@ steps:
       - "Run: git push --force-with-lease origin HEAD"
       - Force-with-lease needed because reorganize-commits rewrites history.
 
+  - name: record-demo
+    number: "145"
+    instructions:
+      - "Record demos for packages modified in batch {{taskrefs}} and attach to the PR."
+      - "Detect modified packages: `git diff origin/main --name-only | grep '^ace-' | cut -d/ -f1 | sort -u`."
+      - "For each package, check for tape at `<package>/docs/demo/<package>-getting-started.tape.yml`."
+      - "Record and attach: `ace-demo record <tape-path> --pr <PR_NUMBER> --playback-speed 4x`."
+      - "If VHS or FFmpeg is not available, skip this step with a clear reason."
+      - "If no tapes exist for any modified package, skip this step."
+      - "This step is non-blocking: if recording fails, report the failure but do not block subsequent steps."
+
   - name: update-pr-desc
     number: "150"
     context: fork

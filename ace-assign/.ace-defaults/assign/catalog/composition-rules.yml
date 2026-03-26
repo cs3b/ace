@@ -58,6 +58,16 @@ ordering:
     after: update-pr-desc
     note: "PR description should reflect post-rebase branch state"
 
+  - rule: push-before-record-demo
+    before: push-to-remote
+    after: record-demo
+    note: "Demo recording requires pushed code and existing PR"
+
+  - rule: record-demo-before-update-pr
+    before: record-demo
+    after: update-pr-desc
+    note: "PR description should reference attached demo if available"
+
   - rule: push-before-update-pr
     before: push-to-remote
     after: update-pr-desc
@@ -181,9 +191,9 @@ conditional:
     note: "Test suite verification with profiling catches slow tests and regressions before release. In explicit-step mode this remains advisory unless policy elevates it."
 
   - when: "assignment includes work-on-task and touches CLI commands or public API"
-    suggest: [verify-e2e, update-docs]
+    suggest: [verify-e2e, update-docs, record-demo]
     strength: recommended
-    note: "Public contract changes require E2E verification and doc updates"
+    note: "Public contract changes require E2E verification, doc updates, and demo recording"
 
   - when: "task involves auth, security, or data handling"
     suggest: [security-audit]
