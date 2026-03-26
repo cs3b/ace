@@ -151,6 +151,20 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 - User acceptance criteria
 - Behavioral test scenarios
 
+#### Demo Scenario (user-facing features only)
+<!-- Skip this section if the task has no CLI or user-visible behavior changes -->
+<!-- Define what a recorded demo should show so a reviewer can confirm the feature works -->
+
+**What the viewer should understand**: [one sentence summarizing the takeaway]
+
+| Scene | Shows | Commands | Fixtures needed |
+|-------|-------|----------|-----------------|
+| 1. Show input | The config/input the user creates | `cat <file>` | sample config file |
+| 2. Run feature | The feature in action | `ace-<tool> <command>` | — |
+| 3. Verify result | The output/outcome | `ls`, `cat`, status check | — |
+
+**Timing**: use 3-5s sleep per scene so the viewer can read output
+
 ## Out of Scope
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
