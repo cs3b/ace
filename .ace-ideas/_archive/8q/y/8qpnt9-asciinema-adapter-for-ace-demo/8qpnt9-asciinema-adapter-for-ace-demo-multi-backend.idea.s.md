@@ -1,6 +1,6 @@
 ---
 id: 8qpnt9
-status: pending
+status: done
 title: asciinema adapter for ace-demo multi-backend recording
 tags: [ace-demo, recording, asciinema, adapter, verification]
 created_at: "2026-03-26 15:52:30"
