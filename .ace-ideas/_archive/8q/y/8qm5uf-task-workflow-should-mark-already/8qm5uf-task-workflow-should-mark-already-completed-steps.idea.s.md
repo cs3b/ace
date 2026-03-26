@@ -1,6 +1,6 @@
 ---
 id: 8qm5uf
-status: pending
+status: done
 title: "Task workflow should mark already-completed steps "
 tags: [workflow, task, ux]
 created_at: "2026-03-23 03:53:48"
