@@ -15,7 +15,8 @@ bundle:
     - ace-assign/lib/ace/assign/atoms/preset_expander.rb
     - ace-task/lib/ace/task/organisms/task_manager.rb
   commands: []
-needs_review: true
+review_completed: 2026-03-26
+reviewed_by: User
 ---
 
 # Filter Done Tasks from work-on-task Assignment Creation
@@ -104,13 +105,52 @@ Edge Cases:
 6. `ace-assign create FILE` remains unchanged as the deterministic runtime boundary
 7. No checkbox-based reuse or `task/work` resume behavior is introduced by this task
 
-### Validation Questions
+## Review Questions (Resolved)
 
-- Resolved: The owning layer is assignment preparation/creation, not `task/work.wf.md` or `assign/drive.wf.md`
-- Resolved: Only `status: done` is filtered by this task
-- Resolved: Mixed sets should skip done refs and continue with a warning
-- Resolved: If all requested refs are done, assignment creation should fail instead of creating an empty assignment
-- Resolved: Plan/success-criteria checkboxes are out of scope
+### ✅ RESOLVED: Which layer owns this behavior?
+
+- **Original Priority**: HIGH
+- **Decision**: Assignment preparation/creation owns the behavior; `task/work.wf.md` and `assign/drive.wf.md` are out of scope
+- **Rationale**: Already-done tasks should never enter the queue, so filtering must happen before preset expansion and assignment creation
+- **Implementation Notes**: Apply the behavior in the `work-on-task` assignment prepare/create path and hidden-spec generation flow
+- **Resolved by**: User
+- **Date**: 2026-03-26
+
+### ✅ RESOLVED: Which task statuses should be filtered?
+
+- **Original Priority**: HIGH
+- **Decision**: Filter only task refs whose current status is `done`
+- **Rationale**: The request is specifically about excluding already-completed work, not redefining assignment handling for other task states
+- **Implementation Notes**: Leave `pending`, `draft`, `in-progress`, `blocked`, `skipped`, and `cancelled` unchanged in this task
+- **Resolved by**: User
+- **Date**: 2026-03-26
+
+### ✅ RESOLVED: What should happen for mixed requested sets?
+
+- **Original Priority**: HIGH
+- **Decision**: Skip done refs, continue with remaining workable refs, and warn/report which refs were excluded
+- **Rationale**: Users should still get an assignment when some requested work remains; already-done refs should not block the whole request
+- **Implementation Notes**: The filtered `taskrefs` list becomes the source of truth for preset expansion and downstream batch steps
+- **Resolved by**: User
+- **Date**: 2026-03-26
+
+### ✅ RESOLVED: What should happen if all requested refs are already done?
+
+- **Original Priority**: HIGH
+- **Decision**: Fail before queue creation and report that all requested tasks are already done
+- **Rationale**: Creating an empty assignment would be misleading and would not represent actionable work
+- **Implementation Notes**: Stop before calling `ace-assign create` when done-task filtering leaves an empty effective taskref set
+- **Resolved by**: User
+- **Date**: 2026-03-26
+
+### ✅ RESOLVED: Should checked plan or success-criteria checkboxes be part of this task?
+
+- **Original Priority**: MEDIUM
+- **Decision**: No; checkbox-based reuse and resume behavior are out of scope
+- **Rationale**: The requested change is about queue construction, not task-execution semantics
+- **Implementation Notes**: Do not add `task/work` resume logic or success-criteria checkbox handling as part of this task
+- **Resolved by**: User
+- **Date**: 2026-03-26
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -182,3 +222,18 @@ This is a **single standalone task**.
 - Assignment prep workflow: `ace-assign/handbook/workflow-instructions/assign/prepare.wf.md`
 - Assignment create workflow: `ace-assign/handbook/workflow-instructions/assign/create.wf.md`
 - Preset expansion: `ace-assign/.ace-defaults/assign/presets/work-on-task.yml`
+
+## Review Completion Summary
+
+**Date**: 2026-03-26
+**Reviewed by**: User
+**Questions Resolved**: 5 (4 HIGH, 1 MEDIUM)
+**Implementation Readiness**: ✅ Ready for implementation review
+
+**Key Decisions Made**:
+
+- Assignment preparation/creation is the owning layer
+- Only `status: done` refs are filtered
+- Mixed requested sets skip done refs and continue with a warning
+- All-done requested sets fail without creating an empty assignment
+- Checkbox-based resume behavior is out of scope
