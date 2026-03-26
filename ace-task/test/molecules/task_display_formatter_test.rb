@@ -152,10 +152,25 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     assert_includes output, "Second task"
   end
 
-  def test_format_list_returns_message_for_empty_list
+  def test_format_list_empty_returns_no_tasks_message_with_stats
     output = Ace::Task::Molecules::TaskDisplayFormatter.format_list([])
 
-    assert_equal "No tasks found.", output
+    assert_equal "No tasks found.\n\nTasks: • 0 total", output
+  end
+
+  def test_format_list_empty_includes_folder_summary_when_totals_exist
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(
+      [],
+      total_count: 10,
+      global_folder_stats: {nil => 2, "_maybe" => 3, "_archive" => 5}
+    )
+
+    assert_includes output, "No tasks found."
+    assert_includes output, "Tasks:"
+    assert_includes output, "• 0 of 10"
+    assert_includes output, "next 2"
+    assert_includes output, "maybe 3"
+    assert_includes output, "archive 5"
   end
 
   def test_format_list_shows_tags_inline

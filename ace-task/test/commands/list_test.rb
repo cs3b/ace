@@ -91,6 +91,7 @@ class ListCommandTest < AceTaskTestCase
     end.first
 
     assert_match(/No tasks found/, output)
+    assert_match(/Tasks:.*0 total/, output)
   end
 
   def test_list_shows_stats_line

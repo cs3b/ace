@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.3] - 2026-03-26
+
+### Fixed
+- Simplified `TaskDisplayFormatter.format_list` by consolidating the shared stats footer return path for empty and non-empty output.
+
+### Technical
+- Strengthened `ace-task list` command coverage to assert empty-state stats footer output includes the zero-total summary.
+
+## [0.31.2] - 2026-03-26
+
+### Fixed
+- Tightened empty-list stats rendering to match the corrected support formatter output (`Tasks: • 0 total`) for fully empty roots.
+
+### Technical
+- Strengthened task display formatter regression coverage with an exact empty-output assertion.
+
+## [0.31.1] - 2026-03-26
+
+### Fixed
+- Updated `ace-task list` empty-result rendering to always append the stats footer, matching non-empty output and `ace-idea` behavior.
+
 ## [0.31.0] - 2026-03-24
 
 ### Fixed
