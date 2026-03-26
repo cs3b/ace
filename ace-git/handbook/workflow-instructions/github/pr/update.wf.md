@@ -138,6 +138,8 @@ Structure:
 
 Omit when: the PR has no user-facing CLI, no runnable entry point, or is purely internal refactoring.
 
+**Recorded demo integration**: If a recorded demo GIF has been attached as a PR comment (via `ace-demo record --pr`), reference it in the Demo section: "See attached demo recording in PR comments below" alongside the runnable commands. The recorded demo supplements but does not replace the runnable commands.
+
 ### 8. Omission and Fallback Rules
 
 - If no changelog evidence: omit `## 📦 Releases`
