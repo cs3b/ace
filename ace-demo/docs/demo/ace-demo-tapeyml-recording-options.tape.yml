@@ -25,15 +25,19 @@ scenes:
     sleep: 5s
 - name: Record with retime-only output
   commands:
-  - type: clear
-    sleep: 1s
   - type: ace-demo record sample-project/demo.tape.yml
-    sleep: 6s
+    sleep: 30s
 - name: Verify output placement
   commands:
   - type: clear
     sleep: 1s
-  - type: ls -lh .ace-local/demo/demo.gif output/demo.gif
-    sleep: 4s
+  - type: echo '=== Raw recording (default location) ==='
+    sleep: 1s
+  - type: ls -lh .ace-local/demo/demo.gif
+    sleep: 3s
+  - type: echo '=== Retimed output (settings.output path) ==='
+    sleep: 1s
+  - type: ls -lh output/demo.gif
+    sleep: 3s
 teardown:
 - cleanup
