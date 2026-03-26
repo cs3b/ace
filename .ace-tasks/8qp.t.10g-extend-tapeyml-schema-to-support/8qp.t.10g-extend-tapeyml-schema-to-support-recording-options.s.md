@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.10g
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 00:40:31"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb, ace-demo/lib/ace/demo/atoms/playback_speed_parser.rb, ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/molecules/media_retimer.rb, ace-demo/docs/demo/ace-demo-getting-started.tape.yml, ace-demo/docs/getting-started.md, ace-demo/docs/usage.md]
   commands: []
 needs_review: false
+worktree:
+  branch: 10g-extend-tapeyml-schema-to-support-recording-options
+  path: ../ace-t.10g
+  created_at: "2026-03-26 00:45:12"
+  updated_at: "2026-03-26 00:45:12"
+  target_branch: main
 ---
 
 # Extend tape.yml Schema to Support Recording Options
