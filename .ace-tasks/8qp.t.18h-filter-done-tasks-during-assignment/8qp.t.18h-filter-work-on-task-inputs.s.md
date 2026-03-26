@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.18h
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 00:49:25"
 estimate: TBD
@@ -13,6 +13,12 @@ bundle:
 review_completed: 2026-03-26
 reviewed_by: User
 needs_review: false
+worktree:
+  branch: 18h-filter-done-tasks-from-work-on-task-assignment-creation
+  path: ../ace-t.18h
+  created_at: "2026-03-26 01:07:54"
+  updated_at: "2026-03-26 01:07:54"
+  target_branch: main
 ---
 
 # Filter Done Tasks from work-on-task Assignment Creation
