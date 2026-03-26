@@ -1,24 +1,16 @@
 ---
 id: 8qp.t.2p4
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 01:47:55"
 estimate: TBD
 dependencies: []
 tags: [ace-assign, cli, skill]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-assign/lib/ace/assign/cli/commands/add.rb
-    - ace-assign/lib/ace/assign/organisms/assignment_executor.rb
-    - ace-assign/lib/ace/assign/molecules/step_writer.rb
-    - ace-assign/lib/ace/assign/atoms/preset_expander.rb
-    - ace-assign/lib/ace/assign/atoms/step_numbering.rb
-    - ace-assign/.ace-defaults/assign/presets/work-on-task.yml
-    - ace-assign/handbook/skills/as-assign-run-in-batches/SKILL.md
-    - ace-assign/handbook/workflow-instructions/assign/run-in-batches.wf.md
-  commands:
-    - "ace-bundle project"
+  presets: [project]
+  files: [ace-assign/lib/ace/assign/cli/commands/add.rb, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/molecules/step_writer.rb, ace-assign/lib/ace/assign/atoms/preset_expander.rb, ace-assign/lib/ace/assign/atoms/step_numbering.rb, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/handbook/skills/as-assign-run-in-batches/SKILL.md, ace-assign/handbook/workflow-instructions/assign/run-in-batches.wf.md]
+  commands: [ace-bundle project]
+needs_review: false
 ---
 
 # Dynamic Task Subtree Insertion for ace-assign
@@ -92,7 +84,8 @@ steps:
       - pre-commit-review
       - verify-test
 
-# Sub_steps can also be hashes with instructions
+# String sub_steps become child steps using the string as name, with default instructions
+# Hash sub_steps provide explicit name, instructions, and optional fields
 steps:
   - name: batch-reviews
     instructions: "Review container"
@@ -135,6 +128,15 @@ Added 4 step(s) from add-task-xyz.yml
 | Child would exceed max depth | Error: depth exceeded (existing) |
 | No active assignment | Error: "No active assignment" (existing) |
 
+#### Consumer Packages
+- `ace-assign` (internal: CLI command, executor)
+- `ace-handbook-integration-claude` (skill projection for `as-assign-add-task`)
+
+#### Operating Modes
+- `--quiet`: Suppress per-step output, show only summary count
+- `--verbose`/`--debug`: Show step creation details, renumbering events
+- Existing flags pass through to each step insertion
+
 ### Success Criteria
 
 - Multiple steps from a YAML file are inserted in a single `ace-assign add --from` invocation
@@ -175,12 +177,18 @@ Added 4 step(s) from add-task-xyz.yml
 
 - Create assignment with batch-parent, run `ace-assign add --from steps.yml --after 010 --child`, verify `ace-assign status` shows new children
 - Insert subtree mid-assignment (some steps done, one in_progress), verify existing states unchanged
+- Insert children under current in_progress parent, verify parent rebalanced to pending
 
 ### Failure/Invalid Path Validation
 
 - YAML file with empty `steps:` array produces clear error
 - YAML file with invalid structure (no `steps:` key) produces clear error
 - Insertion that would exceed max nesting depth (3 levels) produces clear error
+
+### Skill Validation
+- `/as-assign-add-task t.xyz` with active batch-parent detects parent, generates YAML, inserts child steps
+- `/as-assign-add-task t.xyz --parent 010` inserts under specified parent
+- `/as-assign-add-task t.xyz` with no batch-parent produces clear error
 
 ### Verification Commands
 
@@ -226,5 +234,4 @@ Added 4 step(s) from add-task-xyz.yml
 ## References
 
 - Source idea: `8qmfmt` — Dynamic Task Subtree Insertion for ace-assign
-- Usage docs: `ux-usage.md` (draft usage scenarios below)
 - Existing patterns: `ace-assign add` command, `PresetExpander`, `work-on-task.yml` preset
