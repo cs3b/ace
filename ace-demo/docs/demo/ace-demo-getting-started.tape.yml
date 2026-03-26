@@ -9,6 +9,8 @@ settings:
   width: 1100
   height: 600
   format: gif
+  playback_speed: 4x
+  output: docs/demo/ace-demo-getting-started.gif
 setup:
 - sandbox
 - git-init

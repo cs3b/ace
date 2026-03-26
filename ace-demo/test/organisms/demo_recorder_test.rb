@@ -45,6 +45,12 @@ class DemoRecorderTest < AceDemoTestCase
     end
   end
 
+  class RaisingYamlParser
+    def parse_file(_path)
+      raise "parse_file should not be called"
+    end
+  end
+
   class StubYamlCompiler
     attr_reader :output_path
 
@@ -78,6 +84,25 @@ class DemoRecorderTest < AceDemoTestCase
     def execute(steps:, sandbox_path:)
       @steps = steps
       @sandbox_path = sandbox_path
+    end
+  end
+
+  class StubMediaRetimer
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def retime(**kwargs)
+      @calls << kwargs
+      output_path = kwargs[:output_path] || kwargs[:input_path].sub(/(\.[a-z0-9]+)\z/i, "-#{kwargs[:speed]}\\1")
+      {
+        input_path: kwargs[:input_path],
+        output_path: output_path,
+        speed: kwargs[:speed],
+        dry_run: false
+      }
     end
   end
 
@@ -181,6 +206,35 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal sandbox_path, teardown_executor.sandbox_path
   end
 
+  def test_records_yaml_tape_with_preparsed_spec_without_reparsing
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    output_path = File.join(@tmp, "demo.gif")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    executor = StubExecutor.new
+
+    spec = {
+      "settings" => {"format" => "gif"},
+      "setup" => ["sandbox"],
+      "teardown" => ["cleanup"],
+      "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+    }
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: executor,
+      yaml_parser: RaisingYamlParser.new,
+      yaml_compiler: StubYamlCompiler.new,
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new
+    )
+
+    output = recorder.record(tape_ref: "demo", output: output_path, yaml_spec: spec)
+
+    assert_equal output_path, output
+  end
+
   def test_yaml_teardown_runs_when_vhs_execution_fails
     yaml_path = File.join(@tmp, "demo.tape.yml")
     File.write(yaml_path, "description: demo\n")
@@ -209,5 +263,135 @@ class DemoRecorderTest < AceDemoTestCase
     assert_includes error.message, "vhs failed"
     assert_equal ["cleanup"], teardown_executor.steps
     assert_equal sandbox_path, teardown_executor.sandbox_path
+  end
+
+  def test_records_yaml_tape_with_playback_speed_only_and_returns_retimed_path
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    executor = StubExecutor.new
+    retimer = StubMediaRetimer.new
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: executor,
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif", "playback_speed" => "4x"},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      yaml_compiler: StubYamlCompiler.new,
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      media_retimer: retimer
+    )
+
+    output = recorder.record(tape_ref: "demo")
+
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
+    assert_equal File.expand_path(".ace-local/demo/demo-4x.gif", @tmp), output
+    assert_includes executor.cmd, raw_path
+    assert_equal raw_path, retimer.calls[0][:input_path]
+    assert_equal "4x", retimer.calls[0][:speed]
+    assert_nil retimer.calls[0][:output_path]
+  end
+
+  def test_records_yaml_tape_with_speed_only_and_retime_output_override
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    final_output = File.join(@tmp, "docs", "demo", "override.gif")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    executor = StubExecutor.new
+    retimer = StubMediaRetimer.new
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: executor,
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif", "playback_speed" => "4x"},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      yaml_compiler: StubYamlCompiler.new,
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      media_retimer: retimer
+    )
+
+    output = recorder.record(tape_ref: "demo", retime_output: final_output)
+
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
+    assert_equal final_output, output
+    assert_includes executor.cmd, raw_path
+    assert_equal raw_path, retimer.calls[0][:input_path]
+    assert_equal final_output, retimer.calls[0][:output_path]
+    assert_equal "4x", retimer.calls[0][:speed]
+  end
+
+  def test_records_yaml_tape_with_output_only_without_retime
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    output_path = File.join(@tmp, "docs", "demo", "demo.gif")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    retimer = StubMediaRetimer.new
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: StubExecutor.new,
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif", "output" => output_path},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      yaml_compiler: StubYamlCompiler.new,
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      media_retimer: retimer
+    )
+
+    output = recorder.record(tape_ref: "demo")
+
+    assert_equal output_path, output
+    assert_empty retimer.calls
+  end
+
+  def test_records_yaml_tape_with_output_and_speed_as_retime_only_mode
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    final_output = File.join(@tmp, "docs", "demo", "demo.gif")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    executor = StubExecutor.new
+    retimer = StubMediaRetimer.new
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: executor,
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif", "playback_speed" => "4x", "output" => final_output},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      yaml_compiler: StubYamlCompiler.new,
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      media_retimer: retimer
+    )
+
+    output = recorder.record(tape_ref: "demo")
+
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
+    assert_equal final_output, output
+    assert_includes executor.cmd, raw_path
+    assert_equal raw_path, retimer.calls[0][:input_path]
+    assert_equal final_output, retimer.calls[0][:output_path]
+    assert_equal "4x", retimer.calls[0][:speed]
   end
 end

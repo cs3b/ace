@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-03-26
+
+### Fixed
+- Unified YAML recording planning across dry-run preview and execution so unsupported `settings.format` values fail consistently.
+
+### Changed
+- Centralized YAML format/speed/output-path planning into a shared helper reused by both CLI context building and `DemoRecorder`.
+
+### Technical
+- Added dry-run regression coverage to assert YAML tapes with unsupported `settings.format` are rejected.
+
+## [0.19.2] - 2026-03-26
+
+### Fixed
+- Reject blank or whitespace-only YAML `settings.output` values during parsing to prevent unusable expanded output paths.
+
+### Changed
+- Updated tape record context resolution so live runs surface unresolved tape refs immediately while dry-run keeps preview fallback behavior.
+
+### Technical
+- Removed the obsolete `dry_run_preview_for_tape` path and expanded parser/CLI regression coverage for output validation and YAML tape routing.
+
+## [0.19.1] - 2026-03-26
+
+### Fixed
+- Honor CLI `--output` as the retime target when YAML defines `settings.playback_speed` but omits `settings.output`.
+
+### Changed
+- Align tape-mode precedence handoff by passing parsed YAML spec and resolved context from CLI to `DemoRecorder`.
+
+### Technical
+- Added regression coverage for YAML speed + CLI output precedence and pre-parsed YAML spec reuse in recorder tests.
+
+## [0.19.0] - 2026-03-26
+
+### Added
+- Added support for `settings.playback_speed` and `settings.output` in `.tape.yml` for self-contained `ace-demo record` execution.
+- Added parser contract tests for new YAML settings and invalid speed handling.
+
+### Changed
+- Updated YAML tape recording flow to support retime-only output mode when both speed and output are set (raw stays in `.ace-local/demo`, retimed output writes to the exact configured path).
+- Updated CLI tape-mode precedence so `--playback-speed` and `--output` override tape settings while preserving YAML defaults when flags are omitted.
+- Updated getting-started and usage documentation plus example demo tape to reflect tape-defined speed/output behavior.
+
+### Technical
+- Expanded recorder and CLI test coverage for speed-only, output-only, combined mode, dry-run preview messaging, and override precedence.
+
 ## [0.18.1] - 2026-03-23
 
 ### Fixed

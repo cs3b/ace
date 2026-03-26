@@ -142,8 +142,10 @@ ace-demo record hello --pr 42 --dry-run
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
 - `.tape.yml` paths run in sandbox mode: setup directives execute, scenes compile to VHS, and teardown cleanup runs.
+- `.tape.yml` settings can define `playback_speed` and `output`; CLI flags override those values.
+- If both speed and output are active for a YAML tape, raw output stays in `.ace-local/demo` and retimed output is written exactly to the selected output path.
 - With `--dry-run`, output shows planned recording and attachment actions only.
-- `--playback-speed` creates a `-<speed>` file and, when `--pr` is set, attaches that variant.
+- `--playback-speed` creates a `-<speed>` file by default; when combined with explicit output in YAML mode, the retimed file uses that exact output path.
 
 ### Examples
 

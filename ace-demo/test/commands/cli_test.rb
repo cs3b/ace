@@ -39,10 +39,12 @@ class CliTest < AceDemoTestCase
 
   def test_record_calls_recorder
     fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
+      def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output == "/tmp/x.gif"
         raise "bad format" unless format.nil?
+        raise "bad playback_speed" unless playback_speed.nil?
+        raise "bad retime_output" unless retime_output.nil?
 
         "/tmp/x.gif"
       end
@@ -55,19 +57,28 @@ class CliTest < AceDemoTestCase
   end
 
   def test_record_yaml_path_calls_demo_recorder
-    fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
-        raise "bad tape" unless tape_ref.end_with?(".tape.yml")
-        raise "bad output" unless output.nil?
-        raise "bad format" unless format.nil?
+    Dir.mktmpdir("ace_demo_cli_yaml") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      File.write(tape_path, "description: demo\n")
 
-        ".ace-local/demo/yaml.gif"
+      fake_recorder = Class.new do
+        def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil, **_kwargs)
+          raise "bad tape" unless tape_ref.end_with?(".tape.yml")
+          raise "bad output" unless output.nil?
+          raise "bad format" unless format == "gif"
+          raise "bad playback_speed" unless playback_speed.nil?
+          raise "bad retime_output" unless retime_output.nil?
+
+          ".ace-local/demo/yaml.gif"
+        end
+      end.new
+
+      Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {"settings" => {}, "scenes" => [{"commands" => [{"type" => "echo hi"}]}]}) do
+        Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+          result = invoke(["record", tape_path])
+          assert_includes result[:stdout], "Recorded: .ace-local/demo/yaml.gif"
+        end
       end
-    end.new
-
-    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
-      result = invoke(["record", "./demo.tape.yml"])
-      assert_includes result[:stdout], "Recorded: .ace-local/demo/yaml.gif"
     end
   end
 
@@ -96,6 +107,151 @@ class CliTest < AceDemoTestCase
 
       result = invoke(["record", tape_path, "--dry-run"])
       assert_includes result[:stdout], "[dry-run] Would record tape: #{tape_path} (format: webm)"
+    end
+  end
+
+  def test_record_yaml_dry_run_rejects_unsupported_yaml_format
+    Dir.mktmpdir("ace_demo_cli") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      File.write(
+        tape_path,
+        <<~YAML
+          description: demo
+          settings:
+            format: avi
+          scenes:
+            - name: one
+              commands:
+                - type: echo hi
+                  sleep: 1s
+        YAML
+      )
+
+      result = invoke(["record", tape_path, "--dry-run"])
+      assert_equal 1, result[:result]
+      assert_includes result[:stderr], "Unsupported format: avi"
+    end
+  end
+
+  def test_record_yaml_uses_tape_playback_speed_and_output_defaults
+    Dir.mktmpdir("ace_demo_cli_yaml_defaults") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      final_output = File.join(dir, "docs", "demo.gif")
+      File.write(tape_path, "description: demo\n")
+
+      fake_recorder = Class.new do
+        attr_reader :kwargs
+
+        def initialize(return_path)
+          @return_path = return_path
+        end
+
+        def record(**kwargs)
+          @kwargs = kwargs
+          @return_path
+        end
+      end.new(final_output)
+
+      Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+        Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+          "settings" => {"format" => "gif", "playback_speed" => "4x", "output" => final_output},
+          "scenes" => [{"name" => "one", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}]
+        }) do
+          result = invoke(["record", tape_path])
+          assert_includes result[:stdout], "Recorded: #{final_output}"
+          assert_equal "4x", fake_recorder.kwargs[:playback_speed]
+          assert_nil fake_recorder.kwargs[:output]
+          assert_equal final_output, fake_recorder.kwargs[:retime_output]
+          assert_equal "4x", fake_recorder.kwargs.dig(:yaml_spec, "settings", "playback_speed")
+        end
+      end
+    end
+  end
+
+  def test_record_yaml_cli_flags_override_tape_settings
+    Dir.mktmpdir("ace_demo_cli_yaml_override") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      tape_output = File.join(dir, "docs", "from-tape.gif")
+      cli_output = File.join(dir, "docs", "from-cli.gif")
+      File.write(tape_path, "description: demo\n")
+
+      fake_recorder = Class.new do
+        attr_reader :kwargs
+
+        def initialize(return_path)
+          @return_path = return_path
+        end
+
+        def record(**kwargs)
+          @kwargs = kwargs
+          @return_path
+        end
+      end.new(cli_output)
+
+      Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+        Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+          "settings" => {"format" => "gif", "playback_speed" => "4x", "output" => tape_output},
+          "scenes" => [{"name" => "one", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}]
+        }) do
+          result = invoke(["record", tape_path, "--playback-speed", "2x", "--output", cli_output])
+          assert_includes result[:stdout], "Recorded: #{cli_output}"
+          assert_equal "2x", fake_recorder.kwargs[:playback_speed]
+          assert_nil fake_recorder.kwargs[:output]
+          assert_equal cli_output, fake_recorder.kwargs[:retime_output]
+          assert_equal "4x", fake_recorder.kwargs.dig(:yaml_spec, "settings", "playback_speed")
+        end
+      end
+    end
+  end
+
+  def test_record_yaml_uses_tape_speed_with_cli_output_override
+    Dir.mktmpdir("ace_demo_cli_yaml_output_override") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      cli_output = File.join(dir, "docs", "from-cli.gif")
+      File.write(tape_path, "description: demo\n")
+
+      fake_recorder = Class.new do
+        attr_reader :kwargs
+
+        def initialize(return_path)
+          @return_path = return_path
+        end
+
+        def record(**kwargs)
+          @kwargs = kwargs
+          @return_path
+        end
+      end.new(cli_output)
+
+      Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+        Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+          "settings" => {"format" => "gif", "playback_speed" => "4x"},
+          "scenes" => [{"name" => "one", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}]
+        }) do
+          result = invoke(["record", tape_path, "--output", cli_output])
+          assert_includes result[:stdout], "Recorded: #{cli_output}"
+          assert_equal "4x", fake_recorder.kwargs[:playback_speed]
+          assert_nil fake_recorder.kwargs[:output]
+          assert_equal cli_output, fake_recorder.kwargs[:retime_output]
+          assert_equal "4x", fake_recorder.kwargs.dig(:yaml_spec, "settings", "playback_speed")
+        end
+      end
+    end
+  end
+
+  def test_record_yaml_dry_run_shows_exact_retime_target_when_output_is_defined
+    Dir.mktmpdir("ace_demo_cli_yaml_dry_run") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      final_output = File.join(dir, "docs", "demo.gif")
+      File.write(tape_path, "description: demo\n")
+
+      Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+        "settings" => {"format" => "gif", "playback_speed" => "4x", "output" => final_output},
+        "scenes" => [{"name" => "one", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}]
+      }) do
+        result = invoke(["record", tape_path, "--dry-run"])
+        assert_includes result[:stdout], "[dry-run] Would retime recording to 4x: #{final_output}"
+      end
     end
   end
 
@@ -132,10 +288,12 @@ class CliTest < AceDemoTestCase
 
   def test_record_with_pr_attaches_after_recording
     fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
+      def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output.nil?
         raise "bad format" unless format.nil?
+        raise "bad playback_speed" unless playback_speed.nil?
+        raise "bad retime_output" unless retime_output.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -172,10 +330,12 @@ class CliTest < AceDemoTestCase
 
   def test_record_with_playback_speed_retimes_and_attaches_retimed_output
     fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
+      def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad output" unless output.nil?
         raise "bad format" unless format.nil?
+        raise "bad playback_speed" unless playback_speed.nil?
+        raise "bad retime_output" unless retime_output.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -225,9 +385,11 @@ class CliTest < AceDemoTestCase
 
   def test_record_uses_configured_playback_speed
     fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
+      def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad format" unless format.nil?
+        raise "bad playback_speed" unless playback_speed.nil?
+        raise "bad retime_output" unless retime_output.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new
@@ -377,9 +539,11 @@ class CliTest < AceDemoTestCase
 
   def test_record_without_args_uses_tape_path
     fake_recorder = Class.new do
-      def record(tape_ref:, output:, format:)
+      def record(tape_ref:, output:, format:, playback_speed: nil, retime_output: nil)
         raise "bad tape" unless tape_ref == "hello"
         raise "bad format" unless format.nil?
+        raise "bad playback_speed" unless playback_speed.nil?
+        raise "bad retime_output" unless retime_output.nil?
         ".ace-local/demo/hello.gif"
       end
     end.new

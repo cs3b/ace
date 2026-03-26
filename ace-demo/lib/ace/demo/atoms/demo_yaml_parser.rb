@@ -66,10 +66,30 @@ module Ace
           normalized["width"] = integer_or_nil(settings["width"], "settings.width", source_path)
           normalized["height"] = integer_or_nil(settings["height"], "settings.height", source_path)
           normalized["format"] = settings["format"]&.to_s
+          normalized["playback_speed"] = normalize_playback_speed(settings["playback_speed"], source_path) if settings.key?("playback_speed")
+          normalized["output"] = normalize_output_path(settings["output"], source_path) if settings.key?("output")
           normalized["env"] = normalize_env(settings["env"], source_path: source_path) if settings.key?("env")
           normalized
         end
         private_class_method :normalize_settings
+
+        def normalize_playback_speed(value, source_path)
+          parsed = Atoms::PlaybackSpeedParser.parse(value)
+          parsed && parsed[:label]
+        rescue ArgumentError => e
+          raise DemoYamlParseError, "#{e.message} (#{source_path})"
+        end
+        private_class_method :normalize_playback_speed
+
+        def normalize_output_path(value, source_path)
+          normalized = value&.to_s
+          if normalized.nil? || normalized.strip.empty?
+            raise DemoYamlParseError, "settings.output must be a non-empty path in #{source_path}"
+          end
+
+          normalized
+        end
+        private_class_method :normalize_output_path
 
         def normalize_env(env, source_path:)
           return {} if env.nil?

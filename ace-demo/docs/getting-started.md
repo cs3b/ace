@@ -95,6 +95,8 @@ settings:
   height: 600
   font_size: 16
   format: gif
+  playback_speed: 4x
+  output: docs/demo/my-demo.gif
 
 setup:
 - sandbox          # create isolated working directory
@@ -129,7 +131,7 @@ teardown:
 |---------|----------|---------|
 | `description` | No | Metadata shown by `ace-demo show` |
 | `tags` | No | Array or comma-separated string for categorization |
-| `settings` | No | Override `width`, `height`, `font_size`, `format` |
+| `settings` | No | Override `width`, `height`, `font_size`, `format`, `playback_speed`, `output` |
 | `setup` | No | Directives that run before recording starts |
 | `scenes` | **Yes** | One or more named command sequences |
 | `teardown` | No | Cleanup directives that always run |
@@ -166,6 +168,10 @@ Teardown always runs, even when recording fails — similar to `ensure` in Ruby.
 ```bash
 ace-demo record .ace/demo/tapes/my-demo.tape.yml
 ```
+
+When `settings.playback_speed` and `settings.output` are both set, recording runs in retime-only output mode:
+- raw recording stays in `.ace-local/demo/<name>.<format>`
+- retimed output is written exactly to `settings.output` (no `-4x` suffix)
 
 Or, since tapes in `.ace/demo/tapes/` are discovered by name:
 
