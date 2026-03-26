@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.2p4
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 01:47:55"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-assign/lib/ace/assign/cli/commands/add.rb, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/molecules/step_writer.rb, ace-assign/lib/ace/assign/atoms/preset_expander.rb, ace-assign/lib/ace/assign/atoms/step_numbering.rb, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/handbook/skills/as-assign-run-in-batches/SKILL.md, ace-assign/handbook/workflow-instructions/assign/run-in-batches.wf.md]
   commands: [ace-bundle project]
 needs_review: false
+worktree:
+  branch: 2p4-dynamic-task-subtree-insertion-for-ace-assign
+  path: ../ace-t.2p4
+  created_at: "2026-03-26 01:56:48"
+  updated_at: "2026-03-26 01:56:48"
+  target_branch: main
 ---
 
 # Dynamic Task Subtree Insertion for ace-assign
