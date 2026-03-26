@@ -154,7 +154,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.25.0)
+    ace-lint (0.27.3)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-config (~> 0.8)
