@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.933] - 2026-03-26
+
+### Changed
+- **ace-assign v0.38.2**: Updated `work-on-task` prepare/create contracts to filter all terminal task statuses (`done`, `skipped`, `cancelled`) and to no-op assignment creation when all requested refs are terminal.
+
+### Technical
+- **ace-assign v0.38.2**: Strengthened terminal-filter contract coverage and moved the workflow contract test into the standard `test/organisms/` bucket.
+
+## [0.9.932] - 2026-03-26
+
+### Technical
+- **ace-assign v0.38.1**: Added regression tests to lock `work-on-task` done-task filtering contracts for mixed/all-done inputs and create-flow no-op behavior.
+
+## [0.9.931] - 2026-03-26
+
+### Changed
+- **ace-assign v0.38.0**: Updated assignment prepare/create workflow contracts to filter already-done `work-on-task` refs before expansion, continue mixed sets with skip reporting, and abort all-done sets without creating assignments.
+
 ## [0.9.930] - 2026-03-26
 
 ### Added
