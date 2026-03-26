@@ -29,6 +29,8 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       @status = data[:status]
       @subtasks = if data[:subtasks]
         data[:subtasks].map { |s| FakeTask.new(s) }
+      elsif data[:is_orchestrator] && data[:subtask_entries]&.any?
+        data[:subtask_entries].map { |e| FakeSubtaskRef.new(e[:id], status: e[:status]) }
       elsif data[:is_orchestrator] && data[:subtask_ids]&.any?
         data[:subtask_ids].map { |id| FakeSubtaskRef.new(id) }
       end
@@ -36,10 +38,11 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   end
 
   class FakeSubtaskRef
-    attr_reader :id
+    attr_reader :id, :status
 
-    def initialize(id)
+    def initialize(id, status: nil)
       @id = id
+      @status = status
     end
   end
 
@@ -470,6 +473,132 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_empty worktree_provisioner.calls
       assert_empty tmux.calls
       assert_empty launcher.calls
+    end
+  end
+
+  def test_rejects_single_terminal_task_before_side_effects
+    Dir.mktmpdir("task.done") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "done-feature", created: true}
+      )
+      tmux = FakeWindowOpener.new
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("401" => {metadata: {}, status: "done"}),
+        worktree_provisioner: worktree_provisioner,
+        tmux_window_opener: tmux,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "401")
+      end
+
+      assert_includes error.message, "already terminal"
+      assert_includes error.message, "401"
+      assert_empty worktree_provisioner.calls
+      assert_empty tmux.calls
+      assert_empty launcher.calls
+    end
+  end
+
+  def test_rejects_all_terminal_requested_refs_before_side_effects
+    Dir.mktmpdir("task.all-done") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "all-done", created: true}
+      )
+      tmux = FakeWindowOpener.new
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new(
+          "402" => {metadata: {}, status: "done"},
+          "403" => {metadata: {}, status: "skipped"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        tmux_window_opener: tmux,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "402", task_refs: %w[402 403], cli_preset: "work-on-task")
+      end
+
+      assert_includes error.message, "already terminal"
+      assert_includes error.message, "402"
+      assert_includes error.message, "403"
+      assert_empty worktree_provisioner.calls
+      assert_empty tmux.calls
+      assert_empty launcher.calls
+    end
+  end
+
+  def test_skips_terminal_requested_ref_in_mixed_set
+    Dir.mktmpdir("task.mixed") do |worktree|
+      messages = []
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new(
+          "404" => {metadata: {}, status: "done"},
+          "405" => {metadata: {}, status: nil}
+        ),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          {worktree_path: worktree, branch: "mixed-set", created: true}
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      result = orchestrator.call(
+        task_ref: "404",
+        task_refs: %w[404 405],
+        cli_preset: "work-on-task",
+        on_progress: ->(msg) { messages << msg }
+      )
+
+      assert_equal 1, launcher.calls.length
+      assert_equal %w[405], launcher.calls.first[:task_refs]
+      assert messages.any? { |m| m.include?("Skipped terminal tasks") && m.include?("404") }
+    end
+  end
+
+  def test_filters_terminal_subtasks_during_expansion
+    Dir.mktmpdir("task.subtask-filter") do |worktree|
+      launcher = FakeAssignmentLauncher.new
+      task = {
+        metadata: {},
+        is_orchestrator: true,
+        subtask_entries: [
+          {id: "8pp.t.q7w.a", status: nil},
+          {id: "8pp.t.q7w.b", status: "done"},
+          {id: "8pp.t.q7w.c", status: "pending"}
+        ]
+      }
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("500" => task),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          {worktree_path: worktree, branch: "500-orchestrator", created: true}
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      orchestrator.call(task_ref: "500")
+
+      call = launcher.calls.first
+      assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.c], call[:task_refs]
+      assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.c], call[:subtask_refs]
     end
   end
 end
