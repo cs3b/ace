@@ -9,14 +9,46 @@ tags: [ace-lint, auto-fix, agent, doctor-pattern]
 parent: 8qp.t.1fn
 bundle:
   presets: [project]
-  files:
-    - ace-lint/lib/ace/lint/cli/commands/lint.rb
-    - ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb
-    - ace-task/lib/ace/task/cli/commands/doctor.rb
-    - ace-task/lib/ace/task/molecules/task_doctor_fixer.rb
-    - ace-task/lib/ace/task/molecules/task_doctor_reporter.rb
+  files: [ace-lint/lib/ace/lint/cli/commands/lint.rb, ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-task/lib/ace/task/cli/commands/doctor.rb, ace-task/lib/ace/task/molecules/task_doctor_fixer.rb, ace-task/lib/ace/task/molecules/task_doctor_reporter.rb]
   commands: []
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+
+- [ ] **[HIGH-B1a] Agent prompt scope.** Should the agent receive full file content for files with remaining violations, or just violation context (surrounding lines + file path for agent to read more)?
+  - **Research conducted:** ace-task doctor builds a formatted issue list with rules per issue type — no full file content. ace-retro doctor follows same pattern.
+  - **Suggested default:** Violation context with surrounding lines, plus file path. Matches doctor pattern, controls token usage, avoids exposing full file content.
+  - **Why needs human input:** Security posture (full content may include sensitive code) and token cost implications.
+
+- [ ] **[HIGH-B1b] Dry-run scope for agent.** Should `--auto-fix-with-agent --dry-run` show the agent prompt that would be sent, without launching the agent?
+  - **Research conducted:** ace-task doctor's dry-run only previews deterministic fixes, does not show agent prompt.
+  - **Suggested default:** Yes, show the agent prompt for transparency. This diverges from doctor pattern but aids debugging.
+  - **Why needs human input:** User-visible output format decision.
+
+- [ ] **[HIGH-B2] Bundle.files missing QueryInterface.** `Ace::LLM::QueryInterface` is the integration point with 37 options. File exists at `ace-llm/lib/ace/llm/query_interface.rb`. Without it, implementer can't build agent integration.
+  - **Resolution:** Add `ace-llm/lib/ace/llm/query_interface.rb` to bundle.files. (This can be done without human input.)
+
+### [MEDIUM] Design Decisions with Suggested Defaults
+
+- [ ] **[MED-B1] Consumer packages not listed.** These reference `--fix` behavior and need updating:
+  - `ace-lint/docs/usage.md`, `ace-lint/docs/getting-started.md`, `docs/tools.md`
+  - `ace-lint/lib/ace/lint/cli/commands/lint.rb` help text and examples
+  - E2E test: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/TC-003-fix-mode.runner.md`
+
+- [ ] **[MED-B2] `--dry-run` alias `-n` not specified.** Both ace-task doctor and ace-retro doctor use `-n` for `--dry-run`. Ecosystem consistency requires this.
+  - **Suggested default:** Add `-n` alias.
+
+- [ ] **[MED-B3] Interactive confirmation prompt.** Doctor pattern prompts "Apply fixes? (y/N):" before auto-fix. Spec shows no prompt in examples.
+  - **Suggested default:** Non-interactive (matches `--fix` fire-and-forget expectation). Note divergence from doctor pattern.
+
+- [ ] **[MED-B4] Re-lint after fix is new behavior.** Currently `--fix` on markdown returns early WITHOUT running lint (orchestrator line 117). Spec says `--auto-fix` should re-lint. This is a significant orchestrator flow change.
+  - **Suggested default:** Explicitly note as new behavior in spec, flag that orchestrator control flow must change.
+
+- [ ] **[MED-B5] `--format` + `--auto-fix-with-agent` interaction.** Spec covers `--auto-fix + --format` but not the agent variant.
+  - **Suggested default:** Same rule — agent fix takes precedence, `--format` ignored with warning.
 
 # Add Auto-Fix and Agent-Assisted Fix Flags
 
