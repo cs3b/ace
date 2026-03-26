@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.1fn
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 00:57:24"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: []
   commands: []
 needs_review: false
+worktree:
+  branch: 1fn-safe-and-extensible-ace-lint-fix-system
+  path: ../ace-t.1fn
+  created_at: "2026-03-26 01:27:29"
+  updated_at: "2026-03-26 01:27:29"
+  target_branch: main
 ---
 
 # Safe and Extensible ace-lint Fix System
