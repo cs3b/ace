@@ -278,7 +278,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.3)
+    ace-support-items (0.15.4)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
@@ -323,7 +323,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.31.0)
+    ace-task (0.31.3)
       ace-b36ts (~> 0.7)
       ace-support-cli (~> 0.3)
       ace-support-core (~> 0.25)

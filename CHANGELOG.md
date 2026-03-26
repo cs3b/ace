@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.928] - 2026-03-26
+
+### Fixed
+- **ace-task v0.31.3**: Consolidated empty-list stats footer formatting into a single return path and added command-level coverage for zero-total footer output.
+
+## [0.9.927] - 2026-03-26
+
+### Fixed
+- **ace-support-items v0.15.4**: corrected zero-status summary formatting in `StatsLineFormatter` so empty lists render `Tasks: • 0 total` without dangling spacing.
+- **ace-task v0.31.2**: aligned empty-task list output with the formatter fix and added exact output regression coverage.
+
+## [0.9.926] - 2026-03-26
+
+### Fixed
+- **ace-task v0.31.1**: `ace-task list` now shows the stats footer for empty results, including filtered `0 of N` summaries.
+
 ## [0.9.925] - 2026-03-23
 
 ### Fixed
