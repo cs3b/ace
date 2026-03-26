@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.934] - 2026-03-26
+
+### Added
+- **ace-overseer v0.12.0**: Terminal task filtering in `WorkOnOrchestrator` — tasks with `done`, `skipped`, or `cancelled` status are excluded before assignment creation, with skip reporting via progress callbacks.
+
 ## [0.9.933] - 2026-03-26
 
 ### Changed
