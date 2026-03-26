@@ -1,18 +1,16 @@
 ---
 id: 8qp.t.0vy
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 00:35:31"
 estimate: TBD
 dependencies: []
 tags: []
 bundle:
-  presets: ["project"]
-  files:
-    - ace-task/lib/ace/task/molecules/task_display_formatter.rb
-    - ace-task/test/molecules/task_display_formatter_test.rb
-    - ace-idea/lib/ace/idea/molecules/idea_display_formatter.rb
+  presets: [project]
+  files: [ace-task/lib/ace/task/molecules/task_display_formatter.rb, ace-task/test/molecules/task_display_formatter_test.rb, ace-idea/lib/ace/idea/molecules/idea_display_formatter.rb]
   commands: []
+needs_review: false
 ---
 
 # Show Stats Footer in ace-task list for Empty Results
