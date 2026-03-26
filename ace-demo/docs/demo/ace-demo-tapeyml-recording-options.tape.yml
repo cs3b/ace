@@ -1,0 +1,39 @@
+---
+description: Demonstrate tape.yml playback_speed and output settings
+tags:
+- ace-demo
+- recording-options
+- feature-demo
+settings:
+  font_size: 16
+  width: 1100
+  height: 600
+  format: gif
+setup:
+- sandbox
+- copy-fixtures
+scenes:
+- name: Show tape.yml with recording settings
+  commands:
+  - type: cat sample-project/demo.tape.yml
+    sleep: 5s
+- name: Dry-run shows the recording plan
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-demo record sample-project/demo.tape.yml --dry-run
+    sleep: 5s
+- name: Record with retime-only output
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-demo record sample-project/demo.tape.yml
+    sleep: 6s
+- name: Verify output placement
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ls -lh .ace-local/demo/demo.gif output/demo.gif
+    sleep: 4s
+teardown:
+- cleanup

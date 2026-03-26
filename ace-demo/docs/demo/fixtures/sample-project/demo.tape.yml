@@ -1,0 +1,20 @@
+---
+description: Sample project demo
+tags:
+- sample
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+  playback_speed: 4x
+  output: output/demo.gif
+setup:
+- sandbox
+scenes:
+- name: Hello
+  commands:
+  - type: echo 'Hello from tape with recording options!'
+    sleep: 2s
+teardown:
+- cleanup
