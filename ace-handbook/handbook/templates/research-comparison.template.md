@@ -42,25 +42,25 @@ ace-docs:
 
 | Artifact | Agent A | Agent B | Agent C | Best | Action |
 |----------|---------|---------|---------|------|--------|
-| [guide-name.g.md] | [rating] | — | [rating] | [agent] | [merge/use/skip] |
+| [guide-name.g.md] | [rating] | -- | [rating] | [agent] | [merge/use/skip] |
 
 ### Workflows
 
 | Artifact | Agent A | Agent B | Agent C | Best | Action |
 |----------|---------|---------|---------|------|--------|
-| [workflow.wf.md] | [rating] | [rating] | — | [agent] | [merge/use/skip] |
+| [workflow.wf.md] | [rating] | [rating] | -- | [agent] | [merge/use/skip] |
 
 ### Templates
 
 | Artifact | Agent A | Agent B | Agent C | Best | Action |
 |----------|---------|---------|---------|------|--------|
-| [template.md] | — | [rating] | [rating] | [agent] | [merge/use/skip] |
+| [template.md] | -- | [rating] | [rating] | [agent] | [merge/use/skip] |
 
 ### Skills
 
 | Artifact | Agent A | Agent B | Agent C | Best | Action |
 |----------|---------|---------|---------|------|--------|
-| [skill-name] | [rating] | — | — | [agent] | [use/skip] |
+| [skill-name] | [rating] | -- | -- | [agent] | [use/skip] |
 
 ---
 
@@ -72,9 +72,9 @@ ace-docs:
 
 | Topic | Agent A | Agent B | Agent C | Notes |
 |-------|---------|---------|---------|-------|
-| [Topic 1] | ✓ detailed | ✓ brief | — | A most thorough |
+| [Topic 1] | ✓ detailed | ✓ brief | -- | A most thorough |
 | [Topic 2] | ✓ | ✓ | ✓ | All covered similarly |
-| [Topic 3] | — | ✓ | ✓ | A missed this |
+| [Topic 3] | -- | ✓ | ✓ | A missed this |
 
 #### Depth Assessment
 
@@ -170,6 +170,7 @@ ace-docs:
 ## Attribution
 
 All synthesis decisions credit original sources:
+
 - Agent A ([model]): [timestamp]-[agent]-report.md
 - Agent B ([model]): [timestamp]-[agent]-report.md
 - Agent C ([model]): [timestamp]-[agent]-report.md

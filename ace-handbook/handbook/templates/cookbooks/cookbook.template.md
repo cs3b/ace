@@ -22,14 +22,17 @@ Brief description of what this cookbook accomplishes and why it's valuable.
 ## Prerequisites
 
 **System Requirements:**
+
 - Requirement 1
 - Requirement 2
 
 **Knowledge Requirements:**
+
 - Knowledge area 1
 - Knowledge area 2
 
 **Tools & Dependencies:**
+
 - Tool/dependency 1
 - Tool/dependency 2
 
@@ -44,23 +47,27 @@ High-level summary of the approach and main steps involved.
 **Objective**: What this step accomplishes
 
 **Commands/Actions:**
+
 ```bash
 # Command examples with explanation
 command --option value
 ```
 
 **Expected Output:**
+
 ```
 Sample output that confirms success
 ```
 
 **Validation:**
+
 ```bash
 # Commands to verify this step completed successfully
 verification-command
 ```
 
 **Troubleshooting:**
+
 - Common issue 1: Solution
 - Common issue 2: Solution
 
@@ -69,21 +76,25 @@ verification-command
 **Objective**: What this step accomplishes
 
 **Commands/Actions:**
+
 ```bash
 # Additional commands
 ```
 
 **Expected Output:**
+
 ```
 Expected results
 ```
 
 **Validation:**
+
 ```bash
 # Verification commands
 ```
 
 **Troubleshooting:**
+
 - Issue: Solution
 
 ## Validation & Testing
@@ -91,16 +102,19 @@ Expected results
 ### Final Validation Steps
 
 1. **System Check:**
+
    ```bash
    # Commands to verify overall system state
    ```
 
 2. **Functional Test:**
+
    ```bash
    # Commands to test functionality end-to-end
    ```
 
 3. **Performance Check** (if applicable):
+
    ```bash
    # Commands to verify performance expectations
    ```
@@ -118,6 +132,7 @@ Expected results
 **Context**: Specific use case or scenario
 
 **Implementation:**
+
 ```bash
 # Specific commands for this example
 ```
@@ -129,6 +144,7 @@ Expected results
 **Context**: Different use case
 
 **Implementation:**
+
 ```bash
 # Alternative approach or configuration
 ```
@@ -208,20 +224,24 @@ end
 ## Version History
 
 ### v1.0 (YYYY-MM-DD)
+
 - Initial version
 - Core steps documented
 
 ### v1.1 (YYYY-MM-DD)
+
 - Added troubleshooting section
 - Updated validation steps
 
 ## Feedback & Improvements
 
 **Known Limitations:**
+
 - Limitation 1: Description and potential workaround
 - Limitation 2: Impact and mitigation
 
 **Future Enhancements:**
+
 - Enhancement idea 1
 - Enhancement idea 2
 

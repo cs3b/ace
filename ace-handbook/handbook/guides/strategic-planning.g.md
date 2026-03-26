@@ -58,9 +58,9 @@ See `/dev-taskflow/roadmap.md`. Key sections:
 
 ## 6. Tips & Common Pitfalls
 
-* Avoid overly granular detail in roadmap—keep tactical work in tasks.
+* Avoid overly granular detail in roadmap--keep tactical work in tasks.
 * Review metrics regularly; retire objectives once met.
-* Keep roadmap lightweight—update tables, not essays.
+* Keep roadmap lightweight--update tables, not essays.
 
 ---
 

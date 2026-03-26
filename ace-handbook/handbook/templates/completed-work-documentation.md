@@ -3,6 +3,7 @@
 **Issue**: [Describe the issue or need that prompted this work]
 
 **Key Behavioral Requirements**:
+
 - [What behavior needed to change or be fixed]
 - [What the system should do after the fix]
 - [Any constraints or considerations]
@@ -20,13 +21,16 @@
 ### Deliverables
 
 #### Create
+
 - [New files created, if any]
 
 #### Modify
+
 - [Files that were modified]
 - [With brief description of changes]
 
 #### Delete
+
 - [Files removed, if any]
 
 ## Implementation Summary

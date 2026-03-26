@@ -17,6 +17,7 @@ performance aspects (memory usage, execution speed, concurrency) within the proj
 ## 1. Memory Management
 
 - **Object Pooling:** Use pooling for expensive or frequently created/destroyed objects (e.g.,
+
   database connections, threads, large buffers) if your language/framework provides suitable libraries.
 
 ```javascript
@@ -38,6 +39,7 @@ performance aspects (memory usage, execution speed, concurrency) within the proj
   ```
 
 - **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use
+
   language-specific tools (profilers, heap analyzers) to detect and fix leaks.
   - Explicitly release resources when done.
   - Break circular references if using languages with reference counting or specific GC patterns.
@@ -111,6 +113,7 @@ printMemoryReport(report); // Analyze allocations, retained objects, etc.
 Optimize concurrent operations carefully.
 
 - **Thread Pools:** Use thread pools to manage a fixed number of threads, reducing the overhead of
+
   thread creation/destruction and controlling resource usage using libraries appropriate for your
   language.
 
@@ -125,7 +128,9 @@ Optimize concurrent operations carefully.
   ```
 
 - **Asynchronous Operations:** Prefer non-blocking I/O and asynchronous patterns (`async/await`,
+
   Promises, Futures, callbacks, etc.) where possible, especially for I/O-bound tasks.
+
 - **Batch Processing:** Process tasks in batches using available concurrency mechanisms.
 
 ```javascript
@@ -186,6 +191,7 @@ function execute(task) {
 **Example Benchmarking (Conceptual):**
 
 ```javascript
+
 // Pseudocode for benchmarking
 startTime = getCurrentTime();
 runCriticalFunction(testData);
@@ -197,6 +203,7 @@ logBenchmarkResult("criticalFunction", duration);
 if (duration > baselineDuration * 1.1) {
   reportPerformanceRegression("criticalFunction", duration, baselineDuration);
 }
+
 ```
 
 ## Language/Environment-Specific Examples

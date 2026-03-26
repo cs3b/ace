@@ -54,40 +54,40 @@ that leverage embedded templates and comply with project conventions.
     * Create file in `workflow-instructions/` with `.wf.md` extension
     * Use verb-first naming convention (e.g., `create-api-docs.wf.md`)
     * Implement standard workflow structure:
-      
+
           # Workflow Title
-               
+
           ## Goal
           [Single sentence describing the objective]
-               
+
           ## Prerequisites
           * [Required condition 1]
           * [Required condition 2]
-               
+
           ## Project Context Loading
           * Load [context file 1]: `path/to/file`
           * Load [context file 2]: `path/to/file`
-               
+
           ## Process Steps
-               
+
           1. **Step Name:**
              * [Detailed instruction]
              * [Example or command]
-               
+
           ## Success Criteria
           * [Completion check 1]
           * [Completion check 2]
       {: .language-markdown}
 5.  **Embed Templates and Content:**
     * Use the template embedding format for reusable content:
-      
+
           <templates>
           <template path="path/to/template.md">
           [Template content here]
           </template>
           </templates>
       {: .language-markdown}
-    
+
     * **IMPORTANT: Dual Template Editing Required**
       * When modifying embedded templates, you MUST update BOTH:
         1.  The source template file (e.g., `templates/*/template.md`)
@@ -120,48 +120,48 @@ that leverage embedded templates and comply with project conventions.
 ### Basic Workflow Template Structure
 
     # [Action Verb] [Object/Target]
-    
+
     ## Goal
-    
+
     [Single sentence describing what this workflow achieves]
-    
+
     ## Prerequisites
-    
+
     * [Specific requirement 1]
     * [Specific requirement 2]
     * [Knowledge or access requirement]
-    
+
     ## Project Context Loading
-    
+
     * Load [description]: `path/to/relevant/file`
     * Load [description]: `path/to/other/file`
-    
+
     ## Process Steps
-    
+
     1. **[Action Step Name]:**
        * [Specific instruction with details]
        * [Example command or pattern]
-       
+
        **Validation:**
        * [How to verify this step succeeded]
-    
+
     2. **[Next Step Name]:**
        * [Continue with logical progression]
-    
+
     ## Success Criteria
-    
+
     * [Measurable outcome 1]
     * [Measurable outcome 2]
     * [Quality check]
-    
+
     ## Error Handling
-    
+
     **[Common Error Scenario]:**
     * **Symptoms:** [What the user sees]
     * **Solution:** [How to resolve]
-    
+
     ## Usage Example
-    
+
     > "[Example user request or scenario]"
 {: .language-markdown}
 
@@ -174,7 +174,7 @@ When including commands that vary by technology stack:
     - Node.js: `npm test`
     - Python: `pytest`
     - Rust: `cargo test`
-    
+
     ### Install Dependencies
     - Ruby: `bundle install`
     - Node.js: `npm install`
@@ -260,25 +260,31 @@ For generating new content:
 When renaming a workflow, update workflow references first. When renaming a skill, treat it as a
 provider-agent and `ace-assign` discovery concern rather than a general markdown usage path.
 
-1. **SkillPromptBuilder** — grep for the old name in runner code:
+1. **SkillPromptBuilder** -- grep for the old name in runner code:
+
    ```bash
    grep -r "ace:old-name" ace-test-runner-e2e/lib/
    ```
+
    Update `build_skill_prompt` and `build_tc_skill_prompt` in
    `ace-test-runner-e2e/lib/ace/test/end_to_end_runner/atoms/skill_prompt_builder.rb`.
 
-2. **Provider projections** — verify provider integration packages still resolve the renamed skill:
+2. **Provider projections** -- verify provider integration packages still resolve the renamed skill:
+
    ```bash
    rg -n "<skill-dir-name>|old-name" ace-handbook ace-handbook-integration-* ace-assign
    ```
+
    Update projection docs and any provider metadata that still reference the old name.
 
-3. **Handbook references** — grep for old name across all workflow instructions:
+3. **Handbook references** -- grep for old name across all workflow instructions:
+
    ```bash
    grep -r "ace:old-name" ace-*/handbook/
    ```
 
-4. **Tests** — run the runner unit tests to confirm no remaining string drift:
+4. **Tests** -- run the runner unit tests to confirm no remaining string drift:
+
    ```bash
    ace-test ace-test-runner-e2e
    ```

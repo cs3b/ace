@@ -14,6 +14,7 @@ This guide establishes standards for markdown formatting within the development 
 ## Goal
 
 Define clear principles for:
+
 - When to use three-tick vs four-tick code block escaping
 - How to properly demonstrate markdown syntax within documentation
 - Markdown formatting consistency across guides and workflows
@@ -30,6 +31,7 @@ Define clear principles for:
 ### Three-Tick Escaping (```): Standard Code Examples
 
 Use standard three-tick escaping for:
+
 - Command examples
 - Code snippets
 - Configuration examples
@@ -39,17 +41,21 @@ Use standard three-tick escaping for:
 ## Example Commands
 
 ```bash
+
 git status
 git add .
 git commit -m "feat: add new feature"
+
 ```
 
 ## Configuration Example
 
 ```yaml
+
 version: 1.0
 settings:
   debug: false
+
 ```
 ```
 
@@ -61,8 +67,11 @@ Reserve four-tick escaping **exclusively** for demonstrating markdown syntax wit
 To show markdown examples in guides:
 
 ````markdown
+
 # This is a markdown example
+
 Content here demonstrates markdown syntax.
+
 ````
 ````
 
@@ -74,9 +83,13 @@ Content here demonstrates markdown syntax.
 Use this format to demonstrate header syntax:
 
 ````markdown
+
 # Main Title
+
 ## Section Header
+
 ### Subsection Header
+
 ````
 ````
 
@@ -86,14 +99,17 @@ Use this format to demonstrate header syntax:
 Example of list formatting:
 
 ````markdown
+
 - First item
 - Second item
+
   - Nested item
   - Another nested item
 
 1. Numbered list
 2. Second item
    1. Nested numbered item
+
 ````
 ````
 
@@ -103,11 +119,13 @@ Example of list formatting:
 Link examples:
 
 ````markdown
+
 [Link Text](https://example.com)
 [Internal Link](path/to/file.md)
 [Reference Link][ref-id]
 
 [ref-id]: https://example.com "Reference title"
+
 ````
 ````
 
@@ -117,6 +135,7 @@ Link examples:
 Code block examples:
 
 ````markdown
+
 Inline `code` formatting.
 
 ```javascript
@@ -124,6 +143,7 @@ function example() {
     return "code block";
 }
 ```
+
 ````
 ````
 
@@ -133,7 +153,9 @@ function example() {
 
 ````markdown
 ````bash
+
 git status  # This should use three ticks
+
 ````
 ````
 
@@ -157,27 +179,35 @@ git status  # Proper three-tick escaping
 
 ````markdown
 ````markdown
+
 # This markdown example renders correctly
+
 ````
 ````
 
 ## Validation Patterns
 
 ### Find incorrect four-tick usage (should be three-tick for code examples)
+
 ```regex
 ^````(?!markdown).*$
 ```
+
 This finds four-tick blocks that aren't for markdown-within-markdown demonstrations.
 
 ### Find orphaned four-tick blocks (should only be for markdown demonstrations)
+
 ```regex
 ````(?!markdown)[\s\S]*?````
+
 ```
 This finds four-tick blocks not used for markdown-within-markdown examples.
 
 ### Find three-tick markdown blocks (should be four-tick)
 ```regex
+
 ^```markdown[\s\S]*?^```
+
 ```
 This finds markdown demonstrations using three-tick escaping instead of four-tick.
 

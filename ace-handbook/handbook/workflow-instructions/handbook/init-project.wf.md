@@ -215,12 +215,14 @@ The workflow will prompt for:
 ## Generated/Updated Documentation
 
 ### PRD.md
+
 - Complete product requirements with all sections filled
 - Clear feature prioritization (P0, P1, P2)
 - Technical requirements and constraints
 - User stories and acceptance criteria
 
 ### dev-taskflow/backlog/v.0.1.0-foundation/
+
 - **README.md** with complete release overview (goals, scope, not task details)
 - tasks/ directory with properly structured task files
 - Task IDs following v.0.1.0+task.XXX format
@@ -228,12 +230,14 @@ The workflow will prompt for:
 - **First task (000)** is always the next-steps task if no bootstrap release
 
 ### dev-taskflow/roadmap.md
+
 - Phased development plan
 - Release milestones
 - Feature allocation per release
 - Success metrics per phase
 
 ### docs/context/project.md
+
 - **Uses proper context-tool-config format** (not Jinja2 syntax)
 - Customized with project name and description
 - Tech-stack-specific files added to context
@@ -241,11 +245,13 @@ The workflow will prompt for:
 - Essential commands for development workflow
 
 ### .coding-agent/context.yml
+
 - Configured presets for the project
 - Custom context definitions
 - Appropriate chunk limits
 
 ### dev-taskflow/current/v.0.0.0-bootstrap/tasks/v.0.0.0+task.000-project-initialization-next-steps.md
+
 - **CRITICAL**: This task MUST be created for proper project handoff
 - Structured next steps as trackable task with ID 000 (appears first)
 - User prerequisites checklist with project-specific requirements
@@ -259,9 +265,11 @@ The workflow will prompt for:
 - [ ] README.md provides clear project overview
 - [ ] All generated docs updated with actual project details
 - [ ] **Context configuration tested and working**:
+
     - [ ] `docs/context/project.md` uses proper `<context-tool-config>` format
     - [ ] Context loads without errors: `context --preset project`
     - [ ] Project name and description are customized
+
 - [ ] v.0.1.0 release drafted with initial tasks and proper README.md
 - [ ] Roadmap created with phased approach
 - [ ] **Next steps task created as task.000** (in v.0.0.0-bootstrap or v.0.1.0)
@@ -290,46 +298,60 @@ This workflow completes the project initialization by focusing on information ga
 ## Project Overview
 
 ### Problem Statement
+
 <!-- Describe the core problem this project aims to solve -->
 
 ### Proposed Solution
+
 <!-- High-level description of your approach to solving the problem -->
 
 ### Success Metrics
+
 <!-- How will you measure success? Include quantifiable goals where possible -->
 
 ## Project Details
 
 ### Project Name
+
 <!-- The official name of your project -->
 
 ### Target Audience
+
 <!-- Who are the primary users/beneficiaries of this project? -->
 
 ### Core Value Proposition
+
 <!-- What unique value does this project provide? -->
 
 ## Functional Requirements
 
 ### Must-Have Features (P0)
+
 <!-- Critical features without which the project cannot succeed -->
+
 - [ ] Feature 1: Description
 - [ ] Feature 2: Description
 
 ### Should-Have Features (P1)
+
 <!-- Important features that significantly enhance the project -->
+
 - [ ] Feature 1: Description
 - [ ] Feature 2: Description
 
 ### Could-Have Features (P2)
+
 <!-- Nice-to-have features for future consideration -->
+
 - [ ] Feature 1: Description
 - [ ] Feature 2: Description
 
 ## Technical Considerations
 
 ### Technology Stack
+
 <!-- Preferred programming languages, frameworks, databases, etc. -->
+
 - **Primary Language**:
 - **Framework/Runtime**:
 - **Database**:
@@ -337,20 +359,25 @@ This workflow completes the project initialization by focusing on information ga
 - **Deployment**:
 
 ### Architecture Requirements
+
 <!-- High-level architectural constraints or preferences -->
 
 ### Performance Requirements
+
 <!-- Speed, scalability, and resource constraints -->
 
 ### Security Requirements
+
 <!-- Security considerations and compliance needs -->
 
 ### Integration Requirements
+
 <!-- External systems or APIs this project needs to work with -->
 
 ## User Stories
 
 ### Primary User Flows
+
 <!-- Describe the main user journeys through your application -->
 
 #### User Story 1
@@ -360,6 +387,7 @@ This workflow completes the project initialization by focusing on information ga
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
@@ -370,25 +398,30 @@ This workflow completes the project initialization by focusing on information ga
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
 ## Timeline and Milestones
 
 ### Development Phases
+
 <!-- Break down the project into manageable phases -->
 
 #### Phase 1: Foundation (v.0.1.0)
+
 - **Duration**: [Estimated time]
 - **Goals**: [What will be accomplished]
 - **Deliverables**: [Specific outputs]
 
 #### Phase 2: Enhancement (v.0.2.0)
+
 - **Duration**: [Estimated time]
 - **Goals**: [What will be accomplished]
 - **Deliverables**: [Specific outputs]
 
 #### Phase 3: Polish (v.0.3.0)
+
 - **Duration**: [Estimated time]
 - **Goals**: [What will be accomplished]
 - **Deliverables**: [Specific outputs]
@@ -396,34 +429,43 @@ This workflow completes the project initialization by focusing on information ga
 ## Risks and Mitigations
 
 ### Technical Risks
+
 <!-- Potential technical challenges and how to address them -->
 
 ### Business Risks
+
 <!-- Market, user adoption, or other business-related risks -->
 
 ### Dependencies
+
 <!-- External factors that could impact the project -->
 
 ## Success Criteria
 
 ### MVP Success Metrics
+
 <!-- What defines a successful MVP launch? -->
 
 ### Long-term Success Metrics
+
 <!-- What defines long-term project success? -->
 
 ## Appendices
 
 ### Glossary
+
 <!-- Define project-specific terms -->
 
 ### References
+
 <!-- Links to relevant resources, research, or documentation -->
 
 ### Assumptions
+
 <!-- List any assumptions made in this PRD -->
 
 ### Out of Scope
+
 <!-- Explicitly state what is NOT included in this project -->
 </template>
 
@@ -436,63 +478,75 @@ This roadmap outlines the planned development phases for [Project Name], from in
 ## Development Phases
 
 ### Phase 1: Foundation (v.0.1.0)
+
 **Timeline**: [Start Date] - [End Date]
 **Status**: Planning
 
 #### Goals
+
 - Establish core architecture
 - Implement fundamental features
 - Create basic user interface
 - Set up development infrastructure
 
 #### Key Features
+
 - [ ] Feature 1
 - [ ] Feature 2
 - [ ] Feature 3
 
 #### Success Metrics
+
 - Metric 1: Target value
 - Metric 2: Target value
 
 ---
 
 ### Phase 2: Enhancement (v.0.2.0)
+
 **Timeline**: [Start Date] - [End Date]
 **Status**: Planned
 
 #### Goals
+
 - Expand functionality
 - Improve user experience
 - Add integration capabilities
 - Enhance performance
 
 #### Key Features
+
 - [ ] Feature 1
 - [ ] Feature 2
 - [ ] Feature 3
 
 #### Success Metrics
+
 - Metric 1: Target value
 - Metric 2: Target value
 
 ---
 
 ### Phase 3: Polish (v.0.3.0)
+
 **Timeline**: [Start Date] - [End Date]
 **Status**: Planned
 
 #### Goals
+
 - Optimize performance
 - Polish user interface
 - Add advanced features
 - Prepare for production
 
 #### Key Features
+
 - [ ] Feature 1
 - [ ] Feature 2
 - [ ] Feature 3
 
 #### Success Metrics
+
 - Metric 1: Target value
 - Metric 2: Target value
 
@@ -509,10 +563,12 @@ This roadmap outlines the planned development phases for [Project Name], from in
 ## Dependencies
 
 ### External Dependencies
+
 - Dependency 1: Impact and timeline
 - Dependency 2: Impact and timeline
 
 ### Internal Dependencies
+
 - Team availability
 - Infrastructure setup
 - Design completion
@@ -520,10 +576,12 @@ This roadmap outlines the planned development phases for [Project Name], from in
 ## Risk Factors
 
 ### High Priority Risks
+
 - Risk 1: Mitigation strategy
 - Risk 2: Mitigation strategy
 
 ### Medium Priority Risks
+
 - Risk 1: Mitigation strategy
 - Risk 2: Mitigation strategy
 
@@ -539,29 +597,36 @@ This roadmap outlines the planned development phases for [Project Name], from in
 ## Project Overview
 
 ### Name
+
 [Project Name]
 
 ### Purpose
+
 [Brief description of what this project does and why it exists]
 
 ### Status
+
 [Current development phase: Planning/Active/Maintenance]
 
 ### Repository
+
 [Repository URL]
 
 ## Key Information
 
 ### Technology Stack
+
 - **Primary Language**: [Language]
 - **Framework**: [Framework]
 - **Database**: [Database]
 - **Key Dependencies**: [List main dependencies]
 
 ### Architecture
+
 [Brief description of system architecture]
 
 ### Project Structure
+
 ```
 project-root/
 ├── src/           # [Description]
@@ -573,50 +638,62 @@ project-root/
 ## Development Workflow
 
 ### Key Commands
+
 - `command1` - Description
 - `command2` - Description
 
 ### Testing Strategy
+
 [How testing is approached in this project]
 
 ### Deployment Process
+
 [How the project is deployed]
 
 ## Important Decisions
 
 ### Decision 1
+
 [Brief description and rationale]
 
 ### Decision 2
+
 [Brief description and rationale]
 
 ## Current Focus
 
 ### Active Development
+
 [What's currently being worked on]
 
 ### Known Issues
+
 [Any important issues to be aware of]
 
 ### Next Steps
+
 [Planned next actions]
 
 ## References
 
 ### Documentation
+
 - [Link to important doc 1]
 - [Link to important doc 2]
 
 ### External Resources
+
 - [Link to external resource 1]
 - [Link to external resource 2]
 
 ## Team Information
 
 ### Maintainers
+
 - [Name/Role]
 
 ### Contributing
+
 [How to contribute to this project]
 </template>
 </documents>

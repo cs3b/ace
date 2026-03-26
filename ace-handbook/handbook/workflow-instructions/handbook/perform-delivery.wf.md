@@ -72,6 +72,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Do not read implementation details until todo list is created
 
    **Standard Delivery Steps to Add:**
+
    ```
    1. Implement task (via `ace-bundle wfi://task/work` or inline)
    2. Commit all changes (`ace-git-commit`)
@@ -156,10 +157,12 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
 1. Mark the todo as COMPLETED using TodoWrite
 2. Output checkpoint message:
+
    ```
    ✓ Step N complete: [step description]
    → Next: Step N+1 - [next step description]
    ```
+
 3. Read todo list to confirm next step
 4. Continue IMMEDIATELY to next step (no user prompt needed unless blocked)
 
@@ -167,11 +170,13 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
 1. Mark the current todo as blocked (keep as in_progress)
 2. Output failure message:
+
    ```
    ✗ Step N failed: [step description]
    → Error: [error description]
    → Action needed: [what user needs to do]
    ```
+
 3. Ask user for guidance using AskUserQuestion
 4. Resume workflow after issue is resolved
 

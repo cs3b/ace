@@ -43,6 +43,7 @@ Workflow instructions should be self-contained while remaining practical across 
 When dealing with technology-specific content:
 
 1. **Embed Common Examples**: Include examples for multiple common technologies directly in the workflow:
+
    ```markdown
    ### Common Test Commands
    - Ruby: `bundle exec rspec`
@@ -52,6 +53,7 @@ When dealing with technology-specific content:
    ```
 
 2. **Use Inline Pattern Sections**: Create sections that show patterns for different stacks:
+
    ```markdown
    ### Version File Locations
    - Node.js: `package.json`
@@ -61,15 +63,18 @@ When dealing with technology-specific content:
    ```
 
 3. **Provide Template Adaptations**: When embedding templates, show variations:
+
    ```markdown
    ### Build Commands
    ```bash
+
    # TODO: Replace with project-specific build command
    # Examples:
    # - Ruby: bundle install
    # - Node.js: npm install && npm run build
    # - Python: pip install -r requirements.txt
    # - Rust: cargo build --release
+
    ```
    ```
 
@@ -120,23 +125,29 @@ Clearly state the primary objective of this workflow. What problem does it solve
    
 2. **Step Name**: Next major step
    ```bash
+
    # Example commands embedded directly
    bin/test
    bin/lint
+
    ```
 
 ## Embedded Templates
 
 ### Template Name
 ```markdown
+
 [Complete template content embedded here]
 [No external references]
+
 ```
 
 ### Another Template
 ```yaml
+
 [Full template structure]
 [All fields documented]
+
 ```
 
 ## Success Criteria
@@ -170,12 +181,16 @@ Clearly state the primary objective of this workflow. What problem does it solve
 All workflow instruction files must use the `.wf.md` suffix to distinguish them from guides (which use `.g.md`). This convention enables proper editor configuration and clear separation of content types.
 
 ### Naming Pattern
+
 -   **Format:** Use the pattern `<verb>-<context>.wf.md`.
+
     -   `<verb>`: Represents the primary action or purpose of the workflow (e.g., `commit`, `fix`, `prepare`, `release`, `run`, `work-on`).
     -   `<context>`: Provides specific context for the action (e.g., `tests`, `tasks`, `task`).
+
 -   **Style:** Use verb-first naming that describes what action the workflow performs
 -   **Prefix:** Avoid prefixes like `lets-`. Files previously using this prefix should be renamed.
 -   **Examples:**
+
     -   `commit.wf.md`
     -   `fix-tests.wf.md`
     -   `prepare-tasks.wf.md`
@@ -183,7 +198,9 @@ All workflow instruction files must use the `.wf.md` suffix to distinguish them 
     -   `work-on-task.wf.md`
 
 ### Contrast with Guides
+
 Unlike guides (`.g.md` files) which use noun-based naming to describe knowledge areas:
+
 - **Workflows** describe processes to execute: `commit.wf.md`, `fix-tests.wf.md`
 - **Guides** document standards and knowledge: `security.g.md`, `performance.g.md`
 
@@ -194,25 +211,33 @@ This naming distinction helps both humans and AI agents quickly identify whether
 Review these refactored workflow instructions that demonstrate self-containment principles:
 
 ### Context Loading Example
+
 `wfi://bundle` (project context loading):
+
 - Includes explicit file loading instructions
 - No external workflow dependencies
 - Clear context gathering steps
 
 ### Embedded Templates Example
+
 `wfi://handbook/init-project`:
+
 - Contains complete PRD, README, and architecture templates
 - Embeds all binstub scripts
 - Includes full v.0.0.0 release structure
 
 ### Simplified Process Example
+
 `wfi://task/draft`:
+
 - Unified approach for all input types
 - Embedded task template
 - No sub-workflow dependencies
 
 ### Command Reference Example
+
 `wfi://release/publish`:
+
 - Embeds package registry commands for all major platforms
 - Includes changelog format specification
 - Contains complete release process without external references
@@ -247,6 +272,7 @@ Workflow instructions use simple bullet points and numbered lists, avoiding inte
 ### ✅ Success Criteria: Use Simple Bullet Points
 
 **Post-Execution Validation:**
+
 ```markdown
 ## Success Criteria
 - All specified files have been created in the correct locations
@@ -256,6 +282,7 @@ Workflow instructions use simple bullet points and numbered lists, avoiding inte
 ```
 
 These criteria serve as a **validation list** to confirm the workflow was completed successfully. They should:
+
 - Be specific and verifiable
 - Focus on outcomes rather than process steps
 - Allow manual verification by humans or agents
@@ -264,6 +291,7 @@ These criteria serve as a **validation list** to confirm the workflow was comple
 ### ❌ Never Use Checkboxes in Workflow Content
 
 **Don't use checkboxes for any workflow content:**
+
 ```markdown
 <!-- DON'T DO THIS -->
 ## Process Steps
@@ -277,13 +305,16 @@ These criteria serve as a **validation list** to confirm the workflow was comple
 ```
 
 Instead, use numbered steps for processes and simple bullets for criteria:
+
 ```markdown
 <!-- DO THIS -->
 ## Process Steps
 
 1. **Initialize Setup**: Run the setup command
    ```bash
+
    bin/setup
+
    ```
 
 2. **Configure System**: Edit the configuration file
@@ -292,7 +323,9 @@ Instead, use numbered steps for processes and simple bullets for criteria:
 
 3. **Validate Changes**: Test the configuration
    ```bash
+
    bin/test --config
+
    ```
 
 ## Success Criteria
@@ -303,6 +336,7 @@ Instead, use numbered steps for processes and simple bullets for criteria:
 ### ✅ Appropriate Checkbox Use: Templates and Examples Only
 
 Checkboxes are appropriate **only** when:
+
 - Documenting task template formats (showing what task files should contain)
 - Providing copyable templates for users
 - Giving examples of syntax in documentation
@@ -317,6 +351,7 @@ Tasks should include execution steps formatted like this:
 ### Agent Interaction Guidelines
 
 **Success Criteria Lists:**
+
 - Are meant for **post-execution validation** only
 - Should always be written as simple bullet points
 - Serve as verification criteria to confirm completion
@@ -338,6 +373,7 @@ Every workflow must be independently executable:
    - Common patterns
 
 3. **Explicit Context Loading**: Replace implicit dependencies with explicit file loading:
+
    ```markdown
    ## Project Context Loading
    * Load project structure: `docs/blueprint.md`
@@ -358,6 +394,7 @@ When refactoring existing workflows:
 5. **Add Context Loading**: List specific files to load at the beginning
 
 **Process Steps:**
+
 - Should be numbered for sequential execution
 - May contain embedded tests or verification commands
 - Focus on actions and commands to execute
