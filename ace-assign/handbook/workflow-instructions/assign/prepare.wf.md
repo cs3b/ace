@@ -227,6 +227,38 @@ From informal instructions:
 - "tasks 148, 149, 150" → `taskrefs: ["148", "149", "150"]`
 - "PR 45" → `pr_number: "45"`
 
+### 3.1 Resolve Requested Taskrefs and Filter Terminal Tasks (`work-on-task` only)
+
+Apply this step when preparing the `work-on-task` preset.
+
+1. Resolve requested refs to concrete task refs first (before any filtering):
+   - `--taskref` single value
+   - comma-separated `--taskrefs`
+   - ranges like `148-152`
+   - patterns like `240.*`
+2. For each resolved ref, run:
+
+```bash
+ace-task show <taskref>
+```
+
+3. Parse the reported status using `Ace::Task::Atoms::TaskValidationRules::TERMINAL_STATUSES` as the source of truth:
+   - If status is terminal (`done`, `skipped`, `cancelled`) → add to `skipped_terminal_refs`
+   - Otherwise (`pending`, `draft`, `in-progress`, `blocked`) → keep in `effective_taskrefs`
+4. Preserve existing invalid-ref behavior:
+   - If a ref cannot be resolved/found, fail with the existing invalid task reference path.
+5. Branch by result:
+   - Mixed set (`effective_taskrefs` non-empty, `skipped_terminal_refs` non-empty):
+     - Continue with `effective_taskrefs`
+     - Report skipped refs clearly (example: `Skipped terminal tasks (done/skipped/cancelled): 149`)
+   - All-terminal set (`effective_taskrefs` empty, `skipped_terminal_refs` non-empty):
+     - Stop before preset expansion and before job generation
+     - Report:
+       - `All requested tasks are already terminal (done/skipped/cancelled): <refs>`
+       - `No assignment created.`
+
+`effective_taskrefs` is now the source of truth for downstream expansion, hidden spec rendering, and mark-tasks-done behavior.
+
 ### 4. Apply Customizations (if prose provided)
 
 Parse modifications:
@@ -245,6 +277,8 @@ preset = YAML.load_file("work-on-task.yml")
 params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
 steps = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 ```
+
+For `work-on-task`, pass `effective_taskrefs` from step 3.1 (not the unfiltered requested list).
 
 ### 5.1 Resolve Skill `assign.source` Metadata (Deterministic Runtime Expansion)
 
@@ -373,6 +407,8 @@ steps:
 | Unknown preset | List available presets, ask for selection |
 | Missing required parameter | Prompt for value |
 | Invalid task reference | Show expected formats |
+| Mixed refs include terminal tasks | Skip terminal refs, continue with remaining refs, and report skipped refs |
+| All requested refs are terminal | Stop before expansion/job generation and report: `All requested tasks are already terminal (done/skipped/cancelled): ...` + `No assignment created.` |
 | Unresolved placeholders | Report which parameters need values |
 
 ## Examples
@@ -437,10 +473,35 @@ Expands range to tasks 148, 149, 150, 151, 152.
 
 Expands pattern to match subtasks (requires resolution at prepare time).
 
+### Example 7: Mixed Set with Terminal Tasks
+
+```
+/as-assign-prepare work-on-task --taskrefs 148,149,150
+```
+
+If `149` is terminal (for example `done`):
+- continue with `148,150`
+- report `Skipped terminal tasks (done/skipped/cancelled): 149`
+
+### Example 8: All Requested Tasks Already Terminal
+
+```
+/as-assign-prepare work-on-task --taskrefs 148,149
+```
+
+If both are terminal:
+- report `All requested tasks are already terminal (done/skipped/cancelled): 148,149`
+- report `No assignment created.`
+- do not generate a job.yaml
+
 ## Success Criteria
 
 - [ ] Input correctly parsed (preset, parameters, or prose)
 - [ ] Preset loaded and parameters injected
+- [ ] Requested refs resolve to concrete task refs before any terminal-status filtering
+- [ ] Terminal filtering uses `Ace::Task::Atoms::TaskValidationRules::TERMINAL_STATUSES`
+- [ ] Mixed requested sets continue with non-terminal refs and report skipped terminal refs
+- [ ] All-terminal requested sets stop before queue/job creation
 - [ ] Expansion directives processed (if present)
 - [ ] Hierarchical steps numbered correctly
 - [ ] Loops expanded into separate steps

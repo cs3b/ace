@@ -74,7 +74,8 @@ If input is an existing `.yml`/`.yaml` file path:
 
 If input is an exact preset/recipe-style request (for example `work-on-task --taskref 123`):
 - Run `wfi://assign/prepare` to produce normalized job content
-- Continue to hidden-spec rendering (step 4)
+- If prepare reports all requested refs are already terminal (`done/skipped/cancelled`), stop and return that no assignment was created
+- Otherwise continue to hidden-spec rendering (step 4) using the filtered ref set from prepare
 
 #### Path C: Explicit Step or Freeform Intent (Default)
 
@@ -100,7 +101,11 @@ For unmatched phrases:
 Skill-backed steps (for example `work-on-task`) stay high-level in rendered YAML.
 Runtime `ace-assign create` will materialize `assign.source` sub-steps deterministically.
 
-### 4. Render Hidden Spec (Paths B/C)
+### 4. Render Hidden Spec (Paths B/C with Workable Input)
+
+Precondition:
+- Path B: prepare returned workable, filtered content (not an all-terminal abort)
+- Path C: compose resolved at least one actionable step
 
 Create hidden spec directory if missing:
 
@@ -133,6 +138,7 @@ steps:
 Rules:
 - Each invocation writes a new file (no in-place mutation of prior hidden specs).
 - Hidden specs are internal provenance artifacts; users are not required to edit them.
+- Do not render a hidden spec for all-terminal `work-on-task` requests that aborted in Path B.
 
 ### 5. Create Assignment Deterministically
 
@@ -170,6 +176,7 @@ Step 010: ...
 |----------|--------|
 | Unknown explicit phrase | Return unmatched phrase + closest catalog/skill candidates; no assignment created |
 | Conflicting explicit order | Reorder only by hard rule and report the named rule that required it |
+| Path B all requested refs already terminal | Return clear no-op result (`All requested tasks are already terminal (done/skipped/cancelled): ...`, `No assignment created.`); skip hidden-spec render and `ace-assign create` |
 | Hidden-spec render failure | Return concrete render error; no assignment created |
 | `ace-assign create` rejection | Surface CLI error unchanged |
 | `--run` requested but no workable step | Keep create success; report why drive did not continue |
@@ -179,6 +186,8 @@ Step 010: ...
 - Re-running the same request creates a new hidden spec file.
 - Explicit duplicate steps are normalized unless repetition is clearly requested.
 - Explicit steps take precedence over recipe defaults when both are present.
+- Path B mixed refs (terminal + non-terminal) continue with filtered non-terminal refs only.
+- Path B all-terminal refs produce no assignment and no hidden-spec artifact.
 - High-level skill-backed steps may expand into sub-steps at create runtime via `assign.source` metadata.
 - `--run` is a workflow-level create-then-drive handoff, not natural-language parsing in `ace-assign create`.
 - Quiet mode for `ace-assign create` suppresses non-essential output (including provenance line).
@@ -187,6 +196,8 @@ Step 010: ...
 
 - Hidden spec is written under `.ace-local/assign/jobs/` for generated inputs
 - `ace-assign create FILE` receives the rendered spec path
+- Path B all-terminal requests do not render a hidden spec and do not call `ace-assign create`
+- Path B mixed requests render/create from filtered non-terminal refs only
 - Assignment metadata preserves hidden-spec provenance
 - Explicit step requests map to expected steps with explainable ordering
 - Capability skills remain excluded from assign composition
@@ -197,7 +208,7 @@ Step 010: ...
 
 ```bash
 # Validate intent-resolution language exists in create workflow
-rg -n "explicit|phrase|advisory|assign.source|--run" ace-assign/handbook/workflow-instructions/assign/create.wf.md
+rg -n "explicit|phrase|advisory|assign.source|--run|already terminal|No assignment created" ace-assign/handbook/workflow-instructions/assign/create.wf.md
 
 # Validate hidden-spec references remain present
 rg -n "\.ace-local/assign/jobs|Created from hidden spec" ace-assign

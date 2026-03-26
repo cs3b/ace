@@ -3,8 +3,8 @@ doc-type: user
 title: ace-assign Usage Guide
 purpose: Complete command reference for ace-assign queue orchestration, hierarchy, and fork execution.
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-03-26
+  last-checked: 2026-03-26
 ---
 
 # ace-assign Usage Guide
@@ -184,6 +184,17 @@ Options:
 - `--debug, -d`
 
 ## Workflow Patterns
+
+### `work-on-task` Input Filtering (Prepare/Create Workflows)
+
+When using workflow-driven assignment creation for `work-on-task` (`/as-assign-prepare` or `/as-assign-create`):
+
+- Requested refs are resolved first (single, comma list, range, pattern).
+- Terminal refs (`done`, `skipped`, `cancelled`) are skipped before queue expansion.
+- Mixed sets continue with remaining non-terminal refs and report skipped terminal refs.
+- If all requested refs are terminal, assignment creation stops with:
+  - `All requested tasks are already terminal (done/skipped/cancelled): <refs>`
+  - `No assignment created.`
 
 ### Scoped Subtree Execution
 

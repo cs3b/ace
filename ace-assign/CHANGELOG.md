@@ -7,14 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.2] - 2026-03-26
+
+### Changed
+- Updated `work-on-task` prepare/create filtering guidance to treat terminal task statuses (`done`, `skipped`, `cancelled`) as filtered refs and abort all-terminal requests before assignment creation.
+- Updated no-op messaging and edge-case language across prepare/create workflow instructions and usage docs to match the terminal-status contract.
+
+### Technical
+- Replaced fragile done-filter workflow contract assertions with stronger section-scoped terminal-contract checks.
+- Moved the contract test into the standard `test/organisms/` bucket and removed the nonstandard `test/workflows/` location.
+
+## [0.38.1] - 2026-03-26
+
+### Technical
+- Added regression coverage for `work-on-task` done-task filtering contracts, including mixed done/non-done handling, all-done no-op behavior, and create-flow no hidden-spec/`ace-assign create` guard assertions.
+
 ## [0.38.0] - 2026-03-26
 
 ### Added
+- Added explicit done-task filtering rules to `assign/prepare` so `work-on-task` requests resolve refs first, skip `status: done` refs, continue mixed sets, and abort all-done sets before queue generation.
 - Added `record-demo` step to the assignment step catalog for recording and attaching terminal demos to PRs.
 - Added composition rules positioning `record-demo` between `push-to-remote` and `update-pr-desc`.
 - Added `record-demo` to the `implement-with-pr` recipe as an optional step.
 
 ### Changed
+- Updated `assign/create` workflow guidance so Path B respects filtered taskrefs from prepare and skips hidden-spec render/`ace-assign create` when all requested refs are already done.
+- Updated usage docs with `work-on-task` prepare/create filtering behavior and no-assignment outcomes for all-done inputs.
 - Updated `work-on-task` preset with step 145 (`record-demo`) that reads demo scenarios from task specs, validates with dry-run, and records with proper fixture/sandbox patterns.
 
 ## [0.37.0] - 2026-03-23
