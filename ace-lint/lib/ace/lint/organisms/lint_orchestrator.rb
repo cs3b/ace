@@ -5,6 +5,7 @@ require_relative "../molecules/markdown_linter"
 require_relative "../molecules/yaml_linter"
 require_relative "../molecules/frontmatter_validator"
 require_relative "../molecules/kramdown_formatter"
+require_relative "../molecules/markdown_surgical_fixer"
 require_relative "../molecules/ruby_linter"
 require_relative "../molecules/group_resolver"
 require_relative "../molecules/skill_validator"
@@ -268,16 +269,47 @@ module Ace
           # Skill, workflow, and agent files are markdown-based and support formatting
           return nil unless [:markdown, :skill, :workflow, :agent].include?(type)
 
+          warnings = []
+          formatted = false
+
+          if options[:fix]
+            fix_result = Molecules::MarkdownSurgicalFixer.fix_file(file_path)
+            unless fix_result[:success]
+              return Models::LintResult.new(
+                file_path: file_path,
+                success: false,
+                errors: fix_result[:errors].map { |msg| Models::ValidationError.new(message: msg) },
+                warnings: [],
+                formatted: false
+              )
+            end
+            warnings.concat(Array(fix_result[:warnings]).map { |msg| Models::ValidationError.new(message: msg, severity: :warning) })
+            formatted ||= fix_result[:formatted]
+          end
+
+          return nil unless options[:format] || options[:fix]
+
+          unless options[:format]
+            return Models::LintResult.new(
+              file_path: file_path,
+              success: true,
+              errors: [],
+              warnings: warnings,
+              formatted: formatted
+            )
+          end
+
           kramdown_opts = options[:kramdown_options] || {}
-          format_result = Molecules::KramdownFormatter.format_file(file_path, options: kramdown_opts)
+          format_result = Molecules::KramdownFormatter.format_file(file_path, options: kramdown_opts, guardrails: true)
 
           if format_result[:success]
+            warnings.concat(Array(format_result[:warnings]).map { |msg| Models::ValidationError.new(message: msg, severity: :warning) })
             Models::LintResult.new(
               file_path: file_path,
               success: true,
               errors: [],
-              warnings: [],
-              formatted: format_result[:formatted]
+              warnings: warnings,
+              formatted: formatted || format_result[:formatted]
             )
           else
             Models::LintResult.new(

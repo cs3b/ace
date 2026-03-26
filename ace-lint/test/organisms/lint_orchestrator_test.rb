@@ -115,6 +115,50 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
     refute result.nil?, "Expected a result for skill file"
   end
 
+  def test_fix_uses_surgical_fixer_without_kramdown_formatter
+    md_file = File.join(@temp_dir, "test.md")
+    File.write(md_file, "Line\u2014with dash\n")
+
+    orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
+    fix_called = false
+
+    Ace::Lint::Molecules::MarkdownSurgicalFixer.stub(:fix_file, ->(*) {
+      fix_called = true
+      {success: true, formatted: true, errors: [], warnings: []}
+    }) do
+      Ace::Lint::Molecules::KramdownFormatter.stub(:format_file, ->(*) { raise "should not be called for --fix only" }) do
+        results = orchestrator.lint_files([md_file], options: {fix: true})
+        assert_equal 1, results.size
+      end
+    end
+
+    assert fix_called, "Expected surgical fixer to be invoked for --fix"
+  end
+
+  def test_fix_and_format_runs_surgical_before_kramdown
+    md_file = File.join(@temp_dir, "test.md")
+    File.write(md_file, "Line\u2014with dash\n")
+
+    orchestrator = Ace::Lint::Organisms::LintOrchestrator.new
+    call_order = []
+
+    Ace::Lint::Molecules::MarkdownSurgicalFixer.stub(:fix_file, ->(*) {
+      call_order << :fix
+      {success: true, formatted: true, errors: [], warnings: []}
+    }) do
+      Ace::Lint::Molecules::KramdownFormatter.stub(:format_file, ->(*) {
+        call_order << :format
+        {success: true, formatted: false, errors: [], warnings: []}
+      }) do
+        results = orchestrator.lint_files([md_file], options: {fix: true, format: true})
+        assert_equal 1, results.size
+        assert results.first.success?
+      end
+    end
+
+    assert_equal [:fix, :format], call_order
+  end
+
   # Basic orchestrator tests
 
   def test_lint_markdown_file

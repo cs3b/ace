@@ -45,9 +45,19 @@ Ruby:
 
 ## Auto-fix mode
 
-Format and fix supported files:
+Deterministic auto-fix (then re-lint):
 
-    ace-lint README.md lib/example.rb --fix
+    ace-lint README.md lib/example.rb --auto-fix
+{: .language-bash}
+
+Preview without modifying files:
+
+    ace-lint README.md --auto-fix --dry-run
+{: .language-bash}
+
+Agent-assisted fix for remaining issues:
+
+    ace-lint README.md --auto-fix-with-agent --model gemini:flash-latest
 {: .language-bash}
 
 ## Configuration basics
@@ -72,7 +82,9 @@ Lint skill files, workflows, and agent markdown just like other docs:
 | Command | What it does |
 |----------
 | `ace-lint README.md` | Auto-detect type and lint |
-| `ace-lint file.md --fix` | Auto-format/fix a markdown file |
+| `ace-lint file.md --auto-fix` | Deterministic auto-fix, then re-lint |
+| `ace-lint file.md --auto-fix --dry-run` | Preview fixes without writing |
+| `ace-lint file.md --auto-fix-with-agent` | Auto-fix and escalate remaining issues to agent |
 | `ace-lint file.rb --type ruby` | Force Ruby linting |
 | `ace-lint --validators standardrb,rubocop **/*.rb` | Use explicit Ruby validators |
 | `ace-lint --doctor` | Diagnose config and validator health |
@@ -83,4 +95,3 @@ Lint skill files, workflows, and agent markdown just like other docs:
 * [Usage Guide](usage.md) - full option and flag reference
 * [Handbook Reference](handbook.md) - package skills and workflows
 * Use `--doctor` when validator detection or config behavior is unclear
-

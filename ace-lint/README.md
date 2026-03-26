@@ -24,13 +24,15 @@
 
 1. Run lint checks across markdown, YAML, Ruby, and frontmatter validators in one pass.
 2. Apply safe auto-fixes with `--fix` for markdown and Ruby style issues.
+   For markdown-family files, `--fix` is surgical (line-level) and does not reserialize structure.
+   Use `--format` when you explicitly want a guarded kramdown rewrite.
 3. Report results with colorized pass/fail output, using configuration cascade from CLI flags through project and user defaults.
 
 ## Use Cases
 
 **Validate markdown, YAML, and Ruby in one pass** - run [`ace-lint`](docs/usage.md) for doc and code lint checks without mixing Node/Python tooling into Ruby projects. Use `/as-lint-run` for the full agent-driven lint workflow.
 
-**Apply low-risk formatting fixes before review** - use `--fix` to automatically clean markdown and Ruby style issues prior to manual review. Run `/as-lint-fix-issue-from` to fix specific issues identified in lint reports.
+**Apply low-risk formatting fixes before review** - use `--fix` to automatically clean markdown and Ruby style issues prior to manual review. For markdown, fixes are surgical to preserve frontmatter/code blocks/tables/HTML. Run `/as-lint-fix-issue-from` to fix specific issues identified in lint reports.
 
 **Standardize lint behavior across teams and repos** - rely on user/project/default cascade settings from [ace-support-config](../ace-support-config) for consistent validator sets and output modes.
 

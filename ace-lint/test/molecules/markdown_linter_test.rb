@@ -41,4 +41,26 @@ class Ace::Lint::Molecules::MarkdownLinterTest < Minitest::Test
 
     assert result.warnings.any? { |warning| warning.message.include?("Missing blank line after heading") }
   end
+
+  def test_check_markdown_style_ignores_heading_warnings_inside_fenced_code_blocks
+    content = <<~MARKDOWN
+      ```ruby
+      # Inside code block heading-like line
+      * list-like line
+      ```
+    MARKDOWN
+
+    warnings = Ace::Lint::Molecules::MarkdownLinter.check_markdown_style(content)
+
+    refute warnings.any? { |warning| warning.message.include?("heading") }
+    refute warnings.any? { |warning| warning.message.include?("list") }
+  end
+
+  def test_check_markdown_style_detects_trailing_whitespace
+    content = "# Heading\n\nLine with trailing spaces   \n"
+
+    warnings = Ace::Lint::Molecules::MarkdownLinter.check_markdown_style(content)
+
+    assert warnings.any? { |warning| warning.message == "Trailing whitespace found" }
+  end
 end

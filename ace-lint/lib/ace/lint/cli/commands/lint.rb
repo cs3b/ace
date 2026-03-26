@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
+require_relative "../../atoms/type_detector"
 require_relative "../../atoms/validator_registry"
 require_relative "../../organisms/lint_orchestrator"
+require_relative "../../organisms/auto_fix_orchestrator"
 require_relative "../../organisms/result_reporter"
 require_relative "../../organisms/report_generator"
 require_relative "../../organisms/lint_doctor"
@@ -17,6 +19,12 @@ module Ace
         # frontmatter files, with built-in doctor diagnostics via --doctor flag.
         class Lint < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+
+          AGENT_FIX_FILE_BLOCK_START = "<<ACE_FILE:".freeze
+          AGENT_FIX_FILE_BLOCK_END = "<<ACE_END_FILE>>".freeze
+          AGENT_FIX_NO_CHANGES = "<<ACE_NO_CHANGES>>".freeze
+          AGENT_FIX_MAX_FILE_BYTES = 200_000
+          AGENT_FIX_MAX_TOTAL_BYTES = 1_000_000
 
           desc <<~DESC.strip
             Lint markdown, YAML, Ruby, and frontmatter files
@@ -42,8 +50,11 @@ module Ace
           # Examples shown in help output
           example [
             "README.md                    # Auto-detect type from extension",
-            "--fix README.md              # Auto-fix and format",
-            "docs/**/*.md --format        # Format with kramdown",
+            "--auto-fix README.md         # Deterministic auto-fix then re-lint",
+            "--fix README.md              # Alias for --auto-fix",
+            "--auto-fix --dry-run README.md  # Preview fixes without writing",
+            "--auto-fix-with-agent README.md # Auto-fix then agent for remaining issues",
+            "docs/**/*.md --format        # Format with guarded kramdown",
             "**/*.rb --validators standardrb,rubocop  # Multiple validators",
             "--doctor                     # Diagnose lint configuration",
             "--doctor-verbose             # Diagnose with all details"
@@ -54,8 +65,13 @@ module Ace
           argument :files, required: false, type: :array, desc: "Files to lint"
 
           # Method options (maintaining parity with Thor implementation)
-          option :fix, type: :boolean, aliases: %w[-f], desc: "Auto-fix/format files"
-          option :format, type: :boolean, desc: "Format files with kramdown"
+          option :auto_fix, type: :boolean, aliases: %w[-f --fix], desc: "Deterministic auto-fix, then re-lint"
+          option :auto_fix_with_agent, type: :boolean,
+            desc: "Run --auto-fix, then launch agent for remaining issues"
+          option :dry_run, type: :boolean, aliases: %w[-n],
+            desc: "Preview auto-fixes without modifying files"
+          option :model, type: :string, desc: "Provider:model for agent-assisted fix"
+          option :format, type: :boolean, desc: "Format markdown with guarded kramdown"
           option :type, type: :string, aliases: %w[-t], desc: "File type (markdown, yaml, ruby, frontmatter)"
           option :line_width, type: :integer, desc: "Line width for formatting (default: 120)"
           option :validators, type: :string, desc: "Comma-separated list of validators (e.g., standardrb,rubocop)"
@@ -116,7 +132,22 @@ module Ace
             lint_options = prepare_options(clean_options)
 
             # Lint files
-            results = orchestrator.lint_files(expanded_paths, options: lint_options)
+            if auto_fix_mode?(clean_options)
+              warn_format_ignored_if_needed(clean_options)
+              auto_fix_orchestrator = build_auto_fix_orchestrator(
+                orchestrator,
+                lint_options: lint_options,
+                options: clean_options
+              )
+              if clean_options[:dry_run]
+                auto_fix_orchestrator.run_dry_run(expanded_paths)
+                return
+              end
+
+              results = auto_fix_orchestrator.run(expanded_paths)
+            else
+              results = orchestrator.lint_files(expanded_paths, options: lint_options)
+            end
 
             # Generate report unless --no-report flag is set
             report_dir = nil
@@ -138,8 +169,16 @@ module Ace
             verbose = !clean_options[:quiet]
             Organisms::ResultReporter.report(results, verbose: verbose, report_dir: report_dir, report_files: report_files)
 
-            # Raise on lint failures
-            if results.any?(&:failed?)
+            # Raise on remaining issues
+            if auto_fix_mode?(clean_options)
+              remaining_errors = results.sum(&:error_count)
+              if remaining_errors.positive?
+                raise Ace::Support::Cli::Error.new(
+                  "#{remaining_errors} error violation(s) remain after auto-fix",
+                  exit_code: 1
+                )
+              end
+            elsif results.any?(&:failed?)
               failed_count = results.count(&:failed?)
               exit_code = Organisms::ResultReporter.exit_code(results)
               raise Ace::Support::Cli::Error.new("#{failed_count} file(s) had lint errors", exit_code: exit_code)
@@ -289,7 +328,7 @@ module Ace
             prepared[:type] = options[:type].to_sym if options[:type]
 
             # Fix/format options
-            prepared[:fix] = options[:fix] if options[:fix]
+            prepared[:fix] = true if auto_fix_mode?(options)
             prepared[:format] = options[:format] if options[:format]
 
             # Validators option (comma-separated list)
@@ -310,6 +349,30 @@ module Ace
           # @return [Array<Symbol>] Validator names as symbols
           def parse_validators(validators_str)
             validators_str.split(",").map { |v| v.strip.downcase.to_sym }
+          end
+
+          def auto_fix_mode?(options)
+            options[:auto_fix] || options[:auto_fix_with_agent]
+          end
+
+          def warn_format_ignored_if_needed(options)
+            return unless options[:format]
+
+            warn "[ace-lint] Warning: --format is ignored when using --auto-fix or --auto-fix-with-agent"
+          end
+
+          def build_auto_fix_orchestrator(orchestrator, lint_options:, options:)
+            Organisms::AutoFixOrchestrator.new(
+              orchestrator: orchestrator,
+              lint_options: lint_options,
+              with_agent: options[:auto_fix_with_agent],
+              model: options[:model],
+              file_block_start: AGENT_FIX_FILE_BLOCK_START,
+              file_block_end: AGENT_FIX_FILE_BLOCK_END,
+              no_changes_marker: AGENT_FIX_NO_CHANGES,
+              max_file_bytes: AGENT_FIX_MAX_FILE_BYTES,
+              max_total_bytes: AGENT_FIX_MAX_TOTAL_BYTES
+            )
           end
         end
       end

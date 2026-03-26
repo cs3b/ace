@@ -2,6 +2,6 @@
 
 module Ace
   module Lint
-    VERSION = "0.25.0"
+    VERSION = "0.27.3"
   end
 end

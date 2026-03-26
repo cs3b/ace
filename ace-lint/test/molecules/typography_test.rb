@@ -241,6 +241,13 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
     assert_empty issues
   end
 
+  def test_skips_link_url_with_nested_parentheses
+    content = "Check [link text](https://example.com/a(b)c\u2014d)\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    assert_empty issues
+  end
+
   def test_detects_issues_in_link_text
     content = "See [link\u2014text](https://example.com)\n"
     issues = @linter.check_typography(content, @default_config)
