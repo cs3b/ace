@@ -24,8 +24,17 @@ module Ace
           raise Error, "No valid task references provided" if requested_refs.empty?
 
           progress.call("Loading task #{requested_refs.join(", ")}...")
-          resolved_refs = resolve_requested_refs(requested_refs)
-          primary_ref = requested_refs.first
+          resolved_refs, skipped_terminal = resolve_requested_refs(requested_refs)
+
+          if resolved_refs.empty?
+            raise Error, "All requested tasks are already terminal (done/skipped/cancelled): #{skipped_terminal.join(", ")}. No assignment created."
+          end
+
+          if skipped_terminal.any?
+            progress.call("Skipped terminal tasks (done/skipped/cancelled): #{skipped_terminal.join(", ")}")
+          end
+
+          primary_ref = resolved_refs.first[:ref]
           primary_task = resolved_refs.first[:task]
 
           preset_name = Atoms::PresetResolver.resolve(
@@ -97,7 +106,8 @@ module Ace
           subtasks = task.respond_to?(:subtasks) ? task.subtasks : nil
           return nil unless subtasks&.any?
 
-          subtasks.map(&:id)
+          active = subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
+          active.any? ? active.map(&:id) : nil
         end
 
         def normalize_requested_refs(task_ref, task_refs)
@@ -109,7 +119,10 @@ module Ace
         end
 
         def resolve_requested_refs(requested_refs)
-          requested_refs.map do |ref|
+          resolved = []
+          skipped_terminal = []
+
+          requested_refs.each do |ref|
             is_subtask = subtask_ref?(ref)
             task = @task_manager.show(ref.to_s)
             raise Error, "Task not found: #{ref}" unless task
@@ -120,8 +133,15 @@ module Ace
                            "(or ace-bundle wfi://task/review), then retry."
             end
 
-            {ref: ref.to_s, task: task, is_subtask: is_subtask}
+            if Ace::Task::Atoms::TaskValidationRules.terminal_status?(task.status.to_s)
+              skipped_terminal << ref.to_s
+              next
+            end
+
+            resolved << {ref: ref.to_s, task: task, is_subtask: is_subtask}
           end
+
+          [resolved, skipped_terminal]
         end
 
         def subtask_ref?(ref)
@@ -136,7 +156,9 @@ module Ace
             if entry[:is_subtask]
               [ref]
             elsif task.respond_to?(:subtasks) && task.subtasks&.any?
-              task.subtasks.map(&:id)
+              task.subtasks
+                .reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
+                .map(&:id)
             else
               [ref]
             end
