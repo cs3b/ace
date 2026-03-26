@@ -6,6 +6,84 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.3] - 2026-03-26
+
+### Fixed
+- Corrected `--auto-fix --dry-run` file-count reporting to count unique lint result file paths instead of parsing formatted issue strings.
+
+### Changed
+- Extracted deterministic and agent-assisted auto-fix orchestration from the lint CLI command into `Organisms::AutoFixOrchestrator`.
+- Centralized `ace-llm` test load-path setup in `test_helper` for agent-fix command tests.
+
+### Technical
+- Documented the frontmatter-prefix reconstruction contract in `MarkdownSurgicalFixer`.
+- Marked internal structural-change guardrail helpers in `KramdownFormatter` as private class methods.
+
+## [0.27.2] - 2026-03-26
+
+### Fixed
+- Made `--auto-fix-with-agent` apply concrete file edits from model output and fail fast when no editable changes are returned.
+- Prevented stale pre-agent lint errors from being carried into post-agent validation results.
+- Hardened markdown formatting guardrails to treat any HTML attribute-count change (increase or decrease) as structural risk.
+
+### Changed
+- Added an explicit warning before agent-assisted fixes that full file contents are sent to the selected model.
+- Added payload-size limits for agent-fix prompt file content to avoid oversized requests.
+- Refactored markdown fence-state handling to use a shared fence-aware line iterator across linter and fixer paths.
+
+### Technical
+- Added non-dry-run command tests for agent fix mode success and no-edit failure behavior.
+- Added formatter coverage for HTML attribute-removal structural change detection.
+
+## [0.27.1] - 2026-03-26
+
+### Fixed
+- Preserved markdown link destinations containing nested parentheses during typography-safe surgical fixes.
+- Hardened agent prompt construction for `--auto-fix-with-agent` by using dynamic code fences that remain valid when file content already contains fenced blocks.
+
+### Changed
+- Updated `--auto-fix --dry-run` preview wording to avoid implying every issue is deterministically fixable.
+- Aligned `--auto-fix` exit behavior with normal lint semantics: warning-only results now exit successfully while error results still fail.
+
+### Technical
+- Optimized `run_auto_fix` to skip redundant fix-mode passes for non-fixable file types while preserving final lint validation.
+
+## [0.27.0] - 2026-03-26
+
+### Added
+- Added deterministic repair flags to `ace-lint`: `--auto-fix`, `--auto-fix-with-agent`, `--dry-run` (`-n`), and `--model`.
+- Added agent-assisted lint repair flow that builds a structured prompt with remaining violations and full file content for affected files.
+- Added command-level coverage for auto-fix dry-run, alias parity, warning precedence, and exit semantics.
+
+### Fixed
+- Fixed auto-fix exit behavior to return non-zero when violations remain after deterministic repair.
+- Fixed help and docs drift by aligning CLI docs/examples and E2E fix-mode guidance with the new auto-fix contract.
+
+### Changed
+- Changed `--fix` semantics to an alias of `--auto-fix` (deterministic fix then re-lint).
+- Changed auto-fix modes to ignore `--format` with an explicit warning.
+- Added `lint.doctor_agent_model` default configuration for agent-assisted repair model selection.
+
+### Technical
+- Expanded task specification verification checklist evidence for the auto-fix and agent-assisted workflow implementation.
+
+## [0.26.0] - 2026-03-26
+
+### Added
+- Added `MarkdownSurgicalFixer` for markdown-family `--fix` operations that apply targeted line edits without full document reserialization.
+- Added structural guardrails for markdown `--format` to skip unsafe kramdown rewrites when frontmatter, code-block, table, or HTML-attribute drift is detected.
+
+### Fixed
+- Fixed markdown style checks to ignore heading/list spacing checks inside fenced code blocks.
+- Added trailing whitespace detection for markdown style validation.
+
+### Changed
+- Changed markdown-family `--fix` behavior (`markdown`, `skill`, `workflow`, `agent`) to surgical edits, with `--fix --format` executing surgical fix first then guarded format.
+- Updated CLI/help and usage docs to describe surgical `--fix` semantics and guarded `--format` behavior.
+
+### Technical
+- Expanded ace-lint tests for surgical fixer behavior, formatter guardrails, and orchestrator ordering.
+
 ## [0.25.0] - 2026-03-23
 
 ### Fixed

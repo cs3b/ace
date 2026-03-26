@@ -1,5 +1,6 @@
 # ace-lint general configuration
 # Place this in .ace/lint/config.yml in your project
 
-# General ace-lint settings (currently using defaults)
-# Future: enable/disable specific linters, custom rules, etc.
+lint:
+  # Default model for --auto-fix-with-agent when --model is not provided
+  doctor_agent_model: "gemini:flash-latest@yolo"

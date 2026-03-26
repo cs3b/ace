@@ -38,8 +38,11 @@ By default, file types are detected from extensions:
 
 | Option | Alias | Description |
 |--------|-------|-------------|
-| `--fix` / `--no-fix` | `-f` | Auto-fix/format files |
-| `--format` / `--no-format` | | Format files with kramdown |
+| `--auto-fix` | `-f`, `--fix` | Deterministic auto-fix, then re-lint and report remaining issues |
+| `--auto-fix-with-agent` | | Run `--auto-fix`, then launch agent for remaining issues |
+| `--dry-run` | `-n` | Preview auto-fixes without modifying files (applies to auto-fix modes) |
+| `--model=VALUE` | | Provider:model override for `--auto-fix-with-agent` |
+| `--format` / `--no-format` | | Format markdown with guarded kramdown rewrite |
 | `--type=VALUE` | `-t` | Force file type (`markdown`, `yaml`, `ruby`, `frontmatter`) |
 | `--line-width=VALUE` | | Line width for formatting (default: `120`) |
 | `--validators=VALUE` | | Comma-separated validators (for example `standardrb,rubocop`) |
@@ -59,7 +62,7 @@ By default, file types are detected from extensions:
 
 ## Exit Codes
 
-- `0` - success
+- `0` - success (including `--auto-fix --dry-run` and `--auto-fix-with-agent --dry-run`)
 - `1` - lint/validation errors found
 - `2` - fatal execution error
 
@@ -69,11 +72,18 @@ By default, file types are detected from extensions:
 # Auto-detect by extension
 ace-lint README.md
 
-# Auto-fix markdown or Ruby style
+# Deterministic auto-fix and re-lint (`--fix` is an alias)
+ace-lint README.md lib/example.rb --auto-fix
 ace-lint README.md lib/example.rb --fix
 
-# Format markdown with configured line width
+# Format markdown with configured line width (skips structural-risk rewrites)
 ace-lint docs/getting-started.md --format --line-width 100
+
+# Preview auto-fixes without writing files
+ace-lint README.md --auto-fix --dry-run
+
+# Deterministic auto-fix + agent escalation for remaining issues
+ace-lint README.md --auto-fix-with-agent --model gemini:flash-latest
 
 # Force YAML mode
 ace-lint .ace/lint/config.yml --type yaml
@@ -85,6 +95,8 @@ ace-lint lib/**/*.rb --validators standardrb,rubocop
 ace-lint --doctor
 ace-lint --doctor-verbose
 ```
+
+`--format` is ignored (with warning) when `--auto-fix` or `--auto-fix-with-agent` is used.
 
 ## Example Output
 

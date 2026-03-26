@@ -10,6 +10,10 @@ $LOAD_PATH.unshift(ace_support_core_path) if Dir.exist?(ace_support_core_path)
 ace_support_config_path = File.expand_path("../../ace-support-config/lib", __dir__)
 $LOAD_PATH.unshift(ace_support_config_path) if Dir.exist?(ace_support_config_path)
 
+# Add ace-llm to load path for agent-assisted lint tests.
+ace_llm_path = File.expand_path("../../ace-llm/lib", __dir__)
+$LOAD_PATH.unshift(ace_llm_path) if Dir.exist?(ace_llm_path)
+
 require "ace/lint"
 
 require "minitest/autorun"

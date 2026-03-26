@@ -1,6 +1,6 @@
-x = 1
-y = [1, 2, 3]
-puts x
-if y.length > 0
-  puts "hello"
+class Demo
+  def call
+    value=[1,2,3]
+    puts value.join(",")
+  end
 end

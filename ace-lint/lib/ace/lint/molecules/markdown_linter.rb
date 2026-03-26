@@ -22,10 +22,10 @@ module Ace
         # Fenced code block pattern (``` or ~~~, with optional up to 3 leading spaces per CommonMark)
         # Captures the fence character and length for proper matching
         FENCE_PATTERN = /^(\s{0,3})(`{3,}|~{3,})/
-        # Markdown link pattern [text](url) - captures link text for typography checking
-        LINK_PATTERN = /\[([^\]]*)\]\([^)]*\)/
         # Inline code pattern - handles single and double backtick spans
         INLINE_CODE_PATTERN = /``[^`]+``|`[^`]+`/
+        HEADING_PATTERN = /^\#{1,6}\s+\S/
+        UNORDERED_LIST_PATTERN = /^[*-]\s+\S/
         # Validate markdown file
         # @param file_path [String] Path to markdown file
         # @param options [Hash] Kramdown options
@@ -93,13 +93,56 @@ module Ace
         def self.check_markdown_style(content)
           warnings = []
           lines = content.lines
-
-          lines.each_with_index do |line, idx|
+          each_fence_aware_line(lines) do |line:, index:, in_code_block:, transition:|
+            idx = index
             line_num = idx + 1
+            prev_line = idx.positive? ? lines[idx - 1] : nil
             next_line = lines[idx + 1]
 
+            case transition
+            when :open
+              if prev_line && !prev_line.strip.empty?
+                warnings << Models::ValidationError.new(
+                  line: line_num,
+                  message: "Missing blank line before code block",
+                  severity: :warning
+                )
+              end
+              next
+            when :close
+              if next_line && !next_line.strip.empty?
+                warnings << Models::ValidationError.new(
+                  line: line_num + 1,
+                  message: "Missing blank line after code block",
+                  severity: :warning
+                )
+              end
+              next
+            end
+
+            # Skip style checks inside fenced code blocks.
+            next if in_code_block
+
+            # Check: trailing whitespace
+            if line_has_trailing_whitespace?(line)
+              warnings << Models::ValidationError.new(
+                line: line_num,
+                message: "Trailing whitespace found",
+                severity: :warning
+              )
+            end
+
+            # Check: blank line before headers
+            if line.match?(HEADING_PATTERN) && prev_line && !prev_line.strip.empty?
+              warnings << Models::ValidationError.new(
+                line: line_num,
+                message: "Missing blank line before heading",
+                severity: :warning
+              )
+            end
+
             # Check: blank line after headers
-            if line.match?(/^\#{1,6}\s+\S/) && next_line && !next_line.strip.empty?
+            if line.match?(HEADING_PATTERN) && next_line && !next_line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
                 message: "Missing blank line after heading",
@@ -108,8 +151,7 @@ module Ace
             end
 
             # Check: blank line before lists (unless first line or after another list item)
-            prev_line = idx.positive? ? lines[idx - 1] : nil
-            if line.match?(/^[*-]\s+\S/) && prev_line && !prev_line.strip.empty? && !prev_line.match?(/^[*-]\s+\S/)
+            if line.match?(UNORDERED_LIST_PATTERN) && prev_line && !prev_line.strip.empty? && !prev_line.match?(UNORDERED_LIST_PATTERN)
               warnings << Models::ValidationError.new(
                 line: line_num,
                 message: "Missing blank line before list",
@@ -118,28 +160,10 @@ module Ace
             end
 
             # Check: blank line after lists
-            if prev_line&.match?(/^[*-]\s+\S/) && !line.match?(/^[*-]\s+\S/) && !line.strip.empty?
+            if prev_line&.match?(UNORDERED_LIST_PATTERN) && !line.match?(UNORDERED_LIST_PATTERN) && !line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
                 message: "Missing blank line after list",
-                severity: :warning
-              )
-            end
-
-            # Check: blank line before code blocks
-            if line.match?(/^```/) && prev_line && !prev_line.strip.empty?
-              warnings << Models::ValidationError.new(
-                line: line_num,
-                message: "Missing blank line before code block",
-                severity: :warning
-              )
-            end
-
-            # Check: blank line after code blocks (closing ```)
-            if prev_line&.match?(/^```$/) && !line.strip.empty?
-              warnings << Models::ValidationError.new(
-                line: line_num,
-                message: "Missing blank line after code block",
                 severity: :warning
               )
             end
@@ -156,12 +180,55 @@ module Ace
           warnings
         end
 
+        def self.line_has_trailing_whitespace?(line)
+          line_without_newline = line.sub(/\r?\n\z/, "")
+          line_without_newline.match?(/[ \t]+\z/)
+        end
+
         def self.strip_frontmatter(content)
           extraction = Atoms::FrontmatterExtractor.extract(content)
           return content unless extraction[:has_frontmatter]
 
           frontmatter_lines = extraction[:frontmatter].to_s.lines.count + 2
           ("\n" * frontmatter_lines) + extraction[:body].to_s
+        end
+
+        def self.each_markdown_link(text)
+          return enum_for(:each_markdown_link, text) unless block_given?
+
+          cursor = 0
+          while (open_bracket = text.index("[", cursor))
+            close_bracket = find_matching_closer(text, open_bracket, "[", "]")
+            if close_bracket && text[close_bracket + 1] == "("
+              close_paren = find_matching_closer(text, close_bracket + 1, "(", ")")
+              if close_paren
+                yield(
+                  start: open_bracket,
+                  end_exclusive: close_paren + 1,
+                  link_text: text[(open_bracket + 1)...close_bracket],
+                  destination: text[(close_bracket + 2)...close_paren]
+                )
+                cursor = close_paren + 1
+                next
+              end
+            end
+
+            cursor = open_bracket + 1
+          end
+        end
+
+        def self.strip_link_markup(text)
+          output = +""
+          cursor = 0
+
+          each_markdown_link(text) do |link|
+            output << text[cursor...link[:start]]
+            output << link[:link_text]
+            cursor = link[:end_exclusive]
+          end
+
+          output << (text[cursor..] || "")
+          output
         end
 
         # Check typography issues (em-dashes, smart quotes)
@@ -179,41 +246,15 @@ module Ace
           return issues if em_dash_severity == "off" && smart_quotes_severity == "off"
 
           lines = content.lines
-          in_code_block = false
-          fence_char = nil
-          fence_length = 0
 
-          lines.each_with_index do |line, idx|
-            line_num = idx + 1
+          each_fence_aware_line(lines) do |line:, index:, in_code_block:, transition:|
+            line_num = index + 1
 
-            # Track fenced code block state with proper fence matching
-            if (match = line.match(FENCE_PATTERN))
-              current_fence_char = match[2][0] # First char (` or ~)
-              current_fence_length = match[2].length
-
-              if in_code_block
-                # Only close if same char and at least same length
-                if current_fence_char == fence_char && current_fence_length >= fence_length
-                  in_code_block = false
-                  fence_char = nil
-                  fence_length = 0
-                end
-              else
-                # Opening fence
-                in_code_block = true
-                fence_char = current_fence_char
-                fence_length = current_fence_length
-              end
-              next
-            end
-
-            # Skip lines inside code blocks
-            next if in_code_block
+            next if transition || in_code_block
 
             # Remove inline code spans (handles both single and double backticks)
             # Then remove link markup but keep link text for checking
-            line_without_code = line.gsub(INLINE_CODE_PATTERN, "")
-              .gsub(LINK_PATTERN, '\1')
+            line_without_code = strip_link_markup(line.gsub(INLINE_CODE_PATTERN, ""))
 
             # Check for em-dashes
             if em_dash_severity != "off" && line_without_code.include?(EM_DASH)
@@ -242,6 +283,86 @@ module Ace
           end
 
           issues
+        end
+
+        def self.each_fence_aware_line(lines)
+          return enum_for(:each_fence_aware_line, lines) unless block_given?
+
+          in_code_block = false
+          fence_char = nil
+          fence_length = 0
+
+          lines.each_with_index do |line, idx|
+            transition = nil
+            opened_fence_char = nil
+            opened_fence_length = nil
+
+            if (match = line.match(FENCE_PATTERN))
+              current_fence_char = match[2][0]
+              current_fence_length = match[2].length
+
+              if in_code_block
+                transition = :close if current_fence_char == fence_char && current_fence_length >= fence_length
+              else
+                transition = :open
+                opened_fence_char = current_fence_char
+                opened_fence_length = current_fence_length
+              end
+            end
+
+            yield(
+              line: line,
+              index: idx,
+              in_code_block: in_code_block,
+              transition: transition
+            )
+
+            case transition
+            when :open
+              in_code_block = true
+              fence_char = opened_fence_char
+              fence_length = opened_fence_length
+            when :close
+              in_code_block = false
+              fence_char = nil
+              fence_length = 0
+            end
+          end
+        end
+
+        def self.find_matching_closer(text, opener_index, opener_char, closer_char)
+          depth = 0
+          idx = opener_index
+
+          while idx < text.length
+            char = text[idx]
+            if escaped_character?(text, idx)
+              idx += 1
+              next
+            end
+
+            if char == opener_char
+              depth += 1
+            elsif char == closer_char
+              depth -= 1
+              return idx if depth.zero?
+            end
+            idx += 1
+          end
+
+          nil
+        end
+
+        def self.escaped_character?(text, index)
+          backslashes = 0
+          idx = index - 1
+
+          while idx >= 0 && text[idx] == "\\"
+            backslashes += 1
+            idx -= 1
+          end
+
+          backslashes.odd?
         end
       end
     end
