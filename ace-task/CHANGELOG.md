@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.4] - 2026-03-26
+
+### Added
+- Added optional "Demo Scenario" section to the task draft template for defining demo scenes, commands, and fixtures upfront on user-facing features.
+
 ## [0.31.3] - 2026-03-26
 
 ### Fixed
