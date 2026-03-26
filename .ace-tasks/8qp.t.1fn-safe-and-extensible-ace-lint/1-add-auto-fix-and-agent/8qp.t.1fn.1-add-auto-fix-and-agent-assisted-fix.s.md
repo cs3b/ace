@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.1fn.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 00:57:58"
 estimate: TBD
@@ -9,46 +9,23 @@ tags: [ace-lint, auto-fix, agent, doctor-pattern]
 parent: 8qp.t.1fn
 bundle:
   presets: [project]
-  files: [ace-lint/lib/ace/lint/cli/commands/lint.rb, ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-task/lib/ace/task/cli/commands/doctor.rb, ace-task/lib/ace/task/molecules/task_doctor_fixer.rb, ace-task/lib/ace/task/molecules/task_doctor_reporter.rb]
+  files: [ace-lint/lib/ace/lint/cli/commands/lint.rb, ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-task/lib/ace/task/cli/commands/doctor.rb, ace-task/lib/ace/task/molecules/task_doctor_fixer.rb, ace-task/lib/ace/task/molecules/task_doctor_reporter.rb, ace-llm/lib/ace/llm/query_interface.rb]
   commands: []
-needs_review: true
+needs_review: false
 ---
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved 2026-03-26)
 
-### [HIGH] Critical Implementation Questions
+All questions resolved. Answers integrated into spec below.
 
-- [ ] **[HIGH-B1a] Agent prompt scope.** Should the agent receive full file content for files with remaining violations, or just violation context (surrounding lines + file path for agent to read more)?
-  - **Research conducted:** ace-task doctor builds a formatted issue list with rules per issue type — no full file content. ace-retro doctor follows same pattern.
-  - **Suggested default:** Violation context with surrounding lines, plus file path. Matches doctor pattern, controls token usage, avoids exposing full file content.
-  - **Why needs human input:** Security posture (full content may include sensitive code) and token cost implications.
-
-- [ ] **[HIGH-B1b] Dry-run scope for agent.** Should `--auto-fix-with-agent --dry-run` show the agent prompt that would be sent, without launching the agent?
-  - **Research conducted:** ace-task doctor's dry-run only previews deterministic fixes, does not show agent prompt.
-  - **Suggested default:** Yes, show the agent prompt for transparency. This diverges from doctor pattern but aids debugging.
-  - **Why needs human input:** User-visible output format decision.
-
-- [ ] **[HIGH-B2] Bundle.files missing QueryInterface.** `Ace::LLM::QueryInterface` is the integration point with 37 options. File exists at `ace-llm/lib/ace/llm/query_interface.rb`. Without it, implementer can't build agent integration.
-  - **Resolution:** Add `ace-llm/lib/ace/llm/query_interface.rb` to bundle.files. (This can be done without human input.)
-
-### [MEDIUM] Design Decisions with Suggested Defaults
-
-- [ ] **[MED-B1] Consumer packages not listed.** These reference `--fix` behavior and need updating:
-  - `ace-lint/docs/usage.md`, `ace-lint/docs/getting-started.md`, `docs/tools.md`
-  - `ace-lint/lib/ace/lint/cli/commands/lint.rb` help text and examples
-  - E2E test: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/TC-003-fix-mode.runner.md`
-
-- [ ] **[MED-B2] `--dry-run` alias `-n` not specified.** Both ace-task doctor and ace-retro doctor use `-n` for `--dry-run`. Ecosystem consistency requires this.
-  - **Suggested default:** Add `-n` alias.
-
-- [ ] **[MED-B3] Interactive confirmation prompt.** Doctor pattern prompts "Apply fixes? (y/N):" before auto-fix. Spec shows no prompt in examples.
-  - **Suggested default:** Non-interactive (matches `--fix` fire-and-forget expectation). Note divergence from doctor pattern.
-
-- [ ] **[MED-B4] Re-lint after fix is new behavior.** Currently `--fix` on markdown returns early WITHOUT running lint (orchestrator line 117). Spec says `--auto-fix` should re-lint. This is a significant orchestrator flow change.
-  - **Suggested default:** Explicitly note as new behavior in spec, flag that orchestrator control flow must change.
-
-- [ ] **[MED-B5] `--format` + `--auto-fix-with-agent` interaction.** Spec covers `--auto-fix + --format` but not the agent variant.
-  - **Suggested default:** Same rule — agent fix takes precedence, `--format` ignored with warning.
+- [x] **[HIGH-B1a] Agent prompt scope:** Full file content for files with remaining violations (user decision).
+- [x] **[HIGH-B1b] Dry-run agent scope:** Yes, show the agent prompt without launching (transparency).
+- [x] **[HIGH-B2] Bundle.files:** Added `ace-llm/lib/ace/llm/query_interface.rb`.
+- [x] **[MED-B1] Consumer packages:** Listed in spec.
+- [x] **[MED-B2] `--dry-run` alias:** `-n` added for ecosystem consistency.
+- [x] **[MED-B3] Interactive prompt:** Non-interactive (diverges from doctor pattern intentionally).
+- [x] **[MED-B4] Re-lint after fix:** Noted as new behavior requiring orchestrator flow change.
+- [x] **[MED-B5] `--format` + agent:** Same precedence rule — agent wins, format ignored with warning.
 
 # Add Auto-Fix and Agent-Assisted Fix Flags
 
@@ -82,7 +59,7 @@ Align ace-lint with the ecosystem's doctor repair pattern by adding `--auto-fix`
    - Run `--auto-fix` first (deterministic fixes)
    - If violations remain, format them into a structured prompt
    - Launch agent via `Ace::LLM::QueryInterface` (same pattern as ace-task doctor)
-   - Agent receives: violation list with file paths, line numbers, messages, and relevant surrounding context
+   - Agent receives: full file content for files with remaining violations, plus violation list with file paths, line numbers, and messages
    - Supports `--model` flag for provider:model selection (default from config cascade)
    - Reports agent results
    - If all violations fixed by auto-fix, agent is not launched
@@ -105,7 +82,8 @@ ace-lint --auto-fix README.md lib/**/*.rb        # same behavior
 
 # Preview fixes without applying
 ace-lint --auto-fix --dry-run README.md
-ace-lint --fix --dry-run README.md               # same behavior
+ace-lint --auto-fix -n README.md                  # -n alias for --dry-run
+ace-lint --fix --dry-run README.md                # same behavior
 # Output:
 #   Would fix: README.md:5: Em-dash character -> double hyphens
 #   Would fix: README.md:12: Smart double quote -> ASCII quote
@@ -141,6 +119,7 @@ Error Handling:
 - `--model` with invalid provider: Error with available providers hint (same pattern as ace-task doctor)
 - No files specified: Same error as today
 - `--auto-fix` with `--format`: `--auto-fix` takes precedence, `--format` is ignored with a warning
+- `--auto-fix-with-agent` with `--format`: same rule — agent fix takes precedence, `--format` ignored with a warning
 
 Edge Cases:
 
@@ -149,12 +128,19 @@ Edge Cases:
 - Mixed file types (markdown + Ruby): Each type uses its own fix strategy, combined report
 - `--dry-run` without `--auto-fix` or `--fix`: Ignored (no effect on lint-only mode)
 
+Implementation Notes:
+
+- **`--dry-run` alias:** `-n` (ecosystem consistency with ace-task doctor, ace-retro doctor)
+- **Non-interactive:** `--auto-fix` does NOT prompt for confirmation (diverges from doctor pattern; matches user expectation of `--fix` as fire-and-forget)
+- **Re-lint after fix is new behavior:** Currently `--fix` on markdown returns early without running lint (orchestrator line 117). `--auto-fix` introduces fix → re-lint → report flow. This requires restructuring the orchestrator's `lint_single_file_by_type` control flow.
+- **Consumer packages needing updates:** `ace-lint/docs/usage.md`, `ace-lint/docs/getting-started.md`, `docs/tools.md`, `ace-lint/lib/ace/lint/cli/commands/lint.rb` (help text/examples), `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/TC-003-fix-mode.runner.md`
+
 ### Success Criteria
 
 - [ ] `ace-lint --fix` and `ace-lint --auto-fix` produce identical behavior (fix + re-lint + report)
 - [ ] `ace-lint --auto-fix --dry-run` shows preview without modifying files
 - [ ] `ace-lint --auto-fix-with-agent` launches agent for remaining violations (mirrors ace-task doctor)
-- [ ] `--auto-fix`, `--auto-fix-with-agent`, `--dry-run`, `--model` appear in `ace-lint --help`
+- [ ] `--auto-fix`, `--auto-fix-with-agent`, `--dry-run` / `-n`, `--model` appear in `ace-lint --help`
 - [ ] `--model` flag works for agent provider selection
 - [ ] Behavioral parity with ace-task doctor's `--auto-fix` / `--auto-fix-with-agent` pattern
 - [ ] `-f` alias maps to `--auto-fix` (not legacy `--fix` behavior)
@@ -163,8 +149,8 @@ Edge Cases:
 
 - [x] **Flag naming:** `--auto-fix` / `--auto-fix-with-agent` (hyphenated, matching ecosystem convention). Confirmed.
 - [x] **`--fix` aliases `--auto-fix`:** Single behavior, no separate low-level flag. Confirmed.
-- [ ] **Agent prompt scope:** Should the agent receive full file content for files with remaining violations, or just violation context (surrounding lines)? Recommend: violation context with surrounding lines, plus file path for the agent to read more if needed.
-- [ ] **`--dry-run` scope for agent:** Should `--dry-run` with `--auto-fix-with-agent` show the agent prompt without launching? Recommend: yes, for transparency.
+- [x] **Agent prompt scope:** Agent receives full file content for files with remaining violations. Confirmed 2026-03-26.
+- [x] **`--dry-run` scope for agent:** Yes, `--dry-run` with `--auto-fix-with-agent` shows the agent prompt without launching. Confirmed 2026-03-26.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -178,7 +164,7 @@ Edge Cases:
 ### Unit / Component Validation
 
 - [ ] `--auto-fix` applies fixes and re-lints, reporting correct counts
-- [ ] `--auto-fix --dry-run` does not modify any files
+- [ ] `--auto-fix --dry-run` does not modify any files (also works with `-n` alias)
 - [ ] `--fix` and `--auto-fix` produce identical results
 - [ ] `--auto-fix-with-agent` calls LLM query interface with structured prompt
 - [ ] `--model` flag is passed through to agent invocation
@@ -196,6 +182,8 @@ Edge Cases:
 - [ ] `ace-lint --auto-fix-with-agent` without ace-llm: clear error message
 - [ ] `ace-lint --auto-fix-with-agent --model invalid:model`: clear error with provider hint
 - [ ] `ace-lint --auto-fix --format`: warning that `--format` is ignored under `--auto-fix`
+- [ ] `ace-lint --auto-fix-with-agent --format`: same warning that `--format` is ignored
+- [ ] `ace-lint --auto-fix-with-agent --dry-run`: shows deterministic fix preview AND agent prompt without launching
 
 ### Verification Commands
 

@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.1fn.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 00:57:55"
 estimate: TBD
@@ -9,52 +9,32 @@ tags: [ace-lint, fix, markdown, bug]
 parent: 8qp.t.1fn
 bundle:
   presets: [project]
-  files: [ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-lint/lib/ace/lint/molecules/kramdown_formatter.rb, ace-lint/lib/ace/lint/molecules/markdown_linter.rb, ace-lint/lib/ace/lint/molecules/ruby_linter.rb, ace-lint/lib/ace/lint/atoms/kramdown_parser.rb, ace-lint/test/molecules/markdown_linter_test.rb, ace-lint/lib/ace/lint/cli/commands/lint.rb]
+  files: [ace-lint/lib/ace/lint/organisms/lint_orchestrator.rb, ace-lint/lib/ace/lint/molecules/kramdown_formatter.rb, ace-lint/lib/ace/lint/molecules/markdown_linter.rb, ace-lint/lib/ace/lint/molecules/ruby_linter.rb, ace-lint/lib/ace/lint/atoms/kramdown_parser.rb, ace-lint/lib/ace/lint/models/lint_result.rb, ace-lint/lib/ace/lint/models/validation_error.rb, ace-lint/test/molecules/markdown_linter_test.rb, ace-lint/lib/ace/lint/cli/commands/lint.rb]
   commands: []
-needs_review: true
+needs_review: false
 ---
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved 2026-03-26)
 
-### [HIGH] Critical Implementation Questions
+All questions resolved. Answers integrated into spec below.
 
-- [ ] **[HIGH-A1] Should `--fix` auto-fix missing blank lines?** Missing blank line warnings (before/after headings, lists, code blocks) are structural insertions — a fundamentally different code path from typography replacement. The spec recommends "yes" but is unchecked. The implementer cannot scope the surgical fixer without this answer.
-  - **Suggested default:** Yes, include them — low-risk and high-value for users.
-
-- [ ] **[HIGH-A2] `check_markdown_style` false positives inside code blocks.** The style checker (`markdown_linter.rb:93-157`) does NOT track fenced code block state. A `# heading` inside a code block triggers "Missing blank line after heading." If the surgical fixer acts on this, it inserts blank lines inside code blocks — recreating the exact damage the task prevents.
-  - **Research conducted:** Confirmed by reading `check_markdown_style` — no code block tracking. The `check_typography` method correctly tracks code blocks (line 172+), proving the pattern exists.
-  - **Suggested default:** Add "fix `check_markdown_style` to track code block state" as a deliverable of this subtask. The bug also produces false lint warnings today.
-
-- [ ] **[HIGH-A3] Trailing whitespace listed as fixable but never detected.** Spec lists "Trailing whitespace removal" as a surgical fix, but `MarkdownLinter` has zero trailing whitespace detection (searched entire ace-lint codebase).
-  - **Research conducted:** No trailing whitespace check exists for markdown. Only Ruby has it via StandardRB's `Layout/TrailingWhitespace`.
-  - **Suggested default:** Add trailing whitespace detection to `MarkdownLinter` as a deliverable, since it's a simple line-level check.
-  - **Why needs human input:** Scope decision — adding detection expands the subtask.
-
-- [ ] **[HIGH-A4] Exit code 2 contradiction.** Spec says "0 success, 1 remaining violations, 2 fatal errors" but `ResultReporter.exit_code` only returns 0 or 1. Exit code 2 exists only in `--doctor` path.
-  - **Research conducted:** Confirmed `result_reporter.rb` line 42-44 returns only 0/1. The CLI help text at `lint.rb:38` already documents exit code 2 for "fatal error" but the main lint path never produces it.
-  - **Suggested default:** Remove "2 for fatal errors" from this subtask's success criteria. The existing help text documents it; introducing it for the main path is separate scope.
-
-### [MEDIUM] Design Decisions with Suggested Defaults
-
-- [ ] **[MED-A1] `--fix --format` combined in single invocation.** Currently both route to kramdown. After this subtask, `--fix` = surgical and `--format` = kramdown-with-guardrails. What happens with `ace-lint --fix --format README.md`?
-  - **Suggested default:** `--fix` runs surgical first, then `--format` applies kramdown-with-guardrails on the already-fixed file.
-
-- [ ] **[MED-A2] Skill/workflow/agent file types.** `apply_formatting` (orchestrator line 269) handles `:skill, :workflow, :agent` alongside `:markdown`. Spec only mentions "markdown."
-  - **Suggested default:** Same surgical treatment for all markdown-based types.
-
-- [ ] **[MED-A3] Ordered list detection gap.** `check_markdown_style` matches unordered lists only (`*-`). Spec says "lists" without qualifying.
-  - **Suggested default:** Note that only unordered lists are currently detected; expanding to ordered lists is a separate enhancement.
-
-- [ ] **[MED-A4] `-f` alias semantics transition.** Currently `-f` → destructive kramdown rewrite. After this subtask: `-f` → safe surgical edits. Same flag, different behavior. While intentional, spec should note this.
-
-- [ ] **[MED-A5] Exit codes imply re-lint (subtask B's deliverable).** "Exit code 1 if unfixable violations remain" requires knowing about remaining violations, which requires re-linting — that's subtask B.
-  - **Suggested default:** Simplify A's exit codes to: 0 if fix succeeded, 1 if fix encountered errors. Reserve violation-counting for B.
+- [x] **[HIGH-A1] Blank-line fixability:** Yes, `--fix` auto-fixes missing blank lines (structural insertions included).
+- [x] **[HIGH-A2] Code block false positives:** Yes, fix `check_markdown_style` to track code block state — added as deliverable.
+- [x] **[HIGH-A3] Trailing whitespace:** Add trailing whitespace detection to `MarkdownLinter` — added as deliverable.
+- [x] **[HIGH-A4] Exit code 2:** Yes, introduce exit code 2 for the main lint path (fatal errors).
+- [x] **[MED-A1] `--fix --format` combined:** Surgical first, then kramdown-with-guardrails.
+- [x] **[MED-A2] Skill/workflow/agent types:** Same surgical treatment as markdown.
+- [x] **[MED-A3] Ordered lists:** Only unordered lists detected currently; ordered lists is separate enhancement.
+- [x] **[MED-A4] `-f` alias transition:** Noted as intentional breaking behavioral change.
+- [x] **[MED-A5] A's exit codes:** Simplified to success/error; violation-counting reserved for subtask B.
 
 # Make Markdown Fix Safe with Surgical Edit Model
 
 ## Objective
 
 Fix the destructive behavior of `ace-lint --fix` on markdown files. Currently, `--fix` routes markdown through a Kramdown parse-and-serialize round-trip that rewrites entire files, destroying frontmatter, code blocks, tables, HTML structure, and link styles. This was discovered 2026-03-23 when it damaged 57 files in ace-assign/. The fix should make `--fix` for markdown work like Ruby's `--fix` — applying surgical, line-level edits to specific violations only.
+
+Additionally, this subtask fixes a pre-existing safety-critical bug in `check_markdown_style` (does not track fenced code block state, producing false positives for headings/lists inside code blocks) and adds trailing whitespace detection to `MarkdownLinter` (currently missing but needed for the surgical fixer to act on).
 
 ## Behavioral Specification
 
@@ -63,17 +43,17 @@ Fix the destructive behavior of `ace-lint --fix` on markdown files. Currently, `
 - **Input:** User runs `ace-lint --fix <markdown-files>` or `ace-lint --format <markdown-files>`
 - **Process (`--fix`):** Each markdown file is scanned for fixable violations. Only the specific lines containing violations are modified. The file's overall structure (frontmatter, code blocks, tables, HTML, links) is never altered.
 - **Process (`--format`):** The Kramdown round-trip is applied, but with a structural integrity check before writing. If the round-trip would damage frontmatter, code blocks, tables, or HTML, the write is aborted and the user is warned.
-- **Output (`--fix`):** Files are updated in place with only targeted fixes. The report shows which violations were fixed. Exit code 0 if all fixable violations corrected, exit code 1 if unfixable violations remain.
+- **Output (`--fix`):** Files are updated in place with only targeted fixes. The report shows which violations were fixed. Exit code 0 if fix succeeded, exit code 1 if fix encountered errors. (Violation-counting exit codes are added by subtask B.)
 - **Output (`--format`):** Files are rewritten with Kramdown normalization if safe. If unsafe, a per-file warning is emitted and the file is skipped.
 
 ### Expected Behavior
 
-1. `ace-lint --fix` on markdown applies surgical fixes for these specific violations:
+1. `ace-lint --fix` on markdown (and markdown-based types: skill, workflow, agent) applies surgical fixes for these specific violations:
    - **Em-dash replacement:** Replace `—` with `--` (outside code blocks and inline code)
    - **Smart quote replacement:** Replace `"` `"` `'` `'` with ASCII equivalents (outside code blocks and inline code)
-   - **Trailing whitespace removal:** Remove trailing spaces/tabs from lines
+   - **Trailing whitespace removal:** Remove trailing spaces/tabs from lines (new detection added to `MarkdownLinter`)
    - **Missing trailing newline:** Append `\n` if file doesn't end with one
-   - **Missing blank lines:** Insert blank line before/after headings, lists, and code blocks where the linter reports them missing
+   - **Missing blank lines:** Insert blank line before/after headings, unordered lists, and code blocks where the linter reports them missing (ordered list detection is a separate enhancement)
 
 2. `ace-lint --fix` on markdown does **NOT**:
    - Reparse and serialize the entire file through Kramdown
@@ -94,14 +74,22 @@ Fix the destructive behavior of `ace-lint --fix` on markdown files. Currently, `
 
 4. Ruby `--fix` behavior is completely unchanged.
 
+5. `--fix --format` combined in a single invocation: surgical fix runs first, then `--format` applies kramdown-with-guardrails on the already-fixed file.
+
+6. **Pre-requisite fix:** `check_markdown_style` must track fenced code block state (same pattern as `check_typography`). Without this, false positive warnings for headings/lists inside code blocks would cause the surgical fixer to damage code blocks — the exact failure mode this task prevents.
+
+7. **New detection:** Add trailing whitespace check to `MarkdownLinter.check_markdown_style` (simple line-level check: `/[ \t]+$/`). Currently not detected for markdown.
+
+8. **Breaking behavioral change (intentional):** `-f` / `--fix` changes from Kramdown round-trip (destructive) to surgical edits (safe). Same flag, safer behavior.
+
 ### Interface Contract
 
 ```bash
-# Surgical fix — safe for all markdown files
+# Surgical fix — safe for all markdown files (and skill, workflow, agent types)
 ace-lint --fix README.md docs/**/*.md
 # Fixes specific violations only, never alters structure
-# Exit 0: all fixable violations corrected
-# Exit 1: some violations remain (unfixable by --fix)
+# Exit 0: fix succeeded without errors
+# Exit 1: fix encountered errors
 
 # Full Kramdown rewrite — opt-in, with safety guardrails
 ace-lint --format README.md
@@ -109,7 +97,10 @@ ace-lint --format README.md
 # Exit 0: all files formatted or safely skipped
 # Exit 1: formatting errors
 
-# Combined workflow
+# Combined: surgical first, then kramdown-with-guardrails
+ace-lint --fix --format README.md
+
+# Sequential workflow
 ace-lint --fix README.md     # fix violations
 ace-lint README.md           # verify remaining violations
 ```
@@ -132,16 +123,20 @@ Edge Cases:
 
 - [ ] `ace-lint --fix` on the 57 previously-damaged ace-assign markdown files produces zero structural changes (frontmatter, code blocks, tables, HTML, links all preserved)
 - [ ] `ace-lint --fix` correctly fixes em-dashes and smart quotes without altering surrounding content
+- [ ] `ace-lint --fix` correctly fixes trailing whitespace on markdown lines
 - [ ] `ace-lint --fix` correctly inserts missing blank lines at precise locations
 - [ ] `ace-lint --fix` does not modify content inside code blocks or inline code
+- [ ] `check_markdown_style` does not produce false positive warnings inside fenced code blocks
+- [ ] `ace-lint --fix` works identically on skill, workflow, and agent file types (markdown-based)
+- [ ] `ace-lint --fix --format` applies surgical fix first, then kramdown-with-guardrails
 - [ ] `ace-lint --format` skips files where Kramdown round-trip would damage structure, with clear warning
 - [ ] Ruby `--fix` behavior is completely unchanged
-- [ ] Exit codes are consistent: 0 for success, 1 for remaining violations, 2 for fatal errors
+- [ ] Exit codes: 0 for fix succeeded without errors, 1 for fix encountered errors (violation-counting exit codes reserved for subtask B)
 
 ### Validation Questions
 
 - [x] **`--fix` vs `--format` semantics:** `--fix` = surgical for violations, `--format` = full rewrite with guardrails. Confirmed.
-- [ ] **Missing blank line fixes:** Should missing-blank-line warnings be auto-fixable by `--fix`? These are structural insertions but low-risk. Recommend: yes, include them.
+- [x] **Missing blank line fixes:** Yes, include them. Structural insertions are low-risk and high-value. Confirmed 2026-03-26.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -161,6 +156,11 @@ Edge Cases:
 - [ ] Surgical fixer never alters frontmatter section
 - [ ] Surgical fixer never alters content inside fenced code blocks
 - [ ] Surgical fixer respects inline code spans (no fixes inside backticks)
+- [ ] Surgical fixer removes trailing whitespace from lines (outside code blocks)
+- [ ] `check_markdown_style` with heading inside fenced code block produces no false warning
+- [ ] `check_markdown_style` detects trailing whitespace on markdown lines
+- [ ] Surgical fixer works on skill/workflow/agent file types identically to markdown
+- [ ] `--fix --format` combined: surgical runs first, then kramdown-with-guardrails
 - [ ] `KramdownFormatter.format_file` with structural damage detection skips file and returns warning
 
 ### Integration / E2E Validation
