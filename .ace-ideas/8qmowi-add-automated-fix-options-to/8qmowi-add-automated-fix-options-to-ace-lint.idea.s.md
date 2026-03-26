@@ -1,6 +1,6 @@
 ---
 id: 8qmowi
-status: pending
+status: done
 title: Add Automated Fix Options to ace-lint
 tags: []
 created_at: "2026-03-23 16:36:08"

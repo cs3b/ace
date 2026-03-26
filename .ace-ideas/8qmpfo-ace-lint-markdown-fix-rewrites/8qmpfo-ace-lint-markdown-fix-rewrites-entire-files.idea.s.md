@@ -1,6 +1,6 @@
 ---
 id: 8qmpfo
-status: pending
+status: done
 title: "ace-lint: markdown --fix is destructive -- Kramdown round-trip damages files"
 tags: [ace-lint, bug, markdown]
 created_at: "2026-03-23 16:57:26"
