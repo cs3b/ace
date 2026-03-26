@@ -57,12 +57,12 @@ to ensure all components are properly documented and discoverable.
     for guide in guides/*.g.md; do
       basename "$guide" | xargs -I {} grep -q {} README.md || echo "Missing: {}"
     done
-    
+
     # Check for undocumented workflows
     for wf in workflow-instructions/*.wf.md; do
       basename "$wf" | xargs -I {} grep -q {} README.md || echo "Missing workflow: {}"
     done
-    
+
     # Check for broken links
     grep -o '\[.*\](.*.md)' README.md | grep -o '(.*\.md)' | tr -d '()' | while read link; do
       [ -f "$link" ] || echo "Broken link: $link"
@@ -74,28 +74,28 @@ to ensure all components are properly documented and discoverable.
 **Structure to maintain:**
 
     # ACE Handbooks (ace-* packages)
-    
+
     [Brief description and purpose]
-    
+
     ## Quick Start
     [Installation instructions]
-    
+
     ## Structure
     [Directory organization]
-    
+
     ## Development Guides
     ### [Category]
     - [Guide links with descriptions]
-    
+
     ## Workflow Instructions
     [Key workflows listed]
-    
+
     ## Templates
     [Available templates]
-    
+
     ## Integrations
     [AI assistant integrations]
-    
+
     ## Contributing
     [How to contribute]
 {: .language-markdown}
@@ -121,26 +121,26 @@ to ensure all components are properly documented and discoverable.
 **Structure Template:**
 
     # Meta Documentation (`.meta`)
-    
+
     [Purpose and overview]
-    
+
     ## Structure
-    
+
     ### `/gds` - Guide Definition Standards
     [List all definition files with descriptions]
-    
+
     ### `/wfi` - Meta Workflow Instructions
     [Categorized workflow listings]
-    
+
     ### `/tpl` - Templates
     [Template inventory with use cases]
-    
+
     ## Relationships
     [ASCII diagram or structured explanation]
-    
+
     ## Usage
     [Common tasks and how to accomplish them]
-    
+
     ## Quick Reference
     [Table mapping needs to resources]
 {: .language-markdown}
@@ -161,11 +161,11 @@ to ensure all components are properly documented and discoverable.
 
     # Count agents
     ls -1 .claude/agents/*.ag.md | wc -l
-    
+
     # Count commands
     ls -1 dev-tools/commands/_custom/*.md | wc -l
     ls -1 dev-tools/commands/_generated/*.md | wc -l
-    
+
     # Verify agent links
     for agent in .claude/agents/*.ag.md; do
       name=$(basename "$agent" .ag.md)
@@ -186,7 +186,7 @@ to ensure all components are properly documented and discoverable.
 **Cross-reference validation:**
 
     # Check that all workflows mentioned in READMEs exist
-    grep -h "\.wf\.md" README.md .meta/README.md | 
+    grep -h "\.wf\.md" README.md .meta/README.md |
       grep -o '[a-z-]*\.wf\.md' | sort -u | while read wf; do
         find . -name "$wf" | grep -q . || echo "Referenced but missing: $wf"
     done
@@ -214,6 +214,7 @@ to ensure all components are properly documented and discoverable.
 
 <templates>
 <template path="readme-section-template.md">
+
 ## [Section Name]
 
 [Brief description of section purpose]
@@ -221,10 +222,12 @@ to ensure all components are properly documented and discoverable.
 ### Available [Items]
 
 **[Category]:**
+
 - **[Item Name](./path/to/item.md)** - [One-line description]
 - **[Item Name](./path/to/item.md)** - [One-line description]
 
 **[Another Category]:**
+
 - **[Item Name](./path/to/item.md)** - [One-line description]
 
 ### Usage
@@ -234,11 +237,14 @@ to ensure all components are properly documented and discoverable.
 ```
 
 ### Related Resources
+
 - [Related Section](#section-anchor)
 - [External Doc](./path/to/doc.md)
+
 </template>
 
 <template path="relationship-diagram-template.md">
+
 ## Relationships
 
 ```
@@ -252,8 +258,10 @@ Component B maintains →
 ```
 
 ### Dependencies
+
 - **[Component]** requires **[Other Component]** for [purpose]
 - **[Component]** generates **[Output]** used by **[Consumer]**
+
 </template>
 </templates>
 

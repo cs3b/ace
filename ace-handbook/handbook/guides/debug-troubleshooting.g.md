@@ -16,7 +16,7 @@ debugging to seeking help.
 
 | Step | What to do | Why |
 |------|------------|-----|
-| **1  Understand the system** | Skim docs/architecture first | You can’t debug what you don’t grasp. |
+| **1  Understand the system** | Skim docs/architecture first | You can't debug what you don't grasp. |
 | **2  Make it fail on demand** | Reproduce the bug and minimise the input or scenario | Gives you a quick feedback loop & future test. |
 | **3  Collect evidence** | Read stack traces, logs, error codes | Surface clues without touching code. |
 | **4  Check recent changes/config** | Roll back toggles, feature flags, deployments | Regressions are usually fresh. |
@@ -30,13 +30,20 @@ debugging to seeking help.
 ## Elaborations on Key Steps
 
 * **Step 2: Make it fail on demand:** This is crucial for effective testing. Aim for the *simplest possible*
+
   reproducible case. This often forms the basis of a new regression test (see Step 8).
+
 * **Step 3 & 4: Collect evidence & Check recent changes:** Don't underestimate logs, configuration files, and
+
   recent commits (`git log`, `git blame`). Many issues are regressions introduced by recent changes.
+
 * **Step 8: Validate & Regress-Test:** After applying a fix, *always* run the minimal failing case you created in
+
   Step 2 to confirm the specific issue is resolved. Then, run the broader test suite (e.g., `bin/rspec`, `npm test`)
   to check for unintended side-effects. Refer to the [Testing Guidelines Guide](testing.g.md) for more details.
+
 * **Step 10: Escalate or Rubber Duck:** If you're stuck after diligently following the steps:
+
   * **Rubber Ducking:** Explain the problem out loud (to yourself, a pet, or an inanimate object). This often
     clarifies your thinking.
   * **AI Assistance:** Consult an AI agent. Use structured prompts, providing the context (code, error, steps taken).
@@ -48,8 +55,11 @@ debugging to seeking help.
 ## Utilizing Documentation and Research
 
 * **Internal Docs:** Before extensive debugging, always check project-specific documentation (`README.md`,
+
   architecture diagrams in project docs, specific guides via `guide://` protocol).
+
 * **External Research:** Use search engines effectively. Formulate precise queries including error messages,
+
   technology names, and library versions.
 
 ## Language-Specific Considerations

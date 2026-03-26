@@ -9,6 +9,7 @@ Run status in table mode and capture output/exit evidence.
 Save artifacts to `results/tc/02/`.
 
 Capture:
+
 - `results/tc/02/status-table.stdout`, `.stderr`, `.exit` from `ace-handbook status --provider pi`
 
 ## Constraints

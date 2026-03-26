@@ -59,29 +59,29 @@ best practices while maintaining consistency across the handbook.
     * Create file in `guides/` with `.g.md` extension
     * Use noun-phrase naming convention (e.g., `coding-standards.g.md`)
     * Implement standard guide structure:
-      
+
           # Guide Title
-               
+
           [Brief introduction paragraph explaining purpose and scope]
-               
+
           ## Core Principles
-               
+
           1. **Principle Name**: Explanation of concept and rationale
           2. **Principle Name**: Why this matters and how it applies
-               
+
           ## Standards and Best Practices
-               
+
           ### Standard Category
-               
+
           * [Standard with explanation]
           * [Best practice with rationale]
-               
+
           ## Examples
-               
+
           [Concrete examples that illustrate concepts]
-               
+
           ## Related Resources
-               
+
           * [Link to related guide]
           * [Link to workflow for implementation]
       {: .language-markdown}
@@ -90,22 +90,22 @@ best practices while maintaining consistency across the handbook.
     * Create language-specific files: `[language].md` (not `.g.md`)
     * Focus on implementation details specific to that language
     * Structure language sub-guides:
-      
+
           # [Topic] - [Language]
-               
+
           Language-specific implementation of [topic] principles.
-               
+
           ## [Language] Specifics
-               
+
           ### Tools and Libraries
           * [Language-specific tools]
-               
+
           ### Code Examples
           [Actual code samples]
-               
+
           ### Common Patterns
           [Language-specific patterns]
-               
+
           ## Integration with [Language] Ecosystem
           [How principles apply in this language context]
       {: .language-markdown}
@@ -174,16 +174,16 @@ For handbook and documentation standards:
 ### Main Guide Structure (testing.g.md)
 
     # Testing and Quality Assurance
-    
+
     This guide establishes testing principles and quality standards.
-    
+
     ## Core Testing Principles
-    
+
     1. **Test-Driven Development**: Write tests before implementation
     2. **Test Pyramid**: Unit tests > Integration tests > E2E tests
-    
+
     ## Language-Specific Implementation
-    
+
     See language-specific guides for implementation details:
     * [Ruby Testing with RSpec](./testing/ruby-rspec.md)
     * [TypeScript Testing with Bun](./testing/typescript-bun.md)
@@ -193,19 +193,19 @@ For handbook and documentation standards:
 ### Language Sub-Guide Structure (testing/ruby-rspec.md)
 
     # Testing - Ruby RSpec
-    
+
     Ruby-specific implementation of testing principles using RSpec.
-    
+
     ## RSpec Configuration
-    
+
     [Specific configuration examples]
-    
+
     ## Common Patterns
-    
+
     [Ruby/RSpec specific testing patterns]
-    
+
     ## Integration with Rails
-    
+
     [Framework-specific guidance]
 {: .language-markdown}
 

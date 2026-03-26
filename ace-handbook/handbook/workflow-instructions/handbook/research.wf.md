@@ -27,17 +27,20 @@ Conduct research on a topic with optional escalation to multi-agent research for
 ## High-Level Execution Plan
 
 ### Decision Point: Single vs Multi-Agent
+
 - [ ] Evaluate research complexity
 - [ ] Check multi-agent criteria
 - [ ] Route to appropriate path
 
 ### Single-Agent Path
+
 - [ ] Scope the research
 - [ ] Gather information
 - [ ] Analyze findings
 - [ ] Produce deliverables
 
 ### Multi-Agent Path
+
 - [ ] Invoke parallel-research workflow
 - [ ] Follow synthesis workflow
 - [ ] Validate combined output
@@ -115,6 +118,7 @@ If single-agent approach selected:
 If multi-agent approach selected:
 
 1. **Load Parallel Research Workflow**
+
    ```
    ace-bundle wfi://handbook/parallel-research
    ```
@@ -127,6 +131,7 @@ If multi-agent approach selected:
    - Handoff: Prepare for synthesis
 
 3. **Load Synthesis Workflow**
+
    ```
    ace-bundle wfi://handbook/synthesize-research
    ```

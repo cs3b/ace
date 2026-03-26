@@ -43,93 +43,93 @@ established patterns and maintain high quality across the entire collection.
       * Template synchronization validation
 2.  **Gather Workflow Inventory:**
     * List all workflow files to review:
-      
+
           find workflow-instructions -name "*.wf.md" -type f
       {: .language-bash}
-    
+
     * Group workflows by category or type for systematic review
     * Note file modification dates and sizes for context
     * Create review tracking structure
 3.  **Initialize Review Process:**
     * Create review session directory:
-      
+
           mkdir -p dev-taskflow/current/v.X.Y.Z-release/workflow-review/$(date +%Y%m%d)
       {: .language-bash}
-    
+
     * Create review summary template:
-      
+
           # Workflow Review Session - [Date]
-               
+
           ## Review Scope
           * Total workflows reviewed: [N]
           * Review criteria: [Standards compliance, consistency, quality]
-               
+
           ## Summary Results
           * ✅ Compliant workflows: [N]
           * ⚠️ Workflows needing minor fixes: [N]
           * ❌ Workflows needing major fixes: [N]
-               
+
           ## Detailed Findings
           [Individual workflow assessments]
-               
+
           ## Recommended Actions
           [Prioritized improvement tasks]
       {: .language-markdown}
 4.  **Review Each Workflow Systematically:**
-    
+
     For each workflow file, assess the following areas:
-    
+
     **Structure Compliance:**
-    
+
     * ✅ Contains required sections: Goal, Prerequisites, Project Context Loading, Process Steps
     * ✅ Uses proper markdown structure and formatting
     * ✅ Follows verb-first naming convention (.wf.md)
     * ✅ Has clear, single-sentence goal statement
     **Self-Containment:**
-    
+
     * ✅ No external dependencies or broken references
     * ✅ Embedded templates use proper format
     * ✅ All necessary examples and patterns included
     * ✅ Context loading section complete and accurate
     **Content Quality:**
-    
+
     * ✅ Instructions are clear and actionable
     * ✅ Process steps are logically ordered
     * ✅ Examples and commands are accurate
     * ✅ Error handling guidance provided
     **Consistency:**
-    
+
     * ✅ Terminology matches project standards
     * ✅ Structure follows established patterns
     * ✅ Cross-references are accurate
     * ✅ Template embedding follows standards
 5.  **Document Review Findings:**
-    
+
     For each workflow, create a standardized assessment:
-    
+
         ### [Workflow Name] - [filename.wf.md]
-           
+
         **Overall Status:** ✅ Compliant | ⚠️ Minor Issues | ❌ Major Issues
-           
+
         **Structure Assessment:**
         * Required sections: ✅/❌
         * Naming convention: ✅/❌
         * Markdown formatting: ✅/❌
-           
+
         **Self-Containment Assessment:**
         * External dependencies: ✅ None | ⚠️ Some | ❌ Many
         * Template embedding: ✅ Correct | ⚠️ Minor issues | ❌ Incorrect
         * Context loading: ✅ Complete | ⚠️ Partial | ❌ Missing
-           
+
         **Content Quality Assessment:**
         * Clarity: ✅ Clear | ⚠️ Some issues | ❌ Unclear
         * Completeness: ✅ Complete | ⚠️ Minor gaps | ❌ Major gaps
         * Accuracy: ✅ Accurate | ⚠️ Minor errors | ❌ Major errors
-           
+
         **Issues Identified:**
         * [Specific issue 1]
         * [Specific issue 2]
-           
+
         **Recommended Actions:**
         * [Priority level] [Specific action needed]
     {: .language-markdown}
@@ -141,27 +141,27 @@ established patterns and maintain high quality across the entire collection.
     * Verify cross-references between workflows are accurate
     * Assess overall cohesion of workflow collection
 7.  **Prioritize Improvement Actions:**
-    
+
     **Critical Issues (Fix Immediately):**
-    
+
     * Broken references or dependencies
     * Missing required sections
     * Incorrect or dangerous commands
     * Major structural problems
     **High Priority Issues (Fix Soon):**
-    
+
     * Inconsistent terminology
     * Minor structural issues
     * Outdated examples or patterns
     * Missing error handling
     **Medium Priority Issues (Plan for Fix):**
-    
+
     * Clarity improvements
     * Better examples or explanations
     * Enhanced self-containment
     * Template synchronization needs
     **Low Priority Issues (Nice to Have):**
-    
+
     * Minor formatting improvements
     * Additional examples
     * Enhanced cross-references
@@ -225,10 +225,10 @@ Use shell commands to quickly identify common issues:
         echo "Missing Goal section: $file"
       fi
     done
-    
+
     # Check for external workflow references
     grep -r "workflow-instructions/" workflow-instructions/ --include="*.wf.md"
-    
+
     # Check for broken template embedding
     grep -r "<template" workflow-instructions/ --include="*.wf.md" | grep -v "path="
 {: .language-bash}

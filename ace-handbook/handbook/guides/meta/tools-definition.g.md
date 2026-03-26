@@ -14,6 +14,7 @@ This guide outlines best practices for creating, maintaining, and using developm
 ## Goal of Tools
 
 The primary goal of development tools is to:
+
 - Automate repetitive or complex development tasks.
 - Ensure consistency in project operations (e.g., task management, documentation checks).
 - Provide support for workflows defined via `wfi://` protocol.
@@ -97,6 +98,7 @@ Simple, frequently used tools from the tools directory may have thin wrapper scr
 - **Functionality:** These wrappers should primarily set up the correct execution path to the actual tool in the tools directory and pass along any arguments. These wrappers should be kept as minimal as possible. If no special environment setup or argument manipulation is needed beyond what the target script handles, a simple `exec` call (like the example below for Ruby scripts, or its shell script equivalent) is preferred.
 
 Example `bin/tn` wrapper:
+
 ```ruby
 #!/usr/bin/env ruby
 # bin/tn: Thin wrapper for get-next-task utility
@@ -129,9 +131,11 @@ exec(File.expand_path('../tools/get-next-task', __dir__), *ARGV)
 ### Documentation Review Tools
 
 #### `generate-doc-review-prompt`
+
 **Purpose:** Creates comprehensive AI agent prompts for reviewing code diffs and updating related documentation.
 
 **Usage:**
+
 ```bash
 # Basic usage - generate prompt from diff file
 generate-doc-review-prompt -d changes.diff
@@ -144,6 +148,7 @@ generate-doc-review-prompt -d changes.diff --include-content
 ```
 
 **Options:**
+
 - `-d, --diff FILE`: Path to the diff file (required)
 - `-o, --output FILE`: Output file for the prompt (optional, auto-generates if not specified)
 - `-r, --root DIR`: Project root directory (default: current directory)

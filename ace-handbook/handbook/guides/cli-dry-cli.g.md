@@ -16,6 +16,7 @@ Complete reference for implementing CLI interfaces in ace-* gems using dry-cli.
 All ACE CLI gems use dry-cli. See [ADR-023](../../../docs/decisions/ADR-023-dry-cli-framework.md) for decision rationale.
 
 **Two patterns:**
+
 - **Multi-command**: Subcommand tools (ace-bundle, ace-taskflow)
 - **Single-command**: One-action tools (ace-git-commit, ace-search)
 
@@ -73,6 +74,7 @@ end
 ```
 
 **Exe wrapper:**
+
 ```ruby
 #!/usr/bin/env ruby
 require "ace/gem"
@@ -113,6 +115,7 @@ end
 ```
 
 **Exe wrapper:**
+
 ```ruby
 #!/usr/bin/env ruby
 require "ace/gem"
@@ -232,6 +235,7 @@ end
 ```
 
 **Exe wrapper catches exceptions:**
+
 ```ruby
 #!/usr/bin/env ruby
 require "ace/gem"

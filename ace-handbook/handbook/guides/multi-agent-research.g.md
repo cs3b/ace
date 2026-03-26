@@ -14,6 +14,7 @@ This guide explains when and how to leverage multiple AI agents for research tas
 ## Purpose
 
 Multi-agent research uses parallel execution across different AI models followed by structured synthesis to:
+
 - Reduce individual model blind spots through cross-validation
 - Surface diverse perspectives and approaches
 - Increase confidence in findings through consensus
@@ -56,7 +57,7 @@ Ask yourself:
 Research shows that mixing high-quality agents produces better results than adding lower-quality agents for diversity. The key finding:
 
 > "Diversity in MoA proposers might have an adverse effect... MoA performance is sensitive to the quality of the models being mixed."
-> — Princeton Research on Mixture-of-Agents
+> -- Princeton Research on Mixture-of-Agents
 
 ### Selection Principles
 
@@ -184,6 +185,7 @@ Synthesis combines multiple agent outputs into a unified result. See [Synthesize
 ### Aggregator Role
 
 The synthesis should be performed by a dedicated aggregator (human or agent) who:
+
 - Has access to all agent outputs
 - Can make objective comparisons
 - Documents all decisions with rationale
@@ -241,11 +243,13 @@ The synthesis should be performed by a dedicated aggregator (human or agent) who
 ## References
 
 ### Academic Sources
+
 - [Mixture-of-Agents (arXiv 2406.04692)](https://arxiv.org/abs/2406.04692)
 - [Multi-Agent Collaboration Mechanisms Survey (arXiv 2501.06322)](https://arxiv.org/abs/2501.06322)
 - [Iterative Consensus Ensemble (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S0010482525010820)
 
 ### Industry Sources
+
 - [LLM Orchestration Best Practices (orq.ai)](https://orq.ai/blog/llm-orchestration)
 - [Multi-Agent LLMs in 2025 (SuperAnnotate)](https://www.superannotate.com/blog/multi-agent-llms)
 - [Awesome-LLM-Ensemble (GitHub)](https://github.com/junchenzhi/Awesome-LLM-Ensemble)

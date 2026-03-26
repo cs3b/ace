@@ -26,24 +26,37 @@ follow single-purpose design, have proper response formats, and are correctly in
 ### Planning Steps
 
 * Determine if creating new agent or
+
   updating existing
+
 * Identify agent's single purpose and
+
   action keywords
+
 * Plan expected parameters and tool
+
   requirements
+
 * Consider agent composition needs
 
 
 ### Execution Steps
 
 * Create/update agent file with proper
+
   .ag.md extension
+
 * Add standardized metadata and response
+
   format
+
 * Update symlinks in .claude/agents/
 * Update CLAUDE.md agent section if
+
   significant changes
+
 * Update settings.json if new tool
+
   permissions needed
 
 
@@ -144,6 +157,7 @@ If agent uses new tools, add to permissions.allow:
 
 <documents>
 <document path="docs/guides/agents-definition.g.md">
+
 # Writing Agent Definitions
 
 This guide outlines best practices for creating and maintaining agent definitions located within the `.claude/agents/` directory.
@@ -153,9 +167,11 @@ This guide outlines best practices for creating and maintaining agent definition
 All agent files must use the `.ag.md` suffix to distinguish them from other documentation types.
 
 ### Naming Pattern
+
 - **Format:** `<agent-name>.ag.md`
 - **Style:** Use descriptive names that indicate the agent's primary function
 - **Examples:**
+
   - `git-commit.ag.md` (not `git-commit-manager.md`)
   - `task-finder.ag.md` (not `task-manager-agent.md`)
   - `lint-files.ag.md` (not `code-lint-agent.md`)
@@ -163,9 +179,11 @@ All agent files must use the `.ag.md` suffix to distinguish them from other docu
 ## Core Principles
 
 ### 1. Single Purpose Design
+
 Each agent should have exactly ONE primary purpose.
 
 **Anti-pattern:** Multi-purpose agent
+
 ```yaml
 name: git-manager
 description: Handles commits, reviews, staging, and history
@@ -173,6 +191,7 @@ description: Handles commits, reviews, staging, and history
 ```
 
 **Good pattern:** Focused agents
+
 ```yaml
 name: git-fast-commit
 description: FAST direct commit execution - NO analysis
@@ -184,16 +203,19 @@ description: ANALYZE and REVIEW changes before committing
 ### 2. Agent Naming and Description Guidelines
 
 **Action-First Names:**
+
 - `fast-commit` - Immediate execution
 - `review-commit` - Analysis first
 - `fix-tests` - Direct action
 
 **Description Format:**
+
 ```
 [ACTION_KEYWORD] [specific purpose] - [what it does NOT do]
 ```
 
 Examples:
+
 - "FAST direct commit execution - NO analysis or review"
 - "ANALYZE and REVIEW changes - does NOT auto-commit"
 - "FIX failing tests immediately - NO investigation"
@@ -222,45 +244,59 @@ Natural language instructions for the agent...
 
 ### Success Response
 ```markdown
+
 ## Summary
+
 [Brief overview of what was accomplished]
 
 ## Results
+
 [Key findings or actions taken]
 
 ## Next Steps
+
 [Suggested follow-up actions or agent delegations]
+
 ```
 
 ### Error Response
 ```markdown
+
 ## Summary
+
 [What went wrong]
 
 ## Issue
+
 [Specific error details]
 
 ## Suggested Solution
+
 [How to resolve the issue]
+
 ```
 
 ## Context Definition
 
 ```yaml
+
 commands:
   - command-to-execute
 format: markdown-xml
+
 ```
 ```
 
 ### 4. Tool Access and Permissions
 
 **Best Practice:** Omit the `tools:` field entirely
+
 - Agent inherits all permissions from settings.json
 - Ensures wrapper tools are used
 - Provides security through permission boundaries
 
 Update settings.json to control tool access:
+
 ```json
 {
   "permissions": {
@@ -311,6 +347,7 @@ Task tool with subagent_type: [agent-name]
 ## Common Patterns
 
 ### Research Agent Pattern
+
 ```yaml
 expected_params:
   required:
@@ -321,6 +358,7 @@ expected_params:
 ```
 
 ### Execution Agent Pattern
+
 ```yaml
 expected_params:
   required:
@@ -331,6 +369,7 @@ expected_params:
 ```
 
 ### Analysis Agent Pattern
+
 ```yaml
 expected_params:
   required:
@@ -343,6 +382,7 @@ expected_params:
 ## When to Update CLAUDE.md
 
 Update the Agent Recommendations section when:
+
 - Creating a new agent
 - Significantly changing agent purpose
 - Renaming an agent

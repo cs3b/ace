@@ -42,149 +42,149 @@ established patterns and maintain coherent coverage of development principles an
       * Content gaps and coverage analysis
 2.  **Gather Guide Inventory:**
     * List all guide files to review:
-      
+
           find guides -name "*.g.md" -type f
       {: .language-bash}
-    
+
     * Identify language-specific sub-guides:
-      
+
           find guides -name "*.md" -not -name "*.g.md" -type f
       {: .language-bash}
-    
+
     * Group guides by category (Core Process, Standards, Technical, etc.)
     * Note file relationships and cross-references
 3.  **Initialize Review Process:**
     * Create review session directory:
-      
+
           mkdir -p dev-taskflow/current/v.X.Y.Z-release/guide-review/$(date +%Y%m%d)
       {: .language-bash}
-    
+
     * Create review summary template:
-      
+
           # Guide Review Session - [Date]
-               
+
           ## Review Scope
           * Total guides reviewed: [N main guides]
           * Language sub-guides reviewed: [N sub-guides]
           * Review criteria: [Conceptual focus, standards compliance, consistency]
-               
+
           ## Coverage Analysis
           * Core development processes: [Status]
           * Standards and best practices: [Status]
           * Technical implementation guides: [Status]
           * Meta and documentation guides: [Status]
-               
+
           ## Summary Results
           * ✅ Compliant guides: [N]
           * ⚠️ Guides needing minor improvements: [N]
           * ❌ Guides needing major revision: [N]
           * 📝 Content gaps identified: [N]
-               
+
           ## Detailed Findings
           [Individual guide assessments]
-               
+
           ## Recommended Actions
           [Prioritized improvement tasks]
       {: .language-markdown}
 4.  **Review Each Guide Systematically:**
-    
+
     For each guide file, assess the following areas:
-    
+
     **Conceptual Focus Compliance:**
-    
+
     * ✅ Focuses on "why" (principles, concepts, standards)
     * ✅ Explains rationale behind recommendations
     * ✅ Avoids step-by-step procedures (leaves those to workflows)
     * ✅ Provides decision-making context
     **Structure and Organization:**
-    
+
     * ✅ Uses proper `.g.md` naming convention
     * ✅ Follows noun-phrase naming pattern
     * ✅ Has clear, scannable structure with headings
     * ✅ Organized logically for quick reference
     **Language Modularity:**
-    
+
     * ✅ Main guide is language-agnostic (if applicable)
     * ✅ Language-specific details extracted to sub-guides
     * ✅ Proper subdirectory structure for language variants
     * ✅ Clear navigation between main and sub-guides
     **Content Quality:**
-    
+
     * ✅ Information is accurate and up-to-date
     * ✅ Examples illustrate concepts (not procedures)
     * ✅ Terminology is consistent with project standards
     * ✅ Cross-references are accurate and helpful
 5.  **Analyze Language Modularity Implementation:**
-    
+
     For guides with language-specific content:
-    
+
     **Main Guide Assessment:**
-    
+
     * Does it contain language-specific implementation details?
     * Are general principles clearly separated from specifics?
     * Does it properly reference language sub-guides?
     **Sub-Guide Assessment:**
-    
+
     * Are language-specific guides appropriately focused?
     * Do they follow the `[topic]/[language].md` pattern?
     * Do they integrate well with main guide principles?
     * Are they consistent across different languages?
     **Cross-Reference Validation:**
-    
+
     * Are links between main and sub-guides accurate?
     * Do sub-guides reference back to main principles?
     * Are external references to guides correct?
 6.  **Document Review Findings:**
-    
+
     For each guide, create a standardized assessment:
-    
+
         ### [Guide Name] - [filename.g.md]
-           
+
         **Overall Status:** ✅ Compliant | ⚠️ Minor Issues | ❌ Major Issues
         **Category:** [Core Process | Standards | Technical | Meta]
-           
+
         **Conceptual Focus Assessment:**
         * Principle-based content: ✅/❌
         * Avoids procedures: ✅/❌
         * Provides decision context: ✅/❌
-           
+
         **Structure Assessment:**
         * Naming convention: ✅/❌
         * Scannable organization: ✅/❌
         * Logical flow: ✅/❌
-           
+
         **Language Modularity Assessment:**
         * Main guide language-agnostic: ✅/❌/N/A
         * Sub-guides properly structured: ✅/❌/N/A
         * Clear navigation: ✅/❌/N/A
-           
+
         **Content Quality Assessment:**
         * Accuracy: ✅ Current | ⚠️ Minor issues | ❌ Outdated
         * Consistency: ✅ Consistent | ⚠️ Some issues | ❌ Inconsistent
         * Completeness: ✅ Complete | ⚠️ Minor gaps | ❌ Major gaps
-           
+
         **Cross-Reference Assessment:**
         * Internal links: ✅ Working | ⚠️ Some broken | ❌ Many broken
         * External references: ✅ Accurate | ⚠️ Some issues | ❌ Incorrect
-           
+
         **Issues Identified:**
         * [Specific issue 1]
         * [Specific issue 2]
-           
+
         **Recommended Actions:**
         * [Priority level] [Specific action needed]
     {: .language-markdown}
 
 7.  **Analyze Guide Coverage and Organization:**
-    
+
     **Coverage Assessment:**
-    
+
     * Are all major development areas covered?
     * Are there gaps in standards or best practices?
     * Do guides complement each other effectively?
     * Are there overlaps that could be consolidated?
     **Organization Assessment:**
-    
+
     * Is the categorization in README.md logical?
     * Are related guides clearly connected?
     * Is the progression from basic to advanced clear?
@@ -195,27 +195,27 @@ established patterns and maintain coherent coverage of development principles an
     * Validate external links and references
     * Ensure bi-directional references where appropriate
 9.  **Prioritize Improvement Actions:**
-    
+
     **Critical Issues (Fix Immediately):**
-    
+
     * Guides that are procedural instead of conceptual
     * Broken cross-references or navigation
     * Serious inaccuracies or outdated information
     * Major structural problems
     **High Priority Issues (Fix Soon):**
-    
+
     * Language modularity violations
     * Inconsistent terminology usage
     * Missing cross-references
     * Content gaps in important areas
     **Medium Priority Issues (Plan for Fix):**
-    
+
     * Minor accuracy updates
     * Improved examples or explanations
     * Better organization or structure
     * Enhanced scanability
     **Low Priority Issues (Nice to Have):**
-    
+
     * Additional examples
     * Minor formatting improvements
     * Enhanced cross-references
@@ -262,11 +262,11 @@ established patterns and maintain coherent coverage of development principles an
 
     # Check for proper .g.md naming
     find guides -name "*.md" -not -name "*.g.md" -not -path "*/guides/*/" -type f
-    
+
     # Check for procedural language in guides
     grep -r "step.*:" guides/*.g.md
     grep -r "first.*then" guides/*.g.md
-    
+
     # Check for broken internal links
     grep -r "](\./" guides/ --include="*.md"
 {: .language-bash}
@@ -275,7 +275,7 @@ established patterns and maintain coherent coverage of development principles an
 
     # Find guides with potential language-specific content
     grep -r "ruby\|python\|javascript\|typescript" guides/*.g.md
-    
+
     # Check sub-guide organization
     find guides -mindepth 2 -name "*.md" -type f
 {: .language-bash}
@@ -284,7 +284,7 @@ established patterns and maintain coherent coverage of development principles an
 
     # Check for broken README references
     grep -f <(find guides -name "*.g.md" -exec basename {} \;) guides/README.md
-    
+
     # Validate workflow references
     grep -r "workflow-instructions/" guides/ --include="*.md"
 {: .language-bash}

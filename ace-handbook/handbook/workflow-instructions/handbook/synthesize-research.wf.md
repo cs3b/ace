@@ -28,27 +28,32 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 ## High-Level Execution Plan
 
 ### Phase 1: Inventory
+
 - [ ] List all agent outputs (reports and supplementary artifacts)
 - [ ] Create comparison matrix from template
 - [ ] Mark artifact presence and initial quality assessment
 
 ### Phase 2: Compare
+
 - [ ] Side-by-side analysis by artifact type
 - [ ] Note conflicts and disagreements
 - [ ] Rate depth, accuracy, actionability (1-5 scale)
 
 ### Phase 3: Resolve
+
 - [ ] Document each conflict with both positions
 - [ ] Research/verify factual disagreements
 - [ ] Make decisions with documented rationale
 
 ### Phase 4: Synthesize
+
 - [ ] Select base for each artifact (most comprehensive)
 - [ ] Merge unique contributions from other agents
 - [ ] Ensure consistent terminology
 - [ ] Credit source reports
 
 ### Phase 5: Validate
+
 - [ ] Completeness check (nothing valuable lost)
 - [ ] Consistency check (no contradictions)
 - [ ] Gap identification (for future work)
@@ -60,11 +65,13 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 1. **List All Agent Outputs**
 
    Scan the research folder to identify all outputs:
+
    ```bash
    ls -la {research_folder}/
    ```
 
    Expected pattern:
+
    ```
    {ts1}-{agent1}-report.md
    {ts1}-{agent1}-report-enhanced.md (if cross-review done)
@@ -76,6 +83,7 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 2. **Create Comparison Matrix**
 
    Copy the comparison template to synthesis folder:
+
    ```
    {research_folder}/synthesis/comparison-matrix.md
    ```
@@ -171,6 +179,7 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 ### Phase 4: Synthesize
 
 1. **Create Synthesis Folder Structure**
+
    ```
    {research_folder}/synthesis/
    ├── report.md              # Unified report
@@ -219,6 +228,7 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 4. **Create Attribution Document**
 
    In `synthesis/sources.md`:
+
    ```markdown
    # Synthesis Sources
 
@@ -396,16 +406,19 @@ See `sources.md` for detailed contribution breakdown.
 ## Error Handling
 
 **Missing Agent Output:**
+
 - Document which agent output is missing
 - Proceed with available outputs
 - Note reduced coverage in validation
 
 **Irreconcilable Conflict:**
+
 - If no clear resolution, document both positions
 - Mark as "context-dependent" with guidance
 - Let users choose based on their context
 
 **Quality Concerns:**
+
 - If synthesis quality is lower than expected, iterate
 - Consider re-running Phase 4 with different base selection
 - Document any compromises made
@@ -413,11 +426,13 @@ See `sources.md` for detailed contribution breakdown.
 ## Usage Examples
 
 ### Basic Usage
+
 ```bash
 ace-bundle wfi://handbook/synthesize-research
 ```
 
 ### With Custom Output
+
 ```bash
 ace-bundle wfi://handbook/synthesize-research
 ```

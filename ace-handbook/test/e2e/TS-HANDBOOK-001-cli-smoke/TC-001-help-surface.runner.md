@@ -9,6 +9,7 @@ Run the CLI help command and capture command-surface behavior for `ace-handbook`
 Save artifacts to `results/tc/01/`.
 
 Capture:
+
 - `results/tc/01/help.stdout`, `.stderr`, `.exit` from `ace-handbook --help`
 
 ## Constraints

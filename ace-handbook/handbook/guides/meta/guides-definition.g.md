@@ -14,6 +14,7 @@ This guide outlines best practices for creating and maintaining the development 
 ## Goal of Guides
 
 The primary goal of these guides is to:
+
 - Document established standards, best practices, and workflows.
 - Ensure consistency across the project.
 - Provide clear, actionable instructions and explanations.
@@ -36,16 +37,20 @@ The primary goal of these guides is to:
 All guide files must use the `.g.md` suffix to distinguish them from workflow instructions (which use `.wf.md`). This convention enables proper editor configuration and clear separation of content types.
 
 ### Naming Pattern
+
 - **Format:** `<noun-phrase>.g.md`
 - **Style:** Use noun-based naming that describes what the guide covers, avoiding action verbs
 - **Examples:**
+
   - `coding-standards.g.md` (not `write-coding-standards.g.md`)
   - `testing-tdd-cycle.g.md` (not `implement-tdd-cycle.g.md`)
   - `release-publish.g.md` (not `publish-release.g.md`)
   - `debug-troubleshooting.g.md` (not `troubleshoot-issues.g.md`)
 
 ### Contrast with Workflow Instructions
+
 Unlike workflow instructions (`.wf.md` files) which use verb-first naming to indicate actions:
+
 - **Guides** document standards and knowledge: `security.g.md`, `performance.g.md`
 - **Workflows** describe processes to execute: `commit.wf.md`, `fix-tests.wf.md`
 
@@ -58,6 +63,7 @@ Guides and workflows serve distinct purposes and should contain different types 
 ### What Belongs in Guides
 
 **Conceptual Content:**
+
 - Principles, philosophies, and best practices
 - Standards and coding conventions
 - Architecture patterns and design approaches
@@ -66,8 +72,9 @@ Guides and workflows serve distinct purposes and should contain different types 
 - Deep-dive knowledge and understanding
 
 **Appropriate Guide Content Examples:**
+
 - "Test-driven development principles and benefits"
-- "Security considerations for input validation" 
+- "Security considerations for input validation"
 - "Code review standards and what to look for"
 - "Performance optimization strategies"
 - "Error handling patterns and when to use them"
@@ -75,6 +82,7 @@ Guides and workflows serve distinct purposes and should contain different types 
 ### What Does NOT Belong in Guides
 
 **Procedural Content:**
+
 - Step-by-step instructions for executing tasks
 - Command sequences and specific CLI operations
 - Implementation workflows and task execution
@@ -82,19 +90,22 @@ Guides and workflows serve distinct purposes and should contain different types 
 - Detailed "how-to" procedures
 
 **Content That Should Be in Workflows Instead:**
+
 - "How to set up test environment" → Move to workflow
-- "Steps to perform security audit" → Move to workflow  
+- "Steps to perform security audit" → Move to workflow
 - "Checklist for code review process" → Move to workflow
 - "Commands to deploy application" → Move to workflow
 
 ### Linking Between Guides and Workflows
 
 **From Guides to Workflows:**
+
 - Guides should link to relevant workflows when discussing how principles are applied
 - Use clear language: "To implement these security principles, see [Security Audit Workflow](wfi://security-audit)"
 - Avoid embedding procedural steps directly in guides
 
 **From Workflows to Guides:**
+
 - Workflows can reference guides for context and rationale
 - Link to guides when explaining why certain steps are necessary
 - Use format: "For background on these testing principles, see [Testing Guide](guide://testing)"
@@ -118,19 +129,19 @@ While the specific sections will vary based on the guide's topic, aim for a gene
 
 When splitting language‑dependent examples out of a general guide, follow these rules:
 
-1. **Directory & File Names**  
-   * Place sub‑guides in a directory that matches the parent guide’s slug.  
-   * Use lower‑case filenames that match the language, e.g. `ruby.md`, `rust.md`, `typescript.md`.  
+1. **Directory & File Names**
+   * Place sub‑guides in a directory that matches the parent guide's slug.
+   * Use lower‑case filenames that match the language, e.g. `ruby.md`, `rust.md`, `typescript.md`.
    * For testing, prefer more descriptive names such as `ruby-rspec.md` or `typescript-bun.md` when tool‑specific.
 
-3. **Cross‑Linking**  
-   * At the top of each sub‑guide add a short note:  
+3. **Cross‑Linking**
+   * At the top of each sub‑guide add a short note:
      ```markdown
      > This page is a language‑specific companion to [Testing Guide](guide://testing)
-     ```  
+     ```
    * Add reciprocal links from the parent guide to its sub‑guides.
 
-3. **Index Updates**  
+3. **Index Updates**
    * Whenever you add or delete a sub‑guide, update the guides README (or `index.md`) so the navigation tree stays accurate.
 
 4. **Example Tree**
@@ -160,6 +171,7 @@ Understanding the distinction between conceptual guide content and procedural wo
 ### ✅ Appropriate Guide Content
 
 **Conceptual Explanations:**
+
 ```markdown
 ## Test-Driven Development Philosophy
 
@@ -172,6 +184,7 @@ The key insight is that TDD is not just about testing - it's a design methodolog
 ```
 
 **Standards and Conventions:**
+
 ```markdown
 ## Code Review Standards
 
@@ -187,6 +200,7 @@ For the specific steps to conduct a code review, see [Code Review Workflow](wfi:
 ### ❌ Inappropriate Guide Content (Move to Workflows)
 
 **Step-by-Step Procedures:**
+
 ```markdown
 ❌ Don't put this in a guide:
 ## How to Set Up Testing Environment
@@ -201,6 +215,7 @@ For the specific steps to conduct a code review, see [Code Review Workflow](wfi:
 ```
 
 **Interactive Checklists:**
+
 ```markdown
 ❌ Don't put this in a guide:
 ## Deployment Checklist
@@ -213,14 +228,17 @@ For the specific steps to conduct a code review, see [Code Review Workflow](wfi:
 ```
 
 **Command Sequences:**
+
 ```markdown
 ❌ Don't put this in a guide:
 ## Git Branch Management
 To create a feature branch:
 ```bash
+
 git checkout main
 git pull origin main
 git checkout -b feature/new-feature
+
 ```
 
 ✅ This belongs in a workflow file instead.
@@ -229,6 +247,7 @@ git checkout -b feature/new-feature
 ### 🔄 Converting Procedural to Conceptual Content
 
 **Before (Procedural - belongs in workflow):**
+
 ```markdown
 ## Database Migration Process
 1. Create migration file: `rails generate migration AddColumn`
@@ -239,6 +258,7 @@ git checkout -b feature/new-feature
 ```
 
 **After (Conceptual - appropriate for guide):**
+
 ```markdown
 ## Database Migration Principles
 
@@ -262,6 +282,7 @@ Guides are **informational and reference documents**, not actionable tasks. Prop
 ### ❌ Inappropriate Use (Don't Do This)
 
 **Interactive Checklists in Guides:**
+
 ```markdown
 ## Security Review Process
 - [ ] Check input validation
@@ -274,6 +295,7 @@ This treats the guide as a task to be completed, which is incorrect.
 ### ✅ Appropriate Use (Do This Instead)
 
 **Informational Bullet Points:**
+
 ```markdown
 ## Security Review Areas
 - **Input Validation**: Check all user inputs are sanitized

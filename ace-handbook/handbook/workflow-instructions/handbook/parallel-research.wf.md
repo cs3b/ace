@@ -28,27 +28,32 @@ Set up and execute parallel research across multiple AI agents, producing consis
 ## High-Level Execution Plan
 
 ### Phase 1: Setup
+
 - [ ] Define research question clearly
 - [ ] Select agents (quality > diversity)
 - [ ] Create shared context and materials
 - [ ] Prepare consistent prompt template
 
 ### Phase 2: Dispatch
+
 - [ ] Create output folder structure
 - [ ] Launch parallel research with identical prompts
 - [ ] Assign unique timestamps to each agent
 
 ### Phase 3: Monitor
+
 - [ ] Track agent completion
 - [ ] Handle failures/retries
 - [ ] Collect all outputs
 
 ### Phase 4: Cross-Review
+
 - [ ] Distribute reports to all agents
 - [ ] Each agent reviews peer reports
 - [ ] Collect enhanced reports
 
 ### Phase 5: Handoff
+
 - [ ] Verify all outputs collected
 - [ ] Prepare for synthesis phase
 - [ ] Invoke synthesize-research workflow
@@ -90,6 +95,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
 ### Phase 2: Dispatch
 
 1. **Create Output Folder Structure**
+
    ```
    {task}/research/
    ├── context/                    # Shared materials
@@ -110,6 +116,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
    - Start agents in parallel when possible
 
 4. **Record Launch Details**
+
    ```markdown
    ## Research Launch Log
    | Agent | Model | Timestamp | Status |
@@ -134,6 +141,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
 3. **Collect Outputs**
    - Verify each agent produced expected deliverables
    - Move outputs to standard locations:
+
    ```
    {task}/research/
    ├── {ts1}-{agent1}-report.md
@@ -170,6 +178,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
    - Enhanced reports collected
 
 2. **Prepare Synthesis Folder**
+
    ```
    {task}/research/
    ├── {ts1}-{agent1}-report.md
@@ -290,16 +299,19 @@ Below are reports from peer agents. Review them to:
 ## Error Handling
 
 **Agent Failure:**
+
 - Document the failure with error details
 - Assess if retry is worthwhile
 - If agent cannot complete, proceed with remaining agents
 - Note reduced agent count in synthesis
 
 **Inconsistent Outputs:**
+
 - If outputs don't match expected format, request correction
 - Document any deviations for synthesis phase
 
 **Time Constraints:**
+
 - If time-limited, prioritize initial reports over cross-review
 - Cross-review can be abbreviated or skipped if necessary
 - Document any shortcuts taken
@@ -307,16 +319,19 @@ Below are reports from peer agents. Review them to:
 ## Usage Examples
 
 ### Basic Usage
+
 ```bash
 ace-bundle wfi://handbook/parallel-research
 ```
 
 ### With Agent Selection
+
 ```bash
 ace-bundle wfi://handbook/parallel-research
 ```
 
 ### Full Specification
+
 ```bash
 ace-bundle wfi://handbook/parallel-research
 ```

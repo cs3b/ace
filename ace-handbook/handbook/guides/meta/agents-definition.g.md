@@ -14,6 +14,7 @@ This guide outlines best practices for creating and maintaining agent definition
 ## Goal of Agents
 
 The primary goal of agents is to:
+
 - Provide specialized, context-aware assistance for specific development tasks
 - Minimize context window usage through efficient data loading strategies
 - Enable both direct Claude Code usage and enhanced MCP proxy features
@@ -25,16 +26,20 @@ The primary goal of agents is to:
 All agent files must use the `.ag.md` suffix to distinguish them from other documentation types. This convention enables proper identification and tooling support.
 
 ### Naming Pattern
+
 - **Format:** `<agent-name>.ag.md`
 - **Style:** Use descriptive names that indicate the agent's primary function
 - **Examples:**
+
   - `git-commit.ag.md` (not `git-commit-manager.md`)
   - `task-manager.ag.md` (not `task-manager-agent.md`)
   - `code-review.ag.md` (not `code-reviewer.md`)
   - `search.ag.md` (not `search-agent.md`)
 
 ### File Type Suffixes
+
 The project uses consistent suffixes to identify different content types:
+
 - **`.ag.md`** - Agent definitions (this guide)
 - **`.g.md`** - Development guides
 - **`.wf.md`** - Workflow instructions
@@ -45,15 +50,18 @@ This naming distinction helps both humans and tools quickly identify agent defin
 ## Core Principles
 
 ### 1. Start Minimal
+
 **Principle:** Agents don't need all data, just enough to make informed decisions.
 
 **Implementation:**
+
 - Load metadata instead of full file contents when possible
 - Use command outputs over file reading
 - Start with 5-6 essential commands maximum
 - Add complexity only based on actual usage patterns
 
 **Example from task-manager-agent:**
+
 ```yaml
 # Minimal context - just commands, no file content
 commands:
@@ -63,15 +71,18 @@ commands:
 ```
 
 ### 2. Dynamic Discovery Over Hard-Coded Values
+
 **Principle:** Use commands to discover current state rather than embedding static paths.
 
 **Implementation:**
+
 - Query for current release/branch/status dynamically
 - Use relative paths resolved at runtime
 - Leverage existing tools for navigation
 - Avoid hard-coding version numbers or release names
 
 **Example:**
+
 ```bash
 # Good: Dynamic discovery
 release-manager current  # Discovers current release
@@ -81,41 +92,50 @@ cd dev-taskflow/current/v.0.5.0-insights/  # Version will change
 ```
 
 ### 3. Work at Metadata Level
+
 **Principle:** Operate on file lists and metadata rather than loading full content.
 
 **Implementation:**
+
 - Use file listings to understand structure
 - Extract metadata from filenames and paths
 - Load content only when transformation is needed
 - Batch metadata operations for efficiency
 
 ### 4. Research Before Designing
+
 **Principle:** Analyze actual usage patterns before creating agent workflows.
 
 **Implementation:**
+
 - Study how humans perform the task
 - Identify common command sequences
 - Document discovered patterns
 - Test with real scenarios
 
 ### 5. Single Source of Truth
+
 **Principle:** Maintain agents in one canonical location with clear versioning.
 
 **Implementation:**
+
 - All agents in `.claude/agents/` directory
 - Use `last_modified` field for versioning
 - Document migration paths for updates
 - Avoid duplicate agent definitions
 
 ### 6. Single Purpose Design
+
 **Principle:** Each agent should have exactly ONE primary purpose.
 
 **Implementation:**
+
 - Split complex agents into focused, single-purpose agents
 - Clear separation between "execute" vs "analyze" agents
 - Each agent does one thing exceptionally well
 
 **Anti-pattern:** Multi-purpose agent
+
 ```yaml
 name: git-manager
 description: Handles commits, reviews, staging, and history
@@ -123,6 +143,7 @@ description: Handles commits, reviews, staging, and history
 ```
 
 **Good pattern:** Focused agents
+
 ```yaml
 name: git-fast-commit
 description: FAST direct commit execution - NO analysis
@@ -134,28 +155,34 @@ description: ANALYZE and REVIEW changes before committing
 ## Agent Naming and Description Guidelines
 
 ### Naming Patterns
+
 **Action-First Names:**
+
 - `fast-commit` - Immediate execution
 - `review-commit` - Analysis first
 - `fix-tests` - Direct action
 - `analyze-tests` - Investigation first
 
 **Avoid:**
+
 - Generic names (`manager`, `helper`, `assistant`)
 - Similar names that differ only slightly
 - Names that don't indicate the action
 
 ### Description Format
+
 ```
 [ACTION_KEYWORD] [specific purpose] - [what it does NOT do]
 ```
 
 Examples:
+
 - "FAST direct commit execution - NO analysis or review"
 - "ANALYZE and REVIEW changes - does NOT auto-commit"
 - "FIX failing tests immediately - NO investigation"
 
 ### Keywords to Use
+
 - **Execution**: FAST, DIRECT, IMMEDIATE, EXECUTE
 - **Analysis**: ANALYZE, REVIEW, INSPECT, INVESTIGATE
 - **Scope limiters**: ONLY, NO, WITHOUT, JUST
@@ -163,6 +190,7 @@ Examples:
 ## Agent Format Specification
 
 ### File Structure
+
 Agents use Markdown with YAML frontmatter for metadata and embedded context definitions.
 
 ```markdown
@@ -206,36 +234,44 @@ Natural language instructions for the agent...
 ## Context Definition
 
 ```yaml
+
 files:
   - path/patterns/*.md
 commands:
   - command-to-execute
   - another-command --with-flags
 format: markdown-xml
+
 ```
 ```
 
 ### Metadata Fields
 
 #### Required Fields
+
 - **name**: Unique identifier for the agent (kebab-case)
 - **description**: Clear description of when to use this agent
 - **last_modified**: ISO date of last significant update
 - **type**: Always "agent" for agent definitions
 
 #### Optional Fields
+
 - **tools**: (Often better to omit)
+
   - If specified: Comma-separated list like `Read, Edit` (no brackets)
   - **BEST PRACTICE**: Omit this field to inherit permissions from settings.json
   - This ensures agents respect tool restrictions and wrapper enforcement
   - Only specify if you need to explicitly limit agent to specific tools
+
 - **expected_params**: Document expected inputs for the agent
+
   - `required`: List of parameters that must be provided
   - `optional`: List of parameters with defaults
   - Format: `- param_name: "Description"`
   - Helps users understand what inputs the agent expects
 
 #### Optional MCP Fields
+
 - **mcp.model**: Preferred model for this agent's tasks
 - **mcp.tools_mapping**: Fine-grained tool access control
 - **mcp.security**: Path restrictions and rate limiting
@@ -243,6 +279,7 @@ format: markdown-xml
 - **mcp.prompts**: Reusable prompt templates
 
 #### Context Configuration
+
 - **context.auto_inject**: Whether to auto-load context
 - **context.template**: Location of context template
 - **context.cache_ttl**: Cache duration in seconds
@@ -250,6 +287,7 @@ format: markdown-xml
 ## Context Optimization Strategies
 
 ### 1. Command-Based Context
+
 Prefer commands that return structured data over file reading:
 
 ```yaml
@@ -264,6 +302,7 @@ files:
 ```
 
 ### 2. Progressive Context Loading
+
 Start with minimal context, expand based on need:
 
 ```yaml
@@ -281,6 +320,7 @@ files:
 ```
 
 ### 3. Metadata Extraction Patterns
+
 Use commands that provide metadata without content:
 
 ```yaml
@@ -291,6 +331,7 @@ commands:
 ```
 
 ### 4. Context Templates
+
 Create reusable context templates for common patterns:
 
 ```yaml
@@ -306,6 +347,7 @@ bundle:
 ## Agent Response Format
 
 ### Standardized Response Structure
+
 Agents should provide clear, structured responses back to their parent (user or calling agent):
 
 ```markdown
@@ -336,6 +378,7 @@ Agents should provide clear, structured responses back to their parent (user or 
 ### Example Response Patterns
 
 #### Success Response (task-finder)
+
 ```markdown
 ## Summary
 Found 5 pending high-priority tasks in the current release.
@@ -350,6 +393,7 @@ Use task-creator agent if you need to add more tasks.
 ```
 
 #### Delegation Response (task-creator)
+
 ```markdown
 ## Summary
 Need current release context before creating task.
@@ -361,6 +405,7 @@ Created task v.0.5.0+task.042 in current release.
 ```
 
 #### Error Response
+
 ```markdown
 ## Summary
 Unable to complete the requested operation.
@@ -376,6 +421,7 @@ No current release found in dev-taskflow.
 ## Common Patterns
 
 ### Task Management Agent Pattern
+
 Focuses on task discovery and navigation without content loading:
 
 ```yaml
@@ -387,6 +433,7 @@ commands:
 ```
 
 ### Code Review Agent Pattern
+
 Loads specific files for review with structured output:
 
 ```yaml
@@ -399,6 +446,7 @@ format: markdown-xml
 ```
 
 ### Search Agent Pattern
+
 Combines multiple search strategies efficiently:
 
 ```yaml
@@ -411,33 +459,41 @@ commands:
 ## Anti-Patterns to Avoid
 
 ### 1. Loading Everything Upfront
+
 **Bad:**
+
 ```yaml
 files:
   - /**/*.md  # Loads entire project
 ```
 
 **Good:**
+
 ```yaml
 commands:
   - find . -name "*.md" -type f | head -20  # Just listings
 ```
 
 ### 2. Hard-Coded Paths
+
 **Bad:**
+
 ```yaml
 files:
   - dev-taskflow/current/v.0.5.0/tasks/*.md  # Version-specific
 ```
 
 **Good:**
+
 ```yaml
 commands:
   - release-manager current  # Discover current version
 ```
 
 ### 3. Redundant Context
+
 **Bad:**
+
 ```yaml
 files:
   - README.md
@@ -446,19 +502,23 @@ files:
 ```
 
 **Good:**
+
 ```yaml
 files:
   - README.md  # Just the essential one
 ```
 
 ### 4. Missing Error Handling
+
 **Bad:**
+
 ```bash
 cd specific/directory
 cat required-file.md  # Assumes file exists
 ```
 
 **Good:**
+
 ```bash
 if [ -f "required-file.md" ]; then
   cat required-file.md
@@ -470,6 +530,7 @@ fi
 ## Testing and Validation
 
 ### 1. Dual Compatibility Testing
+
 Test agents in both environments:
 
 ```bash
@@ -485,6 +546,7 @@ mcp-proxy --config test-config.yaml
 ```
 
 ### 2. Context Efficiency Testing
+
 Measure and optimize context usage:
 
 ```bash
@@ -495,6 +557,7 @@ context .claude/agents/agent-name.md | wc -c
 ```
 
 ### 3. Performance Validation
+
 Ensure agents respond quickly:
 
 - Initial response: <2 seconds
@@ -502,6 +565,7 @@ Ensure agents respond quickly:
 - Command execution: <1 second per command
 
 ### 4. Error Resilience Testing
+
 Verify graceful degradation:
 
 - Missing files: Agent continues with available data
@@ -511,6 +575,7 @@ Verify graceful degradation:
 ## Agent Creation Workflow
 
 ### 1. Research Phase
+
 ```bash
 # Analyze how task is currently done
 task-manager recent --limit 10
@@ -522,6 +587,7 @@ history | grep "relevant-pattern" >> agent-research.md
 ```
 
 ### 2. Prototype Phase
+
 Create minimal agent with core functionality:
 
 ```yaml
@@ -537,12 +603,15 @@ Basic instructions...
 
 ## Context Definition
 ```yaml
+
 commands:
   - single-test-command
+
 ```
 ```
 
 ### 3. Enhancement Phase
+
 Add features based on usage:
 
 - Observe actual usage patterns
@@ -551,6 +620,7 @@ Add features based on usage:
 - Document common workflows
 
 ### 4. Optimization Phase
+
 Reduce context and improve efficiency:
 
 - Replace file loads with commands
@@ -561,6 +631,7 @@ Reduce context and improve efficiency:
 ## Tool Access and Permissions
 
 ### Custom Tool Wrappers
+
 When agents need to use custom executables (like git wrapper tools):
 
 1. **Agent Definition**: Omit the `tools:` field entirely (best practice)
@@ -568,6 +639,7 @@ When agents need to use custom executables (like git wrapper tools):
 3. **Result**: Agent inherits all permissions, ensuring wrapper tools are used
 
 Example for git wrapper tools:
+
 ```json
 {
   "permissions": {
@@ -586,6 +658,7 @@ Example for git wrapper tools:
 ```
 
 This pattern:
+
 - Forces use of enhanced wrapper tools
 - Prevents accidental use of native commands
 - Provides security through permission boundaries
@@ -608,6 +681,7 @@ This pattern:
 ## Migration Guide
 
 ### From Old Format to Enhanced Format
+
 When updating existing agents:
 
 1. Add YAML frontmatter with required fields
@@ -617,7 +691,9 @@ When updating existing agents:
 5. Update last_modified date
 
 ### Example Migration
+
 **Before:**
+
 ```markdown
 # Git Commit Agent
 
@@ -629,6 +705,7 @@ Load these files:
 ```
 
 **After:**
+
 ```markdown
 ---
 name: git-commit-manager
@@ -642,9 +719,11 @@ You help with commits...
 
 ## Context Definition
 ```yaml
+
 files:
   - file1.md
   - file2.md
+
 ```
 ```
 
@@ -663,14 +742,19 @@ files:
 <documents>
     <template path="tmpl://meta/agent">
 ---
+
 # Core metadata (both Claude Code and MCP proxy compatible)
+
 name: #{agent_name}
 description: #{agent_description}
+
 # tools: [optional - consider omitting]
+
 last_modified: '#{date}'
 type: agent
 
 # MCP proxy enhancements (optional - remove if not needed)
+
 mcp:
   model: #{mcp_model}  # e.g., google:gemini-2.5-flash
   tools_mapping:
@@ -678,11 +762,12 @@ mcp:
       expose: true
       methods: [#{allowed_methods}]
   security:
-    allowed_paths: 
+    allowed_paths:
       - "#{path_pattern}"
     rate_limit: #{rate}/hour
 
 # Context configuration
+
 bundle:
   auto_inject: #{auto_inject}  # true or false
   template: embedded  # or path to external template
@@ -711,11 +796,13 @@ You are a #{agent_role} focused on #{agent_focus}.
 ## Common Workflows
 
 ### Workflow 1: #{workflow_1_name}
+
 ```bash
 #{workflow_1_commands}
 ```
 
 ### Workflow 2: #{workflow_2_name}
+
 ```bash
 #{workflow_2_commands}
 ```
@@ -752,6 +839,7 @@ format: markdown-xml
 ## Input Validation and Parameter Handling
 
 ### Expected Parameters Pattern
+
 Agents should clearly document and validate expected inputs:
 
 ```yaml
@@ -765,6 +853,7 @@ expected_params:
 ```
 
 ### Validation Rules in Agent Prompt
+
 ```markdown
 **VALIDATION RULES**:
 1. Required inputs MUST be provided - STOP if missing
@@ -778,6 +867,7 @@ expected_params:
 ```
 
 ### Handling Missing Parameters
+
 - **Required missing**: Stop and ask user to provide
 - **Optional missing**: Use sensible defaults or proceed without
 - **Never**: Generate or guess required parameters
@@ -787,6 +877,7 @@ expected_params:
 When reporting results back to the parent:
 
 ### Success Response
+
 ```markdown
 ## Summary
 [Brief overview of what was accomplished]
@@ -799,6 +890,7 @@ When reporting results back to the parent:
 ```
 
 ### Error Response
+
 ```markdown
 ## Summary
 [What went wrong]

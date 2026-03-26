@@ -33,7 +33,7 @@ addition to the generic standards in `../coding-standards.md`.
 
 ## Performance Tips
 
-- Prefer `each` over `map` when you don’t need the new array.
+- Prefer `each` over `map` when you don't need the new array.
 - Avoid creating unnecessary objects in hot code paths.
 
 ---

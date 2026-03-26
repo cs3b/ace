@@ -104,17 +104,21 @@ bundle:
 ### Pattern A: "Context Already Available"
 
 **Before (manual gathering):**
+
 ```markdown
 1. Get the current repository status:
    ```bash
+
    git status -sb
    git diff --stat
+
    ```
 
 2. Review the changes
 ```
 
 **After (embedded context):**
+
 ```markdown
 1. **Repository status is embedded above** in `<current_repository_status>`.
 
@@ -129,16 +133,20 @@ bundle:
 ### Pattern B: "Interactive Selection"
 
 **Before:**
+
 ```markdown
 1. List available presets:
    ```bash
+
    ace-bundle --list
+
    ```
 
 2. Ask user which one to load
 ```
 
 **After:**
+
 ```markdown
 1. **Available presets are listed above** in `<available_presets>`.
 
@@ -153,16 +161,20 @@ bundle:
 ### Pattern C: "Validation"
 
 **Before:**
+
 ```markdown
 1. Check if task exists:
    ```bash
+
    ace-task $task_ref
+
    ```
 
 2. If error, report to user
 ```
 
 **After:**
+
 ```markdown
 1. **Verify task reference** against user input:
    - If `$task_ref` provided: use it directly
@@ -201,6 +213,7 @@ Use these embedded sections instead of running commands to gather this informati
 ### commit.wf.md (ace-git-commit)
 
 **Frontmatter:**
+
 ```yaml
 bundle:
   embed_document_source: true
@@ -212,6 +225,7 @@ bundle:
 ```
 
 **Instructions:**
+
 ```markdown
 1. **Repository status is embedded above** in `<current_repository_status>`.
 
@@ -227,6 +241,7 @@ bundle:
 ### load-context.wf.md (ace-bundle)
 
 **Frontmatter:**
+
 ```yaml
 bundle:
   embed_document_source: true
@@ -237,6 +252,7 @@ bundle:
 ```
 
 **Instructions:**
+
 ```markdown
 ### 2. Select and Load Context
 

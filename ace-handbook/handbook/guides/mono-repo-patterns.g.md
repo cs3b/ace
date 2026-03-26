@@ -21,6 +21,7 @@ Individual gems do NOT have their own `Gemfile`. The mono-repo uses a single roo
 | `*.gemspec` | Each gem | Runtime dependencies for gem distribution |
 
 **Why no per-gem Gemfile?**
+
 - All gems developed together in mono-repo context
 - Root Gemfile includes all gems as path dependencies
 - `ace-test` and binstubs use root Gemfile
