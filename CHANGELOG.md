@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.935] - 2026-03-26
+
+### Added
+- **ace-lint v0.26.0**: Added a surgical markdown fixer for `--fix` and structural guardrails for markdown `--format` to prevent unsafe rewrites.
+- **ace-lint v0.27.0**: Added deterministic repair flags (`--auto-fix`, `--auto-fix-with-agent`, `--dry-run`, `--model`) and agent-assisted prompt generation for remaining violations.
+
+### Fixed
+- **ace-lint v0.26.0**: Fixed markdown style false positives inside fenced code blocks and added trailing-whitespace detection for markdown lint checks.
+- **ace-lint v0.27.0**: Fixed auto-fix flow to return non-zero when violations remain after deterministic repair.
+- **ace-lint v0.27.1**: Preserved markdown link destinations with nested parentheses during surgical typography fixes.
+- **ace-lint v0.27.2**: Made `--auto-fix-with-agent` apply concrete file edits from model output and tightened markdown formatter guardrails.
+- **ace-lint v0.27.3**: Corrected `--auto-fix --dry-run` file-count reporting.
+
+### Changed
+- **ace-lint v0.26.0**: Switched markdown-family `--fix` to surgical edits and clarified `--fix --format` execution order.
+- **ace-lint v0.27.0**: Made `--fix` an alias for deterministic `--auto-fix` with explicit `--format` warning.
+- **ace-lint v0.27.1**: Aligned `--auto-fix` exit semantics so warning-only results no longer fail.
+- **ace-lint v0.27.3**: Extracted auto-fix orchestration from the lint CLI command into a dedicated `AutoFixOrchestrator`.
+
+### Technical
+- **ace-lint v0.26.0–v0.27.3**: Expanded molecule, orchestrator, and command test coverage for surgical fixing, guardrails, agent-fix, and dry-run paths.
+
 ## [0.9.934] - 2026-03-26
 
 ### Added

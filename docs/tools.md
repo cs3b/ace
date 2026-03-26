@@ -85,7 +85,9 @@ Provider-agent skills are reserved for CLI agent integrations and `ace-assign` d
 | Tool | Purpose |
 |------|---------|
 | `ace-lint file.md` | Lint file |
-| `ace-lint file.md --fix` | Auto-fix lint issues |
+| `ace-lint file.md --auto-fix` | Deterministic auto-fix and re-lint |
+| `ace-lint file.md --auto-fix --dry-run` | Preview fixes without writing |
+| `ace-lint file.md --auto-fix-with-agent` | Auto-fix and escalate remaining issues to agent |
 | `ace-lint --doctor` | Diagnose lint configuration health |
 
 ## Documentation
