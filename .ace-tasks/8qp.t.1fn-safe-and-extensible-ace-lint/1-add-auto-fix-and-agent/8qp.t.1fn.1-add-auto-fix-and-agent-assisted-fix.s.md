@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.1fn.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 00:57:58"
 estimate: TBD
@@ -137,13 +137,13 @@ Implementation Notes:
 
 ### Success Criteria
 
-- [ ] `ace-lint --fix` and `ace-lint --auto-fix` produce identical behavior (fix + re-lint + report)
-- [ ] `ace-lint --auto-fix --dry-run` shows preview without modifying files
-- [ ] `ace-lint --auto-fix-with-agent` launches agent for remaining violations (mirrors ace-task doctor)
-- [ ] `--auto-fix`, `--auto-fix-with-agent`, `--dry-run` / `-n`, `--model` appear in `ace-lint --help`
-- [ ] `--model` flag works for agent provider selection
-- [ ] Behavioral parity with ace-task doctor's `--auto-fix` / `--auto-fix-with-agent` pattern
-- [ ] `-f` alias maps to `--auto-fix` (not legacy `--fix` behavior)
+- [x] `ace-lint --fix` and `ace-lint --auto-fix` produce identical behavior (fix + re-lint + report)
+- [x] `ace-lint --auto-fix --dry-run` shows preview without modifying files
+- [x] `ace-lint --auto-fix-with-agent` launches agent for remaining violations (mirrors ace-task doctor)
+- [x] `--auto-fix`, `--auto-fix-with-agent`, `--dry-run` / `-n`, `--model` appear in `ace-lint --help`
+- [x] `--model` flag works for agent provider selection
+- [x] Behavioral parity with ace-task doctor's `--auto-fix` / `--auto-fix-with-agent` pattern
+- [x] `-f` alias maps to `--auto-fix` (not legacy `--fix` behavior)
 
 ### Validation Questions
 
@@ -163,30 +163,30 @@ Implementation Notes:
 
 ### Unit / Component Validation
 
-- [ ] `--auto-fix` applies fixes and re-lints, reporting correct counts
-- [ ] `--auto-fix --dry-run` does not modify any files (also works with `-n` alias)
-- [ ] `--fix` and `--auto-fix` produce identical results
-- [ ] `--auto-fix-with-agent` calls LLM query interface with structured prompt
-- [ ] `--model` flag is passed through to agent invocation
-- [ ] `--auto-fix` with zero violations exits 0 with "No violations found"
-- [ ] `-f` alias triggers auto-fix behavior
+- [x] `--auto-fix` applies fixes and re-lints, reporting correct counts
+- [x] `--auto-fix --dry-run` does not modify any files (also works with `-n` alias)
+- [x] `--fix` and `--auto-fix` produce identical results
+- [x] `--auto-fix-with-agent` calls LLM query interface with structured prompt
+- [x] `--model` flag is passed through to agent invocation
+- [x] `--auto-fix` with zero violations exits 0 with "No violations found"
+- [x] `-f` alias triggers auto-fix behavior
 
 ### Integration / E2E Validation
 
-- [ ] `ace-lint --auto-fix` on a mixed markdown+Ruby file set fixes both types and reports combined results
+- [x] `ace-lint --auto-fix` on a mixed markdown+Ruby file set fixes both types and reports combined results
 - [ ] `ace-lint --auto-fix-with-agent` end-to-end with a test model
-- [ ] `ace-lint --help` includes all new flags with descriptions
+- [x] `ace-lint --help` includes all new flags with descriptions
 
 ### Failure / Invalid-Path Validation
 
 - [ ] `ace-lint --auto-fix-with-agent` without ace-llm: clear error message
-- [ ] `ace-lint --auto-fix-with-agent --model invalid:model`: clear error with provider hint
-- [ ] `ace-lint --auto-fix --format`: warning that `--format` is ignored under `--auto-fix`
-- [ ] `ace-lint --auto-fix-with-agent --format`: same warning that `--format` is ignored
-- [ ] `ace-lint --auto-fix-with-agent --dry-run`: shows deterministic fix preview AND agent prompt without launching
+- [x] `ace-lint --auto-fix-with-agent --model invalid:model`: clear error with provider hint
+- [x] `ace-lint --auto-fix --format`: warning that `--format` is ignored under `--auto-fix`
+- [x] `ace-lint --auto-fix-with-agent --format`: same warning that `--format` is ignored
+- [x] `ace-lint --auto-fix-with-agent --dry-run`: shows deterministic fix preview AND agent prompt without launching
 
 ### Verification Commands
 
-- [ ] `ace-test ace-lint` — full test suite passes
-- [ ] `ace-lint --auto-fix --dry-run README.md` — shows preview without modifications
-- [ ] `ace-lint --help` — new flags visible
+- [x] `ace-test ace-lint` — full test suite passes
+- [x] `ace-lint --auto-fix --dry-run README.md` — shows preview without modifications
+- [x] `ace-lint --help` — new flags visible

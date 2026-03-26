@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.1fn.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 00:57:55"
 estimate: TBD
@@ -122,16 +122,16 @@ Edge Cases:
 ### Success Criteria
 
 - [ ] `ace-lint --fix` on the 57 previously-damaged ace-assign markdown files produces zero structural changes (frontmatter, code blocks, tables, HTML, links all preserved)
-- [ ] `ace-lint --fix` correctly fixes em-dashes and smart quotes without altering surrounding content
-- [ ] `ace-lint --fix` correctly fixes trailing whitespace on markdown lines
-- [ ] `ace-lint --fix` correctly inserts missing blank lines at precise locations
-- [ ] `ace-lint --fix` does not modify content inside code blocks or inline code
-- [ ] `check_markdown_style` does not produce false positive warnings inside fenced code blocks
-- [ ] `ace-lint --fix` works identically on skill, workflow, and agent file types (markdown-based)
-- [ ] `ace-lint --fix --format` applies surgical fix first, then kramdown-with-guardrails
-- [ ] `ace-lint --format` skips files where Kramdown round-trip would damage structure, with clear warning
-- [ ] Ruby `--fix` behavior is completely unchanged
-- [ ] Exit codes: 0 for fix succeeded without errors, 1 for fix encountered errors (violation-counting exit codes reserved for subtask B)
+- [x] `ace-lint --fix` correctly fixes em-dashes and smart quotes without altering surrounding content
+- [x] `ace-lint --fix` correctly fixes trailing whitespace on markdown lines
+- [x] `ace-lint --fix` correctly inserts missing blank lines at precise locations
+- [x] `ace-lint --fix` does not modify content inside code blocks or inline code
+- [x] `check_markdown_style` does not produce false positive warnings inside fenced code blocks
+- [x] `ace-lint --fix` works identically on skill, workflow, and agent file types (markdown-based)
+- [x] `ace-lint --fix --format` applies surgical fix first, then kramdown-with-guardrails
+- [x] `ace-lint --format` skips files where Kramdown round-trip would damage structure, with clear warning
+- [x] Ruby `--fix` behavior is completely unchanged
+- [x] Exit codes: 0 for fix succeeded without errors, 1 for fix encountered errors (violation-counting exit codes reserved for subtask B)
 
 ### Validation Questions
 
@@ -149,33 +149,33 @@ Edge Cases:
 
 ### Unit / Component Validation
 
-- [ ] Surgical fixer on content with em-dash returns content with `--`, nothing else changed
-- [ ] Surgical fixer on content with smart quotes returns content with ASCII quotes, nothing else changed
-- [ ] Surgical fixer on content with missing blank lines inserts blank lines at correct positions only
-- [ ] Surgical fixer on content with no violations returns identical content (no mutation)
-- [ ] Surgical fixer never alters frontmatter section
-- [ ] Surgical fixer never alters content inside fenced code blocks
-- [ ] Surgical fixer respects inline code spans (no fixes inside backticks)
-- [ ] Surgical fixer removes trailing whitespace from lines (outside code blocks)
-- [ ] `check_markdown_style` with heading inside fenced code block produces no false warning
-- [ ] `check_markdown_style` detects trailing whitespace on markdown lines
-- [ ] Surgical fixer works on skill/workflow/agent file types identically to markdown
-- [ ] `--fix --format` combined: surgical runs first, then kramdown-with-guardrails
-- [ ] `KramdownFormatter.format_file` with structural damage detection skips file and returns warning
+- [x] Surgical fixer on content with em-dash returns content with `--`, nothing else changed
+- [x] Surgical fixer on content with smart quotes returns content with ASCII quotes, nothing else changed
+- [x] Surgical fixer on content with missing blank lines inserts blank lines at correct positions only
+- [x] Surgical fixer on content with no violations returns identical content (no mutation)
+- [x] Surgical fixer never alters frontmatter section
+- [x] Surgical fixer never alters content inside fenced code blocks
+- [x] Surgical fixer respects inline code spans (no fixes inside backticks)
+- [x] Surgical fixer removes trailing whitespace from lines (outside code blocks)
+- [x] `check_markdown_style` with heading inside fenced code block produces no false warning
+- [x] `check_markdown_style` detects trailing whitespace on markdown lines
+- [x] Surgical fixer works on skill/workflow/agent file types identically to markdown
+- [x] `--fix --format` combined: surgical runs first, then kramdown-with-guardrails
+- [x] `KramdownFormatter.format_file` with structural damage detection skips file and returns warning
 
 ### Integration / E2E Validation
 
-- [ ] `ace-lint --fix` on a file with known em-dashes and smart quotes fixes them without altering frontmatter
-- [ ] `ace-lint --fix` on a file with complex structure (tables, HTML, code blocks, frontmatter) fixes only typography and whitespace violations
-- [ ] `ace-lint --format` on a file with YAML frontmatter skips it when frontmatter would be damaged
+- [x] `ace-lint --fix` on a file with known em-dashes and smart quotes fixes them without altering frontmatter
+- [x] `ace-lint --fix` on a file with complex structure (tables, HTML, code blocks, frontmatter) fixes only typography and whitespace violations
+- [x] `ace-lint --format` on a file with YAML frontmatter skips it when frontmatter would be damaged
 
 ### Failure / Invalid-Path Validation
 
-- [ ] `ace-lint --fix` on a non-existent file returns error result
-- [ ] `ace-lint --format` on a file where Kramdown would destroy frontmatter: file is not modified, warning emitted
-- [ ] `ace-lint --fix` on a binary file: skipped with warning
+- [x] `ace-lint --fix` on a non-existent file returns error result
+- [x] `ace-lint --format` on a file where Kramdown would destroy frontmatter: file is not modified, warning emitted
+- [x] `ace-lint --fix` on a binary file: skipped with warning
 
 ### Verification Commands
 
-- [ ] `ace-test ace-lint` — full test suite passes
+- [x] `ace-test ace-lint` — full test suite passes
 - [ ] `ace-lint --fix ace-assign/**/*.md && git diff` — confirm only targeted violations changed, no structural damage
