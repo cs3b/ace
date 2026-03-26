@@ -4,21 +4,56 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.929] - 2026-03-26
+
+### Fixed
+- **ace-demo v0.19.3**: Unified YAML planning so `record --dry-run` and live recording enforce unsupported `settings.format` validation consistently.
+
+### Changed
+- **ace-demo v0.19.3**: Centralized YAML format/speed/output-path planning into a shared helper used by CLI context resolution and `DemoRecorder`.
+
+### Technical
+- **ace-demo v0.19.3**: Added regression coverage for dry-run rejection of unsupported YAML tape formats.
+
 ## [0.9.928] - 2026-03-26
 
 ### Fixed
 - **ace-task v0.31.3**: Consolidated empty-list stats footer formatting into a single return path and added command-level coverage for zero-total footer output.
+- **ace-demo v0.19.2**: Reject blank or whitespace-only YAML `settings.output` values so output path expansion stays valid.
+
+### Changed
+- **ace-demo v0.19.2**: Updated tape-mode context resolution to keep dry-run preview fallback while surfacing unresolved live tape refs earlier.
+
+### Technical
+- **ace-demo v0.19.2**: Removed obsolete record-command preview helper flow and expanded parser/CLI regression coverage.
 
 ## [0.9.927] - 2026-03-26
 
 ### Fixed
 - **ace-support-items v0.15.4**: corrected zero-status summary formatting in `StatsLineFormatter` so empty lists render `Tasks: • 0 total` without dangling spacing.
 - **ace-task v0.31.2**: aligned empty-task list output with the formatter fix and added exact output regression coverage.
+- **ace-demo v0.19.1**: Fixed YAML tape retime routing so CLI `--output` is honored when speed is set in tape settings without a tape output path.
+
+### Changed
+- **ace-demo v0.19.1**: Unified tape-mode precedence handoff by passing parsed YAML spec and resolved context from CLI into `DemoRecorder`.
+
+### Technical
+- **ace-demo v0.19.1**: Added regression tests for YAML speed + CLI output precedence and pre-parsed YAML spec reuse.
 
 ## [0.9.926] - 2026-03-26
 
 ### Fixed
 - **ace-task v0.31.1**: `ace-task list` now shows the stats footer for empty results, including filtered `0 of N` summaries.
+
+### Added
+- **ace-demo v0.19.0**: Added tape-level `settings.playback_speed` and `settings.output` support so `.tape.yml` files can fully define record/retime defaults.
+
+### Changed
+- **ace-demo v0.19.0**: Updated YAML tape recording routing for retime-only output mode (raw default artifact plus exact final output path when both speed and output are set).
+- **ace-demo v0.19.0**: Updated tape-mode override precedence so CLI `--playback-speed` and `--output` win over tape settings.
+
+### Technical
+- **ace-demo v0.19.0**: Added parser tests and expanded recorder/CLI coverage for speed/output combinations and dry-run preview behavior.
 
 ## [0.9.925] - 2026-03-23
 
