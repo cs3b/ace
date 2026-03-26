@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.4] - 2026-03-26
+
+### Added
+- Added `ace-demo-tapeyml-recording-options.tape.yml` demo tape with fixtures showing `playback_speed` and `output` settings in action.
+- Added `fixtures/sample-project/demo.tape.yml` fixture for demo sandbox recording.
+
+### Changed
+- Updated `ace-demo-getting-started.tape.yml` with `playback_speed` and `output` settings example.
+
 ## [0.19.3] - 2026-03-26
 
 ### Fixed
