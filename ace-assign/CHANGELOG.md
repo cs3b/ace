@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-03-26
+
+### Added
+- Added `record-demo` step to the assignment step catalog for recording and attaching terminal demos to PRs.
+- Added composition rules positioning `record-demo` between `push-to-remote` and `update-pr-desc`.
+- Added `record-demo` to the `implement-with-pr` recipe as an optional step.
+
+### Changed
+- Updated `work-on-task` preset with step 145 (`record-demo`) that reads demo scenarios from task specs, validates with dry-run, and records with proper fixture/sandbox patterns.
+
 ## [0.37.0] - 2026-03-23
 
 ### Changed
