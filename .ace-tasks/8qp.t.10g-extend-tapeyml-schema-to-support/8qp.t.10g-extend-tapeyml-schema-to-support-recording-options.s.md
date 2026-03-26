@@ -1,21 +1,16 @@
 ---
 id: 8qp.t.10g
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 00:40:31"
 estimate: TBD
 dependencies: []
 tags: [ace-demo, dx, tape-format]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb
-    - ace-demo/lib/ace/demo/atoms/playback_speed_parser.rb
-    - ace-demo/lib/ace/demo/organisms/demo_recorder.rb
-    - ace-demo/lib/ace/demo/cli/commands/record.rb
-    - ace-demo/lib/ace/demo/molecules/media_retimer.rb
-    - ace-demo/docs/demo/ace-demo-getting-started.tape.yml
+  presets: [project]
+  files: [ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb, ace-demo/lib/ace/demo/atoms/playback_speed_parser.rb, ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/molecules/media_retimer.rb, ace-demo/docs/demo/ace-demo-getting-started.tape.yml, ace-demo/docs/getting-started.md, ace-demo/docs/usage.md]
   commands: []
+needs_review: false
 ---
 
 # Extend tape.yml Schema to Support Recording Options
@@ -76,7 +71,7 @@ ace-demo record tape.tape.yml --playback-speed 2x --output other.gif
 
 Error Handling:
 - Invalid `playback_speed` value (e.g., `3x`) → `DemoYamlParseError` with message listing valid values
-- Invalid `output` value (non-string) → `DemoYamlParseError`
+- Non-string `output` YAML scalars are coerced with `to_s` (matching current permissive parser behavior for string-like settings)
 
 Edge Cases:
 - `output` with relative path → resolved from cwd (consistent with `--output`)
@@ -92,7 +87,9 @@ Edge Cases:
 4. CLI flags override tape.yml values for both `playback_speed` and `output`
 5. Existing tapes without new keys continue working with zero behavioral change
 6. Parser rejects invalid `playback_speed` values with clear error message
-7. Dry-run mode correctly previews tape-sourced settings
+7. `settings.output` accepts YAML scalars via string coercion while preserving CLI-equivalent path semantics
+8. Dry-run mode correctly previews tape-sourced settings
+9. User-facing docs describe the new tape.yml settings and override precedence
 
 ### Validation Questions
 
@@ -138,12 +135,14 @@ Edge Cases:
 - `cd ace-demo && ace-test atoms` → parser tests pass
 - `cd ace-demo && ace-test` → full suite passes
 - `ace-test-suite` → monorepo green
+- Review updated examples in `ace-demo/docs/getting-started.md` and `ace-demo/docs/usage.md` for tape-defined `playback_speed`/`output` and CLI override precedence
 
 ## Scope of Work
 
 - **User experience scope**: `ace-demo record` tape-based recording mode only (not inline mode)
 - **System behavior scope**: YAML parsing, recording orchestration, retime-output routing
 - **Interface scope**: tape.yml schema (new settings keys), CLI override precedence
+- **Docs scope**: usage and getting-started docs for the tape.yml settings contract
 
 ## Deliverables
 
@@ -156,6 +155,7 @@ Edge Cases:
 - Unit tests for parser extension
 - Integration tests for retime-only output routing
 - CLI override precedence tests
+- Updated `ace-demo` docs showing tape-defined settings and CLI override behavior
 
 ## Out of Scope
 
