@@ -6,6 +6,26 @@ require_relative "../test_helper"
 class AssignmentLauncherTest < AceOverseerTestCase
   FakeAssignment = Struct.new(:id)
   FakeStep = Struct.new(:number, :name)
+  FakeSubtask = Struct.new(:id, :status)
+
+  class FakeTask
+    attr_reader :status, :subtasks
+
+    def initialize(status: nil, subtasks: [])
+      @status = status
+      @subtasks = subtasks
+    end
+  end
+
+  class FakeTaskManager
+    def initialize(tasks)
+      @tasks = tasks
+    end
+
+    def show(ref)
+      @tasks[ref]
+    end
+  end
 
   class FakeExecutor
     attr_reader :start_calls
@@ -25,7 +45,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_builds_job_and_starts_assignment
     Dir.mktmpdir("overseer-worktree") do |worktree|
-      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
         File.join(preset_dir, "work-on-task.yml"),
@@ -36,14 +56,20 @@ class AssignmentLauncherTest < AceOverseerTestCase
           "steps" => [
             {
               "name" => "work-on-task",
-              "instructions" => ["Work on task {{taskref}}."]
+              "instructions" => ["Work on task {{taskref}}."],
+              "sub_steps" => ["work-on-task", "pre-commit-review", "release-minor", "create-retro"]
             }
           ]
         }.to_yaml
       )
 
       fake_executor = FakeExecutor.new
-      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(
+        assignment_executor: fake_executor,
+        task_manager: FakeTaskManager.new(
+          "235.03" => FakeTask.new(status: "pending")
+        )
+      )
       result = launcher.launch(worktree_path: worktree, preset_name: "work-on-task", task_ref: "235.03")
 
       assert_equal "abc123", result[:assignment_id]
@@ -51,12 +77,15 @@ class AssignmentLauncherTest < AceOverseerTestCase
       assert File.exist?(result[:job_path])
       assert_equal 1, fake_executor.start_calls.length
       assert_includes File.read(result[:job_path]), "Work on task 235.03"
+      assert_includes File.read(result[:job_path]), "pre-commit-review"
+      assert_includes File.read(result[:job_path]), "release-minor"
+      assert_includes File.read(result[:job_path]), "create-retro"
     end
   end
 
   def test_launch_expands_subtask_refs_into_taskrefs_parameter
     Dir.mktmpdir("overseer-worktree") do |worktree|
-      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
         File.join(preset_dir, "work-on-task.yml"),
@@ -82,7 +111,19 @@ class AssignmentLauncherTest < AceOverseerTestCase
       )
 
       fake_executor = FakeExecutor.new
-      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(
+        assignment_executor: fake_executor,
+        task_manager: FakeTaskManager.new(
+          "272" => FakeTask.new(status: "pending", subtasks: [
+            FakeSubtask.new("272.01", "pending"),
+            FakeSubtask.new("272.02", "pending"),
+            FakeSubtask.new("272.03", "pending")
+          ]),
+          "272.01" => FakeTask.new(status: "pending"),
+          "272.02" => FakeTask.new(status: "pending"),
+          "272.03" => FakeTask.new(status: "pending")
+        )
+      )
       result = launcher.launch(
         worktree_path: worktree,
         preset_name: "work-on-task",
@@ -100,7 +141,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_falls_back_to_task_ref_when_no_subtask_refs
     Dir.mktmpdir("overseer-worktree") do |worktree|
-      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
         File.join(preset_dir, "work-on-task.yml"),
@@ -126,7 +167,12 @@ class AssignmentLauncherTest < AceOverseerTestCase
       )
 
       fake_executor = FakeExecutor.new
-      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(
+        assignment_executor: fake_executor,
+        task_manager: FakeTaskManager.new(
+          "150" => FakeTask.new(status: "pending")
+        )
+      )
       result = launcher.launch(
         worktree_path: worktree,
         preset_name: "work-on-task",
@@ -141,7 +187,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_uses_explicit_taskrefs_when_provided
     Dir.mktmpdir("overseer-worktree") do |worktree|
-      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
         File.join(preset_dir, "work-on-task.yml"),
@@ -167,7 +213,16 @@ class AssignmentLauncherTest < AceOverseerTestCase
       )
 
       fake_executor = FakeExecutor.new
-      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(
+        assignment_executor: fake_executor,
+        task_manager: FakeTaskManager.new(
+          "288" => FakeTask.new(status: "pending"),
+          "288.01" => FakeTask.new(status: "pending"),
+          "288.02" => FakeTask.new(status: "pending"),
+          "287.01" => FakeTask.new(status: "pending"),
+          "300" => FakeTask.new(status: "pending")
+        )
+      )
       result = launcher.launch(
         worktree_path: worktree,
         preset_name: "work-on-task",
@@ -205,7 +260,12 @@ class AssignmentLauncherTest < AceOverseerTestCase
       )
 
       fake_executor = FakeExecutor.new
-      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(
+        assignment_executor: fake_executor,
+        task_manager: FakeTaskManager.new(
+          "235.03" => FakeTask.new(status: "pending")
+        )
+      )
       result = launcher.launch(worktree_path: worktree, preset_name: "work-on-task", task_ref: "235.03")
 
       assert_equal "abc123", result[:assignment_id]

@@ -29,6 +29,8 @@ Options:
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
 
+Internally, `work-on` now routes assignment creation through `ace-assign create --task ...`, so direct `ace-assign` and `ace-overseer` task flows use the same preset expansion behavior.
+
 ## `ace-overseer status`
 
 Show status for active task worktrees.

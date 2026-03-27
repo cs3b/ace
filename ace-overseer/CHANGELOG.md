@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-27
+
+### Changed
+- Routed `ace-overseer work-on` assignment launch through the shared `ace-assign create --task ...` creation path while preserving the existing CLI and pre-side-effect validation behavior.
+- Updated package docs to describe the shared task-driven assignment creation flow with `ace-assign`.
+
+### Technical
+- Added launcher and orchestrator coverage for the shared creator path and explicit task fixture resolution.
+
 ## [0.12.1] - 2026-03-26
 
 ### Fixed
