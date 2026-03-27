@@ -4,6 +4,80 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.942] - 2026-03-27
+
+### Fixed
+- **ace-demo v0.22.4**: Corrected default `agg_font_family` to match spike-validated font available in the environment.
+
+### Changed
+- **ace-assign v0.38.3**: Updated `record-demo` step to require diagnosis before skipping on failure — agents must check config, fonts, and spike findings before reporting a non-blocking skip.
+
+## [0.9.941] - 2026-03-27
+
+### Fixed
+- **ace-demo v0.22.3**: Validated asciinema tape `sleep` durations before script compilation to prevent malformed or injected shell sleep values.
+
+### Changed
+- **ace-demo v0.22.3**: Added `agg_font_family` configuration plumbing across YAML parsing, recording-time AGG conversion, and cast attachment conversion.
+
+### Technical
+- **ace-demo v0.22.3**: Expanded atom/organism regression coverage for sleep validation and AGG font-family passthrough paths.
+
+## [0.9.940] - 2026-03-27
+
+### Fixed
+- **ace-demo v0.22.2**: Cleaned up temporary GIF artifacts generated during `.cast` attachment conversion so attach flows do not leave orphan files.
+
+### Changed
+- **ace-demo v0.22.2**: Centralized recording backend/format validation in a shared validator reused by YAML planner, recorder, and CLI entrypoints.
+
+### Technical
+- **ace-demo v0.22.2**: Added validator atom coverage and updated attacher tests for temporary conversion artifact lifecycle handling.
+
+## [0.9.939] - 2026-03-27
+
+### Fixed
+- **ace-demo v0.22.1**: Escaped asciinema `--command` script paths, validated command-mode cast recordings from header-linked scripts, skipped cast-to-GIF conversion during dry-run attach, and reported configured binary names in executor not-found errors.
+
+### Changed
+- **ace-demo v0.22.1**: Simplified YAML backend/format guard logic and updated dry-run upload planning to support planned artifact paths without generated files.
+
+### Technical
+- **ace-demo v0.22.1**: Added regression coverage for shell-escaped command assembly, command-mode cast verification, dry-run cast attachment behavior, uploader dry-run planning, and custom binary error messaging.
+
+## [0.9.938] - 2026-03-27
+
+### Added
+- **ace-demo v0.22.0**: Added cast verification primitives (`CastFileParser`, `CastVerifier`, and cast/verification models) plus `.cast` attachment support that converts to GIF before PR upload/comment.
+
+### Changed
+- **ace-demo v0.22.0**: Integrated non-blocking command-presence verification into asciinema recording output and updated attach/record CLI messaging for cast-aware behavior.
+
+### Technical
+- **ace-demo v0.22.0**: Expanded parser/verifier/recorder/attacher test coverage across atoms, molecules, organisms, and models.
+
+## [0.9.937] - 2026-03-27
+
+### Added
+- **ace-demo v0.21.0**: Added backend selection for `ace-demo record` via `--backend` and YAML `settings.backend`, plus structured recording result metadata.
+
+### Changed
+- **ace-demo v0.21.0**: Made asciinema the default YAML recording backend and enforced backend/format compatibility rules with actionable CLI guidance.
+
+### Technical
+- **ace-demo v0.21.0**: Expanded parser/recorder/CLI regression coverage for backend dispatch, format guardrails, and structured recording outputs.
+
+## [0.9.936] - 2026-03-27
+
+### Added
+- **ace-demo v0.20.0**: Added asciinema-native recording support and AGG post-processing pipeline components for multi-backend demo generation.
+
+### Changed
+- **ace-demo v0.20.0**: Updated recording orchestration and defaults to support asciinema adapter flows in task-driven demo workflows.
+
+### Technical
+- **ace-demo v0.20.0**: Expanded atom/molecule/pipeline/smoke test coverage for asciinema+AGG execution paths.
+
 ## [0.9.935] - 2026-03-26
 
 ### Added
