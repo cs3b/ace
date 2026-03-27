@@ -507,6 +507,211 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_add_batch_inserts_flat_steps_sequentially
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      result = executor.add_batch(
+        steps: [
+          {"name" => "review-security", "instructions" => "Review auth"},
+          {"name" => "review-performance", "instructions" => "Profile API"}
+        ],
+        after: "010",
+        source_file: "/tmp/batch-steps.yml"
+      )
+
+      added_numbers = result[:added].map(&:number)
+      assert_equal %w[011 012], added_numbers
+      assert_equal "batch_from:batch-steps.yml", result[:added][0].added_by
+      assert_equal "batch_from:batch-steps.yml", result[:added][1].added_by
+    end
+  end
+
+  def test_add_batch_prevalidates_all_steps_before_mutation
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      before_state = executor.status[:state]
+      before_numbers = before_state.all_numbers
+
+      error = assert_raises(Ace::Assign::Error) do
+        executor.add_batch(
+          steps: [
+            {"name" => "review-security", "instructions" => "Review auth"},
+            {"name" => "   ", "instructions" => "Invalid name"}
+          ],
+          after: "010",
+          source_file: "/tmp/invalid-batch.yml"
+        )
+      end
+
+      assert_includes error.message, "Step name is required at steps[1]"
+
+      after_state = executor.status[:state]
+      assert_equal before_numbers, after_state.all_numbers
+      refute after_state.steps.any? { |step| step.name == "review-security" }
+    end
+  end
+
+  def test_add_batch_with_sub_steps_expands_parent_and_children
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      result = executor.add_batch(
+        steps: [
+          {
+            "name" => "work-on-t.xyz",
+            "context" => "fork",
+            "workflow" => "wfi://task/work",
+            "instructions" => "Implement task t.xyz",
+            "sub_steps" => [
+              "onboard",
+              {"name" => "plan-task", "instructions" => "Plan task", "context" => "fork"}
+            ]
+          }
+        ],
+        after: "010",
+        source_file: "/tmp/add-task-xyz.yml"
+      )
+
+      numbers = result[:state].all_numbers
+      assert_includes numbers, "011"
+      assert_includes numbers, "011.01"
+      assert_includes numbers, "011.02"
+
+      parent = result[:state].find_by_number("011")
+      child_1 = result[:state].find_by_number("011.01")
+      child_2 = result[:state].find_by_number("011.02")
+
+      assert_equal "work-on-t.xyz", parent.name
+      assert_equal "onboard", child_1.name
+      assert_equal "plan-task", child_2.name
+
+      parent_content = File.read(parent.file_path)
+      child_1_content = File.read(child_1.file_path)
+      child_content = File.read(child_2.file_path)
+      assert_includes parent_content, "context: fork"
+      assert_includes parent_content, "split_step_type: split-subtree-root"
+      assert_includes parent_content, "Subtree root orchestrator step."
+      assert_includes parent_content, "added_by: batch_from:add-task-xyz.yml"
+      assert_includes child_1_content, "source_skill: as-onboard"
+      assert_includes child_1_content, "source_workflow: wfi://onboard"
+      assert_includes child_content, "context: fork"
+      assert_includes child_content, "source_skill: as-task-plan"
+      assert_includes child_content, "source_workflow: wfi://task/plan"
+      assert_includes child_content, "added_by: batch_from:add-task-xyz.yml"
+    end
+  end
+
+  def test_add_batch_workflow_only_uses_canonical_assign_sub_steps
+    with_temp_cache do |cache_dir|
+      project_root = File.expand_path("../../..", __dir__)
+      config_path = create_test_config(cache_dir)
+
+      with_real_config do
+        Dir.chdir(project_root) do
+          original_project_root = ENV["PROJECT_ROOT_PATH"]
+          original_home = ENV["HOME"]
+          Dir.mktmpdir("ace-assign-home") do |temp_home|
+            ENV["PROJECT_ROOT_PATH"] = project_root
+            ENV["HOME"] = temp_home
+            Ace::Assign.reset_config!
+
+            executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+            executor.start(config_path)
+
+            result = executor.add_batch(
+              steps: [
+                {
+                  "name" => "work-on-t.xyz",
+                  "context" => "fork",
+                  "workflow" => "wfi://task/work",
+                  "instructions" => "Implement task t.xyz"
+                }
+              ],
+              after: "010",
+              source_file: "/tmp/add-task-xyz.yml"
+            )
+
+            expected_child_names = %w[
+              onboard-base
+              task-load
+              plan-task
+              work-on-task
+              pre-commit-review
+              verify-test
+              release-minor
+              create-retro
+            ]
+
+            expected_child_names.each_with_index do |name, index|
+              number = format("011.%02d", index + 1)
+              step = result[:state].find_by_number(number)
+              refute_nil step, "Expected child step #{number}"
+              assert_equal name, step.name
+            end
+
+            work_step = result[:state].find_by_number("011.04")
+            refute_nil work_step
+            assert_includes File.read(work_step.file_path), "source_skill: as-task-work"
+            assert_includes File.read(work_step.file_path), "source_workflow: wfi://task/work"
+          end
+        ensure
+          if original_home.nil?
+            ENV.delete("HOME")
+          else
+            ENV["HOME"] = original_home
+          end
+          if original_project_root.nil?
+            ENV.delete("PROJECT_ROOT_PATH")
+          else
+            ENV["PROJECT_ROOT_PATH"] = original_project_root
+          end
+          Ace::Assign.reset_config!
+        end
+      end
+    end
+  end
+
+  def test_add_batch_as_child_rebalances_active_parent
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "parent-job", "instructions" => "Parent work"},
+        {"name" => "final-step", "instructions" => "Final work"}
+      ])
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assert_equal "010", result[:current].number
+
+      result = executor.add_batch(
+        steps: [
+          {"name" => "child-a", "instructions" => "A"},
+          {"name" => "child-b", "instructions" => "B"}
+        ],
+        after: "010",
+        as_child: true,
+        source_file: "/tmp/children.yml"
+      )
+
+      assert_equal "010.01", result[:state].current.number
+      assert_equal :pending, result[:state].find_by_number("010").status
+      assert_equal :in_progress, result[:state].find_by_number("010.01").status
+      assert_equal :pending, result[:state].find_by_number("010.02").status
+      assert_equal "batch_from:children.yml", result[:state].find_by_number("010.01").added_by
+      assert_equal "batch_from:children.yml", result[:state].find_by_number("010.02").added_by
+    end
+  end
+
   def test_hierarchical_display
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)

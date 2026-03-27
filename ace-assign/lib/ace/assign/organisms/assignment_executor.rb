@@ -11,6 +11,8 @@ module Ace
       # Implements the state machine for queue operations:
       # start → advance → complete (with fail/add/retry branches)
       class AssignmentExecutor
+        DEFAULT_DYNAMIC_STEP_INSTRUCTIONS = "Complete this step and finish with: ace-assign finish --message report.md".freeze
+
         attr_reader :assignment_manager, :queue_scanner, :step_writer, :step_renumberer, :skill_source_resolver
 
         def initialize(cache_base: nil)
@@ -288,9 +290,12 @@ module Ace
         # @param after [String, nil] Insert after this step number (optional)
         # @param as_child [Boolean] Insert as child of 'after' step (default: false, sibling)
         # @return [Hash] Result with new step
-        def add(name, instructions, after: nil, as_child: false)
+        def add(name, instructions, after: nil, as_child: false, added_by: nil, extra: {})
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+
+          step_name = name.to_s.strip
+          raise Error, "Step name cannot be empty." if step_name.empty?
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
@@ -318,7 +323,7 @@ module Ace
           initial_status = state.current ? :pending : :in_progress
 
           # Build added_by metadata for audit trail
-          added_by = if after && as_child
+          added_by ||= if after && as_child
             "child_of:#{after}"
           elsif after
             "injected_after:#{after}"
@@ -326,15 +331,18 @@ module Ace
             "dynamic"
           end
 
+          extra_frontmatter = normalize_batch_extra_fields(extra)
+
           # Create new step file with correct status
           step_writer.create(
             steps_dir: assignment.steps_dir,
             number: new_number,
-            name: name,
+            name: step_name,
             instructions: instructions,
             status: initial_status,
             added_by: added_by,
-            parent: as_child ? after : nil
+            parent: as_child ? after : nil,
+            extra: extra_frontmatter
           )
 
           rebalance_after_child_injection(assignment: assignment, state: state, parent_number: after) if as_child && after
@@ -351,6 +359,57 @@ module Ace
             state: new_state,
             added: new_step,
             renumbered: renumbered
+          }
+        end
+
+        # Add multiple steps dynamically from a pre-parsed steps array.
+        #
+        # @param steps [Array<Hash>] Step definitions loaded from YAML
+        # @param after [String, nil] Insert after this step number
+        # @param as_child [Boolean] Insert as children of +after+
+        # @param source_file [String, nil] Source YAML path (for added_by audit metadata)
+        # @note Structural validation is performed for the full batch before any writes.
+        #   Runtime I/O failures can still interrupt insertion after partial writes.
+        # @return [Hash] Result with added steps and final state
+        def add_batch(steps:, after: nil, as_child: false, source_file: nil)
+          unless steps.is_a?(Array) && steps.any?
+            source_label = source_file.to_s.strip.empty? ? "batch input" : source_file
+            raise Error, "No steps defined in #{source_label}"
+          end
+
+          if as_child && (after.nil? || after.to_s.strip.empty?)
+            raise Error, "Child insertion requires an after step reference."
+          end
+
+          source_label = source_file.to_s.strip.empty? ? "batch" : File.basename(source_file.to_s)
+          batch_added_by = "batch_from:#{source_label}"
+
+          prevalidate_batch_trees!(steps)
+
+          added_steps = []
+          renumbered = []
+          sibling_cursor = after
+
+          steps.each_with_index do |step_config, index|
+            inserted = insert_batch_step_tree(
+              step_config,
+              after: as_child ? after : sibling_cursor,
+              as_child: as_child,
+              added_by: batch_added_by,
+              location: "steps[#{index}]"
+            )
+            added_steps.concat(inserted[:added])
+            renumbered.concat(inserted[:renumbered])
+            sibling_cursor = inserted[:root_number] unless as_child
+          end
+
+          assignment = assignment_manager.find_active
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          {
+            assignment: assignment,
+            state: state,
+            added: added_steps,
+            renumbered: renumbered.uniq
           }
         end
 
@@ -1119,6 +1178,267 @@ module Ace
           instructions.is_a?(Array) ? instructions.join("\n") : instructions.to_s
         end
 
+        def insert_batch_step_tree(step_config, after:, as_child:, added_by:, location:)
+          normalized = normalize_batch_step_hash(step_config, location: location)
+
+          if canonical_batch_insert_requested?(normalized)
+            canonical_inserted = insert_canonical_batch_step_tree(
+              normalized,
+              after: after,
+              as_child: as_child,
+              added_by: added_by,
+              location: location
+            )
+            return canonical_inserted if canonical_inserted
+          end
+
+          prepared = materialize_batch_step_config(normalized)
+          instructions = normalize_instructions(prepared["instructions"])
+
+          result = add(
+            prepared["name"],
+            instructions,
+            after: after,
+            as_child: as_child,
+            added_by: added_by,
+            extra: prepared
+          )
+
+          root_step = result[:added]
+          added_steps = [root_step]
+          renumbered = Array(result[:renumbered])
+
+          normalize_batch_sub_steps(prepared, location: location).each_with_index do |child_config, index|
+            child_inserted = insert_batch_step_tree(
+              child_config,
+              after: root_step.number,
+              as_child: true,
+              added_by: added_by,
+              location: "#{location}.sub_steps[#{index}]"
+            )
+            added_steps.concat(child_inserted[:added])
+            renumbered.concat(child_inserted[:renumbered])
+          end
+
+          {added: added_steps, renumbered: renumbered, root_number: root_step.number}
+        end
+
+        def canonical_batch_insert_requested?(step_config)
+          raw_sub_steps = step_config["sub_steps"] || step_config["sub-steps"]
+          has_declared_sub_steps = raw_sub_steps.is_a?(Array) && raw_sub_steps.any?
+          has_workflow = !step_config["workflow"].to_s.strip.empty?
+          has_skill = !step_config["skill"].to_s.strip.empty?
+
+          has_declared_sub_steps || has_workflow || has_skill
+        end
+
+        def insert_canonical_batch_step_tree(step_config, after:, as_child:, added_by:, location:)
+          materialized_tree = materialize_canonical_batch_tree(step_config, location: location)
+          return nil if materialized_tree.nil? || materialized_tree.empty?
+
+          root_template = materialized_tree.find { |step| step["parent"].nil? } || materialized_tree.first
+          root_instructions = normalize_instructions(root_template["instructions"])
+          root_instructions = default_dynamic_step_instructions if root_instructions.strip.empty?
+
+          root_result = add(
+            root_template["name"],
+            root_instructions,
+            after: after,
+            as_child: as_child,
+            added_by: added_by,
+            extra: root_template
+          )
+
+          root_step = root_result[:added]
+          added_steps = [root_step]
+          renumbered = Array(root_result[:renumbered])
+
+          root_number = root_template["number"]
+          children = materialized_tree
+            .select { |step| step["parent"] == root_number }
+            .sort_by { |step| step["number"].to_s }
+
+          children.each do |child_template|
+            child_instructions = normalize_instructions(child_template["instructions"])
+            child_instructions = default_dynamic_step_instructions if child_instructions.strip.empty?
+            child_result = add(
+              child_template["name"],
+              child_instructions,
+              after: root_step.number,
+              as_child: true,
+              added_by: added_by,
+              extra: child_template
+            )
+
+            added_steps << child_result[:added]
+            renumbered.concat(Array(child_result[:renumbered]))
+          end
+
+          {added: added_steps, renumbered: renumbered, root_number: root_step.number}
+        end
+
+        def materialize_canonical_batch_tree(step_config, location:)
+          canonical_input, child_overrides = prepare_canonical_batch_input(step_config, location: location)
+          return nil unless canonical_input
+
+          expanded = expand_sub_steps([canonical_input])
+          expanded = apply_canonical_child_overrides(expanded, child_overrides)
+          materialize_skill_backed_steps(expanded)
+        end
+
+        def prepare_canonical_batch_input(step_config, location:)
+          enriched = enrich_declared_sub_steps([step_config]).first
+          raw_sub_steps = enriched["sub_steps"] || enriched["sub-steps"]
+          descriptors = parse_canonical_sub_step_descriptors(raw_sub_steps, location: "#{location}.sub_steps")
+          return [nil, {}] if descriptors.nil?
+
+          names = descriptors[:names]
+          overrides = descriptors[:overrides]
+          canonical = enriched.dup
+          if names
+            canonical["sub_steps"] = names
+            canonical.delete("sub-steps")
+          end
+
+          [canonical, overrides]
+        end
+
+        def parse_canonical_sub_step_descriptors(raw_sub_steps, location:)
+          return {names: nil, overrides: {}} if raw_sub_steps.nil?
+          return nil unless raw_sub_steps.is_a?(Array)
+
+          names = []
+          overrides = {}
+
+          raw_sub_steps.each_with_index do |entry, index|
+            case entry
+            when String
+              name = entry.to_s.strip
+              raise Error, "sub_steps entry at #{location}[#{index}] cannot be empty" if name.empty?
+
+              names << name
+            when Hash
+              normalized = normalize_batch_step_hash(entry, location: "#{location}[#{index}]")
+              return nil if normalized.key?("sub_steps") || normalized.key?("sub-steps")
+
+              names << normalized["name"]
+              overrides[index] = normalized
+            else
+              return nil
+            end
+          end
+
+          {names: names, overrides: overrides}
+        end
+
+        def apply_canonical_child_overrides(expanded_steps, overrides)
+          return expanded_steps if overrides.empty?
+
+          root = expanded_steps.find { |step| step["parent"].nil? } || expanded_steps.first
+          root_number = root["number"]
+          children = expanded_steps
+            .select { |step| step["parent"] == root_number }
+            .sort_by { |step| step["number"].to_s }
+
+          merged_children = children.each_with_index.map do |child, index|
+            override = overrides[index]
+            next child unless override
+
+            child.merge(override).merge(
+              "number" => child["number"],
+              "parent" => child["parent"]
+            )
+          end
+
+          [root] + merged_children
+        end
+
+        def materialize_batch_step_config(step_config)
+          prepared = materialize_skill_backed_step(step_config)
+          instructions = normalize_instructions(prepared["instructions"])
+          prepared["instructions"] = default_dynamic_step_instructions if instructions.strip.empty?
+          prepared
+        end
+
+        def prevalidate_batch_trees!(steps)
+          steps.each_with_index do |step_config, index|
+            prevalidate_batch_step_tree(step_config, location: "steps[#{index}]")
+          end
+        end
+
+        def prevalidate_batch_step_tree(step_config, location:)
+          normalized = normalize_batch_step_hash(step_config, location: location)
+
+          if canonical_batch_insert_requested?(normalized)
+            materialized_tree = materialize_canonical_batch_tree(normalized, location: location)
+            return if materialized_tree
+          end
+
+          prepared = materialize_batch_step_config(normalized)
+          normalize_batch_sub_steps(prepared, location: location).each_with_index do |child_config, index|
+            prevalidate_batch_step_tree(child_config, location: "#{location}.sub_steps[#{index}]")
+          end
+        end
+
+        def normalize_batch_step_hash(step_config, location:)
+          unless step_config.is_a?(Hash)
+            raise Error, "Invalid step definition at #{location}: expected mapping"
+          end
+
+          normalized = step_config.each_with_object({}) do |(key, value), memo|
+            memo[key.to_s] = value
+          end
+
+          name = normalized["name"].to_s.strip
+          raise Error, "Step name is required at #{location}" if name.empty?
+
+          normalized["name"] = name
+          normalized
+        end
+
+        def normalize_batch_sub_steps(step_config, location:)
+          raw = step_config["sub_steps"] || step_config["sub-steps"]
+          return [] unless raw
+
+          unless raw.is_a?(Array)
+            raise Error, "sub_steps must be an array at #{location}"
+          end
+
+          raw.each_with_index.map do |entry, index|
+            case entry
+            when String
+              name = entry.to_s.strip
+              raise Error, "sub_steps entry at #{location}[#{index}] cannot be empty" if name.empty?
+
+              {
+                "name" => name,
+                "instructions" => "Execute #{name} step."
+              }
+            when Hash
+              normalized = normalize_batch_step_hash(entry, location: "#{location}[#{index}]")
+              materialize_batch_step_config(normalized)
+            else
+              raise Error, "Invalid sub_steps entry at #{location}[#{index}]: expected string or mapping"
+            end
+          end
+        end
+
+        def normalize_batch_extra_fields(step_config)
+          return {} unless step_config.is_a?(Hash)
+          return {} if step_config.empty?
+
+          reserved_keys = %w[name instructions number status parent added_by sub_steps sub-steps]
+          step_config.each_with_object({}) do |(key, value), memo|
+            key_str = key.to_s
+            next if reserved_keys.include?(key_str)
+            memo[key_str] = value
+          end
+        end
+
+        def default_dynamic_step_instructions
+          DEFAULT_DYNAMIC_STEP_INSTRUCTIONS
+        end
+
         def find_target_step_for_start(state, step_number, fork_root)
           target = state.find_by_number(step_number)
           raise StepErrors::NotFound, "Step #{step_number} not found in queue" unless target
@@ -1264,7 +1584,11 @@ module Ace
           if after
             if as_child
               # Insert as first child of 'after'
-              new_number = Atoms::StepNumbering.next_child(after, existing_numbers)
+              begin
+                new_number = Atoms::StepNumbering.next_child(after, existing_numbers)
+              rescue ArgumentError => e
+                raise Error, e.message
+              end
               [new_number, []]
             else
               # Insert as sibling after 'after'

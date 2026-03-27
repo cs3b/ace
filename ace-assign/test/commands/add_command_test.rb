@@ -3,131 +3,197 @@
 require_relative "../test_helper"
 
 class AddCommandTest < AceAssignTestCase
-  def test_add_creates_step
+  def test_add_with_yaml_inserts_steps
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
+      steps_path = File.join(cache_dir, "batch-steps.yml")
+      File.write(steps_path, {
+        "steps" => [
+          {"name" => "review-security", "instructions" => "Review auth changes"},
+          {"name" => "review-performance", "instructions" => "Profile endpoints"}
+        ]
+      }.to_yaml)
 
       Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-      executor.start(config_path)
-
-      result = nil
       output = capture_io do
-        result = Ace::Assign::CLI::Commands::Add.new.call(
-          name: "fix-bug",
-          instructions: "Fix the bug"
-        )
+        Ace::Assign::CLI::Commands::Add.new.call(yaml: steps_path, after: "010")
       end
-      assert_nil result  # Verify success returns nil
-      assert_includes output.first, "Created: steps/"
-      assert_includes output.first, "fix-bug"
+
+      assert_includes output.first, "Added 2 step(s) from batch-steps.yml"
+      assert_includes output.first, "011: review-security"
+      assert_includes output.first, "012: review-performance"
 
       Ace::Assign.reset_config!
     end
   end
 
-  def test_add_without_assignment
+  def test_add_requires_exactly_one_mode
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Add.new.call
+    end
+
+    assert_includes error.message, "Exactly one of --yaml, --step, or --task is required"
+  end
+
+  def test_add_rejects_multiple_modes
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Add.new.call(step: "review-fit", task: "t.123")
+    end
+
+    assert_includes error.message, "mutually exclusive"
+  end
+
+  def test_add_rejects_preset_without_step_or_task
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Add.new.call(yaml: "steps.yml", preset: "work-on-task")
+    end
+
+    assert_includes error.message, "--preset requires --step or --task"
+  end
+
+  def test_add_step_mode_uses_base_name_matching_and_auto_iteration
     with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "seed", "instructions" => "Seed"},
+        {"name" => "review-fit-1", "instructions" => "Existing cycle"}
+      ])
+
       Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Add.new.call(step: "review-fit", preset: "work-on-task", after: "010")
+      end
+
+      assert_includes output.first, "Added review-fit-2"
+      state = executor.status[:state]
+      assert state.steps.any? { |step| step.name == "review-fit-2" }
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_add_task_mode_auto_detects_batch_parent
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "batch-tasks", "instructions" => "Batch container"},
+        {"name" => "finalize", "instructions" => "Finalize"}
+      ])
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Add.new.call(task: "t.456", preset: "work-on-task")
+      end
+
+      assert_includes output.first, "Added task t.456 under 010"
+      state = executor.status[:state]
+      assert state.steps.any? { |step| step.name == "work-on-t.456" }
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_add_task_mode_errors_when_batch_parent_not_found
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Add.new.call(name: "fix-bug")
+        Ace::Assign::CLI::Commands::Add.new.call(task: "t.456", preset: "work-on-task")
       end
 
-      assert_equal 2, error.exit_code
-      assert_includes error.message, "No active assignment"
-
+      assert_includes error.message, "No batch parent found"
       Ace::Assign.reset_config!
     end
   end
 
-  def test_add_with_after_option
+  def test_add_step_mode_refreshes_existing_names_between_preset_insertions
+    project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+    preset_dir = File.join(project_root, ".ace", "assign", "presets")
+    preset_path = File.join(preset_dir, "test-iter-collision.yml")
+    FileUtils.mkdir_p(preset_dir)
+    File.write(preset_path, {
+      "name" => "test-iter-collision",
+      "steps" => [
+        {
+          "name" => "review-fit-1",
+          "instructions" => "First review",
+          "sub_steps" => [
+            {"name" => "review-fit-2", "instructions" => "Expanded child"}
+          ]
+        },
+        {"name" => "review-fit-1", "instructions" => "Second review"}
+      ]
+    }.to_yaml)
+
     with_temp_cache do |cache_dir|
-      config_path = create_test_config(cache_dir)
+      config_path = create_test_config(cache_dir, steps: [{"name" => "seed", "instructions" => "Seed"}])
 
       Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
 
+      capture_io do
+        Ace::Assign::CLI::Commands::Add.new.call(step: "review-fit,review-fit", preset: "test-iter-collision", after: "010")
+      end
+
+      state = executor.status[:state]
+      top_level_names = state.top_level.map(&:name)
+      assert_includes top_level_names, "review-fit-1"
+      assert_includes top_level_names, "review-fit-3"
+      assert state.steps.any? { |step| step.name == "review-fit-2" && step.number.start_with?("011.") }
+
+      Ace::Assign.reset_config!
+    end
+  ensure
+    FileUtils.rm_f(preset_path)
+  end
+
+  def test_add_task_mode_warns_for_unexpanded_tokens_in_debug_mode
+    project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+    preset_dir = File.join(project_root, ".ace", "assign", "presets")
+    preset_path = File.join(preset_dir, "test-task-tokens.yml")
+    FileUtils.mkdir_p(preset_dir)
+    File.write(preset_path, {
+      "name" => "test-task-tokens",
+      "expansion" => {
+        "child-template" => {
+          "name" => "work-on-{{item}}",
+          "instructions" => "Implement {{item}} from {{task_id}}"
+        }
+      }
+    }.to_yaml)
+
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "batch-tasks", "instructions" => "Batch container"},
+        {"name" => "finalize", "instructions" => "Finalize"}
+      ])
+
+      Ace::Assign.config["cache_dir"] = cache_dir
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(
-          name: "verify",
-          instructions: "Verify initialization",
-          after: "010"
-        )
+        Ace::Assign::CLI::Commands::Add.new.call(task: "t.789", preset: "test-task-tokens", debug: true)
       end
 
-      assert_includes output.first, "Created: steps/"
-      assert_includes output.first, "011-verify"
-      assert_includes output.first, "sibling after 010"
+      assert_includes output.last, "Unexpanded preset template token(s): {{task_id}}"
+      inserted = executor.status[:state].steps.find { |step| step.name == "work-on-t.789" }
+      assert inserted
+      assert_includes inserted.instructions, "{{task_id}}"
 
       Ace::Assign.reset_config!
     end
-  end
-
-  def test_add_with_child_option
-    with_temp_cache do |cache_dir|
-      config_path = create_test_config(cache_dir)
-
-      Ace::Assign.config["cache_dir"] = cache_dir
-
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-      executor.start(config_path)
-
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(
-          name: "verify",
-          instructions: "Verify initialization",
-          after: "010",
-          child: true
-        )
-      end
-
-      assert_includes output.first, "Created: steps/"
-      assert_includes output.first, "010.01-verify"
-      assert_includes output.first, "child of 010"
-
-      Ace::Assign.reset_config!
-    end
-  end
-
-  def test_add_with_assignment_flag
-    with_temp_cache do |cache_dir|
-      Ace::Assign.config["cache_dir"] = cache_dir
-
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-
-      config1 = create_test_config(cache_dir, name: "first-task")
-      result1 = executor.start(config1)
-
-      config2 = create_test_config(cache_dir, name: "second-task")
-      result2 = executor.start(config2)
-      target_id = result2[:assignment].id
-
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(
-          name: "hotfix",
-          instructions: "Apply hotfix",
-          assignment: "#{target_id}@010"
-        )
-      end
-
-      assert_includes output.first, "Created: steps/"
-      assert_includes output.first, "hotfix"
-
-      # Verify the step was added to the targeted assignment, not the first one
-      target_steps_dir = result2[:assignment].steps_dir
-      added_files = Dir.glob(File.join(target_steps_dir, "*hotfix*"))
-      refute_empty added_files, "Step should be added to the targeted assignment"
-
-      # Verify the first assignment was not modified
-      first_steps_dir = result1[:assignment].steps_dir
-      first_hotfix = Dir.glob(File.join(first_steps_dir, "*hotfix*"))
-      assert_empty first_hotfix, "First assignment should not have the new step"
-
-      Ace::Assign.reset_config!
-    end
+  ensure
+    FileUtils.rm_f(preset_path)
   end
 end
