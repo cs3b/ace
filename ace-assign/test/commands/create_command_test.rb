@@ -200,7 +200,7 @@ class CreateCommandTest < AceAssignTestCase
 
     assert_equal ["404"], result[:skipped_terminal]
     assert_equal ["405"], result[:task_refs]
-    assert_match(%r{\.ace-local/assign/jobs/work-on-task-405-job\.yml$}, executor.path)
+    assert_match(%r{\.ace-local/assign/jobs/work-on-task-405-[0-9a-f]{8}-job\.yml$}, executor.path)
   end
 
   def test_task_assignment_creator_rejects_all_terminal_refs

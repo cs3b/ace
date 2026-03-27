@@ -2,6 +2,7 @@
 
 require "ace/task"
 require "fileutils"
+require "securerandom"
 require "tempfile"
 require "yaml"
 
@@ -157,7 +158,7 @@ module Ace
 
           dir = File.join(Ace::Assign.cache_dir, "jobs")
           FileUtils.mkdir_p(dir)
-          path = File.join(dir, "#{session_name}-job.yml")
+          path = File.join(dir, "#{session_name}-#{SecureRandom.hex(4)}-job.yml")
           payload = YAML.dump(job)
 
           Tempfile.create(["#{session_name}-job", ".yml"], dir) do |tmp|
