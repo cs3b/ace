@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.3] - 2026-03-27
+
+### Fixed
+- Corrected `ace-assign add` documentation examples to match the mutually exclusive add-mode contract (`--yaml`, `--step`, or `--task`).
+- Replaced invalid preset-step examples in docs with preset-backed step names that resolve under the current `--step` behavior.
+
 ## [0.40.2] - 2026-03-27
 
 ### Fixed
