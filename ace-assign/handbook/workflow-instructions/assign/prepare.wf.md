@@ -11,7 +11,7 @@ ace-docs:
 
 ## Purpose
 
-Transform informal instructions OR preset names into a structured job.yaml file that can be used with `ace-assign create job.yaml`. This workflow bridges the gap between high-level intent and the structured work queue format.
+Transform informal instructions OR preset names into a structured job.yaml file that can be used with `ace-assign create --yaml job.yaml`. This workflow bridges the gap between high-level intent and the structured work queue format.
 
 ## Input Formats
 
@@ -365,7 +365,7 @@ Steps: 10 total
   - apply-feedback-3
   - finalize
 
-Start assignment with: ace-assign create job.yaml
+Start assignment with: ace-assign create --yaml job.yaml
 ```
 
 ## Output Format
@@ -518,7 +518,7 @@ After job.yaml is created:
 /as-assign-create job.yaml
 
 # Or directly:
-ace-assign create job.yaml
+ace-assign create --yaml job.yaml
 
 # Check status
 ace-assign status

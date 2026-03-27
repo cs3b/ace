@@ -52,7 +52,14 @@ Create the assignment:
 
 
 ```bash
-ace-assign create job.yaml
+ace-assign create --yaml job.yaml
+```
+
+Or create directly from task refs with the default `work-on-task` preset:
+
+```bash
+ace-assign create --task t.xyz
+ace-assign create --task t.100,t.101 --preset work-on-task
 ```
 
 ## 2) Check status and execute work
@@ -106,7 +113,8 @@ ace-assign finish --message report.md --assignment abc123@010.01
 
 | Command | Purpose |
 |---------|---------|
-| `ace-assign create job.yaml` | Create assignment from YAML |
+| `ace-assign create --yaml job.yaml` | Create assignment from YAML |
+| `ace-assign create --task t.xyz` | Create assignment from task refs |
 | `ace-assign status` | Show current queue |
 | `ace-assign start` | Start next workable step |
 | `ace-assign finish --message done.md` | Complete in-progress step |

@@ -26,7 +26,7 @@ ace-assign finish --message report.md
 
 
 ```bash
-ace-assign create job.yaml
+ace-assign create --yaml job.yaml
 ace-assign status
 ace-assign finish --message step-010.md
 ace-assign status
@@ -65,14 +65,19 @@ ace-assign add --yaml .ace-local/assign/jobs/add-task.yml --after 010 --child
 
 ## Commands
 
-### `ace-assign create CONFIG`
+### `ace-assign create`
 
-Create a new assignment from a YAML file.
+Create a new assignment from YAML or from task refs expanded through an assignment preset.
 
 Options:
 
+- `--yaml FILE`
+- `--task, -t <taskref[,taskref...]>` (repeatable)
+- `--preset, -p NAME`
 - `--quiet, -q`
 - `--debug, -d`
+
+Exactly one mode is required: `--yaml` or `--task`.
 
 ### `ace-assign status`
 
@@ -193,7 +198,7 @@ Options:
 
 ### `work-on-task` Input Filtering (Prepare/Create Workflows)
 
-When using workflow-driven assignment creation for `work-on-task` (`/as-assign-prepare` or `/as-assign-create`):
+When using preset-backed assignment creation (`ace-assign create --task ...`, `/as-assign-prepare`, or `/as-assign-create`):
 
 - Requested refs are resolved first (single, comma list, range, pattern).
 - Terminal refs (`done`, `skipped`, `cancelled`) are skipped before queue expansion.

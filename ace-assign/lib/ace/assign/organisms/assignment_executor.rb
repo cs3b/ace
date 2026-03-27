@@ -107,7 +107,7 @@ module Ace
         # @return [Hash] Result with assignment and state
         def status
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
@@ -129,7 +129,7 @@ module Ace
         # @return [Hash] Result with started step and updated state
         def start_step(step_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           raise StepErrors::InvalidState, "Cannot start: step #{state.current.number} is already in progress. Finish or fail it first." if state.current
@@ -171,7 +171,7 @@ module Ace
         # @return [Hash] Result with completed step and updated state
         def finish_step(report_content:, step_number: nil, fork_root: nil)
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           current = find_target_step_for_finish(state, step_number, fork_root)
@@ -262,7 +262,7 @@ module Ace
         # @return [Hash] Result with updated state
         def fail(message)
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           current = state.current
@@ -292,7 +292,7 @@ module Ace
         # @return [Hash] Result with new step
         def add(name, instructions, after: nil, as_child: false, added_by: nil, extra: {})
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           step_name = name.to_s.strip
           raise Error, "Step name cannot be empty." if step_name.empty?
@@ -419,7 +419,7 @@ module Ace
         # @return [Hash] Result with new retry step
         def retry_step(step_ref)
           assignment = assignment_manager.find_active
-          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
 

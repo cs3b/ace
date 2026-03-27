@@ -194,6 +194,15 @@ expansion:
     context: fork
     workflow: wfi://task/work
     taskref: "{{item}}"
+    sub_steps:
+      - onboard-base
+      - task-load
+      - plan-task
+      - work-on-task
+      - pre-commit-review
+      - verify-test
+      - release-minor
+      - create-retro
     instructions: |
       Use existing base and task context loaded by the batch workflow.
       Implement task {{item}}.
