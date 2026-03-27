@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 22:32:56"
 estimate: TBD
@@ -8,24 +8,17 @@ dependencies: []
 tags: [ace-demo, asciinema, agg, spike]
 parent: 8qp.t.r6b
 bundle:
-  presets: ["project"]
-  files:
-    - ace-demo/lib/ace/demo/organisms/demo_recorder.rb
-    - ace-demo/lib/ace/demo/molecules/vhs_executor.rb
-    - ace-demo/lib/ace/demo/atoms/vhs_tape_compiler.rb
-    - ace-demo/lib/ace/demo/atoms/vhs_command_builder.rb
-    - ace-demo/lib/ace/demo/molecules/demo_sandbox_builder.rb
-    - ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb
-    - ace-demo/.ace-defaults/demo/config.yml
-    - ace-demo/docs/demo/fixtures/sample-project/demo.tape.yml
+  presets: [project]
+  files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/atoms/vhs_tape_compiler.rb, ace-demo/lib/ace/demo/atoms/vhs_command_builder.rb, ace-demo/lib/ace/demo/molecules/demo_sandbox_builder.rb, ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb, ace-demo/.ace-defaults/demo/config.yml, ace-demo/docs/demo/fixtures/sample-project/demo.tape.yml]
   commands: []
+needs_review: false
 ---
 
 # Spike: Validate Asciinema and Agg Recording Pipeline
 
 ## Objective
 
-Time-boxed spike to prove that asciinema can record a tape.yml scenario inside the existing ace-demo sandbox and that agg can convert the resulting `.cast` file to gif. Produces a concept inventory showing which existing VHS concepts survive, which get abstracted, and what the final multi-backend architecture looks like.
+Time-boxed spike to prove that asciinema can record a tape.yml scenario inside the existing ace-demo sandbox and that agg can convert the resulting `.cast` file to GIF. Produces a concept inventory showing which existing VHS concepts survive, which get abstracted, what the final multi-backend architecture looks like, and which cast-format compatibility path keeps asciinema interoperable with agg.
 
 ## Behavioral Specification
 
@@ -33,7 +26,7 @@ Time-boxed spike to prove that asciinema can record a tape.yml scenario inside t
 
 - **Input**: An existing `tape.yml` file from ace-demo fixtures
 - **Process**: Manually drive asciinema recording of one scenario in a sandbox, convert with agg
-- **Output**: A working `.cast` file, a gif converted via agg, and a concept inventory document
+- **Output**: A working `.cast` file, a GIF converted via agg, and a concept inventory document that recommends the production invocation contract
 
 ### Expected Behavior
 
@@ -42,9 +35,10 @@ Time-boxed spike to prove that asciinema can record a tape.yml scenario inside t
 3. Build a sandbox via the existing `DemoSandboxBuilder`
 4. Manually construct an asciinema recording command that captures the tape's commands
 5. Execute asciinema in the sandbox, producing a `.cast` file
-6. Run agg on the `.cast` file to produce a gif
-7. Verify: the `.cast` file contains JSON event lines matching the executed commands
-8. Document findings: what worked, what needed adaptation, concept inventory
+6. Confirm whether the recorder emits asciicast v2 directly or requires a conversion step before agg can consume the cast
+7. Run agg on the compatible `.cast` file to produce a GIF
+8. Verify: the `.cast` file contains JSON event lines matching the executed commands
+9. Document findings: what worked, what needed adaptation, final flag mapping, concept inventory, and the chosen v2-compatibility mechanism
 
 ### Interface Contract
 
@@ -52,7 +46,7 @@ No public interface changes in this spike. This is exploratory validation.
 
 ```bash
 # Spike validation commands (manual, not production)
-asciinema rec --command "bash script.sh" output.cast
+asciinema rec -c "bash script.sh" output.cast
 agg output.cast output.gif
 ```
 
@@ -60,7 +54,8 @@ Key questions to answer:
 - Does asciinema work in a sandboxed directory with custom env vars?
 - Can we script asciinema to run commands non-interactively?
 - Does agg produce acceptable gif quality from `.cast`?
-- What asciinema flags map to tape.yml settings (width, height, font_size)?
+- Which current asciinema flags map to tape.yml settings (window size, env, command)?
+- Does the chosen asciinema version need a conversion step to hand agg a v2-compatible cast?
 
 ### Success Criteria
 
@@ -68,14 +63,7 @@ Key questions to answer:
 - [ ] agg converts `.cast` to gif successfully
 - [ ] `.cast` file contains parseable JSON with command/output event data
 - [ ] Concept inventory documents: what survives from VHS pattern, what needs new abstraction
-- [ ] Clear recommendation on asciinema invocation pattern for tape compilation
-
-### Validation Questions
-
-- Does asciinema support `--cols` and `--rows` to match tape.yml width/height settings?
-- Can asciinema run a script file non-interactively (no TTY required)?
-- Does agg support format selection (gif vs webm) or just gif?
-- Are there sandbox permission/isolation concerns with asciinema?
+- [ ] Clear recommendation on asciinema invocation pattern, cast compatibility strategy, and GIF-only renderer assumptions for production
 
 ## Vertical Slice Decomposition
 
@@ -99,3 +87,4 @@ Single standalone spike — no further decomposition needed.
 - [ ] Document behavior when asciinema is not installed
 - [ ] Document behavior when agg is not installed
 - [ ] Document behavior with invalid/empty script input
+- [ ] Document behavior when the recorder emits a cast format agg cannot consume directly

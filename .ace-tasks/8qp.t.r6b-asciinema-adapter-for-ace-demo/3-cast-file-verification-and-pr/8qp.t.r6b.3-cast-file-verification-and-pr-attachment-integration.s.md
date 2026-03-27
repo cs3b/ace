@@ -1,37 +1,32 @@
 ---
 id: 8qp.t.r6b.3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-26 22:33:06"
 estimate: TBD
-dependencies: ["8qp.t.r6b.2"]
+dependencies: [8qp.t.r6b.2]
 tags: [ace-demo, verification, cast, pr-attachment]
 parent: 8qp.t.r6b
 bundle:
-  presets: ["project"]
-  files:
-    - ace-demo/lib/ace/demo/organisms/demo_recorder.rb
-    - ace-demo/lib/ace/demo/organisms/demo_attacher.rb
-    - ace-demo/lib/ace/demo/molecules/gh_asset_uploader.rb
-    - ace-demo/lib/ace/demo/molecules/demo_comment_poster.rb
-    - ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb
-    - ace-demo/lib/ace/demo/atoms/demo_comment_formatter.rb
+  presets: [project]
+  files: [ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/organisms/demo_attacher.rb, ace-demo/lib/ace/demo/molecules/gh_asset_uploader.rb, ace-demo/lib/ace/demo/molecules/demo_comment_poster.rb, ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb, ace-demo/lib/ace/demo/atoms/demo_comment_formatter.rb, ace-demo/lib/ace/demo/cli/commands/attach.rb, ace-demo/docs/usage.md, .ace-tasks/8qp.t.r6b-asciinema-adapter-for-ace-demo/2-integrate-asciinema-as-default-recording/ux-usage.md]
   commands: []
+needs_review: false
 ---
 
 # Cast File Verification and PR Attachment Integration
 
 ## Objective
 
-Enable programmatic verification of `.cast` recordings — confirming that commands ran and produced expected output — and update the PR attachment workflow to support the asciinema-first pipeline (`.cast` → agg → gif → attach to PR).
+Enable programmatic verification of `.cast` recordings by confirming that expected commands were recorded, and update the PR attachment workflow to support the asciinema-first pipeline (`.cast` → agg → GIF → attach to PR) while keeping `attach` file-path based.
 
 ## Behavioral Specification
 
 ### User Experience
 
 - **Input**: `.cast` file from asciinema recording + tape.yml spec defining expected commands
-- **Process**: Parser extracts events from `.cast`, verifier checks commands executed and output is valid
-- **Output**: Verification pass/fail result; gif attached to PR via existing attachment workflow
+- **Process**: Parser extracts events from `.cast`, verifier checks whether expected commands were recorded, and `attach` converts `.cast` to GIF before upload when needed
+- **Output**: Verification pass/warn result; GIF attached to PR via existing attachment workflow
 
 ### Expected Behavior
 
@@ -41,9 +36,9 @@ Enable programmatic verification of `.cast` recordings — confirming that comma
    - Events: `[timestamp, event_type, data]` tuples — "i" (input) and "o" (output)
 2. `CastVerifier` (molecule) compares extracted events against tape.yml commands
    - For each command in tape.yml scenes: verify it appears in input events
-   - For each command's output: verify non-empty output events follow
-   - Reports: which commands ran, which produced output, any missing/unexpected
-3. Verification result: pass (all commands ran + valid output) or fail (with details)
+   - Output events may be included in details, but are not required for a successful verification result in this task
+   - Reports: which commands were found, which were missing, and any parse/ordering anomalies
+3. Verification result: pass when command presence is confirmed; warn/fail-details when commands are missing or the cast is malformed
 
 **PR Attachment Integration**:
 1. `ace-demo attach` workflow updated for asciinema-first pipeline
@@ -56,7 +51,7 @@ Enable programmatic verification of `.cast` recordings — confirming that comma
 **Verification in record-demo workflow**:
 1. After asciinema recording completes, verification runs automatically
 2. If verification fails, recording still succeeds but warning is emitted
-3. Verification result available for CI gates (exit code)
+3. Verification result is returned in recording metadata / CLI output, but does not change the record command's exit code in this task
 
 ### Interface Contract
 
@@ -68,17 +63,17 @@ CastFileParser.parse(cast_path)
 # CastVerifier (molecule)
 verifier = CastVerifier.new
 result = verifier.verify(cast_path:, tape_spec:)
-# => VerificationResult(success:, commands_found: [], commands_missing: [], details:)
+# => VerificationResult(success:, status:, commands_found: [], commands_missing: [], details:)
 ```
 
 ```bash
 # Verification integrated into record flow
 ace-demo record my-tape
-# => Records .cast, converts to gif, verifies commands + output
+# => Records .cast, converts to gif, verifies command presence
 # => Exit 0 if all good, warning if verification finds issues
 
 # Attach with asciinema source
-ace-demo attach my-tape --pr 123
+ace-demo attach .ace-local/demo/my-tape.cast --pr 123
 # => Converts .cast to gif (if needed), uploads gif, posts comment
 ```
 
@@ -89,18 +84,19 @@ Error Handling:
 
 Edge Cases:
 - `.cast` with no output events (commands that produce no output) → pass if command input found
-- Commands with shell expansion/variables → verify the expanded form in `.cast`
+- Commands with shell expansion/variables → verify the actual command text recorded in cast input events
 - Very long recordings → parser handles large files efficiently (streaming JSON lines)
+- `attach` invoked with a visual file path → upload directly without reconversion
 
 ### Success Criteria
 
 - [ ] CastFileParser parses asciinema v2 `.cast` files into structured events
 - [ ] CastVerifier confirms all tape.yml commands appear in `.cast` input events
-- [ ] CastVerifier confirms commands produced output (non-empty output events)
 - [ ] Verification integrated into `ace-demo record` flow (automatic, non-blocking)
 - [ ] PR attachment works with asciinema pipeline: .cast → agg → gif → upload → comment
 - [ ] Verification result includes actionable details on failures
 - [ ] New models: CastRecording, CastEvent, VerificationResult
+- [ ] `ace-demo attach` remains file-path based and accepts `.cast` inputs
 
 ## Vertical Slice Decomposition
 
@@ -115,9 +111,9 @@ Single subtask — verification and PR attachment are tightly coupled (both depe
 ### Unit/Component Validation
 - [ ] CastFileParser: parses valid .cast file, extracts header and events
 - [ ] CastFileParser: raises CastParseError on invalid/malformed .cast
-- [ ] CastVerifier: passes when all commands found with output
+- [ ] CastVerifier: passes when all expected commands are found in input events
 - [ ] CastVerifier: fails with details when command missing
-- [ ] CastVerifier: fails with details when command has no output
+- [ ] DemoAttacher / attach flow converts `.cast` input to GIF before upload
 
 ### Integration Validation
 - [ ] Full flow: record tape.yml → .cast → verify → convert → attach to PR
@@ -127,8 +123,10 @@ Single subtask — verification and PR attachment are tightly coupled (both depe
 - [ ] Invalid .cast file → CastParseError with actionable message
 - [ ] Missing commands → verification warning with command list
 - [ ] agg failure during attach → AggExecutionError, attachment blocked
+- [ ] Verification warnings leave `ace-demo record` exit status successful
 
 ### Verification Commands
 - [ ] `ace-demo record sample-tape` → .cast + gif + verification pass
-- [ ] `ace-demo attach sample-tape --pr NNN` → gif uploaded, comment posted
+- [ ] `ace-demo attach .ace-local/demo/sample-tape.cast --pr NNN` → gif uploaded, comment posted
+- [ ] `ace-demo attach .ace-local/demo/sample-tape.gif --pr NNN` → gif uploaded, comment posted without reconversion
 - [ ] `ace-test` in ace-demo passes all existing + new tests
