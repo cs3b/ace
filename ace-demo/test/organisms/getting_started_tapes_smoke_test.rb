@@ -23,10 +23,11 @@ class GettingStartedTapesSmokeTest < AceDemoTestCase
     end
   end
 
-  def test_task_demo_avoids_unconditional_git_init
+  def test_task_demo_uses_sandbox_with_git_init
     spec = load_tape("ace-task/docs/demo/ace-task-getting-started.tape.yml")
     setup = Array(spec["setup"]).map(&:to_s)
-    refute_includes setup, "git-init"
+    assert_includes setup, "sandbox"
+    assert_includes setup, "git-init"
   end
 
   private

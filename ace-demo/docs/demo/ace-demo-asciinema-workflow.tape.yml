@@ -1,0 +1,33 @@
+---
+description: Demonstrate asciinema recording workflow — show tape, record, and attach to PR
+tags:
+- ace-demo
+- asciinema
+- feature-demo
+settings:
+  font_size: 16
+  width: 1100
+  height: 600
+  format: gif
+setup:
+- sandbox
+- copy-fixtures
+scenes:
+- name: Show the YAML tape
+  commands:
+  - type: cat asciinema-workflow/demo.tape.yml
+    sleep: 5s
+- name: Record the tape with asciinema (default backend)
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-demo record asciinema-workflow/demo.tape.yml
+    sleep: 30s
+- name: Attach the recording to a PR
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-demo attach .ace-local/demo/demo.gif --pr 269 --dry-run
+    sleep: 5s
+teardown:
+- cleanup

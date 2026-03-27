@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 22:32:59"
 estimate: TBD
@@ -101,14 +101,14 @@ Edge Cases:
 
 ### Success Criteria
 
-- [ ] AsciinemaCommandBuilder produces correct command arrays for all tape.yml settings
-- [ ] AsciinemaTapeCompiler converts tape.yml scenes to valid bash scripts with sleep intervals
-- [ ] AsciinemaExecutor records `.cast` files that are valid for the chosen agg-compatible path
-- [ ] AggCommandBuilder produces correct command arrays for GIF conversion
-- [ ] AggExecutor converts `.cast` to GIF successfully
-- [ ] All components return `ExecutionResult` model consistently
-- [ ] Error classes follow existing pattern (inherit from `Ace::Demo::Error`)
-- [ ] Config keys `asciinema_bin` and `agg_bin` added to `.ace-defaults/demo/config.yml`
+- [x] AsciinemaCommandBuilder produces correct command arrays for all tape.yml settings
+- [x] AsciinemaTapeCompiler converts tape.yml scenes to valid bash scripts with sleep intervals
+- [x] AsciinemaExecutor records `.cast` files that are valid for the chosen agg-compatible path
+- [x] AggCommandBuilder produces correct command arrays for GIF conversion
+- [x] AggExecutor converts `.cast` to GIF successfully
+- [x] All components return `ExecutionResult` model consistently
+- [x] Error classes follow existing pattern (inherit from `Ace::Demo::Error`)
+- [x] Config keys `asciinema_bin` and `agg_bin` added to `.ace-defaults/demo/config.yml`
 
 ## Vertical Slice Decomposition
 
@@ -121,19 +121,19 @@ Single subtask — all atoms/molecules are tightly coupled and tested together.
 ## Verification Plan
 
 ### Unit/Component Validation
-- [ ] AsciinemaCommandBuilder: correct args for various settings combinations
-- [ ] AsciinemaTapeCompiler: bash script output matches expected for multi-scene tape
-- [ ] AsciinemaTapeCompiler: special characters in commands are properly escaped
-- [ ] AggCommandBuilder: correct args for GIF conversion
-- [ ] AsciinemaExecutor: returns ExecutionResult with correct fields
-- [ ] AggExecutor: returns ExecutionResult with correct fields
+- [x] AsciinemaCommandBuilder: correct args for various settings combinations
+- [x] AsciinemaTapeCompiler: bash script output matches expected for multi-scene tape
+- [x] AsciinemaTapeCompiler: special characters in commands are properly escaped
+- [x] AggCommandBuilder: correct args for GIF conversion
+- [x] AsciinemaExecutor: returns ExecutionResult with correct fields
+- [x] AggExecutor: returns ExecutionResult with correct fields
 
 ### Integration Validation
-- [ ] Full pipeline: compile → record → convert produces valid gif from tape.yml
+- [x] Full pipeline: compile → record → convert produces valid gif from tape.yml
 
 ### Failure Path Validation
-- [ ] AsciinemaExecutor raises AsciinemaNotFoundError when binary missing
-- [ ] AsciinemaExecutor raises AsciinemaExecutionError on recording failure
-- [ ] AggExecutor raises AggNotFoundError when binary missing
-- [ ] AggExecutor raises AggExecutionError on conversion failure
-- [ ] Compatibility normalization failure raises an actionable cast-format error
+- [x] AsciinemaExecutor raises AsciinemaNotFoundError when binary missing
+- [x] AsciinemaExecutor raises AsciinemaExecutionError on recording failure
+- [x] AggExecutor raises AggNotFoundError when binary missing
+- [x] AggExecutor raises AggExecutionError on conversion failure
+- [x] Compatibility normalization failure raises an actionable cast-format error

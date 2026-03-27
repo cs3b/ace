@@ -66,12 +66,23 @@ module Ace
           normalized["width"] = integer_or_nil(settings["width"], "settings.width", source_path)
           normalized["height"] = integer_or_nil(settings["height"], "settings.height", source_path)
           normalized["format"] = settings["format"]&.to_s
+          normalized["agg_font_family"] = settings["agg_font_family"]&.to_s if settings.key?("agg_font_family")
+          normalized["backend"] = normalize_backend(settings["backend"], source_path) if settings.key?("backend")
           normalized["playback_speed"] = normalize_playback_speed(settings["playback_speed"], source_path) if settings.key?("playback_speed")
           normalized["output"] = normalize_output_path(settings["output"], source_path) if settings.key?("output")
           normalized["env"] = normalize_env(settings["env"], source_path: source_path) if settings.key?("env")
           normalized
         end
         private_class_method :normalize_settings
+
+        def normalize_backend(value, source_path)
+          backend = value.to_s.strip.downcase
+          allowed = %w[asciinema vhs]
+          return backend if allowed.include?(backend)
+
+          raise DemoYamlParseError, "Unknown backend '#{backend}'. Valid: asciinema, vhs (#{source_path})"
+        end
+        private_class_method :normalize_backend
 
         def normalize_playback_speed(value, source_path)
           parsed = Atoms::PlaybackSpeedParser.parse(value)

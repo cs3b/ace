@@ -12,7 +12,7 @@ module Ace
 
           desc "Attach an existing demo recording to a PR"
 
-          argument :file, required: true, desc: "Recording file path (GIF, MP4, or WebM)"
+          argument :file, required: true, desc: "Recording file path (GIF, MP4, WebM, or .cast)"
           option :pr, type: :string, desc: "PR number"
           option :dry_run, type: :boolean, aliases: ["-n"], default: false, desc: "Preview only"
 
@@ -23,7 +23,8 @@ module Ace
             attacher = Organisms::DemoAttacher.new
             result = attacher.attach(file: file, pr: pr, dry_run: options[:dry_run])
             Atoms::AttachOutputPrinter.print(result)
-          rescue ArgumentError, PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError => e
+          rescue ArgumentError, PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError,
+            AggNotFoundError, AggExecutionError => e
             raise Ace::Support::Cli::Error, e.message
           end
         end

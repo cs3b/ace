@@ -5,6 +5,8 @@ require "ace/support/config"
 
 require_relative "demo/version"
 require_relative "demo/atoms/vhs_command_builder"
+require_relative "demo/atoms/asciinema_command_builder"
+require_relative "demo/atoms/agg_command_builder"
 require_relative "demo/atoms/demo_name_sanitizer"
 require_relative "demo/atoms/demo_comment_formatter"
 require_relative "demo/atoms/tape_metadata_parser"
@@ -13,10 +15,20 @@ require_relative "demo/atoms/attach_output_printer"
 require_relative "demo/atoms/tape_content_generator"
 require_relative "demo/atoms/demo_yaml_parser"
 require_relative "demo/atoms/yaml_record_planner"
+require_relative "demo/atoms/record_option_validator"
 require_relative "demo/atoms/vhs_tape_compiler"
+require_relative "demo/atoms/asciinema_tape_compiler"
 require_relative "demo/atoms/playback_speed_parser"
+require_relative "demo/atoms/cast_file_parser"
 require_relative "demo/models/execution_result"
+require_relative "demo/models/recording_result"
+require_relative "demo/models/cast_event"
+require_relative "demo/models/cast_recording"
+require_relative "demo/models/verification_result"
 require_relative "demo/molecules/vhs_executor"
+require_relative "demo/molecules/asciinema_executor"
+require_relative "demo/molecules/agg_executor"
+require_relative "demo/molecules/cast_verifier"
 require_relative "demo/molecules/tape_resolver"
 require_relative "demo/molecules/tape_writer"
 require_relative "demo/molecules/tape_scanner"
@@ -36,8 +48,13 @@ module Ace
     class Error < StandardError; end
     class TapeNotFoundError < Error; end
     class DemoYamlParseError < Error; end
+    class CastParseError < Error; end
     class VhsNotFoundError < Error; end
     class VhsExecutionError < Error; end
+    class AsciinemaNotFoundError < Error; end
+    class AsciinemaExecutionError < Error; end
+    class AggNotFoundError < Error; end
+    class AggExecutionError < Error; end
     class FfmpegNotFoundError < Error; end
     class MediaRetimeError < Error; end
     class GhAuthenticationError < Error; end

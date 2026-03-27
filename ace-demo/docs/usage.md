@@ -105,7 +105,7 @@ ace-demo create my-demo --dry-run -- "echo hello"
 
 ```bash
 ace-demo record hello
-ace-demo record ./local.tape --format mp4 --output /tmp/demo.mp4
+ace-demo record ./local.tape --backend vhs --format webm --output /tmp/demo.webm
 ace-demo record ace-task/docs/demo/ace-task-getting-started.tape.yml
 ace-demo record my-demo -- "git status" "make deploy"
 ace-demo record my-demo --timeout 3s --width 1100 -- "git status"
@@ -126,7 +126,8 @@ ace-demo record hello --pr 42 --dry-run
 | Option | Alias | Default | Purpose |
 |--------|-------|---------|---------|
 | `--output` | `-o` | `.ace-local/demo/<name>.<format>` | Output file path |
-| `--format` | `-f` | `gif` | `gif`, `mp4`, `webm` |
+| `--format` | `-f` | `gif` | `gif`, `webm` |
+| `--backend` | `-b` | YAML: `asciinema`, raw/inline: `vhs` | Recording backend (`asciinema`, `vhs`) |
 | `--pr` | — | — | Attach to PR |
 | `--dry-run` | `-n` | `false` | Preview output without running VHS |
 | `--timeout` | `-t` | `2s` | Delay between inline commands |
@@ -141,8 +142,12 @@ ace-demo record hello --pr 42 --dry-run
 
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
-- `.tape.yml` paths run in sandbox mode: setup directives execute, scenes compile to VHS, and teardown cleanup runs.
-- `.tape.yml` settings can define `playback_speed` and `output`; CLI flags override those values.
+- `.tape.yml` paths default to `asciinema` backend: scenes compile to script, record to `.cast`, then convert to GIF with `agg`.
+- Asciinema YAML recordings are automatically verified against tape scene commands; command mismatches emit warnings but do not fail the record command.
+- `.tape.yml` settings can define `backend`, `playback_speed`, and `output`; CLI flags override those values.
+- Raw `.tape` and inline recordings use VHS-compatible flow.
+- `mp4` recording output is unsupported; use `gif`, or use `--backend vhs --format webm` for compatibility output.
+- `webm` requires `--backend vhs` for YAML tape recordings.
 - If both speed and output are active for a YAML tape, raw output stays in `.ace-local/demo` and retimed output is written exactly to the selected output path.
 - With `--dry-run`, output shows planned recording and attachment actions only.
 - `--playback-speed` creates a `-<speed>` file by default; when combined with explicit output in YAML mode, the retimed file uses that exact output path.
@@ -185,6 +190,7 @@ ace-demo retime .ace-local/demo/hello.gif --playback-speed 4x --dry-run
 
 ```bash
 ace-demo attach .ace-local/demo/hello.gif --pr 42
+ace-demo attach .ace-local/demo/hello.cast --pr 42
 ace-demo attach /tmp/hello.webm --pr 42 --dry-run
 ```
 
@@ -203,6 +209,7 @@ ace-demo attach /tmp/hello.webm --pr 42 --dry-run
 ### Behavior
 
 - Without `--pr`, command raises `PR number is required. Use --pr <number>.`
+- When input is `.cast`, `attach` converts it to GIF via `agg` and uploads the GIF asset (not the `.cast` file).
 - `--dry-run` prints the would-be upload and comment body.
 
 ## Tape Discovery Order

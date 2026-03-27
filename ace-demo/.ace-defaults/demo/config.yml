@@ -1,3 +1,8 @@
 vhs_bin: vhs
+asciinema_bin: asciinema
+agg_bin: agg
+agg_font_family: Hack Nerd Font Mono
 output_dir: .ace-local/demo
 sandbox_dir: .ace-local/demo/sandbox
+record:
+  backend: asciinema

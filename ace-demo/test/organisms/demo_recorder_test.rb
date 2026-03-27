@@ -106,6 +106,19 @@ class DemoRecorderTest < AceDemoTestCase
     end
   end
 
+  class StubCastVerifier
+    attr_reader :args
+
+    def initialize(result:)
+      @result = result
+    end
+
+    def verify(cast_path:, tape_spec:)
+      @args = {cast_path: cast_path, tape_spec: tape_spec}
+      @result
+    end
+  end
+
   def setup
     super
     @tmp = Dir.mktmpdir("ace_demo_recorder")
@@ -124,12 +137,14 @@ class DemoRecorderTest < AceDemoTestCase
     File.write(resolver.resolve("hello"), "output /tmp/hello.gif\n")
     executor = StubExecutor.new
 
-    recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor)
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor, default_backend: "vhs")
     output = recorder.record(tape_ref: "hello", format: "gif")
 
-    assert_equal File.expand_path(".ace-local/demo/hello.gif", @tmp), output
+    assert_equal File.expand_path(".ace-local/demo/hello.gif", @tmp), output.visual_path
+    assert_equal "vhs", output.backend
+    assert_nil output.cast_path
     assert_includes executor.cmd, "--output"
-    assert_includes executor.cmd, output
+    assert_includes executor.cmd, output.visual_path
   end
 
   def test_uses_configured_defaults_for_output_dir_and_vhs_bin
@@ -138,10 +153,14 @@ class DemoRecorderTest < AceDemoTestCase
     executor = StubExecutor.new
 
     Ace::Demo.stub(:config, {"output_dir" => "tmp/demo-out", "vhs_bin" => "vhs-custom"}) do
-      recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor)
+      recorder = Ace::Demo::Organisms::DemoRecorder.new(
+        resolver: resolver,
+        executor: executor,
+        default_backend: "vhs"
+      )
       output = recorder.record(tape_ref: "hello", format: "gif")
 
-      assert_equal File.expand_path("tmp/demo-out/hello.gif", @tmp), output
+      assert_equal File.expand_path("tmp/demo-out/hello.gif", @tmp), output.visual_path
       assert_equal "vhs-custom", executor.cmd.first
     end
   end
@@ -151,15 +170,19 @@ class DemoRecorderTest < AceDemoTestCase
     File.write(resolver.resolve("hello"), "output /tmp/hello.gif\n")
     executor = StubExecutor.new
 
-    recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor)
-    output = recorder.record(tape_ref: "hello", output: "/tmp/custom.mp4", format: "mp4")
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor, default_backend: "vhs")
+    output = recorder.record(tape_ref: "hello", output: "/tmp/custom.webm", format: "webm")
 
-    assert_equal "/tmp/custom.mp4", output
-    assert_includes executor.cmd, "/tmp/custom.mp4"
+    assert_equal "/tmp/custom.webm", output.visual_path
+    assert_includes executor.cmd, "/tmp/custom.webm"
   end
 
   def test_rejects_unsupported_format
-    recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: StubResolver.new("/tmp/x.tape"), executor: StubExecutor.new)
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new("/tmp/x.tape"),
+      executor: StubExecutor.new,
+      default_backend: "vhs"
+    )
 
     assert_raises(ArgumentError) do
       recorder.record(tape_ref: "hello", format: "avi")
@@ -191,12 +214,14 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_parser: parser,
       yaml_compiler: compiler,
       sandbox_builder: sandbox_builder,
-      teardown_executor: teardown_executor
+      teardown_executor: teardown_executor,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo", output: output_path)
 
-    assert_equal output_path, output
+    assert_equal output_path, output.visual_path
+    assert_equal "vhs", output.backend
     assert_equal yaml_path, sandbox_builder.source_tape_path
     assert_equal ["sandbox", "copy-fixtures"], sandbox_builder.setup_steps
     assert_equal "./demo.gif", compiler.output_path
@@ -227,12 +252,13 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_parser: RaisingYamlParser.new,
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
-      teardown_executor: StubTeardownExecutor.new
+      teardown_executor: StubTeardownExecutor.new,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo", output: output_path, yaml_spec: spec)
 
-    assert_equal output_path, output
+    assert_equal output_path, output.visual_path
   end
 
   def test_yaml_teardown_runs_when_vhs_execution_fails
@@ -253,7 +279,8 @@ class DemoRecorderTest < AceDemoTestCase
       ),
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
-      teardown_executor: teardown_executor
+      teardown_executor: teardown_executor,
+      default_backend: "vhs"
     )
 
     error = assert_raises(RuntimeError) do
@@ -285,13 +312,14 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      media_retimer: retimer
+      media_retimer: retimer,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo")
 
     raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
-    assert_equal File.expand_path(".ace-local/demo/demo-4x.gif", @tmp), output
+    assert_equal File.expand_path(".ace-local/demo/demo-4x.gif", @tmp), output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
     assert_equal "4x", retimer.calls[0][:speed]
@@ -319,13 +347,14 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      media_retimer: retimer
+      media_retimer: retimer,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo", retime_output: final_output)
 
     raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
-    assert_equal final_output, output
+    assert_equal final_output, output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
     assert_equal final_output, retimer.calls[0][:output_path]
@@ -352,12 +381,13 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      media_retimer: retimer
+      media_retimer: retimer,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo")
 
-    assert_equal output_path, output
+    assert_equal output_path, output.visual_path
     assert_empty retimer.calls
   end
 
@@ -382,16 +412,63 @@ class DemoRecorderTest < AceDemoTestCase
       yaml_compiler: StubYamlCompiler.new,
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      media_retimer: retimer
+      media_retimer: retimer,
+      default_backend: "vhs"
     )
 
     output = recorder.record(tape_ref: "demo")
 
     raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
-    assert_equal final_output, output
+    assert_equal final_output, output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
     assert_equal final_output, retimer.calls[0][:output_path]
     assert_equal "4x", retimer.calls[0][:speed]
+  end
+
+  def test_records_yaml_tape_with_asciinema_default_backend
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    asciinema_executor = StubExecutor.new
+    agg_executor = StubExecutor.new
+    verification_result = Ace::Demo::Models::VerificationResult.new(
+      success: true,
+      status: "pass",
+      commands_found: ["echo ok"],
+      commands_missing: [],
+      details: {commands_expected: 1}
+    )
+    cast_verifier = StubCastVerifier.new(result: verification_result)
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: StubExecutor.new,
+      asciinema_executor: asciinema_executor,
+      agg_executor: agg_executor,
+      cast_verifier: cast_verifier,
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif", "agg_font_family" => "Hack Nerd Font Mono"},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      default_backend: "asciinema"
+    )
+
+    output = recorder.record(tape_ref: "demo")
+
+    assert_equal "asciinema", output.backend
+    assert_equal File.expand_path(".ace-local/demo/demo.gif", @tmp), output.visual_path
+    assert_equal File.expand_path(".ace-local/demo/demo.cast", @tmp), output.cast_path
+    assert_equal verification_result, output.verification
+    assert_equal output.cast_path, cast_verifier.args[:cast_path]
+    assert_equal "asciinema", asciinema_executor.cmd.first
+    assert_equal "agg", agg_executor.cmd.first
+    assert_includes agg_executor.cmd, "--font-family"
+    assert_includes agg_executor.cmd, "Hack Nerd Font Mono"
   end
 end

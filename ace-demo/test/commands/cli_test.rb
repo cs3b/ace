@@ -82,6 +82,33 @@ class CliTest < AceDemoTestCase
     end
   end
 
+  def test_record_yaml_passes_backend_override_to_demo_recorder
+    Dir.mktmpdir("ace_demo_cli_yaml_backend") do |dir|
+      tape_path = File.join(dir, "demo.tape.yml")
+      File.write(tape_path, "description: demo\n")
+
+      fake_recorder = Class.new do
+        attr_reader :kwargs
+
+        def record(**kwargs)
+          @kwargs = kwargs
+          Ace::Demo::Models::RecordingResult.new(
+            backend: "vhs",
+            visual_path: ".ace-local/demo/yaml.webm"
+          )
+        end
+      end.new
+
+      Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {"settings" => {}, "scenes" => [{"commands" => [{"type" => "echo hi"}]}]}) do
+        Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+          result = invoke(["record", tape_path, "--backend", "vhs", "--format", "webm"])
+          assert_includes result[:stdout], "Recorded backend: vhs"
+          assert_equal "vhs", fake_recorder.kwargs[:backend]
+        end
+      end
+    end
+  end
+
   def test_record_yaml_dry_run_defaults_preview_format_to_gif_when_yaml_not_found
     result = invoke(["record", "./demo.tape.yml", "--dry-run"])
     assert_includes result[:stdout], "[dry-run] Would record tape: ./demo.tape.yml (format: gif)"
@@ -96,6 +123,7 @@ class CliTest < AceDemoTestCase
           description: demo
           tags: []
           settings:
+            backend: vhs
             format: webm
           scenes:
             - name: one
@@ -471,7 +499,7 @@ class CliTest < AceDemoTestCase
       def record(**kwargs)
         @recorded_args = kwargs
         {
-          output_path: ".ace-local/demo/20260305-120000/my-demo.mp4",
+          output_path: ".ace-local/demo/20260305-120000/my-demo.webm",
           tape_path: ".ace-local/demo/20260305-120000/my-demo.tape",
           session_dir: ".ace-local/demo/20260305-120000"
         }
@@ -479,12 +507,12 @@ class CliTest < AceDemoTestCase
     end.new
 
     Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
-      result = invoke(["record", "my-demo", "--format", "mp4", "--timeout", "3s",
+      result = invoke(["record", "my-demo", "--format", "webm", "--timeout", "3s",
         "--width", "1200", "--height", "600", "--font-size", "20",
         "--desc", "A test", "--tags", "ci,test",
         "--", "echo hello"])
       assert_includes result[:stdout], "Recorded:"
-      assert_equal "mp4", fake_inline.recorded_args[:format]
+      assert_equal "webm", fake_inline.recorded_args[:format]
       assert_equal "3s", fake_inline.recorded_args[:timeout]
       assert_equal 1200, fake_inline.recorded_args[:width].to_i
       assert_equal 600, fake_inline.recorded_args[:height].to_i
@@ -492,6 +520,14 @@ class CliTest < AceDemoTestCase
       assert_equal "A test", fake_inline.recorded_args[:description]
       assert_equal "ci,test", fake_inline.recorded_args[:tags]
     end
+  end
+
+  def test_record_rejects_mp4_with_actionable_guidance
+    result = invoke(["record", "hello", "--format", "mp4"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Unsupported format: mp4"
+    assert_includes result[:stderr], "--backend vhs --format webm"
   end
 
   def test_record_inline_dry_run_prints_tape_content

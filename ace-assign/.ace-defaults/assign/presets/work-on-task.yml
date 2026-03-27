@@ -133,8 +133,13 @@ steps:
       - "  - Run `ace-demo record <tape> --dry-run` to verify no path errors"
       - "  - Ensure all fixtures exist and are referenced correctly"
       - "Record and attach: `cd <package> && ace-demo record <tape-path> --pr <PR_NUMBER>`."
-      - "If VHS or FFmpeg is not available, skip this step with a clear reason."
-      - "This step is non-blocking: if recording fails, report the failure but do not block subsequent steps."
+      - "If VHS or FFmpeg is not installed (`which vhs` / `which asciinema` / `which agg` all fail), skip this step."
+      - "Non-blocking policy — if recording fails, diagnose before skipping:"
+      - "  1. Read the error message and identify the cause (missing font, missing tool, config mismatch, path error)"
+      - "  2. Check config: `cat <package>/.ace-defaults/demo/config.yml` and compare `agg_font_family` against available fonts (`fc-list | grep -i nerd | head -5`)"
+      - "  3. Check spike findings: search `.ace-tasks/` or `.ace-retros/` for spike docs that document working configurations"
+      - "  4. Fix and retry: if the cause is a fixable config/env issue (wrong font, missing fixture, bad path), fix it and retry"
+      - "  5. Only skip if the failure is truly unfixable (tool not installed, no tapes exist, hardware dependency)"
 
   - name: update-pr-desc
     number: "150"

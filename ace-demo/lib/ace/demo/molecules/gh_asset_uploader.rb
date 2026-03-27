@@ -18,14 +18,13 @@ module Ace
         end
 
         def upload(file_path:, dry_run: false)
-          raise ArgumentError, "Recording file not found: #{file_path}" unless File.exist?(file_path)
-
           asset_name = stamped_asset_name(file_path)
           if dry_run
             repo = ENV.fetch("GITHUB_REPOSITORY", "OWNER/REPO")
             asset_url = "https://github.com/#{repo}/releases/download/#{RELEASE_TAG}/#{asset_name}"
             return {asset_name: asset_name, asset_url: asset_url, dry_run: true}
           end
+          raise ArgumentError, "Recording file not found: #{file_path}" unless File.exist?(file_path)
 
           repo = repo_name_with_owner
           asset_url = "https://github.com/#{repo}/releases/download/#{RELEASE_TAG}/#{asset_name}"

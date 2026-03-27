@@ -31,3 +31,9 @@ when_to_skip:
 
 effort: medium
 tags: [demo, pr, documentation, recording]
+decision_notes:
+  non_blocking_policy: >
+    "non-blocking" means do not block subsequent steps if truly unfixable.
+    It does NOT mean skip on first failure. Diagnose the error, check config
+    against known-good values (spike findings, test fixtures), fix environment
+    issues, and retry before reporting failure.
