@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-03-27
+
+### Fixed
+- Preserved taskref-only preset compatibility by collapsing launcher task refs to the primary task when a preset does not declare `taskrefs`.
+
 ## [0.13.1] - 2026-03-27
 
 ### Fixed
