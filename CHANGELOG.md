@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.944] - 2026-03-27
+
+### Fixed
+- **ace-assign v0.40.1**: Corrected task-driven preset guard behavior to use resolved non-terminal refs, preserved parent refs when expanded subtasks are all terminal, and normalized batch-parent fallback return semantics.
+- **ace-overseer v0.13.1**: Corrected work-on preset guard behavior to use resolved non-terminal refs and preserved parent refs when expanded subtasks are all terminal.
+
+### Technical
+- **ace-assign v0.40.1**: Switched hidden task-driven job spec naming to unique filenames and updated create-command coverage for randomized job-path generation.
+
 ## [0.9.943] - 2026-03-27
 
 ### Added
