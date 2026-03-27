@@ -33,7 +33,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 | Tool | Purpose |
 |------|---------|
 | `ace-assign status` | Show assignment status |
-| `ace-assign create CONFIG` | Create assignment from YAML |
+| `ace-assign create --yaml FILE` | Create assignment from YAML |
 
 ## Git Operations
 
