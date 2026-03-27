@@ -241,7 +241,7 @@ module Ace
             fallback = state.top_level.find do |step|
               state.children_of(step.number).any? { |child| child.name.start_with?("work-on-") }
             end
-            fallback&.number.to_s
+            fallback&.number
           end
 
           def load_steps_from_file(path)
