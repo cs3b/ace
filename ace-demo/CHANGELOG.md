@@ -7,6 +7,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.4] - 2026-03-27
+
+### Fixed
+- Corrected default `agg_font_family` from `CaskaydiaMono Nerd Font` to `Hack Nerd Font Mono` to match spike-validated font available in the environment.
+
+## [0.22.3] - 2026-03-27
+
+### Fixed
+- Validated asciinema tape `sleep` durations before script compilation to block malformed/injected values.
+
+### Changed
+- Added `agg_font_family` default/config plumbing through YAML parsing, recorder conversion, and cast attachment conversion.
+
+### Technical
+- Expanded parser/recorder/attacher/asciinema compiler test coverage for font-family wiring and sleep validation behavior.
+
+## [0.22.2] - 2026-03-27
+
+### Fixed
+- Cleaned up temporary GIF conversion artifacts generated from `.cast` attachments after upload/comment orchestration completes.
+
+### Changed
+- Centralized recording backend/format validation in `RecordOptionValidator` and reused it across planner, recorder, and CLI flows.
+
+### Technical
+- Added validator-focused atom tests and updated attacher tests to assert temporary artifact lifecycle behavior.
+
+## [0.22.1] - 2026-03-27
+
+### Fixed
+- Escaped asciinema `--command` script paths to handle spaces and shell metacharacters safely.
+- Updated `CastVerifier` to validate command-mode asciinema recordings by inspecting script commands from cast header metadata.
+- Prevented `.cast` conversion during `attach --dry-run` while preserving planned GIF naming in preview output.
+- Improved missing-binary errors for asciinema and agg executors to report configured executable names.
+
+### Changed
+- Simplified YAML record planner backend/format validation by removing a redundant unreachable guard.
+- Updated dry-run upload planning to allow planned artifact paths without requiring generated files.
+
+### Technical
+- Expanded atom/molecule/organism test coverage for escaped command generation, command-mode cast verification, dry-run cast attachment behavior, dry-run uploader planning, and configured binary error reporting.
+
+## [0.22.0] - 2026-03-27
+
+### Added
+- Added cast verification primitives (`CastFileParser`, `CastVerifier`, and cast/verification models) for asciinema recording validation.
+- Added `.cast` attachment support that converts recordings to GIF before PR upload/comment posting.
+
+### Changed
+- Updated asciinema record flow to run non-blocking command-presence verification and expose verification status in CLI output.
+- Updated `attach` command help and error handling to include `.cast` source files and agg conversion failures.
+- Updated usage documentation for automatic cast verification and `.cast -> .gif` attachment behavior.
+
+### Technical
+- Expanded atom, molecule, organism, and model test coverage for cast parsing, verification outcomes, recorder integration, and cast attachment conversion.
+
+## [0.21.0] - 2026-03-27
+
+### Added
+- Added backend selection support for `ace-demo record` with `--backend` and YAML `settings.backend`.
+- Added `RecordingResult` model to return structured recording output metadata (backend, visual path, optional cast path).
+
+### Changed
+- Switched YAML tape recording default backend to asciinema with cast capture and AGG conversion to GIF.
+- Updated YAML planning and CLI validation so backend/format constraints are enforced with actionable errors.
+- Updated usage documentation for backend defaults, cast output visibility, and compatibility formatting rules.
+
+### Technical
+- Expanded parser, recorder, and CLI test coverage for backend routing, format guards, and structured recorder output.
+
+## [0.20.0] - 2026-03-27
+
+### Added
+- Added asciinema-native recording support with command-building and execution pipeline components.
+- Added AGG post-processing support to compile asciinema recordings into final demo artifacts.
+
+### Changed
+- Updated demo recording orchestration to support multi-backend execution and asciinema-to-AGG compatibility flows.
+- Updated demo defaults/config to enable asciinema adapter behavior for task-driven recording workflows.
+
+### Technical
+- Added atom and molecule test coverage for asciinema/AGG command builders and executors.
+- Expanded smoke and pipeline tests for getting-started tape behavior under the new recording backend flow.
+
 ## [0.19.4] - 2026-03-26
 
 ### Added

@@ -84,4 +84,14 @@ class GhAssetUploaderTest < AceDemoTestCase
       assert_includes error.message, "gh auth login"
     end
   end
+
+  def test_upload_dry_run_allows_planned_nonexistent_path
+    uploader = Ace::Demo::Molecules::GhAssetUploader.new(now: -> { 1700 })
+    missing_planned_path = File.join(@tmp, "planned.gif")
+
+    result = uploader.upload(file_path: missing_planned_path, dry_run: true)
+
+    assert_equal true, result[:dry_run]
+    assert_equal "planned-1700.gif", result[:asset_name]
+  end
 end

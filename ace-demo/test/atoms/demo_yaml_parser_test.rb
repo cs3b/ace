@@ -18,15 +18,28 @@ class DemoYamlParserTest < AceDemoTestCase
 
   def test_accepts_playback_speed_and_output_settings
     parsed = parse_hash(
+      "backend" => "asciinema",
       "playback_speed" => "4x",
       "output" => "docs/demo/example.gif",
-      "format" => "gif"
+      "format" => "gif",
+      "agg_font_family" => "Hack Nerd Font Mono"
     )
 
     settings = parsed["settings"]
+    assert_equal "asciinema", settings["backend"]
     assert_equal "4x", settings["playback_speed"]
     assert_equal "docs/demo/example.gif", settings["output"]
     assert_equal "gif", settings["format"]
+    assert_equal "Hack Nerd Font Mono", settings["agg_font_family"]
+  end
+
+  def test_rejects_unknown_backend
+    error = assert_raises(Ace::Demo::DemoYamlParseError) do
+      parse_hash("backend" => "foo")
+    end
+
+    assert_includes error.message, "Unknown backend 'foo'"
+    assert_includes error.message, "Valid: asciinema, vhs"
   end
 
   def test_coerces_output_setting_to_string

@@ -15,7 +15,8 @@ module Ace
           argument :tape, required: true, desc: "Tape file path, preset name, or inline demo name (with --)"
 
           option :output, type: :string, aliases: ["-o"], desc: "Output file path"
-          option :format, type: :string, aliases: ["-f"], desc: "Output format: gif|mp4|webm"
+          option :format, type: :string, aliases: ["-f"], desc: "Output format: gif|webm"
+          option :backend, type: :string, aliases: ["-b"], desc: "Backend override: asciinema|vhs"
           option :pr, type: :string, desc: "PR number"
           option :dry_run, type: :boolean, aliases: ["-n"], default: false, desc: "Preview without recording"
           option :timeout, type: :string, aliases: ["-t"], default: "2s", desc: "Wait time after each command (inline mode)"
@@ -27,22 +28,26 @@ module Ace
           option :playback_speed, type: :string, desc: "Optional postprocess speed: 1x|2x|4x|8x"
 
           def call(tape:, args: [], **options)
-            explicit_format = options[:format]&.downcase
-            if explicit_format && !Organisms::DemoRecorder::SUPPORTED_FORMATS.include?(explicit_format)
-              raise Ace::Support::Cli::Error, "Unsupported format: #{explicit_format}. Use gif, mp4, or webm."
-            end
+            explicit_format = Atoms::RecordOptionValidator.normalize_format(
+              options[:format],
+              supported_formats: Organisms::DemoRecorder::SUPPORTED_FORMATS
+            )
+            backend = normalize_backend_option(options[:backend])
             options = options.dup
             options.delete(:format)
+            options.delete(:backend)
 
             commands = collect_commands(args)
 
             if commands
+              Atoms::RecordOptionValidator.validate_raw_tape_backend!(backend: backend)
               record_inline(name: tape, commands: commands, format: explicit_format || "gif", **options)
             else
-              record_tape(tape: tape, format: explicit_format, **options)
+              record_tape(tape: tape, format: explicit_format, backend: backend, **options)
             end
           rescue TapeNotFoundError, VhsNotFoundError, VhsExecutionError, FfmpegNotFoundError, MediaRetimeError,
             PrNotFoundError, GhAuthenticationError, GhUploadError, GhCommentError, GhCommandError,
+            AsciinemaNotFoundError, AsciinemaExecutionError, AggNotFoundError, AggExecutionError,
             ArgumentError, DemoYamlParseError => e
             raise Ace::Support::Cli::Error, e.message
           end
@@ -110,11 +115,12 @@ module Ace
             attach_to_pr(attach_path, options)
           end
 
-          def record_tape(tape:, format:, **options)
+          def record_tape(tape:, format:, backend:, **options)
             if options[:dry_run]
               context = build_tape_record_context(
                 tape: tape,
                 format: format,
+                backend: backend,
                 output: options[:output],
                 playback_speed: options[:playback_speed],
                 allow_missing_tape: true
@@ -131,6 +137,7 @@ module Ace
             context = build_tape_record_context(
               tape: tape,
               format: format,
+              backend: backend,
               output: options[:output],
               playback_speed: options[:playback_speed],
               allow_missing_tape: false
@@ -145,12 +152,16 @@ module Ace
               retime_output: context[:yaml] ? context[:retime_output_override] : nil
             }
             record_kwargs[:yaml_spec] = context[:spec] if context[:yaml]
-            output_path = recorder.record(**record_kwargs)
-            puts "Recorded: #{output_path}"
+            record_kwargs[:backend] = context[:backend] if context[:yaml] && context[:backend]
+            recording = normalize_recording_result(recorder.record(**record_kwargs))
+            puts "Recorded backend: #{recording.backend}"
+            puts "Cast: #{recording.cast_path}" if recording.cast_path
+            print_verification(recording.verification) if recording.verification
+            puts "Recorded: #{recording.visual_path}"
 
-            attach_path = output_path
+            attach_path = recording.visual_path
             if context[:speed] && !context[:yaml]
-              retimed = retime_recording(output_path, context[:speed], output_path: context[:retime_output])
+              retimed = retime_recording(recording.visual_path, context[:speed], output_path: context[:retime_output])
               puts "Retimed: #{retimed[:output_path]} (#{retimed[:speed]})"
               attach_path = retimed[:output_path]
             end
@@ -182,6 +193,10 @@ module Ace
             Atoms::PlaybackSpeedParser.parse(selected)
           end
 
+          def normalize_backend_option(value)
+            Atoms::RecordOptionValidator.normalize_backend(value)
+          end
+
           def retime_recording(input_path, speed, output_path: nil)
             Molecules::MediaRetimer.new.retime(
               input_path: input_path,
@@ -202,7 +217,7 @@ module Ace
             tape.end_with?(".tape.yml", ".tape.yaml")
           end
 
-          def build_tape_record_context(tape:, format:, output:, playback_speed:, allow_missing_tape:)
+          def build_tape_record_context(tape:, format:, backend:, output:, playback_speed:, allow_missing_tape:)
             resolved_tape = resolve_tape_ref(tape, allow_missing_tape: allow_missing_tape)
             spec = load_yaml_spec(resolved_tape)
             yaml = !spec.nil?
@@ -218,8 +233,11 @@ module Ace
                 yaml_spec: spec,
                 yaml_parser: Atoms::DemoYamlParser,
                 supported_formats: Organisms::DemoRecorder::SUPPORTED_FORMATS,
-                default_output_path_builder: ->(selected_format) { default_output_for_tape(resolved_tape, selected_format) }
+                default_output_path_builder: ->(selected_format) { default_output_for_tape(resolved_tape, selected_format) },
+                backend: backend,
+                default_backend: Demo.config.dig("record", "backend") || "asciinema"
               )
+              selected_backend = yaml_plan[:backend]
               selected_format = yaml_plan[:format]
               selected_speed = yaml_plan[:speed]
               selected_output = yaml_plan[:selected_output]
@@ -232,9 +250,13 @@ module Ace
                 end
               retime_output_override = combined_yaml ? selected_output : nil
             else
+              if backend && backend != "vhs"
+                raise ArgumentError, "Raw .tape recordings support backend 'vhs' only"
+              end
               selected_format = (format || "gif").to_s.downcase
               selected_output = output
               selected_speed = resolve_playback_speed({playback_speed: playback_speed})
+              selected_backend = nil
               record_output = selected_output
               record_preview_output = record_output || default_output_for_tape(resolved_tape || tape, selected_format)
               retime_output = selected_speed ? retime_output_path(record_preview_output, selected_speed) : nil
@@ -244,6 +266,7 @@ module Ace
             {
               yaml: yaml,
               spec: spec,
+              backend: selected_backend,
               format: selected_format,
               speed: selected_speed,
               record_output: record_output,
@@ -251,6 +274,15 @@ module Ace
               retime_output: retime_output,
               retime_output_override: retime_output_override
             }
+          end
+
+          def normalize_recording_result(result)
+            return result if result.respond_to?(:visual_path) && result.respond_to?(:backend)
+
+            Models::RecordingResult.new(
+              backend: "vhs",
+              visual_path: result.to_s
+            )
           end
 
           def resolve_tape_ref(tape, allow_missing_tape:)
@@ -272,6 +304,14 @@ module Ace
             ext = File.extname(output_path)
             base = output_path.sub(/#{Regexp.escape(ext)}\z/, "")
             "#{base}-#{speed[:label]}#{ext}"
+          end
+
+          def print_verification(verification)
+            puts "Verification: #{verification.status}"
+            return if verification.success?
+
+            missing = verification.commands_missing
+            puts "Warning: missing commands in cast: #{missing.join(', ')}" unless missing.empty?
           end
         end
       end

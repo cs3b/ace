@@ -6,14 +6,29 @@ module Ace
       module YamlRecordPlanner
         module_function
 
-        def plan(tape_path:, output:, format:, playback_speed:, retime_output:, yaml_spec:, yaml_parser:, supported_formats:, default_output_path_builder:)
+        def plan(
+          tape_path:,
+          output:,
+          format:,
+          playback_speed:,
+          retime_output:,
+          yaml_spec:,
+          yaml_parser:,
+          supported_formats:,
+          default_output_path_builder:,
+          backend: nil,
+          default_backend: "asciinema"
+        )
           spec = yaml_spec || yaml_parser.parse_file(tape_path)
-          selected_format = (format || spec.dig("settings", "format") || "gif").to_s.downcase
-          unless supported_formats.include?(selected_format)
-            raise ArgumentError, "Unsupported format: #{selected_format}"
-          end
-
           settings = spec["settings"] || {}
+          selected_backend = RecordOptionValidator.normalize_backend(backend || settings["backend"] || default_backend)
+          selected_format = RecordOptionValidator.normalize_format(
+            format || settings["format"] || "gif",
+            supported_formats: supported_formats,
+            allow_nil: false
+          )
+          RecordOptionValidator.validate_yaml_backend_format!(backend: selected_backend, format: selected_format)
+
           selected_speed = playback_speed.nil? ? settings["playback_speed"] : playback_speed
           selected_speed = Atoms::PlaybackSpeedParser.parse(selected_speed)
           selected_output = output.nil? ? settings["output"] : output
@@ -29,6 +44,7 @@ module Ace
 
           {
             spec: spec,
+            backend: selected_backend,
             format: selected_format,
             speed: selected_speed,
             selected_output: selected_output,

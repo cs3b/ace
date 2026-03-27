@@ -1,0 +1,20 @@
+---
+description: Quick asciinema demo
+tags:
+- sample
+settings:
+  font_size: 16
+  width: 960
+  height: 480
+  format: gif
+setup:
+- sandbox
+scenes:
+- name: Commands
+  commands:
+  - type: echo 'Recorded via asciinema + agg'
+    sleep: 2s
+  - type: echo 'Cast files are machine-readable JSON'
+    sleep: 2s
+teardown:
+- cleanup
