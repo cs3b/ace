@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.943] - 2026-03-27
+
+### Added
+- **ace-assign v0.40.0**: Added flags-only `ace-assign create --task ...` with multi-task preset-based assignment creation and a shared task-driven creator used by direct CLI and overseer flows.
+
+### Changed
+- **ace-assign v0.40.0**: Replaced positional `create CONFIG` with explicit `--yaml` / `--task` modes and expanded `work-on-task` child templates to include the full `task/work` subtree, including `pre-commit-review`, `release-minor`, and `create-retro`.
+- **ace-overseer v0.13.0**: Routed `work-on` assignment launch through the shared `ace-assign` task-driven create path and updated docs to reflect the unified flow.
+
+### Technical
+- **ace-assign v0.40.0**: Added create-path regression coverage and a runtime `ace-task` dependency for task-ref-based creation.
+- **ace-overseer v0.13.0**: Added regression coverage for shared-launch task fixture resolution and launcher delegation behavior.
+
 ## [0.9.942] - 2026-03-27
 
 ### Fixed
