@@ -121,9 +121,10 @@ module Ace
             if entry[:is_subtask]
               [ref]
             elsif task.respond_to?(:subtasks) && task.subtasks&.any?
-              task.subtasks
+              active_subtasks = task.subtasks
                 .reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
                 .map(&:id)
+              active_subtasks.empty? ? [ref] : active_subtasks
             else
               [ref]
             end
