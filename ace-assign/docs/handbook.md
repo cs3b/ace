@@ -15,6 +15,7 @@ Canonical skills and workflow instructions bundled with `ace-assign`.
 
 | Skill | What it does |
 |-------|---------------|
+| `as-assign-add-task` | Add a work-on-task subtree into a running assignment batch parent |
 | `as-assign-compose` | Compose a tailored assignment from catalog steps and composition rules |
 | `as-assign-create` | Create assignments from public workflow, with optional handoff to drive |
 | `as-assign-drive` | Drive active assignment execution step-by-step |
@@ -26,6 +27,7 @@ Canonical skills and workflow instructions bundled with `ace-assign`.
 
 | Protocol Path | Purpose | Invoked by |
 |---------------|---------|------------|
+| `wfi://assign/add-task` | Insert a task subtree into a running assignment using `ace-assign add --yaml` | `as-assign-add-task` |
 | `wfi://assign/compose` | Compose assignment definitions from cataloged steps | `as-assign-compose` |
 | `wfi://assign/create` | Create assignment and initialize queue from config | `as-assign-create` |
 | `wfi://assign/drive` | Execute active assignment loop with status/finish/fail transitions | `as-assign-drive` |

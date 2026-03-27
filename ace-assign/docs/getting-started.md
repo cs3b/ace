@@ -70,11 +70,13 @@ Use `--message <file>` to keep reports explicit and reusable.
 
 
 ```bash
-ace-assign add fix-links --instructions "Fix broken docs links"
-ace-assign add verify-links --after 020 --child -i "Check all markdown links"
+ace-assign add --step work-on-task --task t.xyz
+ace-assign add --step review-pr --after 020 --child
+ace-assign add --yaml .ace-local/assign/jobs/add-task-t.xyz.yml --after 010 --child
 ```
 
 Use `--child` to insert nested steps under a parent step.
+Use `--yaml` to insert multiple steps (including subtree expansions via `sub_steps`) from YAML.
 
 ## 4) Work with hierarchical steps
 
@@ -109,7 +111,7 @@ ace-assign finish --message report.md --assignment abc123@010.01
 | `ace-assign start` | Start next workable step |
 | `ace-assign finish --message done.md` | Complete in-progress step |
 | `ace-assign fail --message "error"` | Mark current step failed |
-| `ace-assign add NAME -i "..."` | Insert new step dynamically |
+| `ace-assign add --step NAME` | Insert preset step dynamically |
 | `ace-assign retry 040` | Retry failed step as linked work |
 | `ace-assign fork-run --root 010.01` | Execute a subtree in forked context |
 

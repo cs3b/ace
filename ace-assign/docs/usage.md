@@ -58,8 +58,9 @@ Create child/sibling steps:
 
 
 ```bash
-ace-assign add setup-db --after 010 --child -i "Set up DB"
-ace-assign add hotfix --after 010 -i "Urgent fix"
+ace-assign add --step setup-db --after 010 --child
+ace-assign add --step hotfix --after 010
+ace-assign add --yaml .ace-local/assign/jobs/add-task.yml --after 010 --child
 ```
 
 ## Commands
@@ -123,18 +124,23 @@ Options:
 - `--quiet, -q`
 - `--debug, -d`
 
-### `ace-assign add NAME`
+### `ace-assign add`
 
-Insert a new step dynamically.
+Insert new step(s) dynamically.
 
 Options:
 
-- `--instructions, -i TEXT`
+- `--yaml FILE`
+- `--step NAME[,NAME...]`
+- `--task TASKREF`
+- `--preset NAME`
 - `--after, -a NUMBER`
 - `--child, -c`
 - `--assignment <id>`
 - `--quiet, -q`
 - `--debug, -d`
+
+Exactly one mode is required: `--yaml`, `--step`, or `--task`.
 
 ### `ace-assign retry STEP_REF`
 
