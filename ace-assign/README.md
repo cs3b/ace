@@ -76,7 +76,7 @@ The easiest way to start is through [ace-overseer](../ace-overseer) -- define a 
 
 ## Use Cases
 
-**Define assignments from presets** - pick a [preset](.ace-defaults/assign/presets/) like [`work-on-task`](.ace-defaults/assign/presets/work-on-task.yml) or `release-only`, pass parameters (task refs, packages), and [`ace-assign create`](docs/usage.md) expands it into a concrete step queue. Steps are defined in the [catalog](.ace-defaults/assign/catalog/steps/) (e.g., [`work-on-task.step.yml`](.ace-defaults/assign/catalog/steps/work-on-task.step.yml)) and ordered by [composition rules](.ace-defaults/assign/catalog/composition-rules.yml). Compose custom assignments with `/as-assign-compose`.
+**Define assignments from presets** - pick a [preset](.ace-defaults/assign/presets/) like [`work-on-task`](.ace-defaults/assign/presets/work-on-task.yml) or `release-only`, pass parameters (task refs, packages), and run `ace-assign create --task ...` or [`ace-assign create --yaml ...`](docs/usage.md) to expand them into a concrete step queue. Steps are defined in the [catalog](.ace-defaults/assign/catalog/steps/) (e.g., [`work-on-task.step.yml`](.ace-defaults/assign/catalog/steps/work-on-task.step.yml)) and ordered by [composition rules](.ace-defaults/assign/catalog/composition-rules.yml). Compose custom assignments with `/as-assign-compose`.
 
 **Run with orchestrator and fork agents** - use `/as-assign-drive` to walk through steps, forking long-running work (implementation, review, release) to isolated agent subprocesses with configurable [execution defaults](.ace-defaults/assign/config.yml). Forks can run sequentially or as parallel batches, each producing inspectable traces and session reports under `.ace-local/assign/`.
 

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-03-27
+
+### Added
+- Added flags-only `ace-assign create --task ...` support for preset-based assignment creation from task refs, including multi-task input.
+- Added a shared `TaskAssignmentCreator` path so direct `create --task` and `ace-overseer` launch use the same preset expansion and hidden job generation behavior.
+
+### Changed
+- Replaced positional `ace-assign create CONFIG` with explicit `--yaml` and `--task` modes.
+- Updated `work-on-task` task-child expansion so generated `work-on-{{item}}` roots include the full `task/work` sub-step sequence, including `pre-commit-review`, `release-minor`, and `create-retro`.
+- Refreshed docs and workflow wording to use the explicit `ace-assign create --yaml ...` contract.
+
+### Technical
+- Added command coverage for create-mode validation and task-driven creation edge cases.
+- Added `ace-task` as a runtime dependency for task-ref-based creation.
+
 ## [0.39.1] - 2026-03-27
 
 ### Fixed

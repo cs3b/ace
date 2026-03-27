@@ -3,7 +3,54 @@
 require_relative "../test_helper"
 
 class CreateCommandTest < AceAssignTestCase
-  def test_create_with_valid_config
+  class FakeTaskManager
+    def initialize(tasks)
+      @tasks = tasks
+    end
+
+    def show(ref)
+      data = @tasks[ref]
+      return nil unless data
+
+      FakeTask.new(data)
+    end
+  end
+
+  class FakeTask
+    attr_reader :status, :subtasks
+
+    def initialize(data)
+      @status = data[:status]
+      @subtasks = Array(data[:subtasks]).map { |entry| FakeSubtask.new(entry[:id], entry[:status]) }
+    end
+  end
+
+  class FakeSubtask
+    attr_reader :id, :status
+
+    def initialize(id, status)
+      @id = id
+      @status = status
+    end
+  end
+
+  class FakeExecutor
+    attr_reader :path
+
+    def start(path)
+      @path = path
+      assignment = Struct.new(:name, :id, :cache_dir, :source_config).new(
+        "work-on-task-230",
+        "8qqgyk",
+        File.join(Dir.pwd, ".ace-local", "assign", "8qqgyk"),
+        path
+      )
+      current = Struct.new(:number, :name, :status, :instructions).new("010", "onboard", "in_progress", "Load context")
+      {assignment: assignment, current: current}
+    end
+  end
+
+  def test_create_with_valid_yaml
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
 
@@ -12,7 +59,7 @@ class CreateCommandTest < AceAssignTestCase
 
       result = nil
       output = capture_io do
-        result = Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+        result = Ace::Assign::CLI::Commands::Create.new.call(yaml: config_path)
       end
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Assignment: test-session"
@@ -22,9 +69,9 @@ class CreateCommandTest < AceAssignTestCase
     end
   end
 
-  def test_create_with_missing_config
+  def test_create_with_missing_yaml
     error = assert_raises(Ace::Support::Cli::Error) do
-      Ace::Assign::CLI::Commands::Create.new.call(config: "nonexistent.yaml")
+      Ace::Assign::CLI::Commands::Create.new.call(yaml: "nonexistent.yaml")
     end
 
     assert_equal 3, error.exit_code
@@ -38,7 +85,7 @@ class CreateCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Create.new.call(config: config_path, quiet: true)
+        Ace::Assign::CLI::Commands::Create.new.call(yaml: config_path, quiet: true)
       end
 
       assert_empty output.first.strip
@@ -56,7 +103,7 @@ class CreateCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+        Ace::Assign::CLI::Commands::Create.new.call(yaml: config_path)
       end
 
       assert_includes output.first, "Created from hidden spec:"
@@ -81,7 +128,7 @@ class CreateCommandTest < AceAssignTestCase
           Ace::Assign.config["cache_dir"] = File.join(".ace-local", "assign")
 
           output = capture_io do
-            Ace::Assign::CLI::Commands::Create.new.call(config: config_path)
+            Ace::Assign::CLI::Commands::Create.new.call(yaml: config_path)
           end
 
           created_line = output.first.lines.find { |line| line.start_with?("Created: ") }
@@ -99,5 +146,78 @@ class CreateCommandTest < AceAssignTestCase
         Ace::Assign.reset_config!
       end
     end
+  end
+
+  def test_create_requires_exactly_one_mode
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Create.new.call
+    end
+
+    assert_equal "Exactly one of --yaml or --task is required", error.message
+  end
+
+  def test_create_rejects_both_yaml_and_task
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Create.new.call(yaml: "job.yml", task: ["230"])
+    end
+
+    assert_equal "--yaml and --task are mutually exclusive", error.message
+  end
+
+  def test_create_rejects_preset_without_task
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::CLI::Commands::Create.new.call(yaml: "job.yml", preset: "work-on-task")
+    end
+
+    assert_equal "--preset requires --task", error.message
+  end
+
+  def test_task_assignment_creator_rejects_draft_tasks
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new("400" => {status: "draft"}),
+      executor: FakeExecutor.new
+    )
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      creator.call(task_refs: ["400"])
+    end
+
+    assert_includes error.message, "status 'draft'"
+    assert_includes error.message, "/as-task-review 400"
+  end
+
+  def test_task_assignment_creator_skips_terminal_refs_and_continues
+    executor = FakeExecutor.new
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "404" => {status: "done"},
+        "405" => {status: "pending"}
+      ),
+      executor: executor
+    )
+
+    result = creator.call(task_refs: ["404", "405"])
+
+    assert_equal ["404"], result[:skipped_terminal]
+    assert_equal ["405"], result[:task_refs]
+    assert_match(%r{\.ace-local/assign/jobs/work-on-task-405-job\.yml$}, executor.path)
+  end
+
+  def test_task_assignment_creator_rejects_all_terminal_refs
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "402" => {status: "done"},
+        "403" => {status: "skipped"}
+      ),
+      executor: FakeExecutor.new
+    )
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      creator.call(task_refs: ["402", "403"])
+    end
+
+    assert_includes error.message, "All requested tasks are already terminal"
+    assert_includes error.message, "402"
+    assert_includes error.message, "403"
   end
 end

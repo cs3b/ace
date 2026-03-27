@@ -9,6 +9,7 @@ require "pathname"
 
 # CLI and commands
 require_relative "assign/cli"
+require_relative "assign/organisms/task_assignment_creator"
 
 module Ace
   module Assign
