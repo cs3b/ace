@@ -47,36 +47,40 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.938] - 2026-03-27
 
-### Added
-- **ace-demo v0.22.0**: Added cast verification primitives (`CastFileParser`, `CastVerifier`, and cast/verification models) plus `.cast` attachment support that converts to GIF before PR upload/comment.
-
-### Changed
-- **ace-demo v0.22.0**: Integrated non-blocking command-presence verification into asciinema recording output and updated attach/record CLI messaging for cast-aware behavior.
+### Fixed
+- **ace-assign v0.39.1**: Updated assignment add-task workflow/docs to use the current `ace-assign add --yaml` contract and fixed preset step insertion naming to avoid stale-collision cases during canonical expansion.
 
 ### Technical
-- **ace-demo v0.22.0**: Expanded parser/verifier/recorder/attacher test coverage across atoms, molecules, organisms, and models.
+- **ace-assign v0.39.1**: Added regression coverage for canonical expansion name-refresh and debug warnings for unexpanded `--task` preset template tokens.
 
 ## [0.9.937] - 2026-03-27
 
 ### Added
-- **ace-demo v0.21.0**: Added backend selection for `ace-demo record` via `--backend` and YAML `settings.backend`, plus structured recording result metadata.
+- **ace-assign v0.39.0**: Added preset-aware `ace-assign add --step` and `--task` insertion modes with preset resolution and task-template expansion support.
 
 ### Changed
-- **ace-demo v0.21.0**: Made asciinema the default YAML recording backend and enforced backend/format compatibility rules with actionable CLI guidance.
+- **ace-assign v0.39.0**: Replaced legacy `add` positional/`--from` insertion contract with explicit mutually exclusive modes (`--yaml`, `--step`, `--task`), including canonical `--yaml` naming.
 
 ### Technical
-- **ace-demo v0.21.0**: Expanded parser/recorder/CLI regression coverage for backend dispatch, format guardrails, and structured recording outputs.
+- **ace-assign v0.39.0**: Added loader/resolver/inferrer modules plus expanded command and helper test coverage for preset-aware insertion behavior.
 
-## [0.9.936] - 2026-03-27
+## [0.9.936] - 2026-03-26
 
 ### Added
-- **ace-demo v0.20.0**: Added asciinema-native recording support and AGG post-processing pipeline components for multi-backend demo generation.
+- **ace-assign v0.38.3**: Added `ace-assign add --from <file>` for YAML-driven batch insertion with nested `sub_steps` support.
+- **ace-assign v0.38.3**: Added `as-assign-add-task` skill and `wfi://assign/add-task` workflow for guided subtree insertion.
+
+### Fixed
+- **ace-assign v0.38.3**: Prevalidated full `add_batch` trees before queue mutation to prevent partial insertion on invalid later entries.
+- **ace-assign v0.38.3**: Normalized nested batch child-depth overflow handling with consistent `Ace::Assign::Error` reporting.
+- **ace-assign v0.38.3**: Routed workflow/skill/sub-step batch insertions through canonical subtree materialization.
 
 ### Changed
-- **ace-demo v0.20.0**: Updated recording orchestration and defaults to support asciinema adapter flows in task-driven demo workflows.
+- **ace-assign v0.38.3**: Extended assignment insertion with batch support, metadata passthrough, and unified dynamic step instructions.
+- **ace-overseer v0.12.1**: Tightened `ace-assign` gemspec constraint from `~> 0.16` to `~> 0.38` to match the runtime dependency introduced in v0.12.0.
 
 ### Technical
-- **ace-demo v0.20.0**: Expanded atom/molecule/pipeline/smoke test coverage for asciinema+AGG execution paths.
+- **ace-assign v0.38.3**: Expanded command/executor test coverage for `--from` validation, batch insertion, depth overflow, and workflow-backed inserts.
 
 ## [0.9.935] - 2026-03-26
 

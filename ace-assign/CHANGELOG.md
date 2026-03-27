@@ -7,11 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.38.3] - 2026-03-27
+## [0.39.1] - 2026-03-27
+
+### Fixed
+- Updated the `as-assign-add-task` workflow and related docs to use the current `ace-assign add --yaml` contract instead of removed `--from` usage.
+- Refreshed preset step insertion name resolution to re-read queue names between insertions, preventing stale iteration-name collisions when canonical expansion adds additional steps.
+- Added debug-time warnings for unexpanded `{{token}}` placeholders in `--task` preset templates.
+
+### Technical
+- Added regression coverage for preset insertion name-refresh behavior across canonical subtree expansion.
+- Added regression coverage for unexpanded template-token warnings in debug `--task` mode.
+- Normalized `detect_batch_parent` return semantics to always return a string value.
+
+## [0.39.0] - 2026-03-27
+
+### Added
+- Added preset-aware `ace-assign add --step <name[,name...]>` mode with exact-first and base-name fallback resolution.
+- Added preset-aware `ace-assign add --task <ref>` mode using preset `expansion.child-template` with automatic batch-parent detection.
+- Added new preset insertion support modules: `PresetLoader`, `PresetStepResolver`, and `PresetInferrer`.
 
 ### Changed
+- Replaced legacy `ace-assign add` insertion contract with exactly one required mode: `--yaml`, `--step`, or `--task`.
+- Renamed YAML file insertion flag from `--from` to canonical `--yaml`.
+- Removed positional `name` insertion mode in favor of explicit `--step`.
+
+### Technical
+- Expanded command and atom/molecule test coverage for mode validation, preset loading, step resolution, auto-iteration naming, and preset inference fallback behavior.
+
+## [0.38.3] - 2026-03-27
+
+### Added
+- Added `ace-assign add --from <file>` to insert multiple steps from YAML, including nested `sub_steps` expansion.
+- Added the `as-assign-add-task` skill and `wfi://assign/add-task` workflow for guided subtree insertion.
+
+### Fixed
+- Prevalidated full `add_batch` trees before mutating assignment queues, preventing partial insertion when later batch entries are invalid.
+- Normalized nested batch child-depth overflow handling by converting `StepNumbering` depth `ArgumentError` into `Ace::Assign::Error`.
+- Routed workflow/skill/sub-step batch insertions through canonical subtree expansion and materialization.
+- Reworded executor-level child insertion validation to domain language so non-CLI callers are not coupled to CLI flag syntax.
+- Removed stale add-task child-step hardcoding drift by relying on workflow `assign.sub-steps` resolution at insertion time.
+
+### Changed
+- Extended assignment insertion execution with batch insertion support and frontmatter passthrough for inserted steps.
+- Unified dynamic step default instructions under a single `AssignmentExecutor::DEFAULT_DYNAMIC_STEP_INSTRUCTIONS` source.
+- Limited canonical batch expansion to explicit `workflow`, `skill`, or declared `sub_steps` inputs, preserving prior numbering behavior for plain flat batch inserts.
+- Updated usage, getting-started, and handbook docs to cover the new `add --from` workflow.
 - Updated `record-demo` step instructions to require diagnosis before skipping on failure — agents must check config, available fonts, and spike findings before reporting a non-blocking skip.
 - Added `decision_notes.non_blocking_policy` to `record-demo` step catalog entry clarifying that "non-blocking" means "diagnose and retry before skipping," not "skip on first failure."
+
+### Technical
+- Expanded command and executor coverage for `--from` validation, child rebalance behavior, and metadata preservation.
+- Added regression tests for batch insertion validation, depth overflow, and workflow-backed inserts.
+- Renamed add-command local boolean flags to predicate-style names (`name_given`, `from_given`) for readability.
 
 ## [0.38.2] - 2026-03-26
 
