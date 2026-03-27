@@ -13,12 +13,15 @@ module Ace
 
         def launch(worktree_path:, preset_name:, task_ref:, subtask_refs: nil, task_refs: nil)
           with_worktree_context(worktree_path) do
+            requested_refs = effective_task_refs(task_ref, subtask_refs, task_refs)
+            requested_refs = [task_ref] unless preset_supports_taskrefs?(preset_name: preset_name)
+
             creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
               task_manager: @task_manager,
               executor: @assignment_executor
             )
             result = creator.call(
-              task_refs: effective_task_refs(task_ref, subtask_refs, task_refs),
+              task_refs: requested_refs,
               preset_name: preset_name,
               primary_task_ref: task_ref
             )
