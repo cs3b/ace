@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.2] - 2026-03-27
+
+### Fixed
+- Validated preset names before file resolution to block invalid path-like preset inputs.
+- Added `ace-assign add --task` task-reference existence validation before mutating assignment queues.
+- Corrected `ace-assign add --task` insertion semantics to honor `--child`; explicit `--after` without `--child` now inserts as a sibling.
+- Added explicit preset-step resolver errors when presets define no usable `steps` array.
+
+### Technical
+- Added regression coverage for preset-name validation and empty-preset-step diagnostics.
+- Added `add --task` coverage for task-ref validation and sibling insertion with `--after` when `--child` is not set.
+- Added end-to-end CLI coverage for `ace-assign create --task` assignment and step-file materialization.
+
 ## [0.40.1] - 2026-03-27
 
 ### Fixed
