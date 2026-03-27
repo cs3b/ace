@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.3] - 2026-03-27
+
+### Changed
+- Updated `record-demo` step instructions to require diagnosis before skipping on failure — agents must check config, available fonts, and spike findings before reporting a non-blocking skip.
+- Added `decision_notes.non_blocking_policy` to `record-demo` step catalog entry clarifying that "non-blocking" means "diagnose and retry before skipping," not "skip on first failure."
+
 ## [0.38.2] - 2026-03-26
 
 ### Changed
