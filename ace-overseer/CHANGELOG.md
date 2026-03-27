@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-03-27
+
+### Fixed
+- Updated work-on preset guard checks to evaluate active resolved refs after terminal filtering, preventing false single-task preset rejections on mixed terminal/non-terminal inputs.
+- Preserved parent refs during taskref expansion when all subtasks are terminal, preventing empty expansion results from valid parent-task inputs.
+
 ## [0.13.0] - 2026-03-27
 
 ### Changed
