@@ -42,7 +42,7 @@ module Ace
             cli_preset: cli_preset,
             default: @config["default_assign_preset"] || "work-on-task"
           )
-          guard_multi_task_preset!(preset_name, requested_refs.length)
+          guard_multi_task_preset!(preset_name, resolved_refs.length)
 
           expanded_taskrefs = expand_task_refs_in_order(resolved_refs)
           primary_subtask_refs = extract_subtask_refs(primary_task)
