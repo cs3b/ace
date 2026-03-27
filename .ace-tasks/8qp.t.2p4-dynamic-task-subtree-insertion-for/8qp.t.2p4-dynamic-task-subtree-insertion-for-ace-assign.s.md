@@ -23,7 +23,7 @@ worktree:
 
 ## Objective
 
-Enable flexible assignment modification by allowing users to inject new task subtrees and preset-defined steps into active assignments. This improves adaptability when new requirements emerge, a review needs retrying, or a task needs to be added to a running batch without recreating assignments from scratch.
+Enable flexible assignment composition and modification by allowing users to inject new task subtrees and preset-defined steps into active assignments, and by letting assignment creation start directly from task refs through the same preset-driven path used by `ace-overseer`. This improves adaptability when new requirements emerge, a review needs retrying, a task needs to be added to a running batch, or a fresh assignment should be created from tasks without a separate prepare step.
 
 ## Concept Inventory
 
@@ -39,27 +39,31 @@ Enable flexible assignment modification by allowing users to inject new task sub
 | `PresetLoader` atom | t.2p4.1 | -- | PLANNED |
 | `PresetStepResolver` atom | t.2p4.1 | -- | PLANNED |
 | `PresetInferrer` molecule | t.2p4.1 | -- | PLANNED |
-| `create --task` preset-based creation | t.2p4.2 | -- | PLANNED |
-| `create --yaml` (replaces positional CONFIG) | t.2p4.2 | -- | PLANNED |
+| shared task-driven assignment creation | t.2p4.2 | -- | IN PROGRESS |
+| `create --task` preset-based creation | t.2p4.2 | -- | IN PROGRESS |
+| `create --yaml` (replaces positional CONFIG) | t.2p4.2 | -- | IN PROGRESS |
+| multi-task `create --task` input | t.2p4.2 | -- | IN PROGRESS |
+| `ace-overseer` adoption of shared create path | t.2p4.2 | -- | IN PROGRESS |
+| task child-template inherits full `task/work` sub-step sequence | t.2p4.2 | -- | IN PROGRESS |
 | `PresetJobBuilder` molecule | t.2p4.1 | -- | PLANNED |
 
 ## Subtasks
 
 - **t.2p4.0** (done): YAML Batch Insertion and Add-Task Skill -- `--yaml`, `add_batch()`, canonical subtree insertion, skill/workflow
 - **t.2p4.1** (done): Preset-Aware Step and Task Insertion -- `--step`, `--task`, `--preset`, option-only `add` contract
-- **t.2p4.2** (draft): Unified Preset Input for Create Command -- `create --task`, `create --yaml`, terminal filtering
+- **t.2p4.2** (in_progress): Unified Preset Input for Create Command -- flags-only `create`, multi-task `--task`, shared `ace-overseer` path, full task subtree sub-steps
 
 ## Behavioral Specification
 
 ### User Experience
 
-- **Input**: One explicit insertion mode for `ace-assign add`: `--yaml <file>`, `--step <name[,name...]>`, or `--task <ref>`
-- **Process**: The CLI resolves the requested input into concrete step definitions, feeds them through the existing batch insertion engine, and reuses canonical subtree expansion for any workflow/skill-backed step trees
-- **Output**: Summary of inserted steps with assigned numbers, parent relationships, iteration-renamed roots where applicable, and confirmation that existing queue state was preserved
+- **Input**: One explicit mode for `ace-assign add` (`--yaml <file>`, `--step <name[,name...]>`, or `--task <ref>`) and one explicit mode for `ace-assign create` (`--yaml <file>` or `--task <ref[,ref...]>`)
+- **Process**: The CLI resolves the requested input into concrete step definitions or a hidden job spec, feeds insertion requests through the existing batch insertion engine, and feeds creation requests through the shared preset-driven task creation path also used by `ace-overseer`
+- **Output**: For `add`, a summary of inserted steps with assigned numbers and preserved queue state. For `create`, a new assignment with the expanded step tree and first-step instructions.
 
 ### Expected Behavior
 
-This task lands in two phases:
+This task lands in three phases:
 
 **1. Done in `t.2p4.0`: batch insertion engine**
 
@@ -67,7 +71,7 @@ This task lands in two phases:
 
 Each inserted step receives `added_by: "batch_from:<filename>"` for audit trail.
 
-**2. Planned in `t.2p4.1`: preset-aware insertion UX**
+**2. Done in `t.2p4.1`: preset-aware insertion UX**
 
 `ace-assign add` becomes an option-driven command with exactly one required mode:
 
@@ -81,7 +85,30 @@ Each inserted step receives `added_by: "batch_from:<filename>"` for audit trail.
 
 `--task` resolves `expansion.child-template`, substitutes the task reference, auto-detects a batch parent when `--after` is omitted, and implies child insertion for the auto-detected path.
 
+The child-template now declares the full `task/work` subtree so inserted task roots expand with:
+- `onboard-base`
+- `task-load`
+- `plan-task`
+- `work-on-task`
+- `pre-commit-review`
+- `verify-test`
+- `release-minor`
+- `create-retro`
+
 `as-assign-add-task` remains supported, but its CLI invocation and examples must migrate to `--yaml`.
+
+**3. In progress in `t.2p4.2`: unified create UX**
+
+`ace-assign create` becomes an option-driven command with exactly one required mode:
+
+1. `--yaml <file>` for direct YAML-based creation
+2. `--task <ref[,ref...]>` / repeated `--task` for preset-based creation from one or more task refs
+
+`--preset <name>` is optional for `--task` and defaults to `work-on-task`.
+
+Task-driven creation rejects draft tasks, skips terminal tasks in mixed sets, errors when all requested refs are terminal, and rejects multi-task input for presets that do not support `taskrefs`.
+
+`ace-overseer work-on` keeps its CLI surface but adopts the same shared task-driven assignment creation path, so direct `ace-assign create --task` and overseer-driven creation share preset loading, parameter shaping, hidden job generation, and task filtering semantics.
 
 ### Interface Contract
 
@@ -155,6 +182,7 @@ Added 4 step(s) from add-task-xyz.yml
 
 #### Consumer Packages
 - `ace-assign` (internal: CLI command, executor)
+- `ace-overseer` (shared create-path consumer in `work-on`)
 - `ace-handbook-integration-claude` (skill projection for `as-assign-add-task`)
 - other projected skill packages for `as-assign-add-task`
 
@@ -168,7 +196,10 @@ Added 4 step(s) from add-task-xyz.yml
 - `ace-assign add --yaml` preserves the batch insertion behavior shipped in `t.2p4.0`
 - `ace-assign add --step review-fit` resolves the preset definition and inserts it with the next queue iteration name
 - `ace-assign add --step review-valid,review-fit,review-shine` inserts an ordered sequence of preset step trees
-- `ace-assign add --task t.456` resolves the preset child-template, auto-detects the batch parent when possible, and inserts the task subtree as a child
+- `ace-assign add --task t.456` resolves the preset child-template, auto-detects the batch parent when possible, and inserts the full `task/work` subtree as a child
+- `ace-assign create --task t.xyz` creates a full assignment directly from task refs without a separate prepare step
+- `ace-assign create --task t.100,t.101 --preset work-on-task` creates one assignment from the ordered active task set
+- `ace-overseer work-on` uses the shared task-driven creation path rather than its own preset expansion implementation
 - Each inserted step has `added_by: "batch_from:<filename>"` metadata when materialized through batch insertion
 - Existing step states (done, in_progress, pending) are not modified by insertion other than the documented parent rebalance for active child injection
 - `as-assign-add-task` remains coherent with the CLI contract and examples after the `--yaml` rename
@@ -180,6 +211,8 @@ Added 4 step(s) from add-task-xyz.yml
 - [Resolved] Batch insertion implementation is the existing `add_batch()` executor path with canonical subtree materialization
 - [Resolved] Preset inference comes from archived `source_config` job YAML `session.name`, with fallback to `work-on-task`
 - [Resolved] Preset inference does not consult `.ace/assign/config.yml`
+- [Resolved] `create` is also option-only; positional `CONFIG` is removed
+- [Resolved] multi-task `--task` creation is part of this track so `ace-overseer` can converge on the same path
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -231,6 +264,8 @@ Added 4 step(s) from add-task-xyz.yml
 - CLI users can batch-insert concrete steps from YAML
 - CLI users can insert preset-backed step trees by name with auto-iteration numbering
 - CLI users can insert preset-backed task subtrees with batch-parent auto-detection
+- CLI users can create assignments directly from YAML or task refs through explicit modes
+- `ace-overseer` users get the same simplified task-driven creation behavior without a CLI change
 - Skill users can continue adding a work-on-task child to a running batch via `/as-assign-add-task`
 
 ### System Behavior Scope
@@ -238,13 +273,19 @@ Added 4 step(s) from add-task-xyz.yml
 - `PresetLoader` atom — preset file resolution and loading
 - `PresetStepResolver` atom — step matching and next-iteration naming
 - `PresetInferrer` molecule — preset inference from archived assignment metadata
+- shared task-driven assignment creation service
 - CLI `add.rb` — option-only insertion modes and preset routing
+- CLI `create.rb` — option-only creation modes and preset routing
+- `ace-overseer` assignment launch path delegates to the shared creation service
 
 ### Interface Scope
 - `ace-assign add --yaml` CLI flag
 - `ace-assign add --step` CLI flag
 - `ace-assign add --task` CLI flag
 - `ace-assign add --preset` CLI flag
+- `ace-assign create --yaml` CLI flag
+- `ace-assign create --task` CLI flag
+- `ace-assign create --preset` CLI flag
 - `as-assign-add-task` skill + `wfi://assign/add-task` workflow examples updated for `--yaml`
 
 ## Deliverables
@@ -253,12 +294,14 @@ Added 4 step(s) from add-task-xyz.yml
 - Extended `add` command with option-only insertion modes
 - YAML file format for concrete step definitions
 - Preset-backed step resolution, iteration naming, and task child-template insertion
+- Shared task-driven assignment creation across `ace-assign` and `ace-overseer`
 - Updated `as-assign-add-task` contract/examples for `--yaml`
 
 ### Validation Artifacts
 - Unit tests for preset loading, preset step resolution, and preset inference
 - CLI tests for `--yaml`, `--step`, `--task`, and `--preset`
 - Integration tests for ordered preset insertion and task subtree auto-detection
+- create-path tests for single-task and multi-task taskref expansion plus overseer delegation
 
 ## Out of Scope
 
