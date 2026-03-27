@@ -34,6 +34,14 @@ class PresetStepResolverTest < AceAssignTestCase
     assert_includes error.message, "Step 'unknown' not found"
   end
 
+  def test_find_step_raises_clear_error_when_preset_has_no_steps
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::Atoms::PresetStepResolver.find_step({"name" => "empty"}, "review-fit")
+    end
+
+    assert_includes error.message, "has no steps defined"
+  end
+
   def test_next_iteration_name_increments_from_existing_names
     next_name = Ace::Assign::Atoms::PresetStepResolver.next_iteration_name(
       "review-fit",

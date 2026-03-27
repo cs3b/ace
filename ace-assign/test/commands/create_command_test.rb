@@ -220,4 +220,31 @@ class CreateCommandTest < AceAssignTestCase
     assert_includes error.message, "402"
     assert_includes error.message, "403"
   end
+
+  def test_create_task_mode_creates_assignment_and_step_files_end_to_end
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+      fake_manager = FakeTaskManager.new("405" => {status: "pending"})
+
+      output = nil
+      Ace::Task::Organisms::TaskManager.stub(:new, fake_manager) do
+        output = capture_io do
+          Ace::Assign::CLI::Commands::Create.new.call(task: ["405"], preset: "work-on-task")
+        end
+      end
+
+      assignment_id = output.first[/Assignment: .* \(([0-9a-z]+)\)/, 1]
+      refute_nil assignment_id
+
+      assignment_dir = File.join(cache_dir, assignment_id)
+      assert Dir.exist?(assignment_dir)
+      assert Dir.exist?(File.join(assignment_dir, "steps"))
+
+      step_files = Dir.glob(File.join(assignment_dir, "steps", "*.st.md"))
+      refute_empty step_files
+      assert step_files.any? { |path| File.read(path).include?("work-on-405") }
+
+      Ace::Assign.reset_config!
+    end
+  end
 end

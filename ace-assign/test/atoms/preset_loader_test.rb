@@ -18,4 +18,12 @@ class PresetLoaderTest < AceAssignTestCase
 
     assert_includes error.message, "not found"
   end
+
+  def test_load_rejects_invalid_preset_name_characters
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Assign::Atoms::PresetLoader.load("../../../etc/passwd")
+    end
+
+    assert_includes error.message, "Invalid preset name"
+  end
 end
