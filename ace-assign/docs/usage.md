@@ -58,8 +58,8 @@ Create child/sibling steps:
 
 
 ```bash
-ace-assign add --step setup-db --after 010 --child
-ace-assign add --step hotfix --after 010
+ace-assign add --step update-docs --after 020
+ace-assign add --step review-pr --after 100 --child
 ace-assign add --yaml .ace-local/assign/jobs/add-task.yml --after 010 --child
 ```
 
