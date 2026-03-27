@@ -77,8 +77,9 @@ Use `--message <file>` to keep reports explicit and reusable.
 
 
 ```bash
-ace-assign add --step work-on-task --task t.xyz
-ace-assign add --step review-pr --after 020 --child
+ace-assign add --task t.xyz
+ace-assign add --step update-docs --after 020
+ace-assign add --step review-pr --after 100 --child
 ace-assign add --yaml .ace-local/assign/jobs/add-task-t.xyz.yml --after 010 --child
 ```
 
