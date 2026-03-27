@@ -35,7 +35,7 @@ module Ace
           primary_ref = primary_task_ref.to_s.strip
           primary_ref = resolved_refs.first[:ref] if primary_ref.empty?
 
-          guard_multi_task_preset!(preset_name, preset, requested_refs.length)
+          guard_multi_task_preset!(preset_name, preset, resolved_refs.length)
 
           expanded_taskrefs = if preset_supports_taskrefs?(preset)
             expand_task_refs_in_order(resolved_refs)
