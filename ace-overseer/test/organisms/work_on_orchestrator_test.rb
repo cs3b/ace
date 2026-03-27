@@ -86,7 +86,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
     def launch(**kwargs)
       @calls << kwargs
-      {assignment_id: "8or5kx", first_step: "010-onboard"}
+      {assignment_id: "8or5kx", first_step: "010-onboard", job_path: ".ace-local/assign/jobs/work-on-task-230-job.yml"}
     end
   end
 

@@ -23,7 +23,7 @@ Starting task work means creating a worktree, opening a tmux window, and prepari
 ## How It Works
 
 1. Resolve task refs and create a scoped worktree.
-2. Expand the assignment preset into concrete steps under `.ace-local/assign/`, then open a dedicated tmux window mapped to that worktree.
+2. Route assignment creation through `ace-assign create --task ...`, which expands the assignment preset into concrete steps under `.ace-local/assign/`, then open a dedicated tmux window mapped to that worktree.
 3. Instruct the agent inside the tmux window to act as an orchestrator and drive the assignment step-by-step.
 
 ## Use Cases
