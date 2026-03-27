@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/task"
 require "yaml"
 require "set"
 
@@ -130,6 +131,7 @@ module Ace
             preset = Atoms::PresetLoader.load(preset_name)
             task_ref = options[:task].to_s.strip
             raise Ace::Support::Cli::Error, "--task requires a task reference" if task_ref.empty?
+            raise Ace::Support::Cli::Error, "Task not found: #{task_ref}" unless task_manager.show(task_ref)
 
             child_template = preset.dig("expansion", "child-template")
             unless child_template.is_a?(Hash)
@@ -143,14 +145,15 @@ module Ace
             end
 
             task_step = build_task_step(child_template, task_ref, debug: options[:debug])
+            insert_as_child = options[:child] || options[:after].to_s.strip.empty?
             result = executor.add_batch(
               steps: [task_step],
               after: parent_step,
-              as_child: true,
+              as_child: insert_as_child,
               source_file: "preset:#{preset_name}:task:#{task_ref}"
             )
 
-            print_task_result(result, task_ref, parent_step) unless options[:quiet]
+            print_task_result(result, task_ref, parent_step, as_child: insert_as_child) unless options[:quiet]
             nil
           end
 
@@ -244,6 +247,10 @@ module Ace
             fallback&.number
           end
 
+          def task_manager
+            @task_manager ||= Ace::Task::Organisms::TaskManager.new
+          end
+
           def load_steps_from_file(path)
             raise Ace::Support::Cli::Error, "File not found: #{path}" unless File.exist?(path)
 
@@ -279,9 +286,10 @@ module Ace
             print_added_steps(added_steps)
           end
 
-          def print_task_result(result, task_ref, parent_step)
+          def print_task_result(result, task_ref, parent_step, as_child:)
             added_steps = Array(result[:added])
-            puts "Added task #{task_ref} under #{parent_step}"
+            relation = as_child ? "under" : "after"
+            puts "Added task #{task_ref} #{relation} #{parent_step}"
             print_added_steps(added_steps)
           end
 

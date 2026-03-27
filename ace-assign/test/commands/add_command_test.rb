@@ -3,6 +3,18 @@
 require_relative "../test_helper"
 
 class AddCommandTest < AceAssignTestCase
+  class FakeTaskManager
+    def initialize(existing_refs)
+      @existing_refs = existing_refs
+    end
+
+    def show(ref)
+      return Object.new if @existing_refs.include?(ref)
+
+      nil
+    end
+  end
+
   def test_add_with_yaml_inserts_steps
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -88,7 +100,10 @@ class AddCommandTest < AceAssignTestCase
       executor.start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(task: "t.456", preset: "work-on-task")
+        command = Ace::Assign::CLI::Commands::Add.new
+        command.stub(:task_manager, FakeTaskManager.new(["t.456"])) do
+          command.call(task: "t.456", preset: "work-on-task")
+        end
       end
 
       assert_includes output.first, "Added task t.456 under 010"
@@ -107,10 +122,64 @@ class AddCommandTest < AceAssignTestCase
       Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Add.new.call(task: "t.456", preset: "work-on-task")
+        command = Ace::Assign::CLI::Commands::Add.new
+        command.stub(:task_manager, FakeTaskManager.new(["t.456"])) do
+          command.call(task: "t.456", preset: "work-on-task")
+        end
       end
 
       assert_includes error.message, "No batch parent found"
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_add_task_mode_validates_task_reference_exists
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "batch-tasks", "instructions" => "Batch container"}
+      ])
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        command = Ace::Assign::CLI::Commands::Add.new
+        command.stub(:task_manager, FakeTaskManager.new([])) do
+          command.call(task: "t.missing", preset: "work-on-task")
+        end
+      end
+
+      assert_equal "Task not found: t.missing", error.message
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_add_task_mode_respects_after_without_child_as_sibling_insertion
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [
+        {"name" => "seed", "instructions" => "Seed"},
+        {"name" => "batch-tasks", "instructions" => "Batch container"},
+        {"name" => "finalize", "instructions" => "Finalize"}
+      ])
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      output = capture_io do
+        command = Ace::Assign::CLI::Commands::Add.new
+        command.stub(:task_manager, FakeTaskManager.new(["t.900"])) do
+          command.call(task: "t.900", preset: "work-on-task", after: "010")
+        end
+      end
+
+      assert_includes output.first, "Added task t.900 after 010"
+
+      state = executor.status[:state]
+      inserted = state.top_level.find { |step| step.name == "work-on-t.900" }
+      assert inserted
+      assert_equal "011", inserted.number
+
       Ace::Assign.reset_config!
     end
   end
@@ -183,7 +252,10 @@ class AddCommandTest < AceAssignTestCase
       executor.start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(task: "t.789", preset: "test-task-tokens", debug: true)
+        command = Ace::Assign::CLI::Commands::Add.new
+        command.stub(:task_manager, FakeTaskManager.new(["t.789"])) do
+          command.call(task: "t.789", preset: "test-task-tokens", debug: true)
+        end
       end
 
       assert_includes output.last, "Unexpanded preset template token(s): {{task_id}}"

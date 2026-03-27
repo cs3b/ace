@@ -7,9 +7,15 @@ module Ace
     module Atoms
       # Loads assign presets from project overrides first, then gem defaults.
       module PresetLoader
+        VALID_PRESET_NAME = /\A[A-Za-z0-9_-]+\z/.freeze
+
         def self.load(preset_name)
           name = preset_name.to_s.strip
           raise Ace::Support::Cli::Error, "Preset name cannot be empty" if name.empty?
+          unless VALID_PRESET_NAME.match?(name)
+            raise Ace::Support::Cli::Error,
+              "Invalid preset name '#{name}'. Allowed characters: letters, numbers, underscore, hyphen."
+          end
 
           path = resolve_path(name)
           raise Ace::Support::Cli::Error, "Preset '#{name}' not found" unless path

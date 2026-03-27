@@ -16,6 +16,11 @@ module Ace
           raise Ace::Support::Cli::Error, "Step name cannot be empty" if requested.empty?
 
           steps = Array(preset["steps"])
+          if steps.empty?
+            raise Ace::Support::Cli::Error,
+              "Preset '#{preset['name'] || 'unknown'}' has no steps defined. Add a non-empty 'steps' array."
+          end
+
           exact = steps.find { |step| step_name(step) == requested }
           return exact if exact
 
