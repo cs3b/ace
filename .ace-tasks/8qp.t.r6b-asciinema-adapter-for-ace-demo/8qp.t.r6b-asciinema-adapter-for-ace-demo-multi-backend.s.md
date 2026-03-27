@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-26 18:07:01"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-demo/lib/ace/demo/cli/commands/record.rb, ace-demo/lib/ace/demo/cli/commands/attach.rb, ace-demo/lib/ace/demo/organisms/demo_recorder.rb, ace-demo/lib/ace/demo/organisms/demo_attacher.rb, ace-demo/lib/ace/demo/atoms/vhs_tape_compiler.rb, ace-demo/lib/ace/demo/atoms/vhs_command_builder.rb, ace-demo/lib/ace/demo/molecules/vhs_executor.rb, ace-demo/lib/ace/demo/atoms/demo_yaml_parser.rb, ace-demo/docs/usage.md, ace-demo/.ace-defaults/demo/config.yml, .ace-tasks/8qp.t.r6b-asciinema-adapter-for-ace-demo/2-integrate-asciinema-as-default-recording/ux-usage.md]
   commands: []
 needs_review: false
+worktree:
+  branch: r6b-asciinema-adapter-for-ace-demo-multi-backend-recording
+  path: ../ace-t.r6b
+  created_at: "2026-03-27 10:57:47"
+  updated_at: "2026-03-27 10:57:47"
+  target_branch: main
 ---
 
 # Asciinema Adapter for ace-demo Multi-Backend Recording
