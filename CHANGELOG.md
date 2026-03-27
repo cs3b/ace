@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.945] - 2026-03-27
+
+### Fixed
+- **ace-assign v0.40.2**: Validated preset-name input before file resolution, added task-ref existence checks for `ace-assign add --task`, honored `--child` semantics when inserting task-derived steps with `--after`, and improved missing-steps preset diagnostics.
+
+### Technical
+- **ace-assign v0.40.2**: Added regression coverage for preset-name hardening, empty-preset diagnostics, task-mode insertion semantics, and end-to-end `ace-assign create --task` assignment materialization.
+
 ## [0.9.944] - 2026-03-27
 
 ### Fixed
