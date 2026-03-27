@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.946] - 2026-03-27
+
+### Fixed
+- **ace-overseer v0.13.2**: Preserved taskref-only preset compatibility in assignment launching by collapsing to the primary task when presets do not support `taskrefs`.
+- **ace-assign v0.40.3**: Corrected `ace-assign add` documentation examples to align with mutually exclusive add modes and current preset-step resolution behavior.
+
 ## [0.9.945] - 2026-03-27
 
 ### Fixed
