@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 22:33:02"
 estimate: TBD
@@ -107,17 +107,17 @@ Edge Cases:
 
 ### Success Criteria
 
-- [ ] `ace-demo record` uses asciinema by default for YAML tapes
-- [ ] `--backend` CLI flag overrides tape.yml and config defaults
-- [ ] tape.yml `settings.backend` key accepted and validated by DemoYamlParser
-- [ ] DemoRecorder dispatches to correct backend based on resolution order
-- [ ] `DemoRecorder.record` returns a structured recording result exposing backend, visual path, optional cast path, and verification slot/details
-- [ ] asciinema pipeline: compile → record → convert to GIF → retime (if needed)
-- [ ] VHS pipeline unchanged when selected explicitly
-- [ ] Raw `.tape` files continue to use VHS (no regression)
-- [ ] `webm` remains available only via explicit VHS selection
-- [ ] `mp4` is rejected with an actionable error
-- [ ] Both `.cast` and visual artifact paths are reported to the user when asciinema is used
+- [x] `ace-demo record` uses asciinema by default for YAML tapes
+- [x] `--backend` CLI flag overrides tape.yml and config defaults
+- [x] tape.yml `settings.backend` key accepted and validated by DemoYamlParser
+- [x] DemoRecorder dispatches to correct backend based on resolution order
+- [x] `DemoRecorder.record` returns a structured recording result exposing backend, visual path, optional cast path, and verification slot/details
+- [x] asciinema pipeline: compile → record → convert to GIF → retime (if needed)
+- [x] VHS pipeline unchanged when selected explicitly
+- [x] Raw `.tape` files continue to use VHS (no regression)
+- [x] `webm` remains available only via explicit VHS selection
+- [x] `mp4` is rejected with an actionable error
+- [x] Both `.cast` and visual artifact paths are reported to the user when asciinema is used
 
 ## Vertical Slice Decomposition
 
@@ -130,29 +130,29 @@ Single subtask — backend integration is one cohesive change to DemoRecorder + 
 ## Verification Plan
 
 ### Unit/Component Validation
-- [ ] DemoYamlParser accepts `settings.backend` key (asciinema, vhs)
-- [ ] DemoYamlParser rejects unknown backend values
-- [ ] DemoRecorder routes to asciinema when backend is asciinema or nil
-- [ ] DemoRecorder routes to VHS when backend is vhs
-- [ ] DemoRecorder rejects `mp4` regardless of backend
-- [ ] DemoRecorder rejects `webm` when backend resolves to asciinema
-- [ ] CLI `--backend` flag parsed and forwarded correctly
+- [x] DemoYamlParser accepts `settings.backend` key (asciinema, vhs)
+- [x] DemoYamlParser rejects unknown backend values
+- [x] DemoRecorder routes to asciinema when backend is asciinema or nil
+- [x] DemoRecorder routes to VHS when backend is vhs
+- [x] DemoRecorder rejects `mp4` regardless of backend
+- [x] DemoRecorder rejects `webm` when backend resolves to asciinema
+- [x] CLI `--backend` flag parsed and forwarded correctly
 
 ### Integration Validation
-- [ ] Full asciinema recording: tape.yml → .cast → gif via agg
-- [ ] Full VHS recording with `--backend vhs` (regression check)
-- [ ] Playback speed retiming works with asciinema pipeline
-- [ ] `ace-demo record sample-tape --backend vhs --format webm` remains supported
+- [x] Full asciinema recording: tape.yml → .cast → gif via agg
+- [x] Full VHS recording with `--backend vhs` (regression check)
+- [x] Playback speed retiming works with asciinema pipeline
+- [x] `ace-demo record sample-tape --backend vhs --format webm` remains supported
 
 ### Failure Path Validation
-- [ ] Unknown backend value produces actionable error
-- [ ] Missing asciinema binary produces clear install instructions
-- [ ] Missing agg binary produces clear install instructions
-- [ ] `webm` requested on asciinema path produces an actionable error
-- [ ] `mp4` requested produces an actionable error
+- [x] Unknown backend value produces actionable error
+- [x] Missing asciinema binary produces clear install instructions
+- [x] Missing agg binary produces clear install instructions
+- [x] `webm` requested on asciinema path produces an actionable error
+- [x] `mp4` requested produces an actionable error
 
 ### Verification Commands
-- [ ] `ace-demo record sample-tape` → produces .cast + .gif
-- [ ] `ace-demo record sample-tape --backend vhs --format webm` → produces .webm (VHS)
-- [ ] `ace-demo record sample-tape --format mp4` → fails with unsupported-format guidance
-- [ ] `ace-test` in ace-demo passes all existing + new tests
+- [x] `ace-demo record sample-tape` → produces .cast + .gif
+- [x] `ace-demo record sample-tape --backend vhs --format webm` → produces .webm (VHS)
+- [x] `ace-demo record sample-tape --format mp4` → fails with unsupported-format guidance
+- [x] `ace-test` in ace-demo passes all existing + new tests

@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 22:32:56"
 estimate: TBD
@@ -59,11 +59,11 @@ Key questions to answer:
 
 ### Success Criteria
 
-- [ ] asciinema records a tape.yml scenario in sandbox, producing valid `.cast` file
-- [ ] agg converts `.cast` to gif successfully
-- [ ] `.cast` file contains parseable JSON with command/output event data
-- [ ] Concept inventory documents: what survives from VHS pattern, what needs new abstraction
-- [ ] Clear recommendation on asciinema invocation pattern, cast compatibility strategy, and GIF-only renderer assumptions for production
+- [x] asciinema records a tape.yml scenario in sandbox, producing valid `.cast` file
+- [x] agg converts `.cast` to gif successfully
+- [x] `.cast` file contains parseable JSON with command/output event data
+- [x] Concept inventory documents: what survives from VHS pattern, what needs new abstraction
+- [x] Clear recommendation on asciinema invocation pattern, cast compatibility strategy, and GIF-only renderer assumptions for production
 
 ## Vertical Slice Decomposition
 
@@ -76,15 +76,15 @@ Single standalone spike — no further decomposition needed.
 ## Verification Plan
 
 ### Unit/Component Validation
-- [ ] `.cast` file is valid asciinema v2 format (JSON header + event lines)
-- [ ] `.cast` events contain typed commands and their output
+- [x] `.cast` file is valid asciinema format (v3 observed in this environment) with JSON header + event lines
+- [x] `.cast` events contain typed commands and their output
 
 ### Integration Validation
-- [ ] asciinema works inside DemoSandboxBuilder-created sandbox
-- [ ] agg produces gif from the `.cast` file without errors
+- [x] asciinema works inside DemoSandboxBuilder-created sandbox
+- [x] agg produces gif from the `.cast` file without errors
 
 ### Failure Path Validation
-- [ ] Document behavior when asciinema is not installed
-- [ ] Document behavior when agg is not installed
-- [ ] Document behavior with invalid/empty script input
-- [ ] Document behavior when the recorder emits a cast format agg cannot consume directly
+- [x] Document behavior when asciinema is not installed
+- [x] Document behavior when agg is not installed
+- [x] Document behavior with invalid/empty script input
+- [x] Document behavior when the recorder emits a cast format agg cannot consume directly

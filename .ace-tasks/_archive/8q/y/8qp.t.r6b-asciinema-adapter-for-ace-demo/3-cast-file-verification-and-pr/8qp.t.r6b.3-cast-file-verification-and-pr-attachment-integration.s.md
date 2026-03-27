@@ -1,6 +1,6 @@
 ---
 id: 8qp.t.r6b.3
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-26 22:33:06"
 estimate: TBD
@@ -90,13 +90,13 @@ Edge Cases:
 
 ### Success Criteria
 
-- [ ] CastFileParser parses asciinema v2 `.cast` files into structured events
-- [ ] CastVerifier confirms all tape.yml commands appear in `.cast` input events
-- [ ] Verification integrated into `ace-demo record` flow (automatic, non-blocking)
-- [ ] PR attachment works with asciinema pipeline: .cast → agg → gif → upload → comment
-- [ ] Verification result includes actionable details on failures
-- [ ] New models: CastRecording, CastEvent, VerificationResult
-- [ ] `ace-demo attach` remains file-path based and accepts `.cast` inputs
+- [x] CastFileParser parses asciinema v2 `.cast` files into structured events
+- [x] CastVerifier confirms all tape.yml commands appear in `.cast` input events
+- [x] Verification integrated into `ace-demo record` flow (automatic, non-blocking)
+- [x] PR attachment works with asciinema pipeline: .cast → agg → gif → upload → comment
+- [x] Verification result includes actionable details on failures
+- [x] New models: CastRecording, CastEvent, VerificationResult
+- [x] `ace-demo attach` remains file-path based and accepts `.cast` inputs
 
 ## Vertical Slice Decomposition
 
@@ -109,24 +109,24 @@ Single subtask — verification and PR attachment are tightly coupled (both depe
 ## Verification Plan
 
 ### Unit/Component Validation
-- [ ] CastFileParser: parses valid .cast file, extracts header and events
-- [ ] CastFileParser: raises CastParseError on invalid/malformed .cast
-- [ ] CastVerifier: passes when all expected commands are found in input events
-- [ ] CastVerifier: fails with details when command missing
-- [ ] DemoAttacher / attach flow converts `.cast` input to GIF before upload
+- [x] CastFileParser: parses valid .cast file, extracts header and events
+- [x] CastFileParser: raises CastParseError on invalid/malformed .cast
+- [x] CastVerifier: passes when all expected commands are found in input events
+- [x] CastVerifier: fails with details when command missing
+- [x] DemoAttacher / attach flow converts `.cast` input to GIF before upload
 
 ### Integration Validation
-- [ ] Full flow: record tape.yml → .cast → verify → convert → attach to PR
-- [ ] Verification runs automatically after asciinema recording
+- [x] Full flow: record tape.yml → .cast → verify → convert → attach to PR
+- [x] Verification runs automatically after asciinema recording
 
 ### Failure Path Validation
-- [ ] Invalid .cast file → CastParseError with actionable message
-- [ ] Missing commands → verification warning with command list
-- [ ] agg failure during attach → AggExecutionError, attachment blocked
-- [ ] Verification warnings leave `ace-demo record` exit status successful
+- [x] Invalid .cast file → CastParseError with actionable message
+- [x] Missing commands → verification warning with command list
+- [x] agg failure during attach → AggExecutionError, attachment blocked
+- [x] Verification warnings leave `ace-demo record` exit status successful
 
 ### Verification Commands
-- [ ] `ace-demo record sample-tape` → .cast + gif + verification pass
-- [ ] `ace-demo attach .ace-local/demo/sample-tape.cast --pr NNN` → gif uploaded, comment posted
-- [ ] `ace-demo attach .ace-local/demo/sample-tape.gif --pr NNN` → gif uploaded, comment posted without reconversion
-- [ ] `ace-test` in ace-demo passes all existing + new tests
+- [x] `ace-demo record sample-tape` → .cast + gif + verification pass
+- [x] `ace-demo attach .ace-local/demo/sample-tape.cast --pr NNN` → gif uploaded, comment posted
+- [x] `ace-demo attach .ace-local/demo/sample-tape.gif --pr NNN` → gif uploaded, comment posted without reconversion
+- [x] `ace-test` in ace-demo passes all existing + new tests
