@@ -6,16 +6,17 @@ description: Review Package - Comprehensive code, docs, UX/DX review with recomm
 # agent: Explore
 user-invocable: true
 allowed-tools:
-  - Bash(ace-bundle:*)
-  - Bash(ace-git:*)
-  - Bash(gh:*)
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Edit
-  - TodoWrite
-  - Skill
+- Bash(ace-bundle:*)
+- Bash(ace-git:*)
+- Bash(gh:*)
+- Bash(ace-idea:*)
+- Read
+- Glob
+- Grep
+- Write
+- Edit
+- TodoWrite
+- Skill
 argument-hint: [package-name]
 last_modified: 2026-01-10
 source: ace-review

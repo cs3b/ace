@@ -6,6 +6,7 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Bash(ace-search:*)
   - Bash(ace-lint:*)
+  - Bash(ace-idea:*)
 title: Review Package Workflow
 purpose: Run evidence-first package reviews across maintainability, interface quality, and documentation fidelity
 ace-docs:
@@ -27,7 +28,7 @@ Review a package with a repeatable, evidence-first process that combines determi
 
 - Target package directory exists in repository root
 - `ace-bundle` and `ace-search` available
-- No additional optional tools are required.
+- `ace-idea` is optional for persisting the full report as an idea attachment
 
 
 ## Priority Model
@@ -101,6 +102,16 @@ ace-search "." "$1" --files
 ```
 
 3. Continue with project context and direct package inspection.
+
+4. Initialize deterministic report output target:
+
+```bash
+package_slug="$(printf '%s' "$1" | tr '/ ' '-')"
+review_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+report_dir=".ace-local/review/package/${package_slug}"
+report_path="${report_dir}/raw-review-${review_timestamp}.md"
+mkdir -p "$report_dir"
+```
 
 ### Step 3: Build Evidence Inventory
 
@@ -383,7 +394,7 @@ Group actions into buckets:
 
 Add rough effort tags where possible (`S`, `M`, `L`).
 
-### Step 10: Final Review Output
+### Step 10: Final Review Output and Report Artifact
 
 Your final package review output should contain, in order:
 
@@ -393,6 +404,43 @@ Your final package review output should contain, in order:
 4. Summary table
 5. Prioritized recommendation list
 6. Brief closing note with follow-up suggestion
+
+Use the same content to create a full markdown report file:
+
+```bash
+cat <<EOF > "$report_path"
+# Package Review Report: $1
+
+Scope and package reviewed: $1
+
+## Tool Availability
+
+## Findings
+
+| # | Dimension | Check | Priority | Evidence | File(s) | Recommendation | Tool |
+|---|-----------|-------|----------|----------|---------|----------------|------|
+
+## Summary
+
+| Dimension | Immediate | Next Release | Backlog | Advisory | Total |
+|-----------|-----------|--------------|---------|----------|-------|
+
+## Prioritized Recommendations
+
+## Closing Note
+EOF
+
+echo "Full report saved to: $report_path"
+
+if command -v ace-idea >/dev/null 2>&1; then
+  ace-idea create "Package review report for ${1}. Full report is attached as full-report.md in the idea folder." --title "Review package ${1}" --tags review,package --move-to maybe
+  echo "Use the output Path above to attach report artifact:"
+  echo "Set idea_file_path to the \"Path:\" value above and run:"
+  echo "cp \"$report_path\" \"\$(dirname \"$idea_file_path\")/full-report.md\""
+else
+  echo "ace-idea not available; full report available at: $report_path"
+fi
+```
 
 ## Error Handling
 
