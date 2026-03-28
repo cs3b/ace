@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-03-28
+
+### Changed
+
+- Migrated most RubyGems publish decision logic into `wfi://release/rubygems-publish`, keeping `as-release-rubygems-publish` as a thin workflow wrapper.
+
+### Technical
+
+- Removed skill-local pending-release-discovery preference logic and aligned the workflow with build-first + single-OTP publish behavior.
+
 ## [0.20.0] - 2026-03-28
 
 ### Added
