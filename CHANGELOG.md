@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.947] - 2026-03-28
+
+### Fixed
+- **ace-overseer v0.13.3**: Added a repo/worktree guard so operational commands stop with a clean actionable error outside git context instead of leaking raw `git` failures.
+
+### Technical
+- **ace-overseer v0.13.3**: Added non-repo command coverage and converted temporary launcher worktree fixtures into real git repos.
+
 ## [0.9.946] - 2026-03-27
 
 ### Fixed
