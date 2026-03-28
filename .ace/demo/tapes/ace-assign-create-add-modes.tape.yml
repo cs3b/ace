@@ -21,11 +21,17 @@ scenes:
     sleep: 3s
 - name: Add steps with all supported insertion modes
   commands:
-  - type: ace-assign add --step review-pr --after 010
+  - type: ace-assign add --step update-docs --after 010
+    sleep: 3s
+  - type: ace-assign status
     sleep: 3s
   - type: ace-assign add --yaml .ace/demo/fixtures/assign/add-steps.yml --after 010 --child
     sleep: 3s
+  - type: ace-assign status
+    sleep: 3s
   - type: ace-assign add --task 8qp.t.2p4.2 --after 010 --child
+    sleep: 3s
+  - type: ace-assign status
     sleep: 3s
 - name: Create an assignment from task refs
   commands:
