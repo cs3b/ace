@@ -223,7 +223,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.50.3)
+    ace-review (0.51.0)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)

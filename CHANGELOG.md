@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.933] - 2026-03-28
+
+### Added
+
+- **ace-review v0.51.0**: Standardized package review output handling with deterministic `.ace-local/review/package/` report persistence and optional `ace-idea` attachment flow in `review/package`.
+
 ## [0.9.932] - 2026-03-28
 
 ### Fixed
