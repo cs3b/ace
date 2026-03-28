@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.928] - 2026-03-28
+
+### Changed
+- **ace-git v0.18.2**: Updated GitHub release publish workflow documentation and related handbook skill guidance to use package emoji headers and improve package grouping readability.
+
 ## [0.9.927] - 2026-03-28
 
 ### Fixed
