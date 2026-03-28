@@ -26,7 +26,7 @@ class AsciinemaCommandBuilderTest < AceDemoTestCase
   def test_builds_command_without_tty_size
     cmd = Ace::Demo::Atoms::AsciinemaCommandBuilder.build(
       output_path: "/tmp/demo.cast",
-      script_path: "/tmp/demo.compiled.sh",
+      shell_command: "bash --noprofile --norc -i",
       tty_size: nil,
       asciinema_bin: "asciinema-custom"
     )
@@ -36,7 +36,7 @@ class AsciinemaCommandBuilderTest < AceDemoTestCase
       "rec",
       "--overwrite",
       "--command",
-      "bash /tmp/demo.compiled.sh",
+      "bash --noprofile --norc -i",
       "/tmp/demo.cast"
     ], cmd
   end
@@ -72,5 +72,15 @@ class AsciinemaCommandBuilderTest < AceDemoTestCase
     )
 
     assert_equal "bash /tmp/demo\\ script\\ \\'\\$HOME\\'.sh", cmd[4]
+  end
+
+  def test_prefers_explicit_shell_command_when_provided
+    cmd = Ace::Demo::Atoms::AsciinemaCommandBuilder.build(
+      output_path: "/tmp/demo.cast",
+      script_path: "/tmp/demo.compiled.sh",
+      shell_command: "bash --noprofile --norc -i"
+    )
+
+    assert_equal "bash --noprofile --norc -i", cmd[4]
   end
 end

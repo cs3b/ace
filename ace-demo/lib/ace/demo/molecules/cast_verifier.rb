@@ -17,8 +17,11 @@ module Ace
             .select { |event| event.type == "i" }
             .map { |event| event.data.to_s.strip }
             .reject(&:empty?)
+          echoed_commands = recording.events
+            .select { |event| event.type == "o" }
+            .flat_map { |event| echoed_output_lines(event.data) }
           script_commands = script_commands(recording: recording)
-          recorded_commands = (recorded_inputs + script_commands).uniq
+          recorded_commands = (recorded_inputs + echoed_commands + script_commands).uniq
 
           commands_found = expected.select { |command| include_command?(recorded_commands, command) }
           commands_missing = expected - commands_found
@@ -32,6 +35,7 @@ module Ace
             details: {
               cast_path: cast_path,
               inputs_recorded: recorded_inputs.length,
+              echoed_commands_recorded: echoed_commands.length,
               script_commands_recorded: script_commands.length,
               commands_expected: expected.length
             }
@@ -82,6 +86,17 @@ module Ace
           end
         rescue StandardError
           []
+        end
+
+        ANSI_ESCAPE_PATTERN = /\e\[[0-9;?]*[A-Za-z]/.freeze
+        private_constant :ANSI_ESCAPE_PATTERN
+
+        def echoed_output_lines(data)
+          data.to_s
+            .gsub(ANSI_ESCAPE_PATTERN, "")
+            .split(/[\r\n]+/)
+            .map(&:strip)
+            .reject(&:empty?)
         end
 
         def script_path_from_header(header)

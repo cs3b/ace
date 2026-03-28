@@ -28,6 +28,18 @@ class DemoRecorderTest < AceDemoTestCase
     end
   end
 
+  class StubInteractiveExecutor < StubExecutor
+    attr_reader :commands, :env
+
+    def run_interactive(cmd, commands:, env:, chdir: nil)
+      @cmd = cmd
+      @commands = commands
+      @env = env
+      @chdir = chdir
+      Ace::Demo::Models::ExecutionResult.new(stdout: "ok", stderr: "", success: true, exit_code: 0)
+    end
+  end
+
   class FailingExecutor < StubExecutor
     def run(cmd, chdir: nil)
       super
@@ -431,7 +443,7 @@ class DemoRecorderTest < AceDemoTestCase
     File.write(yaml_path, "description: demo\n")
     sandbox_path = File.join(@tmp, "sandbox")
     FileUtils.mkdir_p(sandbox_path)
-    asciinema_executor = StubExecutor.new
+    asciinema_executor = StubInteractiveExecutor.new
     agg_executor = StubExecutor.new
     verification_result = Ace::Demo::Models::VerificationResult.new(
       success: true,
@@ -467,6 +479,15 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal verification_result, output.verification
     assert_equal output.cast_path, cast_verifier.args[:cast_path]
     assert_equal "asciinema", asciinema_executor.cmd.first
+    assert_equal "bash --noprofile --norc -i", asciinema_executor.cmd[4]
+    assert_equal [{"command" => "echo ok", "sleep" => "1s"}], [
+      {
+        "command" => asciinema_executor.commands[0][:command],
+        "sleep" => "#{asciinema_executor.commands[0][:sleep]}s".sub(".0s", "s")
+      }
+    ]
+    assert_equal sandbox_path, asciinema_executor.env["PROJECT_ROOT_PATH"]
+    assert_equal "$ ", asciinema_executor.env["PS1"]
     assert_equal "agg", agg_executor.cmd.first
     assert_includes agg_executor.cmd, "--font-family"
     assert_includes agg_executor.cmd, "Hack Nerd Font Mono"

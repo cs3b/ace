@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-28
+
+### Changed
+- Switched YAML asciinema tape recording to an interactive shell session so demo commands are recorded visibly in casts by default instead of only being inferred from compiled script execution.
+
+### Fixed
+- Wait for the initial shell prompt before sending the first tape command, preventing the first command from being dropped in interactive asciinema recordings.
+- Normalized invalid `0x0` cast terminal headers before AGG conversion so interactive asciinema recordings convert cleanly to GIF output.
+- Updated cast verification to recognize echoed interactive shell commands from the new default recording path.
+
+### Technical
+- Reworked asciinema execution to drive the recorded PTY directly, preserving command ordering and shell session state across YAML tape scenes.
+- Expanded recorder, executor, verifier, and command-builder coverage for the interactive YAML asciinema path.
+
 ## [0.22.4] - 2026-03-27
 
 ### Fixed
