@@ -18,6 +18,8 @@ Create GitHub releases from root `CHANGELOG.md` entries that have no correspondi
 - `$version`: explicit version like `v0.9.846`, or range like `v0.9.840..v0.9.846`
 - `$since`: time filter like `"3 days"` or `"this week"`
 - `$dry_run`: if set, print what would be created without creating anything
+- `$group_by`: optional mode switch. `date` (default) keeps legacy daily grouping. `package` enables package-first grouping inside each date bucket.
+- `$category_order`: optional ordered category list, e.g. `fixed,added,changed,technical` (defaults to fixed → added → changed → technical)
 
 ## Instructions
 
@@ -57,16 +59,14 @@ If no versions remain after filtering, report and stop:
 No unpublished versions found matching the given criteria.
 ```
 
-### 4. Group by Date
+### 4. Grouping
 
-Multiple changelog versions on the same date are consolidated into one GitHub release per day:
+Use `$group_by` to choose the release body layout. Release tags/titles still use date-bucket grouping (highest version per date).
 
-- **Tag/title**: uses the highest version of that day (e.g., `v0.9.846` if versions 840–846 all share 2026-03-18)
-- **Release body**: combines all changelog entries for that day, ordered from highest to lowest version, separated by `---` dividers with version headers
+- `date` (default): preserve current behavior, one release body per date in descending version order separated by `---`.
+- `package`: within each date bucket, group entries as package blocks and then categories.
 
-Single-version days produce a release with just that version's changelog body (no divider needed).
-
-Format for multi-version daily release body:
+Date mode example:
 
 ```markdown
 ## [0.9.846] - 2026-03-18
@@ -85,6 +85,32 @@ Format for multi-version daily release body:
 
 [changelog body for 0.9.844]
 ```
+
+Package mode example:
+
+```markdown
+## [0.9.846] - 2026-03-18
+
+### [ace-review v0.50.3]
+
+#### Fixed
+- **ace-review v0.50.3**: Corrected non-runnable package flag examples.
+
+#### Added
+- **ace-review v0.50.2**: Added package-specific examples.
+
+### [ace-handbook v0.21.0]
+
+#### Changed
+- **ace-handbook v0.21.0**: Migrated publish workflow wiring.
+```
+
+Package-mode parse rules:
+- Parse each version body by `### Fixed`, `### Added`, `### Changed`, `### Technical` (case-insensitive).
+- Parse package from lines like `- **<package> vX.Y.Z**: ...` and map item into that package.
+- Track the most recent package version seen for each package in the date bucket for package headers.
+- Render categories in `fixed,added,changed,technical` unless `$category_order` overrides.
+- If a bullet does not match the package pattern, place it under a fallback package section `### [other]`.
 
 ### 5. Resolve Target Commits
 
@@ -150,7 +176,7 @@ Summarize all created releases:
 
 - Every unpublished changelog version is covered by a GitHub release
 - Releases are tagged at the correct commits
-- Multi-version days are consolidated with combined bodies
+- Multi-version days are consolidated with combined bodies in the selected grouping mode
 - `--dry-run` produces accurate output without side effects
 - Oldest releases are created first to maintain chronological order
 
@@ -160,3 +186,4 @@ Summarize all created releases:
 **Versions Covered:** [range or list]
 **Skipped:** [count and reasons, if any]
 **Mode:** [live|dry-run]
+**Grouping:** [date|package]

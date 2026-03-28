@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(gh:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: "[version-or-range] [--since duration] [--dry-run]"
+argument-hint: "[version-or-range] [--since duration] [--group-by package|date] [--category-order fixed,added,changed,technical] [--dry-run]"
 last_modified: 2026-03-21
 source: ace-git
 integration:
