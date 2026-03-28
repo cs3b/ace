@@ -1,0 +1,6 @@
+steps:
+  - name: demo-review
+    instructions: Review the current task implementation.
+
+  - name: demo-release
+    instructions: Prepare the release notes for the current task.

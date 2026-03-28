@@ -1,0 +1,9 @@
+name: demo-assign-create
+description: Demo assignment for create/add mode recordings
+
+steps:
+  - name: batch-tasks
+    instructions: Prepare a batch container for dynamic inserts.
+
+  - name: finalize
+    instructions: Wrap up the recorded demo flow.
