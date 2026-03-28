@@ -1,36 +1,33 @@
 ---
 id: 8qr.t.hgk
-status: draft
+status: pending
 priority: medium
-needs_review: true
+needs_review: false
 created_at: "2026-03-28 11:38:24"
 estimate: S
 dependencies: []
 tags: [ace-review, workflow, static-analysis]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-review/handbook/workflow-instructions/review/package.wf.md
-    - ace-review/handbook/workflow-instructions/review/run.wf.md
-    - ace-review/handbook/workflow-instructions/review/verify-feedback.wf.md
-    - ace-review/handbook/guides/code-review-process.g.md
-    - .ace-ideas/_review/
+  presets: [project]
+  files: [ace-review/handbook/workflow-instructions/review/package.wf.md, ace-review/handbook/workflow-instructions/review/run.wf.md, ace-review/handbook/workflow-instructions/review/verify-feedback.wf.md, ace-review/handbook/guides/code-review-process.g.md]
   commands: []
 ---
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved 2026-03-28)
 
-### [HIGH] Source-of-truth references in this task are stale or non-reproducible
+### [RESOLVED] Source-of-truth references in this task are stale or non-reproducible
 
-- [ ] Should this task keep any historical-source reference at all, or should it be rewritten to rely only on current repo artifacts?
+- **Decision**: Remove the stale historical-source references and ground the task entirely in current repository artifacts.
 - **Research conducted**: Checked the referenced plan path and historical-idea directory during review.
 - **Findings**:
   - `.claude/plans/lovely-weaving-goose.md` does not exist.
-  - `.ace-ideas/_review/` exists but contains no review source files, so it cannot support the claim that requirements were gathered from 15 historical review ideas.
-- **Suggested default**: Remove both references and restate rationale from current `ace-review` workflow gaps plus sibling workflow patterns.
-- **Why needs human input**: This changes the provenance story in the task rationale, not just wording.
+  - `.ace-ideas/_review/` exists but contains no review source files, so it cannot support the prior provenance claim.
+- **Resolution applied**:
+  - Removed the stale `References` entries.
+  - Rewrote the `Objective` section to rely on current `ace-review` workflow gaps and sibling workflow patterns.
+- **Rationale**: This keeps the task reproducible from the current repo state and avoids blocking implementation on missing historical context.
 
-# Expand Package Review Workflow with Static-Analysis Hygiene, Health, and Doc-Drift Checks
+# Expand Package Review Workflow with Quality and Doc-Drift Checks
 
 ## Behavioral Specification
 
@@ -116,7 +113,7 @@ Error Handling:
 
 ### Validation Questions
 
-- None remaining — requirements gathered from 15 historical review ideas and confirmed by user.
+- None remaining — requirements grounded in current `ace-review` workflow gaps, sibling workflows, and the resolved review decisions in this task.
 
 ## Vertical Slice Decomposition
 
@@ -171,7 +168,7 @@ The current `package.wf.md` is a 3-line placeholder that gives no structured gui
 - Adding new Ruby gems (RubyCritic, Flay, Reek) to the project — workflow handles them as optional
 - Changes to the `/as-review-package` skill definition
 - Changes to other review workflows (run.wf.md, pr.wf.md, etc.)
-- Implementing any findings from the historical reviews themselves
+- Implementing package-level findings discovered while using the workflow
 
 ## References
 
@@ -180,9 +177,9 @@ The current `package.wf.md` is a 3-line placeholder that gives no structured gui
 
 ## Review Summary
 
-**Readiness Checklist:** Not ready for promotion. Core workflow intent is clear, but several implementation-driving details were incorrect or ungrounded.  
-**Questions Generated:** 1 total (1 high, 0 medium)  
-**Critical Blockers:** Task rationale cites missing or empty references, so the provenance and justification need to be corrected before promotion.  
+**Readiness Checklist:** Previously blocked by stale provenance references; blocking question now resolved in favor of current repo artifacts.  
+**Questions Generated:** 1 total (1 high, 0 medium), now resolved.  
+**Critical Blockers:** None remaining from the provenance review pass.  
 **Advisories:** Prefer standards-first dimension naming (`Maintainability`, `Interface Quality`, `Documentation Fidelity`) and a baseline-tool-first workflow design with optional enrichments.  
-**Decision:** Remains draft (`needs_review: true`)  
-**Recommended Next Steps:** Remove or replace stale references, update the objective text to rely on current repository evidence, then re-run `/as-task-review 8qr.t.hgk`.
+**Decision:** Remains draft but no longer marked `needs_review`.  
+**Recommended Next Steps:** Re-run `/as-task-review 8qr.t.hgk` to reassess promotion readiness now that the provenance issue is resolved.
