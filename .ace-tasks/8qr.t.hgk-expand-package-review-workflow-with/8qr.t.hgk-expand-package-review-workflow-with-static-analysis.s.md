@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.hgk
-status: pending
+status: in-progress
 priority: medium
 needs_review: false
 created_at: "2026-03-28 11:38:24"
@@ -11,6 +11,12 @@ bundle:
   presets: [project]
   files: [ace-review/handbook/workflow-instructions/review/package.wf.md, ace-review/handbook/workflow-instructions/review/run.wf.md, ace-review/handbook/workflow-instructions/review/verify-feedback.wf.md, ace-review/handbook/guides/code-review-process.g.md]
   commands: []
+worktree:
+  branch: hgk-expand-package-review-workflow-with-quality-and-doc-drift-checks
+  path: ../ace-t.hgk
+  created_at: "2026-03-28 19:55:39"
+  updated_at: "2026-03-28 19:55:39"
+  target_branch: main
 ---
 
 ## Review Questions (Resolved 2026-03-28)
