@@ -24,6 +24,7 @@ ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
 .ace-taskflow/  # Task and release management
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
+.ace-bin/       # Shared scripts for non-package CLI helpers
 docs/           # System documentation and ADRs
 .github/        # CI/CD workflows
 _legacy/        # Archived content (dev-handbook, dev-tools)

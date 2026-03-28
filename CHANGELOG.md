@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Added
+- **ace-handbook**: Added `.ace-bin` as the shared location for durable repo scripts; this repository now prefers it in tool PATH and onboarding/release workflows.
+
+### Changed
+- **ace-handbook**: Moved `ace-rubygems-needs-release` from `bin/` to `.ace-bin/`, removed legacy helper shims (`bin/setup-ace-config` and `bin/test-ace-search`), and updated scripts/docs references accordingly.
 
 ## [0.9.928] - 2026-03-28
 

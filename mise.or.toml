@@ -5,12 +5,12 @@
 _.file = ["~/.ace/.env"]
 
 [env]
-# Add the bin directory to PATH for executable commands
+# Add project script directories to PATH for executable commands
 PROJECT_ROOT_PATH = "{{ config_root }}"
 ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 LANG = "en_US.UTF-8"
 LC_ALL = "en_US.UTF-8"
-_.path = ["./bin"]
+_.path = ["./.ace-bin", "./bin"]
 
 ANTHROPIC_API_KEY = ""
 ANTHROPIC_AUTH_TOKEN = { value = "{{vars.OPENROUTER_API_KEY}}", redact = true }

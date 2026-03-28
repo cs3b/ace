@@ -77,7 +77,7 @@ Determine the pending publish set before building or pushing gems:
 
 1. Read the local version from each discovered gemspec
 2. Check remote status:
-   * Preferred: if `bin/ace-rubygems-needs-release` exists, run it once and use its output to identify `new` and `pending` gems
+   * Preferred: if `.ace-bin/ace-rubygems-needs-release` exists, run it once and use its output to identify `new` and `pending` gems
    * Fallback: for each gem in dependency order, check RubyGems with:
 
 ```bash
