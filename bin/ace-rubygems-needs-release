@@ -1,0 +1,129 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "open3"
+require "pathname"
+require "rubygems"
+
+ROOT = Pathname.new(__FILE__).dirname.parent.realpath
+
+def load_local_specs
+  specs = {}
+
+  Dir.glob(ROOT.join("ace-*/*.gemspec")).sort.each do |gemspec_path|
+    spec = Gem::Specification.load(gemspec_path)
+    abort "Failed to load gemspec: #{gemspec_path}" unless spec
+
+    specs[spec.name] = spec
+  end
+
+  specs
+end
+
+def runtime_dependencies(specs)
+  specs.transform_values do |spec|
+    spec.dependencies
+      .select { |dep| dep.type == :runtime && dep.name.start_with?("ace-") && specs.key?(dep.name) }
+      .map(&:name)
+      .sort
+  end
+end
+
+def topo_sort(graph)
+  visited = {}
+  order = []
+  stack = []
+
+  visit = lambda do |name|
+    case visited[name]
+    when :perm
+      return
+    when :temp
+      cycle_start = stack.index(name) || 0
+      cycle = (stack[cycle_start..] + [name]).join(" -> ")
+      abort "Circular dependency detected: #{cycle}"
+    end
+
+    visited[name] = :temp
+    stack << name
+    graph.fetch(name, []).each { |dependency| visit.call(dependency) }
+    stack.pop
+    visited[name] = :perm
+    order << name
+  end
+
+  graph.keys.sort.each { |name| visit.call(name) }
+  order
+end
+
+def fetch_remote_versions
+  stdout, status = Open3.capture2("gem", "search", "ace-", "--remote", "--versions")
+  abort "Failed to fetch RubyGems versions" unless status.success?
+
+  versions = {}
+  stdout.each_line do |line|
+    next unless line =~ /^(ace-[^ ]+) \(([^)]+)\)$/
+
+    name = Regexp.last_match(1)
+    highest = Regexp.last_match(2)
+      .split(/,\s*/)
+      .reject(&:empty?)
+      .max_by { |version| Gem::Version.new(version) }
+
+    versions[name] = highest if highest
+  end
+
+  versions
+end
+
+def classify_specs(order, specs, remote_versions)
+  pending = []
+
+  order.each do |name|
+    local_version = specs.fetch(name).version.to_s
+    remote_version = remote_versions[name]
+    status =
+      if remote_version.nil?
+        "new"
+      else
+        local = Gem::Version.new(local_version)
+        remote = Gem::Version.new(remote_version)
+
+        if local > remote
+          "pending"
+        elsif local == remote
+          "published"
+        else
+          warn "Warning: #{name} local #{local_version} is older than RubyGems #{remote_version}"
+          "older_than_remote"
+        end
+      end
+
+    pending << [name, local_version, remote_version || "-", status] if %w[new pending].include?(status)
+  end
+
+  pending
+end
+
+def print_table(rows)
+  headers = ["gem", "local", "remote", "status"]
+  widths = headers.map(&:length)
+
+  rows.each do |row|
+    row.each_with_index do |value, index|
+      widths[index] = [widths[index], value.length].max
+    end
+  end
+
+  format_string = widths.map { |width| "%-#{width}s" }.join("  ")
+  puts format(format_string, *headers)
+  rows.each { |row| puts format(format_string, *row) }
+end
+
+local_specs = load_local_specs
+dependency_graph = runtime_dependencies(local_specs)
+publish_order = topo_sort(dependency_graph)
+remote_versions = fetch_remote_versions
+rows = classify_specs(publish_order, local_specs, remote_versions)
+
+print_table(rows)

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.927] - 2026-03-28
+
+### Added
+- **ace-handbook v0.20.0**: Added `bin/ace-rubygems-needs-release` for single-fetch pending RubyGems release discovery and updated the RubyGems publish workflow/skill to prefer it with corrected exact-name fallback checks.
+
 ## [0.9.926] - 2026-03-26
 
 ### Fixed

@@ -73,14 +73,21 @@ Circular dependency detected: ace-a → ace-b → ace-a — aborting
 
 ### 4. Check Each Gem Version
 
-For each gem in dependency order:
+Determine the pending publish set before building or pushing gems:
 
-1. Read the local version from `lib/**/version.rb`
+1. Read the local version from each discovered gemspec
 2. Check remote status:
+   * Preferred: if `bin/ace-rubygems-needs-release` exists, run it once and use its output to identify `new` and `pending` gems
+   * Fallback: for each gem in dependency order, check RubyGems with:
 
 ```bash
-gem search "^ace-<name>$" --remote --exact --versions
+gem search "ace-<name>" --remote --exact --versions
 ```
+
+Validation:
+
+* `gem search --exact` expects the plain gem name. Do not wrap the name in `^...$`.
+* If using the helper script, rely on its single remote snapshot as the source of truth for pending-release discovery.
 
 Decision matrix:
 
