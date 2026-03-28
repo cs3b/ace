@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2026-03-28
+
+### Added
+
+- Standardized package review output handling in `review/package` to persist full markdown reports in `.ace-local/review/package/`, with optional `ace-idea` creation for report attachment flow.
+
 ## [0.50.3] - 2026-03-28
 
 ### Fixed
