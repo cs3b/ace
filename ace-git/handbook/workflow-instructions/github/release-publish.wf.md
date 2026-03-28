@@ -91,7 +91,7 @@ Package mode example:
 ```markdown
 ## [0.9.846] - 2026-03-18
 
-### [ace-review v0.50.3]
+### 📦 ace-review v0.50.3
 
 #### Fixed
 - **ace-review v0.50.3**: Corrected non-runnable package flag examples.
@@ -99,7 +99,7 @@ Package mode example:
 #### Added
 - **ace-review v0.50.2**: Added package-specific examples.
 
-### [ace-handbook v0.21.0]
+### 📦 ace-handbook v0.21.0
 
 #### Changed
 - **ace-handbook v0.21.0**: Migrated publish workflow wiring.
@@ -110,7 +110,7 @@ Package-mode parse rules:
 - Parse package from lines like `- **<package> vX.Y.Z**: ...` and map item into that package.
 - Track the most recent package version seen for each package in the date bucket for package headers.
 - Render categories in `fixed,added,changed,technical` unless `$category_order` overrides.
-- If a bullet does not match the package pattern, place it under a fallback package section `### [other]`.
+- If a bullet does not match the package pattern, place it under a fallback package section `### 📦 other`.
 
 ### 5. Resolve Target Commits
 

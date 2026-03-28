@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-28
+
+### Changed
+- **ace-git v0.18.2**: Updated GitHub release publish workflow documentation to use package-emoji headings and improved handbook skill guidance around package-aware release note rendering.
+
 ## [0.18.1] - 2026-03-26
 
 ### Changed
