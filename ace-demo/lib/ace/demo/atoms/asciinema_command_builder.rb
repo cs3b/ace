@@ -10,11 +10,16 @@ module Ace
 
         # cast_compatibility is accepted to keep the interface aligned with task
         # requirements; v3 passthrough is currently the proven production path.
-        def build(output_path:, script_path:, tty_size: "80x24", cast_compatibility: :v2, asciinema_bin: "asciinema")
+        def build(output_path:, script_path: nil, shell_command: nil, tty_size: "80x24", cast_compatibility: :v2, asciinema_bin: "asciinema")
           validate_cast_compatibility!(cast_compatibility)
 
-          escaped_script_path = Shellwords.escape(script_path.to_s)
-          cmd = [asciinema_bin, "rec", "--overwrite", "--command", "bash #{escaped_script_path}"]
+          command = shell_command.to_s.strip
+          if command.empty?
+            escaped_script_path = Shellwords.escape(script_path.to_s)
+            command = "bash #{escaped_script_path}"
+          end
+
+          cmd = [asciinema_bin, "rec", "--overwrite", "--command", command]
           cmd.concat(tty_size_flags(tty_size))
           cmd << output_path
           cmd

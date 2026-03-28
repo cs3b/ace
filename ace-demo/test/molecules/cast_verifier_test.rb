@@ -98,4 +98,25 @@ class CastVerifierTest < AceDemoTestCase
     assert_equal 0, result.details[:inputs_recorded]
     assert_equal 2, result.details[:script_commands_recorded]
   end
+
+  def test_uses_echoed_output_commands_for_interactive_asciinema_recordings
+    cast_path = File.join(@tmp, "interactive.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","bash-5.3$ "]
+      [0.20,"o","echo hi\\r\\n"]
+      [0.30,"o","hi\\n"]
+      [0.40,"o","bash-5.3$ "]
+      [0.50,"o","pwd\\r\\n"]
+    CAST
+
+    result = @verifier.verify(cast_path: cast_path, tape_spec: @spec)
+
+    assert_equal true, result.success?
+    assert_equal "pass", result.status
+    assert_equal ["echo hi", "pwd"], result.commands_found
+    assert_equal [], result.commands_missing
+    assert_equal 0, result.details[:inputs_recorded]
+    assert_equal 5, result.details[:echoed_commands_recorded]
+  end
 end

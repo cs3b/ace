@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
 
 module Ace
   module Demo
@@ -154,22 +155,19 @@ module Ace
 
           sandbox = @sandbox_builder.build(source_tape_path: tape_path, setup_steps: spec["setup"] || [])
           begin
-            script_path = File.join(
-              sandbox[:path],
-              "#{File.basename(tape_path).sub(/\.tape\.ya?ml\z/, "")}.compiled.sh"
-            )
             inject_sandbox_env(spec, sandbox[:path])
-            script_content = @asciinema_tape_compiler.compile(spec: spec)
-            File.write(script_path, script_content)
-            FileUtils.chmod(0o755, script_path)
+            env = (settings["env"] || {}).transform_values(&:to_s)
+            env["PS1"] ||= "$ "
+            commands = interactive_commands_for(spec: spec)
 
             record_cmd = Atoms::AsciinemaCommandBuilder.build(
               output_path: cast_output_path,
-              script_path: script_path,
-              tty_size: "#{settings.fetch("width", 80)}x#{settings.fetch("height", 24)}",
+              shell_command: "bash --noprofile --norc -i",
+              tty_size: settings.fetch("tty_size", "80x24"),
               asciinema_bin: @asciinema_bin
             )
-            @asciinema_executor.run(record_cmd, chdir: sandbox[:path])
+            @asciinema_executor.run_interactive(record_cmd, commands: commands, env: env, chdir: sandbox[:path])
+            normalize_cast_terminal_size(cast_output_path, tty_size: settings.fetch("tty_size", "80x24"))
 
             convert_cmd = Atoms::AggCommandBuilder.build(
               input_path: cast_output_path,
@@ -208,6 +206,53 @@ module Ace
           settings = spec["settings"] ||= {}
           env = settings["env"] ||= {}
           env["PROJECT_ROOT_PATH"] ||= sandbox_path
+        end
+
+        def interactive_commands_for(spec:)
+          spec.fetch("scenes", []).flat_map do |scene|
+            scene.fetch("commands", []).map do |command|
+              {
+                command: command.fetch("type"),
+                sleep: sleep_seconds(command["sleep"] || "2s")
+              }
+            end
+          end
+        end
+
+        def sleep_seconds(value)
+          text = value.to_s.strip
+          match = text.match(/\A(?<number>\d+(?:\.\d+)?)(?<unit>ms|s|m|h)?\z/)
+          raise ArgumentError, "sleep must be a numeric duration (e.g. 0.5s, 250ms, 2)" unless match
+
+          number = match[:number].to_f
+          case match[:unit]
+          when "ms" then number / 1000.0
+          when "m" then number * 60.0
+          when "h" then number * 3600.0
+          else number
+          end
+        end
+
+        def normalize_cast_terminal_size(cast_path, tty_size:)
+          cols_text, rows_text = tty_size.to_s.split("x", 2)
+          cols = cols_text.to_i
+          rows = rows_text.to_i
+          return unless cols.positive? && rows.positive?
+          return unless File.file?(cast_path)
+
+          lines = File.readlines(cast_path)
+          return if lines.empty?
+
+          header = JSON.parse(lines.first)
+          term = header["term"] ||= {}
+          return unless term["cols"].to_i <= 0 || term["rows"].to_i <= 0
+
+          term["cols"] = cols
+          term["rows"] = rows
+          lines[0] = "#{JSON.generate(header)}\n"
+          File.write(cast_path, lines.join)
+        rescue JSON::ParserError
+          nil
         end
 
         def default_output_path(tape_ref, format)
