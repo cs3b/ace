@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.928] - 2026-03-28
+
+### Changed
+
+- **ace-handbook v0.21.0**: Migrated most `as-release-rubygems-publish` release decision logic into the RubyGems publish workflow and kept the skill as a thin wrapper.
+
 ## [0.9.927] - 2026-03-28
 
 ### Added
