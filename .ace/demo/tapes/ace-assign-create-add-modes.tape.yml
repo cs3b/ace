@@ -1,0 +1,37 @@
+---
+description: Showcase ace-assign create and add modes with a temporary git worktree
+tags:
+- ace-assign
+- demo
+- create
+- add
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Create a temporary demo worktree
+  commands:
+  - type: export DEMO_TREE=$(mktemp -d /tmp/ace-assign-demo-XXXXXX) && git worktree add "$DEMO_TREE" HEAD && cd "$DEMO_TREE"
+    sleep: 3s
+- name: Create an assignment from YAML
+  commands:
+  - type: ace-assign create --yaml .ace/demo/fixtures/assign/create-job.yml
+    sleep: 3s
+- name: Add steps with all supported insertion modes
+  commands:
+  - type: ace-assign add --step review-pr --after 010
+    sleep: 3s
+  - type: ace-assign add --yaml .ace/demo/fixtures/assign/add-steps.yml --after 010 --child
+    sleep: 3s
+  - type: ace-assign add --task 8qp.t.2p4.2 --after 010 --child
+    sleep: 3s
+- name: Create an assignment from task refs
+  commands:
+  - type: ace-assign create --task 8qp.t.2p4.2 --preset work-on-task
+    sleep: 3s
+- name: Remove the temporary demo worktree
+  commands:
+  - type: cd /home/mc/ace-t.2p4 && git worktree remove "$DEMO_TREE" --force
+    sleep: 2s
