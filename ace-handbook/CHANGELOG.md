@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-03-28
+
+### Added
+
+- Added `bin/ace-rubygems-needs-release` to derive pending ACE RubyGems releases from a single remote snapshot instead of querying each gem individually.
+
+### Changed
+
+- Updated the RubyGems publish workflow to prefer the helper script when available and corrected the fallback `gem search --exact` guidance.
+- Updated `as-release-rubygems-publish` skill instructions to prefer the helper script for pending-release discovery.
+
 ## [0.19.0] - 2026-03-23
 
 ### Added
