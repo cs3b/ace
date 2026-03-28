@@ -119,6 +119,8 @@ Constraints:
 
 Include `## 🎮 Demo` when the PR introduces a user-facing CLI command or runnable entry point that a reviewer can try.
 
+When a PR adds or changes multiple distinct user-facing modes, list each mode explicitly in `## 🎮 Demo` instead of showing only one representative command. Examples: mutually exclusive flags (`--yaml` vs `--task`) or sibling commands like `add --step`, `add --yaml`, and `add --task`.
+
 Structure:
 
 ```markdown
@@ -126,7 +128,7 @@ Structure:
 
 ### Run
 \`\`\`bash
-[exact command to copy-paste]
+[exact commands to copy-paste]
 \`\`\`
 
 ### Expected Output
