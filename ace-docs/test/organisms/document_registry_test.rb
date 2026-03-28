@@ -408,7 +408,7 @@ module Ace
             doc = registry.find_by_path(File.join(@temp_dir, "ace-docs/README.md"))
 
             refute_nil doc
-            assert_equal "user", doc.doc_type
+            assert_equal "readme", doc.doc_type
             assert_match(/User-facing introduction/, doc.purpose)
           end
         end
