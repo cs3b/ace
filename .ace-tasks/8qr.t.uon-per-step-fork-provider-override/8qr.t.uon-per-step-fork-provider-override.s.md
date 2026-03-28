@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.uon
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-28 20:27:23"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-assign/lib/ace/assign/models/step.rb, ace-assign/lib/ace/assign/atoms/step_file_parser.rb, ace-assign/lib/ace/assign/molecules/queue_scanner.rb, ace-assign/lib/ace/assign/molecules/step_writer.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/lib/ace/assign/cli/commands/status.rb, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/.ace-defaults/assign/config.yml, ace-assign/docs/usage.md, ace-assign/handbook/guides/fork-context.g.md]
   commands: [cd ace-assign && ace-test]
 needs_review: false
+worktree:
+  branch: uon-per-step-fork-provider-override
+  path: ../ace-t.uon
+  created_at: "2026-03-28 23:33:16"
+  updated_at: "2026-03-28 23:33:16"
+  target_branch: main
 ---
 
 # Per-Step Fork Provider Override
