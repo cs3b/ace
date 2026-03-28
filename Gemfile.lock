@@ -185,7 +185,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.13.2)
+    ace-overseer (0.13.3)
       ace-assign (~> 0.40)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
