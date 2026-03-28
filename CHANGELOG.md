@@ -4,58 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.933] - 2026-03-28
-
-### Added
-
-- **ace-review v0.51.0**: Standardized package review output handling with deterministic `.ace-local/review/package/` report persistence and optional `ace-idea` attachment flow in `review/package`.
-
-## [0.9.932] - 2026-03-28
-
-### Fixed
-
-- **ace-review v0.50.3**: Corrected non-runnable `review/package` search/lint command examples for hyphen-led flag patterns and Ruby-file lint targeting.
-
-### Changed
-
-- **ace-review v0.50.3**: Standardized quick-reference search snippets and clarified review workflow guidance around reference shell blocks, evidence reuse, and docs-scan scope.
-
-## [0.9.931] - 2026-03-28
-
-### Fixed
-
-- **ace-review v0.50.2**: Replaced non-working glob-style `ace-search` inventory/help-text commands in `review/package` with executable path-scoped queries.
-
-### Changed
-
-- **ace-review v0.50.2**: Made package input validation fail-fast and refined maintainability checks to remove duplicate lint passes and label duplication checks as heuristic.
-
-## [0.9.930] - 2026-03-28
-
-### Fixed
-
-- **ace-review v0.50.1**: Corrected invalid workflow command examples in `review/package`, including unsupported bundle preset usage, path-incompatible `ace-search` targets, and hyphen-pattern argument parsing.
-
-### Changed
-
-- **ace-review v0.50.1**: Refined package-review maintainability and documentation-drift checks to use executable `ace-*` workflows with clearer, lower-noise evidence gathering.
-
-## [0.9.929] - 2026-03-28
-
-### Changed
-
-- **ace-review v0.50.0**: Expanded the package review workflow into an evidence-first process with deterministic maintainability checks, interface quality evaluation criteria, documentation fidelity cross-checks, and standardized findings tables.
-
-## [0.9.928] - 2026-03-28
-
-### Changed
-
-- **ace-handbook v0.21.0**: Migrated most `as-release-rubygems-publish` release decision logic into the RubyGems publish workflow and kept the skill as a thin wrapper.
-
 ## [0.9.927] - 2026-03-28
 
+### Fixed
+- **ace-review v0.50.3**: Corrected non-runnable `review/package` search/lint command examples for hyphen-led flag patterns and Ruby-file lint targeting.
+- **ace-review v0.50.2**: Replaced non-working glob-style `ace-search` inventory/help-text commands in `review/package` with executable path-scoped queries.
+- **ace-review v0.50.1**: Corrected invalid workflow command examples in `review/package`, including unsupported bundle preset usage, path-incompatible `ace-search` targets, and hyphen-pattern argument parsing.
+
 ### Added
+- **ace-review v0.51.0**: Standardized package review output handling with deterministic `.ace-local/review/package/` report persistence and optional `ace-idea` attachment flow in `review/package`.
 - **ace-handbook v0.20.0**: Added `bin/ace-rubygems-needs-release` for single-fetch pending RubyGems release discovery and updated the RubyGems publish workflow/skill to prefer it with corrected exact-name fallback checks.
+
+### Changed
+- **ace-review v0.50.3**: Standardized quick-reference search snippets and clarified review workflow guidance around reference shell blocks, evidence reuse, and docs-scan scope.
+- **ace-review v0.50.2**: Made package input validation fail-fast and refined maintainability checks to remove duplicate lint passes and label duplication checks as heuristic.
+- **ace-review v0.50.1**: Refined package-review maintainability and documentation-drift checks to use executable `ace-*` workflows with clearer, lower-noise evidence gathering.
+- **ace-review v0.50.0**: Expanded the package review workflow into an evidence-first process with deterministic maintainability checks, interface quality evaluation criteria, documentation fidelity cross-checks, and standardized findings tables.
+- **ace-handbook v0.21.0**: Migrated most `as-release-rubygems-publish` release decision logic into the RubyGems publish workflow and kept the skill as a thin wrapper.
 
 ## [0.9.926] - 2026-03-26
 
