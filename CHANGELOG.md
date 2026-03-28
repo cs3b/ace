@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.932] - 2026-03-28
+
+### Fixed
+
+- **ace-review v0.50.3**: Corrected non-runnable `review/package` search/lint command examples for hyphen-led flag patterns and Ruby-file lint targeting.
+
+### Changed
+
+- **ace-review v0.50.3**: Standardized quick-reference search snippets and clarified review workflow guidance around reference shell blocks, evidence reuse, and docs-scan scope.
+
+## [0.9.931] - 2026-03-28
+
+### Fixed
+
+- **ace-review v0.50.2**: Replaced non-working glob-style `ace-search` inventory/help-text commands in `review/package` with executable path-scoped queries.
+
+### Changed
+
+- **ace-review v0.50.2**: Made package input validation fail-fast and refined maintainability checks to remove duplicate lint passes and label duplication checks as heuristic.
+
+## [0.9.930] - 2026-03-28
+
+### Fixed
+
+- **ace-review v0.50.1**: Corrected invalid workflow command examples in `review/package`, including unsupported bundle preset usage, path-incompatible `ace-search` targets, and hyphen-pattern argument parsing.
+
+### Changed
+
+- **ace-review v0.50.1**: Refined package-review maintainability and documentation-drift checks to use executable `ace-*` workflows with clearer, lower-noise evidence gathering.
+
+## [0.9.929] - 2026-03-28
+
+### Changed
+
+- **ace-review v0.50.0**: Expanded the package review workflow into an evidence-first process with deterministic maintainability checks, interface quality evaluation criteria, documentation fidelity cross-checks, and standardized findings tables.
+
 ## [0.9.928] - 2026-03-28
 
 ### Changed
