@@ -15,6 +15,19 @@ scenes:
   commands:
   - type: export DEMO_TREE=$(mktemp -d /tmp/ace-assign-demo-XXXXXX) && git worktree add "$DEMO_TREE" HEAD && cd "$DEMO_TREE"
     sleep: 3s
+  - type: mkdir -p .ace .ace-local/demo/tasks
+    sleep: 1s
+  - type: >-
+      printf 'task:\n  root_dir: .ace-local/demo/tasks\n  default_status: pending\n' > .ace/task/config.yml
+    sleep: 2s
+- name: Create a sandbox task for task-based demos
+  commands:
+  - type: ace-task create "Demo task for ace-assign modes" --status pending --tags demo
+    sleep: 3s
+  - type: export DEMO_TASK_REF=$(ruby -e 'dir = Dir.glob(".ace-local/demo/tasks/*").find { |path| File.directory?(path) } or abort("No demo task found"); puts File.basename(dir).sub(/-.*/, "")')
+    sleep: 1s
+  - type: printf 'DEMO_TASK_REF=%s\n' "$DEMO_TASK_REF"
+    sleep: 3s
 - name: Create an assignment from YAML
   commands:
   - type: ace-assign create --yaml .ace/demo/fixtures/assign/create-job.yml
@@ -29,13 +42,13 @@ scenes:
     sleep: 3s
   - type: ace-assign status
     sleep: 3s
-  - type: ace-assign add --task 8qp.t.2p4.2 --after 010 --child
+  - type: ace-assign add --task "$DEMO_TASK_REF" --after 010 --child
     sleep: 3s
   - type: ace-assign status
     sleep: 3s
 - name: Create an assignment from task refs
   commands:
-  - type: ace-assign create --task 8qp.t.2p4.2 --preset work-on-task
+  - type: ace-assign create --task "$DEMO_TASK_REF" --preset work-on-task
     sleep: 3s
 - name: Remove the temporary demo worktree
   commands:
