@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.hgk
-status: in-progress
+status: done
 priority: medium
 needs_review: false
 created_at: "2026-03-28 11:38:24"
