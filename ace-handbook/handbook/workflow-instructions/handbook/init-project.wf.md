@@ -80,7 +80,7 @@ Complete the project initialization started by `coding-agent-tools integrate cla
           - `context` - Load project context
           - `release-manager` - Manage releases
     - **Create project-specific scripts (optional)**:
-        - Only if the project requires custom wrapper scripts, create them in `bin/`
+        - Only if the project requires custom wrapper scripts, create them in `.ace-bin/`
         - Most functionality is available directly through dev-tools commands
 
 5. **Customize v.0.0.0 Bootstrap Release** (if it was created):
