@@ -4,243 +4,93 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.948] - 2026-03-28
-
-### Changed
-- **ace-demo v0.23.0**: Switched YAML asciinema tape recording to an interactive shell session so demo commands are visibly recorded by default.
+## [0.9.926] - 2026-03-26
 
 ### Fixed
 - **ace-demo v0.23.0**: Waited for the initial shell prompt before sending the first tape command, normalized invalid cast terminal sizes before GIF conversion, and verified interactive recordings from echoed shell commands.
-
-### Technical
-- **ace-demo v0.23.0**: Reworked the asciinema executor to drive the recorded PTY directly and expanded recorder/executor/verifier coverage for the interactive YAML path.
-
-## [0.9.947] - 2026-03-28
-
-### Fixed
 - **ace-overseer v0.13.3**: Added a repo/worktree guard so operational commands stop with a clean actionable error outside git context instead of leaking raw `git` failures.
-
-### Technical
-- **ace-overseer v0.13.3**: Added non-repo command coverage and converted temporary launcher worktree fixtures into real git repos.
-
-## [0.9.946] - 2026-03-27
-
-### Fixed
 - **ace-overseer v0.13.2**: Preserved taskref-only preset compatibility in assignment launching by collapsing to the primary task when presets do not support `taskrefs`.
 - **ace-assign v0.40.3**: Corrected `ace-assign add` documentation examples to align with mutually exclusive add modes and current preset-step resolution behavior.
-
-## [0.9.945] - 2026-03-27
-
-### Fixed
 - **ace-assign v0.40.2**: Validated preset-name input before file resolution, added task-ref existence checks for `ace-assign add --task`, honored `--child` semantics when inserting task-derived steps with `--after`, and improved missing-steps preset diagnostics.
-
-### Technical
-- **ace-assign v0.40.2**: Added regression coverage for preset-name hardening, empty-preset diagnostics, task-mode insertion semantics, and end-to-end `ace-assign create --task` assignment materialization.
-
-## [0.9.944] - 2026-03-27
-
-### Fixed
 - **ace-assign v0.40.1**: Corrected task-driven preset guard behavior to use resolved non-terminal refs, preserved parent refs when expanded subtasks are all terminal, and normalized batch-parent fallback return semantics.
 - **ace-overseer v0.13.1**: Corrected work-on preset guard behavior to use resolved non-terminal refs and preserved parent refs when expanded subtasks are all terminal.
-
-### Technical
-- **ace-assign v0.40.1**: Switched hidden task-driven job spec naming to unique filenames and updated create-command coverage for randomized job-path generation.
-
-## [0.9.943] - 2026-03-27
-
-### Added
-- **ace-assign v0.40.0**: Added flags-only `ace-assign create --task ...` with multi-task preset-based assignment creation and a shared task-driven creator used by direct CLI and overseer flows.
-
-### Changed
-- **ace-assign v0.40.0**: Replaced positional `create CONFIG` with explicit `--yaml` / `--task` modes and expanded `work-on-task` child templates to include the full `task/work` subtree, including `pre-commit-review`, `release-minor`, and `create-retro`.
-- **ace-overseer v0.13.0**: Routed `work-on` assignment launch through the shared `ace-assign` task-driven create path and updated docs to reflect the unified flow.
-
-### Technical
-- **ace-assign v0.40.0**: Added create-path regression coverage and a runtime `ace-task` dependency for task-ref-based creation.
-- **ace-overseer v0.13.0**: Added regression coverage for shared-launch task fixture resolution and launcher delegation behavior.
-
-## [0.9.942] - 2026-03-27
-
-### Fixed
 - **ace-demo v0.22.4**: Corrected default `agg_font_family` to match spike-validated font available in the environment.
-
-### Changed
-- **ace-assign v0.38.3**: Updated `record-demo` step to require diagnosis before skipping on failure — agents must check config, fonts, and spike findings before reporting a non-blocking skip.
-
-## [0.9.941] - 2026-03-27
-
-### Fixed
 - **ace-demo v0.22.3**: Validated asciinema tape `sleep` durations before script compilation to prevent malformed or injected shell sleep values.
-
-### Changed
-- **ace-demo v0.22.3**: Added `agg_font_family` configuration plumbing across YAML parsing, recording-time AGG conversion, and cast attachment conversion.
-
-### Technical
-- **ace-demo v0.22.3**: Expanded atom/organism regression coverage for sleep validation and AGG font-family passthrough paths.
-
-## [0.9.940] - 2026-03-27
-
-### Fixed
 - **ace-demo v0.22.2**: Cleaned up temporary GIF artifacts generated during `.cast` attachment conversion so attach flows do not leave orphan files.
-
-### Changed
-- **ace-demo v0.22.2**: Centralized recording backend/format validation in a shared validator reused by YAML planner, recorder, and CLI entrypoints.
-
-### Technical
-- **ace-demo v0.22.2**: Added validator atom coverage and updated attacher tests for temporary conversion artifact lifecycle handling.
-
-## [0.9.939] - 2026-03-27
-
-### Fixed
 - **ace-demo v0.22.1**: Escaped asciinema `--command` script paths, validated command-mode cast recordings from header-linked scripts, skipped cast-to-GIF conversion during dry-run attach, and reported configured binary names in executor not-found errors.
-
-### Changed
-- **ace-demo v0.22.1**: Simplified YAML backend/format guard logic and updated dry-run upload planning to support planned artifact paths without generated files.
-
-### Technical
-- **ace-demo v0.22.1**: Added regression coverage for shell-escaped command assembly, command-mode cast verification, dry-run cast attachment behavior, uploader dry-run planning, and custom binary error messaging.
-
-## [0.9.938] - 2026-03-27
-
-### Fixed
 - **ace-assign v0.39.1**: Updated assignment add-task workflow/docs to use the current `ace-assign add --yaml` contract and fixed preset step insertion naming to avoid stale-collision cases during canonical expansion.
-
-### Technical
-- **ace-assign v0.39.1**: Added regression coverage for canonical expansion name-refresh and debug warnings for unexpanded `--task` preset template tokens.
-
-## [0.9.937] - 2026-03-27
-
-### Added
-- **ace-assign v0.39.0**: Added preset-aware `ace-assign add --step` and `--task` insertion modes with preset resolution and task-template expansion support.
-
-### Changed
-- **ace-assign v0.39.0**: Replaced legacy `add` positional/`--from` insertion contract with explicit mutually exclusive modes (`--yaml`, `--step`, `--task`), including canonical `--yaml` naming.
-
-### Technical
-- **ace-assign v0.39.0**: Added loader/resolver/inferrer modules plus expanded command and helper test coverage for preset-aware insertion behavior.
-
-## [0.9.936] - 2026-03-26
-
-### Added
-- **ace-assign v0.38.3**: Added `ace-assign add --from <file>` for YAML-driven batch insertion with nested `sub_steps` support.
-- **ace-assign v0.38.3**: Added `as-assign-add-task` skill and `wfi://assign/add-task` workflow for guided subtree insertion.
-
-### Fixed
 - **ace-assign v0.38.3**: Prevalidated full `add_batch` trees before queue mutation to prevent partial insertion on invalid later entries.
 - **ace-assign v0.38.3**: Normalized nested batch child-depth overflow handling with consistent `Ace::Assign::Error` reporting.
 - **ace-assign v0.38.3**: Routed workflow/skill/sub-step batch insertions through canonical subtree materialization.
-
-### Changed
-- **ace-assign v0.38.3**: Extended assignment insertion with batch support, metadata passthrough, and unified dynamic step instructions.
-- **ace-overseer v0.12.1**: Tightened `ace-assign` gemspec constraint from `~> 0.16` to `~> 0.38` to match the runtime dependency introduced in v0.12.0.
-
-### Technical
-- **ace-assign v0.38.3**: Expanded command/executor test coverage for `--from` validation, batch insertion, depth overflow, and workflow-backed inserts.
-
-## [0.9.935] - 2026-03-26
-
-### Added
-- **ace-lint v0.26.0**: Added a surgical markdown fixer for `--fix` and structural guardrails for markdown `--format` to prevent unsafe rewrites.
-- **ace-lint v0.27.0**: Added deterministic repair flags (`--auto-fix`, `--auto-fix-with-agent`, `--dry-run`, `--model`) and agent-assisted prompt generation for remaining violations.
-
-### Fixed
 - **ace-lint v0.26.0**: Fixed markdown style false positives inside fenced code blocks and added trailing-whitespace detection for markdown lint checks.
 - **ace-lint v0.27.0**: Fixed auto-fix flow to return non-zero when violations remain after deterministic repair.
 - **ace-lint v0.27.1**: Preserved markdown link destinations with nested parentheses during surgical typography fixes.
 - **ace-lint v0.27.2**: Made `--auto-fix-with-agent` apply concrete file edits from model output and tightened markdown formatter guardrails.
 - **ace-lint v0.27.3**: Corrected `--auto-fix --dry-run` file-count reporting.
+- **ace-demo v0.19.3**: Unified YAML planning so `record --dry-run` and live recording enforce unsupported `settings.format` validation consistently.
+- **ace-task v0.31.3**: Consolidated empty-list stats footer formatting into a single return path and added command-level coverage for zero-total footer output.
+- **ace-demo v0.19.2**: Reject blank or whitespace-only YAML `settings.output` values so output path expansion stays valid.
+- **ace-support-items v0.15.4**: corrected zero-status summary formatting in `StatsLineFormatter` so empty lists render `Tasks: • 0 total` without dangling spacing.
+- **ace-task v0.31.2**: aligned empty-task list output with the formatter fix and added exact output regression coverage.
+- **ace-demo v0.19.1**: Fixed YAML tape retime routing so CLI `--output` is honored when speed is set in tape settings without a tape output path.
+- **ace-task v0.31.1**: `ace-task list` now shows the stats footer for empty results, including filtered `0 of N` summaries.
+
+### Added
+- **ace-assign v0.40.0**: Added flags-only `ace-assign create --task ...` with multi-task preset-based assignment creation and a shared task-driven creator used by direct CLI and overseer flows.
+- **ace-assign v0.39.0**: Added preset-aware `ace-assign add --step` and `--task` insertion modes with preset resolution and task-template expansion support.
+- **ace-assign v0.38.3**: Added `ace-assign add --from <file>` for YAML-driven batch insertion with nested `sub_steps` support.
+- **ace-assign v0.38.3**: Added `as-assign-add-task` skill and `wfi://assign/add-task` workflow for guided subtree insertion.
+- **ace-lint v0.26.0**: Added a surgical markdown fixer for `--fix` and structural guardrails for markdown `--format` to prevent unsafe rewrites.
+- **ace-lint v0.27.0**: Added deterministic repair flags (`--auto-fix`, `--auto-fix-with-agent`, `--dry-run`, `--model`) and agent-assisted prompt generation for remaining violations.
+- **ace-overseer v0.12.0**: Terminal task filtering in `WorkOnOrchestrator` — tasks with `done`, `skipped`, or `cancelled` status are excluded before assignment creation, with skip reporting via progress callbacks.
+- **ace-assign v0.38.0**: Added `record-demo` assignment step for recording and attaching terminal demos to PRs, with composition rules and recipe integration.
+- **ace-demo v0.19.4**: Added recording-options demo tape with fixtures showing `playback_speed` and `output` settings in action.
+- **ace-task v0.31.4**: Added optional "Demo Scenario" section to the task draft template for upfront demo scene definitions.
+- **ace-demo v0.19.0**: Added tape-level `settings.playback_speed` and `settings.output` support so `.tape.yml` files can fully define record/retime defaults.
 
 ### Changed
+- **ace-demo v0.23.0**: Switched YAML asciinema tape recording to an interactive shell session so demo commands are visibly recorded by default.
+- **ace-assign v0.40.0**: Replaced positional `create CONFIG` with explicit `--yaml` / `--task` modes and expanded `work-on-task` child templates to include the full `task/work` subtree, including `pre-commit-review`, `release-minor`, and `create-retro`.
+- **ace-overseer v0.13.0**: Routed `work-on` assignment launch through the shared `ace-assign` task-driven create path and updated docs to reflect the unified flow.
+- **ace-assign v0.38.3**: Updated `record-demo` step to require diagnosis before skipping on failure — agents must check config, fonts, and spike findings before reporting a non-blocking skip.
+- **ace-demo v0.22.3**: Added `agg_font_family` configuration plumbing across YAML parsing, recording-time AGG conversion, and cast attachment conversion.
+- **ace-demo v0.22.2**: Centralized recording backend/format validation in a shared validator reused by YAML planner, recorder, and CLI entrypoints.
+- **ace-demo v0.22.1**: Simplified YAML backend/format guard logic and updated dry-run upload planning to support planned artifact paths without generated files.
+- **ace-assign v0.39.0**: Replaced legacy `add` positional/`--from` insertion contract with explicit mutually exclusive modes (`--yaml`, `--step`, `--task`), including canonical `--yaml` naming.
+- **ace-assign v0.38.3**: Extended assignment insertion with batch support, metadata passthrough, and unified dynamic step instructions.
+- **ace-overseer v0.12.1**: Tightened `ace-assign` gemspec constraint from `~> 0.16` to `~> 0.38` to match the runtime dependency introduced in v0.12.0.
 - **ace-lint v0.26.0**: Switched markdown-family `--fix` to surgical edits and clarified `--fix --format` execution order.
 - **ace-lint v0.27.0**: Made `--fix` an alias for deterministic `--auto-fix` with explicit `--format` warning.
 - **ace-lint v0.27.1**: Aligned `--auto-fix` exit semantics so warning-only results no longer fail.
 - **ace-lint v0.27.3**: Extracted auto-fix orchestration from the lint CLI command into a dedicated `AutoFixOrchestrator`.
-
-### Technical
-- **ace-lint v0.26.0–v0.27.3**: Expanded molecule, orchestrator, and command test coverage for surgical fixing, guardrails, agent-fix, and dry-run paths.
-
-## [0.9.934] - 2026-03-26
-
-### Added
-- **ace-overseer v0.12.0**: Terminal task filtering in `WorkOnOrchestrator` — tasks with `done`, `skipped`, or `cancelled` status are excluded before assignment creation, with skip reporting via progress callbacks.
-
-## [0.9.933] - 2026-03-26
-
-### Changed
 - **ace-assign v0.38.2**: Updated `work-on-task` prepare/create contracts to filter all terminal task statuses (`done`, `skipped`, `cancelled`) and to no-op assignment creation when all requested refs are terminal.
-
-### Technical
-- **ace-assign v0.38.2**: Strengthened terminal-filter contract coverage and moved the workflow contract test into the standard `test/organisms/` bucket.
-
-## [0.9.932] - 2026-03-26
-
-### Technical
-- **ace-assign v0.38.1**: Added regression tests to lock `work-on-task` done-task filtering contracts for mixed/all-done inputs and create-flow no-op behavior.
-
-## [0.9.931] - 2026-03-26
-
-### Changed
 - **ace-assign v0.38.0**: Updated assignment prepare/create workflow contracts to filter already-done `work-on-task` refs before expansion, continue mixed sets with skip reporting, and abort all-done sets without creating assignments.
-
-## [0.9.930] - 2026-03-26
-
-### Added
-- **ace-assign v0.38.0**: Added `record-demo` assignment step for recording and attaching terminal demos to PRs, with composition rules and recipe integration.
-- **ace-demo v0.19.4**: Added recording-options demo tape with fixtures showing `playback_speed` and `output` settings in action.
-- **ace-task v0.31.4**: Added optional "Demo Scenario" section to the task draft template for upfront demo scene definitions.
-
-### Changed
 - **ace-git v0.18.1**: Updated PR update workflow to reference recorded demo GIFs when attached via `ace-demo record --pr`.
-
-## [0.9.929] - 2026-03-26
-
-### Fixed
-- **ace-demo v0.19.3**: Unified YAML planning so `record --dry-run` and live recording enforce unsupported `settings.format` validation consistently.
-
-### Changed
 - **ace-demo v0.19.3**: Centralized YAML format/speed/output-path planning into a shared helper used by CLI context resolution and `DemoRecorder`.
-
-### Technical
-- **ace-demo v0.19.3**: Added regression coverage for dry-run rejection of unsupported YAML tape formats.
-
-## [0.9.928] - 2026-03-26
-
-### Fixed
-- **ace-task v0.31.3**: Consolidated empty-list stats footer formatting into a single return path and added command-level coverage for zero-total footer output.
-- **ace-demo v0.19.2**: Reject blank or whitespace-only YAML `settings.output` values so output path expansion stays valid.
-
-### Changed
 - **ace-demo v0.19.2**: Updated tape-mode context resolution to keep dry-run preview fallback while surfacing unresolved live tape refs earlier.
-
-### Technical
-- **ace-demo v0.19.2**: Removed obsolete record-command preview helper flow and expanded parser/CLI regression coverage.
-
-## [0.9.927] - 2026-03-26
-
-### Fixed
-- **ace-support-items v0.15.4**: corrected zero-status summary formatting in `StatsLineFormatter` so empty lists render `Tasks: • 0 total` without dangling spacing.
-- **ace-task v0.31.2**: aligned empty-task list output with the formatter fix and added exact output regression coverage.
-- **ace-demo v0.19.1**: Fixed YAML tape retime routing so CLI `--output` is honored when speed is set in tape settings without a tape output path.
-
-### Changed
 - **ace-demo v0.19.1**: Unified tape-mode precedence handoff by passing parsed YAML spec and resolved context from CLI into `DemoRecorder`.
-
-### Technical
-- **ace-demo v0.19.1**: Added regression tests for YAML speed + CLI output precedence and pre-parsed YAML spec reuse.
-
-## [0.9.926] - 2026-03-26
-
-### Fixed
-- **ace-task v0.31.1**: `ace-task list` now shows the stats footer for empty results, including filtered `0 of N` summaries.
-
-### Added
-- **ace-demo v0.19.0**: Added tape-level `settings.playback_speed` and `settings.output` support so `.tape.yml` files can fully define record/retime defaults.
-
-### Changed
 - **ace-demo v0.19.0**: Updated YAML tape recording routing for retime-only output mode (raw default artifact plus exact final output path when both speed and output are set).
 - **ace-demo v0.19.0**: Updated tape-mode override precedence so CLI `--playback-speed` and `--output` win over tape settings.
 
 ### Technical
+- **ace-demo v0.23.0**: Reworked the asciinema executor to drive the recorded PTY directly and expanded recorder/executor/verifier coverage for the interactive YAML path.
+- **ace-overseer v0.13.3**: Added non-repo command coverage and converted temporary launcher worktree fixtures into real git repos.
+- **ace-assign v0.40.2**: Added regression coverage for preset-name hardening, empty-preset diagnostics, task-mode insertion semantics, and end-to-end `ace-assign create --task` assignment materialization.
+- **ace-assign v0.40.1**: Switched hidden task-driven job spec naming to unique filenames and updated create-command coverage for randomized job-path generation.
+- **ace-assign v0.40.0**: Added create-path regression coverage and a runtime `ace-task` dependency for task-ref-based creation.
+- **ace-overseer v0.13.0**: Added regression coverage for shared-launch task fixture resolution and launcher delegation behavior.
+- **ace-demo v0.22.3**: Expanded atom/organism regression coverage for sleep validation and AGG font-family passthrough paths.
+- **ace-demo v0.22.2**: Added validator atom coverage and updated attacher tests for temporary conversion artifact lifecycle handling.
+- **ace-demo v0.22.1**: Added regression coverage for shell-escaped command assembly, command-mode cast verification, dry-run cast attachment behavior, uploader dry-run planning, and custom binary error messaging.
+- **ace-assign v0.39.1**: Added regression coverage for canonical expansion name-refresh and debug warnings for unexpanded `--task` preset template tokens.
+- **ace-assign v0.39.0**: Added loader/resolver/inferrer modules plus expanded command and helper test coverage for preset-aware insertion behavior.
+- **ace-assign v0.38.3**: Expanded command/executor test coverage for `--from` validation, batch insertion, depth overflow, and workflow-backed inserts.
+- **ace-lint v0.26.0–v0.27.3**: Expanded molecule, orchestrator, and command test coverage for surgical fixing, guardrails, agent-fix, and dry-run paths.
+- **ace-assign v0.38.2**: Strengthened terminal-filter contract coverage and moved the workflow contract test into the standard `test/organisms/` bucket.
+- **ace-assign v0.38.1**: Added regression tests to lock `work-on-task` done-task filtering contracts for mixed/all-done inputs and create-flow no-op behavior.
+- **ace-demo v0.19.3**: Added regression coverage for dry-run rejection of unsupported YAML tape formats.
+- **ace-demo v0.19.2**: Removed obsolete record-command preview helper flow and expanded parser/CLI regression coverage.
+- **ace-demo v0.19.1**: Added regression tests for YAML speed + CLI output precedence and pre-parsed YAML spec reuse.
 - **ace-demo v0.19.0**: Added parser tests and expanded recorder/CLI coverage for speed/output combinations and dry-run preview behavior.
 
 ## [0.9.925] - 2026-03-23
