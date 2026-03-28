@@ -21,6 +21,8 @@ module Ace
           end
 
           def call(task: nil, preset: nil, **options)
+            Atoms::RepoGuard.ensure_repo!
+
             task_refs = normalize_task_refs(task)
             if task_refs.empty?
               raise Ace::Support::Cli::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")

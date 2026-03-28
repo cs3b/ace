@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "tmpdir"
 require_relative "../test_helper"
 
 class WorkOnCommandTest < AceOverseerTestCase
@@ -76,6 +77,22 @@ class WorkOnCommandTest < AceOverseerTestCase
     end
 
     assert_equal "Task not found: 999", error.message
+  end
+
+  def test_requires_git_repo_before_running
+    orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
+
+    Dir.mktmpdir("overseer-no-repo") do |dir|
+      Dir.chdir(dir) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          command.call(task: "230", quiet: true)
+        end
+
+        assert_equal Ace::Overseer::Atoms::RepoGuard::MESSAGE, error.message
+        assert_empty orchestrator.calls
+      end
+    end
   end
 
   private

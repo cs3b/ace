@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stringio"
+require "tmpdir"
 require_relative "../test_helper"
 
 class PruneCommandTest < AceOverseerTestCase
@@ -184,5 +185,27 @@ class PruneCommandTest < AceOverseerTestCase
 
     assert_equal 1, orchestrator.calls.length
     assert_equal "", output.first
+  end
+
+  def test_requires_git_repo_before_running
+    orchestrator = FakePruneOrchestrator.new(
+      result: {dry_run: true, safe: [], unsafe: [], pruned: [], failed: []}
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    Dir.mktmpdir("overseer-no-repo") do |dir|
+      Dir.chdir(dir) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          command.call(quiet: false, dry_run: true, yes: false, debug: false)
+        end
+
+        assert_equal Ace::Overseer::Atoms::RepoGuard::MESSAGE, error.message
+        assert_empty orchestrator.calls
+      end
+    end
   end
 end

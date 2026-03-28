@@ -23,6 +23,7 @@ module Ace
           end
 
           def call(format:, **options)
+            Atoms::RepoGuard.ensure_repo!
             return if options[:quiet]
 
             if options[:watch] && format != "json"

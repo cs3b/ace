@@ -26,6 +26,8 @@ module Ace
           end
 
           def call(**options)
+            Atoms::RepoGuard.ensure_repo!
+
             targets = Array(options[:targets] || [])
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
             result = @orchestrator.call(

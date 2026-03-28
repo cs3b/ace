@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "tmpdir"
 
 class StatusCommandTest < AceOverseerTestCase
   class FakeCollector
@@ -91,5 +92,21 @@ class StatusCommandTest < AceOverseerTestCase
     parsed = JSON.parse(output)
     assert_equal [], parsed["worktrees"]
     assert_equal 1, collector.collect_count
+  end
+
+  def test_requires_git_repo_before_running
+    collector = FakeCollector.new({contexts: []})
+    command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
+
+    Dir.mktmpdir("overseer-no-repo") do |dir|
+      Dir.chdir(dir) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          command.call(format: "table")
+        end
+
+        assert_equal Ace::Overseer::Atoms::RepoGuard::MESSAGE, error.message
+        assert_equal 0, collector.collect_count
+      end
+    end
   end
 end
