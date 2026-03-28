@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-03-28
+
+### Fixed
+- Added an explicit git-repository guard for operational commands so `work-on`, `status`, and `prune` fail cleanly outside a repo or worktree instead of leaking raw `git` errors.
+
+### Technical
+- Added command coverage for non-repo failure paths and updated launcher fixtures to initialize real git repos in temporary worktree test directories.
+
 ## [0.13.2] - 2026-03-27
 
 ### Fixed

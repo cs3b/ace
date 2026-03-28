@@ -27,6 +27,17 @@ class AssignmentLauncherTest < AceOverseerTestCase
     end
   end
 
+  def init_git_repo!(path)
+    Dir.chdir(path) do
+      system("git", "init", "--quiet")
+      system("git", "config", "user.name", "ACE Test")
+      system("git", "config", "user.email", "ace@example.com")
+      File.write(".gitkeep", "")
+      system("git", "add", ".gitkeep")
+      system("git", "commit", "-m", "init", "--quiet")
+    end
+  end
+
   class FakeExecutor
     attr_reader :start_calls
 
@@ -45,6 +56,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_builds_job_and_starts_assignment
     Dir.mktmpdir("overseer-worktree") do |worktree|
+      init_git_repo!(worktree)
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
@@ -85,6 +97,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_expands_subtask_refs_into_taskrefs_parameter
     Dir.mktmpdir("overseer-worktree") do |worktree|
+      init_git_repo!(worktree)
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
@@ -141,6 +154,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_falls_back_to_task_ref_when_no_subtask_refs
     Dir.mktmpdir("overseer-worktree") do |worktree|
+      init_git_repo!(worktree)
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
@@ -187,6 +201,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_uses_explicit_taskrefs_when_provided
     Dir.mktmpdir("overseer-worktree") do |worktree|
+      init_git_repo!(worktree)
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
@@ -242,6 +257,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
 
   def test_launch_uses_project_preset_path_when_available
     Dir.mktmpdir("overseer-worktree") do |worktree|
+      init_git_repo!(worktree)
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
       FileUtils.mkdir_p(preset_dir)
       File.write(
