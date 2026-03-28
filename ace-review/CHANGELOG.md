@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.3] - 2026-03-28
+
+### Fixed
+- Corrected non-runnable `ace-search` examples in `review/package` for hyphen-prefixed flag discovery and help-text checks.
+- Updated maintainability lint examples to target Ruby implementation files (`$1/lib/**/*.rb`) instead of unsupported directory-only lint targets.
+
+### Changed
+- Standardized quick-reference `ace-search` snippets to match executable command forms used in the workflow body.
+- Clarified that Step 1 shell blocks are reference execution snippets, reduced duplicated evidence-collection instructions, and narrowed D2 usage-doc scanning to `docs/usage.md` when available (with fallback to `docs/`).
+
+## [0.50.2] - 2026-03-28
+
+### Fixed
+- Replaced unsupported glob-style `ace-search` file inventory examples in `review/package` with path-scoped commands that execute correctly.
+- Corrected the I5 help-text evidence command to search a real package path instead of a glob-resolved commands path.
+
+### Changed
+- Made Step 1 package input checks fail-fast (with explicit stop behavior) to prevent downstream review execution on invalid targets.
+- Reworked maintainability checks to reduce duplicate lint noise and clarified that duplication scans are heuristic signals requiring manual confirmation.
+
+## [0.50.1] - 2026-03-28
+
+### Fixed
+- Corrected `review/package` workflow command examples to avoid invalid `ace-bundle` preset usage and path-incompatible `ace-search` patterns.
+- Added argument terminators for hyphen-prefixed search patterns and tightened performance/doc-drift checks to reduce noisy or ambiguous output.
+
+### Changed
+- Aligned package review workflow to executable `ace-*` command surfaces and simplified maintainability checks to use deterministic lint/search evidence.
+
+## [0.50.0] - 2026-03-28
+
+### Changed
+- Expanded `review/package` workflow from placeholder instructions to a comprehensive evidence-first package review protocol spanning maintainability, interface quality, and documentation fidelity checks with required reporting templates.
+
 ## [0.49.0] - 2026-03-24
 
 ### Fixed
