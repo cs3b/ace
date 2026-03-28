@@ -98,9 +98,31 @@ Decision matrix:
 | Found, local version already published | Skip with message |
 | Found, different owner | Warn and skip |
 
-### 5. Publish Gems
+### 5. Build Gems
 
 For each gem that needs publishing (in dependency order):
+
+```bash
+cd ace-<name> && gem build ace-<name>.gemspec
+```
+
+Run all builds before any `gem push` step.
+
+### 6. Validate Plan and Collect OTP
+
+In live mode, before publishing:
+
+1. Show the final publish queue with order and artifact names.
+2. Prompt once for the RubyGems OTP.
+3. If OTP is not provided, abort:
+
+```text
+Aborted by operator: no OTP provided.
+```
+
+Use the same OTP for all publishes.
+
+### 7. Publish Gems
 
 **Dry-run mode** (`--dry-run`):
 
@@ -113,16 +135,10 @@ For each gem that needs publishing (in dependency order):
 
 **Live mode**:
 
-Build the gem:
+Publish each pre-built gem artifact in order:
 
 ```bash
-cd ace-<name> && gem build ace-<name>.gemspec
-```
-
-Publish:
-
-```bash
-cd ace-<name> && gem push ace-<name>-X.Y.Z.gem
+cd ace-<name> && gem push ace-<name>-X.Y.Z.gem --otp <OTP>
 ```
 
 Clean up after each publish:
@@ -139,7 +155,7 @@ rm -f ace-<name>/ace-<name>-*.gem
   - ace-dependent-b
 ```
 
-### 6. Report Results
+### 8. Report Results
 
 Summarize all actions:
 
@@ -160,6 +176,7 @@ Summarize all actions:
 - `.gem` build artifacts are cleaned up
 - `--dry-run` produces accurate output without side effects
 - Credentials are verified before any publish attempt
+- Live mode gathers publish plan then collects OTP once and reuses it for every `gem push`
 
 ## Response Template
 
