@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.948] - 2026-03-28
+
+### Changed
+- **ace-demo v0.23.0**: Switched YAML asciinema tape recording to an interactive shell session so demo commands are visibly recorded by default.
+
+### Fixed
+- **ace-demo v0.23.0**: Waited for the initial shell prompt before sending the first tape command, normalized invalid cast terminal sizes before GIF conversion, and verified interactive recordings from echoed shell commands.
+
+### Technical
+- **ace-demo v0.23.0**: Reworked the asciinema executor to drive the recorded PTY directly and expanded recorder/executor/verifier coverage for the interactive YAML path.
+
 ## [0.9.947] - 2026-03-28
 
 ### Fixed
