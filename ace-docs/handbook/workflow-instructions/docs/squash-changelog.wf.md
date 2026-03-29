@@ -13,6 +13,13 @@ Consolidate multiple CHANGELOG.md version entries added on a feature branch into
 
 ## When to Use
 
+> **Note:** Since root changelog entries now accumulate under `[Unreleased]` (no version numbers assigned until
+> publish via `wfi://github/release-publish`), this workflow is rarely needed on new branches. It remains useful
+> for:
+> - Legacy branches created before the unreleased-mode change
+> - Branches where someone explicitly created versioned entries
+> - Any situation where multiple `## [X.Y.Z]` entries need consolidation
+
 On feature branches with multiple `ace-release` cycles that each added a version entry to root `CHANGELOG.md`. Before merging the PR, squash these into one entry using the **lowest** version number.
 
 ## Prerequisites
