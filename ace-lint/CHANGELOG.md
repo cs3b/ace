@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.7] - 2026-03-29
+
+### Changed
+- Role-based lint doctor model default.
+
+
 ## [0.27.6] - 2026-03-29
 
 ### Technical
