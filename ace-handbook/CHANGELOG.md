@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-03-29
+
 ### Changed
 
 - Updated the coordinated release workflow so packages pulled in only by internal dependency constraint bumps are auto-added as follower releases and default to a patch bump with full version/changelog metadata.
