@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.zoz
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-28 23:47:46"
 estimate: TBD
@@ -8,8 +8,9 @@ dependencies: []
 tags: [ace-llm, config, model-resolution, orchestrator]
 bundle:
   presets: [project]
-  files: [.ace/llm/config.yml, .ace/task/config.yml, .ace/review/config.yml, .ace/assign/config.yml, .ace/e2e-runner/config.yml, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md]
+  files: [.ace/llm/config.yml, .ace/task/config.yml, .ace/review/config.yml, .ace/assign/config.yml, .ace/e2e-runner/config.yml, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/ux-usage.md]
   commands: []
+needs_review: false
 ---
 
 # Roles-first LLM configuration rollout
@@ -69,6 +70,14 @@ Roll out named model roles across ACE in two steps: first add `role:` support in
         - codex:mini
       docs-analysis:
         - glite
+      idea-enhance:
+        - gemini:flash-latest
+      compressor:
+        - glite
+      sim-primary:
+        - google:flash-preview
+      sim-synthesis:
+        - claude:haiku
 ```
 
 ```yaml
@@ -184,3 +193,4 @@ review:
 - Child feature spec: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md`
 - Child migration spec: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md`
 - Usage doc for child feature: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/ux-usage.md`
+- Usage doc for child migration: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/ux-usage.md`

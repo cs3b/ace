@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.zoz.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 00:19:51"
 estimate: TBD
@@ -9,39 +9,9 @@ tags: [config, migration, roles]
 parent: 8qr.t.zoz
 bundle:
   presets: [project]
-  files:
-    - .ace/llm/config.yml
-    - .ace/task/config.yml
-    - .ace/review/config.yml
-    - .ace/review/presets/code-valid.yml
-    - .ace/review/presets/code-fit.yml
-    - .ace/review/presets/code-shine.yml
-    - .ace/review/presets/spec.yml
-    - .ace/review/presets/docs.yml
-    - .ace/assign/config.yml
-    - .ace/e2e-runner/config.yml
-    - .ace/git/commit.yml
-    - .ace/docs/config.yml
-    - .ace/prompt-prep/config.yml
-    - ace-task/.ace-defaults/task/config.yml
-    - ace-review/.ace-defaults/review/config.yml
-    - ace-review/.ace-defaults/review/presets/code-valid.yml
-    - ace-review/.ace-defaults/review/presets/code-fit.yml
-    - ace-review/.ace-defaults/review/presets/code-shine.yml
-    - ace-review/.ace-defaults/review/presets/spec.yml
-    - ace-review/.ace-defaults/review/presets/docs.yml
-    - ace-assign/.ace-defaults/assign/config.yml
-    - ace-test-runner-e2e/.ace-defaults/e2e-runner/config.yml
-    - ace-sim/.ace-defaults/sim/presets/validate-task.yml
-    - ace-sim/.ace-defaults/sim/presets/validate-idea.yml
-    - ace-compressor/.ace-defaults/compressor/config.yml
-    - ace-prompt-prep/.ace-defaults/prompt-prep/config.yml
-    - ace-idea/.ace-defaults/idea/config.yml
-    - ace-retro/.ace-defaults/retro/config.yml
-    - ace-lint/.ace-defaults/lint/config.yml
-    - ace-git-commit/.ace-defaults/git/commit.yml
-    - ace-docs/.ace-defaults/docs/config.yml
+  files: [.ace/llm/config.yml, .ace/task/config.yml, .ace/review/config.yml, .ace/review/presets/code-valid.yml, .ace/review/presets/code-fit.yml, .ace/review/presets/code-shine.yml, .ace/review/presets/spec.yml, .ace/review/presets/docs.yml, .ace/assign/config.yml, .ace/e2e-runner/config.yml, .ace/git/commit.yml, .ace/docs/config.yml, .ace/prompt-prep/config.yml, ace-task/.ace-defaults/task/config.yml, ace-review/.ace-defaults/review/config.yml, ace-review/.ace-defaults/review/presets/code-valid.yml, ace-review/.ace-defaults/review/presets/code-fit.yml, ace-review/.ace-defaults/review/presets/code-shine.yml, ace-review/.ace-defaults/review/presets/spec.yml, ace-review/.ace-defaults/review/presets/docs.yml, ace-assign/.ace-defaults/assign/config.yml, ace-test-runner-e2e/.ace-defaults/e2e-runner/config.yml, ace-sim/.ace-defaults/sim/presets/validate-task.yml, ace-sim/.ace-defaults/sim/presets/validate-idea.yml, ace-compressor/.ace-defaults/compressor/config.yml, ace-prompt-prep/.ace-defaults/prompt-prep/config.yml, ace-idea/.ace-defaults/idea/config.yml, ace-retro/.ace-defaults/retro/config.yml, ace-lint/.ace-defaults/lint/config.yml, ace-git-commit/.ace-defaults/git/commit.yml, ace-docs/.ace-defaults/docs/config.yml, docs/architecture.md, docs/vision.md, ace-compressor/docs/usage.md, ace-compressor/docs/demo/fixtures/architecture.md, ace-git-commit/docs/usage.md, ace-git-commit/docs/getting-started.md, ace-review/docs/feedback-workflow.md, ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/fixtures/pkg-a/.ace/git/commit.yml, ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/fixtures/pkg-b/.ace/git/commit.yml, ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/config.yml, ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/presets/single.yml, ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/presets/multi.yml, ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/presets/reviewers-test.yml, ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/presets/level_1.yml, ace-sim/test/e2e/TS-SIM-001-next-phase-smoke/fixtures/.ace/sim/presets/validate-task.yml, ace-sim/test/e2e/TS-SIM-001-next-phase-smoke/fixtures/.ace/sim/presets/validate-idea.yml, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/ux-usage.md]
   commands: []
+needs_review: false
 ---
 
 # Migrate ACE configs to roles-first model selection
@@ -68,6 +38,36 @@ Migrate ACE consumer configs, presets, docs, examples, and fixtures to use stabl
 6. Review preset arrays keep their multi-model shape but use role references per reviewer slot
 7. Execution/simulation fields named `provider` are migrated when they semantically represent LLM selection
 8. Docs, examples, and fixtures touched by the migration are updated in the same task
+
+### Inventory Contract
+
+The migration inventory is fixed by this spec and must not rely on implementation-time discovery for scope:
+
+| Surface | Current field(s) | Target role(s) |
+| --- | --- | --- |
+| Project task config | `task.doctor_agent_model`, `task.plan.model` | `doctor`, `planner` |
+| Project review config | `defaults.model`, `feedback.synthesis_model` | `review-default`, `review-synthesizer` |
+| Project review presets | `.ace/review/presets/*: models[]` | `review-claude`, `review-codex`, `review-gemini` |
+| Project assign config | `execution.provider` | `assign-executor` |
+| Project e2e config | `reporting.model`, `execution.provider` | `e2e-reporter`, `e2e-executor` |
+| Project git config | `git.model` | `commit` |
+| Project docs config | `llm.model` only; preserve `llm.provider: ace-llm-query` | `docs-analysis` |
+| Project prompt-prep config | `model` | `prompt-enhance` |
+| Package task defaults | `task.doctor_agent_model`, `task.plan.model` | `doctor`, `planner` |
+| Package review defaults | `defaults.model`, `feedback.synthesis_model`, `feedback.fallback_models[]` | `review-default`, `review-synthesizer`, `review-fallback` |
+| Package review presets | `ace-review/.ace-defaults/review/presets/*: models[]` | `review-claude`, `review-codex`, `review-gemini` |
+| Package assign defaults | `execution.provider` | `assign-executor` |
+| Package e2e defaults | `reporting.model`, `execution.provider` | `e2e-reporter`, `e2e-executor` |
+| Package sim presets | `provider[]`, `synthesis_provider` | `sim-primary`, `sim-synthesis` |
+| Package compressor defaults | `agent_model` | `compressor` |
+| Package prompt-prep defaults | `model` | `prompt-enhance` |
+| Package idea defaults | `idea.llm_model`, `idea.doctor_agent_model` | `idea-enhance`, `doctor` |
+| Package retro defaults | `retro.doctor_agent_model` | `doctor` |
+| Package lint defaults | `lint.doctor_agent_model` | `doctor` |
+| Package git defaults | `git.model` | `commit` |
+| Package docs defaults | `llm.model` with existing provider semantics preserved | `docs-analysis` |
+| Teaching docs/examples | config-teaching examples in `docs/architecture.md`, `docs/vision.md`, `ace-compressor/docs/usage.md`, `ace-git-commit/docs/usage.md`, `ace-git-commit/docs/getting-started.md`, `ace-review/docs/feedback-workflow.md`, and this task's usage doc | roles-first examples only |
+| Shipped fixtures | review, sim, and git-commit fixture configs under the listed `test/e2e/**/fixtures` paths | same roles used by shipped config surfaces |
 
 ### Interface Contract
 
@@ -125,6 +125,13 @@ git:
 llm:
   provider: ace-llm-query
   model: role:docs-analysis
+
+idea:
+  llm_model: role:idea-enhance
+  doctor_agent_model: role:doctor
+
+compressor:
+  agent_model: role:compressor
 ```
 
 ```yaml
@@ -133,6 +140,11 @@ models:
   - role:review-claude
   - role:review-codex
   - role:review-gemini
+
+feedback:
+  synthesis_model: role:review-synthesizer
+  fallback_models:
+    - role:review-fallback
 ```
 
 ```yaml
@@ -156,6 +168,7 @@ reporting:
 - `provider:` fields are migrated only when they encode LLM selection, not when they encode provider registry metadata
 - `.ace/docs/config.yml` migrates `llm.model` to `role:docs-analysis`, but keeps `llm.provider: ace-llm-query` unchanged
 - Commented examples and shipped documentation are in scope when they teach hardcoded model usage
+- CLI override examples showing intentional one-off `--model` or `--provider` flags remain valid and do not need conversion to roles
 
 ## Success Criteria
 
@@ -186,6 +199,7 @@ reporting:
 
 - config loaders continue to accept migrated values in touched packages
 - review preset loaders accept role-based `models:` arrays
+- review feedback config continues to accept role-based `fallback_models`
 - execution/sim loaders accept role-based `provider:` fields where applicable
 - docs config continues to use `llm.provider: ace-llm-query` while resolving `llm.model` through roles
 
@@ -194,6 +208,8 @@ reporting:
 - project `.ace` configs resolve through roles after child `8qr.t.zoz.0` lands
 - package defaults ship role-based selectors instead of hardcoded provider/model literals
 - review and simulation workflows still compose valid provider/model requests through role resolution
+- repo-level teaching docs no longer show stale hardcoded model examples for migrated consumer surfaces
+- shipped E2E/demo fixtures that mirror migrated config surfaces are updated to the same roles-first selectors
 
 ### Failure/Invalid Path Validation
 
@@ -201,11 +217,13 @@ reporting:
 - no review preset loses multi-model behavior during migration
 - `.ace/docs/config.yml` does not rewrite `llm.provider` to a `role:` value
 - docs/examples do not keep teaching stale hardcoded config values after migration
+- `idea.llm_model` and `feedback.fallback_models` are not missed by inventory or validation scans
 
 ### Verification Commands
 
 - `ace-search "role:" --content --hidden --include ".ace/**/*.yml,ace-*/.ace-defaults/**/*.yml" --max-results 200`
-- `ace-search "doctor_agent_model|synthesis_model|agent_model|^\s*model:|^\s*provider:|^\s*models:|synthesis_provider:" --content --hidden --include ".ace/**/*.yml,ace-*/.ace-defaults/**/*.yml" --max-results 200`
+- `ace-search "doctor_agent_model|llm_model|synthesis_model|fallback_models|agent_model|^\s*model:|^\s*provider:|^\s*models:|synthesis_provider:" --content --hidden --include ".ace/**/*.yml,ace-*/.ace-defaults/**/*.yml" --max-results 200`
+- `ace-search "codex:|claude:|gemini:|google:|glite|openai:|zai:" --content --hidden --include "docs/**/*.md,ace-*/docs/**/*.md,ace-*/test/e2e/**/fixtures/**/*.yml,.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/*.md" --max-results 200`
 - package-specific `ace-test` commands for each touched package during implementation
 
 ## Scope of Work
@@ -239,8 +257,13 @@ reporting:
 
 - inventory-backed migration scope
 - updated docs/examples/fixtures included in the task contract
+- companion usage examples for roles-first migration surfaces
 
 ## References
 
 - Parent rollout task: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/8qr.t.zoz-named-model-pools-roles-for-ace-llm.s.md`
 - `ace-llm` feature child: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md`
+- Usage doc for this migration: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/ux-usage.md`
+- Repo teaching docs in scope: `docs/architecture.md`, `docs/vision.md`
+- Package docs/examples in scope: `ace-compressor/docs/usage.md`, `ace-git-commit/docs/usage.md`, `ace-git-commit/docs/getting-started.md`, `ace-review/docs/feedback-workflow.md`
+- Fixture configs in scope: `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/fixtures/pkg-a/.ace/git/commit.yml`, `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/fixtures/pkg-b/.ace/git/commit.yml`, `ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/config.yml`, `ace-review/test/e2e/TS-REVIEW-001-review-workflow/fixtures/.ace/review/presets/{single,multi,reviewers-test,level_1}.yml`, `ace-sim/test/e2e/TS-SIM-001-next-phase-smoke/fixtures/.ace/sim/presets/{validate-task,validate-idea}.yml`
