@@ -14,6 +14,11 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
+
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-overseer/"
@@ -44,7 +49,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-task", "~> 0.31"
   spec.add_dependency "ace-tmux", "~> 0.11"
 
-  spec.add_development_dependency "ace-support-test-helpers", "~> 0.13" 
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.13"
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
