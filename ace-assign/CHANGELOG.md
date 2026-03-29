@@ -7,11 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.4] - 2026-03-29
+
+### Technical
+- Added `when_to_skip` entry for unreleased-mode branches to the `squash-changelog` catalog step.
+
+## [0.41.3] - 2026-03-29
+
+### Changed
+- Reused one resolved provider value in `ace-assign fork-run` for both runtime display and launcher execution flow.
+
+### Technical
+- Clarified inline documentation of intentional fork-context merge semantics in `AssignmentExecutor` (`=` overwrite for generated children, `||=` default-preserve for materialized explicit steps).
+
+## [0.41.2] - 2026-03-29
+
+### Fixed
+- Updated scoped `ace-assign status` output (text and JSON `current_step`) to show the effective fork provider inherited from the scoped fork root when the active child has no local provider.
+- Removed unreachable symbol-key provider fallback in `Step#fork_provider` now that fork options are normalized to string keys.
+
+### Technical
+- Added scoped status regression tests covering fork-provider display/serialization for fork-root scope (`@010`) with active child steps.
+- Documented intentional fork-context propagation semantics in `AssignmentExecutor` (generated child-step overwrite vs explicit-step default-preserve behavior).
+
+## [0.41.1] - 2026-03-29
+
+### Fixed
+- Preserved catalog `context.fork` provider overrides for explicit `skill`-backed step materialization so step-level fork provider precedence is applied correctly.
+- Kept fork child-step behavior stable by avoiding implicit fork-context propagation from canonical metadata when children do not explicitly declare fork context.
+
+### Technical
+- Added regression coverage for explicit `skill` and explicit `workflow` materialization paths to ensure catalog fork overrides are retained.
+
+## [0.41.0] - 2026-03-28
+
+### Added
+- Added per-step fork provider overrides via step frontmatter `fork.provider`.
+- Added `fork_provider` exposure in `ace-assign status` current-step output and `--format json` payloads.
+
+### Changed
+- Updated `ace-assign fork-run` provider precedence to: CLI `--provider` > step `fork.provider` > config `execution.provider` > default.
+- Extended skill/catalog step materialization to carry `context.fork` options into generated step metadata.
+
+### Technical
+- Added coverage for step model/parser/scanner fork-option round-trip, fork-run provider precedence, status serialization/display, and executor composition behavior.
+- Updated usage and fork-context docs with `fork.provider` examples and precedence rules.
 
 ## [0.40.4] - 2026-03-29
 
 ### Fixed
-- **ace-assign v0.40.4**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+- Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
 
 ## [0.40.3] - 2026-03-27
 

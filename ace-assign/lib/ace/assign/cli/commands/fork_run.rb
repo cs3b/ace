@@ -39,6 +39,7 @@ module Ace
 
             root_step = resolve_root_step(state, current, options[:root], target.scope)
             ensure_root_is_fork!(root_step)
+            resolved_provider = resolved_provider_for(root_step, options[:provider])
 
             if state.subtree_complete?(root_step.number)
               puts "Subtree #{root_step.number} is already complete." unless options[:quiet]
@@ -49,7 +50,7 @@ module Ace
               next_step = state.next_workable_in_subtree(root_step.number)
               puts "Starting fork subtree execution: #{root_step.number} - #{root_step.name}"
               puts "Assignment: #{assignment.id}"
-              puts "Provider: #{options[:provider] || Ace::Assign.config.dig("execution", "provider") || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER}"
+              puts "Provider: #{resolved_provider}"
               puts "Timeout: #{options[:timeout] || Ace::Assign.config.dig("execution", "timeout") || Molecules::ForkSessionLauncher::DEFAULT_TIMEOUT}s"
               puts "Next step: #{next_step.number} - #{next_step.name}" if next_step
             end
@@ -73,7 +74,7 @@ module Ace
             launch_result = launcher.launch(
               assignment_id: assignment.id,
               fork_root: root_step.number,
-              provider: options[:provider],
+              provider: resolved_provider,
               cli_args: options[:cli_args],
               timeout: options[:timeout],
               cache_dir: assignment.cache_dir
@@ -184,6 +185,13 @@ module Ace
             return if root_step.fork?
 
             raise Error, "Step #{root_step.number} is not fork-enabled (context: fork missing)."
+          end
+
+          def resolved_provider_for(root_step, cli_provider)
+            explicit = cli_provider&.to_s&.strip
+            return explicit unless explicit.nil? || explicit.empty?
+
+            root_step.fork_provider || Ace::Assign.config.dig("execution", "provider") || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER
           end
 
           def record_fork_pid_info(root_step, launch_result)

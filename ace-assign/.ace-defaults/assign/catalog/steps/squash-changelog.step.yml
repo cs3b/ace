@@ -23,6 +23,7 @@ context:
 when_to_skip:
   - "There is only one relevant changelog entry"
   - "Changelog has already been consolidated for this branch"
+  - "Root changelog entries are under [Unreleased] (no versioned entries to squash)"
 
 effort: trivial
 tags: [docs, changelog, release]

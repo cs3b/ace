@@ -171,6 +171,25 @@ Options:
 - `--quiet, -q`
 - `--debug, -d`
 
+Provider resolution precedence for fork execution:
+
+1. CLI `--provider`
+2. Step frontmatter `fork.provider`
+3. Config `execution.provider`
+4. Built-in default provider
+
+Step-level example:
+
+```yaml
+---
+name: research
+status: pending
+context: fork
+fork:
+  provider: "claude:sonnet@yolo"
+---
+```
+
 ### `ace-assign list`
 
 List assignments.

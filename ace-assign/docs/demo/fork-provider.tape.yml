@@ -1,0 +1,34 @@
+---
+description: Show per-step fork provider — different steps run with different LLM models
+tags:
+- ace-assign
+- fork
+- provider
+settings:
+  font_size: 16
+  width: 1000
+  height: 500
+  format: gif
+setup:
+- sandbox
+- git-init
+- copy-fixtures
+scenes:
+- name: Show step frontmatter with fork.provider
+  commands:
+  - type: "cat .ace-local/assign/demoXx/steps/020-implement.st.md"
+    sleep: 4s
+- name: Status shows per-step Fork Provider
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: "ace-assign status"
+    sleep: 4s
+- name: fork-run resolves step provider
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: "ace-assign fork-run --root 020 --dry-run"
+    sleep: 4s
+teardown:
+- cleanup

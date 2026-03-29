@@ -706,6 +706,14 @@ module Ace
 
             context_default = step_def.dig("context", "default")
             child["context"] = context_default if context_default && parent_context != "fork"
+            fork_context = step_def.dig("context", "fork")
+            if child["context"] == "fork" && fork_context.is_a?(Hash) && !fork_context.empty?
+              # Generated child sub-steps have no explicit frontmatter overrides.
+              # Apply the catalog fork context directly (overwrite semantics) so
+              # delegated children inherit the scheduler/provider policy configured
+              # for that child step type.
+              child["fork"] = fork_context
+            end
           end
 
           child
@@ -844,6 +852,15 @@ module Ace
             "instructions" => rendered_instructions,
             "workflow" => rendering["workflow"]
           )
+          context_default = rendering.dig("context", "default")
+          materialized["context"] ||= context_default if context_default
+          fork_context = rendering.dig("context", "fork")
+          if materialized["context"] == "fork" && fork_context.is_a?(Hash) && !fork_context.empty?
+            # For materialized explicit steps, preserve frontmatter-provided fork config
+            # (`||=` semantics). Rendering contributes defaults only when the step
+            # itself did not declare fork options.
+            materialized["fork"] ||= fork_context
+          end
           materialized["source_skill"] = rendering["source_skill"] || rendering["skill"] if rendering["source_skill"] || rendering["skill"]
           materialized["source_workflow"] = rendering["workflow"] if rendering["workflow"] && !rendering["workflow"].empty?
           materialized.delete("skill")
@@ -866,7 +883,14 @@ module Ace
 
           explicit_skill = step["skill"]&.to_s&.strip
           if explicit_skill && !explicit_skill.empty?
-            return skill_source_resolver.resolve_skill_rendering(explicit_skill)
+            canonical_step = find_step_definition(step["name"]&.to_s)
+            if canonical_step && step["parent"] && !step.key?("context") && !step.key?("fork")
+              canonical_step = canonical_step.dup
+              canonical_step.delete("context")
+              canonical_step.delete("fork")
+            end
+            rendering = skill_source_resolver.resolve_skill_rendering(explicit_skill)
+            return canonical_step ? canonical_step.merge(rendering || {}) : rendering if rendering
           end
 
           skill_source_resolver.resolve_step_rendering(step["name"]&.to_s)

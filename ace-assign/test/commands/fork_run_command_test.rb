@@ -638,4 +638,103 @@ class ForkRunCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_fork_run_uses_step_fork_provider_when_cli_provider_absent
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"provider" => "claude:sonnet@yolo"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, provider:, **_kwargs|
+          @snapshot[:provider] = provider
+
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          writer = Ace::Assign::Molecules::StepWriter.new
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
+          root = state.find_by_number(fork_root)
+          writer.mark_done(root.file_path, report_content: "done", reports_dir: assignment.reports_dir)
+        end
+      end
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
+        ).call(assignment: "#{result[:assignment].id}@020")
+      end
+
+      assert_equal "claude:sonnet@yolo", launch_snapshot[:provider]
+      assert_includes output.first, "Provider: claude:sonnet@yolo"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_cli_provider_overrides_step_fork_provider
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"provider" => "claude:sonnet@yolo"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, provider:, **_kwargs|
+          @snapshot[:provider] = provider
+
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          writer = Ace::Assign::Molecules::StepWriter.new
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
+          root = state.find_by_number(fork_root)
+          writer.mark_done(root.file_path, report_content: "done", reports_dir: assignment.reports_dir)
+        end
+      end
+
+      capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
+        ).call(assignment: "#{result[:assignment].id}@020", provider: "codex:gpt-5")
+      end
+
+      assert_equal "codex:gpt-5", launch_snapshot[:provider]
+
+      Ace::Assign.reset_config!
+    end
+  end
 end

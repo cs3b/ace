@@ -128,6 +128,118 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_json_includes_fork_provider
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"provider" => "claude:sonnet@yolo"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: result[:assignment].id)
+      end
+
+      payload = JSON.parse(output.first)
+      step = payload.fetch("steps").first
+      assert_equal "claude:sonnet@yolo", step["fork_provider"]
+      assert_equal "claude:sonnet@yolo", payload.dig("current_step", "fork_provider")
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_prints_fork_provider_for_current_step
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"provider" => "claude:sonnet@yolo"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
+      end
+
+      assert_includes output.first, "Fork Provider: claude:sonnet@yolo"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_prints_scoped_fork_provider_from_scope_root
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "fork" => {"provider" => "codex:gpt-fit"},
+          "sub_steps" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
+      end
+
+      assert_includes output.first, "Current Step: 010.01 - onboard"
+      assert_includes output.first, "Fork Provider: codex:gpt-fit"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_json_with_scope_uses_fork_provider_from_scope_root
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "fork" => {"provider" => "codex:gpt-fit"},
+          "sub_steps" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: "#{result[:assignment].id}@010")
+      end
+
+      payload = JSON.parse(output.first)
+      assert_equal "010.01", payload.dig("current_step", "number")
+      assert_equal "codex:gpt-fit", payload.dig("current_step", "fork_provider")
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_with_scoped_done_fork_step_omits_fork_execution_guidance
     with_temp_cache do |cache_dir|
       steps = [
