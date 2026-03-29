@@ -25,6 +25,46 @@ llm:
     chains: {}
     providers: []
 
+  # Named model roles for indirection across consumer configs.
+  # Override in .ace/llm/config.yml for project-specific role assignments.
+  roles:
+    doctor:
+      - gemini:flash-latest@yolo
+    planner:
+      - codex:gpt@ro
+    review-default:
+      - codex:codex@ro
+    review-synthesizer:
+      - codex:gpt@ro
+    review-fallback:
+      - claude:sonnet
+    review-claude:
+      - claude:opus@ro
+    review-codex:
+      - codex:gpt@ro
+    review-gemini:
+      - gemini:pro-latest@ro
+    assign-executor:
+      - codex:codex@yolo
+    e2e-executor:
+      - claude:haiku@yolo
+    e2e-reporter:
+      - claude:haiku
+    prompt-enhance:
+      - glite
+    commit:
+      - codex:mini
+    docs-analysis:
+      - glite
+    idea-enhance:
+      - gemini:flash-latest
+    compressor:
+      - glite
+    sim-primary:
+      - google:flash-preview
+    sim-synthesis:
+      - claude:haiku
+
   # Default context limit for unknown models (in tokens)
   # Provider-specific limits are defined in providers/*.yml
   context_limit:

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Shipped canonical role catalog with gem defaults so `role:*` selectors resolve without project-level config.
+
+### Fixed
+- Added type guard in `RoleConfig.from_hash` to raise `ConfigurationError` for non-Hash role config input.
+
 ## [0.31.3] - 2026-03-31
 
 ### Technical
@@ -26,10 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Extended `ace-llm --list-providers` output with provider credential setup hints, including required environment variable names.
+- Added named model-role resolution via `role:<name>` selectors in `ProviderModelParser`, including strict runtime availability checks across candidate providers.
 
 ### Changed
 - Made provider setup failures actionable by surfacing supported provider lists, ignored-provider guidance, and an explicit recovery path via `ace-llm --list-providers`.
 - Updated onboarding and usage documentation to align runtime errors with provider discovery and environment-variable setup guidance.
+- Added `llm.roles` configuration support and a dedicated `RoleResolver`/`RoleConfig` pipeline so callers can centralize provider-model selection and keep caller `:thinking` and `@preset` overrides authoritative.
+
+### Technical
+- Added focused coverage for role config validation, resolver behavior, and parser integration in `test/models/role_config_test.rb`, `test/molecules/role_resolver_test.rb`, and `test/molecules/provider_model_parser_test.rb`.
 
 ## [0.30.2] - 2026-03-29
 
