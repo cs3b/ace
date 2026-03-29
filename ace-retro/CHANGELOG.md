@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-03-29
+
+### Changed
+- Role-based retro doctor model default.
+
+
 ## [0.16.4] - 2026-03-29
 
 ### Technical
