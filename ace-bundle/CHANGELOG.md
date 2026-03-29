@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.40.5] - 2026-03-29
+
+### Fixed
+- Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-bundle stays aligned with the current git workflow release.
+
 ## [0.40.4] - 2026-03-29
 
 ### Technical
