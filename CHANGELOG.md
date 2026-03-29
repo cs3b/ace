@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-support-items v0.15.6**: Hardened frontmatter field updates with an exclusive same-file lock so concurrent `ace-task update`-style mutations do not silently lose one writer's changes.
+- **ace-task v0.31.6**: Updated task review/update workflow guidance to combine same-task scalar updates into one `ace-task update ... --set ...` call and avoid parallel writes against the same task ref.
+
+### Technical
+- **ace-retro v0.16.3**: Corrected the `retro/selfimprove` workflow example to use the current supported retro create contract for self-improvement retros.
+
 ## [0.9.934] - 2026-03-29
 
 ### Changed

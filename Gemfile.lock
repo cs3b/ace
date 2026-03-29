@@ -213,7 +213,7 @@ PATH
 PATH
   remote: ace-retro
   specs:
-    ace-retro (0.16.2)
+    ace-retro (0.16.3)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -279,7 +279,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.5)
+    ace-support-items (0.15.6)
       ace-b36ts (~> 0.13)
       ace-support-core (~> 0.29)
 
@@ -324,7 +324,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.31.5)
+    ace-task (0.31.6)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
