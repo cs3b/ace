@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-cli', '~> 0.6'
   spec.add_dependency 'ace-support-core', '~> 0.29'
   spec.add_dependency 'ace-support-config', '~> 0.9'
-  spec.add_dependency 'ace-git', '~> 0.18'
+  spec.add_dependency 'ace-git', '~> 0.19'
   spec.add_dependency 'ace-task', '~> 0.31'
 
   # Development dependencies are managed in the root Gemfile
