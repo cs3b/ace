@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.zoz
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-28 23:47:46"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [.ace/llm/config.yml, .ace/task/config.yml, .ace/review/config.yml, .ace/assign/config.yml, .ace/e2e-runner/config.yml, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/ux-usage.md]
   commands: []
 needs_review: false
+worktree:
+  branch: zoz-roles-first-llm-configuration-rollout
+  path: ../ace-t.zoz
+  created_at: "2026-03-29 22:26:19"
+  updated_at: "2026-03-29 22:26:19"
+  target_branch: main
 ---
 
 # Roles-first LLM configuration rollout
