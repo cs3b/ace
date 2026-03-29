@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.5] - 2026-03-29
+
+### Changed
+- Role-based compressor model default.
+
+
 ## [0.24.4] - 2026-03-29
 
 ### Technical
