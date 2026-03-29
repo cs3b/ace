@@ -110,7 +110,7 @@ Project override example:
 
 ```yaml
 # .ace/compressor/config.yml
-agent_model: glite
+agent_model: role:compressor
 agent_template_uri: tmpl://agent/minify-single-source
 ```
 
