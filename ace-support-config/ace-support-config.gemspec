@@ -16,8 +16,13 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
+
   # Runtime dependencies
-  spec.add_dependency "ace-support-fs", "~> 0.3" 
+  spec.add_dependency "ace-support-fs", "~> 0.3"
 
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
@@ -32,6 +37,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-support-config/"
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/"
   spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-support-config/CHANGELOG.md"
 end

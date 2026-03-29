@@ -14,6 +14,11 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
+
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-support-cli/"

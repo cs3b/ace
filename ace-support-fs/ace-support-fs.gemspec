@@ -16,6 +16,11 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
+
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
   spec.metadata["homepage_uri"] = spec.homepage
@@ -24,11 +29,11 @@ Gem::Specification.new do |spec|
 
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.glob(%w[
-                          lib/**/*
-                          *.md
-                          LICENSE
-                          Rakefile
-                        ]).select { |f| File.file?(f) }
+    lib/**/*
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
 
   spec.bindir = "exe"
   spec.executables = []
