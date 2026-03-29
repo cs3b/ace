@@ -4,9 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-bundle v0.40.5**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-bundle stays aligned with the current git workflow release.
+- **ace-docs v0.31.4**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-docs stays aligned with the current git workflow release.
+- **ace-git-commit v0.23.3**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-git-commit stays aligned with the current git workflow release.
+- **ace-git-worktree v0.19.3**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-git-worktree stays aligned with the current git workflow release.
+- **ace-overseer v0.13.7**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-overseer stays aligned with the current git workflow release.
+- **ace-prompt-prep v0.23.3**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-prompt-prep stays aligned with the current git workflow release.
+- **ace-review v0.51.3**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-review stays aligned with the current git workflow release.
+- **ace-search v0.24.3**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-search stays aligned with the current git workflow release.
+
 ### Changed
 - **ace-git v0.19.0**: Defaulted GitHub release publishing to package-grouped notes and switched live release creation guidance to `--notes-file` to avoid shell-quoting failures.
-- **ace-handbook**: Updated the coordinated release workflow so dependency-follower packages are auto-added as patch releases with full version and changelog metadata instead of being committed as gemspec-only fallout.
+- **ace-handbook v0.21.3**: Updated the coordinated release workflow so dependency-follower packages are auto-added as patch releases with full version and changelog metadata instead of being committed as gemspec-only fallout.
 
 ## [0.9.933] - 2026-03-29
 

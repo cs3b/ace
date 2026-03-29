@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.40.4)
+    ace-bundle (0.40.5)
       ace-compressor (~> 0.24)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -51,7 +51,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.31.3)
+    ace-docs (0.31.4)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.23.2)
+    ace-git-commit (0.23.3)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.2)
+    ace-git-worktree (0.19.3)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -136,7 +136,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.21.2)
+    ace-handbook (0.21.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -185,7 +185,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.13.6)
+    ace-overseer (0.13.7)
       ace-assign (~> 0.41)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.19)
@@ -199,7 +199,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.23.2)
+    ace-prompt-prep (0.23.3)
       ace-b36ts (~> 0.13)
       ace-bundle (~> 0.40)
       ace-git (~> 0.19)
@@ -223,7 +223,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.51.2)
+    ace-review (0.51.3)
       ace-b36ts (~> 0.13)
       ace-bundle (~> 0.40)
       ace-git (~> 0.19)
@@ -237,7 +237,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.24.2)
+    ace-search (0.24.3)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
