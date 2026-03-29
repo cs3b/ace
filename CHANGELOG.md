@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.933] - 2026-03-29
+
 ### Fixed
 - **ace-assign v0.41.1**: Preserved explicit skill/workflow materialization fork-provider overrides from catalog metadata while preventing unintended fork-context propagation to non-fork child steps.
 - **ace-assign v0.41.2**: Corrected scoped `status` fork-provider reporting to inherit provider metadata from fork roots in scoped subtrees and removed dead provider lookup paths.
