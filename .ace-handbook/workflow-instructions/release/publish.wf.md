@@ -174,20 +174,21 @@ This updates the shared `Gemfile.lock` once for the coordinated release.
 
 ### 7. Update Root CHANGELOG Once
 
-Add one new root `CHANGELOG.md` entry after `[Unreleased]`.
+Append items to the existing `## [Unreleased]` section in root `CHANGELOG.md`.
 
-Versioning:
+Do **not** create a new versioned entry — version numbers are assigned later at publish time by
+`wfi://github/release-publish`.
 
-* Use the next root patch version after the current top entry.
+Rules:
 
-Formatting rules:
-
-* One root entry per `/as-release` invocation
-* Include every released package and its new version
+* If `[Unreleased]` already contains category headings (e.g., `### Fixed`), append new bullets to the matching
+  categories.
+* If a needed category does not exist yet under `[Unreleased]`, create it in canonical order: Fixed, Added,
+  Removed, Changed, Technical.
+* Include every released package and its new version.
 * Use bullets like `**ace-assign v0.22.8**: ...`
-* Group bullets under Keep a Changelog headings: `Added`, `Fixed`, `Changed`, `Technical`
-
-Do not create separate root changelog entries per package.
+* Do not create separate root changelog entries per package.
+* Do not duplicate items that already appear in the `[Unreleased]` section from a prior `/as-release` run.
 
 ### 8. Commit the Coordinated Release
 
@@ -216,7 +217,7 @@ Checklist:
 
 * every selected package has an updated `version.rb`
 * every selected package has a new package changelog entry
-* root `CHANGELOG.md` has one combined release entry
+* root `CHANGELOG.md` `[Unreleased]` section includes the new items
 * `Gemfile.lock` reflects the new internal versions
 * no unrelated package was released
 
