@@ -4,7 +4,7 @@ steps:
   - plan
   - work
 provider:
-  - google:flash-preview
+  - role:sim-primary
 repeat: 1
 synthesis_workflow: wfi://idea/review
-synthesis_provider: claude:haiku
+synthesis_provider: role:sim-synthesis

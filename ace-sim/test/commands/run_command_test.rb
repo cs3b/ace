@@ -101,13 +101,13 @@ class RunCommandTest < AceSimTestCase
       File.expand_path("../../.ace-defaults/sim/presets/validate-task.yml", __dir__)
     )
 
-    assert_equal ["google:flash-preview"], idea_preset["provider"]
+    assert_equal ["role:sim-primary"], idea_preset["provider"]
     assert_equal "wfi://idea/review", idea_preset["synthesis_workflow"]
-    assert_equal "claude:haiku", idea_preset["synthesis_provider"]
+    assert_equal "role:sim-synthesis", idea_preset["synthesis_provider"]
 
-    assert_equal ["google:flash-preview"], task_preset["provider"]
+    assert_equal ["role:sim-primary"], task_preset["provider"]
     assert_equal "wfi://task/review", task_preset["synthesis_workflow"]
-    assert_equal "claude:haiku", task_preset["synthesis_provider"]
+    assert_equal "role:sim-synthesis", task_preset["synthesis_provider"]
   end
 
   def test_rejects_unknown_preset
