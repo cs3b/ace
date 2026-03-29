@@ -46,9 +46,13 @@ Load and follow:
    ace-task update <ref> --set status=in-progress
    ace-task update <ref> --set status=done
    ace-task update <ref> --set status=done,priority=high
+   ace-task update <ref> --set status=pending,needs_review=false
    ace-task update <ref> --add tags=shipped
    ace-task update <ref> --remove tags=wip
    ```
+
+   - When multiple scalar fields on the same task must change together, prefer one combined `--set a=x,b=y` command.
+   - Do not run multiple `ace-task update` commands in parallel against the same task ref.
 
 3. **Apply hierarchy updates via `--move-as-child-of`**
 
@@ -90,6 +94,7 @@ Load and follow:
 
    - Re-open target task: `ace-task show <ref>`
    - Confirm metadata, location, parent/child relationship, and position
+   - If you combined multiple field updates, confirm all fields persisted before issuing another same-task mutation
    - Verify dry-run output before executing non-idempotent moves
 
 ## Error Handling

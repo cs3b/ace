@@ -58,6 +58,18 @@ class UpdateCommandTest < AceTaskTestCase
     assert_match(/priority: high/, content)
   end
 
+  def test_update_set_multiple_fields_with_boolean_false
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=pending,needs_review=false"])
+    end.first
+
+    assert_match(/Task updated/, output)
+
+    content = File.read(@task_file)
+    assert_match(/status: pending/, content)
+    assert_match(/needs_review: false/, content)
+  end
+
   def test_update_add_tag
     output = capture_io do
       Ace::Task::TaskCLI.start(["update", "q7w", "--add", "tags=security"])

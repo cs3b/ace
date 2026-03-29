@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.6] - 2026-03-29
+
+### Fixed
+- `task/review` and `task/update`: replaced split same-task promotion examples with a combined `ace-task update <ref> --set status=pending,needs_review=false` pattern and explicitly banned parallel updates against the same task ref.
+
+### Technical
+- Added command coverage for combined scalar updates including `needs_review=false`.
 
 ## [0.31.5] - 2026-03-29
 

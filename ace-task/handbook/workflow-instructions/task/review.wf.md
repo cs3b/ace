@@ -139,19 +139,19 @@ Validate draft behavioral specifications and promote to pending when ready. This
 
    **If Ready (all readiness criteria met):**
    - **Orchestrator rule:** If the task is an orchestrator, only promote the parent after all draft child subtasks have been reviewed and promoted successfully.
+   - **Same-task mutation rule:** Do not run multiple `ace-task update` commands in parallel against the same task ref. Prefer one combined `--set` call when clearing or setting multiple scalar fields on the same task.
    - **Recursive promotion for orchestrators:**
      - Review each draft child subtask using the same checklist
      - Promote each child subtask that passes:
        ```bash
-       ace-task update <child-ref> --set status=pending
-       ace-task update <child-ref> --set needs_review=false
+       ace-task update <child-ref> --set status=pending,needs_review=false
        ```
      - For any child subtask that fails, keep it in `draft`, set `needs_review=true`, and do not promote the parent
    - Promote the task status and clear any existing `needs_review` flag:
      ```bash
-     ace-task update <ref> --set status=pending
-     ace-task update <ref> --set needs_review=false
+     ace-task update <ref> --set status=pending,needs_review=false
      ```
+   - Validate immediately after each promotion with `ace-task show <ref>` before proceeding to the next same-task mutation or parent promotion.
    - Report promotion:
      ```
      Task <ref> promoted from draft to pending.
