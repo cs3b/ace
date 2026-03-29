@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.932] - 2026-03-29
+
+### Technical
+- **ace-bundle v0.40.4**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-demo v0.23.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-docs v0.31.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-git v0.18.4**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-git-commit v0.23.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-git-secrets v0.13.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-git-worktree v0.19.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-handbook v0.21.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-idea v0.18.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-lint v0.27.5**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-overseer v0.13.5**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-prompt-prep v0.23.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-retro v0.16.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-review v0.51.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-search v0.24.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-sim v0.13.2**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+- **ace-test v0.6.1**: Register missing package-level skill source defaults in `.ace-defaults/nav/protocols/skill-sources`.
+
 ## [0.9.931] - 2026-03-29
 
 ### Fixed
