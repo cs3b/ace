@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-llm v0.31.2**: Shipped canonical role catalog with gem defaults; added type guard for non-Hash role config input.
+- **ace-docs v0.31.7**: Fixed analyze CLI to read nested `llm.model` config path after roles migration.
+
+### Added
+- **ace-llm v0.31.0**: Added named `role:<name>` model resolution with strict provider availability checks and caller override precedence for `:thinking` / `@preset`.
+
+### Changed
+- Coordinated role-first config rollout across ACE package defaults, project presets, and shipped fixtures.
+- Updated docs and examples to teach role-based selectors instead of provider/model literals for migrated surfaces.
+
+### Technical
+- Coordinated patch releases for the role-migration package set: `ace-assign v0.41.6`, `ace-compressor v0.24.5`, `ace-docs v0.31.6`, `ace-git-commit v0.23.5`, `ace-idea v0.18.4`, `ace-lint v0.27.7`, `ace-prompt-prep v0.23.5`, `ace-retro v0.16.5`, `ace-review v0.51.5`, `ace-sim v0.13.4`, `ace-task v0.31.8`, `ace-test-runner-e2e v0.29.3`.
+
 ## [0.9.936] - 2026-03-29
 
 ### Fixed
