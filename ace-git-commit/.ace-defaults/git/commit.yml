@@ -3,7 +3,7 @@
 
 git:
   # LLM model for commit message generation
-  model: glite  # or gpt4, claude, etc. - must match provider alias
+  model: role:commit  # or gpt4, claude, etc. - must match provider alias
 
   # Commit message conventions
   conventions:
