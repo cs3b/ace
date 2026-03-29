@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24.3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 12:42:29"
 estimate: TBD
@@ -9,15 +9,9 @@ tags: [ace-llm, config, providers, dx]
 parent: 8qs.t.j24
 bundle:
   presets: [project]
-  files:
-    - ace-llm/docs/usage.md
-    - ace-llm/lib/ace/llm/configuration.rb
-    - ace-llm/lib/ace/llm/molecules/provider_model_parser.rb
-    - ace-llm/lib/ace/llm/molecules/client_registry.rb
-    - .ace/llm/config.yml
-    - .ace/llm/providers/openrouter.yml
-    - .ace/llm/providers/codexoai.yml
+  files: [ace-llm/docs/usage.md, ace-llm/lib/ace/llm/configuration.rb, ace-llm/lib/ace/llm/molecules/provider_model_parser.rb, ace-llm/lib/ace/llm/molecules/client_registry.rb, .ace/llm/config.yml, .ace/llm/providers/openrouter.yml, .ace/llm/providers/codexoai.yml]
   commands: []
+needs_review: false
 ---
 
 # Make ace-llm provider setup and errors actionable

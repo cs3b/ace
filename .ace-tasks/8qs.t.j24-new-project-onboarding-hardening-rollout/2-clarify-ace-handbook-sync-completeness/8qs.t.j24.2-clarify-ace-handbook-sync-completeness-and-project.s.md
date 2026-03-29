@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24.2
-status: draft
+status: pending
 priority: high
 created_at: "2026-03-29 12:42:28"
 estimate: TBD
@@ -9,32 +9,28 @@ tags: [ace-handbook, skills, workflow, docs, dx]
 parent: 8qs.t.j24
 bundle:
   presets: [project]
-  files:
-    - ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb
-    - ace-handbook/README.md
-    - ace-handbook/docs/getting-started.md
-    - ace-handbook/docs/usage.md
-    - ace-handbook/docs/handbook.md
+  files: [ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/README.md, ace-handbook/docs/getting-started.md, ace-handbook/docs/usage.md, ace-handbook/docs/handbook.md]
   commands: []
+needs_review: false
 ---
 
 # Clarify ace-handbook sync completeness and project handbook extension
 
 ## Objective
 
-Make `ace-handbook sync` understandable for first-time users and document how project-specific handbook assets are added and discovered outside the ACE monorepo.
+Make `ace-handbook sync` understandable for first-time users and document how project-specific handbook assets are added and discovered outside the ACE monorepo, using `.ace-handbook/` as the canonical project-level handbook root.
 
 ## Behavioral Specification
 
 ### User Experience
 
 - **Input:** A user installs ACE in a normal project, runs `ace-handbook sync`, and wants to understand what was projected and how to add project-specific skills, workflows, guides, and templates.
-- **Process:** ACE documents the expected project layout, protocol usage, and sync completeness story. Sync output and docs explain when only built-in skills are available and when a rerun is expected after full install.
-- **Output:** Users understand where custom handbook assets live, how protocols resolve in project context, and why sync counts may change after full gem installation.
+- **Process:** ACE documents the expected project layout under `.ace-handbook/`, protocol usage, and sync completeness story. Sync output and docs explain when only built-in skills are available and when a rerun is expected after full install.
+- **Output:** Users understand where custom handbook assets live in `.ace-handbook/`, how protocols resolve in project context, and why sync counts may change after full gem installation.
 
 ### Expected Behavior
 
-1. Docs explain where project-specific handbook assets live outside the ACE monorepo.
+1. Docs explain that `.ace-handbook/` is the canonical project-level root for project-specific handbook assets outside the ACE monorepo.
 2. Docs explain how `wfi://`, `guide://`, `tmpl://`, and `skill://` are meant to work in ordinary projects.
 3. `ace-handbook sync` no longer leaves partial skill projection as unexplained behavior.
 4. The onboarding story explicitly covers install/init/sync ordering when it affects projected inventory.
@@ -46,6 +42,7 @@ Make `ace-handbook sync` understandable for first-time users and document how pr
 ace-handbook sync
 ace-nav list 'wfi://handbook/*'
 ace-nav resolve wfi://handbook/manage-guides
+mkdir -p .ace-handbook/workflow-instructions
 ```
 
 ```text
@@ -68,8 +65,9 @@ synced <provider> -> <dir> (...)
 
 1. A user can follow docs to add a project-specific workflow or skill in the right place.
 2. The sync completeness story is explicit rather than accidental.
-3. Protocol documentation covers non-monorepo usage.
-4. This child provides accurate input to the final onboarding docs child.
+3. The canonical project-level handbook root is stated explicitly as `.ace-handbook/`.
+4. Protocol documentation covers non-monorepo usage.
+5. This child provides accurate input to the final onboarding docs child.
 
 ## Validation Questions
 
@@ -89,7 +87,7 @@ synced <provider> -> <dir> (...)
 ### Unit/Component Validation
 
 - Sync output contract is explicit enough to distinguish a partial projection story.
-- Docs name concrete project-level asset locations.
+- Docs name concrete project-level asset locations under `.ace-handbook/`.
 
 ### Integration/E2E Validation
 

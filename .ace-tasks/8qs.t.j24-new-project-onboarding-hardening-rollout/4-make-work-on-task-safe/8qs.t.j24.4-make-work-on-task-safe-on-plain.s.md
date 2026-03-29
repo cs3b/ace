@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24.4
-status: draft
+status: pending
 priority: high
 created_at: "2026-03-29 12:42:29"
 estimate: TBD
@@ -9,14 +9,9 @@ tags: [ace-assign, workflow, nav, dx]
 parent: 8qs.t.j24
 bundle:
   presets: [project]
-  files:
-    - ace-assign/.ace-defaults/assign/presets/work-on-task.yml
-    - ace-assign/.ace-defaults/assign/catalog/steps/release-minor.step.yml
-    - ace-assign/lib/ace/assign/molecules/skill_assign_source_resolver.rb
-    - ace-assign/handbook/workflow-instructions/assign/create.wf.md
-    - ace-assign/handbook/workflow-instructions/assign/prepare.wf.md
-    - ace-assign/README.md
+  files: [ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/.ace-defaults/assign/catalog/steps/release-minor.step.yml, ace-assign/lib/ace/assign/molecules/skill_assign_source_resolver.rb, ace-assign/handbook/workflow-instructions/assign/create.wf.md, ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, ace-assign/README.md]
   commands: []
+needs_review: false
 ---
 
 # Make work-on-task safe on plain projects and align assign-source WFI resolution

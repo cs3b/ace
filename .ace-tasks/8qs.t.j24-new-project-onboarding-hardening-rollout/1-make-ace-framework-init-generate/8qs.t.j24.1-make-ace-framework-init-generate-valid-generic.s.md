@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24.1
-status: draft
+status: pending
 priority: high
 created_at: "2026-03-29 12:42:28"
 estimate: TBD
@@ -9,14 +9,9 @@ tags: [ace-support-core, bootstrap, scaffold, dx]
 parent: 8qs.t.j24
 bundle:
   presets: [project]
-  files:
-    - ace-support-core/lib/ace/core/organisms/config_initializer.rb
-    - ace-support-core/lib/ace/core/models/config_templates.rb
-    - .ace/bundle/presets/project.md
-    - .ace/bundle/presets/project-base.md
-    - .ace/README.md
-    - ace-support-core/docs/config.md
+  files: [ace-support-core/lib/ace/core/organisms/config_initializer.rb, ace-support-core/lib/ace/core/models/config_templates.rb, .ace/bundle/presets/project.md, .ace/bundle/presets/project-base.md, .ace/README.md, ace-support-core/docs/config.md]
   commands: []
+needs_review: false
 ---
 
 # Make ace-framework init generate valid generic project bootstrap files
