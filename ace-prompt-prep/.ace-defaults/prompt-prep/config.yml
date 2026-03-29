@@ -15,7 +15,7 @@ paths:
 
 # Default model and temperature settings
 defaults:
-  model: "glite"
+  model: "role:prompt-enhance"
   temperature:
     min: 0.0
     max: 2.0
@@ -54,6 +54,6 @@ debug:
 # Controls LLM-powered prompt enhancement via `ace-prompt-prep -e`
 enhance:
   enabled: false          # Whether enhancement is enabled by default
-  model: glite            # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
+  model: role:prompt-enhance            # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
   temperature: 0.3        # Lower = more focused, higher = more creative
   system_prompt: prompt://prompt-enhance-instructions.system  # System prompt for enhancement
