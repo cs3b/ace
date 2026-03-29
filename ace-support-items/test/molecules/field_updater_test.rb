@@ -2,6 +2,8 @@
 
 require "test_helper"
 require "tmpdir"
+require "timeout"
+require "rbconfig"
 
 class FieldUpdaterTest < AceSupportItemsTestCase
   Updater = Ace::Support::Items::Molecules::FieldUpdater
@@ -126,6 +128,44 @@ class FieldUpdaterTest < AceSupportItemsTestCase
     content = File.read(file)
     assert_includes content, "# Test Task"
     assert_includes content, "Some body content"
+  end
+
+  def test_update_waits_for_lock_and_merges_latest_frontmatter
+    file = create_spec_file("status" => "pending")
+    child_pid = nil
+    lib_dir = File.expand_path("../../lib", __dir__)
+
+    File.open(file, File::RDWR) do |locked_file|
+      locked_file.flock(File::LOCK_EX)
+
+      child_pid = Process.spawn(
+        RbConfig.ruby, "-I", lib_dir, "-e",
+        'require "ace/support/items"; Ace::Support::Items::Molecules::FieldUpdater.update(ARGV[0], set: {"status" => "done"})',
+        file
+      )
+
+      sleep 0.1
+      assert Process.waitpid(child_pid, Process::WNOHANG).nil?, "expected child updater to block on file lock"
+
+      locked_file.rewind
+      content = locked_file.read
+      frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+      body = body.sub(/\A\n/, "")
+      frontmatter["needs_review"] = false
+
+      rewritten = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
+      locked_file.rewind
+      locked_file.truncate(0)
+      locked_file.write(rewritten)
+      locked_file.flush
+      locked_file.fsync
+    end
+
+    Timeout.timeout(2) { Process.wait(child_pid) }
+
+    content = File.read(file)
+    assert_includes content, "status: done"
+    assert_includes content, "needs_review: false"
   end
 
   private

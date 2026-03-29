@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-03-29
+
+### Fixed
+- `FieldUpdater`: serialize same-file frontmatter mutations with an exclusive lock across the full read-modify-write cycle so concurrent updates do not silently lose one writer's changes.
+
+### Technical
+- Added a cross-process regression that proves frontmatter updates wait on the file lock and preserve the latest locked-file edits before applying their own mutation.
 
 ## [0.15.5] - 2026-03-29
 

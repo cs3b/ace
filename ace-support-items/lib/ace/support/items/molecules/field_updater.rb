@@ -20,19 +20,24 @@ module Ace
           # @param remove [Hash] Fields to remove from arrays (key => value or array of values).
           # @return [Hash] Updated frontmatter hash
           def self.update(file_path, set: {}, add: {}, remove: {})
-            content = File.read(file_path)
-            frontmatter, body = Atoms::FrontmatterParser.parse(content)
-            # Strip leading newline from body so rebuild doesn't double-space
-            body = body.sub(/\A\n/, "")
+            File.open(file_path, File::RDWR) do |file|
+              file.flock(File::LOCK_EX)
 
-            apply_set(frontmatter, set)
-            apply_add(frontmatter, add)
-            apply_remove(frontmatter, remove)
+              file.rewind
+              content = file.read
+              frontmatter, body = Atoms::FrontmatterParser.parse(content)
+              # Strip leading newline from body so rebuild doesn't double-space
+              body = body.sub(/\A\n/, "")
 
-            new_content = Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
-            atomic_write(file_path, new_content)
+              apply_set(frontmatter, set)
+              apply_add(frontmatter, add)
+              apply_remove(frontmatter, remove)
 
-            frontmatter
+              new_content = Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
+              rewrite_locked_file(file, new_content)
+
+              frontmatter
+            end
           end
 
           # Apply --set operations (supports nested dot-key paths).
@@ -102,17 +107,18 @@ module Ace
             target[parts.last] = value
           end
 
-          # Write content atomically using temp file + rename.
-          def self.atomic_write(file_path, content)
-            tmp_path = "#{file_path}.tmp.#{Process.pid}"
-            File.write(tmp_path, content)
-            File.rename(tmp_path, file_path)
-          rescue
-            File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
-            raise
+          # Rewrite content in-place on a locked file descriptor.
+          # This preserves the lock across the full read-modify-write cycle so
+          # concurrent updaters serialize instead of losing one writer's changes.
+          def self.rewrite_locked_file(file, content)
+            file.rewind
+            file.truncate(0)
+            file.write(content)
+            file.flush
+            file.fsync
           end
 
-          private_class_method :apply_nested_set, :atomic_write
+          private_class_method :apply_nested_set, :rewrite_locked_file
         end
       end
     end
