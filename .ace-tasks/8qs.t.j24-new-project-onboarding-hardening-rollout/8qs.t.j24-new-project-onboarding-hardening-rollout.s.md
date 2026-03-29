@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-03-29 12:42:22"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [.ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/0-prove-rubygems-dependency-metadata-stays/8qs.t.j24.0-prove-rubygems-dependency-metadata-stays-correct-after.s.md, .ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/1-make-ace-framework-init-generate/8qs.t.j24.1-make-ace-framework-init-generate-valid-generic.s.md, .ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/2-clarify-ace-handbook-sync-completeness/8qs.t.j24.2-clarify-ace-handbook-sync-completeness-and-project.s.md, .ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/3-make-ace-llm-provider-setup/8qs.t.j24.3-make-ace-llm-provider-setup-and-errors.s.md, .ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/4-make-work-on-task-safe/8qs.t.j24.4-make-work-on-task-safe-on-plain.s.md, .ace-tasks/8qs.t.j24-new-project-onboarding-hardening-rollout/5-publish-a-step-by-step/8qs.t.j24.5-publish-a-step-by-step-full-stack.s.md]
   commands: []
 needs_review: false
+worktree:
+  branch: j24-new-project-onboarding-hardening-rollout
+  path: ../ace-t.j24
+  created_at: "2026-03-29 22:11:46"
+  updated_at: "2026-03-29 22:11:46"
+  target_branch: main
 ---
 
 # New-project onboarding hardening rollout
