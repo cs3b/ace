@@ -45,7 +45,7 @@ Create `.ace/git/commit.yml`:
 
 ```yaml
 git:
-  model: glite
+  model: role:commit
 ```
 
 You can keep project-level defaults in `.ace/` and override from your user config when needed.
