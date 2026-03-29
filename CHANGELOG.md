@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **ace-git v0.19.1**: Updated `github/release-publish` to push changelog-finalization commits before `gh release create`, preventing invalid remote target errors during GitHub release publishing.
 
+### Added
+- **ace-test-runner v0.19.0**: Added suite-level per-package timeout enforcement plus package-process-group cleanup on timeout/interrupt so a stuck test package no longer stalls the rest of `ace-test-suite`.
+
 ### Technical
 - **ace-git v0.19.1**: Added explicit recovery guidance for GitHub release creation failures caused by local-only target commits.
 
