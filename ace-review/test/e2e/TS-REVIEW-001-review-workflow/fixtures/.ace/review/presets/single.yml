@@ -1,5 +1,5 @@
 description: "Single model E2E test"
-model: google:gemini-2.5-flash
+model: role:review-codex
 instructions:
   system: "Brief code review."
   user: "List issues in 1-2 sentences."

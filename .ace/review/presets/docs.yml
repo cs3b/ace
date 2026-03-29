@@ -30,7 +30,7 @@ instructions:
 bundle: "project"
 
 models:
-  - codex:gpt@ro
+  - role:review-codex
 
 subject:
   bundle:

@@ -60,6 +60,6 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus@ro
-  - codex:gpt@ro
-  - gemini:pro-latest@ro
+  - role:review-claude
+  - role:review-codex
+  - role:review-gemini
