@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.934] - 2026-03-29
+
 ### Fixed
 - **ace-bundle v0.40.5**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-bundle stays aligned with the current git workflow release.
 - **ace-docs v0.31.4**: Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-docs stays aligned with the current git workflow release.
