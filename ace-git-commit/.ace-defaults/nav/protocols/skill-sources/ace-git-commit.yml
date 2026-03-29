@@ -1,0 +1,19 @@
+---
+# Skill Sources Protocol Configuration for ace-git-commit gem
+# This enables canonical skill discovery from the installed ace-git-commit gem
+
+name: ace-git-commit
+type: gem
+description: Canonical skills from ace-git-commit gem
+priority: 10
+
+# Configuration for skill discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/skills
+
+  # Pattern for finding canonical skill files
+  pattern: "*/SKILL.md"
+
+  # Enable discovery
+  enabled: true
