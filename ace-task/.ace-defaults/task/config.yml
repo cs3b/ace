@@ -18,8 +18,8 @@ task:
     recently_done_limit: 9
 
   # Doctor command: LLM model for agent-assisted fix
-  doctor_agent_model: "gemini:flash-latest@yolo"
+  doctor_agent_model: "role:doctor"
 
   # Plan command defaults
   plan:
-    model: "gemini:pro-latest@ro"
+    model: "role:planner"
