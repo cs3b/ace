@@ -42,7 +42,7 @@ class ConfigLoaderTest < Minitest::Test
   def test_default_provider_accessor
     provider = ConfigLoader.default_provider
     assert_kind_of String, provider
-    assert_match(/\A[^:]+:[^@]+@[^@]+\z/, provider, "Provider should include preset suffix (provider:model@preset)")
+    assert_match(/\A(role:[a-z0-9-]+|[^:]+:[^@]+@[^@]+)\z/, provider)
   end
 
   def test_default_timeout_accessor

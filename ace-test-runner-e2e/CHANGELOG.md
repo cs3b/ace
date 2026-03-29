@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-03-29
+
+### Changed
+- Role-based e2e execution and reporting defaults.
+
+
 ## [0.29.2] - 2026-03-29
 
 ### Technical
