@@ -119,6 +119,15 @@ Use `$group_by` to choose the release body layout. Release tags/titles still use
 - `package` (default): within each date bucket, group entries as package blocks and then categories.
 - `date`: preserve legacy behavior, one release body per date in descending version order separated by `---`.
 
+Mixed-release presentation rule:
+
+- If a date bucket contains one or more clear primary changes plus follower packages that exist only because of
+  dependency-constraint propagation, render the primary package sections first.
+- Collapse follower-only dependency fallout into one compact trailing `### Technical side effects` section instead
+  of expanding every follower into a full package block.
+- Keep follower packages explicit by name/version, but prefer a short list over repeated full prose when the
+  release value is driven elsewhere.
+
 Date mode example:
 
 ```markdown
@@ -164,6 +173,8 @@ Package-mode parse rules:
 - Track the most recent package version seen for each package in the date bucket for package headers.
 - Render categories in `fixed,added,changed,technical` unless `$category_order` overrides.
 - If a bullet does not match the package pattern, place it under a fallback package section `### 📦 other`.
+- If `### Technical` contains a compact follower summary list, preserve it as a single trailing `### Technical side effects`
+  section rather than exploding it back into per-package blocks.
 
 ### 5. Resolve Target Commits
 
