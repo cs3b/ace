@@ -5,7 +5,7 @@ shared_cache_dir: ~/.ace/cache/compressor
 shared_cache_scope: workflow_only
 
 # Model alias or provider:model used for agent-mode prompt minification.
-agent_model: glite
+agent_model: role:compressor
 
 # Template resource used to compose the agent-mode system prompt via ace-bundle.
 agent_template_uri: tmpl://agent/minify-single-source
