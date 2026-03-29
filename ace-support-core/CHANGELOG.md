@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-03-29
+
+### Fixed
+- Added `ace-framework` to packaged files and executables so the CLI is shipped in RubyGems installs.
 
 ## [0.29.1] - 2026-03-29
 

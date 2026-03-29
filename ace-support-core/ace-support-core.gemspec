@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
                           lib/**/*
                           config/**/*
+                          exe/*
                           .ace-defaults/**/*
                           *.md
                           LICENSE
@@ -33,7 +34,7 @@ Gem::Specification.new do |spec|
                         ]).select { |f| File.file?(f) }
 
   spec.bindir = 'exe'
-  spec.executables = []
+  spec.executables = ['ace-framework']
   spec.require_paths = ['lib']
 
   # Runtime dependencies

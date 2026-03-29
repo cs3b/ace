@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-03-29
+
+### Fixed
+- Added `ace-llm-providers` to the gem executable list to keep all model CLIs available after installation.
 
 ## [0.9.1] - 2026-03-29
 

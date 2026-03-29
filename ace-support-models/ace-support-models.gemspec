@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   ]).select { |f| File.file?(f) }
 
   spec.bindir = "exe"
-  spec.executables = ["ace-models"]
+  spec.executables = ["ace-models", "ace-llm-providers"]
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
