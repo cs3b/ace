@@ -1,201 +1,186 @@
 ---
 id: 8qr.t.zoz
-status: pending
+status: draft
 priority: medium
 created_at: "2026-03-28 23:47:46"
 estimate: TBD
 dependencies: []
-tags: [ace-llm, config, model-resolution]
+tags: [ace-llm, config, model-resolution, orchestrator]
 bundle:
   presets: [project]
-  files: [.ace/llm/config.yml, .ace/llm/providers/claude.yml, .ace/llm/providers/codex.yml, .ace/llm/providers/gemini.yml, ace-llm/lib/ace/llm/molecules/provider_model_parser.rb, ace-llm/lib/ace/llm/molecules/client_registry.rb, ace-llm/lib/ace/llm/molecules/llm_alias_resolver.rb, ace-llm/lib/ace/llm/models/fallback_config.rb, ace-llm/lib/ace/llm/configuration.rb, ace-llm/lib/ace/llm/molecules/config_loader.rb, ace-llm/lib/ace/llm.rb, ace-llm/.ace-defaults/llm/config.yml, ace-llm/test/molecules/provider_model_parser_test.rb, ace-llm/test/models/fallback_config_test.rb]
+  files: [.ace/llm/config.yml, .ace/task/config.yml, .ace/review/config.yml, .ace/assign/config.yml, .ace/e2e-runner/config.yml, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md, .ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md]
   commands: []
 ---
 
-# Named Model Pools (Roles) for ace-llm
+# Roles-first LLM configuration rollout
 
 ## Objective
 
-Packages currently hardcode specific model identifiers (e.g., `doctor_agent_model: "gemini:flash-latest@yolo"`). If a provider is unavailable (no API key configured), there is no way to resolve to an alternative at configuration time. The existing fallback system only handles runtime HTTP errors.
-
-This task introduces named "roles" — ordered model pools that resolve to the first available model at parse time. This enables portable, provider-agnostic model selection across the project.
-
-Roles also provide stable indirection for system-wide model management: packages can reference role names while operators swap the underlying models or providers centrally in role config, without editing each consumer file.
+Roll out named model roles across ACE in two steps: first add `role:` support in `ace-llm`, then migrate ACE consumer configs to use roles first. This should make provider and model changes centrally manageable through `llm.roles` without per-file edits across the repo.
 
 ## Behavioral Specification
 
 ### User Experience
 
-- **Input:** Users define roles in config (`llm.roles` in `.ace/llm/config.yml` or `~/.ace/llm/config.yml`); reference them as `role:<name>` anywhere a model identifier is accepted
-- **Process:** Transparent resolution at parse time — candidates are evaluated in order until one is available under the strict runtime rule: provider is active, registry-loadable, and has a present API key when that provider requires one. The winning model is then parsed through the normal alias/preset/thinking flow. Caller-supplied thinking and preset suffixes on the `role:` reference are applied last and always override any thinking/preset embedded in the resolved role entry. V1 uses ordered first-match; future work may add richer ranking metrics without changing `role:<name>` syntax
-- **Output:** The resolved model is used seamlessly; if no models are available, a clear error lists all tried models and suggests checking API keys. Updating a role definition can also redirect many consuming configs at once without touching each consumer file
+- **Input:** Operators define stable role names in `llm.roles`; ACE consumer configs reference those roles instead of hardcoded provider/model strings wherever possible
+- **Process:** The rollout is split into two child tasks: `8qr.t.zoz.0` adds the `ace-llm` capability, and `8qr.t.zoz.1` migrates shipped and project configs, presets, docs, examples, and fixtures to the new roles-first style, standardizing onto one canonical role catalog
+- **Output:** The system has a central role catalog, consumer configs prefer `role:<name>`, and changing a role definition updates many consumers without touching each consumer file
 
 ### Expected Behavior
 
-When a model string like `role:reviewer` is passed to `ProviderModelParser.parse()`:
-
-1. Parser detects `role:` prefix before normal parsing begins
-2. Delegates to `RoleResolver` which loads role definitions from config cascade
-3. Iterates through the role's model list, checking each candidate with the strict runtime availability rule: provider is allowed by `llm.providers.active` when filtering is enabled, provider config/gem/class can be loaded successfully, and any required API key is present
-4. Returns the first available model string
-5. Parser re-parses that string through the normal alias → provider → thinking → preset flow
-6. Any thinking level or preset supplied on the original `role:` reference overrides the resolved role entry's thinking/preset
-7. Result is transparent to callers — `ParseResult` contains the resolved provider/model with `original_input` preserving the `role:` reference
-
-When no models in a role are available, a `ConfigurationError` is raised with an actionable message.
+1. The parent task acts only as an orchestrator and rollout contract
+2. Child `8qr.t.zoz.0` delivers `role:` support in `ace-llm`
+3. Child `8qr.t.zoz.1` migrates ACE consumer surfaces to use those roles
+4. The migration child covers project config, package defaults, review presets, execution-provider fields, docs, examples, and fixtures in one task, and intentionally standardizes currently divergent project/default selections onto the canonical role catalog
+5. The parent is complete when both children are complete and the repo has a coherent roles-first configuration story
 
 ### Interface Contract
 
 ```yaml
-# Config definition (.ace/llm/config.yml or ~/.ace/llm/config.yml)
-llm:
-  roles:
-    reviewer:
-      - claude:sonnet:high@yolo
-      - codex:gpt@ro
-    orchestrator:
-      - claude:opus:medium@yolo
-      - gemini:pro-latest@yolo
-    fast:
-      - gemini:flash-latest
-      - claude:haiku
+# Central role catalog
+.ace/llm/config.yml:
+  llm:
+    roles:
+      doctor:
+        - gemini:flash-latest@yolo
+      planner:
+        - codex:gpt@ro
+      review-default:
+        - codex:codex@ro
+      review-synthesizer:
+        - codex:gpt@ro
+      review-fallback:
+        - claude:sonnet
+      review-claude:
+        - claude:opus@ro
+      review-codex:
+        - codex:gpt@ro
+      review-gemini:
+        - gemini:pro-latest@ro
+      assign-executor:
+        - codex:codex@yolo
+      e2e-executor:
+        - claude:haiku@yolo
+      e2e-reporter:
+        - claude:haiku
+      prompt-enhance:
+        - glite
+      commit:
+        - codex:mini
+      docs-analysis:
+        - glite
 ```
 
-```ruby
-# Usage in any package config YAML
-model: "role:reviewer"          # resolves to first available
-model: "role:fast@ro"           # caller preset overrides resolved model preset
-model: "role:reviewer:low@ro"   # caller thinking/preset override role defaults
+```yaml
+# Consumer configs after rollout
+task:
+  doctor_agent_model: role:doctor
+  plan:
+    model: role:planner
 
-# Programmatic usage
-parser = ProviderModelParser.new
-result = parser.parse("role:reviewer")
-# => ParseResult(provider: "claude", model: "claude-sonnet-4-6",
-#                preset: "yolo", thinking_level: "high",
-#                original_input: "role:reviewer")
-
-result = parser.parse("role:reviewer:low@ro")
-# => ParseResult(provider: "claude", model: "claude-sonnet-4-6",
-#                preset: "ro", thinking_level: "low",
-#                original_input: "role:reviewer:low@ro")
+review:
+  defaults:
+    model: role:review-default
+  feedback:
+    synthesis_model: role:review-synthesizer
+    fallback_models:
+      - role:review-fallback
 ```
 
-**Error Handling:**
+### Error Handling
 
-- Unknown role → `"Unknown role: 'nonexistent'. Defined roles: reviewer, orchestrator, fast"`
-- No available models → `"No available models for role 'reviewer'. Tried: claude:sonnet:high@yolo, codex:gpt@ro. Check API keys and provider configuration."`
-- Circular reference (`role:X` inside a role definition) → rejected during `RoleConfig` validation
-- Empty model list in role → rejected during `RoleConfig` validation
+- If child `8qr.t.zoz.0` does not land the `role:` capability, child `8qr.t.zoz.1` cannot be completed
+- If a consumer surface cannot accept `role:<name>` without parser/loader work, that gap must be captured in child `8qr.t.zoz.1` rather than silently skipped
 
-**Edge Cases:**
+### Edge Cases
 
-- Caller overrides win: `role:fast@ro` applies `@ro` even if the resolved model already has its own preset
-- Caller thinking overrides win: `role:reviewer:low` applies `low` even if the resolved model already has its own thinking level
-- Combined caller overrides win: `role:reviewer:low@ro` overrides both thinking level and preset from the resolved role entry
-- Aliases inside roles: model entries like `opus` are valid — full alias resolution happens after role resolution via recursive `parse()`
-- Config cascade: project `.ace/llm/config.yml` roles override user `~/.ace/llm/config.yml` roles (standard nearest-wins)
-- Active-provider filtering: if `llm.providers.active` is configured, role resolution only considers providers on that allow-list
-- Load failures: providers whose registry config, gem, or client class cannot be loaded are skipped as unavailable
-- Optional-key CLI providers: providers without a required API key remain eligible if their registry config loads successfully
+- Multi-model review presets remain arrays; each array element becomes a role reference rather than collapsing the preset to one role
+- `provider:` fields that currently accept `provider:model@preset` remain valid surfaces for migration when they represent LLM choice rather than provider metadata
+- Docs, examples, and fixtures are part of the rollout, not deferred to an unspecified future task
 
 ## Success Criteria
 
-1. `role:<name>` syntax resolves to first available model in any model string field
-2. Roles participate in config cascade (project overrides user overrides gem defaults)
-3. Existing model identifiers (`claude:opus:high@yolo`) continue working unchanged — zero regression
-4. Caller override passthrough works (`role:fast@ro`, `role:reviewer:low`, and `role:reviewer:low@ro` override preset/thinking from the resolved role entry)
-5. Clear, actionable error messages for unknown roles and no-available-models conditions
-6. Circular `role:` references inside role definitions are rejected at config validation time
-7. Changing a role definition updates all consumers that reference that role without per-file config edits
+1. The task tree contains exactly two direct children: `8qr.t.zoz.0` and `8qr.t.zoz.1`
+2. Child `8qr.t.zoz.0` completely specifies the `ace-llm` role feature
+3. Child `8qr.t.zoz.1` completely specifies the ACE migration scope in one task without nested subtasks
+4. The role catalog is explicit enough that implementers do not need to invent role names later
+5. Changing one role definition is explicitly documented as a system-wide update mechanism
 
 ## Validation Questions
 
-- Resolved during review: availability uses strict runtime semantics today
-- Future extensibility is intentionally preserved: role selection may later incorporate ranking signals such as cost or available tokens, but v1 remains ordered first-match
-- No blocking human-input questions remain
+- No blocking behavioral questions remain
+- The rollout intentionally uses one migration child task, not a deeper task tree
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
-**Single standalone task** — all changes are within the ace-llm package.
+**Orchestrator with two child tasks**
 
-- **Slice:** Add role config model, role resolver molecule, parser integration, config defaults, tests
-- **Advisory size:** Small-Medium
-- **Context dependencies:** ace-llm parser, config loader, client registry, fallback_config model pattern
+- **Child `8qr.t.zoz.0`:** Implement role resolution in `ace-llm`
+- **Child `8qr.t.zoz.1`:** Migrate ACE configs to roles-first model selection
+- **Advisory size:** Large
+- **Context dependencies:** `.ace/llm/config.yml`, consumer config surfaces, child task specs
 
 ## Verification Plan
 
 ### Unit/Component Validation
 
-- `RoleConfig.from_hash` correctly parses YAML structure with string/symbol keys
-- `RoleConfig.models_for` returns ordered array; returns nil for unknown roles
-- `RoleConfig.validate!` rejects empty model lists, non-array values, nested `role:` refs
-- `RoleResolver.role_reference?` detects `role:` prefix, ignores `claude:opus`
-- `RoleResolver.resolve` returns first available model under strict runtime availability, skipping inactive providers, load-failing providers, and required-key-missing providers
-- `RoleResolver.resolve` preserves caller-supplied thinking/preset overrides so the parser can apply them last
-- `RoleResolver.resolve` allows optional-key CLI providers to win when they are active and loadable
+- `ace-task show t.zoz` reports exactly two direct children
+- `ace-task show t.zoz.1` reports no subtasks
 
 ### Integration/E2E Validation
 
-- `ProviderModelParser.parse("role:reviewer")` returns valid `ParseResult` with resolved provider/model
-- `ProviderModelParser.parse("role:fast@ro")` overrides any preset from the resolved role entry
-- `ProviderModelParser.parse("role:reviewer:low")` overrides any thinking level from the resolved role entry
-- `ProviderModelParser.parse("role:reviewer:low@ro")` overrides both thinking level and preset from the resolved role entry
-- `ProviderModelParser.parse("role:unknown")` returns invalid result with clear error
-- Role resolution honors `llm.providers.active` filtering when present
-- Full `QueryInterface.query("role:fast", prompt)` works end-to-end (if provider available)
+- Child `8qr.t.zoz.0` and child `8qr.t.zoz.1` together cover both capability and rollout behavior
+- The role catalog shown in the specs maps the repo's current hardcoded selections to stable role names
 
 ### Failure/Invalid Path Validation
 
-- `parse("role:")` → error (empty role name)
-- `parse("role:x")` where role `x` has all unavailable providers → actionable error
-- `parse("role:x")` skips candidates whose provider gem/class cannot be loaded and continues to later candidates
-- `parse("role:x")` skips candidates whose provider is configured but excluded by `llm.providers.active`
-- Role config with `role:other` in model list → validation error at config load time
+- No accidental extra migration grandchildren remain under `8qr.t.zoz.1`
+- The parent no longer contains the detailed `ace-llm` implementation behavior that belongs in child `8qr.t.zoz.0`
 
 ### Verification Commands
 
-- `cd ace-llm && ace-test test/models/role_config_test.rb` → model tests pass
-- `cd ace-llm && ace-test test/molecules/role_resolver_test.rb` → resolver tests pass
-- `cd ace-llm && ace-test test/molecules/provider_model_parser_test.rb` → parser tests pass (existing + new)
-- `cd ace-llm && ace-test` → full package suite green
+- `ace-task show t.zoz`
+- `ace-task show t.zoz.0`
+- `ace-task show t.zoz.1`
 
 ## Scope of Work
 
 ### Included
 
-- `RoleConfig` model (pure data carrier) — ATOM Models layer
-- `RoleResolver` molecule (availability-based resolution) — ATOM Molecules layer
-- Parser integration (pre-processing step in `ProviderModelParser.parse()`)
-- Config defaults (`roles: {}` in `.ace-defaults/llm/config.yml`)
-- Role resolution aligned with project-level provider overlays and `llm.providers.active`
-- Requires wiring in `ace-llm/lib/ace/llm.rb`
-- Unit tests for all new components + parser integration tests
+- Parent orchestration spec for the roles rollout
+- Two-child task structure
+- Explicit role catalog for the rollout
+- Clear division between capability work and migration work
 
 ### Out of Scope
 
-- Migrating existing package configs to use `role:` references (future incremental work per package)
-- Runtime fallback integration (roles resolve at config time, not runtime)
-- CLI subcommand for listing/inspecting roles (can be added later)
-- Role inheritance or composition (roles are flat ordered lists)
+- Implementing the `ace-llm` role engine in this parent task
+- Executing consumer config migrations in this parent task
+- Reintroducing nested migration subtasks under `8qr.t.zoz.1`
 
 ## Deliverables
 
 ### Behavioral Specifications
 
-- Role config data model with validation
-- Role resolution logic with availability checking
-- Parser integration for transparent `role:` prefix handling
+- Parent rollout contract
+- Child `ace-llm` feature spec
+- Child system migration spec
 
 ### Validation Artifacts
 
-- Unit tests for RoleConfig model
-- Unit tests for RoleResolver molecule
-- Integration tests for parser with role references
+- Two-child task tree
+- No nested migration grandchildren
+
+## Concept Inventory (Orchestrator Only)
+
+| Concept | Introduced by | Removed by | Status |
+| --- | --- | --- | --- |
+| `role:` parser support | `8qr.t.zoz.0` | -- | KEPT |
+| system migration to role refs | `8qr.t.zoz.1` | -- | KEPT |
+| nested migration subtasks | prior mistaken decomposition | parent repair | REMOVED |
 
 ## References
 
-- Plan file: `/home/mc/.claude/plans/zesty-twirling-blossom.md`
-- Existing pattern reference: `ace-llm/lib/ace/llm/models/fallback_config.rb` (model pattern)
-- Existing pattern reference: `ace-llm/lib/ace/llm/molecules/provider_model_parser.rb` (integration point)
-- ADR-022: Config cascade
-- ADR-011: ATOM architecture
+- Child feature spec: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/8qr.t.zoz.0-implement-role-resolution-in-ace-llm.s.md`
+- Child migration spec: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/1-migrate-ace-configs-to-roles/8qr.t.zoz.1-migrate-ace-configs-to-roles-first-model.s.md`
+- Usage doc for child feature: `.ace-tasks/8qr.t.zoz-named-model-pools-roles-for/0-implement-role-resolution-in-ace/ux-usage.md`
