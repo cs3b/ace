@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.41.7**: Made `wfi://release/publish` verification package-aware by running `ace-test` against the resolved release package set.
 - **ace-bundle v0.41.1**: Removed the generic-project preset dependency on `ace-task` by replacing task listing with `ls -1` for plain-repo compatibility.
 - **ace-handbook v0.23.1**: Restored `Bash(gem:*)` permissions in `as-release-rubygems-publish` and added regression coverage for projected skill permission drift.
+- **ace-llm v0.31.2**: Shipped canonical role catalog with gem defaults; added type guard for non-Hash role config input.
+- **ace-docs v0.31.7**: Fixed analyze CLI to read nested `llm.model` config path after roles migration.
+
+### Added
+- **ace-llm v0.31.0**: Added named `role:<name>` model resolution with strict provider availability checks and caller override precedence for `:thinking` / `@preset`.
 
 ### Changed
 - **ace-handbook v0.23.5**: Replaced `wfi://release/rubygems-verify-install` workflow with E2E scenario `TS-MONO-001-rubygems-install` and updated all skill/doc references to use `ace-test-e2e`.
@@ -25,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm v0.31.0**: Made provider configuration failures actionable with supported-provider/error guidance tied to `ace-llm --list-providers`, plus provider env-key setup hints in CLI output and docs.
 - **ace-assign v0.41.6**: Made `work-on-task` safer in plain projects by shipping a default `wfi://release/publish` workflow and aligning assign-source `wfi://` resolution to registered nav workflow sources (including project-level overrides).
 - **ace-assign v0.41.9**: Updated task archival completion steps to persist status and move-to-archive operations via `--gc`/`--git-commit` instead of separate manual `.ace-tasks` commits.
+- Coordinated role-first config rollout across ACE package defaults, project presets, and shipped fixtures.
+- Updated docs and examples to teach role-based selectors instead of provider/model literals for migrated surfaces.
 
 ### Technical
 - **ace-llm v0.31.3**: Clarified provider fallback environment-key coupling in `ClientRegistry` so provider credential guidance matches runtime resolution behavior.
@@ -34,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch releases after the `ace-handbook` 0.22 line update: `ace-handbook-integration-claude v0.3.5`, `ace-handbook-integration-codex v0.3.4`, `ace-handbook-integration-gemini v0.3.4`, `ace-handbook-integration-opencode v0.3.4`, `ace-handbook-integration-pi v0.3.5`.
 - Dependency-following patch releases after the `ace-bundle` 0.41 line update: `ace-prompt-prep v0.23.5`, `ace-review v0.51.5`.
 - **ace-llm v0.31.1**: Added regression coverage for `GOOGLE_API_KEY`-only credential fallback behavior.
+- Coordinated patch releases for the role-migration package set: `ace-assign v0.41.6`, `ace-compressor v0.24.5`, `ace-docs v0.31.6`, `ace-git-commit v0.23.5`, `ace-idea v0.18.4`, `ace-lint v0.27.7`, `ace-prompt-prep v0.23.5`, `ace-retro v0.16.5`, `ace-review v0.51.5`, `ace-sim v0.13.4`, `ace-task v0.31.8`, `ace-test-runner-e2e v0.29.3`.
 
 ## [0.9.936] - 2026-03-29
 

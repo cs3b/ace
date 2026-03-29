@@ -117,7 +117,7 @@ Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `work
 
 * **Skills**: package `handbook/skills/` files are canonical source of truth for provider-agent integrations and `ace-assign` skill discovery
 * **Provider projections**: provider packages project canonical skills directly into provider-native folders (`.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, `.pi/skills/`)
-* **Provider overrides**: provider-specific frontmatter in `integration.providers.<provider>.frontmatter` can carry execution hints such as Claude `model: haiku` and Codex `model: gpt-5.3-codex-spark`
+* **Provider overrides**: provider-specific frontmatter in `integration.providers.<provider>.frontmatter` can carry execution hints such as Claude `model: role:e2e-reporter` and Codex `model: role:assign-executor`
 * **Integration runtime**: `ace-handbook` owns shared provider discovery, projection, sync, and status behavior used by provider packages
 * **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
@@ -140,7 +140,7 @@ The configuration system (ADR-022) uses a four-tier cascade with nearest-wins re
 3. **User `~/.ace/`** - personal preferences across projects
 4. **Gem `.ace-defaults/`** - sensible defaults
 
-Settings are deep-merged, so you only specify what differs from defaults. Example: if `ace-git-commit` defaults to `model: glite` and your project sets `model: gflash` in `.ace/git/commit.yml`, the project setting wins.
+Settings are deep-merged, so you only specify what differs from defaults. Example: if `ace-git-commit` defaults to `model: role:commit` and your project sets `model: role:review-codex` in `.ace/git/commit.yml`, the project setting wins.
 
 ```ruby
 resolver = Ace::Support::Config.create

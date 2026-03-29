@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.41.9)
+    ace-assign (0.41.6)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.41.2)
+    ace-bundle (0.40.6)
       ace-compressor (~> 0.24)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -34,7 +34,7 @@ PATH
 PATH
   remote: ace-compressor
   specs:
-    ace-compressor (0.24.4)
+    ace-compressor (0.24.5)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -51,7 +51,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.31.5)
+    ace-docs (0.31.7)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.23.4)
+    ace-git-commit (0.23.5)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -106,37 +106,37 @@ PATH
 PATH
   remote: ace-handbook-integration-claude
   specs:
-    ace-handbook-integration-claude (0.3.5)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-claude (0.3.4)
+      ace-handbook (~> 0.21)
 
 PATH
   remote: ace-handbook-integration-codex
   specs:
-    ace-handbook-integration-codex (0.3.4)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-codex (0.3.3)
+      ace-handbook (~> 0.21)
 
 PATH
   remote: ace-handbook-integration-gemini
   specs:
-    ace-handbook-integration-gemini (0.3.4)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-gemini (0.3.3)
+      ace-handbook (~> 0.21)
 
 PATH
   remote: ace-handbook-integration-opencode
   specs:
-    ace-handbook-integration-opencode (0.3.4)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-opencode (0.3.3)
+      ace-handbook (~> 0.21)
 
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.3.5)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-pi (0.3.4)
+      ace-handbook (~> 0.21)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.23.5)
+    ace-handbook (0.21.4)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -145,7 +145,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.18.3)
+    ace-idea (0.18.4)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -155,7 +155,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.27.6)
+    ace-lint (0.27.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -173,7 +173,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.31.3)
+    ace-llm (0.31.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -201,7 +201,7 @@ PATH
   specs:
     ace-prompt-prep (0.23.5)
       ace-b36ts (~> 0.13)
-      ace-bundle (~> 0.41)
+      ace-bundle (~> 0.40)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -213,7 +213,7 @@ PATH
 PATH
   remote: ace-retro
   specs:
-    ace-retro (0.16.4)
+    ace-retro (0.16.5)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -225,7 +225,7 @@ PATH
   specs:
     ace-review (0.51.5)
       ace-b36ts (~> 0.13)
-      ace-bundle (~> 0.41)
+      ace-bundle (~> 0.40)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -246,7 +246,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.13.3)
+    ace-sim (0.13.4)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -260,13 +260,13 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.10.2)
+    ace-support-config (0.9.2)
       ace-support-fs (~> 0.3)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.29.5)
+    ace-support-core (0.29.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-fs (~> 0.3)
@@ -324,7 +324,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.31.7)
+    ace-task (0.31.8)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -335,7 +335,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.29.2)
+    ace-test-runner-e2e (0.29.3)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
