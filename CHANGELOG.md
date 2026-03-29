@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-git v0.19.0**: Defaulted GitHub release publishing to package-grouped notes and switched live release creation guidance to `--notes-file` to avoid shell-quoting failures.
+
 ## [0.9.933] - 2026-03-29
 
 ### Fixed
