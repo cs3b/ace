@@ -2,6 +2,6 @@
 
 module Ace
   module LLM
-    VERSION = '0.30.1'
+    VERSION = '0.30.2'
   end
 end

@@ -14,6 +14,11 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
+
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-llm/"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-llm/CHANGELOG.md"
@@ -33,9 +38,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-cli", "~> 0.6" 
-  spec.add_dependency "ace-support-config", "~> 0.9" 
-  spec.add_dependency "ace-support-core", "~> 0.29" 
+  spec.add_dependency "ace-support-cli", "~> 0.6"
+  spec.add_dependency "ace-support-config", "~> 0.9"
+  spec.add_dependency "ace-support-core", "~> 0.29"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "addressable", "~> 2.8"
   spec.add_dependency "kramdown", "~> 2.0"
