@@ -1,0 +1,19 @@
+---
+# Skill Sources Protocol Configuration for ace-prompt-prep gem
+# This enables canonical skill discovery from the installed ace-prompt-prep gem
+
+name: ace-prompt-prep
+type: gem
+description: Canonical skills from ace-prompt-prep gem
+priority: 10
+
+# Configuration for skill discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/skills
+
+  # Pattern for finding canonical skill files
+  pattern: "*/SKILL.md"
+
+  # Enable discovery
+  enabled: true
