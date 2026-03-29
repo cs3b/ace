@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Updated dependency constraints for install compatibility with current RubyGems releases:
+  - `ace-support-config ~> 0.9`
+  - `ace-support-core ~> 0.29`
+  - `ace-support-cli ~> 0.6`
+  - `ace-support-test-helpers ~> 0.13`
+
+## [0.13.1] - 2026-03-29
+
+### Fixed
+- Updated runtime dependency constraints to current published versions:
+  - `ace-support-config ~> 0.9`
+  - `ace-support-core ~> 0.29`
+  - `ace-support-cli ~> 0.6`
+  - `ace-support-test-helpers ~> 0.13`
+
 ## [0.13.0] - 2026-03-23
 
 ### Changed
