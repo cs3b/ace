@@ -5,16 +5,21 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "ace/llm/providers/cli/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "ace-llm-providers-cli"
-  spec.version       = Ace::LLM::Providers::CLI::VERSION
+  spec.name = "ace-llm-providers-cli"
+  spec.version = Ace::LLM::Providers::CLI::VERSION
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary       = "CLI-based LLM providers for ace-llm"
-  spec.description   = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, Gemini CLI, OpenCode, and pi-agent"
-  spec.homepage      = "https://github.com/cs3b/ace"
-  spec.license       = "MIT"
+  spec.summary = "CLI-based LLM providers for ace-llm"
+  spec.description = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, Gemini CLI, OpenCode, and pi-agent"
+  spec.homepage = "https://github.com/cs3b/ace"
+  spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
+
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-llm-providers-cli/"
@@ -35,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Dependencies
-  spec.add_dependency "ace-llm", "~> 0.30" 
+  spec.add_dependency "ace-llm", "~> 0.30"
 
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"
