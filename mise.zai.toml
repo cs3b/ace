@@ -7,7 +7,6 @@ _.file = ["~/.ace/.env"]
 [env]
 # Add project script directories to PATH for executable commands
 PROJECT_ROOT_PATH = "{{ config_root }}"
-ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 LANG = "en_US.UTF-8"
 LC_ALL = "en_US.UTF-8"
 _.path = ["./.ace-bin", "./bin"]
