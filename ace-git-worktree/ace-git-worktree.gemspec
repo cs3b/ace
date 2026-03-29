@@ -39,14 +39,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-cli', '~> 0.3'
-  spec.add_dependency 'ace-support-core', '~> 0.24'
-  spec.add_dependency 'ace-support-config', '~> 0.7'
-  spec.add_dependency 'ace-git', '~> 0.11'
-  spec.add_dependency 'ace-task', '~> 0.11'
+  spec.add_dependency 'ace-support-cli', '~> 0.6'
+  spec.add_dependency 'ace-support-core', '~> 0.29'
+  spec.add_dependency 'ace-support-config', '~> 0.9'
+  spec.add_dependency 'ace-git', '~> 0.18'
+  spec.add_dependency 'ace-task', '~> 0.31'
 
   # Development dependencies are managed in the root Gemfile
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'
+  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.13'
 end

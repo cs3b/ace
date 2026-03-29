@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+
+## [0.40.3] - 2026-03-29
+
+### Fixed
+- **ace-bundle v0.40.3**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
 ## [0.40.2] - 2026-03-23
 
 ### Added

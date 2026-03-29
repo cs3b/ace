@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
+## [0.13.1] - 2026-03-29
+
+### Fixed
+- **ace-sim v0.13.1**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
 ## [0.13.0] - 2026-03-24
 
 ### Changed

@@ -39,15 +39,15 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-config', '~> 0.7'
-  spec.add_dependency 'ace-bundle', '~> 0.31'
-  spec.add_dependency 'ace-git', '~> 0.11' # Unified git operations (task 140.04)
-  spec.add_dependency 'ace-llm', '~> 0.23'
-  spec.add_dependency 'ace-support-nav', '~> 0.18'
-  spec.add_dependency 'ace-support-core', '~> 0.24' # ace-support-cli infrastructure (task 179.01)
-  spec.add_dependency 'ace-task', '~> 0.11'
-  spec.add_dependency 'ace-b36ts', '~> 0.7' # Base36 compact IDs (task 149, renamed 202.03)
-  spec.add_dependency 'ace-support-cli', '~> 0.3'
+  spec.add_dependency 'ace-support-config', '~> 0.9'
+  spec.add_dependency 'ace-bundle', '~> 0.40'
+  spec.add_dependency 'ace-git', '~> 0.18' # Unified git operations (task 140.04)
+  spec.add_dependency 'ace-llm', '~> 0.30'
+  spec.add_dependency 'ace-support-nav', '~> 0.25'
+  spec.add_dependency 'ace-support-core', '~> 0.29' # ace-support-cli infrastructure (task 179.01)
+  spec.add_dependency 'ace-task', '~> 0.31'
+  spec.add_dependency 'ace-b36ts', '~> 0.13' # Base36 compact IDs (task 149, renamed 202.03)
+  spec.add_dependency 'ace-support-cli', '~> 0.6'
 
   # Development dependencies managed in root Gemfile
 end

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.31.1] - 2026-03-29
+
+### Fixed
+- **ace-docs v0.31.1**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
 ## [0.31.0] - 2026-03-23
 
 ### Changed

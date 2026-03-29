@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.2.0"
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-fs", "~> 0.2"
+  spec.add_dependency "ace-support-fs", "~> 0.3" 
 
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"

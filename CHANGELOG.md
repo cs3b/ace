@@ -3,11 +3,55 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [0.9.930] - 2026-03-29
+
+### Fixed
+- **ace-assign v0.40.4**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-b36ts v0.13.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-bundle v0.40.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-compressor v0.24.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-demo v0.23.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-docs v0.31.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-git v0.18.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-git-commit v0.23.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-git-secrets v0.13.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-git-worktree v0.19.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook v0.21.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook-integration-claude v0.3.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook-integration-codex v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook-integration-gemini v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook-integration-opencode v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-handbook-integration-pi v0.3.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-idea v0.18.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-lint v0.27.4**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-llm v0.30.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-llm-providers-cli v0.27.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-overseer v0.13.4**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-prompt-prep v0.23.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-retro v0.16.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-review v0.51.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-search v0.24.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-sim v0.13.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-config v0.9.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-core v0.29.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-items v0.15.5**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-markdown v0.3.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-models v0.9.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-support-nav v0.25.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-task v0.31.5**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-test-runner v0.18.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-test-runner-e2e v0.29.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
+- **ace-tmux v0.11.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
+
 ### Added
 - **ace-handbook**: Added `.ace-bin` as the shared location for durable repo scripts; this repository now prefers it in tool PATH and onboarding/release workflows.
 
 ### Changed
 - **ace-handbook**: Moved `ace-rubygems-needs-release` from `bin/` to `.ace-bin/`, removed legacy helper shims (`bin/setup-ace-config` and `bin/test-ace-search`), and updated scripts/docs references accordingly.
+
+### Fixed
+- **ace-compressor v0.24.2**: Bumped `ace-support-*` dependency constraints in `ace-compressor.gemspec` to versions currently available on RubyGems (`ace-support-config ~> 0.9`, `ace-support-core ~> 0.29`, `ace-support-cli ~> 0.6`, `ace-support-test-helpers ~> 0.13`).
 
 ## [0.9.929] - 2026-03-29
 

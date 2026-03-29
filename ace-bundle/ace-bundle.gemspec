@@ -39,15 +39,15 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-cli', '~> 0.3'
-  spec.add_dependency 'ace-support-config', '~> 0.7'
-  spec.add_dependency 'ace-support-core', '~> 0.24' # For FileAggregator, OutputFormatter, etc.
-  spec.add_dependency 'ace-support-fs', '~> 0.2' # For ProjectRootFinder
+  spec.add_dependency 'ace-support-cli', '~> 0.6'
+  spec.add_dependency 'ace-support-config', '~> 0.9'
+  spec.add_dependency 'ace-support-core', '~> 0.29' # For FileAggregator, OutputFormatter, etc.
+  spec.add_dependency 'ace-support-fs', '~> 0.3' # For ProjectRootFinder
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
-  spec.add_dependency 'ace-git', '~> 0.11'
-  spec.add_dependency 'ace-support-nav', '~> 0.18' # For in-process protocol resolution (wfi://, guide://, etc.)
-  spec.add_dependency 'ace-compressor', '~> 0.21' # For --compress option (section content compression)
+  spec.add_dependency 'ace-git', '~> 0.18'
+  spec.add_dependency 'ace-support-nav', '~> 0.25' # For in-process protocol resolution (wfi://, guide://, etc.)
+  spec.add_dependency 'ace-compressor', '~> 0.24' # For --compress option (section content compression)
 
   # Development dependencies managed in root Gemfile
 end

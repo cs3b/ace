@@ -4,6 +4,12 @@ All notable changes to ace-handbook-integration-codex will be documented in this
 
 ## [Unreleased]
 
+
+## [0.3.2] - 2026-03-29
+
+### Fixed
+- **ace-handbook-integration-codex v0.3.2**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
 ## [0.3.1] - 2026-03-22
 
 ### Technical

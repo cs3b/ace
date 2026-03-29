@@ -4,6 +4,12 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+
+## [0.3.3] - 2026-03-29
+
+### Fixed
+- **ace-handbook-integration-pi v0.3.3**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
 ## [0.3.2] - 2026-03-22
 
 ### Technical

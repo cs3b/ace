@@ -35,13 +35,13 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-config", "~> 0.8"
-  spec.add_dependency "ace-support-core", "~> 0.25" # Requires PromptCacheManager
-  spec.add_dependency "ace-git", "~> 0.10"
-  spec.add_dependency "ace-b36ts", "~> 0.7"
-  spec.add_dependency "ace-llm", "~> 0.26"
-  spec.add_dependency "ace-support-markdown", "~> 0.2"
-  spec.add_dependency "ace-support-cli", "~> 0.3"
+  spec.add_dependency "ace-support-config", "~> 0.9" 
+  spec.add_dependency "ace-support-core", "~> 0.29" 
+  spec.add_dependency "ace-git", "~> 0.18" 
+  spec.add_dependency "ace-b36ts", "~> 0.13" 
+  spec.add_dependency "ace-llm", "~> 0.30" 
+  spec.add_dependency "ace-support-markdown", "~> 0.3" 
+  spec.add_dependency "ace-support-cli", "~> 0.6" 
   spec.add_dependency "yaml", "~> 0.3"
   spec.add_dependency "colorize", "~> 1.1"
   spec.add_dependency "terminal-table", "~> 3.0"

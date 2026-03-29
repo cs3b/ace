@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
+## [0.24.3] - 2026-03-29
+
+### Fixed
+- **ace-compressor v0.24.3**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+
+## [0.24.2] - 2026-03-29
+
+### Fixed
+- Bumped `ace-support-*` dependency constraints to currently publishable versions so this package remains installable from RubyGems.
+
 ## [0.24.1] - 2026-03-23
 
 ### Fixed

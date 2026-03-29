@@ -34,17 +34,17 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "ace-support-cli", "~> 0.3"
-  spec.add_dependency "ace-support-core", "~> 0.25"
-  spec.add_dependency "ace-support-config", "~> 0.8"
-  spec.add_dependency "ace-support-fs", "~> 0.2"
-  spec.add_dependency "ace-assign", "~> 0.40"
-  spec.add_dependency "ace-git", "~> 0.10"
-  spec.add_dependency "ace-git-worktree", "~> 0.13"
-  spec.add_dependency "ace-task", "~> 0.18"
-  spec.add_dependency "ace-tmux", "~> 0.11"
+  spec.add_dependency "ace-support-cli", "~> 0.6" 
+  spec.add_dependency "ace-support-core", "~> 0.29" 
+  spec.add_dependency "ace-support-config", "~> 0.9" 
+  spec.add_dependency "ace-support-fs", "~> 0.3" 
+  spec.add_dependency "ace-assign", "~> 0.40" 
+  spec.add_dependency "ace-git", "~> 0.18" 
+  spec.add_dependency "ace-git-worktree", "~> 0.19" 
+  spec.add_dependency "ace-task", "~> 0.31" 
+  spec.add_dependency "ace-tmux", "~> 0.11" 
 
-  spec.add_development_dependency "ace-support-test-helpers", "~> 0.12"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.13" 
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
