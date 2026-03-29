@@ -84,7 +84,13 @@ If `[Unreleased]` has content:
    ace-git-commit CHANGELOG.md -i "finalize changelog v0.9.933 from unreleased"
    ```
 
-4. Proceed to step 2 with the newly created versioned entry available for publishing.
+4. **Push the finalization commit before creating releases:**
+   ```bash
+   git push
+   ```
+   The release target commit must exist on GitHub before `gh release create` can tag and publish it.
+
+5. Proceed to step 2 with the newly created versioned entry available for publishing.
 
 ### 2. Parse Root CHANGELOG
 
@@ -200,6 +206,12 @@ If no commit is found for a version group, skip it and report:
 ### 6. Create Releases
 
 Process each daily group from oldest date to newest:
+
+Before each live release creation:
+
+- Verify the chosen `${SHA}` exists on the remote branch you intend to tag.
+- If the workflow created or committed the changelog entry locally during step 1.5, ensure that commit has already been pushed before continuing.
+- If `gh release create` reports `tag_name is not a valid tag` or `target_commitish is invalid`, stop and push the missing commit instead of retrying the same release command unchanged.
 
 **Dry-run mode** (`--dry-run`):
 

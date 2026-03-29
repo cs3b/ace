@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-03-29
+
+### Fixed
+- Added an explicit `git push` step to `github/release-publish` after changelog finalization so release target commits exist on GitHub before `gh release create`.
+
+### Technical
+- Added a stop-and-recover rule for GitHub API validation errors caused by local-only target commits (`tag_name is not a valid tag`, `target_commitish is invalid`) so the workflow pushes before retrying release creation.
+
 ## [0.19.0] - 2026-03-29
 
 ### Changed
