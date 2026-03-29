@@ -6,6 +6,7 @@ allowed-tools:
 - Bash(ace-bundle:*)
 - Bash(ace-git:*)
 - Bash(gh:*)
+- Bash(ace-idea:*)
 - Read
 - Glob
 - Grep
