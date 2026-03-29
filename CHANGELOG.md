@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-assign v0.41.1**: Preserved explicit skill/workflow materialization fork-provider overrides from catalog metadata while preventing unintended fork-context propagation to non-fork child steps.
+- **ace-assign v0.41.2**: Corrected scoped `status` fork-provider reporting to inherit provider metadata from fork roots in scoped subtrees and removed dead provider lookup paths.
+- **ace-overseer v0.13.6**: Updated `ace-assign` dependency constraint to `~> 0.41` so overseer release compatibility tracks the current assign minor line.
+
+### Added
+- **ace-assign v0.41.0**: Added per-step fork provider overrides (`fork.provider`) and surfaced `fork_provider` in current-step status display and JSON output.
+- **ace-git v0.18.5**: Added Step 1.5 "Finalize Unreleased Content" to `github/release-publish` workflow: assigns version number and commits `[Unreleased]` content at publish time.
+- **ace-handbook**: Added `.ace-bin` as the shared location for durable repo scripts; this repository now prefers it in tool PATH and onboarding/release workflows.
+
+### Changed
+- **ace-assign v0.41.0**: Updated fork-run provider precedence to CLI override > step override > config > default and extended step composition to carry `context.fork` options.
+- **ace-assign v0.41.3**: Reused resolved fork provider selection in `fork-run` for both output and launch execution, and clarified fork-context merge semantics documentation in `AssignmentExecutor`.
+- **ace-docs v0.31.3**: Added deprecation note to `squash-changelog` workflow for unreleased-mode branches.
+- **ace-git v0.18.5**: Updated `as-github-release-publish` skill permissions and rebase workflow CHANGELOG conflict advice for unreleased-mode.
+- **ace-handbook**: Moved `ace-rubygems-needs-release` from `bin/` to `.ace-bin/`, removed legacy helper shims (`bin/setup-ace-config` and `bin/test-ace-search`), and updated scripts/docs references accordingly.
+
+### Technical
+- **ace-assign v0.41.4**: Added `when_to_skip` entry for unreleased-mode branches to the `squash-changelog` catalog step.
+
 ## [0.9.932] - 2026-03-29
 
 ### Technical
@@ -45,40 +65,7 @@ All notable changes to this project will be documented in this file.
 - **ace-git-secrets v0.13.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
 - **ace-git-worktree v0.19.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
 - **ace-handbook v0.21.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-handbook-integration-claude v0.3.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-handbook-integration-codex v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-handbook-integration-gemini v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-handbook-integration-opencode v0.3.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-handbook-integration-pi v0.3.3**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-idea v0.18.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-lint v0.27.4**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-llm v0.30.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-llm-providers-cli v0.27.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
 - **ace-overseer v0.13.4**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-prompt-prep v0.23.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-retro v0.16.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-review v0.51.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-search v0.24.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-sim v0.13.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-config v0.9.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-core v0.29.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-items v0.15.5**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-markdown v0.3.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-models v0.9.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-support-nav v0.25.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-task v0.31.5**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-test-runner v0.18.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-test-runner-e2e v0.29.1**: Dependency constraint refresh and release metadata update for patch release compatibility.
-- **ace-tmux v0.11.2**: Dependency constraint refresh and release metadata update for patch release compatibility.
-
-### Added
-- **ace-handbook**: Added `.ace-bin` as the shared location for durable repo scripts; this repository now prefers it in tool PATH and onboarding/release workflows.
-
-### Changed
-- **ace-handbook**: Moved `ace-rubygems-needs-release` from `bin/` to `.ace-bin/`, removed legacy helper shims (`bin/setup-ace-config` and `bin/test-ace-search`), and updated scripts/docs references accordingly.
-
-### Fixed
-- **ace-compressor v0.24.2**: Bumped `ace-support-*` dependency constraints in `ace-compressor.gemspec` to versions currently available on RubyGems (`ace-support-config ~> 0.9`, `ace-support-core ~> 0.29`, `ace-support-cli ~> 0.6`, `ace-support-test-helpers ~> 0.13`).
 
 ## [0.9.929] - 2026-03-29
 

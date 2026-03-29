@@ -24,31 +24,18 @@ Update the main project CHANGELOG.md with new entries, automatically determining
 
 ## Process Steps
 
-### 1. Determine Version Number
+### 1. Confirm Target Section
 
-Get current release:
+This workflow appends items to the `## [Unreleased]` section in root `CHANGELOG.md`.
+
+Version numbers are assigned later at publish time by `wfi://github/release-publish`.
+
+Verify the `[Unreleased]` section exists:
 ```bash
-ace-release | grep "Release:" | awk '{print $2}'
-# Example output: v.0.9.0
+grep -n "## \[Unreleased\]" CHANGELOG.md
 ```
 
-Extract major.minor (remove 'v.' prefix and last '.0'):
-```bash
-# From v.0.9.0 → 0.9
-VERSION_BASE=$(ace-release | grep "Release:" | awk '{print $2}' | sed 's/v\.//' | sed 's/\.[0-9]*$//')
-echo "Version base: $VERSION_BASE"
-```
-
-Get last changelog version:
-```bash
-grep -E "^## \[[0-9]+\.[0-9]+\.[0-9]+\]" CHANGELOG.md | head -1
-# Example output: ## [0.12.0] - 2025-10-14
-```
-
-Calculate new version:
-- Use `$VERSION_BASE` for MAJOR.MINOR
-- Increment PATCH from last entry: `0.9.0` → `0.9.1`
-- Or start at `0.9.1` if this is first entry for this release
+If missing, add it after the file header.
 
 ### 2. Audit Commits Since Last Entry
 
@@ -97,12 +84,11 @@ Before drafting the entry, confirm:
 - [ ] No new features are listed under Fixed
 - [ ] Entries include package version references where applicable (e.g., `**ace-foo v1.2.3**:`)
 
-### 3. Generate Changelog Entry
+### 3. Generate Changelog Items
 
-Create entry with format:
+Prepare items grouped by category (no version header — items will be merged into `[Unreleased]`):
+
 ```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
 ### Fixed
 - Bug fix or crash correction
 
@@ -119,9 +105,7 @@ Create entry with format:
 - Maintenance changes
 ```
 
-**Date format:** Use current date in ISO format (YYYY-MM-DD)
-
-**Skip empty sections:** Only include sections with actual changes
+**Skip empty categories:** Only include categories with actual changes.
 
 ### 3a. Verify Entry Completeness
 
@@ -131,38 +115,29 @@ Before inserting, cross-check the draft:
 2. **Category accuracy**: For each entry, re-ask: "Is this really [Fixed/Added/Changed]?"
 3. **Scope coverage**: Check the scope list from step 2b. Is every scope mentioned?
 4. **Version references**: Each package-level change should include `**package vX.Y.Z**:` prefix.
-5. **No empty categories**: Only include sections that have entries.
+5. **No empty categories**: Only include categories that have entries.
 
-### 4. Update CHANGELOG.md
+### 4. Merge Into `[Unreleased]` Section
 
-Insert new entry after `## [Unreleased]` section:
+Append the generated items into the existing `## [Unreleased]` section in `CHANGELOG.md`:
 
+* If `[Unreleased]` already has a matching category heading (e.g., `### Fixed`), append bullets to that category.
+* If a needed category does not yet exist under `[Unreleased]`, create it in canonical order: Fixed, Added,
+  Removed, Changed, Technical.
+* Do not duplicate items that already appear from a prior run.
+
+Verify:
 ```bash
-# Find line number of [Unreleased]
-LINE=$(grep -n "## \[Unreleased\]" CHANGELOG.md | cut -d: -f1)
-
-# Insert new entry after that line (with blank line separator)
-# Use Edit tool or sed
-```
-
-Verify format:
-```bash
-# Check entry was added correctly
-grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
+# Confirm items are under [Unreleased]
+grep -A 20 "## \[Unreleased\]" CHANGELOG.md
 ```
 
 ## Versioning Rules
 
-### Version Calculation
+Root changelog entries accumulate under `## [Unreleased]` — no version number is assigned here.
 
-| Current Release | Last CHANGELOG | New Version | Rule |
-|----------------|----------------|-------------|------|
-| v.0.9.0 | 0.12.0 | 0.9.1 | Reset to release base, start at .1 |
-| v.0.9.0 | 0.9.1 | 0.9.2 | Increment patch |
-| v.0.9.0 | 0.9.5 | 0.9.6 | Increment patch |
-| v.0.10.0 | 0.9.10 | 0.10.1 | New release, reset to .1 |
-
-**Key principle:** Version always follows `{release_major}.{release_minor}.{auto_patch}`
+Version numbers are minted at publish time by `wfi://github/release-publish`, which assigns the next root patch
+version (highest existing `## [X.Y.Z]` patch + 1) when finalizing unreleased content.
 
 ### Change Categories
 
@@ -176,21 +151,20 @@ grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 
 **One-liner solutions:**
 
-- `cannot find current release` → ensure active release exists with `ace-release`
 - `CHANGELOG.md not found` → check you're in project root directory
-- `version extraction fails` → verify CHANGELOG follows Keep a Changelog format
-- `duplicate version in changelog` → check if version was already added, adjust patch number
-- `cannot parse version base` → ensure release follows v.X.Y.Z format
+- `[Unreleased] section missing` → add `## [Unreleased]` after the file header
+- `duplicate items in [Unreleased]` → dedup before appending; check prior `/as-release` runs
 - `ace-git-commit fails` → check git hooks or commit manually: `git commit -m "..."`
-- `wrong date format` → use ISO 8601 format: YYYY-MM-DD
-- `entry in wrong position` → should be after [Unreleased], before previous version
+- `entry in wrong position` → items should be under `[Unreleased]`, before the first versioned entry
 
 ## Embedded Templates
 
-### Changelog Entry Template
+### Unreleased Category Template
+
+Items are appended into the `[Unreleased]` section by category:
 
 ```markdown
-## [X.Y.Z] - YYYY-MM-DD
+## [Unreleased]
 
 ### Fixed
 - Bug fix or crash correction
@@ -206,14 +180,6 @@ grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 
 ### Technical
 - Maintenance, refactoring, or infrastructure changes
-```
-
-### Unreleased Section Format
-
-```markdown
-## [Unreleased]
-
-<!-- New entries will be added below this line -->
 
 ## [X.Y.Z] - YYYY-MM-DD
 ```
@@ -225,70 +191,49 @@ grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 ```
 > "/as-release-update-changelog"
 
-Current release: v.0.9.0
-Last version: 0.12.0
-New version: 0.9.1
+[Audits commits, classifies changes, appends to [Unreleased]]
 
-What was added?
-> ace-lint integration for markdown files
+Result in CHANGELOG.md:
+## [Unreleased]
 
-What was changed?
-> workflow structure simplified
+### Fixed
+- **ace-docs v0.5.1**: Broken links in documentation
 
-What was fixed?
-> broken links in documentation
+### Added
+- **ace-lint v0.3.0**: ace-lint integration for markdown files
 
-Technical changes?
-> test coverage improvements
+### Changed
+- **ace-handbook v0.21.0**: Workflow structure simplified
 
-[Generates entry and commits]
+### Technical
+- **ace-test v0.8.2**: Test coverage improvements
 ```
 
-### Example 2: Direct Description
-
-```
-> "/as-release-update-changelog Added ace-lint integration for markdown linting"
-
-Current release: v.0.9.0
-Last version: 0.9.1
-New version: 0.9.2
-
-Category: Added
-- ace-lint integration for markdown linting
-
-[Generates entry and commits]
-```
-
-### Example 3: Multiple Categories
+### Example 2: Accumulation Across Multiple Runs
 
 ```
 > "/as-release-update-changelog"
 
-[Provide multiple items across categories]
+[Existing [Unreleased] already has items from a prior run]
+[New items are appended to matching categories or new categories are created]
 
 Result:
-## [0.9.3] - 2025-10-14
-
-### Added
-- New workflow for changelog management
-- Claude command integration
-
-### Changed
-- Simplified workflow structure
+## [Unreleased]
 
 ### Fixed
-- Documentation links corrected
+- **ace-docs v0.5.1**: Broken links in documentation
+- **ace-review v0.50.3**: Fixed non-runnable examples    ← new
 
-[Creates commit: "docs: update CHANGELOG to version 0.9.3"]
+### Added
+- **ace-lint v0.3.0**: ace-lint integration for markdown files
 ```
 
 ## Notes
 
 * This workflow updates **main project CHANGELOG** only (not package CHANGELOGs)
 * For package-specific changelogs, use `/as-release-bump-version [package]`
-* Version always follows current release: v.0.9.0 → 0.9.X
-* When release changes (e.g., v.0.10.0), version resets to 0.10.1
-* Patch level increments for **any** change (no semantic versioning rules)
+* Items accumulate under `[Unreleased]` — version numbers are assigned at publish time by
+  `wfi://github/release-publish`
 * Changes are documented immediately, no batching required
 * Follow Keep a Changelog format for consistency
 * **This workflow does NOT commit changes** - use `/as-release` for complete release with commit
