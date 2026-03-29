@@ -59,6 +59,11 @@ module Ace
         Molecules::ConfigLoader.get(path)
       end
 
+      # Get configured role map (llm.roles) from config cascade.
+      def roles
+        get("llm.roles") || {}
+      end
+
       # Check if configuration exists
       def configured?
         !config.empty?

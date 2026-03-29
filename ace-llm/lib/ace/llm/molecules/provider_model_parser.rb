@@ -2,6 +2,7 @@
 
 require_relative "client_registry"
 require_relative "llm_alias_resolver"
+require_relative "role_resolver"
 
 module Ace
   module LLM
@@ -33,6 +34,7 @@ module Ace
         def initialize(alias_resolver: nil, registry: nil)
           @alias_resolver = alias_resolver || LlmAliasResolver.new
           @registry = registry || ClientRegistry.new
+          @role_resolver = RoleResolver.new(registry: @registry)
         end
 
         # Parse a provider:model string or alias.
@@ -40,6 +42,67 @@ module Ace
           return create_error_result(input, "Input cannot be nil or empty") if input.nil? || input.strip.empty?
 
           original_input = input.strip
+          if role_reference?(original_input)
+            return parse_role_reference(original_input)
+          end
+
+          parse_standard_target(original_input)
+        rescue Ace::LLM::ConfigurationError => e
+          create_error_result(original_input, e.message)
+        end
+
+        def supported_providers
+          @registry.available_providers
+        end
+
+        def default_model_for(provider)
+          models = @registry.models_for_provider(provider)
+          models&.first
+        end
+
+        def dynamic_aliases
+          return {} unless @alias_resolver
+
+          global = @alias_resolver.available_aliases[:global] || {}
+          providers = @alias_resolver.available_aliases[:providers] || {}
+
+          flattened = {}
+          providers.each do |provider, aliases|
+            aliases.each do |alias_name, model|
+              flattened["#{provider}:#{alias_name}"] = "#{provider}:#{model}"
+            end
+          end
+
+          global.merge(flattened)
+        end
+
+        private
+
+        def parse_role_reference(original_input)
+          role_target, caller_preset, preset_error = split_preset_suffix(original_input)
+          return create_error_result(original_input, preset_error) if preset_error
+
+          role_value = role_target.sub(/\Arole:/, "")
+          role_name, caller_thinking, thinking_error = split_thinking_suffix(role_value)
+          return create_error_result(original_input, thinking_error) if thinking_error
+          return create_error_result(original_input, "Invalid target: role name cannot be empty") if role_name.to_s.strip.empty?
+
+          resolved_selector = @role_resolver.resolve(role_name)
+          resolved_parse = parse_standard_target(resolved_selector)
+          return resolved_parse if resolved_parse.invalid?
+
+          ParseResult.new(
+            resolved_parse.provider,
+            resolved_parse.model,
+            caller_preset || resolved_parse.preset,
+            caller_thinking || resolved_parse.thinking_level,
+            true,
+            nil,
+            original_input
+          )
+        end
+
+        def parse_standard_target(original_input)
           provider_target, preset_name, preset_error = split_preset_suffix(original_input)
           return create_error_result(original_input, preset_error) if preset_error
 
@@ -83,32 +146,9 @@ module Ace
           ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
         end
 
-        def supported_providers
-          @registry.available_providers
+        def role_reference?(input)
+          input.to_s.strip.start_with?("role:")
         end
-
-        def default_model_for(provider)
-          models = @registry.models_for_provider(provider)
-          models&.first
-        end
-
-        def dynamic_aliases
-          return {} unless @alias_resolver
-
-          global = @alias_resolver.available_aliases[:global] || {}
-          providers = @alias_resolver.available_aliases[:providers] || {}
-
-          flattened = {}
-          providers.each do |provider, aliases|
-            aliases.each do |alias_name, model|
-              flattened["#{provider}:#{alias_name}"] = "#{provider}:#{model}"
-            end
-          end
-
-          global.merge(flattened)
-        end
-
-        private
 
         def normalize_provider(provider)
           provider.strip.downcase.gsub(/[-_]/, "")
