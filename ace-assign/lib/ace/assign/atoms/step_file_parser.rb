@@ -56,6 +56,7 @@ module Ace
             parallel: parse_boolean(fm["parallel"]),
             max_parallel: parse_positive_integer(fm["max_parallel"]),
             fork_retry_limit: parse_non_negative_integer(fm["fork_retry_limit"]),
+            fork_options: parse_hash(fm["fork"]),
             started_at: parse_time(fm["started_at"]),
             completed_at: parse_time(fm["completed_at"]),
             fork_launch_pid: parse_integer(fm["fork_launch_pid"]),
@@ -173,6 +174,16 @@ module Ace
           Array(value).map { |v| parse_integer(v) }.compact.uniq.sort
         end
         private_class_method :parse_integer_array
+
+        def self.parse_hash(value)
+          return nil unless value.is_a?(Hash)
+
+          normalized = value.each_with_object({}) do |(key, val), memo|
+            memo[key.to_s] = val
+          end
+          normalized.empty? ? nil : normalized
+        end
+        private_class_method :parse_hash
 
         def self.parse_boolean(value)
           return nil if value.nil?

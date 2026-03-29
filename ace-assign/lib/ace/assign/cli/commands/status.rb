@@ -72,7 +72,8 @@ module Ace
 
             unless options[:quiet]
               if options[:format] == "json"
-                puts JSON.pretty_generate(status_to_h(assignment, scoped_state, current_for_display))
+                scoped_fork_step = scoped_fork_metadata_step(state, current_for_display, target.scope, scope_root)
+                puts JSON.pretty_generate(status_to_h(assignment, scoped_state, current_for_display, scoped_fork_step: scoped_fork_step))
                 return
               end
 
@@ -97,6 +98,10 @@ module Ace
                 end
                 if current_for_display.context
                   puts "Context: #{current_for_display.context}"
+                end
+                effective_fork_provider = effective_fork_provider_for(current_for_display, scoped_fork_step)
+                if effective_fork_provider
+                  puts "Fork Provider: #{effective_fork_provider}"
                 end
                 puts
                 print_scoped_fork_pid_info(scoped_fork_step)
@@ -129,7 +134,7 @@ module Ace
 
           private
 
-          def status_to_h(assignment, state, current_step)
+          def status_to_h(assignment, state, current_step, scoped_fork_step: nil)
             {
               assignment: {
                 id: assignment.id,
@@ -137,12 +142,12 @@ module Ace
                 state: state.assignment_state.to_s
               },
               steps: state.steps.map { |step| step_to_h(step) },
-              current_step: step_to_h(current_step),
+              current_step: step_to_h(current_step, effective_fork_provider: effective_fork_provider_for(current_step, scoped_fork_step)),
               progress: "#{state.done.size}/#{state.size} done"
             }
           end
 
-          def step_to_h(step)
+          def step_to_h(step, effective_fork_provider: nil)
             return nil unless step
 
             {
@@ -152,6 +157,7 @@ module Ace
               skill: step.skill,
               workflow: step.workflow,
               context: step.context,
+              fork_provider: effective_fork_provider || step.fork_provider,
               batch_parent: step.batch_parent,
               parallel: step.parallel,
               max_parallel: step.max_parallel,
@@ -340,6 +346,13 @@ module Ace
             end
 
             fork_scope_root(state, current_step)
+          end
+
+          def effective_fork_provider_for(current_step, scoped_fork_step)
+            return nil unless current_step
+
+            provider = current_step.fork_provider || scoped_fork_step&.fork_provider
+            provider.to_s.strip.empty? ? nil : provider
           end
 
           def print_scoped_fork_pid_info(step)

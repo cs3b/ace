@@ -108,4 +108,30 @@ class QueueScannerTest < AceAssignTestCase
       assert_equal "build", current.name
     end
   end
+
+  def test_scan_parses_fork_provider
+    with_temp_cache do |cache_dir|
+      steps_dir = File.join(cache_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
+
+      File.write(File.join(steps_dir, "020-research.st.md"), <<~MD)
+        ---
+        name: research
+        status: in_progress
+        context: fork
+        fork:
+          provider: claude:sonnet@yolo
+        ---
+
+        Run research.
+      MD
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(steps_dir, assignment: @assignment)
+      step = state.find_by_number("020")
+
+      assert_equal "fork", step.context
+      assert_equal "claude:sonnet@yolo", step.fork_provider
+    end
+  end
 end

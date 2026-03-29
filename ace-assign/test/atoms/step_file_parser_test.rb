@@ -89,6 +89,22 @@ class StepFileParserTest < AceAssignTestCase
     assert_equal "/tmp/010.pid.yml", result[:fork_pid_file]
   end
 
+  def test_extract_fields_with_fork_options
+    parsed = {
+      frontmatter: {
+        "name" => "research",
+        "status" => "pending",
+        "context" => "fork",
+        "fork" => {"provider" => "claude:sonnet@yolo"}
+      },
+      body: "Run research."
+    }
+
+    result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
+
+    assert_equal({"provider" => "claude:sonnet@yolo"}, result[:fork_options])
+  end
+
   def test_extract_fields_with_batch_scheduler_metadata
     parsed = {
       frontmatter: {

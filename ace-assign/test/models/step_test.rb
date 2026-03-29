@@ -294,4 +294,45 @@ class StepTest < AceAssignTestCase
 
     assert_match(/max_parallel/, error.message)
   end
+
+  def test_fork_provider_from_fork_options
+    step = Ace::Assign::Models::Step.new(
+      number: "020",
+      name: "research",
+      status: :pending,
+      instructions: "Run research",
+      context: "fork",
+      fork_options: {"provider" => "claude:sonnet@yolo"}
+    )
+
+    assert_equal "claude:sonnet@yolo", step.fork_provider
+  end
+
+  def test_to_frontmatter_includes_fork_options
+    step = Ace::Assign::Models::Step.new(
+      number: "020",
+      name: "research",
+      status: :pending,
+      instructions: "Run research",
+      context: "fork",
+      fork_options: {"provider" => "claude:sonnet@yolo"}
+    )
+
+    fm = step.to_frontmatter
+    assert_equal({"provider" => "claude:sonnet@yolo"}, fm["fork"])
+  end
+
+  def test_to_frontmatter_excludes_empty_fork_options
+    step = Ace::Assign::Models::Step.new(
+      number: "020",
+      name: "research",
+      status: :pending,
+      instructions: "Run research",
+      context: "fork",
+      fork_options: {}
+    )
+
+    fm = step.to_frontmatter
+    refute fm.key?("fork")
+  end
 end

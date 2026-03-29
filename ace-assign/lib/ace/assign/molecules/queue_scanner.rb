@@ -88,6 +88,7 @@ module Ace
             parallel: fields[:parallel],
             max_parallel: fields[:max_parallel],
             fork_retry_limit: fields[:fork_retry_limit],
+            fork_options: fields[:fork_options],
             stall_reason: fields[:stall_reason],
             file_path: file_path
           )

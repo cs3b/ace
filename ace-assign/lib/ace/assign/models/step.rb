@@ -25,7 +25,7 @@ module Ace
         attr_reader :number, :name, :status, :instructions, :report, :error,
           :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
           :workflow,
-          :batch_parent, :parallel, :max_parallel, :fork_retry_limit,
+          :batch_parent, :parallel, :max_parallel, :fork_retry_limit, :fork_options,
           :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
           :stall_reason
 
@@ -46,6 +46,7 @@ module Ace
         # @param parallel [Boolean, nil] Batch scheduling mode hint (true=parallel, false=sequential)
         # @param max_parallel [Integer, nil] Max concurrent children for parallel batches
         # @param fork_retry_limit [Integer, nil] Retry attempts allowed per failed child
+        # @param fork_options [Hash, nil] Fork execution options from frontmatter (e.g. {provider: "..."} )
         # @param fork_launch_pid [Integer, nil] PID of the process that launched the fork run
         # @param fork_tracked_pids [Array<Integer>, nil] Observed subprocess/descendant PIDs during fork execution
         # @param fork_pid_updated_at [Time, nil] Timestamp when fork PID metadata was last updated
@@ -55,6 +56,7 @@ module Ace
           started_at: nil, completed_at: nil, added_by: nil, parent: nil,
           file_path: nil, skill: nil, workflow: nil, context: nil,
           batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
+          fork_options: nil,
           fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
           fork_pid_file: nil, stall_reason: nil)
           validate_status!(status)
@@ -63,6 +65,7 @@ module Ace
           validate_boolean!(:parallel, parallel)
           validate_positive_integer!(:max_parallel, max_parallel)
           validate_non_negative_integer!(:fork_retry_limit, fork_retry_limit)
+          validate_hash!(:fork_options, fork_options)
 
           @number = number.freeze
           @name = name.freeze
@@ -82,6 +85,7 @@ module Ace
           @parallel = parallel.nil? ? nil : !!parallel
           @max_parallel = max_parallel&.to_i
           @fork_retry_limit = fork_retry_limit&.to_i
+          @fork_options = normalize_fork_options(fork_options)
           @fork_launch_pid = fork_launch_pid&.to_i
           @fork_tracked_pids = Array(fork_tracked_pids).map(&:to_i).uniq.sort.freeze
           @fork_pid_updated_at = fork_pid_updated_at
@@ -113,6 +117,16 @@ module Ace
           context == "fork"
         end
 
+        # Resolve per-step provider override from fork options.
+        # @return [String, nil]
+        def fork_provider
+          return nil unless fork_options
+
+          provider = fork_options["provider"]
+          provider = provider.to_s.strip
+          provider.empty? ? nil : provider
+        end
+
         # Get the original step number if this is a retry
         # @return [String, nil] Original step number
         def retry_of
@@ -134,6 +148,7 @@ module Ace
             "parallel" => parallel,
             "max_parallel" => max_parallel,
             "fork_retry_limit" => fork_retry_limit,
+            "fork" => fork_options,
             "started_at" => started_at&.iso8601,
             "completed_at" => completed_at&.iso8601,
             "fork_launch_pid" => fork_launch_pid,
@@ -190,6 +205,24 @@ module Ace
           return if value.is_a?(Integer) && value >= 0
 
           raise ArgumentError, "Invalid #{field_name}: #{value.inspect}. Must be an integer >= 0"
+        end
+
+        def validate_hash!(field_name, value)
+          return if value.nil? || value.is_a?(Hash)
+
+          raise ArgumentError, "Invalid #{field_name}: #{value.inspect}. Must be a Hash or nil"
+        end
+
+        def normalize_fork_options(value)
+          return nil unless value.is_a?(Hash)
+
+          normalized = value.each_with_object({}) do |(key, val), memo|
+            memo[key.to_s] = val
+          end
+          normalized.compact!
+          return nil if normalized.empty?
+
+          normalized.freeze
         end
       end
     end

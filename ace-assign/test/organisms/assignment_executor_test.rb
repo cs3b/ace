@@ -1349,6 +1349,103 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_start_materializes_catalog_fork_provider_into_step_frontmatter
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      rendering = {
+        "workflow" => "wfi://task/research",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "claude:sonnet@yolo"}
+        }
+      }
+
+      executor.define_singleton_method(:resolve_step_rendering) { |_step| rendering }
+      executor.define_singleton_method(:render_skill_backed_step_instructions) do |step:, rendering:|
+        "Rendered instructions for #{step["name"]} via #{rendering["workflow"]}"
+      end
+
+      materialized = executor.send(:materialize_skill_backed_step, {"name" => "research", "instructions" => "Run research"})
+
+      assert_equal "fork", materialized["context"]
+      assert_equal({"provider" => "claude:sonnet@yolo"}, materialized["fork"])
+    end
+  end
+
+  def test_materialize_explicit_skill_preserves_catalog_fork_overrides
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      canonical_step = {
+        "name" => "review-pr",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "codex:gpt-5"}
+        }
+      }
+
+      resolver = Object.new
+      resolver.define_singleton_method(:resolve_skill_rendering) do |_skill_name|
+        {
+          "workflow" => "wfi://review/pr",
+          "body" => "Review body"
+        }
+      end
+      resolver.define_singleton_method(:resolve_workflow_rendering) { |_workflow_source, **_kwargs| nil }
+      resolver.define_singleton_method(:resolve_step_rendering) { |_step_name| nil }
+
+      executor.define_singleton_method(:find_step_definition) { |_name| canonical_step }
+      executor.define_singleton_method(:skill_source_resolver) { resolver }
+      executor.define_singleton_method(:render_skill_backed_step_instructions) do |step:, rendering:|
+        "Rendered instructions for #{step["name"]} via #{rendering["workflow"]}"
+      end
+
+      materialized = executor.send(
+        :materialize_skill_backed_step,
+        {"name" => "review-pr", "skill" => "as-review-pr", "instructions" => "Review changes"}
+      )
+
+      assert_equal "fork", materialized["context"]
+      assert_equal({"provider" => "codex:gpt-5"}, materialized["fork"])
+    end
+  end
+
+  def test_materialize_explicit_workflow_preserves_catalog_fork_overrides
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      canonical_step = {
+        "name" => "review-pr",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "codex:gpt-5"}
+        }
+      }
+
+      resolver = Object.new
+      resolver.define_singleton_method(:resolve_workflow_rendering) do |_workflow_source, **_kwargs|
+        {
+          "workflow" => "wfi://review/pr",
+          "body" => "Review body"
+        }
+      end
+      resolver.define_singleton_method(:resolve_skill_rendering) { |_skill_name| nil }
+      resolver.define_singleton_method(:resolve_step_rendering) { |_step_name| nil }
+
+      executor.define_singleton_method(:find_step_definition) { |_name| canonical_step }
+      executor.define_singleton_method(:skill_source_resolver) { resolver }
+      executor.define_singleton_method(:render_skill_backed_step_instructions) do |step:, rendering:|
+        "Rendered instructions for #{step["name"]} via #{rendering["workflow"]}"
+      end
+
+      materialized = executor.send(
+        :materialize_skill_backed_step,
+        {"name" => "review-pr", "workflow" => "wfi://review/pr", "instructions" => "Review changes"}
+      )
+
+      assert_equal "fork", materialized["context"]
+      assert_equal({"provider" => "codex:gpt-5"}, materialized["fork"])
+    end
+  end
+
   def test_descendants_of_returns_all_nested
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
