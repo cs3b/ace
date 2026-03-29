@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.936] - 2026-03-29
+
 ### Fixed
 - **ace-git v0.19.1**: Updated `github/release-publish` to push changelog-finalization commits before `gh release create`, preventing invalid remote target errors during GitHub release publishing.
 
