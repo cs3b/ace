@@ -33,6 +33,59 @@ gh release list --limit 50 --json tagName,name --jq '[.[] | select(.tagName | st
 
 If no `v*` release exists, treat all changelog versions as unpublished.
 
+### 1.5. Finalize Unreleased Content
+
+Check if the `## [Unreleased]` section in `CHANGELOG.md` has substantive content (any lines between
+`## [Unreleased]` and the next `## [` heading that are not blank or HTML comments).
+
+If `[Unreleased]` is empty, skip to step 2.
+
+If `[Unreleased]` has content:
+
+1. **Determine the next version number:**
+   - Find the highest existing versioned entry (`## [X.Y.Z]`) in `CHANGELOG.md`.
+   - Increment its patch number by 1 (e.g., `0.9.932` → `0.9.933`).
+
+2. **Rewrite the unreleased section:**
+   - Move all category headings and bullet items from the `[Unreleased]` block into a new versioned entry.
+   - Leave the `[Unreleased]` section empty.
+   - Use today's date in ISO format.
+
+   Before:
+   ```markdown
+   ## [Unreleased]
+
+   ### Fixed
+   - item 1
+
+   ### Added
+   - item 2
+
+   ## [0.9.932] - 2026-03-29
+   ```
+
+   After:
+   ```markdown
+   ## [Unreleased]
+
+   ## [0.9.933] - 2026-03-30
+
+   ### Fixed
+   - item 1
+
+   ### Added
+   - item 2
+
+   ## [0.9.932] - 2026-03-29
+   ```
+
+3. **Commit the finalization:**
+   ```bash
+   ace-git-commit CHANGELOG.md -i "finalize changelog v0.9.933 from unreleased"
+   ```
+
+4. Proceed to step 2 with the newly created versioned entry available for publishing.
+
 ### 2. Parse Root CHANGELOG
 
 Read `CHANGELOG.md` and extract all version entries matching `## [X.Y.Z] - YYYY-MM-DD`.

@@ -1,13 +1,15 @@
 ---
 name: as-github-release-publish
-description: Create GitHub releases from unpublished CHANGELOG entries
+description: Finalize unreleased changelog and create GitHub releases
 # bundle: wfi://github/release-publish
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
   - Bash(gh:*)
   - Bash(ace-bundle:*)
+  - Bash(ace-git-commit:*)
   - Read
+  - Edit
 argument-hint: "[version-or-range] [--since duration] [--group-by package|date] [--category-order fixed,added,changed,technical] [--dry-run]"
 last_modified: 2026-03-21
 source: ace-git
