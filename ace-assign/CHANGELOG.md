@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Role-based assignment execution defaults.
+
 ## [0.41.9] - 2026-03-31
 
 ### Changed
