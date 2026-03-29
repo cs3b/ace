@@ -1,6 +1,6 @@
 ---
 id: 8qsi6p
-status: pending
+status: done
 title: Clarify and harden new-project onboarding path
 tags: [dx, onboarding, docs, ace-framework, ace-handbook, ace-llm, ace-assign]
 created_at: "2026-03-29 12:07:28"
