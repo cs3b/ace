@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.uon
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-03-28 20:27:23"
 estimate: TBD
