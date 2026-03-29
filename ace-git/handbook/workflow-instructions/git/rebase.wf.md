@@ -190,7 +190,7 @@ if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
     echo "Strategy: continue-first"
     echo "Resolve conflicts, then run: git add <files> && git rebase --continue"
     echo "Escalate only if the next rebase stop is also conflicted or resolution coordination becomes complex."
-    echo "CHANGELOG.md note: prefer git checkout --theirs CHANGELOG.md, then re-apply your entries on top before git add."
+    echo "CHANGELOG.md note: with unreleased-mode, merge both sides' items under [Unreleased] (keep all). For legacy versioned entries, prefer git checkout --theirs CHANGELOG.md, then re-apply your entries on top before git add."
   else
     echo "Strategy: cherry-pick fallback (conflict set is large)"
     echo "Abort the rebase and proceed to Phase 3."
@@ -370,7 +370,7 @@ find .ace-local/git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
 git rebase "$target_branch"
 # On conflict: resolve files, git add, git rebase --continue
 # Escalate to Phase 3 only if conflicts keep repeating or require per-commit replay
-# CHANGELOG: git checkout --theirs CHANGELOG.md, add your entries on top
+# CHANGELOG: with unreleased-mode, merge both sides' [Unreleased] items. For versioned entries: git checkout --theirs CHANGELOG.md, add your entries on top
 ```
 
 ### Interactive Rebase

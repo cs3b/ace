@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.5] - 2026-03-29
+
+### Added
+- Added Step 1.5 "Finalize Unreleased Content" to `github/release-publish` workflow: assigns version number and commits `[Unreleased]` content at publish time.
+
+### Changed
+- Updated `as-github-release-publish` skill with `Edit` and `ace-git-commit` tool permissions for changelog finalization.
+- Updated rebase workflow CHANGELOG conflict advice for unreleased-mode branches.
+
 ## [0.18.4] - 2026-03-29
 
 ### Technical
