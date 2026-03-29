@@ -45,6 +45,7 @@ Rules:
 * If one of `patch|minor|major` is present, apply it to every selected package.
 * If package names are present, release only those packages.
 * If no package names are present, auto-detect packages from the current working tree.
+* If releasing a selected package requires dependent ACE gemspec constraints to move forward, auto-add those dependent packages to the release set as follower packages.
 
 ### 2. Detect Target Packages
 
@@ -114,7 +115,10 @@ editing anything.
 
 ### 4. Determine Bump Level Per Package
 
-If an explicit bump level was provided, use it for every package.
+If an explicit bump level was provided, use it for every explicitly selected package.
+
+If a package is auto-added only because its gemspec constraint must move to follow another selected package,
+use `patch` by default.
 
 Otherwise choose a bump per package from the unreleased diff:
 
@@ -137,6 +141,13 @@ ace-task -> patch
 ace-test-runner-e2e -> minor
 ```
 
+Follower-package rule:
+
+* If package `A` is being released and package `B`'s gemspec must change only to accept `A`'s new version line,
+  auto-add `B` to the release set and record `B -> patch`.
+* If a follower package was also explicitly named by the operator, honor the operator-provided bump level for that
+  package instead of forcing `patch`.
+
 ### 5. Update Each Package Release
 
 For each package, in package order:
@@ -147,6 +158,9 @@ For each package, in package order:
 4. Add a new package `CHANGELOG.md` entry after `[Unreleased]`.
 5. If the bump is `minor` or `major`, update any stale dependent gemspec `~>` constraints that now fall behind
    the new version.
+6. For every package whose gemspec changed only because of step 5, add that package to the release set as a
+   follower package, bump it by `patch` unless explicitly selected otherwise, and give it its own package
+   changelog entry.
 
 Helpful checks:
 
@@ -203,7 +217,9 @@ ace-git-commit \
   -i "release v[VERSION_A] for ace-[package-a] and v[VERSION_B] for ace-[package-b]"
 ```
 
-Also include any additional package directories whose gemspecs changed due to dependency constraint updates.
+Also include any additional follower-package directories whose gemspecs changed due to dependency constraint
+updates. Those packages must have matching version/changelog updates; do not commit gemspec-only follower changes
+without releasing the affected package.
 
 ### 9. Final Verification
 
@@ -218,6 +234,8 @@ Checklist:
 * every selected package has an updated `version.rb`
 * every selected package has a new package changelog entry
 * root `CHANGELOG.md` `[Unreleased]` section includes the new items
+* every follower package added for dependency constraint updates also has an updated `version.rb`, package changelog
+  entry, and root changelog bullet
 * `Gemfile.lock` reflects the new internal versions
 * no unrelated package was released
 

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **ace-git v0.19.0**: Defaulted GitHub release publishing to package-grouped notes and switched live release creation guidance to `--notes-file` to avoid shell-quoting failures.
+- **ace-handbook**: Updated the coordinated release workflow so dependency-follower packages are auto-added as patch releases with full version and changelog metadata instead of being committed as gemspec-only fallout.
 
 ## [0.9.933] - 2026-03-29
 
