@@ -14,12 +14,10 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
-  source_date_epoch = ENV['SOURCE_DATE_EPOCH']
-  spec.date = if source_date_epoch && !source_date_epoch.strip.empty?
-                Time.at(Integer(source_date_epoch)).utc.strftime('%Y-%m-%d')
-              else
-                Time.now.utc.strftime('%Y-%m-%d')
-              end
+  # RubyGems defaults unset gemspec dates to 1980-01-02, so set an explicit release date.
+  # rubocop:disable Gemspec/DeprecatedAttributeAssignment
+  spec.date = Time.now.utc.strftime("%Y-%m-%d")
+  # rubocop:enable Gemspec/DeprecatedAttributeAssignment
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-test-runner/"
@@ -40,11 +38,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-cli", "~> 0.6" 
-  spec.add_dependency "ace-support-core", "~> 0.29" 
-  spec.add_dependency "ace-support-config", "~> 0.9" 
-  spec.add_dependency "ace-support-test-helpers", "~> 0.13" 
-  spec.add_dependency "ace-b36ts", "~> 0.13" 
+  spec.add_dependency "ace-support-cli", "~> 0.6"
+  spec.add_dependency "ace-support-core", "~> 0.29"
+  spec.add_dependency "ace-support-config", "~> 0.9"
+  spec.add_dependency "ace-support-test-helpers", "~> 0.13"
+  spec.add_dependency "ace-b36ts", "~> 0.13"
   spec.add_dependency "minitest", "~> 5.0"
   spec.add_dependency "minitest-reporters", "~> 1.6"
   spec.add_dependency "ostruct"

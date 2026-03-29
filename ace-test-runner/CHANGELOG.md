@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-03-29
+
+### Technical
+- Normalized published gem metadata so RubyGems and Ruby Toolbox use current release information instead of the 1980 fallback date.
+
 ### Added
 - **ace-test-runner v0.19.0**: Added suite-level per-package timeout support via `ace-test-suite --timeout` and `test_suite.timeout`, allowing hung package runs to fail and free their worker slot instead of stalling the rest of the suite.
 
