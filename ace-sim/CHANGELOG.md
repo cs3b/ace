@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-03-29
+
+### Technical
+- Register package-level `.ace-defaults` skill-sources for ace-sim to enable canonical skill discovery in fresh installs.
+
 
 ## [0.13.1] - 2026-03-29
 
