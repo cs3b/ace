@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.3] - 2026-03-29
+
+### Changed
+- Added deprecation note to `squash-changelog` workflow: rarely needed now that root changelog entries accumulate under `[Unreleased]`.
+
 ## [0.31.2] - 2026-03-29
 
 ### Technical
