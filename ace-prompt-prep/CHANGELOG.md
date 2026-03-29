@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.3] - 2026-03-29
+
+### Fixed
+- Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-prompt-prep stays aligned with the current git workflow release.
+
 ## [0.23.2] - 2026-03-29
 
 ### Technical
