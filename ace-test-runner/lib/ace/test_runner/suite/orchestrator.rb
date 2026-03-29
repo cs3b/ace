@@ -33,7 +33,10 @@ module Ace
           test_options["report_dir"] = report_root if report_root
 
           display_manager = create_display_manager
-          process_monitor = ProcessMonitor.new(@config.dig("test_suite", "max_parallel") || 10)
+          process_monitor = ProcessMonitor.new(
+            @config.dig("test_suite", "max_parallel") || 10,
+            package_timeout: @config.dig("test_suite", "timeout")
+          )
 
           # Enrich packages with historical duration data for scheduling
           estimator = DurationEstimator.new(report_root: report_root)
@@ -69,13 +72,19 @@ module Ace
           display_manager.show_final_results
 
           # Aggregate results
-          aggregator = ResultAggregator.new(@packages, report_root: report_root)
+          aggregator = ResultAggregator.new(@packages, report_root: report_root, runtime_results: @results)
           summary = aggregator.aggregate
 
           display_manager.show_summary(summary)
 
           # Return exit code based on results
           (summary[:packages_failed] > 0) ? 1 : 0
+        rescue Interrupt
+          process_monitor&.stop_all(reason: :interrupt)
+          raise
+        rescue StandardError
+          process_monitor&.stop_all(reason: :error)
+          raise
         end
 
         private

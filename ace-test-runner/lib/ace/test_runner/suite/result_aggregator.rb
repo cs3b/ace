@@ -8,9 +8,10 @@ module Ace
       class ResultAggregator
         attr_reader :packages
 
-        def initialize(packages, report_root: nil)
+        def initialize(packages, report_root: nil, runtime_results: {})
           @packages = packages
           @report_root = report_root
+          @runtime_results = runtime_results || {}
         end
 
         def aggregate
@@ -90,8 +91,7 @@ module Ace
                 }
               end
             else
-              # No summary file means tests didn't complete or save
-              {
+              runtime_result(package) || {
                 package: package["name"],
                 path: package["path"],
                 report_root: @report_root,
@@ -117,6 +117,32 @@ module Ace
               error_message: result[:error]
             }
           end
+        end
+
+        def runtime_result(package)
+          status = @runtime_results[package["name"]]
+          return nil unless status && status[:completed]
+
+          results = status[:results] || {}
+          total = results[:tests] || 0
+          failures = results[:failures] || 0
+          errors = results[:errors] || 0
+          skipped = results[:skipped] || 0
+
+          {
+            package: package["name"],
+            path: package["path"],
+            report_root: @report_root,
+            success: status[:success],
+            error: results[:error],
+            total: total,
+            passed: total - failures - errors - skipped,
+            failed: failures,
+            errors: errors,
+            skipped: skipped,
+            duration: results[:duration] || status[:elapsed] || 0,
+            assertions: results[:assertions] || 0
+          }
         end
 
         def generate_report(summary)

@@ -81,6 +81,7 @@ ace-test-suite [options]
 
 - `-c`, `--config FILE`: suite config path (default: `.ace/test/suite.yml`)
 - `-p`, `--parallel N`: override max parallel worker count
+- `-t`, `--timeout SEC`: fail any package subprocess that exceeds the timeout
 - `-g`, `--group GROUP`: limit execution to a package group
 - `-v`, `--verbose`: verbose output and backtraces
 - `--progress`: live animated progress bars
@@ -91,5 +92,6 @@ ace-test-suite [options]
 ## Notes
 
 - `ace-test` resolves package arguments using ACE package discovery.
+- `ace-test-suite --timeout` is enforced at the suite layer and terminates the timed-out package process group before continuing with queued packages.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.
 - Package defaults and user config are merged with CLI options.

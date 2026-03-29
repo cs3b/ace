@@ -38,6 +38,10 @@ parser = OptionParser.new do |opts|
     options[:group] = group
   end
 
+  opts.on("-t", "--timeout SEC", Integer, "Per-package timeout in seconds") do |timeout|
+    options[:timeout] = timeout
+  end
+
   opts.on("-v", "--verbose", "Show verbose output") do
     options[:verbose] = true
   end
@@ -57,6 +61,7 @@ parser = OptionParser.new do |opts|
     puts "  $ ace-test-suite                    Run all (simple line-by-line output)"
     puts "  $ ace-test-suite --progress         Show live animated progress bars"
     puts "  $ ace-test-suite --parallel 16      Run with 16 parallel processes"
+    puts "  $ ace-test-suite --timeout 10       Fail packages that run over 10s"
     puts "  $ ace-test-suite --group foundation Run only foundation group"
     puts "  $ ace-test-suite --verbose          Show detailed test output"
     exit 0
@@ -108,6 +113,10 @@ end
 # Override config with command line options if provided
 if options[:parallel]
   config["test_suite"]["max_parallel"] = options[:parallel]
+end
+
+if options[:timeout]
+  config["test_suite"]["timeout"] = options[:timeout]
 end
 
 if options[:group]

@@ -14,6 +14,13 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  source_date_epoch = ENV['SOURCE_DATE_EPOCH']
+  spec.date = if source_date_epoch && !source_date_epoch.strip.empty?
+                Time.at(Integer(source_date_epoch)).utc.strftime('%Y-%m-%d')
+              else
+                Time.now.utc.strftime('%Y-%m-%d')
+              end
+
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-test-runner/"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-test-runner/CHANGELOG.md"

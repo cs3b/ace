@@ -86,6 +86,7 @@ module Ace
 
           line = "#{icon}  #{elapsed}  #{name}  #{tests_col}  #{asserts_col}  #{fail_col}"
           line += "  #{skipped} skip" if skipped > 0
+          line += "  timeout" if status[:timed_out]
 
           puts line
         end

@@ -104,6 +104,27 @@ class SimpleDisplayManagerTest < Minitest::Test
     assert_includes output, "?"  # Warning icon for skipped
   end
 
+  def test_update_package_shows_timeout_marker
+    manager = Ace::TestRunner::Suite::SimpleDisplayManager.new(@packages, @config)
+
+    status = {
+      completed: true,
+      success: false,
+      timed_out: true,
+      elapsed: 10.0,
+      results: {
+        tests: 0,
+        assertions: 0,
+        failures: 0,
+        errors: 1
+      }
+    }
+
+    output = capture_output { manager.update_package(@packages[0], status) }
+
+    assert_includes output, "timeout"
+  end
+
   def test_refresh_does_nothing
     manager = Ace::TestRunner::Suite::SimpleDisplayManager.new(@packages, @config)
 

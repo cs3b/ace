@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **ace-test-runner v0.19.0**: Added suite-level per-package timeout support via `ace-test-suite --timeout` and `test_suite.timeout`, allowing hung package runs to fail and free their worker slot instead of stalling the rest of the suite.
+
+### Fixed
+- **ace-test-runner v0.19.0**: Terminate active package process groups on suite timeout or interrupt so `ace-test-suite` no longer leaves orphaned `ace-test` subprocesses behind after stuck or cancelled runs.
 
 ## [0.18.1] - 2026-03-29
 

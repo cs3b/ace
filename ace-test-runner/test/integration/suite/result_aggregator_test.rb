@@ -53,6 +53,36 @@ module Ace
             assert_equal 1, summary[:packages_passed]
           end
         end
+
+        def test_aggregate_uses_runtime_results_when_summary_is_missing
+          Dir.mktmpdir do |tmpdir|
+            package_path = File.join(tmpdir, "ace-timeout")
+            FileUtils.mkdir_p(package_path)
+
+            summary = ResultAggregator.new(
+              [{"name" => "ace-timeout", "path" => package_path}],
+              report_root: File.join(tmpdir, ".ace-local", "test", "reports"),
+              runtime_results: {
+                "ace-timeout" => {
+                  completed: true,
+                  success: false,
+                  elapsed: 10.0,
+                  results: {
+                    tests: 0,
+                    failures: 0,
+                    errors: 1,
+                    duration: 10.0,
+                    success: false,
+                    error: "Timed out after 10 seconds"
+                  }
+                }
+              }
+            ).aggregate
+
+            assert_equal 1, summary[:packages_failed]
+            assert_equal "Timed out after 10 seconds", summary[:failed_packages].first[:error_message]
+          end
+        end
       end
     end
   end
