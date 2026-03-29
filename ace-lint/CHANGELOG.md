@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.5] - 2026-03-29
+
+### Technical
+- Register package-level `.ace-defaults` skill-sources for ace-lint to enable canonical skill discovery in fresh installs.
+
 
 ## [0.27.4] - 2026-03-29
 
