@@ -7,16 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.6] - 2026-03-29
+
+### Fixed
+- Updated the `ace-assign` runtime dependency constraint to `~> 0.41` to stay aligned with the current released assign API.
+
 ## [0.13.5] - 2026-03-29
 
 ### Technical
 - Register package-level `.ace-defaults` skill-sources for ace-overseer to enable canonical skill discovery in fresh installs.
 
-
 ## [0.13.4] - 2026-03-29
 
 ### Fixed
-- **ace-overseer v0.13.4**: Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
+- Bumped dependency constraints to currently available `~>` ranges on RubyGems and updated release metadata after dependency synchronization.
 
 ## [0.13.3] - 2026-03-28
 
