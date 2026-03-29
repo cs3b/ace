@@ -3,4 +3,4 @@
 
 lint:
   # Default model for --auto-fix-with-agent when --model is not provided
-  doctor_agent_model: "gemini:flash-latest@yolo"
+  doctor_agent_model: "role:doctor"

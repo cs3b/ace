@@ -19,9 +19,11 @@ require_relative "llm/atoms/xdg_directory_resolver"
 require_relative "llm/atoms/error_classifier"
 
 require_relative "llm/models/fallback_config"
+require_relative "llm/models/role_config"
 
 require_relative "llm/molecules/file_io_handler"
 require_relative "llm/molecules/llm_alias_resolver"
+require_relative "llm/molecules/role_resolver"
 require_relative "llm/molecules/provider_model_parser"
 require_relative "llm/molecules/format_handlers"
 require_relative "llm/molecules/client_registry"

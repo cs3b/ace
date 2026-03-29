@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.8] - 2026-03-29
+
+### Changed
+- Role-based task doctor/planner defaults.
+
+
 ## [0.31.7] - 2026-03-29
 
 ### Technical

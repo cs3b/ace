@@ -31,7 +31,7 @@ By default, stages ALL changes and generates a commit. Pass specific files to sc
 |--------|-------|-------------|
 | `--intention` | `-i` | Context hint for message generation (e.g. "fix auth bug") |
 | `--message` | `-m` | Use this message directly instead of generating |
-| `--model` | | Provider:model override (e.g. glite, gpt4, claude) |
+| `--model` | | Provider:model override (e.g. role:commit, gpt4, claude) |
 | `--only-staged` | `-s` | Commit only already-staged files (don't auto-stage) |
 | `--dry-run` | `-n` | Preview message without committing |
 | `--no-split` | | Disable automatic scope-based commit splitting |
@@ -82,7 +82,7 @@ Settings cascade: gem defaults → project `.ace/git/commit.yml` → user `~/.ac
 ```yaml
 # .ace/git/commit.yml
 git:
-  model: glite
+  model: role:commit
   conventions:
     format: conventional
     scopes:

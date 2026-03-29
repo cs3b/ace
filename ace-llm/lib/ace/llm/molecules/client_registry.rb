@@ -123,6 +123,26 @@ module Ace
           end
         end
 
+        # Whether provider config marks API key as required.
+        # @param provider_name [String]
+        # @return [Boolean]
+        def provider_api_key_required?(provider_name)
+          provider = get_provider(provider_name)
+          return false unless provider
+
+          provider.dig("api_key", "required") || false
+        end
+
+        # Whether provider has a present API key according to its api_key config.
+        # @param provider_name [String]
+        # @return [Boolean]
+        def provider_api_key_present?(provider_name)
+          provider = get_provider(provider_name)
+          return false unless provider
+
+          api_key_present?(provider["api_key"])
+        end
+
         # Reload all configurations
         def reload!
           @providers.clear

@@ -1,6 +1,6 @@
 ---
 id: 8qr.t.zoz.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-03-29 00:19:49"
 estimate: TBD
@@ -9,21 +9,7 @@ tags: [ace-llm, config, model-resolution]
 parent: 8qr.t.zoz
 bundle:
   presets: [project]
-  files:
-    - .ace/llm/config.yml
-    - .ace/llm/providers/claude.yml
-    - .ace/llm/providers/codex.yml
-    - .ace/llm/providers/gemini.yml
-    - ace-llm/lib/ace/llm/molecules/provider_model_parser.rb
-    - ace-llm/lib/ace/llm/molecules/client_registry.rb
-    - ace-llm/lib/ace/llm/molecules/llm_alias_resolver.rb
-    - ace-llm/lib/ace/llm/models/fallback_config.rb
-    - ace-llm/lib/ace/llm/configuration.rb
-    - ace-llm/lib/ace/llm/molecules/config_loader.rb
-    - ace-llm/lib/ace/llm.rb
-    - ace-llm/.ace-defaults/llm/config.yml
-    - ace-llm/test/molecules/provider_model_parser_test.rb
-    - ace-llm/test/models/fallback_config_test.rb
+  files: [.ace/llm/config.yml, .ace/llm/providers/claude.yml, .ace/llm/providers/codex.yml, .ace/llm/providers/gemini.yml, ace-llm/lib/ace/llm/molecules/provider_model_parser.rb, ace-llm/lib/ace/llm/molecules/client_registry.rb, ace-llm/lib/ace/llm/molecules/llm_alias_resolver.rb, ace-llm/lib/ace/llm/models/fallback_config.rb, ace-llm/lib/ace/llm/configuration.rb, ace-llm/lib/ace/llm/molecules/config_loader.rb, ace-llm/lib/ace/llm.rb, ace-llm/.ace-defaults/llm/config.yml, ace-llm/test/molecules/provider_model_parser_test.rb, ace-llm/test/models/fallback_config_test.rb]
   commands: []
 ---
 

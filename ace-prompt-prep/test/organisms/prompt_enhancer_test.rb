@@ -18,7 +18,7 @@ class PromptEnhancerTest < Minitest::Test
   def test_returns_cached_content_when_available
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Original prompt"
-      model = "glite" # Default model
+      model = "role:prompt-enhance" # Default model
       system_prompt_uri = @system_prompt_path
       temperature = 0.3 # Default temperature
 
@@ -97,7 +97,7 @@ class PromptEnhancerTest < Minitest::Test
     # Mock the LLM query - ace-llm handles alias resolution internally
     mock_query = lambda { |model, _prompt, **_opts|
       # Model alias is passed directly; ace-llm resolves it
-      assert_equal "glite", model
+      assert_equal "role:prompt-enhance", model
       {text: "Enhanced content"}
     }
 
@@ -105,7 +105,7 @@ class PromptEnhancerTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
         result = Ace::PromptPrep::Organisms::PromptEnhancer.call(
           content: content,
-          model: "glite",
+          model: "role:prompt-enhance",
           system_prompt_uri: @system_prompt_path
         )
 
@@ -125,8 +125,8 @@ class PromptEnhancerTest < Minitest::Test
 
     # Mock to verify default model is used
     mock_query = lambda { |model, _prompt, **_opts|
-      # Default model "glite" is used when nil
-      assert_equal "glite", model
+      # Default role is used when nil
+      assert_equal "role:prompt-enhance", model
       {text: "Enhanced content"}
     }
 
@@ -196,7 +196,7 @@ class PromptEnhancerTest < Minitest::Test
   def test_successful_enhancement_stores_in_cache
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
-      model = "glite" # Default model
+      model = "role:prompt-enhance" # Default model
       system_prompt_uri = @system_prompt_path
       temperature = 0.3 # Default temperature
       enhanced_content = "Enhanced test prompt with more details"

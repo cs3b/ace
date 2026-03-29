@@ -1,9 +1,9 @@
 description: "Reviewers format E2E test"
 reviewers:
   - name: "reviewer-1"
-    model: "google:gemini-2.5-flash"
+    model: "role:review-claude"
   - name: "reviewer-2"
-    model: "google:gemini-2.5-flash"
+    model: "role:review-codex"
 instructions:
   system: "Brief review."
   user: "Review:"

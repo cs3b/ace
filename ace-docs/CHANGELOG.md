@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.7] - 2026-03-30
+
+### Fixed
+- Read nested `llm.model` config path in analyze CLI command, falling back to flat `llm_model` key for backward compatibility.
+
+## [0.31.6] - 2026-03-29
+
+### Changed
+- Role-based docs analysis model default.
+
+
 ## [0.31.5] - 2026-03-29
 
 ### Technical

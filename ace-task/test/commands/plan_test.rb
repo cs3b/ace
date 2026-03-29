@@ -86,7 +86,7 @@ class TaskPlanCommandTest < AceTaskTestCase
   def test_default_model_uses_ro_preset_and_no_cli_args
     run_cli(%w[plan q7w --refresh])
 
-    assert_equal "gemini:pro-latest@ro", FakeGenerator.last_init_kwargs[:model]
+    assert_equal "role:planner", FakeGenerator.last_init_kwargs[:model]
     assert_nil FakeGenerator.last_init_kwargs[:cli_args]
   end
 

@@ -233,7 +233,7 @@ module Ace
             end
 
             # Determine model (use config or default to gflash)
-            model = Ace::Docs.config["llm_model"] || "gflash"
+            model = Ace::Docs.config.dig("llm", "model") || Ace::Docs.config["llm_model"] || "gflash"
 
             # Get timeout from config (default is 300 seconds from default_config)
             timeout = Ace::Docs.config["llm_timeout"]
