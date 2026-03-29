@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-fs', '~> 0.3' # For ProjectRootFinder
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
-  spec.add_dependency 'ace-git', '~> 0.18'
+  spec.add_dependency 'ace-git', '~> 0.19'
   spec.add_dependency 'ace-support-nav', '~> 0.25' # For in-process protocol resolution (wfi://, guide://, etc.)
   spec.add_dependency 'ace-compressor', '~> 0.24' # For --compress option (section content compression)
 
