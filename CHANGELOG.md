@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **ace-handbook**: Moved `ace-rubygems-needs-release` from `bin/` to `.ace-bin/`, removed legacy helper shims (`bin/setup-ace-config` and `bin/test-ace-search`), and updated scripts/docs references accordingly.
 
+## [0.9.929] - 2026-03-29
+
+### Fixed
+- **ace-b36ts v0.13.1**: Bumped runtime/development dependency constraints to installable versions in RubyGems (`ace-support-config ~> 0.9`, `ace-support-core ~> 0.29`, `ace-support-cli ~> 0.6`, `ace-support-test-helpers ~> 0.13`).
+
 ## [0.9.928] - 2026-03-28
 
 ### Changed

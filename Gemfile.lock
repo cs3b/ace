@@ -14,10 +14,10 @@ PATH
 PATH
   remote: ace-b36ts
   specs:
-    ace-b36ts (0.13.0)
-      ace-support-cli (~> 0.3)
-      ace-support-config (~> 0.8)
-      ace-support-core (~> 0.25)
+    ace-b36ts (0.13.1)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.9)
+      ace-support-core (~> 0.29)
 
 PATH
   remote: ace-bundle
