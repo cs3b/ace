@@ -13,7 +13,7 @@ cache_dir: .ace-local/docs
 # Analysis settings for LLM integration
 llm_temperature: 0.3  # Lower for deterministic compaction
 llm_timeout: 300      # Timeout in seconds for LLM requests (default: 300 = 5 minutes)
-# llm_model: gflash   # Override default if needed (commented to use ace-llm defaults)
+# llm_model: role:docs-analysis   # Override default if needed (commented to use ace-llm defaults)
 
 # Maximum diff lines before warning (context limit)
 max_diff_lines_warning: 100000
