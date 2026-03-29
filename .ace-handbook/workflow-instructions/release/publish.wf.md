@@ -199,10 +199,32 @@ Rules:
   categories.
 * If a needed category does not exist yet under `[Unreleased]`, create it in canonical order: Fixed, Added,
   Removed, Changed, Technical.
-* Include every released package and its new version.
-* Use bullets like `**ace-assign v0.22.8**: ...`
+* Distinguish **primary release changes** from **follower side effects**:
+  * Primary release changes are packages explicitly selected by the operator or packages with substantive behavior,
+    workflow, feature, or documentation changes worth calling out on their own.
+  * Follower side effects are packages auto-added only because internal dependency constraints moved forward.
+* Include every released package and its new version, but do not give follower side effects equal prominence with
+  the primary change set.
+* Use normal bullets like `**ace-assign v0.22.8**: ...` for primary release changes.
+* Summarize follower side effects in one compact `### Technical` block when the release also contains primary
+  changes. Prefer a short lead sentence plus a compact package list instead of one full bullet per follower package.
 * Do not create separate root changelog entries per package.
 * Do not duplicate items that already appear in the `[Unreleased]` section from a prior `/as-release` run.
+
+Example mixed release shape:
+
+```markdown
+## [Unreleased]
+
+### Changed
+- **ace-git v0.19.0**: Defaulted GitHub release publishing to package-grouped notes and switched live release
+  creation guidance to `--notes-file`.
+
+### Technical
+- Dependency-following patch releases after the ace-git 0.19 line update:
+  `ace-bundle v0.40.5`, `ace-docs v0.31.4`, `ace-git-commit v0.23.3`, `ace-git-worktree v0.19.3`,
+  `ace-overseer v0.13.7`, `ace-prompt-prep v0.23.3`, `ace-review v0.51.3`, `ace-search v0.24.3`
+```
 
 ### 8. Commit the Coordinated Release
 
