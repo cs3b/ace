@@ -18,7 +18,7 @@ Create GitHub releases from root `CHANGELOG.md` entries that have no correspondi
 - `$version`: explicit version like `v0.9.846`, or range like `v0.9.840..v0.9.846`
 - `$since`: time filter like `"3 days"` or `"this week"`
 - `$dry_run`: if set, print what would be created without creating anything
-- `$group_by`: optional mode switch. `date` (default) keeps legacy daily grouping. `package` enables package-first grouping inside each date bucket.
+- `$group_by`: optional mode switch. `package` (default) enables package-first grouping inside each date bucket. `date` keeps the legacy daily grouping.
 - `$category_order`: optional ordered category list, e.g. `fixed,added,changed,technical` (defaults to fixed → added → changed → technical)
 
 ## Instructions
@@ -116,8 +116,8 @@ No unpublished versions found matching the given criteria.
 
 Use `$group_by` to choose the release body layout. Release tags/titles still use date-bucket grouping (highest version per date).
 
-- `date` (default): preserve current behavior, one release body per date in descending version order separated by `---`.
-- `package`: within each date bucket, group entries as package blocks and then categories.
+- `package` (default): within each date bucket, group entries as package blocks and then categories.
+- `date`: preserve legacy behavior, one release body per date in descending version order separated by `---`.
 
 Date mode example:
 
@@ -205,7 +205,7 @@ Process each daily group from oldest date to newest:
 ```bash
 gh release create "v${VERSION}" \
   --title "v${VERSION}" \
-  --notes "${COMBINED_BODY}" \
+  --notes-file ".ace-local/github-release/v${VERSION}-notes.md" \
   --target "${SHA}"
 ```
 

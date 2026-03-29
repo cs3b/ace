@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-03-29
+
+### Changed
+- Defaulted `github/release-publish` to package-grouped release notes, with `--group-by date` now opting into the legacy layout.
+- Switched live GitHub release creation guidance to `--notes-file` so markdown release bodies with inline code do not break shell execution.
+
 ## [0.18.5] - 2026-03-29
 
 ### Added
