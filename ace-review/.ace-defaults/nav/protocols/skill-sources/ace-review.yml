@@ -1,0 +1,19 @@
+---
+# Skill Sources Protocol Configuration for ace-review gem
+# This enables canonical skill discovery from the installed ace-review gem
+
+name: ace-review
+type: gem
+description: Canonical skills from ace-review gem
+priority: 10
+
+# Configuration for skill discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/skills
+
+  # Pattern for finding canonical skill files
+  pattern: "*/SKILL.md"
+
+  # Enable discovery
+  enabled: true
