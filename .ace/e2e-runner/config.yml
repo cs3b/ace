@@ -31,14 +31,14 @@ cleanup:
 # Reporting defaults (suite final report LLM synthesis)
 reporting:
   # LLM model alias for suite report generation
-  model: "claude:haiku"
+  model: "role:e2e-reporter"
   # Timeout in seconds for report generation
   timeout: 60
 
 # Execution defaults
 execution:
   # Default LLM provider:model for test execution
-  provider: "claude:haiku@yolo"
+  provider: "role:e2e-executor"
   # Timeout per test in seconds
   timeout: 600
   # Number of tests to run in parallel (1 = sequential)

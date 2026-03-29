@@ -21,7 +21,7 @@ workflow_source_paths:
   # Fork execution defaults: 
 execution:
   # format: <provider>:<model>@<preset> 
-  provider: "codex:codex@yolo"
+  provider: "role:assign-executor"
   timeout: 1800
 
 # Provider-level defaults for CLI invocation
