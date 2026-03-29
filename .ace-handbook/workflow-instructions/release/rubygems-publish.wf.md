@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: RubyGems publishing workflow
 update:
   frequency: on-change
-  last-updated: '2026-03-21'
+  last-updated: '2026-03-29'
 ---
 
 # RubyGems Publish Workflow
@@ -167,6 +167,22 @@ Summarize all actions:
   Skipped dependents: ace-overseer
 ```
 
+### 9. Verify Published Metadata
+
+After each successful live publish, verify that RubyGems recorded both the publish timestamp and the gem build date:
+
+```bash
+curl -fsSL https://rubygems.org/api/v1/versions/ace-<name>.json
+curl -fsSL https://rubygems.org/api/v1/gems/ace-<name>.json
+```
+
+Check the newly published version entry and confirm:
+
+* `created_at` matches the actual publish event
+* `built_at` is not the RubyGems fallback `1980-01-02T00:00:00.000Z`
+
+If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a gemspec metadata regression before publishing more packages.
+
 ## Success Criteria
 
 - Gems are published in correct dependency order
@@ -177,6 +193,7 @@ Summarize all actions:
 - `--dry-run` produces accurate output without side effects
 - Credentials are verified before any publish attempt
 - Live mode gathers publish plan then collects OTP once and reuses it for every `gem push`
+- Live mode verifies RubyGems `created_at` and `built_at` for each newly published version
 
 ## Response Template
 

@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-gemini will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-03-29
+
+### Technical
+- Normalized published gem metadata so RubyGems and Ruby Toolbox use current release information instead of the 1980 fallback date.
+
 
 ## [0.3.2] - 2026-03-29
 
