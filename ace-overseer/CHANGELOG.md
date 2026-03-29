@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.7] - 2026-03-29
+
+### Fixed
+- Bumped the `ace-git` runtime dependency constraint to `~> 0.19` so ace-overseer stays aligned with the current git workflow release.
+
 ## [0.13.6] - 2026-03-29
 
 ### Fixed
