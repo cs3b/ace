@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.931] - 2026-03-29
+
+### Fixed
+- **ace-support-core v0.29.2**: Included `ace-framework` in gem package files and executables.
+- **ace-support-models v0.9.2**: Included `ace-llm-providers` in gem package executables.
+
 ## [0.9.930] - 2026-03-29
 
 ### Fixed

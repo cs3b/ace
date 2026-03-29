@@ -266,7 +266,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.29.1)
+    ace-support-core (0.29.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-fs (~> 0.3)
@@ -299,7 +299,7 @@ PATH
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.9.1)
+    ace-support-models (0.9.2)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
       faraday (~> 2.0)
