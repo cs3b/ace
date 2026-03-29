@@ -7,10 +7,10 @@ idea:
   default_status: pending
 
   # LLM model for idea enhancement
-  llm_model: gemini:flash-latest
+  llm_model: role:idea-enhance
 
   # LLM model for doctor --auto-fix-with-agent
-  doctor_agent_model: gemini:flash-latest@yolo
+  doctor_agent_model: role:doctor
 
   # Status command: default limits
   status:
