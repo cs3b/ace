@@ -129,9 +129,9 @@ module Ace
           def handle_run(command, sandbox_dir, env)
             full_env = merged_environment(env)
             # Re-export env vars after profile sourcing to protect against
-            # mise's shell hook clobbering (mise manages PROJECT_ROOT_PATH).
+            # mise's shell hook clobbering.
             export_vars = env.dup
-            %w[PROJECT_ROOT_PATH ACE_TASKFLOW_PATH].each do |key|
+            %w[PROJECT_ROOT_PATH].each do |key|
               export_vars[key] ||= ENV[key] if ENV[key]
             end
             exports = export_vars.map { |k, v| "export #{k}=#{Shellwords.shellescape(v.to_s)}" }.join("; ")
