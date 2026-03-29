@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.40.6] - 2026-03-29
+
+### Technical
+- Normalized published gem metadata so RubyGems and Ruby Toolbox use current release information instead of the 1980 fallback date.
+
 ## [0.40.5] - 2026-03-29
 
 ### Fixed
