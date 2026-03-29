@@ -4,7 +4,7 @@
 # Configuration Options:
 # ---------------------
 # preset          - Default preset when --preset not specified (default: "code-valid")
-# model           - Default LLM model for reviews (default: "codex:codex@ro")
+# model           - Default LLM model for reviews (default: "role:review-default")
 # output_format   - Output format for reviews (default: "markdown")
 # context         - Default context preset (default: "project")
 # max_concurrent_models - Max parallel LLM queries for multi-model execution (default: 3)
@@ -32,7 +32,7 @@ project_docs:
 # Default settings applied to all reviews unless overridden
 defaults:
   preset: "code-valid"  # Default preset when --preset not specified
-  model: "codex:codex@ro"
+  model: "role:review-default"
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
@@ -71,9 +71,9 @@ defaults:
 # Feedback items are extracted from review reports for tracking and verification
 feedback:
   enabled: true                           # Enable feedback extraction (default: true)
-  synthesis_model: gemini:flash-latest@ro  # Model for synthesizing feedback items
+  synthesis_model: role:review-synthesizer  # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
-    - claude:sonnet
+    - role:review-fallback
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

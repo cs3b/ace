@@ -234,7 +234,7 @@ Feedback extraction is enabled by default. Configure in `.ace/review/config.yml`
 # .ace/review/config.yml
 feedback:
   enabled: true                        # default
-  synthesis_model: google:gemini-2.5-flash  # model for synthesis
+  synthesis_model: role:review-synthesizer  # model for synthesis
 ```
 
 ### CLI Flags
@@ -252,7 +252,7 @@ presets:
 # Feedback settings for PR reviews
 feedback:
   enabled: true
-  synthesis_model: google:gemini-2.5-flash
+  synthesis_model: role:review-synthesizer
 ```
 
 ## Session Context
@@ -273,7 +273,7 @@ id: 8o7abc
 title: SQL Injection in User Input Handler
 files:
   - src/handlers/user.rb:42-55
-reviewer: google:gemini-2.5-flash
+reviewer: role:review-codex
 status: draft
 priority: high
 created: 2026-01-22T19:00:00Z
