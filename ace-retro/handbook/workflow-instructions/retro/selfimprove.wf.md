@@ -174,7 +174,7 @@ After user approval:
 3. **Record a retro** documenting the improvement:
 
 ```bash
-ace-retro create "selfimprove-TOPIC" --type self-improvement --tags process-fix
+ace-retro create "selfimprove-TOPIC" --type standard --tags self-improvement,process-fix
 ```
 
 Populate the retro with the root cause analysis, the fix applied, and the expected impact.

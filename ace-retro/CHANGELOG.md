@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-03-29
+
+### Fixed
+- `retro/selfimprove`: corrected the retro creation example to use the supported `standard` type plus `self-improvement` and `process-fix` tags instead of the unsupported `self-improvement` type flag.
+
 ## [0.16.2] - 2026-03-29
 
 ### Technical
