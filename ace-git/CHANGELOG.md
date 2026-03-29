@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-03-29
+
+### Technical
+- Normalized published gem metadata so RubyGems and Ruby Toolbox use current release information instead of the 1980 fallback date.
+
 ## [0.19.1] - 2026-03-29
 
 ### Fixed
