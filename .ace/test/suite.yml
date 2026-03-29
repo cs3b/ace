@@ -1,6 +1,7 @@
 test_suite:
   # Maximum parallel processes (10 balances speed vs resource contention)
   max_parallel: 12
+  timeout: 10
 
   # Packages to test in order of priority
   packages:
