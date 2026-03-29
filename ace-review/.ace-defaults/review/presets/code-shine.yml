@@ -40,5 +40,5 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus@ro
-  - codex:gpt@ro
+  - role:review-claude
+  - role:review-codex
