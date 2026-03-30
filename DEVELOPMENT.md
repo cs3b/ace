@@ -8,6 +8,40 @@ Development setup requirements for the Coding Agent Workflow Toolkit (Meta).
 - **Bundler**: Install with `gem install bundler`
 - **Dependencies**: Run `bundle install` in repository root
 
+## New Project Onboarding Contract
+
+When validating onboarding docs or reproducing plain-project setup, use this exact full-stack path:
+
+1. Add gems:
+
+```bash
+bundle add ace-support-core ace-bundle ace-handbook ace-llm ace-task ace-assign \
+  ace-handbook-integration-claude ace-handbook-integration-codex \
+  ace-handbook-integration-gemini ace-handbook-integration-opencode \
+  ace-handbook-integration-pi
+```
+
+2. Install and initialize:
+
+```bash
+bundle install
+ace-framework init
+ace-handbook sync
+```
+
+3. Verify first-use commands:
+
+```bash
+ace-llm --list-providers
+ace-bundle project
+```
+
+If install fails immediately after a large release, apply temporary RubyGems propagation mitigation:
+
+```bash
+bundle install --full-index
+```
+
 ## Core Dependencies
 
 These tools are required for full test suite functionality:

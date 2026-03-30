@@ -6,22 +6,56 @@ By the end of this walkthrough you will have captured an idea, turned it into a 
 
 Ruby 3.2+ required.
 
-**Quick win** — try smart commits with zero setup:
+Use this full-stack setup path before the walkthrough:
+
+1. Add the curated ACE core gem set plus explicit agent integrations:
 
 ```bash
-gem install ace-git-commit
-
-ace-git-commit -i "fix auth token refresh"
-# Analyzes the diff, considers your intention, generates a scoped conventional commit.
+bundle add ace-support-core ace-bundle ace-handbook ace-llm ace-task ace-assign \
+  ace-idea ace-overseer ace-nav \
+  ace-handbook-integration-claude ace-handbook-integration-codex \
+  ace-handbook-integration-gemini ace-handbook-integration-opencode \
+  ace-handbook-integration-pi
 ```
 
-**Full stack** — install the orchestrator used in this walkthrough:
+2. Install gems:
 
 ```bash
-gem install ace-overseer
+bundle install
 ```
 
-This pulls in `ace-assign`, `ace-task`, `ace-git`, `ace-git-worktree`, and `ace-tmux`. For the complete ACE command surface, install additional gems individually or work from the monorepo with `bundle install`.
+3. Initialize project config (`ace-framework` comes from `ace-support-core`, not a separate gem):
+
+```bash
+ace-framework init
+```
+
+4. Sync handbook assets to your agent platforms:
+
+```bash
+ace-handbook sync
+```
+
+5. Verify providers and project context:
+
+```bash
+ace-llm --list-providers
+ace-bundle project
+```
+
+6. Optional assignment sanity check in plain projects:
+
+```bash
+ace-assign create --preset work-on-task --task <taskref>
+```
+
+If `bundle install` fails right after a large ACE release, run:
+
+```bash
+bundle install --full-index
+```
+
+Then return to normal `bundle install` once RubyGems propagation catches up.
 
 ## 1. Capture an idea
 
