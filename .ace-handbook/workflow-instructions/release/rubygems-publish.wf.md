@@ -183,6 +183,39 @@ Check the newly published version entry and confirm:
 
 If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a gemspec metadata regression before publishing more packages.
 
+### 10. Run Post-Publish Dependency Propagation Proof
+
+After live publishing finishes, run one deterministic install proof for the full ACE stack install path:
+
+```bash
+bundle install
+bundle install --full-index
+```
+
+Scope and evidence rules:
+
+* This proof is for multi-package release propagation, not single-gem smoke checks.
+* Capture command exit status plus key stderr/stdout snippets for both attempts.
+* Store proof output in one artifact for downstream docs and release audit:
+
+```text
+.ace-local/release/rubygems-proof-YYYYMMDDHHMMSS.md
+```
+
+Classification contract (required):
+
+| Signal | Classification | Required operator statement |
+|---|---|---|
+| `bundle install` succeeds | `SAFE` | Normal install path is safe. |
+| `bundle install` fails, `bundle install --full-index` succeeds | `LAG_DETECTED` | RubyGems metadata lag detected; use `bundle install --full-index` until registry propagation catches up. |
+| Neither path succeeds, or evidence cannot distinguish lag vs metadata defect | `METADATA_BROKEN` | Release is not onboarding-safe; investigate ACE metadata before declaring install stability. |
+
+Decision guard:
+
+* Do not collapse `LAG_DETECTED` and `METADATA_BROKEN` into one generic failure.
+* If the distinction is unclear from evidence, classify as `METADATA_BROKEN` and stop.
+* Do not claim onboarding-safe status unless classification is `SAFE`.
+
 ## Success Criteria
 
 - Gems are published in correct dependency order
@@ -194,6 +227,8 @@ If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a g
 - Credentials are verified before any publish attempt
 - Live mode gathers publish plan then collects OTP once and reuses it for every `gem push`
 - Live mode verifies RubyGems `created_at` and `built_at` for each newly published version
+- Live mode produces one proof artifact with required classification: `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`
+- `SAFE` is the only classification that permits onboarding-safe release claims
 
 ## Response Template
 
@@ -201,3 +236,5 @@ If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a g
 **Skipped:** [count] (already on RubyGems)
 **Failed:** [count and reasons, if any]
 **Mode:** [live|dry-run]
+**Propagation Proof:** [`SAFE` | `LAG_DETECTED` | `METADATA_BROKEN`]
+**Proof Artifact:** [.ace-local/release/rubygems-proof-*.md or N/A in dry-run]

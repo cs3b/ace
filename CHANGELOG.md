@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-assign v0.41.8**: Clarified the shipped `wfi://release/publish` release contract so root changelog guidance consistently covers package version bullets and RubyGems propagation proof handling.
+- **ace-assign v0.41.7**: Made `wfi://release/publish` verification package-aware by running `ace-test` against the resolved release package set.
+- **ace-bundle v0.41.1**: Removed the generic-project preset dependency on `ace-task` by replacing task listing with `ls -1` for plain-repo compatibility.
+- **ace-handbook v0.23.1**: Restored `Bash(gem:*)` permissions in `as-release-rubygems-publish` and added regression coverage for projected skill permission drift.
+
+### Changed
+- **ace-handbook v0.22.0**: Added a deterministic RubyGems propagation proof gate to coordinated release workflows with explicit `SAFE`, `LAG_DETECTED`, and `METADATA_BROKEN` classifications, plus operator-facing proof contract documentation.
+- **ace-bundle v0.41.0**: Refreshed default bootstrap presets for generic projects and added the lightweight `project-base` starter preset for first-run context loading.
+- **ace-support-core v0.29.4**: Added generated `.ace/README.md` bootstrap scaffolding and aligned bootstrap docs/examples with current `ace-task` and bundle preset defaults.
+- **ace-handbook v0.23.0**: Clarified sync completeness reporting with inventory source counts and documented `.ace-handbook/` project-level handbook extension paths plus protocol usage in normal projects.
+- **ace-llm v0.31.0**: Made provider configuration failures actionable with supported-provider/error guidance tied to `ace-llm --list-providers`, plus provider env-key setup hints in CLI output and docs.
+- **ace-assign v0.41.6**: Made `work-on-task` safer in plain projects by shipping a default `wfi://release/publish` workflow and aligning assign-source `wfi://` resolution to registered nav workflow sources (including project-level overrides).
+
+### Technical
+- **ace-llm v0.31.2**: Removed the unused `api_key_present?` helper from `ClientRegistry`.
+- **ace-handbook v0.23.2**: Added edge-case regression tests for `ProviderSyncer#summarize_sources` empty and nil/blank source inputs.
+- Dependency-following patch releases after the `ace-handbook` 0.22 line update: `ace-handbook-integration-claude v0.3.5`, `ace-handbook-integration-codex v0.3.4`, `ace-handbook-integration-gemini v0.3.4`, `ace-handbook-integration-opencode v0.3.4`, `ace-handbook-integration-pi v0.3.5`.
+- Dependency-following patch releases after the `ace-bundle` 0.41 line update: `ace-prompt-prep v0.23.5`, `ace-review v0.51.5`.
+- **ace-llm v0.31.1**: Added regression coverage for `GOOGLE_API_KEY`-only credential fallback behavior.
+
 ## [0.9.936] - 2026-03-29
 
 ### Fixed

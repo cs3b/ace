@@ -8,7 +8,7 @@ purpose: coordinated multi-package release workflow
 update:
   update_frequency: on-change
   frequency: on-change
-  last-updated: '2026-03-08'
+  last-updated: '2026-03-29'
 ---
 
 # ACE Publish Release Workflow
@@ -260,6 +260,12 @@ Checklist:
   entry, and root changelog bullet
 * `Gemfile.lock` reflects the new internal versions
 * no unrelated package was released
+* RubyGems propagation proof from `wfi://release/rubygems-publish` is recorded with one classification:
+  `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`
+* release is treated as onboarding-safe only when the classification is `SAFE`
+* if classification is `LAG_DETECTED`, release notes/docs include the temporary mitigation:
+  `bundle install --full-index`
+* if classification is `METADATA_BROKEN`, stop and fix release metadata before claiming stable onboarding
 
 ## Notes
 
@@ -267,3 +273,4 @@ Checklist:
 * Use `/as-release` for coordinated multi-package releases.
 * When no package arguments are supplied, package selection comes from the current diff rather than from user
   prompts.
+* See `ace-handbook/docs/release-rubygems-proof.md` for the operator-facing interpretation contract.

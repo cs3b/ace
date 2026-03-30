@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-03-29
+
+### Technical
+- Updated the `ace-handbook` runtime dependency range from `~> 0.21` to `~> 0.22` to follow the new handbook minor release.
+
 ## [0.3.4] - 2026-03-29
 
 ### Technical
