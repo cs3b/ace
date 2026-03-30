@@ -131,7 +131,22 @@ Output uses the format:
 
 - `Available LLM Providers (filtered - X of Y active):`
 - Provider rows with status and model count (for example `✓ google · 8 models (...)`)
+- Per-provider setup hints (for example `Setup hint: set GEMINI_API_KEY or GOOGLE_API_KEY`)
 - Optional `Inactive providers (N):` section
+
+### Provider credential setup reference
+
+Use `ace-llm --list-providers` as the canonical source of truth for active providers and setup hints.
+
+Common credential env keys:
+
+| Provider | Typical env key(s) |
+|----------|---------------------|
+| `google` | `GEMINI_API_KEY` or `GOOGLE_API_KEY` |
+| `openai` | `OPENAI_API_KEY` |
+| `anthropic` | `ANTHROPIC_API_KEY` |
+| `mistral` | `MISTRAL_API_KEY` |
+| `togetherai` | `TOGETHER_API_KEY` or `TOGETHERAI_API_KEY` |
 
 ### Provider filtering
 
@@ -158,7 +173,7 @@ ACE_LLM_PROVIDERS_ACTIVE=google,anthropic ace-llm --list-providers
 When the provider name does not exist, error format includes:
 
 ```text
-Unknown provider: <name>. Supported providers: <list>
+Unknown provider: <name>. Supported providers: <list>. Run `ace-llm --list-providers` for available providers and configuration guidance.
 ```
 
 ### Inactive provider
@@ -169,6 +184,7 @@ When provider exists but is filtered out:
 Provider '<name>' is inactive. It exists but is not in llm.providers.active.
 To enable it, add '<name>' to llm.providers.active in your config.
 Active providers: <list>
+Run `ace-llm --list-providers` for available providers and configuration guidance.
 ```
 
 ## Runtime Help

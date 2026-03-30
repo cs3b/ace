@@ -35,7 +35,5 @@ None
 - Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
 - Read the loaded workflow and execute it end-to-end in this project.
 - Follow the workflow as the source of truth.
-- If releasing a package forces dependent ACE gemspec constraints to move forward, auto-release those follower
-  packages with a `patch` bump unless the caller explicitly selected a different bump for them.
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.

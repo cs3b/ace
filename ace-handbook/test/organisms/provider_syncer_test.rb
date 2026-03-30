@@ -3,6 +3,8 @@
 require "test_helper"
 
 class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
+  FakeSkillSource = Struct.new(:source)
+
   def setup
     @tmpdir = Dir.mktmpdir
     create_provider_manifest("pi", ".pi/skills")
@@ -259,6 +261,20 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes claude_rendered, "Load and run `ace-bundle wfi://e2e/execute` in the current project"
     assert_includes codex_rendered, "If `$ARGUMENTS` contains `--sandbox`:"
     assert_includes codex_rendered, "Load and run `ace-bundle wfi://e2e/execute` in the current project"
+  end
+
+  def test_summarize_sources_handles_empty_inventory
+    assert_equal({}, syncer.send(:summarize_sources, []))
+  end
+
+  def test_summarize_sources_normalizes_nil_and_blank_sources
+    skills = [
+      FakeSkillSource.new("ace-handbook"),
+      FakeSkillSource.new(nil),
+      FakeSkillSource.new("")
+    ]
+
+    assert_equal({"ace-handbook" => 1, "unknown" => 2}, syncer.send(:summarize_sources, skills))
   end
 
   private

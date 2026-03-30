@@ -76,14 +76,49 @@ ace-bundle wfi://task/work
 
 ## Install
 
-Start small with smart commits, or install the full orchestration stack:
+Use this full-stack path for a new project (Ruby 3.2+):
+
+1. Add the curated ACE core gem set and explicit handbook integrations:
 
 ```bash
-gem install ace-git-commit    # smart commits, zero config
-gem install ace-overseer      # full orchestrator stack
+bundle add ace-support-core ace-bundle ace-handbook ace-llm ace-task ace-assign \
+  ace-handbook-integration-claude ace-handbook-integration-codex \
+  ace-handbook-integration-gemini ace-handbook-integration-opencode \
+  ace-handbook-integration-pi
 ```
 
-Ruby 3.2+ required. Each ace-* gem installs independently, so you can start with one tool and add more as needed.
+2. Install gems:
+
+```bash
+bundle install
+```
+
+3. Initialize project config (`ace-framework` is provided by `ace-support-core`):
+
+```bash
+ace-framework init
+```
+
+4. Sync agent assets:
+
+```bash
+ace-handbook sync
+```
+
+5. Verify provider discovery and project context:
+
+```bash
+ace-llm --list-providers
+ace-bundle project
+```
+
+If `bundle install` fails immediately after a large ACE release, rerun with:
+
+```bash
+bundle install --full-index
+```
+
+Use `--full-index` only as temporary RubyGems propagation mitigation, then return to normal `bundle install`.
 
 ## Principles
 

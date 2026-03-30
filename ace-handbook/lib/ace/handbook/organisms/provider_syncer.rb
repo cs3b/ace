@@ -21,19 +21,23 @@ module Ace
         end
 
         def sync(provider: nil)
-          providers_to_sync(provider).map { |provider_id| sync_provider(provider_id) }
+          skills = inventory.all
+          source_breakdown = summarize_sources(skills)
+          providers_to_sync(provider).map do |provider_id|
+            sync_provider(provider_id, skills: skills, source_breakdown: source_breakdown)
+          end
         end
 
         private
 
-        def sync_provider(provider)
+        def sync_provider(provider, skills:, source_breakdown:)
           output_dir = File.join(project_root, registry.output_dir(provider))
           prepare_output_dir(output_dir)
 
           expected = {}
           updated_files = 0
 
-          inventory.all.each do |skill|
+          skills.each do |skill|
             next unless Molecules::SkillProjection.projection_targets(skill.frontmatter, registry: registry).include?(provider)
 
             frontmatter = Molecules::SkillProjection.projected_frontmatter(skill.frontmatter, provider: provider)
@@ -55,8 +59,17 @@ module Ace
             relative_output_dir: registry.output_dir(provider),
             projected_skills: expected.size,
             updated_files: updated_files,
-            removed_entries: removed_entries
+            removed_entries: removed_entries,
+            source_breakdown: source_breakdown
           }
+        end
+
+        def summarize_sources(skills)
+          skills.each_with_object(Hash.new(0)) do |skill, memo|
+            source = skill.source.to_s
+            key = source.empty? ? "unknown" : source
+            memo[key] += 1
+          end.sort.to_h
         end
 
         def providers_to_sync(requested_provider)

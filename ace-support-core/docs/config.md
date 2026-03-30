@@ -48,6 +48,12 @@ global: false
 ## First Time Setup
 
 Run `ace-framework init` to set up all ace-* gem configurations at once.
+For new projects, this generates starter bundle presets:
+
+- `.ace/bundle/presets/project.md`
+- `.ace/bundle/presets/project-base.md`
+
+These files are intentionally generic scaffolding and should be customized for your project.
 
 ## Examples
 
@@ -59,8 +65,8 @@ ace-framework list
 ace-framework init
 
 # Initialize specific gem (both formats work)
-ace-framework init ace-taskflow
-ace-framework init taskflow
+ace-framework init ace-task
+ace-framework init task
 
 # Preview what would be done
 ace-framework init --dry-run
@@ -71,4 +77,7 @@ ace-framework diff --one-line
 # Compare specific gem (both formats work)
 ace-framework diff ace-bundle
 ace-framework diff bundle --one-line
+
+# Load generated project context
+ace-bundle project
 ```

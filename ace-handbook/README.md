@@ -38,5 +38,7 @@
 
 **Sync and inspect provider integrations** - run `ace-handbook sync` to project canonical skills into provider-native folders and `ace-handbook status` to check integration health across all configured providers.
 
+**Extend handbook content in normal projects** - put project-specific workflows, guides, templates, and skills under `.ace-handbook/` and discover them with protocol URLs (`wfi://`, `guide://`, `tmpl://`, `skill://`). See [Usage Guide](docs/usage.md) for path conventions.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

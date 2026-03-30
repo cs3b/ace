@@ -69,6 +69,8 @@ module Ace
 
           assert_equal ["google"], @configuration.providers.keys
           assert_match(/Unknown providers in llm.providers.active: doesnotexist/, stderr)
+          assert_match(/were skipped/, stderr)
+          assert_match(/ace-llm --list-providers/, stderr)
         end
       end
 

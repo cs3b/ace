@@ -144,7 +144,8 @@ class QueryCommandTest < AceLlmTestCase
           gem: "ace-llm",
           available: true,
           api_key_required: false,
-          api_key_present: false
+          api_key_present: false,
+          credential_env_keys: []
         }
       ]
     )
@@ -171,8 +172,41 @@ class QueryCommandTest < AceLlmTestCase
         output, = capture_io { Ace::LLM::CLI::Commands::Query.new.send(:list_providers) }
         assert_match(/Available LLM Providers \(filtered - 1 of 2 active\):/, output)
         assert_match(/google.*1 models/, output)
+        assert_match(/Setup hint: no credential environment variable required/, output)
         assert_match(/Inactive providers \(1\):/, output)
         assert_match(/anthropic/, output)
+      end
+    end
+  end
+
+  def test_list_providers_shows_setup_hint_for_required_credentials
+    registry = Struct.new(:list).new(
+      [
+        {
+          name: "codexoai",
+          models: ["gpt-5"],
+          gem: "ace-llm",
+          available: true,
+          api_key_required: true,
+          api_key_present: false,
+          credential_env_keys: ["CODEX_OAI_API_KEY"]
+        }
+      ]
+    )
+    def registry.list_providers_with_status
+      list
+    end
+
+    configuration = Struct.new(:applied).new(false)
+    def configuration.provider_filter_applied?
+      applied
+    end
+
+    Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+      Ace::LLM.stub(:configuration, configuration) do
+        output, = capture_io { Ace::LLM::CLI::Commands::Query.new.send(:list_providers) }
+        assert_match(/codexoai.*Credentials required/, output)
+        assert_match(/Setup hint: set CODEX_OAI_API_KEY/, output)
       end
     end
   end

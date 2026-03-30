@@ -3,26 +3,13 @@ name: as-release-rubygems-publish
 description: Publish ACE gems to RubyGems.org in dependency order
 user-invocable: true
 allowed-tools:
+- Bash(bundle:*)
 - Bash(gem:*)
 - Bash(ace-bundle:*)
 - Read
 argument-hint: "[gem-name...] [--dry-run]"
-last_modified: 2026-03-21
+last_modified: 2026-03-29
 source: ace-handbook
-assign:
-  source: wfi://release/rubygems-publish
-  steps:
-  - name: publish-gems
-    description: Publish ACE gems to RubyGems.org in dependency order
-    intent:
-      phrases:
-      - publish gems
-      - push to rubygems
-      - publish to rubygems
-    tags:
-    - release
-    - rubygems
-    - publishing
 skill:
   kind: workflow
   execution:
@@ -47,3 +34,9 @@ None
 - Follow the workflow as the source of truth.
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.
+
+- In live mode, require a post-publish propagation proof classification:
+  `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`.
+
+- Record the proof artifact path in the final response:
+  `.ace-local/release/rubygems-proof-*.md` (or `N/A` in dry-run).

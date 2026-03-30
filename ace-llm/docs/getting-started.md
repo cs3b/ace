@@ -53,6 +53,17 @@ ace-llm --list-providers
 ```
 
 If provider filters are active in config, output includes active and inactive provider sections.
+Each provider row also includes setup hints so you can see required credential env vars quickly.
+
+### Provider credential quick reference
+
+Use `ace-llm --list-providers` first when setup fails. Common env vars:
+
+| Provider | Env var(s) |
+|----------|------------|
+| `google` | `GEMINI_API_KEY` or `GOOGLE_API_KEY` |
+| `openai` | `OPENAI_API_KEY` |
+| `anthropic` | `ANTHROPIC_API_KEY` |
 
 ## Saving output and controlling format
 
