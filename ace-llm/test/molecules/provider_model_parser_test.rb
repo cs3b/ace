@@ -41,6 +41,7 @@ module Ace
             refute result.valid?
             assert_match(/Provider 'deepseek' is inactive/, result.error)
             assert_match(/Active providers: google/, result.error)
+            assert_match(/ace-llm --list-providers/, result.error)
           end
         end
 
@@ -53,7 +54,7 @@ module Ace
             result = parser.parse("nonexistent:model")
 
             refute result.valid?
-            assert_equal "Unknown provider: nonexistent. Supported providers: google", result.error
+            assert_equal "Unknown provider: nonexistent. Supported providers: google. Run `ace-llm --list-providers` for available providers and configuration guidance.", result.error
           end
         end
 

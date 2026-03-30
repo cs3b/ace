@@ -112,13 +112,15 @@ module Ace
         # @return [Hash] Provider status information
         def list_providers_with_status
           @providers.map do |name, config|
+            credential = credential_status(config, name)
             {
               name: name,
               models: config["models"] || [],
               gem: config["gem"],
               available: provider_available?(name),
-              api_key_required: config.dig("api_key", "required") || false,
-              api_key_present: api_key_present?(config["api_key"])
+              api_key_required: credential[:required],
+              api_key_present: credential[:present],
+              credential_env_keys: credential[:env_keys]
             }
           end
         end
@@ -299,14 +301,30 @@ module Ace
           end
         end
 
-        # Check if API key is present
-        # @param api_key_config [Hash, String, nil] API key configuration
-        # @return [Boolean] True if API key is configured and present
-        def api_key_present?(api_key_config)
-          return false if api_key_config.nil?
+        # Build normalized credential status for provider output.
+        # @param provider_config [Hash] provider configuration hash
+        # @param provider_name [String] normalized provider name
+        # @return [Hash] credential status
+        def credential_status(provider_config, provider_name)
+          env_keys = extract_credential_env_keys(provider_config, provider_name)
+          explicit_required = provider_config.dig("api_key", "required")
+          required = explicit_required.nil? ? !env_keys.empty? : explicit_required
 
-          key = resolve_api_key(api_key_config)
-          !key.nil? && !key.empty?
+          present = if provider_config["api_key"].is_a?(String) && !provider_config["api_key"].empty?
+            true
+          elsif provider_config["api_key"].is_a?(Hash) && provider_config["api_key"]["value"]
+            !provider_config["api_key"]["value"].to_s.empty?
+          elsif provider_config["api_key"].is_a?(Hash) && provider_config["api_key"]["env"]
+            !ENV[provider_config["api_key"]["env"]].to_s.empty?
+          else
+            env_keys.any? { |key| !ENV[key].to_s.empty? }
+          end
+
+          {
+            required: required,
+            present: present,
+            env_keys: env_keys
+          }
         end
 
         # Build alias maps from provider configurations
@@ -328,6 +346,46 @@ module Ace
                 @model_aliases[provider_name][alias_name] = model
               end
             end
+          end
+        end
+
+        def extract_credential_env_keys(provider_config, provider_name)
+          env_keys = []
+
+          api_key_env = provider_config.dig("api_key", "env")
+          env_keys << api_key_env if api_key_env
+
+          backends = provider_config["backends"]
+          if backends.is_a?(Hash)
+            backends.each_value do |backend|
+              next unless backend.is_a?(Hash)
+
+              env_key = backend["env_key"]
+              Array(env_key).each do |key|
+                env_keys << key if key
+              end
+            end
+          end
+
+          # Keep parity with BaseClient defaults for providers that rely on fallback keys.
+          env_keys.concat(default_env_keys_for_provider(provider_name)) if env_keys.empty?
+          env_keys.map(&:to_s).map(&:strip).reject(&:empty?).uniq
+        end
+
+        def default_env_keys_for_provider(provider_name)
+          case provider_name.to_s.downcase
+          when "google"
+            %w[GEMINI_API_KEY GOOGLE_API_KEY]
+          when "openai"
+            ["OPENAI_API_KEY"]
+          when "anthropic"
+            ["ANTHROPIC_API_KEY"]
+          when "mistral"
+            ["MISTRAL_API_KEY"]
+          when "togetherai"
+            %w[TOGETHER_API_KEY TOGETHERAI_API_KEY]
+          else
+            []
           end
         end
       end
