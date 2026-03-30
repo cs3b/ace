@@ -215,17 +215,27 @@ module Ace
 
             providers.each do |provider|
               status = provider[:available] ? "\u2713" : "\u2717"
-              api_status = if provider[:api_key_required]
-                provider[:api_key_present] ? "API key configured" : "API key required"
+              credential_status = if provider[:api_key_required]
+                provider[:api_key_present] ? "Credentials configured" : "Credentials required"
               else
-                "No API key needed"
+                "No credentials required"
               end
 
               models = provider[:models] || []
               model_count = models.empty? ? "" : " \u00b7 #{models.length} models"
-              puts "#{status} #{provider[:name]}#{model_count} (#{api_status})"
+              puts "#{status} #{provider[:name]}#{model_count} (#{credential_status})"
 
               print_wrapped_list(models, indent: "  ") unless models.empty?
+              env_keys = provider[:credential_env_keys] || []
+              if provider[:api_key_required]
+                if env_keys.empty?
+                  puts "  Setup hint: credentials are required for this provider."
+                else
+                  puts "  Setup hint: set #{env_keys.join(' or ')}"
+                end
+              else
+                puts "  Setup hint: no credential environment variable required."
+              end
               puts "  Gem required: #{provider[:gem]}" unless provider[:available]
               puts ""
             end

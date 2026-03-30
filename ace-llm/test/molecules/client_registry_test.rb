@@ -123,6 +123,68 @@ module Ace
         assert_equal "test-gem", provider_status[:gem]
         assert_equal true, provider_status[:api_key_required]
         assert_equal false, provider_status[:api_key_present] # ENV var not set
+        assert_equal ["TEST_API_KEY"], provider_status[:credential_env_keys]
+      end
+
+      def test_list_providers_with_status_uses_backend_env_key_metadata
+        providers = {
+          "codexoai" => {
+            "name" => "codexoai",
+            "class" => "TestProviders::CodexClient",
+            "gem" => "test-gem",
+            "backends" => {
+              "codexcli" => {"env_key" => "CODEX_OAI_API_KEY"}
+            }
+          }
+        }
+
+        registry = create_registry_with(providers)
+
+        status = registry.list_providers_with_status.first
+        assert_equal true, status[:api_key_required]
+        assert_equal ["CODEX_OAI_API_KEY"], status[:credential_env_keys]
+      end
+
+      def test_list_providers_with_status_uses_default_env_key_fallback
+        providers = {
+          "google" => {
+            "name" => "google",
+            "class" => "TestProviders::GoogleClient",
+            "gem" => "test-gem"
+          }
+        }
+
+        registry = create_registry_with(providers)
+
+        status = registry.list_providers_with_status.first
+        assert_equal true, status[:api_key_required]
+        assert_equal %w[GEMINI_API_KEY GOOGLE_API_KEY], status[:credential_env_keys]
+      end
+
+      def test_list_providers_with_status_recognizes_google_api_key_fallback_presence
+        providers = {
+          "google" => {
+            "name" => "google",
+            "class" => "TestProviders::GoogleClient",
+            "gem" => "test-gem"
+          }
+        }
+
+        registry = create_registry_with(providers)
+
+        previous_gemini = ENV["GEMINI_API_KEY"]
+        previous_google = ENV["GOOGLE_API_KEY"]
+        ENV.delete("GEMINI_API_KEY")
+        ENV["GOOGLE_API_KEY"] = "google-fallback-key"
+        begin
+          status = registry.list_providers_with_status.first
+          assert_equal true, status[:api_key_required]
+          assert_equal true, status[:api_key_present]
+          assert_equal %w[GEMINI_API_KEY GOOGLE_API_KEY], status[:credential_env_keys]
+        ensure
+          previous_gemini.nil? ? ENV.delete("GEMINI_API_KEY") : ENV["GEMINI_API_KEY"] = previous_gemini
+          previous_google.nil? ? ENV.delete("GOOGLE_API_KEY") : ENV["GOOGLE_API_KEY"] = previous_google
+        end
       end
 
       def test_reload_configurations

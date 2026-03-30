@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-03-30
+
+### Technical
+- Removed the unused `api_key_present?` helper from `ClientRegistry` to keep provider credential routing focused on active call sites.
+
+## [0.31.1] - 2026-03-30
+
+### Technical
+- Added regression coverage for Google provider credential fallback when only `GOOGLE_API_KEY` is configured.
+
+## [0.31.0] - 2026-03-29
+
+### Added
+- Extended `ace-llm --list-providers` output with provider credential setup hints, including required environment variable names.
+
+### Changed
+- Made provider setup failures actionable by surfacing supported provider lists, ignored-provider guidance, and an explicit recovery path via `ace-llm --list-providers`.
+- Updated onboarding and usage documentation to align runtime errors with provider discovery and environment-variable setup guidance.
+
 ## [0.30.2] - 2026-03-29
 
 ### Technical

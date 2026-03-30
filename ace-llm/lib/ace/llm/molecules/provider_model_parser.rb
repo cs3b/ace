@@ -154,11 +154,13 @@ module Ace
             Provider '#{provider}' is inactive. It exists but is not in llm.providers.active.
             To enable it, add '#{provider}' to llm.providers.active in your config.
             Active providers: #{active_display}
+            Run `ace-llm --list-providers` for available providers and configuration guidance.
           MSG
         end
 
         def unknown_provider_error(provider, supported_providers)
-          "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}"
+          "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}. " \
+            "Run `ace-llm --list-providers` for available providers and configuration guidance."
         end
 
         def inactive_provider?(provider)
