@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.8] - 2026-03-30
+
+### Fixed
+- Clarified the shipped `wfi://release/publish` workflow release contract so root changelog updates consistently include package versions and RubyGems propagation proof guidance.
+
+## [0.41.7] - 2026-03-30
+
+### Fixed
+- Made the shipped `wfi://release/publish` workflow verify modified packages with package-scoped `ace-test` execution derived from the resolved release set.
+
+## [0.41.6] - 2026-03-29
+
+### Added
+- Added a shipped generic `wfi://release/publish` workflow under `ace-assign` so `work-on-task` release steps have a default resolvable path in plain projects.
+
+### Fixed
+- Aligned `assign.source` `wfi://` resolution with registered/default nav workflow sources by removing implicit workspace workflow-directory fallback behavior.
+- Added resolver coverage for project-level `wfi://` workflow overrides and for unregistered-workflow failure behavior.
+
 ## [0.41.5] - 2026-03-29
 
 ### Technical

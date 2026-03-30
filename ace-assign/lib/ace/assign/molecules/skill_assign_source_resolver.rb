@@ -25,12 +25,9 @@ module Ace
           canonical_paths = discover_canonical_skill_source_paths
           canonical_workflow_paths = discover_canonical_workflow_source_paths
           override_paths = normalize_paths(configured_skill_paths || [])
-          if canonical_workflow_paths.empty? && (configured_workflow_paths.nil? || configured_workflow_paths.empty?)
-            configured_workflow_paths = discover_workspace_workflow_paths
-          end
-          configured_workflow_paths = canonical_workflow_paths if configured_workflow_paths.nil? || configured_workflow_paths.empty?
+          configured_workflow_paths = normalize_paths(configured_workflow_paths || [])
           @skill_paths = (canonical_paths + override_paths).uniq
-          @workflow_paths = (canonical_workflow_paths + normalize_paths(configured_workflow_paths || [])).uniq
+          @workflow_paths = (canonical_workflow_paths + configured_workflow_paths).uniq
           @skill_index = nil
         end
 
@@ -342,10 +339,6 @@ module Ace
           rescue
             nil
           end
-        end
-
-        def discover_workspace_workflow_paths
-          Dir.glob(File.join(project_root, "*", "handbook", "workflow-instructions")).sort
         end
 
         def resolve_source_uri(uri, skill_name)
