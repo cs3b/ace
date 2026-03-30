@@ -46,7 +46,10 @@ ace-docs:
 
 ## Source Paths
 
-- Workflows: `ace-handbook/handbook/workflow-instructions/handbook/`
-- Skills: `ace-handbook/handbook/skills/`
-- Guides: `ace-handbook/handbook/guides/`
+- Canonical package workflows: `ace-handbook/handbook/workflow-instructions/handbook/`
+- Canonical package skills: `ace-handbook/handbook/skills/`
+- Canonical package guides: `ace-handbook/handbook/guides/`
+- Canonical package templates: `ace-handbook/handbook/templates/`
+- Project-level overlays (outside monorepo): `.ace-handbook/workflow-instructions/`, `.ace-handbook/guides/`,
+  `.ace-handbook/templates/`, `.ace-handbook/skills/`
 - Landing and docs: `ace-handbook/README.md`, `ace-handbook/docs/`

@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Handbook Usage Reference
 purpose: Practical command reference for ace-handbook workflows
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-03-29
+  last-checked: 2026-03-29
 ---
 
 # ace-handbook Usage Reference
@@ -17,10 +17,38 @@ ace-docs:
 ace-nav list 'wfi://handbook/*'
 ace-nav resolve wfi://handbook/manage-guides
 ace-nav resolve wfi://handbook/review-workflows
+ace-nav list 'guide://*'
+ace-nav list 'tmpl://*'
+ace-nav list 'skill://*'
 
 ```
 
 Use discovery when you need available paths or exact protocol references.
+
+## Project handbook extensions (`.ace-handbook/`)
+
+For ordinary projects (outside the ACE monorepo), use `.ace-handbook/` as the canonical root for project-specific
+handbook assets:
+
+```text
+.ace-handbook/
+  workflow-instructions/
+  guides/
+  templates/
+  skills/
+```
+
+Typical setup:
+
+```bash
+mkdir -p .ace-handbook/workflow-instructions/handbook
+mkdir -p .ace-handbook/guides
+mkdir -p .ace-handbook/templates
+mkdir -p .ace-handbook/skills
+```
+
+Protocol resolution (`wfi://`, `guide://`, `tmpl://`, `skill://`) uses the merged project context, so these
+project paths are discovered alongside installed package handbooks.
 
 ## Load workflows with `ace-bundle`
 
@@ -62,8 +90,21 @@ ace-demo record ace-handbook/docs/demo/ace-handbook-getting-started.tape --outpu
 
 ```
 
+## Sync completeness and rerun guidance
+
+`ace-handbook sync` prints provider projection counts and inventory source counts. If it reports only one source
+(for example `ace-handbook`), you may have synced before installing the full ACE stack. After installing additional
+packages, rerun:
+
+```bash
+ace-handbook sync
+```
+
 ## Notes
 
 - Keep command invocations direct (`ace-*`) without shell post-processing.
 - Treat loaded workflow bundles as canonical instructions.
 - Keep README concise and move detailed reference content into `ace-handbook/docs/`.
+- For multi-package releases, use `wfi://release/rubygems-publish` and record the propagation proof result
+  (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) with mitigation guidance when lag is detected.
+- See `ace-handbook/docs/release-rubygems-proof.md` for the proof contract consumed by onboarding docs.

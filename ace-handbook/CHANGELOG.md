@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-03-30
+
+### Technical
+- Added edge-case regression coverage for `ProviderSyncer#summarize_sources`, including empty inventory handling and nil/blank source normalization.
+
+## [0.23.1] - 2026-03-30
+
+### Fixed
+- Restored `Bash(gem:*)` permissions in the canonical `as-release-rubygems-publish` skill so release workflows can invoke gem commands directly.
+
+### Technical
+- Added regression coverage for projected release skill permissions to prevent permission drift.
+
+## [0.23.0] - 2026-03-30
+
+### Changed
+- Clarified `ace-handbook sync` output by adding inventory source counts and explicit rerun guidance when only one source is discovered.
+- Expanded `ace-handbook` docs to define `.ace-handbook/` as the canonical project-level handbook root for workflows, guides, templates, and skills in normal projects.
+
+### Technical
+- Added CLI sync command regression coverage for inventory-source summary and single-source guidance output.
+
+## [0.22.0] - 2026-03-29
+
+### Changed
+- Added a deterministic RubyGems propagation proof gate to coordinated release workflows with explicit `SAFE`, `LAG_DETECTED`, and `METADATA_BROKEN` classification outcomes.
+
+### Technical
+- Added operator-facing proof contract documentation and synchronized `as-release-rubygems-publish` skill guidance with the updated release workflow expectations.
+
 ## [0.21.4] - 2026-03-29
 
 ### Technical
