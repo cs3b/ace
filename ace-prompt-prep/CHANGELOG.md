@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.5] - 2026-03-29
+
+### Fixed
+- Bumped the `ace-bundle` runtime dependency constraint to `~> 0.41` to follow the new bundle minor release line.
+
 ## [0.23.4] - 2026-03-29
 
 ### Technical
