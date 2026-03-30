@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-03-30
+
+### Fixed
+- Removed the generic-project preset dependency on `ace-task` by replacing the task listing command with `ls -1` for plain-repo compatibility.
+
+## [0.41.0] - 2026-03-29
+
+### Changed
+- Reworked shipped default bootstrap presets for generic projects: `project` now uses section-driven content, removes stale monorepo/taskflow copy, and includes TODO-oriented scaffold guidance.
+- Added a shipped `project-base` preset for lightweight onboarding context in fresh repositories.
+
 ## [0.40.6] - 2026-03-29
 
 ### Technical
