@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.j24.5
-status: pending
+status: done
 priority: high
 created_at: "2026-03-29 12:42:29"
 estimate: TBD
