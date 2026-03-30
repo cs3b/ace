@@ -11,7 +11,7 @@ ace-docs:
 
 ## Prerequisites
 
-- ACE repository available locally
+- Ruby 3.2+ and `ace-handbook` installed
 - `ace-nav` and `ace-bundle` available on your PATH
 
 ## Installation
@@ -23,7 +23,14 @@ gem install ace-handbook
 
 ```
 
-Inside this repository, run ACE commands directly:
+After install, run sync once to project skills to your configured providers:
+
+```bash
+ace-handbook sync
+
+```
+
+Inside the ACE monorepo, run ACE commands directly:
 
 ```bash
 ace-nav list 'wfi://handbook/*'
@@ -43,6 +50,39 @@ Load and follow the full workflow:
 
 ```bash
 ace-bundle wfi://handbook/manage-guides
+
+```
+
+## Project handbook root (`.ace-handbook/`)
+
+Outside the ACE monorepo, put project-specific handbook assets under `.ace-handbook/`:
+
+```text
+.ace-handbook/
+  workflow-instructions/
+  guides/
+  templates/
+  skills/
+```
+
+Example: add a project workflow path.
+
+```bash
+mkdir -p .ace-handbook/workflow-instructions/handbook
+
+```
+
+Protocol URLs continue to work in normal projects; discovered content is the merged view of installed package
+handbooks and your project's `.ace-handbook/` overlays.
+
+## Sync completeness and install order
+
+`ace-handbook sync` now reports inventory source counts. If output shows only one source (for example only
+`ace-handbook` skills), this can indicate you synced before installing additional ACE packages. Install the
+missing packages, then rerun:
+
+```bash
+ace-handbook sync
 
 ```
 
