@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4] - 2026-03-29
+
+### Changed
+- Added a shipped `.ace-defaults/README.md` scaffold so `ace-framework init` generates `.ace/README.md` for newly initialized projects.
+- Updated bootstrap configuration guidance and examples to current `ace-task` CLI usage and documented generated `project`/`project-base` presets.
+
 ## [0.29.3] - 2026-03-29
 
 ### Technical
