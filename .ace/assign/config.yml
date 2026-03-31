@@ -23,14 +23,3 @@ execution:
   # format: <provider>:<model>@<preset> 
   provider: "role:assign-executor"
   timeout: 1800
-
-# Provider-level defaults for CLI invocation
-providers:
-  cli: 
-    - "claude"
-    - "claudeoai"
-    - "gemini"
-    - "codex"
-    - "codexoss"
-    - "opencode"
-    - "pi"
