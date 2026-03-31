@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-03-31
+
+### Technical
+- Added integration test coverage that stubs config template discovery in CLI flows to keep package tests deterministic across environments.
+
 ## [0.10.1] - 2026-03-31
 
 ### Fixed
