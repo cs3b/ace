@@ -1,83 +1,39 @@
 ---
 doc-type: user
-title: Ace Framework Configuration
-purpose: Documentation for ace-support-core/docs/config.md
+title: ACE Config Delegation
+purpose: Explain how ace-support-core delegates config CLI ownership to ace-support-config.
 ace-docs:
-  last-updated: 2026-01-17
-  last-checked: 2026-03-21
+  last-updated: 2026-03-31
+  last-checked: 2026-03-31
 ---
 
-# Ace Framework Configuration
+# ACE Config Delegation
 
-The `ace-framework` command (from the `ace-core` gem) manages centralized configuration for all ace-* gems.
+`ace-support-core` no longer ships a standalone config CLI. Configuration initialization, diffing, and listing are owned by `ace-support-config` via the `ace-config` command.
 
-## Configuration File
+## Where Config CLI Lives
 
-Create `.ace/core/settings.yml`:
+- Package: [`ace-support-config`](../../ace-support-config)
+- Command: `ace-config`
+- Usage reference: [`ace-support-config/docs/usage.md`](../../ace-support-config/docs/usage.md)
 
-```yaml
-# General settings for ace-core
-verbose: false
-global: false
-```
-
-## Available Commands
-
-- `ace-framework init [GEM]` - Initialize configuration for specific gem or all
-- `ace-framework diff [GEM]` - Compare configs with examples for specific gem or all
-- `ace-framework list` - List available ace-* gems with example configs
-- `ace-framework version` - Show version information
-
-## Options
-
-### For `init` command:
-- `--force` - Overwrite existing configuration files
-- `--dry-run` - Preview what would be done without making changes
-- `--global` - Use ~/.ace instead of ./.ace for configuration
-- `--verbose` - Show detailed output during operations
-
-### For `diff` command:
-- `--one-line` - One-line summary per file
-- `--file PATH` - Compare specific file
-- `--global` - Compare global configs
-- `--local` - Compare local configs (default)
-
-### For `list` command:
-- `--verbose` - Show detailed information including paths and file counts
-
-## First Time Setup
-
-Run `ace-framework init` to set up all ace-* gem configurations at once.
-For new projects, this generates starter bundle presets:
-
-- `.ace/bundle/presets/project.md`
-- `.ace/bundle/presets/project-base.md`
-
-These files are intentionally generic scaffolding and should be customized for your project.
-
-## Examples
+## Common Commands
 
 ```bash
-# List available gems
-ace-framework list
+# Initialize all ACE config defaults
+ace-config init
 
-# Initialize all configurations
-ace-framework init
+# Preview initialization without writing files
+ace-config init --dry-run
 
-# Initialize specific gem (both formats work)
-ace-framework init ace-task
-ace-framework init task
+# Compare current config against defaults
+ace-config diff --one-line
 
-# Preview what would be done
-ace-framework init --dry-run
-
-# Compare all configurations
-ace-framework diff --one-line
-
-# Compare specific gem (both formats work)
-ace-framework diff ace-bundle
-ace-framework diff bundle --one-line
-
-# Load generated project context
-ace-bundle project
+# Show available support package defaults
+ace-config list
 ```
+
+## Notes
+
+- `ace-support-core` remains responsible for shared runtime/config primitives.
+- `ace-support-config` owns config command behavior and user-facing config workflows.
