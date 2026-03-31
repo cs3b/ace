@@ -20,7 +20,9 @@ Checks:
    - assignment completion is blocked with explicit safety message (for example no active assignment) and prune output documents safety rejection.
 5. **Prune final state (primary oracle)** — one of:
    - if assignment completion succeeded, after prune --yes, `worktree-list-after-prune` excludes task q7w and still includes task r8x; or
-   - if assignment completion was explicitly blocked, prune preserves task q7w and task r8x with clear safety rejection evidence.
+   - if assignment completion was explicitly blocked, prune behavior follows task status:
+     - when task q7w is still active/in-progress, q7w is preserved with safety rejection evidence; or
+     - when task q7w is marked done, q7w may be pruned while r8x remains.
 6. **Clean state** — follow-up dry-run shows no safe candidates remaining.
 
 ## Verdict
