@@ -31,7 +31,7 @@ Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems
 
 ```bash
 bundle install
-ace-framework init
+ace-config init
 ace-handbook sync
 ```
 
