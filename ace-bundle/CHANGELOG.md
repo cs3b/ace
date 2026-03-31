@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.41.2] - 2026-03-31
+
+### Fixed
+- Made default bootstrap presets self-contained so generated onboarding guidance no longer depends on external release-specific context.
+
 ## [0.41.1] - 2026-03-30
 
 ### Fixed
