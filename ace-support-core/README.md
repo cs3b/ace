@@ -14,13 +14,13 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-`ace-support-core` centralizes configuration loading, environment handling, and shared runtime behavior used by support libraries. It delegates config resolution through [ace-support-config](../ace-support-config) and exposes stable orchestration points that other `ace-support-*` gems build on. The `ace-framework` CLI manages per-package configuration setup.
+`ace-support-core` centralizes configuration loading, environment handling, and shared runtime behavior used by support libraries. It delegates config resolution through [ace-support-config](../ace-support-config) and exposes stable orchestration points that other `ace-support-*` gems build on.
 
 ## How It Works
 
 1. Provide a shared bootstrap path for config, env, and runtime context so every `ace-support-*` gem starts from the same foundation.
 2. Delegate cascaded configuration resolution through [ace-support-config](../ace-support-config) so packages inherit project, user, and gem-level defaults automatically.
-3. Expose the `ace-framework` CLI for initializing, diffing, and listing gem configurations across the workspace.
+3. Provide shared runtime/config primitives consumed by `ace-support-config`, which owns the `ace-config` CLI.
 
 ## Use Cases
 
@@ -31,4 +31,4 @@
 **Keep support libraries composable** - build package-specific features on top of stable core contracts that provide predictable runtime behavior.
 
 ---
-[Configuration overview](docs/config.md) | [`ace-framework` CLI reference](docs/config.md) | Part of [ACE](https://github.com/cs3b/ace)
+[Configuration overview](docs/config.md) | [`ace-config` usage](../ace-support-config/docs/usage.md) | Part of [ACE](https://github.com/cs3b/ace)

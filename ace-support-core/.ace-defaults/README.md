@@ -12,5 +12,5 @@ These starter files are intentionally generic so you can tailor them to your own
 
 ## Notes
 
-- Re-run `ace-framework init --force` to refresh files from gem defaults.
+- Re-run `ace-config init --force` to refresh files from gem defaults.
 - Keep project-specific guidance in your local `.ace/` files.

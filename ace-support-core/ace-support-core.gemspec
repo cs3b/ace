@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   ]).select { |f| File.file?(f) }
 
   spec.bindir = "exe"
-  spec.executables = ["ace-framework"]
+  spec.executables = []
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
