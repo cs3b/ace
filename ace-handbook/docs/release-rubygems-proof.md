@@ -22,7 +22,7 @@ This contract does not claim to fix RubyGems propagation behavior. It proves whe
 ## Scope
 
 - Applies to many-package ACE releases.
-- Runs after publish succeeds, via the standalone `wfi://release/rubygems-verify-install` workflow.
+- Runs after publish succeeds, via `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001`.
 - Produces one artifact consumed by release and onboarding docs workflows.
 
 ## Proof Commands
@@ -81,6 +81,6 @@ Onboarding docs should consume:
 
 Reference workflows:
 
-- `wfi://release/rubygems-verify-install` (primary — contains the proof logic)
+- `ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/` (primary — E2E scenario with proof logic)
 - `wfi://release/rubygems-publish` (recommends running the verification after publish)
 - `wfi://release/publish` (references proof classification in final checklist)

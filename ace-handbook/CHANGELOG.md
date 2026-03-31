@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.5] - 2026-03-31
+
+### Changed
+- Replaced `wfi://release/rubygems-verify-install` workflow with E2E scenario `TS-MONO-001-rubygems-install` in `ace-monorepo-e2e/`. Updated all skill and doc references to use `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001`.
+
 ## [0.23.4] - 2026-03-31
 
 ### Changed
