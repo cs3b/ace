@@ -35,14 +35,3 @@ subtree:
   native_review_clients:
     - "claude"
     - "codex"
-
-# Provider-level defaults for CLI invocation
-providers:
-  cli:
-    - "claude"
-    - "claudeoai"
-    - "gemini"
-    - "codex"
-    - "codexoss"
-    - "opencode"
-    - "pi"
