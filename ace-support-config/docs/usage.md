@@ -13,6 +13,18 @@ ace-docs:
 
 The `ace-support-config` gem provides a generic configuration cascade system that merges configuration from multiple sources with priority-based resolution.
 
+## ace-config Command
+
+`ace-support-config` ships the `ace-config` CLI for template discovery, initialization, and drift checks.
+
+```bash
+ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
+ace-config list [--verbose]
+ace-config version
+ace-config help
+```
+
 ### Cascade Priority (highest to lowest)
 
 1. **Project level** - `<project_root>/.ace/`
