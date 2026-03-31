@@ -20,18 +20,18 @@ Verify that published ACE gems are installable from RubyGems.org in an isolated 
 
 * ACE gems have been published to RubyGems.org (via `wfi://release/rubygems-publish` or manually)
 * `mise` is available on `PATH` for Ruby version management
-* Project root `Gemfile` lists all ACE gems with `path:` directives
+* Project root `Gemfile` lists ACE gems with `path:` directives (in default and/or grouped sections)
 
 ## Instructions
 
 ### 1. Discover ACE Gems
 
-Parse the project root `Gemfile` to extract publishable ACE gem names (default group only, skip `:development, :test` group):
+Parse the project root `Gemfile` to extract publishable ACE gem names across all sections (including grouped blocks such as `:development, :test`):
 
 ```bash
 PROJECT_ROOT=$(pwd)
-# Extract gem names from default group (before any group block)
-sed -n '1,/^group /p' "$PROJECT_ROOT/Gemfile" | grep "^gem 'ace-" | sed "s/gem '\\([^']*\\)'.*/\\1/"
+# Extract all ace-* gem declarations regardless of Gemfile group placement
+grep "^gem 'ace-" "$PROJECT_ROOT/Gemfile" | sed "s/gem '\\([^']*\\)'.*/\\1/"
 ```
 
 Record the gem count for the proof artifact.
@@ -71,8 +71,7 @@ Write a Gemfile that installs all ACE gems from RubyGems.org (remote, no `path:`
 {
   echo "source 'https://rubygems.org'"
   echo ""
-  sed -n '1,/^group /p' "$PROJECT_ROOT/Gemfile" \
-    | grep "^gem 'ace-" \
+  grep "^gem 'ace-" "$PROJECT_ROOT/Gemfile" \
     | sed "s/, path:.*//" \
     >> "$SANDBOX_DIR/Gemfile"
 }
@@ -156,7 +155,7 @@ If the workflow fails or is interrupted, stale sandbox directories at `/tmp/ace-
 
 - Sandbox is created in a temp directory, not in the project tree
 - Ruby version matches the project's Ruby environment (or explicit `--ruby` argument)
-- Verification Gemfile lists all default-group ACE gems as remote dependencies
+- Verification Gemfile lists all ACE gems (including grouped Gemfile sections) as remote dependencies
 - Both install paths are attempted and evidence is captured
 - Classification is one of: `SAFE`, `LAG_DETECTED`, `METADATA_BROKEN`
 - Proof artifact is stored at `.ace-local/release/rubygems-proof-YYYYMMDDHHMMSS.md`
