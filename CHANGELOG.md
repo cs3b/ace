@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - **ace-handbook v0.23.0**: Clarified sync completeness reporting with inventory source counts and documented `.ace-handbook/` project-level handbook extension paths plus protocol usage in normal projects.
 - **ace-llm v0.31.0**: Made provider configuration failures actionable with supported-provider/error guidance tied to `ace-llm --list-providers`, plus provider env-key setup hints in CLI output and docs.
 - **ace-assign v0.41.6**: Made `work-on-task` safer in plain projects by shipping a default `wfi://release/publish` workflow and aligning assign-source `wfi://` resolution to registered nav workflow sources (including project-level overrides).
+- **ace-assign v0.41.9**: Updated task archival completion steps to persist status and move-to-archive operations via `--gc`/`--git-commit` instead of separate manual `.ace-tasks` commits.
 
 ### Technical
 - **ace-llm v0.31.3**: Clarified provider fallback environment-key coupling in `ClientRegistry` so provider credential guidance matches runtime resolution behavior.
