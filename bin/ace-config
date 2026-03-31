@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "pathname"
+
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+require "bundler/setup"
+
+load ace_meta_root.join("ace-support-config/exe/ace-config").to_s
