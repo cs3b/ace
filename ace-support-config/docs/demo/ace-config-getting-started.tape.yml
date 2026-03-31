@@ -1,0 +1,30 @@
+---
+description: Showcase ace-config CLI for listing, initializing, and diffing ace-* gem configurations
+tags:
+- ace-config
+- ace-support-config
+- getting-started
+settings:
+  font_size: 16
+  width: 1200
+  height: 700
+  format: gif
+scenes:
+- name: List available gem configs
+  commands:
+  - type: ace-config list
+    sleep: 3s
+- name: Preview config initialization
+  commands:
+  - type: ace-config init --dry-run
+    sleep: 4s
+- name: Diff configs against defaults
+  commands:
+  - type: ace-config diff --one-line
+    sleep: 3s
+teardown:
+- cleanup
+setup:
+- sandbox
+- git-init
+- copy-fixtures
