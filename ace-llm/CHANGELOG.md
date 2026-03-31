@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.3] - 2026-03-31
+
+### Technical
+- Clarified provider fallback environment-key coupling in `ClientRegistry` to align credential resolution guidance with current setup behavior.
+
 ## [0.31.2] - 2026-03-30
 
 ### Technical
