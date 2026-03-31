@@ -47,8 +47,4 @@ None
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.
 
-- In live mode, require a post-publish propagation proof classification:
-  `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`.
-
-- Record the proof artifact path in the final response:
-  `.ace-local/release/rubygems-proof-*.md` (or `N/A` in dry-run).
+- After live publishing, recommend running `wfi://release/rubygems-verify-install` for installation verification.
