@@ -12,40 +12,80 @@ llm:
   roles:
     doctor:
       - gemini:flash-latest@yolo
+      - claude:haiku@yolo
+      - codex:mini@yolo
     planner:
       - codex:gpt@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-default:
       - codex:codex@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-synthesizer:
       - codex:gpt@ro
-    review-fallback:
-      - claude:sonnet
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-claude:
       - claude:opus@ro
+      - codex:gpt@ro
+      - gemini:pro-latest@ro
     review-codex:
       - codex:gpt@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-gemini:
       - gemini:pro-latest@ro
+      - claude:sonnet@ro
+      - codex:gpt@ro
     assign-executor:
       - codex:codex@yolo
+      - claude:sonnet@yolo
+      - gemini:pro-latest@yolo
+    assign-engineer:
+      - codex:codex@yolo
+      - claude:sonnet@yolo
+      - gemini:pro-latest@yolo
+    assign-orchestrator:
+      - claude:sonnet
+      - codex:gpt
+      - gemini:pro-latest
     e2e-executor:
       - claude:haiku@yolo
+      - codex:mini@yolo
+      - gemini:flash-latest@yolo
     e2e-reporter:
-      - claude:haiku
+      - claude:haiku@ro
+      - codex:mini@ro
+      - gemini:flash-latest@ro
     prompt-enhance:
-      - glite
+      - codex:mini
+      - claude:haiku
+      - gemini:flash-latest
     commit:
       - codex:mini
-    docs-analysis:
-      - glite
-    idea-enhance:
-      - gemini:flash-latest
-    compressor:
-      - glite
-    sim-primary:
-      - google:flash-preview
-    sim-synthesis:
       - claude:haiku
+      - gemini:flash-latest
+    docs-analysis:
+      - codex:mini
+      - claude:haiku
+      - gemini:flash-latest
+    idea-enhance:
+      - gemini:flash-latest@ro
+      - codex:mini@ro
+      - claude:haiku@ro
+    compressor:
+      - codex:mini
+      - claude:haiku
+      - gemini:flash-latest
+    sim-primary:
+      - gemini:flash-latest@ro
+      - claude:haiku@ro
+      - codex:mini@ro
+    sim-synthesis:
+      - claude:opus
+      - codex:gpt
+      - gemini:pro-latest
   fallback:
     enabled: true
     retry_count: 2
