@@ -10,15 +10,15 @@ bundle:
   sections:
     vision:
       title: Project Vision
-      files:
-        - docs/vision.md
+      content: |
+        TODO: Add your project's mission, users, and success criteria.
+        Optionally move this to docs/vision.md once your docs structure is established.
 
     architecture:
       title: System Architecture
-      files:
-        - docs/architecture.md
-        - docs/decisions.md
-        - docs/blueprint.md
+      content: |
+        TODO: Add key architecture notes, major components, and decision records.
+        You can later split this into docs/architecture.md, docs/decisions.md, and docs/blueprint.md.
 
     project_status:
       title: Project Status

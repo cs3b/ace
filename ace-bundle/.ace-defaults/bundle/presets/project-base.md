@@ -10,13 +10,15 @@ bundle:
   sections:
     vision:
       title: Project Vision
-      files:
-        - docs/vision.md
+      content: |
+        TODO: Add a one-paragraph project overview and current priorities.
+        Move this to docs/vision.md later if desired.
 
     structure:
       title: Project Structure
-      files:
-        - docs/blueprint.md
+      content: |
+        TODO: Describe the top-level folders and where core logic lives.
+        Move this to docs/blueprint.md once project docs exist.
 
     quick_status:
       title: Quick Status
