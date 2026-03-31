@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4] - 2026-03-31
+
+### Changed
+- Role-based E2E runner model defaults.
+
 ## [0.29.3] - 2026-03-29
 
 ### Changed
