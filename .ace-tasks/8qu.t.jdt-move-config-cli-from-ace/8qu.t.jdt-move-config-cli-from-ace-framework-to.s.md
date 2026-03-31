@@ -1,22 +1,16 @@
 ---
 id: 8qu.t.jdt
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-31 12:55:21"
 estimate: TBD
 dependencies: []
 tags: [cli, config, ace-support-config, ace-support-core, dx]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-support-core/lib/ace/core/cli.rb
-    - ace-support-core/lib/ace/core/organisms/config_initializer.rb
-    - ace-support-core/lib/ace/core/organisms/config_diff.rb
-    - ace-support-core/lib/ace/core/models/config_templates.rb
-    - ace-support-core/exe/ace-framework
-    - ace-support-core/ace-support-core.gemspec
-    - ace-support-config/ace-support-config.gemspec
+  presets: [project]
+  files: [ace-support-core/lib/ace/core/cli.rb, ace-support-core/lib/ace/core/organisms/config_initializer.rb, ace-support-core/lib/ace/core/organisms/config_diff.rb, ace-support-core/lib/ace/core/models/config_templates.rb, ace-support-core/exe/ace-framework, ace-support-core/ace-support-core.gemspec, ace-support-config/ace-support-config.gemspec, ace-support-config/README.md, ace-support-config/docs/usage.md, bin/ace-framework, ace-support-core/test/integration/config_initializer_bootstrap_test.rb]
   commands: []
+needs_review: false
 ---
 
 # Move config CLI from ace-framework to ace-config in ace-support-config
@@ -38,6 +32,8 @@ Source idea: `8qrz77` — Unify Ace configuration path and framework binary setu
 ### Expected Behavior
 
 Users who currently run `ace-framework init` will run `ace-config init` instead. All subcommands, flags, and output remain identical. The command is provided by the `ace-support-config` gem rather than `ace-support-core`. No compatibility shim is maintained for `ace-framework` (pre-1.0, ADR-024 applies).
+
+`ace-support-config` is the sole owner of the new `ace-config` executable and implementation. Packaging changes are required in both gems: `ace-support-config` must ship `ace-config`, and `ace-support-core` must stop shipping `ace-framework`.
 
 ### Interface Contract
 
@@ -61,8 +57,13 @@ Error Handling:
 - `ace-config init --dry-run` discovers and lists config templates from installed ace-* gems
 - `ace-config list` shows all gems with `.ace-defaults/` directories
 - `ace-config version` prints the ace-support-config version
+- `ace-support-config` ships the `ace-config` executable in its gemspec and packaged files
 - `ace-framework` is no longer an installed executable
+- `ace-support-core` no longer ships `ace-framework` in its gemspec and packaged files
+- `bin/ace-config` exists as the repo-root wrapper before old-command cleanup begins
 - No references to `ace-framework` remain in onboarding docs (README.md, quick-start.md, DEVELOPMENT.md)
+- `ace-support-config` docs describe `ace-config` as the canonical config-management CLI
+- Existing bootstrap/config coverage from ace-support-core is preserved in ace-support-config
 - Both ace-support-config and ace-support-core test suites pass with no dangling references
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
