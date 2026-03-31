@@ -22,7 +22,7 @@ This contract does not claim to fix RubyGems propagation behavior. It proves whe
 ## Scope
 
 - Applies to many-package ACE releases.
-- Runs after publish succeeds.
+- Runs after publish succeeds, via the standalone `wfi://release/rubygems-verify-install` workflow.
 - Produces one artifact consumed by release and onboarding docs workflows.
 
 ## Proof Commands
@@ -81,5 +81,6 @@ Onboarding docs should consume:
 
 Reference workflows:
 
-- `wfi://release/rubygems-publish`
-- `wfi://release/publish`
+- `wfi://release/rubygems-verify-install` (primary — contains the proof logic)
+- `wfi://release/rubygems-publish` (recommends running the verification after publish)
+- `wfi://release/publish` (references proof classification in final checklist)

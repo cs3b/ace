@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.3] - 2026-03-31
+
+### Changed
+- Extracted RubyGems installation verification into standalone `wfi://release/rubygems-verify-install` workflow with mise-based sandbox isolation.
+- Updated `as-release-rubygems-publish` skill to recommend the standalone verification workflow instead of requiring inline proof classification.
+
 ## [0.23.2] - 2026-03-30
 
 ### Technical
