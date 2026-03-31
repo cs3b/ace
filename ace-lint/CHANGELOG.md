@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.8] - 2026-03-31
+
+### Changed
+- Role-based autofix defaults.
+
 ## [0.27.7] - 2026-03-29
 
 ### Changed
