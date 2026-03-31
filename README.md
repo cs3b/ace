@@ -78,14 +78,15 @@ ace-bundle wfi://task/work
 
 Use this full-stack path for a new project (Ruby 3.2+):
 
-1. Add the curated ACE core gem set and explicit handbook integrations:
+1. Add the ACE tools you need plus agent integrations:
 
 ```bash
-bundle add ace-support-core ace-bundle ace-handbook ace-llm ace-task ace-assign \
-  ace-handbook-integration-claude ace-handbook-integration-codex \
-  ace-handbook-integration-gemini ace-handbook-integration-opencode \
-  ace-handbook-integration-pi
+bundle add ace-bundle ace-handbook ace-llm ace-task ace-assign \
+  ace-handbook-integration-claude ace-handbook-integration-codex
+# Other integrations: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
+
+Dependencies like `ace-support-core` and `ace-support-config` are pulled in automatically.
 
 2. Install gems:
 
