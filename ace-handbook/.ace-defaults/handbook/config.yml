@@ -1,4 +1,6 @@
 sync:
   providers:
-    enabled: []
+    enabled: 
+      - claude 
+      - codex
     disabled: []
