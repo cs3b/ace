@@ -33,4 +33,4 @@ None
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.
 
-- After live publishing, recommend running `wfi://release/rubygems-verify-install` for installation verification.
+- After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` for installation verification.
