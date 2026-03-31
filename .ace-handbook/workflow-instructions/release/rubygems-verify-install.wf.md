@@ -68,13 +68,13 @@ which ruby
 Write a Gemfile that installs all ACE gems from RubyGems.org (remote, no `path:` directives):
 
 ```bash
-{
-  echo "source 'https://rubygems.org'"
-  echo ""
-  grep "^gem 'ace-" "$PROJECT_ROOT/Gemfile" \
-    | sed "s/, path:.*//" \
-    >> "$SANDBOX_DIR/Gemfile"
-}
+cat > "$SANDBOX_DIR/Gemfile" <<'EOF'
+source 'https://rubygems.org'
+
+EOF
+grep "^gem 'ace-" "$PROJECT_ROOT/Gemfile" \
+  | sed "s/, path:.*//" \
+  >> "$SANDBOX_DIR/Gemfile"
 ```
 
 Verify the generated Gemfile lists the expected gem count and contains no `path:` references:
