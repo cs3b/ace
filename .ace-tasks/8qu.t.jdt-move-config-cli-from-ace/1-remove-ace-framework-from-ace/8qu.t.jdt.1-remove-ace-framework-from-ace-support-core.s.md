@@ -18,6 +18,7 @@ bundle:
     - ace-support-core/ace-support-core.gemspec
     - ace-support-core/README.md
     - ace-support-core/docs/config.md
+    - ace-support-core/.ace-defaults/README.md
     - bin/ace-framework
     - README.md
     - docs/quick-start.md
@@ -124,3 +125,4 @@ Error Handling:
 - `cd ace-support-config && ace-test` — test suite passes
 - `grep -r 'ace-framework' README.md docs/quick-start.md DEVELOPMENT.md` — zero matches
 - `ace-config --help` — still works after removal
+- `ace-search ace-framework --content --hidden` — remaining matches should only be in: CHANGELOG.md (historical), `.ace-tasks/_archive/`, `.ace-ideas/_archive/`, `.ace-retros/_archive/`, and the task spec for this task itself
