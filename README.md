@@ -78,15 +78,20 @@ ace-bundle wfi://task/work
 
 Use this full-stack path for a new project (Ruby 3.2+):
 
-1. Add the ACE tools you need plus agent integrations:
+1. Add the ACE tools you need:
 
 ```bash
-bundle add ace-bundle ace-handbook ace-llm ace-task ace-assign \
+bundle add --group "development, test" \
+  ace-idea ace-task ace-sim \
+  ace-overseer ace-assign ace-git-worktree ace-tmux \
+  ace-bundle ace-handbook ace-search ace-docs \
+  ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
+  ace-git-commit ace-git-secrets ace-git \
   ace-handbook-integration-claude ace-handbook-integration-codex
-# Other integrations: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+# Also available: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
 
-Dependencies like `ace-support-core` and `ace-support-config` are pulled in automatically.
+Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled in automatically.
 
 2. Install gems:
 
@@ -130,11 +135,11 @@ Use `--full-index` only as temporary RubyGems propagation mitigation, then retur
 
 ## The Toolkit
 
-- **Plan**: [`ace-idea`](ace-idea/) to capture and shape ideas, [`ace-task`](ace-task/) for markdown task specs with subtasks, [`ace-retro`](ace-retro/) for retrospectives.
-- **Build**: [`ace-overseer`](ace-overseer/) to orchestrate task pipelines, [`ace-assign`](ace-assign/) for multi-step assignments, [`ace-git-worktree`](ace-git-worktree/) for isolated worktrees, [`ace-git-commit`](ace-git-commit/) for intention-aware commits.
-- **Review**: [`ace-review`](ace-review/) for multi-model preset reviews, [`ace-test-runner`](ace-test-runner/) for smart test execution, [`ace-lint`](ace-lint/) for linting, [`ace-docs`](ace-docs/) for doc freshness tracking.
-- **Context**: [`ace-bundle`](ace-bundle/) for context assembly, [`ace-handbook`](ace-handbook/) for workflows, guides, templates, and skills, [`ace-search`](ace-search/) for codebase search, [`ace-llm`](ace-llm/) for multi-provider LLM queries.
-- **Secure**: [`ace-git-secrets`](ace-git-secrets/) for credential leak scanning and revocation.
+- **Plan**: [`ace-idea`](ace-idea/) to capture and shape ideas, [`ace-task`](ace-task/) for markdown task specs with subtasks, [`ace-sim`](ace-sim/) for scenario simulation.
+- **Build**: [`ace-overseer`](ace-overseer/) to orchestrate task pipelines, [`ace-assign`](ace-assign/) for multi-step assignments, [`ace-git-worktree`](ace-git-worktree/) for isolated worktrees.
+- **QA**: [`ace-review`](ace-review/) for multi-model preset reviews, [`ace-test-runner`](ace-test-runner/) for smart test execution, [`ace-lint`](ace-lint/) for linting, [`ace-retro`](ace-retro/) for retrospectives, [`ace-demo`](ace-demo/) for terminal demo recording.
+- **Git**: [`ace-git-commit`](ace-git-commit/) for intention-aware commits, [`ace-git-secrets`](ace-git-secrets/) for credential leak scanning and revocation.
+- **Context**: [`ace-bundle`](ace-bundle/) for context assembly, [`ace-handbook`](ace-handbook/) for workflows, guides, templates, and skills, [`ace-search`](ace-search/) for codebase search, [`ace-docs`](ace-docs/) for doc freshness tracking.
 
 40+ packages total, including shared libraries and [agent platform integrations](ace-handbook-integration-claude/). See [Tools Reference](docs/tools.md) for the complete inventory.
 

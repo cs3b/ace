@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - **ace-handbook v0.23.1**: Restored `Bash(gem:*)` permissions in `as-release-rubygems-publish` and added regression coverage for projected skill permission drift.
 
 ### Changed
+- **ace-handbook v0.23.4**: Reorganized install docs by toolkit building blocks (Plan, Build, Context, QA, Git) with all gems in `development, test` group; shipped default sync config with no providers pre-enabled.
 - **ace-handbook v0.23.3**: Extracted RubyGems installation verification into standalone `wfi://release/rubygems-verify-install` workflow with mise-based sandbox isolation, separating verification from publishing concerns.
 - **ace-handbook v0.22.0**: Added a deterministic RubyGems propagation proof gate to coordinated release workflows with explicit `SAFE`, `LAG_DETECTED`, and `METADATA_BROKEN` classifications, plus operator-facing proof contract documentation.
 - **ace-bundle v0.41.0**: Refreshed default bootstrap presets for generic projects and added the lightweight `project-base` starter preset for first-run context loading.
