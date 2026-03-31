@@ -19,5 +19,10 @@ Capture:
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
 - Corruption must remain inside sandbox-local retro files only.
+- Corruption must produce invalid frontmatter (error-level), not only a scope warning:
+  - Pick one `*.retro.md` file under scenario-local `.ace-retros/`.
+  - Persist its path in `results/tc/04/corrupted-file.path`.
+  - Overwrite that file with malformed YAML frontmatter (for example `id: [broken` with no valid closing structure).
+  - Save the resulting file content in `results/tc/04/corrupted-file.md`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/04/`.
