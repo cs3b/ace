@@ -260,7 +260,7 @@ Checklist:
   entry, and root changelog bullet
 * `Gemfile.lock` reflects the new internal versions
 * no unrelated package was released
-* RubyGems propagation proof from `wfi://release/rubygems-publish` is recorded with one classification:
+* RubyGems propagation proof from `wfi://release/rubygems-verify-install` is recorded with one classification:
   `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`
 * release is treated as onboarding-safe only when the classification is `SAFE`
 * if classification is `LAG_DETECTED`, release notes/docs include the temporary mitigation:
@@ -273,4 +273,5 @@ Checklist:
 * Use `/as-release` for coordinated multi-package releases.
 * When no package arguments are supplied, package selection comes from the current diff rather than from user
   prompts.
+* Run `wfi://release/rubygems-verify-install` after publishing to verify installation propagation.
 * See `ace-handbook/docs/release-rubygems-proof.md` for the operator-facing interpretation contract.
