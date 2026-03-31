@@ -29,8 +29,9 @@ Verify that published ACE gems are installable from RubyGems.org in an isolated 
 Parse the project root `Gemfile` to extract publishable ACE gem names (default group only, skip `:development, :test` group):
 
 ```bash
+PROJECT_ROOT=$(pwd)
 # Extract gem names from default group (before any group block)
-sed -n '1,/^group /p' Gemfile | grep "^gem 'ace-" | sed "s/gem '\\([^']*\\)'.*/\\1/"
+sed -n '1,/^group /p' "$PROJECT_ROOT/Gemfile" | grep "^gem 'ace-" | sed "s/gem '\\([^']*\\)'.*/\\1/"
 ```
 
 Record the gem count for the proof artifact.
