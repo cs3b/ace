@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Migrated config CLI ownership to `ace-support-config` by removing `ace-framework` packaging/runtime surfaces from `ace-support-core` and updating package docs/default guidance to reference `ace-config`.
+
 ## [0.29.4] - 2026-03-29
 
 ### Changed
