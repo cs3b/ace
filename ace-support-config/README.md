@@ -17,6 +17,18 @@
 [Usage Guide](docs/usage.md)
 `ace-support-config` provides layered configuration loading and merging for ACE, resolving values from `.ace` project files, user home defaults, and gem-bundled defaults with deterministic precedence. Used by [ace-llm](../ace-llm), [ace-search](../ace-search), [ace-review](../ace-review), and most other ACE packages.
 
+## ace-config CLI
+
+This package now owns the `ace-config` executable for managing `.ace` configuration files and templates.
+
+```bash
+ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
+ace-config list [--verbose]
+ace-config version
+ace-config help
+```
+
 ## How It Works
 
 1. A resolver builds a configuration cascade from the nearest `.ace` directory up to user-home and gem-default layers.

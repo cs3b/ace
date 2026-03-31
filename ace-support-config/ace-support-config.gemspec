@@ -29,11 +29,15 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     lib/**/*
+    exe/*
     .ace-defaults/**/*
+    docs/**/*
     *.md
     LICENSE
     Rakefile
   ]).select { |f| File.file?(f) }
+  spec.bindir = "exe"
+  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage

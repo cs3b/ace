@@ -26,6 +26,9 @@ require_relative "config/molecules/project_config_scanner"
 # Load organisms (depend on molecules)
 require_relative "config/organisms/config_resolver"
 require_relative "config/organisms/virtual_config_resolver"
+require_relative "config/organisms/config_initializer"
+require_relative "config/organisms/config_diff"
+require_relative "config/models/config_templates"
 
 module Ace
   # Generic configuration cascade management
