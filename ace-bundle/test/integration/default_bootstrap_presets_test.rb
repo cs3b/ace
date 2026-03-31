@@ -21,6 +21,8 @@ class DefaultBootstrapPresetsTest < AceTestCase
 
       assert_nil project_bundle.metadata[:error], "project preset failed: #{project_bundle.metadata[:error]}"
       assert_nil project_base_bundle.metadata[:error], "project-base preset failed: #{project_base_bundle.metadata[:error]}"
+      assert (project_bundle.metadata[:errors] || []).empty?, "project preset warnings: #{project_bundle.metadata[:errors]}"
+      assert (project_base_bundle.metadata[:errors] || []).empty?, "project-base preset warnings: #{project_base_bundle.metadata[:errors]}"
       assert project_bundle.content.is_a?(String)
       assert project_base_bundle.content.is_a?(String)
     end
