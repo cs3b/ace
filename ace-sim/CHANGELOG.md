@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.13.5] - 2026-03-31
+
+### Changed
+- Role-based simulation execution defaults.
+
 ## [0.13.4] - 2026-03-29
 
 ### Changed
