@@ -1,6 +1,6 @@
 ---
 id: 8qrz77
-status: pending
+status: done
 title: Unify Ace configuration path and framework binary setup
 tags: [config, ideas, framework, cli]
 created_at: "2026-03-28 23:28:00"
