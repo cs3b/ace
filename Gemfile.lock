@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.40.6)
+    ace-bundle (0.41.2)
       ace-compressor (~> 0.24)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -106,37 +106,37 @@ PATH
 PATH
   remote: ace-handbook-integration-claude
   specs:
-    ace-handbook-integration-claude (0.3.4)
-      ace-handbook (~> 0.21)
+    ace-handbook-integration-claude (0.3.5)
+      ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-codex
   specs:
-    ace-handbook-integration-codex (0.3.3)
-      ace-handbook (~> 0.21)
+    ace-handbook-integration-codex (0.3.4)
+      ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-gemini
   specs:
-    ace-handbook-integration-gemini (0.3.3)
-      ace-handbook (~> 0.21)
+    ace-handbook-integration-gemini (0.3.4)
+      ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-opencode
   specs:
-    ace-handbook-integration-opencode (0.3.3)
-      ace-handbook (~> 0.21)
+    ace-handbook-integration-opencode (0.3.4)
+      ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.3.4)
-      ace-handbook (~> 0.21)
+    ace-handbook-integration-pi (0.3.5)
+      ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.21.4)
+    ace-handbook (0.23.5)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -201,7 +201,7 @@ PATH
   specs:
     ace-prompt-prep (0.23.5)
       ace-b36ts (~> 0.13)
-      ace-bundle (~> 0.40)
+      ace-bundle (~> 0.41)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -225,7 +225,7 @@ PATH
   specs:
     ace-review (0.51.5)
       ace-b36ts (~> 0.13)
-      ace-bundle (~> 0.40)
+      ace-bundle (~> 0.41)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -260,13 +260,13 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.9.2)
+    ace-support-config (0.10.2)
       ace-support-fs (~> 0.3)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.29.3)
+    ace-support-core (0.29.5)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-fs (~> 0.3)
