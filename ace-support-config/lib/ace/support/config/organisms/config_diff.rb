@@ -9,11 +9,12 @@ module Ace
     module Config
       module Organisms
         class ConfigDiff
-          def initialize(global: false, local: false, file: nil, one_line: false)
+          def initialize(global: false, local: false, file: nil, one_line: false, verbose: false)
             @global = global
             @local = local
             @file = file
             @one_line = one_line
+            @verbose = verbose
             @diffs = []
           end
 
@@ -42,6 +43,8 @@ module Ace
           private
 
           def config_directory
+            return ".ace" if @local
+
             @global ? File.expand_path("~/.ace") : ".ace"
           end
 
