@@ -32,32 +32,21 @@ module Ace
         end
 
         def test_list_includes_usage_footer
-          templates = Class.new do
-            class << self
-              def all_gems
-                ["ace-demo"]
-              end
+          Models::ConfigTemplates.reset!
+          output = nil
 
-              def gem_info
-                {"ace-demo" => {source: :local, path: "/tmp/demo"}}
-              end
-
-              def example_dir_for(_gem_name)
-                nil
+          Models::ConfigTemplates.stub(:all_gems, ["ace-demo"]) do
+            Models::ConfigTemplates.stub(:gem_info, {"ace-demo" => {source: :local, path: "/tmp/demo"}}) do
+              Models::ConfigTemplates.stub(:example_dir_for, nil) do
+                output = capture_io { CLI.start(["list"]) }.first
               end
             end
           end
 
-          Models.send(:remove_const, :ConfigTemplates)
-          Models.const_set(:ConfigTemplates, templates)
-
-          output = capture_io { CLI.start(["list"]) }.first
-
           assert_includes output, "ace-demo [local]"
           assert_includes output, "Use 'ace-config init [GEM]'"
         ensure
-          Models.send(:remove_const, :ConfigTemplates)
-          load File.expand_path("../../lib/ace/support/config/models/config_templates.rb", __dir__)
+          Models::ConfigTemplates.reset!
         end
       end
     end
