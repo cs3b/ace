@@ -1,0 +1,38 @@
+test-id: TS-MONO-001
+title: "RubyGems Install Verification"
+area: monorepo
+package: ace-monorepo-e2e
+priority: high
+tags: [release, rubygems, install-verify, deep]
+cost-tier: deep
+tool-under-test: bundle
+
+sandbox-layout:
+  results/tc/01/: "Gem discovery from Gemfile (gem list, count)"
+  results/tc/02/: "Normal bundle install evidence (stdout, exit)"
+  results/tc/03/: "Full-index fallback evidence (stdout, exit)"
+  results/tc/04/: "Classification and proof artifact"
+
+e2e-justification: >
+  Verifying gem installation from RubyGems.org requires network access, a real
+  sandbox with mise-managed Ruby, real bundle install execution, and filesystem
+  artifact production. Unit tests cannot cover registry propagation behavior or
+  metadata resolution. This scenario replaces the former workflow at
+  the former wfi://release/rubygems-verify-install workflow (now removed).
+
+requires:
+  tools: [bundle, mise, ruby]
+  ruby: ">= 3.0"
+  network: true
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      # Generate a verification Gemfile from the project root Gemfile
+      # Strip path: directives so gems resolve from RubyGems.org
+      echo "source 'https://rubygems.org'" > Gemfile
+      echo "" >> Gemfile
+      grep "^gem 'ace-" "$PROJECT_ROOT_PATH/Gemfile" | sed "s/, path:.*//" >> Gemfile
+  - agent-env:
+      PROJECT_ROOT_PATH: .

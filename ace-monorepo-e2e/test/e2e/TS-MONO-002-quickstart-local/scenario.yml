@@ -1,0 +1,39 @@
+test-id: TS-MONO-002
+title: "Quick-Start Local Validation"
+area: monorepo
+package: ace-monorepo-e2e
+priority: high
+tags: [quickstart, docs-verify, happy-path]
+cost-tier: happy-path
+tool-under-test: ace-idea
+
+sandbox-layout:
+  results/tc/01/: "Idea capture evidence (file creation, list output)"
+  results/tc/02/: "Task creation evidence (file creation, show output)"
+  results/tc/03/: "Protocol navigation evidence (workflow list, bundle output)"
+  results/tc/04/: "Config cascade evidence (override takes precedence)"
+
+e2e-justification: >
+  Validates that the documented quick-start steps in docs/quick-start.md
+  produce the claimed outcomes when executed by a new user. Requires real
+  CLI execution of ace-idea, ace-task, ace-bundle, and ace-nav in a
+  sandbox with real filesystem state. Catches doc drift where documented
+  commands no longer work as described.
+
+unit-coverage-reviewed:
+  - ace-idea/test/commands/create_command_test.rb
+  - ace-task/test/commands/create_command_test.rb
+  - ace-bundle/test/commands/bundle_command_test.rb
+
+requires:
+  tools: [ace-idea, ace-task, ace-bundle, ace-nav, ace-search]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      # Copy the quick-start doc into sandbox for reference
+      cp "$PROJECT_ROOT_PATH/docs/quick-start.md" quick-start.md
+  - agent-env:
+      PROJECT_ROOT_PATH: .

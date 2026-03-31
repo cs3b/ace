@@ -185,10 +185,10 @@ If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a g
 
 ### 10. Recommended: Verify Installation
 
-After live publishing, run the standalone installation verification workflow to confirm gems are installable from RubyGems.org:
+After live publishing, run the E2E install verification scenario to confirm gems are installable from RubyGems.org:
 
-```text
-wfi://release/rubygems-verify-install
+```bash
+ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001
 ```
 
 This sets up an isolated sandbox and classifies the install path as `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`. See `ace-handbook/docs/release-rubygems-proof.md` for the classification contract.
@@ -204,7 +204,7 @@ This sets up an isolated sandbox and classifies the install path as `SAFE`, `LAG
 - Credentials are verified before any publish attempt
 - Live mode gathers publish plan then collects OTP once and reuses it for every `gem push`
 - Live mode verifies RubyGems `created_at` and `built_at` for each newly published version
-- After live publishing, recommend running `wfi://release/rubygems-verify-install` to verify installation propagation
+- After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` to verify installation propagation
 
 ## Response Template
 
@@ -212,4 +212,4 @@ This sets up an isolated sandbox and classifies the install path as `SAFE`, `LAG
 **Skipped:** [count] (already on RubyGems)
 **Failed:** [count and reasons, if any]
 **Mode:** [live|dry-run]
-**Next Step:** Run `wfi://release/rubygems-verify-install` to verify installation
+**Next Step:** Run `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` to verify installation
