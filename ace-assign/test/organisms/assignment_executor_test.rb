@@ -525,8 +525,8 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       added_numbers = result[:added].map(&:number)
       assert_equal %w[011 012], added_numbers
-      assert_equal "batch_from:batch-steps.yml", result[:added][0].added_by
-      assert_equal "batch_from:batch-steps.yml", result[:added][1].added_by
+      assert_equal "injected_after:010", result[:added][0].added_by
+      assert_equal "injected_after:011", result[:added][1].added_by
     end
   end
 
@@ -602,13 +602,13 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_includes parent_content, "context: fork"
       assert_includes parent_content, "split_step_type: split-subtree-root"
       assert_includes parent_content, "Subtree root orchestrator step."
-      assert_includes parent_content, "added_by: batch_from:add-task-xyz.yml"
+      assert_includes parent_content, "added_by: injected_after:010"
       assert_includes child_1_content, "source_skill: as-onboard"
       assert_includes child_1_content, "source_workflow: wfi://onboard"
       assert_includes child_content, "context: fork"
       assert_includes child_content, "source_skill: as-task-plan"
       assert_includes child_content, "source_workflow: wfi://task/plan"
-      assert_includes child_content, "added_by: batch_from:add-task-xyz.yml"
+      assert_includes child_content, "added_by: child_of:011"
     end
   end
 
@@ -707,8 +707,8 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_equal :pending, result[:state].find_by_number("010").status
       assert_equal :in_progress, result[:state].find_by_number("010.01").status
       assert_equal :pending, result[:state].find_by_number("010.02").status
-      assert_equal "batch_from:children.yml", result[:state].find_by_number("010.01").added_by
-      assert_equal "batch_from:children.yml", result[:state].find_by_number("010.02").added_by
+      assert_equal "child_of:010", result[:state].find_by_number("010.01").added_by
+      assert_equal "child_of:010", result[:state].find_by_number("010.02").added_by
     end
   end
 
