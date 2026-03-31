@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **ace-support-config v0.10.0**: Added the new `ace-config` CLI (init/diff/list/version/help), migrated config CLI runtime modules into `ace-support-config`, and documented it as the canonical interface.
+- **ace-support-core v0.29.5**: Removed the legacy `ace-framework` command ownership (executable, wrapper, and migrated config runtime modules) and updated bootstrap/config docs to point to `ace-config`.
 - **ace-handbook v0.23.4**: Reorganized install docs by toolkit building blocks (Plan, Build, Context, QA, Git) with all gems in `development, test` group; shipped default sync config with no providers pre-enabled.
 - **ace-handbook v0.23.3**: Extracted RubyGems installation verification into standalone `wfi://release/rubygems-verify-install` workflow with mise-based sandbox isolation, separating verification from publishing concerns.
 - **ace-handbook v0.22.0**: Added a deterministic RubyGems propagation proof gate to coordinated release workflows with explicit `SAFE`, `LAG_DETECTED`, and `METADATA_BROKEN` classifications, plus operator-facing proof contract documentation.
