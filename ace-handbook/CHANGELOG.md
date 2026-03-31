@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.4] - 2026-03-31
+
+### Changed
+- Shipped default sync config with no providers pre-enabled so users choose their own agent integrations.
+- Reorganized install instructions across README, quick-start, and DEVELOPMENT docs by toolkit building blocks (Plan, Build, Context, QA, Git) with all gems in `development, test` group.
+
 ## [0.23.3] - 2026-03-31
 
 ### Changed
