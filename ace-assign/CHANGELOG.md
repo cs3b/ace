@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.9] - 2026-03-31
+
+### Changed
+- Updated task archival commands to persist task-state transitions during workflow execution using `--gc`/`--git-commit` modes in terminal task completion steps.
+
 ## [0.41.8] - 2026-03-30
 
 ### Fixed

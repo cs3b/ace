@@ -20,7 +20,7 @@ instructions: |
 
   1. Run the status update command:
      ```bash
-     ace-task update {{taskref}} --set status=done --move-to archive
+     ace-task update {{taskref}} --set status=done --move-to archive --git-commit
      ```
 
   2. **VERIFY the status change** (do not skip):
@@ -38,16 +38,16 @@ instructions: |
      ```
      If all subtasks show `✓` (done), mark the parent done too:
      ```bash
-     ace-task update {{parent_taskref}} --set status=done --move-to archive
+     ace-task update {{parent_taskref}} --set status=done --move-to archive --git-commit
      ace-task show {{parent_taskref}}
      ```
      Repeat upward if the parent itself has a parent.
 
-  4. **Commit the task file moves:**
+  4. **Optional validation**: verify the moved task is now archived and complete:
      ```bash
-     ace-git-commit .ace-tasks/ -i "archive completed tasks"
+     ace-task show {{taskref}}
+     ace-task show {{parent_taskref}}
      ```
-     The `--move-to archive` flag relocates task files. This commit captures those moves.
 
 when_to_skip:
   - "Task was already marked done (verified via ace-task show)"

@@ -162,12 +162,7 @@ steps:
           - `TASKREFS="{{taskrefs}}"`
           - `IFS=',' read -ra refs <<< "${TASKREFS// /}"`
         - For each `ref`:
-          - `ace-task update "$ref" --set status=done --move-to archive`
-      - |
-        After all tasks are archived, commit the file moves:
-        ```bash
-        ace-git-commit .ace-tasks/ -i "archive completed tasks"
-        ```
+          - `ace-task update "$ref" --set status=done --move-to archive --gc`
 
   - name: create-retro
     number: "160"
