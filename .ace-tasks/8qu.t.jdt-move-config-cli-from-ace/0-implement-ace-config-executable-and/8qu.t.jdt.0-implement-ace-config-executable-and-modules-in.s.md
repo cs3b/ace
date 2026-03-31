@@ -1,6 +1,6 @@
 ---
 id: 8qu.t.jdt.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-31 12:55:26"
 estimate: TBD
@@ -8,16 +8,10 @@ dependencies: []
 tags: [cli, config, ace-support-config]
 parent: 8qu.t.jdt
 bundle:
-  presets: ["project"]
-  files:
-    - ace-support-core/lib/ace/core/cli.rb
-    - ace-support-core/lib/ace/core/organisms/config_initializer.rb
-    - ace-support-core/lib/ace/core/organisms/config_diff.rb
-    - ace-support-core/lib/ace/core/models/config_templates.rb
-    - ace-support-core/exe/ace-framework
-    - ace-support-config/ace-support-config.gemspec
-    - ace-support-config/lib/ace/support/config.rb
+  presets: [project]
+  files: [ace-support-core/lib/ace/core/cli.rb, ace-support-core/lib/ace/core/organisms/config_initializer.rb, ace-support-core/lib/ace/core/organisms/config_diff.rb, ace-support-core/lib/ace/core/models/config_templates.rb, ace-support-core/exe/ace-framework, ace-support-config/ace-support-config.gemspec, ace-support-config/lib/ace/support/config.rb, ace-support-config/README.md, ace-support-config/docs/usage.md, bin/ace-framework, ace-support-core/test/integration/config_initializer_bootstrap_test.rb]
   commands: []
+needs_review: false
 ---
 
 # Implement ace-config executable and modules in ace-support-config
@@ -41,6 +35,8 @@ A new `ace-config` executable is added to ace-support-config. It provides identi
 5. `ace-config help` / `--help` / `-h` — prints help text
 
 All output, error messages, and exit codes are identical to current behavior, except the command name string changes from `ace-framework` to `ace-config`.
+
+This subtask owns the full introduction slice for the new command. It adds `ace-support-config/exe/ace-config`, updates `ace-support-config.gemspec` to package and ship the executable, adds the repo-root `bin/ace-config` wrapper, migrates or recreates the relevant CLI/integration coverage in `ace-support-config`, and updates `ace-support-config` docs to document `ace-config` as the canonical interface.
 
 ### Interface Contract
 
@@ -69,9 +65,13 @@ Warning: No configuration found for ace-nonexistent-gem
 - `ace-config list` output matches current `ace-framework list` output
 - `ace-config version` prints the ace-support-config version string
 - `ace-config diff --one-line` shows config drift summary
+- `ace-support-config/exe/ace-config` exists and is packaged by ace-support-config
+- `bin/ace-config` exists and works before subtask .1 begins
 - CLI class lives in `Ace::Support::Config` namespace (not `Ace::Core`)
 - Config modules (initializer, diff, templates) live in `ace-support-config` package
 - ace-support-config gemspec declares `ace-config` as executable
+- ace-support-config README and usage docs document `ace-config`
+- Existing bootstrap/config coverage from ace-support-core is moved or recreated in ace-support-config
 - ace-support-config test suite passes with new CLI coverage
 
 ### Validation Questions
@@ -101,6 +101,7 @@ Warning: No configuration found for ace-nonexistent-gem
 - `ace-config init --dry-run` end-to-end in a project with ace-* gems installed
 - `ace-config list` discovers gems from both local and gem sources
 - `ace-config diff --one-line` produces summary output
+- `bin/ace-config --help` works from the repo root
 
 ### Failure/Invalid Path Validation
 
@@ -111,5 +112,5 @@ Warning: No configuration found for ace-nonexistent-gem
 ### Verification Commands
 
 - `cd ace-support-config && ace-test` — full test suite passes
-- `ace-config --help` — prints help with correct command name
-- `ace-config init --dry-run` — discovers templates
+- `bin/ace-config --help` — prints help with correct command name
+- `bin/ace-config init --dry-run` — discovers templates

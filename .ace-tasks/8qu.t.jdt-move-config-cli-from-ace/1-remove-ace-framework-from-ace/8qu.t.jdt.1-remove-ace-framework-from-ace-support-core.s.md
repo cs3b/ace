@@ -1,6 +1,6 @@
 ---
 id: 8qu.t.jdt.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-31 12:55:29"
 estimate: TBD
@@ -8,22 +8,10 @@ dependencies: [8qu.t.jdt.0]
 tags: [cli, config, ace-support-core, docs]
 parent: 8qu.t.jdt
 bundle:
-  presets: ["project"]
-  files:
-    - ace-support-core/exe/ace-framework
-    - ace-support-core/lib/ace/core/cli.rb
-    - ace-support-core/lib/ace/core/organisms/config_initializer.rb
-    - ace-support-core/lib/ace/core/organisms/config_diff.rb
-    - ace-support-core/lib/ace/core/models/config_templates.rb
-    - ace-support-core/ace-support-core.gemspec
-    - ace-support-core/README.md
-    - ace-support-core/docs/config.md
-    - ace-support-core/.ace-defaults/README.md
-    - bin/ace-framework
-    - README.md
-    - docs/quick-start.md
-    - DEVELOPMENT.md
+  presets: [project]
+  files: [ace-support-core/exe/ace-framework, ace-support-core/lib/ace/core/cli.rb, ace-support-core/lib/ace/core/organisms/config_initializer.rb, ace-support-core/lib/ace/core/organisms/config_diff.rb, ace-support-core/lib/ace/core/models/config_templates.rb, ace-support-core/ace-support-core.gemspec, ace-support-core/README.md, ace-support-core/docs/config.md, ace-support-core/.ace-defaults/README.md, bin/ace-framework, README.md, docs/quick-start.md, DEVELOPMENT.md]
   commands: []
+needs_review: false
 ---
 
 # Remove ace-framework from ace-support-core and update all references
@@ -47,7 +35,7 @@ After subtask .0 delivers the new `ace-config` CLI, this subtask removes the old
    - `ace-support-core/lib/ace/core/organisms/config_diff.rb`
    - `ace-support-core/lib/ace/core/models/config_templates.rb`
 4. **Update ace-support-core gemspec**: remove `ace-framework` from executables
-5. **Update bin/ wrappers**: remove `bin/ace-framework`, add `bin/ace-config`
+5. **Update bin/ wrappers**: remove `bin/ace-framework` (the new `bin/ace-config` wrapper already exists from subtask .0)
 6. **Update onboarding docs**: replace `ace-framework` with `ace-config` in:
    - `README.md` (install section, step 3)
    - `docs/quick-start.md`
@@ -55,6 +43,8 @@ After subtask .0 delivers the new `ace-config` CLI, this subtask removes the old
 7. **Update ace-support-core docs**: `ace-support-core/README.md`, `ace-support-core/docs/config.md`
 
 No compatibility shim for `ace-framework` (pre-1.0, ADR-024 applies).
+
+This subtask is cleanup-only. Introduction of the new command, its packaging in `ace-support-config`, the repo-root `bin/ace-config` wrapper, and the migrated bootstrap/config coverage are all completed in subtask .0 before any `ace-framework` removal happens here.
 
 ### Interface Contract
 
@@ -83,6 +73,7 @@ Error Handling:
 - `FrameworkCLI` class no longer exists in ace-support-core
 - `ConfigInitializer`, `ConfigDiff`, `ConfigTemplates` no longer exist in ace-support-core (they live in ace-support-config)
 - `grep -r 'ace-framework' README.md docs/quick-start.md DEVELOPMENT.md` returns zero matches
+- Remaining `ace-framework` references are limited to changelog/history/task/archive content
 - `cd ace-support-core && ace-test` passes with no dangling references
 - `cd ace-support-config && ace-test` still passes
 
@@ -124,5 +115,5 @@ Error Handling:
 - `cd ace-support-core && ace-test` — test suite passes
 - `cd ace-support-config && ace-test` — test suite passes
 - `grep -r 'ace-framework' README.md docs/quick-start.md DEVELOPMENT.md` — zero matches
-- `ace-config --help` — still works after removal
+- `bin/ace-config --help` — still works after removal
 - `ace-search ace-framework --content --hidden` — remaining matches should only be in: CHANGELOG.md (historical), `.ace-tasks/_archive/`, `.ace-ideas/_archive/`, `.ace-retros/_archive/`, and the task spec for this task itself
