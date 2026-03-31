@@ -367,7 +367,8 @@ module Ace
             end
           end
 
-          # Keep parity with BaseClient defaults for providers that rely on fallback keys.
+          # Keep parity with BaseClient/provider.yml defaults for providers that rely on
+          # fallback keys. If new providers are added, update this fallback map as well.
           env_keys.concat(default_env_keys_for_provider(provider_name)) if env_keys.empty?
           env_keys.map(&:to_s).map(&:strip).reject(&:empty?).uniq
         end
