@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-31
+
+### Added
+- Introduced `ace-config` CLI as the canonical config command with parity for `init`, `diff`, `list`, `version`, and `help`.
+- Added package executable `exe/ace-config` and repo wrapper `bin/ace-config`.
+
+### Changed
+- Migrated config CLI runtime to `Ace::Support::Config` with in-package modules for CLI dispatch, template discovery, initialization, and diff operations.
+- Updated package docs to present `ace-config` as the primary interface.
+
+### Technical
+- Added integration tests for `ace-config` CLI behavior and bootstrap/config initialization flows.
+
 ## [0.9.2] - 2026-03-29
 
 ### Technical
