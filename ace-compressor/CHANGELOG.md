@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.6] - 2026-03-31
+
+### Changed
+- Role-based compression defaults.
+
 ## [0.24.5] - 2026-03-29
 
 ### Changed
