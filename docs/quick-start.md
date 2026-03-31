@@ -27,10 +27,10 @@ bundle add --group "development, test" \
 bundle install
 ```
 
-3. Initialize project config (`ace-framework` comes from `ace-support-core`, not a separate gem):
+3. Initialize project config (`ace-config` comes from `ace-support-config`, not a separate gem):
 
 ```bash
-ace-framework init
+ace-config init
 ```
 
 4. Sync handbook assets to your agent platforms:

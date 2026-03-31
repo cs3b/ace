@@ -99,10 +99,10 @@ Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems
 bundle install
 ```
 
-3. Initialize project config (`ace-framework` is provided by `ace-support-core`):
+3. Initialize project config (`ace-config` is provided by `ace-support-config`):
 
 ```bash
-ace-framework init
+ace-config init
 ```
 
 4. Sync agent assets:
