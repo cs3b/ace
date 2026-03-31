@@ -15,12 +15,17 @@ When validating onboarding docs or reproducing plain-project setup, use this exa
 1. Add gems:
 
 ```bash
-bundle add ace-bundle ace-handbook ace-llm ace-task ace-assign \
+bundle add --group "development, test" \
+  ace-idea ace-task ace-sim \
+  ace-overseer ace-assign ace-git-worktree ace-tmux \
+  ace-bundle ace-handbook ace-search ace-docs \
+  ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
+  ace-git-commit ace-git-secrets ace-git \
   ace-handbook-integration-claude ace-handbook-integration-codex
-# Other integrations: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+# Also available: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
 
-Dependencies like `ace-support-core` and `ace-support-config` are pulled in automatically.
+Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled in automatically.
 
 2. Install and initialize:
 

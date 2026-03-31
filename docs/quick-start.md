@@ -8,16 +8,18 @@ Ruby 3.2+ required.
 
 Use this full-stack setup path before the walkthrough:
 
-1. Add the ACE tools you need plus agent integrations:
+1. Add the ACE tools you need:
 
 ```bash
-bundle add ace-bundle ace-handbook ace-llm ace-task ace-assign \
-  ace-idea ace-overseer \
+bundle add --group "development, test" \
+  ace-idea ace-task ace-sim \
+  ace-overseer ace-assign ace-git-worktree ace-tmux \
+  ace-bundle ace-handbook ace-search ace-docs \
+  ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
+  ace-git-commit ace-git-secrets ace-git \
   ace-handbook-integration-claude ace-handbook-integration-codex
-# Other integrations: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+# Also available: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
-
-Dependencies like `ace-support-core`, `ace-support-nav`, and `ace-support-config` are pulled in automatically.
 
 2. Install gems:
 
