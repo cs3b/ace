@@ -311,6 +311,15 @@ fi
 ## Phase 5: Push Changes
 
 ```bash
+# Sync lockfile after version changes (mono-repo: version.rb edits during rebase make lockfile stale)
+if [ -f Gemfile.lock ]; then
+  bundle install
+  if ! git diff --quiet Gemfile.lock; then
+    git add Gemfile.lock
+    git commit -m "chore: sync Gemfile.lock after rebase"
+  fi
+fi
+
 # Run tests before pushing
 if ! ace-test; then
   echo "ERROR: Tests failed. Fix before pushing."
