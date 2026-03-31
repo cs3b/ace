@@ -91,6 +91,7 @@ module Ace
             opts.on("--local", "Compare local configs (default)") { options[:local] = true }
             opts.on("--file PATH", "Compare specific file") { |f| options[:file] = f }
             opts.on("--one-line", "One-line summary per file") { options[:one_line] = true }
+            opts.on("--verbose", "Include unchanged files in one-line summary") { options[:verbose] = true }
             opts.on("-h", "--help", "Show this help") do
               puts opts
               exit
