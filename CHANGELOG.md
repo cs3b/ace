@@ -11,11 +11,12 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.41.7**: Made `wfi://release/publish` verification package-aware by running `ace-test` against the resolved release package set.
 - **ace-bundle v0.41.1**: Removed the generic-project preset dependency on `ace-task` by replacing task listing with `ls -1` for plain-repo compatibility.
 - **ace-handbook v0.23.1**: Restored `Bash(gem:*)` permissions in `as-release-rubygems-publish` and added regression coverage for projected skill permission drift.
-- **ace-llm v0.31.2**: Shipped canonical role catalog with gem defaults; added type guard for non-Hash role config input.
-- **ace-docs v0.31.7**: Fixed analyze CLI to read nested `llm.model` config path after roles migration.
+- **ace-llm v0.32.0**: Shipped canonical role catalog with gem defaults; added type guard for non-Hash role config input.
+- **ace-docs v0.31.8**: Fixed analyze CLI to read nested `llm.model` config path after roles migration.
+- **ace-git v0.19.3**: Added Gemfile.lock sync step to rebase workflow to prevent stale lockfiles after version conflict resolution.
 
 ### Added
-- **ace-llm v0.31.0**: Added named `role:<name>` model resolution with strict provider availability checks and caller override precedence for `:thinking` / `@preset`.
+- **ace-llm v0.32.0**: Added named `role:<name>` model resolution via `role:*` selectors in `ProviderModelParser`, with strict runtime availability checks and caller override precedence for `:thinking` / `@preset`.
 
 ### Changed
 - **ace-handbook v0.23.5**: Replaced `wfi://release/rubygems-verify-install` workflow with E2E scenario `TS-MONO-001-rubygems-install` and updated all skill/doc references to use `ace-test-e2e`.
@@ -41,7 +42,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch releases after the `ace-handbook` 0.22 line update: `ace-handbook-integration-claude v0.3.5`, `ace-handbook-integration-codex v0.3.4`, `ace-handbook-integration-gemini v0.3.4`, `ace-handbook-integration-opencode v0.3.4`, `ace-handbook-integration-pi v0.3.5`.
 - Dependency-following patch releases after the `ace-bundle` 0.41 line update: `ace-prompt-prep v0.23.5`, `ace-review v0.51.5`.
 - **ace-llm v0.31.1**: Added regression coverage for `GOOGLE_API_KEY`-only credential fallback behavior.
-- Coordinated patch releases for the role-migration package set: `ace-assign v0.41.6`, `ace-compressor v0.24.5`, `ace-docs v0.31.6`, `ace-git-commit v0.23.5`, `ace-idea v0.18.4`, `ace-lint v0.27.7`, `ace-prompt-prep v0.23.5`, `ace-retro v0.16.5`, `ace-review v0.51.5`, `ace-sim v0.13.4`, `ace-task v0.31.8`, `ace-test-runner-e2e v0.29.3`.
+- Coordinated patch releases for the role-migration package set: `ace-assign v0.41.10`, `ace-compressor v0.24.6`, `ace-docs v0.31.8`, `ace-git v0.19.3`, `ace-git-commit v0.23.6`, `ace-idea v0.18.5`, `ace-lint v0.27.8`, `ace-prompt-prep v0.23.6`, `ace-retro v0.16.6`, `ace-review v0.51.6`, `ace-sim v0.13.5`, `ace-task v0.31.9`, `ace-test-runner-e2e v0.29.4`.
 
 ## [0.9.936] - 2026-03-29
 
