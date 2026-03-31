@@ -26,44 +26,102 @@ llm:
     providers: []
 
   # Named model roles for indirection across consumer configs.
+  # Each role lists candidates in priority order; RoleResolver returns
+  # the first available one. Every role covers codex, claude, and gemini
+  # so resolution succeeds even when a provider is unconfigured.
   # Override in .ace/llm/config.yml for project-specific role assignments.
   roles:
+    # --- Diagnostic ---
     doctor:
       - gemini:flash-latest@yolo
+      - claude:haiku@yolo
+      - codex:mini@yolo
+
+    # --- Planning ---
     planner:
       - codex:gpt@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
+
+    # --- Review (single-model and synthesis) ---
     review-default:
       - codex:codex@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-synthesizer:
       - codex:gpt@ro
-    review-fallback:
-      - claude:sonnet
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
+
+    # --- Review (provider-specific, for parallel multi-model review) ---
     review-claude:
       - claude:opus@ro
+      - codex:gpt@ro
+      - gemini:pro-latest@ro
     review-codex:
       - codex:gpt@ro
+      - claude:sonnet@ro
+      - gemini:pro-latest@ro
     review-gemini:
       - gemini:pro-latest@ro
+      - claude:sonnet@ro
+      - codex:gpt@ro
+
+    # --- Assignment execution ---
     assign-executor:
       - codex:codex@yolo
+      - claude:sonnet@yolo
+      - gemini:pro-latest@yolo
+    assign-engineer:
+      - codex:codex@yolo
+      - claude:sonnet@yolo
+      - gemini:pro-latest@yolo
+    assign-orchestrator:
+      - claude:sonnet
+      - codex:gpt
+      - gemini:pro-latest
+
+    # --- E2E testing ---
     e2e-executor:
       - claude:haiku@yolo
+      - codex:mini@yolo
+      - gemini:flash-latest@yolo
     e2e-reporter:
       - claude:haiku
+      - codex:mini
+      - gemini:flash-latest
+
+    # --- Utility ---
     prompt-enhance:
-      - glite
+      - google:lite
+      - codex:mini
+      - claude:haiku
     commit:
       - codex:mini
+      - claude:haiku
+      - gemini:flash-latest
     docs-analysis:
-      - glite
+      - google:lite
+      - codex:mini
+      - claude:haiku
     idea-enhance:
       - gemini:flash-latest
+      - codex:mini
+      - claude:haiku
     compressor:
-      - glite
+      - google:lite
+      - codex:mini
+      - claude:haiku
+
+    # --- Simulation ---
     sim-primary:
       - google:flash-preview
+      - claude:haiku
+      - codex:mini
     sim-synthesis:
       - claude:haiku
+      - codex:mini
+      - gemini:flash-latest
 
   # Default context limit for unknown models (in tokens)
   # Provider-specific limits are defined in providers/*.yml
