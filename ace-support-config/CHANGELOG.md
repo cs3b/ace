@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-03-31
+
+### Fixed
+- Initialize project-root handling in RubyGems verify-install workflow usage paths to avoid brittle Gemfile resolution.
+- Remove Bundler runtime dependency from `ace-config` executable startup.
+- Wire `ConfigDiff` local/verbose behavior through CLI execution paths.
+
+### Technical
+- Added reset support for `ConfigTemplates` cache state and regression coverage for CLI/config diff behavior.
+
 ## [0.10.0] - 2026-03-31
 
 ### Added
