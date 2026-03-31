@@ -72,8 +72,7 @@ defaults:
 feedback:
   enabled: true                           # Enable feedback extraction (default: true)
   synthesis_model: role:review-synthesizer  # Model for synthesizing feedback items
-  fallback_models:                        # Fallback models if primary synthesis fails
-    - role:review-fallback
+  # fallback_models not needed — role:review-synthesizer has built-in multi-provider fallback
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability
