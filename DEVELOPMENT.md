@@ -15,11 +15,12 @@ When validating onboarding docs or reproducing plain-project setup, use this exa
 1. Add gems:
 
 ```bash
-bundle add ace-support-core ace-bundle ace-handbook ace-llm ace-task ace-assign \
-  ace-handbook-integration-claude ace-handbook-integration-codex \
-  ace-handbook-integration-gemini ace-handbook-integration-opencode \
-  ace-handbook-integration-pi
+bundle add ace-bundle ace-handbook ace-llm ace-task ace-assign \
+  ace-handbook-integration-claude ace-handbook-integration-codex
+# Other integrations: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
+
+Dependencies like `ace-support-core` and `ace-support-config` are pulled in automatically.
 
 2. Install and initialize:
 
