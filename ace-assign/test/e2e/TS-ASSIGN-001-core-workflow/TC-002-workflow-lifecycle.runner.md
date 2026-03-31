@@ -14,7 +14,10 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - `results/tc/02/fail-implement.stdout`, `.exit` — failure handling
 - `results/tc/02/status-stalled.stdout` — stalled queue status
 - `results/tc/02/add-dynamic.stdout`, `.exit` — dynamic step addition
+- `results/tc/02/finish-dynamic.stdout`, `.exit` — dynamic step completion
 - `results/tc/02/retry.stdout`, `.exit` — retry mechanics
+- `results/tc/02/finish-verify.stdout`, `.exit` — verify step completion
+- `results/tc/02/finish-retry.stdout`, `.exit` — retry step completion
 - `results/tc/02/status-final.stdout` — final completion status
 
 ## Constraints
@@ -28,5 +31,6 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - Verify report is rejected on stalled queue.
 - Add dynamic step "fix-issue" (auto-activates on stalled queue), complete it.
 - Retry failed step 020 (should NOT change current step).
-- Complete verify step, then complete retry step, verify assignment completion.
+- Complete verify step, then complete retry step, and capture each finish command exit/status output.
+- Final status must show no active step and an all-done terminal queue (for example "All steps complete!" or "Assignment completed!").
 - All artifacts must come from real tool execution.

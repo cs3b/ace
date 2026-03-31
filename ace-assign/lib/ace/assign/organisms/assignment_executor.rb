@@ -381,9 +381,6 @@ module Ace
             raise Error, "Child insertion requires an after step reference."
           end
 
-          source_label = source_file.to_s.strip.empty? ? "batch" : File.basename(source_file.to_s)
-          batch_added_by = "batch_from:#{source_label}"
-
           prevalidate_batch_trees!(steps)
 
           added_steps = []
@@ -395,7 +392,7 @@ module Ace
               step_config,
               after: as_child ? after : sibling_cursor,
               as_child: as_child,
-              added_by: batch_added_by,
+              added_by: nil,
               location: "steps[#{index}]"
             )
             added_steps.concat(inserted[:added])
