@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-support-config v0.10.1**: Hardened `ace-config` runtime behavior by removing Bundler startup dependency, fixing project-root path handling in release verification workflows, and wiring `config diff` local/verbose flags through CLI execution.
 - **ace-assign v0.41.8**: Clarified the shipped `wfi://release/publish` release contract so root changelog guidance consistently covers package version bullets and RubyGems propagation proof handling.
 - **ace-assign v0.41.7**: Made `wfi://release/publish` verification package-aware by running `ace-test` against the resolved release package set.
 - **ace-bundle v0.41.1**: Removed the generic-project preset dependency on `ace-task` by replacing task listing with `ls -1` for plain-repo compatibility.
