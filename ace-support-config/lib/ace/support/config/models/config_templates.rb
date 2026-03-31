@@ -29,6 +29,10 @@ module Ace
               @gem_info ||= build_gem_info
             end
 
+            def reset!
+              @gem_info = nil
+            end
+
             def build_gem_info
               gems = {}
 
