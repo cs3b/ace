@@ -12,14 +12,16 @@ Validate output routing in one consolidated flow:
 
 ## Workspace
 
-Save all output to `results/tc/04/`. Capture:
-- `results/tc/04/small.stdout`, `.stderr`, `.exit` — small preset output (expect direct content)
-- `results/tc/04/large.stdout`, `.stderr`, `.exit` — large preset output (expect cache file reference)
-- `results/tc/04/large-to-stdio.stdout`, `.stderr`, `.exit` — large preset forced to stdio
-- `results/tc/04/small-to-cache.stdout`, `.stderr`, `.exit` — small preset forced to cache
+Save all output to `results/tc/04/`. Run exactly these four commands and capture each to the named artifacts:
+
+1. `ace-bundle .ace/bundle/presets/small-test.md` → `results/tc/04/small.stdout`, `.stderr`, `.exit`
+2. `ace-bundle .ace/bundle/presets/large-test.md` → `results/tc/04/large.stdout`, `.stderr`, `.exit`
+3. `ace-bundle .ace/bundle/presets/large-test.md --output stdio` → `results/tc/04/large-to-stdio.stdout`, `.stderr`, `.exit`
+4. `ace-bundle .ace/bundle/presets/small-test.md --output cache` → `results/tc/04/small-to-cache.stdout`, `.stderr`, `.exit`
 
 ## Constraints
 
-- The sandbox has `small-test` preset (few lines) and `large-test` preset (600+ lines).
-- Using what you learned from Goal 1, invoke ace-bundle for both threshold and override checks.
+- The sandbox has `small-test` (few lines) and `large-test` (600+ lines) at `.ace/bundle/presets/`.
+- Load via positional file path (not `--file` flag) so that auto-format threshold routing applies.
+- Run exactly the four commands above. Do not add additional test cases.
 - All artifacts must come from real tool execution, not fabricated.
