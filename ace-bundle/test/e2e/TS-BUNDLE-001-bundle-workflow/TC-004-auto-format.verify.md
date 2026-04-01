@@ -12,7 +12,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 - **All capture sets exist** — `results/tc/04/` contains stdout/exit files for threshold and override checks.
-- **All exit codes zero** — Each invocation completes successfully.
+- **Exit codes zero** — `small.exit`, `large.exit`, `large-to-stdio.exit`, and `small-to-cache.exit` all contain `0`.
 - **Small preset to stdio** — `small.stdout` contains actual content and does NOT contain cache-save messaging.
 - **Large preset to cache** — `large.stdout` contains cache-save messaging and does NOT inline full content.
 - **Large forced to stdio** — `large-to-stdio.stdout` contains actual content and does NOT contain cache-save messaging.
