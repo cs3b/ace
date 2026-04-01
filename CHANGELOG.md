@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-bundle v0.41.3**: Wired diff `paths` through `ace-bundle` normalization and loading so configured path filters now reach `git diff -- <paths>`.
+- **ace-review v0.51.7**: Added `diff:RANGE -- path` subject parsing so focused reviews can scope branch diffs to selected files or directories.
 - **ace-test-runner-e2e v0.29.6**: Fixed CLI provider detection to resolve `role:` references before checking, so sandbox isolation and pipeline execution work correctly with role-based model selectors.
 - **ace-test-runner-e2e v0.29.5**: Fixed sandbox isolation by `Dir.chdir` into sandbox before launching LLM agent, preventing E2E artifact leaks to the repo root.
 - **ace-compressor v0.24.7**: Embedded concrete rule-heavy fixture content in TC-004 E2E runner so policy classifier reliably triggers compact refusal.
