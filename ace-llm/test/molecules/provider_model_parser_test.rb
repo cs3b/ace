@@ -38,6 +38,10 @@ module Ace
           def resolve(role_name)
             resolved.fetch(role_name)
           end
+
+          def resolve_with_candidates(role_name)
+            [resolved.fetch(role_name), []]
+          end
         end
 
         def test_parse_returns_inactive_provider_error
