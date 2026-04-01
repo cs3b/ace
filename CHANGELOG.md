@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-test-runner-e2e v0.29.7**: Strengthened monorepo RubyGems-install and quick-start local E2E scenarios with isolated install/freshness checks, explicit Bundler context assertions, and command output/exit evidence rules. Added false-positive risk metadata and output-focused review guidance to `ace-test-runner-e2e` workflow documentation.
+
 ## [0.9.937] - 2026-04-01
 
 ### Fixed
