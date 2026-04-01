@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.29.5**: Fixed sandbox isolation by `Dir.chdir` into sandbox before launching LLM agent, preventing E2E artifact leaks to the repo root.
+- **ace-compressor v0.24.7**: Embedded concrete rule-heavy fixture content in TC-004 E2E runner so policy classifier reliably triggers compact refusal.
 - **ace-bundle v0.41.2**: Made default bootstrap presets self-contained so generated onboarding guidance no longer depends on external release-specific context.
 - **ace-support-config v0.10.1**: Hardened `ace-config` runtime behavior by removing Bundler startup dependency, fixing project-root path handling in release verification workflows, and wiring `config diff` local/verbose flags through CLI execution.
 - **ace-assign v0.41.8**: Clarified the shipped `wfi://release/publish` release contract so root changelog guidance consistently covers package version bullets and RubyGems propagation proof handling.
