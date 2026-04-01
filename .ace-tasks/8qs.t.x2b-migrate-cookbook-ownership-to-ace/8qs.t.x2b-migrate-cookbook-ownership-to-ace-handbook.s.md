@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.x2b
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 22:02:35"
 estimate: TBD
@@ -10,13 +10,8 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/0-create-handbook-cookbook-standards-and/8qs.t.x2b.0-create-handbook-cookbook-standards-and-workflows.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/1-migrate-cookbook-ownership-references-out/8qs.t.x2b.1-migrate-cookbook-ownership-references-out-of-ace.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/8qs.t.x2b.2-seed-handbook-with-canonical-cookbook-examples.s.md]
   commands: []
-needs_review: true
+needs_review: false
 ---
-
-## Review Summary
-
-- Child review status: `8qs.t.x2b.0` ready, `8qs.t.x2b.1` ready, `8qs.t.x2b.2` blocked pending provenance-source answers.
-- Parent promotion is deferred until every draft child passes review, per orchestrator review rules.
 
 # Migrate cookbook ownership to ace-handbook
 

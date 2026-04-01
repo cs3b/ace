@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.x2b.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 22:02:43"
 estimate: TBD
@@ -9,28 +9,24 @@ tags: [docs, cookbook, examples, ace-handbook]
 parent: 8qs.t.x2b
 bundle:
   presets: [project]
-  files: [ace-handbook/handbook/templates/cookbooks/cookbook.template.md, CLAUDE.md, AGENTS.md]
+  files: [ace-handbook/handbook/templates/cookbooks/cookbook.template.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/astro-project-with-ace.input.md, docs/ace-gems.g.md, ace-monorepo-e2e/README.md, .ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md, CLAUDE.md, AGENTS.md]
   commands: []
-needs_review: true
+needs_review: false
 ---
 
 ## Review Questions (Pending Human Input)
 
-### [HIGH] Missing concrete source artifact for the Astro cookbook
+### Resolved: Astro cookbook provenance source
 
-- [ ] Which repository artifact should serve as the canonical source material for `cookbook://setup-starting-an-astro-project-with-ace`?
-- **Research conducted**: Searched `.ace-tasks`, `.ace-retros`, `.ace-ideas`, `docs`, `ace-handbook`, `ace-docs`, and `ace-monorepo-e2e` for Astro-related cookbook drafts and matching URI/title strings.
-- **What was found**: The task references a "User-provided Astro cookbook draft" in References, but no bundled file path or repository artifact currently identifies that source draft.
-- **Suggested default**: Add the exact source file path to the task `bundle.files` and References so the implementer can derive the example from a concrete artifact instead of inventing source material.
-- **Why needs human input**: The task explicitly requires real-work provenance. Without the source artifact, an implementer would have to guess what the Astro cookbook should be based on.
+- Canonical source material for `cookbook://setup-starting-an-astro-project-with-ace` is `.ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/astro-project-with-ace.input.md`.
+- The task bundle now includes that input material so the implementer can derive the example from a concrete artifact.
 
-### [HIGH] Missing explicit provenance source for the monorepo cookbook
+### Resolved: Monorepo cookbook provenance source
 
-- [ ] Which concrete completed-work artifact should anchor `cookbook://setup-starting-a-multi-ruby-gem-monorepo-with-ace`?
-- **Research conducted**: Located monorepo-related repository artifacts, including `ace-monorepo-e2e/` and retros such as `.ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md`, but the task does not name one as the required provenance source.
-- **What was found**: There is enough thematic material to support a monorepo cookbook, but no single source artifact is called out as the canonical learned-from document.
-- **Suggested default**: Name one primary source artifact in `bundle.files` and allow additional supporting artifacts as secondary references.
-- **Why needs human input**: The task says both examples must be derived from real work and explicitly state the source context. The source context must therefore be fixed, not inferred ad hoc during implementation.
+- Canonical source context for `cookbook://setup-starting-a-multi-ruby-gem-monorepo-with-ace` is the current ACE repository itself, focused on how to start a different-profile Ruby multipackage monorepo by reusing the patterns that are specific to this codebase.
+- Primary source artifacts are `docs/ace-gems.g.md`, `ace-monorepo-e2e/README.md`, and `.ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md`.
+- The cookbook should extract what is reusable and distinctive about ACE monorepo setup, package structure, handbook integration, and monorepo-level verification, rather than narrating ACE history.
+- The cookbook should be framed as "how to start a new Ruby multipackage monorepo with ACE-inspired patterns" rather than "how ACE was built."
 
 # Seed handbook with canonical cookbook examples
 
@@ -139,7 +135,9 @@ ace-nav resolve cookbook://setup-starting-a-multi-ruby-gem-monorepo-with-ace
 
 ## References
 
-- User-provided Astro cookbook draft
-- Current ACE mono-repo conventions
+- `.ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/astro-project-with-ace.input.md`
+- `docs/ace-gems.g.md`
+- `ace-monorepo-e2e/README.md`
+- `.ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md`
 - `CLAUDE.md`
 - `AGENTS.md`
