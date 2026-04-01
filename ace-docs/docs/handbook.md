@@ -3,8 +3,8 @@ doc-type: user
 title: ace-docs Handbook Catalog
 purpose: Catalog of ace-docs workflows, skills, templates, and prompts
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-01
+  last-checked: 2026-04-01
 ---
 
 # ace-docs Handbook Catalog
@@ -37,7 +37,6 @@ All workflows are located under `ace-docs/handbook/workflow-instructions/docs/`:
 - `create-user.wf.md`
 - `create-api.wf.md`
 - `create-adr.wf.md`
-- `create-cookbook.wf.md`
 - `maintain-adrs.wf.md`
 - `squash-changelog.wf.md`
 
