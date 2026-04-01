@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.937] - 2026-04-01
+
 ### Fixed
 - **ace-bundle v0.41.3**: Wired diff `paths` through `ace-bundle` normalization and loading so configured path filters now reach `git diff -- <paths>`.
 - **ace-review v0.51.7**: Added `diff:RANGE -- path` subject parsing so focused reviews can scope branch diffs to selected files or directories.
