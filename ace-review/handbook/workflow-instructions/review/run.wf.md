@@ -22,6 +22,7 @@ Review code using ace-review, verify feedback items, and create a plan for apply
 
   - `staged`, `working` - keywords (no prefix needed)
   - `diff:origin/main..HEAD` - git range (prefix required)
+  - `diff:origin/main...HEAD -- ace-test-runner-e2e` - git range filtered to paths
   - `pr:123` - PR diff (prefix required)
   - `files:lib/**/*.rb` - file pattern (prefix required)
   - `task:145` - task context (prefix required)

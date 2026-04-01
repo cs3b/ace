@@ -177,7 +177,7 @@ module Ace
         def parse_typed_subject(input)
           case input
           when /^diff:(.+)$/
-            {"bundle" => {"diffs" => [::Regexp.last_match(1)]}}
+            {"bundle" => parse_diff_subject(::Regexp.last_match(1))}
           when /^diff:$/
             raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)"
           when /^pr:(.+)$/
@@ -222,6 +222,30 @@ module Ace
           else
             nil  # Fall through to existing parsing
           end
+        end
+
+        def parse_diff_subject(value)
+          subject_value = value.to_s.strip
+          raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)" if subject_value.empty?
+
+          if (match = subject_value.match(/\A(.+?)\s+--(?:\s+(.*))?\z/))
+            diff_range = match[1].to_s.strip
+            path_string = match[2].to_s
+          else
+            diff_range = subject_value
+            path_string = nil
+          end
+
+          raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)" if diff_range.empty?
+
+          config = {"diffs" => [diff_range]}
+          return config if path_string.nil?
+
+          paths = path_string.split(/[,\s]+/).map(&:strip).reject(&:empty?).uniq
+          raise ArgumentError, "No valid paths specified after -- for diff: subject" if paths.empty?
+
+          config["paths"] = paths
+          config
         end
 
         # Default timeout for ace-task subprocess (in seconds)

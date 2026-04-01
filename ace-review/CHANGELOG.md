@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Added `diff:RANGE -- path` subject parsing so reviews can scope git diffs to specific files or directories with git-style path filters.
+
 ## [0.51.6] - 2026-03-31
 
 ### Changed
