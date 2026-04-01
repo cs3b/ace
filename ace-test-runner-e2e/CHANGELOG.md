@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.6] - 2026-04-01
+
+### Fixed
+- Resolved `role:` provider references in CLI provider detection so sandbox isolation and pipeline execution apply when using role-based model selectors like `role:e2e-executor`.
+
 ## [0.29.5] - 2026-04-01
 
 ### Fixed
