@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.5] - 2026-04-01
+
+### Fixed
+- Changed pipeline executor to `Dir.chdir` into sandbox before launching the LLM agent, preventing artifact leaks to the repo root.
+
 ## [0.29.4] - 2026-03-31
 
 ### Changed
