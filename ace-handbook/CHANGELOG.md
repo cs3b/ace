@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-04-01
+
 ### Added
 - Added cookbook-first handbook surface with `wfi://handbook/manage-cookbooks` and `wfi://handbook/review-cookbooks` workflows plus canonical cookbook skills (`as-handbook-manage-cookbooks`, `as-handbook-review-cookbooks`) and provider projections.
-- Added canonical cookbook discovery source registration and seeded `setup-starting-an-astro-project-with-ace.cookbook.md` as a handbook-owned cookbook asset.
+- Added canonical handbook-owned cookbook examples for Astro project setup and multi-ruby-gem monorepo setup, including explicit provenance and downstream propagation guidance.
 
 ### Changed
 - Updated README, handbook/usage references, and cookbook template standards to treat `.cookbook.md` as a first-class handbook asset with explicit provenance and concise propagation guidance.
