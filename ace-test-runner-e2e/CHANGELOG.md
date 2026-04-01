@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-monorepo-e2e**: Added stronger command/output evidence gates to `TS-MONO-001-rubygems-install` and `TS-MONO-002-quickstart-local` so local sandbox installs and quick-start workflow checks validate real CLI behavior, output, and exit status rather than directory/file presence alone.
+- **ace-monorepo-e2e**: Updated `ace-test-runner-e2e` workflow instructions and scenario template defaults to reduce false-positive E2E tests through command-level evidence, false-positive risk tagging, and duplicate-command consolidation rules.
+
 ## [0.29.6] - 2026-04-01
 
 ### Fixed

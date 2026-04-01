@@ -163,7 +163,28 @@ All proposed behaviors are already covered by unit tests in {PACKAGE}/test/.
 No E2E test needed. Consider adding unit tests instead if coverage gaps exist.
 ```
 
-### 7a. E2E Decision Record (Required)
+### 7a. Evidence-Gate Review Before Writing Files
+
+Before finalizing the test plan, block weak coverage patterns:
+- **Existence-only TC**:
+  - only checks directory/file existence
+  - no command output/content assertion
+  - missing `*.exit` capture for the executed command
+- **Duplicate-invocation TC**:
+  - same command invocation, same purpose, split across multiple TCs
+
+| TC ID | Decision (KEEP/ADD/SKIP) | Evidence Strength | E2E-only reason | Unit tests reviewed |
+|-------|---------------------------|------------------|-----------------|--------------------|
+| {tc-id} | {decision} | `command-output` | {why this needs real CLI/tools/fs} | {path1,path2} |
+
+Rules:
+- `existence-only` is never valid for KEEP/ADD. Use it only for SKIP rows with explicit unit-test replacement.
+- `SKIP` rows must include replacement unit-test evidence.
+- Non-skipped rows must include command-level artifacts (`stdout`, `stderr`, `exit`, and/or explicit proof files).
+- At least one `unit tests reviewed` path is required for every row.
+- The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
+
+### 7b. E2E Decision Record (Required)
 
 Before writing files, produce a decision record table for every candidate TC:
 
@@ -205,11 +226,13 @@ If a context description was provided, enhance the test with:
 - Verify actual file paths by running the tool first — never hardcode paths from documentation or assumptions
 - Use explicit `&& echo "PASS" || echo "FAIL"` patterns for every verification step
 - Check specific exit codes for error commands (not just "non-zero")
+- Add at least one output-content assertion for each command being verified
 
 **SHOULD (strongly recommended):**
 - Test the real user journey — structure TCs as a sequential workflow, not isolated commands
 - Verify exit codes for all commands, not just error cases
 - Include negative assertions (files/directories that should NOT exist)
+- Capture and retain command output for all assertions (`stdout`, `stderr`, and `*.exit`)
 - Capture and check CLI output content, not just exit codes
 - Verify that status values match actual implementation (e.g., `done` vs `completed`)
 

@@ -125,6 +125,11 @@ Follow the E2E test writing rules:
 - Consolidate assertions sharing the same CLI invocation into a single TC
 - Target 2-5 TCs per scenario
 - Test through the CLI interface, not library imports
+- Add command-level evidence in every runner:
+  - command output (`*.stdout`/`*.stderr`)
+  - command exit status (`*.exit`)
+- Add at least one behavioral/content assertion per command assertion set
+- Remove duplicate command-only TCs; fold related assertions into one TC where possible
 
 **Load the TC template for reference:**
 ```bash
@@ -141,6 +146,7 @@ For each TC classified as MODIFY:
    - **Narrow scope** — remove assertions that unit tests cover, keep only E2E-exclusive checks
    - **Broaden scope** — add assertions for related behavior tested by the same CLI invocation
    - **Fix structure** — add missing sections, fix formatting issues
+   - **Add evidence gates** — if the existing TC relies on existence-only or missing exit/status checks, add explicit command output assertions and `.exit` captures
 3. Update the `last-verified` field if the TC was re-run during modification
 4. Write the updated TC runner/verifier files
 
@@ -228,6 +234,7 @@ Present the execution summary:
 - [ ] TC count matches plan: {yes/no}
 - [ ] No stale references: {yes/no}
 - [ ] All scenarios have 2-5 TCs: {yes/no}
+- [ ] All modified/created TCs include command output + exit artifacts: {yes/no}
 
 ### Next Steps
 

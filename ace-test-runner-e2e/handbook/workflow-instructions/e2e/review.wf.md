@@ -117,19 +117,21 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
   - `last-verified`, `verified-by`
 - Extract the objective (what the TC verifies)
 - Identify which CLI commands the TC runs
+- Record command fingerprint (`command + key flags`) for each command assertion
 - Count verification steps (PASS/FAIL checks)
 - Map to the feature it tests
 - Mark TC evidence status:
-  - `complete` when `e2e-justification` is present and `unit-coverage-reviewed` has at least one path
+  - `complete` when `e2e-justification` is present, command artifacts are present, and `unit-coverage-reviewed` has at least one path
   - `missing` otherwise
+  - `at-risk` when evidence is existence-only or duplicate command invocations are detected
 
 If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | CLI Command | Feature Tested | Verifications | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence |
+| TC ID | Title | Command Invocations | Feature Tested | Verifications | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
 |-------|-------|-------------|----------------|---------------|------|-----------|-------------------|------------------------|----------|
-| {id} | {title} | {command} | {feature} | {n} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing} |
+| {id} | {title} | {command list} | {feature} | {n} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
 
 ### 5. Build Coverage Matrix
 
@@ -143,13 +145,13 @@ Combine the three inventories into a single coverage matrix:
 ```markdown
 ### Coverage Matrix
 
-| Feature | Unit Tests | E2E Tests | Status |
-|---------|-----------|-----------|--------|
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | Covered |
-| {feature} | {test files} ({n} assertions) | none | Unit-only |
-| {feature} | none | {TC IDs} ({n} verifications) | E2E-only |
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | Overlap |
-| {feature} | none | none | Gap |
+| Feature | Unit Tests | E2E Tests | Evidence Strength | False-Positive Risk | Status |
+|---------|-----------|-----------|------------------|----------------------|--------|
+| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output/state+content | low | Covered |
+| {feature} | {test files} ({n} assertions) | none | none | n/a | Unit-only |
+| {feature} | none | {TC IDs} ({n} verifications) | command-output | low | E2E-only |
+| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output or existence-only | medium/high | Overlap |
+| {feature} | none | none | none | high | Gap |
 ```
 
 **Classify each row:**
@@ -158,6 +160,7 @@ Combine the three inventories into a single coverage matrix:
 - **E2E-only** — E2E test exists but no unit test. Valid if the behavior is inherently E2E (subprocess execution, filesystem discovery).
 - **Overlap** — Both unit and E2E test the same assertions. E2E TC is a candidate for removal.
 - **Gap** — Neither unit nor E2E test covers this feature. Needs investigation.
+- If a row has `false-positive risk` `high`, downgrade Covered/Overlap to **manual-review** until evidence is corrected.
 
 ### 6. Generate Review Report
 
@@ -180,6 +183,7 @@ Produce the full review report with actionable findings:
 | E2E scenarios | {n} |
 | E2E test cases | {n} |
 | TCs with decision evidence | {n}/{total} |
+| High-risk false-positive TCs | {n}/{total} |
 
 ### Coverage Matrix
 
@@ -187,12 +191,13 @@ Produce the full review report with actionable findings:
 
 ### Overlap Analysis
 
-TCs that may fail the E2E Value Gate (unit tests cover the same behavior):
+TCs that may fail the E2E Value Gate (unit tests cover the same behavior or high false-positive risk):
 
 | TC ID | Feature | Overlapping Unit Tests | Recommendation |
 |-------|---------|----------------------|----------------|
 | {id} | {feature} | {test files} | Remove — unit tests cover this fully |
 | {id} | {feature} | {test files} | Keep — TC tests CLI pipeline, units test logic |
+| {id} | {feature} | {test files} | Strengthen — currently existence-only or duplicate command assertions |
 
 **Candidates for removal:** {n} TCs have full overlap with unit tests
 

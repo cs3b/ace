@@ -23,6 +23,12 @@ tags: [{cost-tier}, "use-case:{area}"]
 # Optional: Why this scenario must be E2E (not unit-only)
 e2e-justification: "{Requires real CLI/tools/filesystem behavior}"
 
+# Optional: Evidence quality target for review coverage (`command-output`, `state+content`, `existence-only`)
+e2e-evidence-strength: command-output
+
+# Optional: False-positive risk estimate (`low`, `medium`, `high`)
+e2e-false-positive-risk: low
+
 # Optional: Unit test files reviewed during Value Gate analysis
 unit-coverage-reviewed:
   - test/{layer}/{file}_test.rb
