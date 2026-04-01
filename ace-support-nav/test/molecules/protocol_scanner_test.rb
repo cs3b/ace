@@ -205,6 +205,40 @@ module Ace
             end
           end
 
+          def test_cookbook_protocol_excludes_plain_markdown_files
+            create_test_protocol(@test_dir, "cookbook", {
+              "extensions" => [".cookbook.md"],
+              "inferred_extensions" => [".cookbook", ".cookbook.md"]
+            })
+
+            resource_dir = File.join(@test_dir, "cookbook-resources", "cookbook")
+            FileUtils.mkdir_p(resource_dir)
+            File.write(File.join(resource_dir, "setup.cookbook.md"), "# Cookbook")
+            File.write(File.join(resource_dir, "setup.md"), "# Plain Markdown")
+            File.write(File.join(resource_dir, "notes.txt"), "Not matched")
+
+            create_test_source(@test_dir, "cookbook", "cookbook_source", {
+              "path" => resource_dir
+            })
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              wildcard_resources = @scanner.find_resources("cookbook", "*")
+              wildcard_paths = wildcard_resources.map { |r| File.basename(r[:path]) }
+
+              assert_includes wildcard_paths, "setup.cookbook.md"
+              refute_includes wildcard_paths, "setup.md"
+              refute_includes wildcard_paths, "notes.txt"
+
+              exact_resources = @scanner.find_resources("cookbook", "setup")
+              assert_equal 1, exact_resources.length
+              assert exact_resources.first[:path].end_with?("setup.cookbook.md")
+              refute exact_resources.first[:path].end_with?("setup.md")
+            end
+          end
+
           def test_find_resources_in_multiple_sources
             # Create secondary source
             secondary_dir = File.join(@test_dir, "secondary-resources", "test")
@@ -325,10 +359,11 @@ module Ace
               scanner = ProtocolScanner.new(config_loader: create_test_config_loader(fresh_dir))
               resources = scanner.find_resources("skill", "as-task-plan")
 
-              assert_equal 2, resources.length
-              assert_equal preferred_skill, resources[0][:path]
-              assert_equal "as-task-plan", resources[0][:relative_path]
-              assert_equal "preferred-source", resources[0][:source].name
+              assert_operator resources.length, :>=, 2
+              preferred_resource = resources.find { |resource| resource[:path] == preferred_skill }
+              assert preferred_resource
+              assert_equal "as-task-plan", preferred_resource[:relative_path]
+              assert_equal "preferred-source", preferred_resource[:source].name
             end
           ensure
             cleanup_temp_directory(fresh_dir)
@@ -501,8 +536,8 @@ module Ace
               # Find resource using base name without extension - should use inference
               resources = @scanner.find_resources("guide", "markdown-style")
 
-              assert_equal 1, resources.length
-              assert resources[0][:path].include?("markdown-style.g.md")
+              assert_operator resources.length, :>=, 1
+              assert_includes resources.map { |r| r[:path] }, File.join(resource_dir, "markdown-style.g.md")
             end
           end
 

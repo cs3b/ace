@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "date"
 require "pathname"
+require "rubygems"
 require "ace/support/fs"
 require_relative "../models/protocol_source"
 
@@ -39,8 +41,34 @@ module Ace
             # Discover from project hierarchy
             sources.concat(discover_project_sources(protocol))
 
+            # Discover packaged defaults from installed ace-* gems
+            sources.concat(discover_gem_default_sources(protocol))
+
             # Sort by priority (lower number = higher priority)
-            sources.sort_by(&:priority)
+            deduplicate_sources(sources.sort_by(&:priority))
+          end
+
+          def deduplicate_sources(sorted_sources)
+            seen = {}
+
+            sorted_sources.each_with_object([]) do |source, unique_sources|
+              key = dedupe_key(source)
+              next if seen[key]
+
+              seen[key] = true
+              unique_sources << source
+            end
+          end
+
+          def dedupe_key(source)
+            config = source.config || {}
+            [
+              source.name,
+              source.type,
+              source.path,
+              config["relative_path"],
+              config["pattern"]
+            ]
           end
 
           def discover_user_sources(protocol)
@@ -78,8 +106,27 @@ module Ace
             sources
           end
 
+          def discover_gem_default_sources(protocol)
+            sources = []
+            sources_dir_suffix = File.join(".ace-defaults", "nav", "protocols", "#{protocol}-sources")
+
+            Gem::Specification.each do |spec|
+              next unless spec.name.start_with?("ace-")
+
+              sources_dir = File.join(spec.gem_dir, sources_dir_suffix)
+              next unless Dir.exist?(sources_dir)
+
+              Dir.glob(File.join(sources_dir, "*.yml")).each do |source_file|
+                source = load_source_file(source_file, "gem-default")
+                sources << source if source
+              end
+            end
+
+            sources
+          end
+
           def load_source_file(file_path, origin)
-            data = YAML.load_file(file_path)
+            data = YAML.safe_load_file(file_path, permitted_classes: [Date], aliases: true)
             return nil unless data.is_a?(Hash)
 
             # Expand environment variables in path (only for non-gem types)
@@ -122,8 +169,10 @@ module Ace
               10  # Highest priority
             when "user"
               50  # Medium priority
+            when "gem-default"
+              100 # Installed gem defaults
             else
-              100 # Lower priority for gems
+              150 # Lowest priority for unknown origins
             end
           end
         end

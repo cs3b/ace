@@ -1,0 +1,13 @@
+---
+# Project-local cookbook source configuration
+# Enables cookbook discovery from repository-level handbook overlays.
+
+name: project-local-cookbooks
+type: directory
+path: .ace-handbook/cookbooks
+description: Cookbooks from project-local .ace-handbook overlay
+priority: 20
+
+config:
+  pattern: "*.cookbook.md"
+  enabled: true

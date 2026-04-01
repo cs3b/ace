@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-04-01
+
+### Fixed
+- Switched protocol source config loading from `YAML.load_file` to `YAML.safe_load_file` with explicit safe-load options.
+
+### Changed
+- Documented the intent of the project-local `cookbook://` protocol override to prevent accidental cleanup of required monorepo behavior.
+
+## [0.26.2] - 2026-04-01
+
+### Fixed
+- Restricted `cookbook://` inferred extension matching to cookbook-specific forms (`.cookbook`, `.cookbook.md`) so plain `.md` files are not inferred as cookbook assets.
+
+## [0.26.1] - 2026-04-01
+
+### Fixed
+- Deduplicated `cookbook://` listings across overlapping source registrations and resource scans.
+- Added explicit project-local cookbook source support at `.ace-handbook/cookbooks` and mapped cookbook create targets to the `cookbooks/` directory.
+
+### Changed
+- Aligned cookbook protocol create-template placeholders with lint-safe brace format and tightened canonical extension matching.
+
+## [0.26.0] - 2026-04-01
+
 ### Added
 - Added `cookbook://` protocol defaults, extension inference, categories, and create template for cookbook resource discovery.
 

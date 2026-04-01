@@ -7,13 +7,11 @@ enabled: true
 # File extensions to match
 extensions:
   - .cookbook.md
-  - .md
 
 # Extension inference for DWIM behavior
 inferred_extensions:
   - .cookbook
   - .cookbook.md
-  - .md
 
 # Categories for organizing cookbooks
 categories:
@@ -26,7 +24,7 @@ categories:
 
 # Template for creating new cookbooks
 create_template: |
-  # [Category] Cookbook: %{name}
+  # {Category} Cookbook: {Cookbook Name}
 
   ## Purpose
 
@@ -39,7 +37,7 @@ create_template: |
 
   ## Steps
 
-  ### Step 1: [Step title]
+  ### Step 1: {Step Title}
 
   ```bash
   # command
