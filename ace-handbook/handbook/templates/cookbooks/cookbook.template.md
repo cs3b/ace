@@ -1,19 +1,19 @@
 ---
 doc-type: template
-title: "<Category> Cookbook: <Descriptive Name>"
+title: "{Category} Cookbook: {Descriptive Name}"
 purpose: Documentation for ace-handbook/handbook/templates/cookbooks/cookbook.template.md
 ace-docs:
   last-updated: 2026-01-08
   last-checked: 2026-03-21
 ---
 
-# <Category> Cookbook: <Descriptive Name>
+# {Category} Cookbook: {Descriptive Name}
 
 **Created**: YYYY-MM-DD
 **Last Updated**: YYYY-MM-DD
-**Category**: <integration | setup | migration | debugging | automation | pattern>
-**Audience**: <beginner | intermediate | advanced>
-**Estimated Time**: <X hours/minutes>
+**Category**: {integration | setup | migration | debugging | automation | pattern}
+**Audience**: {beginner | intermediate | advanced}
+**Estimated Time**: {X hours/minutes}
 
 ## Purpose
 
@@ -58,7 +58,7 @@ Capture concise downstream updates required after applying this cookbook.
 
 ## Steps
 
-### Step 1: <Step Title>
+### Step 1: {Step Title}
 
 **Objective**: What this step accomplishes
 
@@ -87,7 +87,7 @@ verification-command
 - Common issue 1: Solution
 - Common issue 2: Solution
 
-### Step 2: <Step Title>
+### Step 2: {Step Title}
 
 **Objective**: What this step accomplishes
 
@@ -143,7 +143,7 @@ Expected results
 
 ## Examples
 
-### Example 1: <Scenario Name>
+### Example 1: {Scenario Name}
 
 **Context**: Specific use case or scenario
 
@@ -155,7 +155,7 @@ Expected results
 
 **Result**: What the outcome looks like
 
-### Example 2: <Another Scenario>
+### Example 2: {Another Scenario}
 
 **Context**: Different use case
 
@@ -191,13 +191,13 @@ end
 
 ## Common Patterns
 
-### Pattern 1: <Pattern Name>
+### Pattern 1: {Pattern Name}
 
 **When to use**: Specific conditions or scenarios
 **How to implement**: Brief implementation guide
 **Example**: Quick code or command example
 
-### Pattern 2: <Another Pattern>
+### Pattern 2: {Another Pattern}
 
 **When to use**: Different scenario
 **How to implement**: Implementation approach
@@ -205,14 +205,14 @@ end
 
 ## Troubleshooting
 
-### Error: <Common Error Message>
+### Error: {Common Error Message}
 
 **Symptoms**: How this error manifests
 **Cause**: Root cause of the issue
 **Solution**: Step-by-step fix
 **Prevention**: How to avoid in the future
 
-### Issue: <Common Problem>
+### Issue: {Common Problem}
 
 **Symptoms**: Observable behavior
 **Diagnosis**: How to confirm this is the issue
