@@ -375,7 +375,7 @@ diff:
   ranges:                      # Required: array of git ranges
     - "origin/main...HEAD"
     - "HEAD~5...HEAD"
-  paths:                       # Optional: filter to specific paths (future)
+  paths:                       # Optional: filter to specific paths
     - "src/**/*.rb"
     - "lib/**/*.js"
   since:                       # Optional: alternative to ranges
@@ -386,10 +386,10 @@ The `diff` format supports additional options:
 
 - **`ranges`**: Array of git range strings (same as simple format)
 - **`since`**: Single reference point (automatically expands to `since...HEAD`)
-- **`paths`**: Path filtering (reserved for future ace-git integration)
+- **`paths`**: Path filtering passed to `git diff -- <paths>`
 
 **Use simple format when**: You only need basic git ranges
-**Use complex format when**: You need path filtering or other advanced options (future)
+**Use complex format when**: You need path filtering or other diff options
 
 #### Format Comparison
 

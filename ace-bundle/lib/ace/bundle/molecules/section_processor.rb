@@ -331,7 +331,7 @@ module Ace
                 since_ref = diff_config[:since] || diff_config["since"]
                 normalized[:ranges] = ["#{since_ref}...HEAD"]
               end
-              # Note: paths filtering will be handled by ace-git when implemented
+              normalized[:paths] = diff_config[:paths] || diff_config["paths"] if diff_config[:paths] || diff_config["paths"]
             elsif diff_config.is_a?(String)
               # Single range string
               normalized[:ranges] = [diff_config]
@@ -374,6 +374,10 @@ module Ace
           # Merge ranges arrays (skip if only _processed_diffs present)
           if merged[:ranges] || new_normalized[:ranges]
             merged[:ranges] = ((merged[:ranges] || []) + (new_normalized[:ranges] || [])).uniq
+          end
+
+          if merged[:paths] || new_normalized[:paths]
+            merged[:paths] = ((merged[:paths] || []) + (new_normalized[:paths] || [])).uniq
           end
 
           # Merge diffs arrays (legacy format)
