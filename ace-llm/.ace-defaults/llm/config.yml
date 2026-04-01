@@ -31,6 +31,16 @@ llm:
   # so resolution succeeds even when a provider is unconfigured.
   # Override in .ace/llm/config.yml for project-specific role assignments.
   roles:
+    # --- Reusable candidate lists ---
+    _utility-lite: &utility-lite
+      - google:lite
+      - codex:mini
+      - claude:haiku
+    _assign-worker: &assign-worker
+      - codex:codex@yolo
+      - claude:sonnet@yolo
+      - gemini:pro-latest@yolo
+
     # --- Diagnostic ---
     doctor:
       - gemini:flash-latest@yolo
@@ -67,15 +77,9 @@ llm:
       - claude:sonnet@ro
       - codex:gpt@ro
 
-    # --- Assignment execution ---
-    assign-executor:
-      - codex:codex@yolo
-      - claude:sonnet@yolo
-      - gemini:pro-latest@yolo
-    assign-engineer:
-      - codex:codex@yolo
-      - claude:sonnet@yolo
-      - gemini:pro-latest@yolo
+    # --- Assignment ---
+    assign-executor: *assign-worker
+    assign-engineer: *assign-worker
     assign-orchestrator:
       - claude:sonnet
       - codex:gpt
@@ -92,26 +96,17 @@ llm:
       - gemini:flash-latest
 
     # --- Utility ---
-    prompt-enhance:
-      - google:lite
-      - codex:mini
-      - claude:haiku
+    prompt-enhance: *utility-lite
     commit:
       - codex:mini
       - claude:haiku
       - gemini:flash-latest
-    docs-analysis:
-      - google:lite
-      - codex:mini
-      - claude:haiku
+    docs-analysis: *utility-lite
     idea-enhance:
       - gemini:flash-latest
       - codex:mini
       - claude:haiku
-    compressor:
-      - google:lite
-      - codex:mini
-      - claude:haiku
+    compressor: *utility-lite
 
     # --- Simulation ---
     sim-primary:
