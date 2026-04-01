@@ -78,7 +78,7 @@ module Ace
           def format_report(report)
             case output_format
             when "json"
-              report.to_json
+              report.to_json(include_raw: true)
             when "yaml"
               report.to_yaml
             else
