@@ -15,7 +15,9 @@ ace-docs:
 | --- | --- |
 | `as-handbook-init-project` | Initialize handbook structure in a project |
 | `as-handbook-manage-guides` | Create and update handbook guides |
+| `as-handbook-manage-cookbooks` | Create and update handbook cookbooks |
 | `as-handbook-review-guides` | Review guides for quality and consistency |
+| `as-handbook-review-cookbooks` | Review handbook cookbooks for quality and consistency |
 | `as-handbook-manage-workflows` | Create and update workflow instruction files |
 | `as-handbook-review-workflows` | Review workflow instructions for correctness |
 | `as-handbook-manage-agents` | Create and maintain agent definition files |
@@ -34,7 +36,9 @@ ace-docs:
 | --- | --- |
 | `wfi://handbook/init-project` | Initialize project handbook structure |
 | `wfi://handbook/manage-guides` | Create or update guide content |
+| `wfi://handbook/manage-cookbooks` | Create or update cookbook content |
 | `wfi://handbook/review-guides` | Validate guide quality and standards |
+| `wfi://handbook/review-cookbooks` | Validate cookbook quality and standards |
 | `wfi://handbook/manage-workflows` | Create or update workflow instructions |
 | `wfi://handbook/review-workflows` | Validate workflow instruction quality |
 | `wfi://handbook/manage-agents` | Create or update agent definitions |
@@ -49,6 +53,8 @@ ace-docs:
 - Canonical package workflows: `ace-handbook/handbook/workflow-instructions/handbook/`
 - Canonical package skills: `ace-handbook/handbook/skills/`
 - Canonical package guides: `ace-handbook/handbook/guides/`
+- Canonical package cookbooks: `ace-handbook/handbook/cookbooks/`
+
 - Canonical package templates: `ace-handbook/handbook/templates/`
 - Project-level overlays (outside monorepo): `.ace-handbook/workflow-instructions/`, `.ace-handbook/guides/`,
   `.ace-handbook/templates/`, `.ace-handbook/skills/`

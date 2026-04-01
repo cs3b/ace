@@ -18,6 +18,8 @@ ace-nav list 'wfi://handbook/*'
 ace-nav resolve wfi://handbook/manage-guides
 ace-nav resolve wfi://handbook/review-workflows
 ace-nav list 'guide://*'
+ace-nav list 'cookbook://*'
+ace-nav resolve cookbook://setup-starting-an-astro-project-with-ace
 ace-nav list 'tmpl://*'
 ace-nav list 'skill://*'
 
@@ -55,7 +57,9 @@ project paths are discovered alongside installed package handbooks.
 ```bash
 ace-bundle wfi://handbook/init-project
 ace-bundle wfi://handbook/manage-guides
+ace-bundle wfi://handbook/manage-cookbooks
 ace-bundle wfi://handbook/review-guides
+ace-bundle wfi://handbook/review-cookbooks
 ace-bundle wfi://handbook/manage-workflows
 ace-bundle wfi://handbook/review-workflows
 ace-bundle wfi://handbook/manage-agents
@@ -71,7 +75,9 @@ Use bundle output as source-of-truth instructions.
 | --- | --- |
 | `wfi://handbook/init-project` | Initialize handbook project structure |
 | `wfi://handbook/manage-guides` | Author/update guide files |
+| `wfi://handbook/manage-cookbooks` | Author/update cookbook files |
 | `wfi://handbook/review-guides` | Validate guide quality and standards |
+| `wfi://handbook/review-cookbooks` | Validate cookbook quality and standards |
 | `wfi://handbook/manage-workflows` | Author/update workflow instructions |
 | `wfi://handbook/review-workflows` | Validate workflow quality |
 | `wfi://handbook/manage-agents` | Manage `.ag.md` agent definitions |
@@ -105,6 +111,7 @@ ace-handbook sync
 - Keep command invocations direct (`ace-*`) without shell post-processing.
 - Treat loaded workflow bundles as canonical instructions.
 - Keep README concise and move detailed reference content into `ace-handbook/docs/`.
+
 - For multi-package releases, use `wfi://release/rubygems-publish` to publish, then run
   `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` to record the propagation proof result
   (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) with mitigation guidance when lag is detected.

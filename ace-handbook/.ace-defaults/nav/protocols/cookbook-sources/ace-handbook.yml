@@ -1,0 +1,13 @@
+---
+# Cookbook Sources Protocol Configuration for ace-handbook gem
+# This enables cookbook discovery from handbook-owned cookbook assets
+
+name: ace-handbook
+type: gem
+description: Cookbooks from ace-handbook gem
+priority: 10
+
+config:
+  relative_path: handbook/cookbooks
+  pattern: "*.cookbook.md"
+  enabled: true
