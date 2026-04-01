@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.x2b
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-03-29 22:02:35"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [.ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/0-create-handbook-cookbook-standards-and/8qs.t.x2b.0-create-handbook-cookbook-standards-and-workflows.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/1-migrate-cookbook-ownership-references-out/8qs.t.x2b.1-migrate-cookbook-ownership-references-out-of-ace.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/8qs.t.x2b.2-seed-handbook-with-canonical-cookbook-examples.s.md]
   commands: []
 needs_review: false
+worktree:
+  branch: x2b-migrate-cookbook-ownership-to-ace-handbook
+  path: ../ace-t.x2b
+  created_at: "2026-04-01 19:08:19"
+  updated_at: "2026-04-01 19:08:19"
+  target_branch: main
 ---
 
 # Migrate cookbook ownership to ace-handbook
