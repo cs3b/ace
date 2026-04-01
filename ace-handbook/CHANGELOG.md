@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.2] - 2026-04-01
+
+### Changed
+- Updated cookbook management/review workflows to embed canonical cookbook standards and storage-path guidance directly, keeping the workflows self-contained.
+- Clarified cookbook path standards by explicitly distinguishing package-owned cookbooks (`ace-handbook/handbook/cookbooks/`) from project-local overlays (`.ace-handbook/cookbooks/`) in workflow/docs references.
+
+## [0.25.1] - 2026-04-01
+
+### Fixed
+- Corrected Astro cookbook setup commands to reference supported `ace-handbook` CLI behavior (`sync` / `status` flow), removing obsolete `ace-handbook init` guidance.
+
+### Changed
+- Added `.ace-handbook/cookbooks` to usage docs and standardized cookbook-review skill `argument-hint` metadata formatting.
+
 ## [0.25.0] - 2026-04-01
 
 ### Added

@@ -79,7 +79,7 @@ npm run build
 **Commands/Actions:**
 
 ```bash
-ace-handbook init
+ace-handbook sync
 ace-nav list 'wfi://handbook/*'
 ```
 
