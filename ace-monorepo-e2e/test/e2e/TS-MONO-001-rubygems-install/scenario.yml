@@ -22,7 +22,7 @@ e2e-justification: >
 
 requires:
   tools: [bundle, mise, ruby]
-  ruby: ">= 3.0"
+  ruby: ">= 3.2"
   network: true
 
 setup:

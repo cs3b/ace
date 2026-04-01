@@ -10,14 +10,19 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Exit code captured** — `results/tc/03/fullindex.exit` exists and contains a numeric value.
-2. **Output captured** — `results/tc/03/fullindex.stdout` exists and is non-empty.
-3. **Success evidence** — If exit code is `0`, `bundle-list.stdout` should exist and mention at least one `ace-*` gem.
-4. **Failure evidence** — If exit code is non-zero, `fullindex.stdout` should contain error details.
+1. **Core artifacts captured** — `results/tc/03/fullindex.exit`, `results/tc/03/fullindex.stdout`, and `results/tc/03/bundle-env.stdout` all exist.
+2. **Install path isolation** — `results/tc/03/bundle-env.stdout` includes the sandbox Gemfile path and does not indicate `/home/mc/ace/Gemfile`.
+3. **Install command result** — `results/tc/03/fullindex.exit` is numeric.
+4. **Version freshness check exists** — `results/tc/03/version-check.exit` and `results/tc/03/version-check.stdout` exist.
+5. **Success evidence** — If exit code is `0`:
+   - `results/tc/03/bundle-list.stdout` exists and mentions at least one `ace-*` gem.
+   - `results/tc/03/version-check.exit` is `0`.
+   - `results/tc/03/version-check.stdout` reports all `ace-*` entries as current (lines indicating `OK`).
+6. **Failure evidence** — If exit code is non-zero, `fullindex.stdout` should contain error details.
 
 ## Verdict
 
-- **PASS**: Exit code and output are captured; evidence is consistent with the exit code.
-- **FAIL**: Missing exit code, missing output, or empty captures.
+- **PASS**: All required artifacts are captured and evidence is consistent with the exit code and version freshness check.
+- **FAIL**: Missing artifacts, unresolved stale versions, missing isolation evidence, or missing error detail on failure.
 
 Report: `PASS` or `FAIL` with evidence (exit code value, key output snippets).

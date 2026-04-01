@@ -20,13 +20,16 @@ e2e-justification: >
   sandbox with real filesystem state. Catches doc drift where documented
   commands no longer work as described.
 
+e2e-evidence-strength: command-output
+e2e-false-positive-risk: low
+
 unit-coverage-reviewed:
   - ace-idea/test/commands/create_command_test.rb
   - ace-task/test/commands/create_command_test.rb
   - ace-bundle/test/commands/bundle_command_test.rb
 
 requires:
-  tools: [ace-idea, ace-task, ace-bundle, ace-nav, ace-search]
+  tools: [ace-idea, ace-task, ace-bundle, ace-nav, ace-search, ace-config, ace-handbook, ace-git-commit]
   ruby: ">= 3.0"
 
 setup:

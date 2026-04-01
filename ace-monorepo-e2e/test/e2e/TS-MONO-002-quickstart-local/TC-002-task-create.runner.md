@@ -2,7 +2,8 @@
 
 ## Goal
 
-Follow quick-start section 2 ("Draft a task from the idea") using the CLI path and verify that `ace-task` creates the expected file structure.
+Follow quick-start section 2 ("Draft a task from the idea") and verify that `ace-task`
+creates a task spec, returns success, and can be shown by its resolved ID.
 
 ## Workspace
 
@@ -10,13 +11,39 @@ Save all output to `results/tc/02/`.
 
 ## Steps
 
-1. Run `ace-task create "Implement webhook retry with exponential backoff" --tags reliability,webhooks --priority high`.
-2. Save stdout to `results/tc/02/create.stdout` and exit code to `results/tc/02/create.exit`.
-3. List the `.ace-tasks/` directory tree and save to `results/tc/02/tree.stdout`.
-4. Find the created `.s.md` spec file and save its path to `results/tc/02/spec-path.txt`.
-5. Extract the task ID from the creation output and run `ace-task show <id>`. Save to `results/tc/02/show.stdout`.
+1. Run task create and capture execution evidence:
+   ```bash
+   ace-task create "Implement webhook retry with exponential backoff" \
+     --tags reliability,webhooks \
+     --priority high \
+     > results/tc/02/create.stdout 2> results/tc/02/create.stderr
+   echo $? > results/tc/02/create.exit
+   ```
+2. Enumerate task specs and resolve the newest path:
+   ```bash
+   find .ace-tasks -type f -name '*.s.md' | sort > results/tc/02/tasks.txt
+   tail -n 1 results/tc/02/tasks.txt > results/tc/02/spec-path.txt
+   ```
+3. Derive task ID from the spec filename and save it:
+   ```bash
+   spec_path="$(cat results/tc/02/spec-path.txt)"
+   task_id="$(basename "$spec_path")"
+   task_id="${task_id%%.*}"
+   printf '%s\n' "$task_id" > results/tc/02/task-id.txt
+   ```
+4. Show the created task with full output capture:
+   ```bash
+   ace-task show "$task_id" --format full \
+     > results/tc/02/show.stdout 2> results/tc/02/show.stderr
+   echo $? > results/tc/02/show.exit
+   ```
+5. Capture normalized task tree snapshot:
+   ```bash
+   find .ace-tasks -type f -name '*.s.md' | sort > results/tc/02/tree.stdout
+   ```
 
 ## Constraints
 
 - Use only `ace-task` commands as documented in quick-start.md.
 - Do not create files manually.
+- Keep all output under `results/tc/02/`.
