@@ -31,7 +31,7 @@ ace-review [OPTIONS]
 |--------|-------------|
 | `--preset` | Review preset: code, code-pr, security, performance, docs |
 | `--pr` | Review GitHub PR (number, URL, or owner/repo#number) |
-| `--subject` | Subject config (repeatable): `diff:range`, `files:glob`, `preset:name` |
+| `--subject` | Subject config (repeatable): `diff:range`, `diff:range -- path`, `files:glob`, `preset:name` |
 | `--context` | Context config (preset name or YAML) |
 | `--model` | LLM model(s) (repeatable for multi-model) |
 | `--auto-execute` | Execute LLM query automatically |
@@ -88,6 +88,9 @@ ace-review [OPTIONS]
 ```bash
 # Review current branch diff with code preset
 ace-review --preset code --subject diff:origin/main..HEAD --auto-execute
+
+# Review only selected paths from the branch diff
+ace-review --preset code --subject "diff:origin/main...HEAD -- ace-test-runner-e2e" --auto-execute
 
 # Review a GitHub PR
 ace-review --pr 123 --auto-execute

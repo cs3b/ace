@@ -489,6 +489,30 @@ class SubjectExtractorTest < AceReviewTest
     assert_equal({"bundle" => {"diffs" => ["HEAD~3...HEAD"]}}, config)
   end
 
+  def test_parse_typed_subject_config_for_diff_with_paths
+    config = @extractor.parse_typed_subject_config("diff:origin/main...HEAD -- ace-test-runner-e2e docs/configuration.md")
+    assert_equal(
+      {"bundle" => {"diffs" => ["origin/main...HEAD"], "paths" => ["ace-test-runner-e2e", "docs/configuration.md"]}},
+      config
+    )
+  end
+
+  def test_parse_typed_subject_config_for_diff_with_comma_separated_paths
+    config = @extractor.parse_typed_subject_config("diff:origin/main...HEAD -- ace-test-runner-e2e,docs/configuration.md")
+    assert_equal(
+      {"bundle" => {"diffs" => ["origin/main...HEAD"], "paths" => ["ace-test-runner-e2e", "docs/configuration.md"]}},
+      config
+    )
+  end
+
+  def test_parse_typed_subject_config_for_diff_with_empty_paths_raises
+    error = assert_raises ArgumentError do
+      @extractor.parse_typed_subject_config("diff:origin/main...HEAD --   ")
+    end
+
+    assert_includes error.message, "No valid paths specified after --"
+  end
+
   def test_parse_typed_subject_config_for_files
     config = @extractor.parse_typed_subject_config("files:lib/**/*.rb")
     assert_equal({"bundle" => {"files" => ["lib/**/*.rb"]}}, config)
