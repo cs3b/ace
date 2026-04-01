@@ -19,6 +19,15 @@ module Ace
         # @param role_name [String]
         # @return [String]
         def resolve(role_name)
+          selector, _remaining = resolve_with_candidates(role_name)
+          selector
+        end
+
+        # Resolve role name and return both the selected candidate and remaining candidates.
+        # Remaining candidates can be used as a fallback chain at query time.
+        # @param role_name [String]
+        # @return [Array(String, Array<String>)] [resolved_selector, remaining_candidates]
+        def resolve_with_candidates(role_name)
           normalized_role_name = role_name.to_s.strip
           if normalized_role_name.empty?
             raise Ace::LLM::ConfigurationError, "Invalid target: role name cannot be empty"
@@ -33,8 +42,11 @@ module Ace
               "Unknown role: #{normalized_role_name}. Defined roles: #{available_display}"
           end
 
-          candidates.each do |candidate|
-            return candidate if candidate_available?(candidate)
+          candidates.each_with_index do |candidate, index|
+            if candidate_available?(candidate)
+              remaining = candidates[(index + 1)..]
+              return [candidate, remaining]
+            end
           end
 
           raise Ace::LLM::ConfigurationError,

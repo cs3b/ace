@@ -104,7 +104,8 @@ module Ace
           registry: registry,
           fallback_config: fallback_config,
           timeout: resolved_timeout,
-          debug: debug
+          debug: debug,
+          role_fallbacks: parse_result.role_fallbacks
         )
 
         text_content = extract_text_content(response)
@@ -290,10 +291,19 @@ module Ace
       end
 
       def self.execute_with_fallback(provider:, model:, messages:, generation_opts:,
-        registry:, fallback_config:, timeout:, debug:)
+        registry:, fallback_config:, timeout:, debug:, role_fallbacks: nil)
         if fallback_config.disabled?
           client = registry.get_client(provider, model: model, timeout: timeout)
           return client.generate(messages, **generation_opts)
+        end
+
+        primary_provider_string = model ? "#{provider}:#{model}" : provider
+
+        # Inject remaining role candidates ahead of the global fallback chain
+        if role_fallbacks&.any?
+          existing_chain = fallback_config.providers_for(primary_provider_string)
+          merged_chain = role_fallbacks + (existing_chain - role_fallbacks)
+          fallback_config = fallback_config.merge(chains: {primary_provider_string => merged_chain})
         end
 
         status_callback = ->(msg) { warn msg }
@@ -303,8 +313,6 @@ module Ace
           status_callback: status_callback,
           timeout: timeout
         )
-
-        primary_provider_string = model ? "#{provider}:#{model}" : provider
 
         orchestrator.execute(primary_provider: primary_provider_string, registry: registry) do |client|
           client.generate(messages, **generation_opts)

@@ -13,7 +13,7 @@ module Ace
         THINKING_LEVELS = %w[low medium high xhigh].freeze
 
         # Result object for parsed provider:model combinations.
-        ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error, :original_input) do
+        ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error, :original_input, :role_fallbacks) do
           def valid?
             valid
           end
@@ -87,9 +87,11 @@ module Ace
           return create_error_result(original_input, thinking_error) if thinking_error
           return create_error_result(original_input, "Invalid target: role name cannot be empty") if role_name.to_s.strip.empty?
 
-          resolved_selector = @role_resolver.resolve(role_name)
+          resolved_selector, remaining_candidates = @role_resolver.resolve_with_candidates(role_name)
           resolved_parse = parse_standard_target(resolved_selector)
           return resolved_parse if resolved_parse.invalid?
+
+          role_fallbacks = build_role_fallbacks(remaining_candidates, caller_preset, caller_thinking)
 
           ParseResult.new(
             resolved_parse.provider,
@@ -98,7 +100,8 @@ module Ace
             caller_thinking || resolved_parse.thinking_level,
             true,
             nil,
-            original_input
+            original_input,
+            role_fallbacks
           )
         end
 
@@ -144,6 +147,22 @@ module Ace
           end
 
           ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
+        end
+
+        def build_role_fallbacks(candidates, caller_preset, caller_thinking)
+          return nil if candidates.nil? || candidates.empty?
+
+          candidates.map do |candidate|
+            parsed = parse_standard_target(candidate)
+            next nil if parsed.invalid?
+
+            preset = caller_preset || parsed.preset
+            thinking = caller_thinking || parsed.thinking_level
+            base = "#{parsed.provider}:#{parsed.model}"
+            base += ":#{thinking}" if thinking
+            base += "@#{preset}" if preset
+            base
+          end.compact
         end
 
         def role_reference?(input)
