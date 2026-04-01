@@ -1,0 +1,60 @@
+# Protocol definition for cookbooks
+protocol: cookbook
+name: "Cookbooks"
+description: "Operational runbooks and implementation recipes"
+enabled: true
+
+# File extensions to match
+extensions:
+  - .cookbook.md
+  - .md
+
+# Extension inference for DWIM behavior
+inferred_extensions:
+  - .cookbook
+  - .cookbook.md
+  - .md
+
+# Categories for organizing cookbooks
+categories:
+  - setup
+  - migration
+  - integration
+  - debugging
+  - automation
+  - pattern
+
+# Template for creating new cookbooks
+create_template: |
+  # [Category] Cookbook: %{name}
+
+  ## Purpose
+
+  Brief description of what this cookbook accomplishes.
+
+  ## Source Provenance
+
+  - Source workflows/guides/docs:
+  - Validation evidence:
+
+  ## Steps
+
+  ### Step 1: [Step title]
+
+  ```bash
+  # command
+  ```
+
+  ## Propagation Notes
+
+  - Documentation updates to apply:
+  - Agent guidance updates to apply:
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true
