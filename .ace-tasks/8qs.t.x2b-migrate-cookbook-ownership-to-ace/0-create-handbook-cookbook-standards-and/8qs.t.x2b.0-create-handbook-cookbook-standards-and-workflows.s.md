@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.x2b.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 22:02:43"
 estimate: TBD
@@ -9,11 +9,7 @@ tags: [docs, cookbook, ace-handbook, protocols, workflows]
 parent: 8qs.t.x2b
 bundle:
   presets: [project]
-  files:
-    - ace-handbook/handbook/templates/cookbooks/cookbook.template.md
-    - ace-handbook/docs/handbook.md
-    - ace-handbook/docs/usage.md
-    - ace-handbook/README.md
+  files: [ace-handbook/handbook/templates/cookbooks/cookbook.template.md, ace-handbook/docs/handbook.md, ace-handbook/docs/usage.md, ace-handbook/README.md]
   commands: []
 needs_review: false
 ---

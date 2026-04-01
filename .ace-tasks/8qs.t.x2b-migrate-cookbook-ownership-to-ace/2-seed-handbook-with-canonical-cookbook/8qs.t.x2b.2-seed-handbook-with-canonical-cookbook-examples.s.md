@@ -9,13 +9,28 @@ tags: [docs, cookbook, examples, ace-handbook]
 parent: 8qs.t.x2b
 bundle:
   presets: [project]
-  files:
-    - ace-handbook/handbook/templates/cookbooks/cookbook.template.md
-    - CLAUDE.md
-    - AGENTS.md
+  files: [ace-handbook/handbook/templates/cookbooks/cookbook.template.md, CLAUDE.md, AGENTS.md]
   commands: []
-needs_review: false
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Missing concrete source artifact for the Astro cookbook
+
+- [ ] Which repository artifact should serve as the canonical source material for `cookbook://setup-starting-an-astro-project-with-ace`?
+- **Research conducted**: Searched `.ace-tasks`, `.ace-retros`, `.ace-ideas`, `docs`, `ace-handbook`, `ace-docs`, and `ace-monorepo-e2e` for Astro-related cookbook drafts and matching URI/title strings.
+- **What was found**: The task references a "User-provided Astro cookbook draft" in References, but no bundled file path or repository artifact currently identifies that source draft.
+- **Suggested default**: Add the exact source file path to the task `bundle.files` and References so the implementer can derive the example from a concrete artifact instead of inventing source material.
+- **Why needs human input**: The task explicitly requires real-work provenance. Without the source artifact, an implementer would have to guess what the Astro cookbook should be based on.
+
+### [HIGH] Missing explicit provenance source for the monorepo cookbook
+
+- [ ] Which concrete completed-work artifact should anchor `cookbook://setup-starting-a-multi-ruby-gem-monorepo-with-ace`?
+- **Research conducted**: Located monorepo-related repository artifacts, including `ace-monorepo-e2e/` and retros such as `.ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md`, but the task does not name one as the required provenance source.
+- **What was found**: There is enough thematic material to support a monorepo cookbook, but no single source artifact is called out as the canonical learned-from document.
+- **Suggested default**: Name one primary source artifact in `bundle.files` and allow additional supporting artifacts as secondary references.
+- **Why needs human input**: The task says both examples must be derived from real work and explicitly state the source context. The source context must therefore be fixed, not inferred ad hoc during implementation.
 
 # Seed handbook with canonical cookbook examples
 

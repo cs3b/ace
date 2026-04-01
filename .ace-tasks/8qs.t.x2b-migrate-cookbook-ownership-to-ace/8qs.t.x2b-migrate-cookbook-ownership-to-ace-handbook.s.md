@@ -8,13 +8,15 @@ dependencies: []
 tags: [docs, cookbook, ace-handbook, ace-docs, orchestrator]
 bundle:
   presets: [project]
-  files:
-    - .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/0-create-handbook-cookbook-standards-and/8qs.t.x2b.0-create-handbook-cookbook-standards-and-workflows.s.md
-    - .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/1-migrate-cookbook-ownership-references-out/8qs.t.x2b.1-migrate-cookbook-ownership-references-out-of-ace.s.md
-    - .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/8qs.t.x2b.2-seed-handbook-with-canonical-cookbook-examples.s.md
+  files: [.ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/0-create-handbook-cookbook-standards-and/8qs.t.x2b.0-create-handbook-cookbook-standards-and-workflows.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/1-migrate-cookbook-ownership-references-out/8qs.t.x2b.1-migrate-cookbook-ownership-references-out-of-ace.s.md, .ace-tasks/8qs.t.x2b-migrate-cookbook-ownership-to-ace/2-seed-handbook-with-canonical-cookbook/8qs.t.x2b.2-seed-handbook-with-canonical-cookbook-examples.s.md]
   commands: []
-needs_review: false
+needs_review: true
 ---
+
+## Review Summary
+
+- Child review status: `8qs.t.x2b.0` ready, `8qs.t.x2b.1` ready, `8qs.t.x2b.2` blocked pending provenance-source answers.
+- Parent promotion is deferred until every draft child passes review, per orchestrator review rules.
 
 # Migrate cookbook ownership to ace-handbook
 

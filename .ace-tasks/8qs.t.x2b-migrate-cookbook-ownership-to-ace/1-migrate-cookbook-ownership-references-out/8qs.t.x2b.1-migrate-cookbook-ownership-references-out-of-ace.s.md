@@ -1,6 +1,6 @@
 ---
 id: 8qs.t.x2b.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-03-29 22:02:43"
 estimate: TBD
@@ -9,10 +9,7 @@ tags: [docs, cookbook, ace-docs, migration]
 parent: 8qs.t.x2b
 bundle:
   presets: [project]
-  files:
-    - ace-docs/handbook/workflow-instructions/docs/create-cookbook.wf.md
-    - ace-docs/docs/handbook.md
-    - ace-docs/CHANGELOG.md
+  files: [ace-docs/handbook/workflow-instructions/docs/create-cookbook.wf.md, ace-docs/docs/handbook.md, ace-docs/CHANGELOG.md]
   commands: []
 needs_review: false
 ---
