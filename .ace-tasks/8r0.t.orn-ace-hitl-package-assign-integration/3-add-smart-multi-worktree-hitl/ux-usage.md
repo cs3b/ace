@@ -57,6 +57,20 @@ ace-hitl show t.abc --scope current
 
 Returns a clear not-found error for the current scope only. The command must not silently widen to all worktrees.
 
+### Scenario 5: Smart fallback resolves outside current worktree
+
+**Goal**: Keep implicit smart lookup user-friendly while making cross-worktree resolution explicit.
+
+```bash
+ace-hitl show t.abc
+ace-hitl show t.abc --content
+```
+
+**Expected Output**
+
+If `t.abc` is not found in the current scope but is found via smart fallback, both command forms include an explicit resolved-location line (path/worktree).
+
 ## Notes for Implementer
 
 Full usage documentation should be completed during implementation using `wfi://docs/update-usage`.
+For this slice, documentation edits are limited to `ace-hitl` docs; treat `ace-overseer` docs as reference-only.
