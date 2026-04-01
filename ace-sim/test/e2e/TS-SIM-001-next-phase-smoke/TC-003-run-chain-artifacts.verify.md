@@ -32,8 +32,9 @@ PASS when EITHER:
 
 ### Path B: Provider unavailable (conditional pass)
 - `results/tc/03/run.exit` is non-zero
-- `results/tc/03/run.stderr` contains provider-related error evidence (e.g., timeout, connection refused, rate limit, API error, model unavailable, empty response)
+- `results/tc/03/run.stderr` mentions `Final synthesis failed`
+- `results/tc/03/synthesis.yml` records `final_stage:` with `status: failed`
 - Verdict: PASS with note "provider unavailable — CLI invocation and argument routing verified, LLM execution skipped"
 
 FAIL when:
-- `results/tc/03/run.exit` is non-zero AND stderr does NOT contain provider-related error evidence (indicates a CLI or validation bug, not infrastructure)
+- Neither Path A nor Path B conditions are met
