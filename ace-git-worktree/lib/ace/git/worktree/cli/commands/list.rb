@@ -22,9 +22,9 @@ module Ace
             ]
 
             option :format, desc: "Output format: table, json, simple", aliases: [], default: "table"
-            option :show_tasks, desc: "Include task associations", type: :boolean, aliases: ["--show-tasks"]
-            option :task_associated, desc: "Show only task-associated worktrees", type: :boolean, aliases: ["--task-associated"]
-            option :usable, desc: "Show only usable worktrees", type: :boolean, aliases: ["--usable"]
+            option :show_tasks, desc: "Include task associations", type: :boolean
+            option :task_associated, desc: "Show only task-associated worktrees", type: :boolean
+            option :usable, desc: "Show only usable worktrees", type: :boolean
             option :search, desc: "Filter by branch name pattern", aliases: []
             option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
