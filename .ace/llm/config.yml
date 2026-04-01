@@ -10,14 +10,29 @@ llm:
       - zai
       - google
   roles:
+    # --- Reusable candidate lists ---
+    _utility: &utility
+      - codex:mini
+      - claude:haiku
+      - gemini:flash-latest
+    _assign-worker: &assign-worker
+      - codex:codex:medium@yolo
+      - claude:sonnet:medium@yolo
+      - gemini:flash-latest@yolo
+
+    # --- Diagnostic ---
     doctor:
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
       - codex:mini:low@yolo
+
+    # --- Planning ---
     planner:
       - codex:gpt:high@ro
       - claude:opus:high@ro
       - gemini:pro-latest@ro
+
+    # --- Review ---
     review-default:
       - codex:codex:medium@ro
       - claude:sonnet:medium@ro
@@ -32,18 +47,16 @@ llm:
       - codex:gpt:high@ro
     review-gemini:
       - gemini:pro-latest@ro
-    assign-executor:
-      - codex:codex:medium@yolo
-      - claude:sonnet:medium@yolo
-      - gemini:flash-latest@yolo
-    assign-engineer:
-      - codex:codex:medium@yolo
-      - claude:sonnet:medium@yolo
-      - gemini:flash-latest@yolo
+
+    # --- Assignment ---
+    assign-executor: *assign-worker
+    assign-engineer: *assign-worker
     assign-orchestrator:
       - claude:opus:medium@yolo
       - codex:gpt:medium@yolo
       - gemini:pro-latest@yolo
+
+    # --- E2E testing ---
     e2e-executor:
       - claude:haiku:low@yolo
       - codex:mini:low@yolo
@@ -52,26 +65,18 @@ llm:
       - claude:haiku:low@ro
       - codex:mini:low@ro
       - gemini:flash-latest@ro
-    prompt-enhance:
-      - codex:mini
-      - claude:haiku
-      - gemini:flash-latest
-    commit:
-      - codex:mini
-      - claude:haiku
-      - gemini:flash-latest
-    docs-analysis:
-      - codex:mini
-      - claude:haiku
-      - gemini:flash-latest
+
+    # --- Utility ---
+    prompt-enhance: *utility
+    commit: *utility
+    docs-analysis: *utility
+    compressor: *utility
     idea-enhance:
       - gemini:flash-latest@ro
       - codex:mini@ro
       - claude:haiku@ro
-    compressor:
-      - codex:mini
-      - claude:haiku
-      - gemini:flash-latest
+
+    # --- Simulation ---
     sim-primary:
       - gemini:flash-latest@ro
       - claude:haiku@ro
