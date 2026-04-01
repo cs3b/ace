@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-support-nav v0.26.1**: Deduplicated `cookbook://` listing results, added explicit project-local cookbook source support (`.ace-handbook/cookbooks`), and aligned cookbook create-target path handling.
+- **ace-support-nav v0.26.2**: Restricted `cookbook://` extension inference to cookbook-specific forms so plain `.md` files are no longer inferred as cookbook assets.
+- **ace-support-nav v0.26.3**: Hardened protocol source loading with `YAML.safe_load_file` and documented the project-local `cookbook://` override intent for monorepo development.
+- **ace-handbook v0.25.2**: Embedded cookbook standards directly in handbook cookbook workflows and aligned package-owned vs project-local cookbook path guidance.
+
 ### Changed
 - **ace-test-runner-e2e v0.29.7**: Strengthened monorepo RubyGems-install and quick-start local E2E scenarios with isolated install/freshness checks, explicit Bundler context assertions, and command output/exit evidence rules. Added false-positive risk metadata and output-focused review guidance to `ace-test-runner-e2e` workflow documentation.
 - **ace-handbook v0.25.0**: Added handbook-owned cookbook management/review workflows and skills, promoted `.cookbook.md` as a first-class handbook asset in docs/templates, introduced provenance + concise propagation guidance standards, and seeded canonical Astro + multi-ruby-gem monorepo cookbook examples.
+- **ace-handbook v0.25.1**: Corrected Astro cookbook command guidance to match current CLI support, added `.ace-handbook/cookbooks` usage docs, and standardized cookbook review skill metadata formatting.
 - **ace-docs v0.32.0**: Removed active cookbook workflow ownership by deleting `create-cookbook.wf.md` and updating package handbook catalog references.
 
 ### Added
