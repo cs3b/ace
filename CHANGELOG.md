@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **ace-test-runner-e2e v0.29.7**: Strengthened monorepo RubyGems-install and quick-start local E2E scenarios with isolated install/freshness checks, explicit Bundler context assertions, and command output/exit evidence rules. Added false-positive risk metadata and output-focused review guidance to `ace-test-runner-e2e` workflow documentation.
 - **ace-handbook v0.24.0**: Added handbook-owned cookbook management/review workflows and skills, promoted `.cookbook.md` as a first-class handbook asset in docs/templates, and introduced provenance + concise propagation guidance standards.
+- **ace-docs v0.32.0**: Removed active cookbook workflow ownership by deleting `create-cookbook.wf.md` and updating package handbook catalog references.
 
 ### Added
 - **ace-support-nav v0.26.0**: Added native `cookbook://` protocol defaults (extensions, inference, categories, and create template) to enable cookbook discovery via `ace-nav`/`ace-bundle`.
