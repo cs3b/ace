@@ -12,15 +12,15 @@ llm:
   roles:
     doctor:
       - gemini:flash-latest@yolo
-      - claude:haiku:medium@yolo
-      - codex:mini@yolo
+      - claude:haiku:low@yolo
+      - codex:mini:low@yolo
     planner:
       - codex:gpt:high@ro
       - claude:opus:high@ro
       - gemini:pro-latest@ro
     review-default:
-      - codex:codex@ro
-      - claude:sonnet@ro
+      - codex:codex:medium@ro
+      - claude:sonnet:medium@ro
       - gemini:pro-latest@ro
     review-synthesizer:
       - codex:gpt:low@ro
@@ -45,12 +45,12 @@ llm:
       - codex:gpt:medium@yolo
       - gemini:pro-latest@yolo
     e2e-executor:
-      - claude:haiku@yolo
-      - codex:mini@yolo
+      - claude:haiku:low@yolo
+      - codex:mini:low@yolo
       - gemini:flash-latest@yolo
     e2e-reporter:
-      - claude:haiku@ro
-      - codex:mini@ro
+      - claude:haiku:low@ro
+      - codex:mini:low@ro
       - gemini:flash-latest@ro
     prompt-enhance:
       - codex:mini
@@ -77,8 +77,8 @@ llm:
       - claude:haiku@ro
       - codex:mini@ro
     sim-synthesis:
-      - claude:opus
-      - codex:gpt
+      - claude:opus:medium
+      - codex:gpt:medium
       - gemini:pro-latest
   fallback:
     enabled: true
