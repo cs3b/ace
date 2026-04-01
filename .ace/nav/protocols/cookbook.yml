@@ -1,3 +1,5 @@
+# Project-local override kept explicit so cookbook protocol changes resolve
+# immediately in this monorepo without waiting for packaged gem defaults.
 # Protocol definition for cookbooks
 protocol: cookbook
 name: "Cookbooks"
@@ -6,12 +8,10 @@ enabled: true
 
 extensions:
   - .cookbook.md
-  - .md
 
 inferred_extensions:
   - .cookbook
   - .cookbook.md
-  - .md
 
 categories:
   - setup
