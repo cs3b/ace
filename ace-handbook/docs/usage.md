@@ -35,6 +35,7 @@ handbook assets:
 ```text
 .ace-handbook/
   workflow-instructions/
+  cookbooks/
   guides/
   templates/
   skills/
@@ -44,6 +45,7 @@ Typical setup:
 
 ```bash
 mkdir -p .ace-handbook/workflow-instructions/handbook
+mkdir -p .ace-handbook/cookbooks
 mkdir -p .ace-handbook/guides
 mkdir -p .ace-handbook/templates
 mkdir -p .ace-handbook/skills

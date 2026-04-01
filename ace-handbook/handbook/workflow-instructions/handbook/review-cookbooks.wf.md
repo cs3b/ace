@@ -23,14 +23,23 @@ propagation guidance.
 ## Prerequisites
 
 - Access to cookbook files under review
-- Access to cookbook standards and template
 - Understanding of handbook workflow/skill ownership boundaries
 
-## Project Context Loading
+## Embedded Review Standards
 
-- Load standards workflow: `ace-bundle wfi://handbook/manage-cookbooks`
-- Load cookbook template: `ace-handbook/handbook/templates/cookbooks/cookbook.template.md`
-- Load handbook docs and usage references
+### Required canonical structure
+
+Each cookbook under review must:
+
+- use `.cookbook.md` file naming
+- include `## Source Provenance` with explicit source references
+- include `## Propagation Notes` with concise downstream updates
+- keep workflow ownership guidance aligned to `ace-handbook`
+
+### Canonical storage paths to validate
+
+- Package-owned cookbooks (inside `ace-handbook`): `ace-handbook/handbook/cookbooks/`
+- Project-local cookbooks (outside package scope): `.ace-handbook/cookbooks/`
 
 ## Process Steps
 
@@ -50,6 +59,7 @@ propagation guidance.
    - No wording implies cookbook ownership lives in `ace-docs`.
 6. **Validate discovery and command contracts:**
    - Ensure cookbook names/locations are resolvable through `cookbook://`.
+   - Confirm package-owned vs project-local path placement is correct.
    - Verify workflow commands referenced in cookbook guidance load correctly.
 7. **Report findings with severity:**
    - Critical: ownership/provenance/discovery breaks.
