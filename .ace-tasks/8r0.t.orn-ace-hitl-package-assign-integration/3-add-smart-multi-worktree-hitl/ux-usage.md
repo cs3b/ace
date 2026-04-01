@@ -1,0 +1,62 @@
+# ace-hitl Smart Scope Resolution - Draft Usage
+
+## API Surface
+
+- [x] CLI (user-facing commands)
+- [ ] Developer API (modules, classes)
+- [ ] Agent API (workflows, protocols, slash commands)
+- [ ] Configuration (config keys, env vars)
+
+## Usage Scenarios
+
+### Scenario 1: Check blockers from a task worktree
+
+**Goal**: See only the pending HITL items relevant to the current worktree without passing extra flags.
+
+```bash
+ace-hitl list
+```
+
+**Expected Output**
+
+Shows pending HITL items for the current worktree only. If no pending items exist locally, output is empty but not an error.
+
+### Scenario 2: Review all pending HITL items from the main checkout
+
+**Goal**: Act as an operator from the main checkout and see pending HITL items across worktrees.
+
+```bash
+ace-hitl list
+```
+
+**Expected Output**
+
+Shows pending HITL items across all worktrees by default, with enough location detail to understand where each item lives.
+
+### Scenario 3: Force a project-wide lookup from a task worktree
+
+**Goal**: Widen the search explicitly when working inside a task worktree.
+
+```bash
+ace-hitl list --scope all
+```
+
+**Expected Output**
+
+Shows matching HITL items across all worktrees instead of only the current worktree.
+
+### Scenario 4: Strict local lookup failure
+
+**Goal**: Fail clearly when an item is not present in the current scope and the user requested strict local lookup.
+
+```bash
+ace-hitl show t.abc --scope current
+```
+
+**Expected Output**
+
+Returns a clear not-found error for the current scope only. The command must not silently widen to all worktrees.
+
+## Notes for Implementer
+
+Full usage documentation should be completed during implementation using `wfi://docs/update-usage`.
