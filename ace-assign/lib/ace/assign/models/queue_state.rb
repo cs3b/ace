@@ -78,6 +78,7 @@ module Ace
           # Normalize to string without leading zeros for comparison
           normalized = number.to_s.sub(/^0+/, "")
           steps.find do |s|
+            next unless s.number
             s.number.sub(/^0+/, "") == normalized || s.number == number.to_s
           end
         end
