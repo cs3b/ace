@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-04-01
+
+### Changed
+- Removed active cookbook workflow ownership from `ace-docs` by deleting `create-cookbook.wf.md` and updating handbook catalog references.
+
 ## [0.31.8] - 2026-03-31
 
 ### Fixed
