@@ -956,9 +956,10 @@ module Ace
           # Process diffs
           if config["diffs"] && config["diffs"].any?
             data[:diffs] ||= []
+            diff_paths = config["paths"] || config[:paths] || []
             config["diffs"].each do |diff_range|
-              result = generate_diff_safe(diff_range)
-              data[:diffs] << result.slice(:range, :output, :success, :error, :error_type)
+              result = generate_diff_safe(diff_range, paths: diff_paths)
+              data[:diffs] << result.slice(:range, :paths, :output, :success, :error, :error_type)
 
               unless result[:success]
                 error_prefix = (result[:error_type] == :git_error) ? "Git diff failed" : "Invalid diff range"
@@ -1270,10 +1271,11 @@ module Ace
           return unless ranges.any?
 
           processed_diffs = []
+          diff_paths = section_data[:paths] || section_data["paths"] || []
 
           ranges.each do |diff_range|
-            result = generate_diff_safe(diff_range)
-            processed_diffs << result.slice(:range, :output, :success, :error)
+            result = generate_diff_safe(diff_range, paths: diff_paths)
+            processed_diffs << result.slice(:range, :paths, :output, :success, :error)
 
             unless result[:success]
               bundle.metadata[:errors] ||= []
@@ -1372,17 +1374,21 @@ module Ace
         # Generate diff with ace-git and return standardized result hash
         # Handles GitError and ArgumentError with standardized error handling
         # @param diff_range [String] Git range to diff
+        # @param paths [Array<String>] Optional git path filters
         # @return [Hash] Result with :range, :output, :success, and optional :error
-        def generate_diff_safe(diff_range)
-          diff_result = Ace::Git::Organisms::DiffOrchestrator.generate(ranges: [diff_range])
+        def generate_diff_safe(diff_range, paths: [])
+          normalized_paths = Array(paths).map(&:to_s).map(&:strip).reject(&:empty?).uniq
+          diff_result = Ace::Git::Organisms::DiffOrchestrator.generate(ranges: [diff_range], paths: normalized_paths)
           {
             range: diff_range,
+            paths: normalized_paths,
             output: diff_result.content,
             success: true
           }
         rescue Ace::Git::Error => e
           {
             range: diff_range,
+            paths: Array(paths).map(&:to_s).map(&:strip).reject(&:empty?).uniq,
             output: "",
             success: false,
             error: e.message,
@@ -1391,6 +1397,7 @@ module Ace
         rescue ArgumentError => e
           {
             range: diff_range,
+            paths: Array(paths).map(&:to_s).map(&:strip).reject(&:empty?).uniq,
             output: "",
             success: false,
             error: e.message,

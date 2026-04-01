@@ -864,6 +864,72 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  def test_load_inline_yaml_with_diff_paths_passes_paths_to_diff_orchestrator
+    with_temp_dir do
+      yaml_string = <<~YAML
+        bundle:
+          diffs:
+            - HEAD~1..HEAD
+          paths:
+            - ace-test-runner-e2e
+            - ace-review/docs/usage.md
+        ---
+      YAML
+
+      captured_options = nil
+      diff_stub = lambda do |options|
+        captured_options = options
+        build_mock_diff_result
+      end
+
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, diff_stub do
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
+        context = loader.send(:load_inline_yaml, yaml_string)
+
+        assert context.content.include?("test.rb"), "Should include diff output"
+      end
+
+      assert_equal ["HEAD~1..HEAD"], captured_options[:ranges]
+      assert_equal ["ace-test-runner-e2e", "ace-review/docs/usage.md"], captured_options[:paths]
+    end
+  end
+
+  def test_section_diff_paths_passes_paths_to_diff_orchestrator
+    with_temp_dir do
+      File.write("section-config.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            scoped_diff:
+              title: Scoped Diff
+              diff:
+                ranges:
+                  - HEAD~1..HEAD
+                paths:
+                  - ace-test-runner-e2e
+                  - ace-review/docs/usage.md
+        ---
+      MARKDOWN
+
+      captured_options = nil
+      diff_stub = lambda do |options|
+        captured_options = options
+        build_mock_diff_result
+      end
+
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, diff_stub do
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
+        context = loader.load_file("section-config.md")
+
+        processed = context.sections["scoped_diff"][:_processed_diffs]
+        assert_equal ["ace-test-runner-e2e", "ace-review/docs/usage.md"], processed.first[:paths]
+      end
+
+      assert_equal ["HEAD~1..HEAD"], captured_options[:ranges]
+      assert_equal ["ace-test-runner-e2e", "ace-review/docs/usage.md"], captured_options[:paths]
+    end
+  end
+
   def test_load_inline_yaml_flat_and_nested_produce_same_output
     with_temp_dir do
       # Just create the test file - no git repo needed for files: config
@@ -1045,6 +1111,18 @@ class BundleLoaderTest < AceTestCase
         # Should capture argument error with "Invalid diff range" prefix
         assert context.content.include?("Invalid diff range"),
           "Content should include invalid range error message: #{context.content[0..500]}"
+      end
+    end
+  end
+
+  def test_generate_diff_safe_includes_paths_in_error_result
+    with_temp_dir do
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
+
+      Ace::Git::Organisms::DiffOrchestrator.stub(:generate, ->(_args) { raise ArgumentError, "Invalid range format" }) do
+        result = loader.send(:generate_diff_safe, "HEAD~1..HEAD", paths: ["ace-test-runner-e2e"])
+        assert_equal ["ace-test-runner-e2e"], result[:paths]
+        refute result[:success]
       end
     end
   end

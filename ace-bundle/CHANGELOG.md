@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Fixed
+- Added end-to-end support for diff path filters in bundle diff configs so `paths` now flows through section normalization and into `git diff -- <paths>`.
+
 ## [0.41.2] - 2026-03-31
 
 ### Fixed

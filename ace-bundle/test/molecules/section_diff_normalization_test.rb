@@ -29,13 +29,15 @@ module Ace
         section = {
           "title" => "Changes",
           "diff" => {
-            "ranges" => ["origin/main...HEAD", "HEAD~5...HEAD"]
+            "ranges" => ["origin/main...HEAD", "HEAD~5...HEAD"],
+            "paths" => ["ace-review/**/*", "ace-bundle/docs/configuration.md"]
           }
         }
 
         normalized = @processor.send(:normalize_section, "changes", section)
 
         assert_equal ["origin/main...HEAD", "HEAD~5...HEAD"], normalized[:ranges]
+        assert_equal ["ace-review/**/*", "ace-bundle/docs/configuration.md"], normalized[:paths]
         refute normalized.key?(:diff), "diff key should be removed after normalization"
       end
 
@@ -44,14 +46,34 @@ module Ace
         section = {
           title: "Changes",
           diff: {
-            ranges: ["origin/main...HEAD"]
+            ranges: ["origin/main...HEAD"],
+            paths: ["ace-review/**/*"]
           }
         }
 
         normalized = @processor.send(:normalize_section, "changes", section)
 
         assert_equal ["origin/main...HEAD"], normalized[:ranges]
+        assert_equal ["ace-review/**/*"], normalized[:paths]
         refute normalized.key?(:diff), "diff key should be removed after normalization"
+      end
+
+      def test_merge_section_data_merges_paths
+        existing = {
+          title: "Changes",
+          ranges: ["origin/main...HEAD"],
+          paths: ["ace-review/**/*"]
+        }
+        incoming = {
+          title: "Changes",
+          ranges: ["HEAD~3...HEAD"],
+          paths: ["ace-bundle/**/*", "ace-review/**/*"]
+        }
+
+        merged = @processor.send(:merge_section_data, existing, incoming)
+
+        assert_equal ["origin/main...HEAD", "HEAD~3...HEAD"], merged[:ranges]
+        assert_equal ["ace-review/**/*", "ace-bundle/**/*"], merged[:paths]
       end
 
       # Test complex diff format with 'since'
