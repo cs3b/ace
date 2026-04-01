@@ -51,7 +51,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.31.8)
+    ace-docs (0.32.0)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
