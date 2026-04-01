@@ -12,44 +12,38 @@ llm:
   roles:
     doctor:
       - gemini:flash-latest@yolo
-      - claude:haiku@yolo
+      - claude:haiku:medium@yolo
       - codex:mini@yolo
     planner:
-      - codex:gpt@ro
-      - claude:sonnet@ro
+      - codex:gpt:high@ro
+      - claude:opus:high@ro
       - gemini:pro-latest@ro
     review-default:
       - codex:codex@ro
       - claude:sonnet@ro
       - gemini:pro-latest@ro
     review-synthesizer:
-      - codex:gpt@ro
-      - claude:sonnet@ro
-      - gemini:pro-latest@ro
+      - codex:gpt:low@ro
+      - claude:sonnet:medium@ro
+      - gemini:flash-latest@ro
     review-claude:
-      - claude:opus@ro
-      - codex:gpt@ro
-      - gemini:pro-latest@ro
+      - claude:opus:high@ro
     review-codex:
-      - codex:gpt@ro
-      - claude:sonnet@ro
-      - gemini:pro-latest@ro
+      - codex:gpt:high@ro
     review-gemini:
       - gemini:pro-latest@ro
-      - claude:sonnet@ro
-      - codex:gpt@ro
     assign-executor:
-      - codex:codex@yolo
-      - claude:sonnet@yolo
-      - gemini:pro-latest@yolo
+      - codex:codex:medium@yolo
+      - claude:sonnet:medium@yolo
+      - gemini:flash-latest@yolo
     assign-engineer:
-      - codex:codex@yolo
-      - claude:sonnet@yolo
-      - gemini:pro-latest@yolo
+      - codex:codex:medium@yolo
+      - claude:sonnet:medium@yolo
+      - gemini:flash-latest@yolo
     assign-orchestrator:
-      - claude:sonnet
-      - codex:gpt
-      - gemini:pro-latest
+      - claude:opus:medium@yolo
+      - codex:gpt:medium@yolo
+      - gemini:pro-latest@yolo
     e2e-executor:
       - claude:haiku@yolo
       - codex:mini@yolo
