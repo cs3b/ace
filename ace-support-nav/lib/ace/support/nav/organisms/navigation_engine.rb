@@ -159,6 +159,7 @@ module Ace
             when "wfi" then "workflow-instructions"
             when "tmpl" then "templates"
             when "guide" then "guides"
+            when "cookbook" then "cookbooks"
             when "sample" then "samples"
             else template.protocol
             end

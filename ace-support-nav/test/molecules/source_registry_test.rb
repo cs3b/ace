@@ -340,6 +340,49 @@ module Ace
           ensure
             cleanup_temp_directory(fresh_dir)
           end
+
+          def test_discovers_gem_default_sources
+            isolated_dir = create_temp_ace_directory
+            registry = SourceRegistry.new(start_path: isolated_dir)
+            gem_dir = Dir.mktmpdir("ace_nav_gem")
+            cookbook_dir = File.join(gem_dir, "handbook", "cookbooks")
+            FileUtils.mkdir_p(cookbook_dir)
+
+            sources_dir = File.join(gem_dir, ".ace-defaults", "nav", "protocols", "cookbook-sources")
+            FileUtils.mkdir_p(sources_dir)
+            File.write(File.join(sources_dir, "ace-handbook.yml"), {
+              "name" => "ace-handbook",
+              "type" => "gem",
+              "config" => {
+                "relative_path" => "handbook/cookbooks",
+                "pattern" => "*.cookbook.md",
+                "enabled" => true
+              }
+            }.to_yaml)
+
+            fake_spec = Struct.new(:name, :gem_dir).new("ace-handbook", gem_dir)
+            stubbed_each = proc do |&block|
+              [fake_spec].each(&block)
+            end
+
+            Gem::Specification.stub(:each, stubbed_each) do
+              Gem::Specification.stub(:find_by_name, fake_spec) do
+                sources = registry.sources_for_protocol("cookbook")
+                source = sources.find { |entry| entry.name == "ace-handbook" && entry.origin == "gem-default" }
+
+                assert source
+                assert_equal "gem", source.type
+                assert_equal "gem-default", source.origin
+                assert_equal 100, source.priority
+                assert_nil source.path
+                assert_equal "handbook/cookbooks", source.config["relative_path"]
+                assert_equal cookbook_dir, source.full_path
+              end
+            end
+          ensure
+            cleanup_temp_directory(isolated_dir)
+            cleanup_temp_directory(gem_dir)
+          end
         end
       end
     end

@@ -41,7 +41,7 @@ module Ace
               resources.concat(find_resources_in_source_internal(source, protocol_config, pattern))
             end
 
-            resources
+            deduplicate_resources(resources)
           end
 
           # Find resources in a specific source (internal implementation)
@@ -274,6 +274,18 @@ module Ace
             end
 
             resources
+          end
+
+          def deduplicate_resources(resources)
+            seen = Set.new
+
+            resources.each_with_object([]) do |resource, unique_resources|
+              key = [resource[:source].type, resource[:path]]
+              next if seen.include?(key)
+
+              seen.add(key)
+              unique_resources << resource
+            end
           end
 
           # Check if extension inference is enabled in settings (cached)
