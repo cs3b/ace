@@ -3,6 +3,7 @@ title: "ace-overseer Goal-Based E2E"
 area: overseer
 package: ace-overseer
 priority: high
+timeout: 900
 tags: [smoke, happy-path, deep, "use-case:overseer"]
 cost-tier: happy-path
 tool-under-test: ace-overseer

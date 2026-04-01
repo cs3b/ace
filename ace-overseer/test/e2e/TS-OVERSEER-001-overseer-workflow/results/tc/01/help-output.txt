@@ -1,0 +1,51 @@
+COMMANDS
+  prune                            # Remove stale task worktrees
+  status                           # Show status of task worktrees
+  work-on                          # Work on a task in isolated worktree
+
+EXAMPLES
+  ace-overseer work-on 148              # Launch task in worktree
+  ace-overseer status                   # All active worktrees
+  ace-overseer prune                    # Clean up finished tasks
+=== SUBCOMMANDS HELP ===
+NAME
+  ace-overseer work-on - Create worktree, open tmux window, and prepare assignment
+
+USAGE
+  ace-overseer work-on [OPTIONS]
+
+OPTIONS
+  --task=VALUE1,VALUE2,.., -t       Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232) (required)
+  --preset=VALUE, -p                Assignment preset name
+  --[no-]quiet, -q                  Suppress non-essential output (default: false)
+  --[no-]debug, -d                  Show debug output (default: false)
+  --help, -h                        Show this help
+NAME
+  ace-overseer status - Show status of active task worktrees
+
+USAGE
+  ace-overseer status [OPTIONS]
+
+OPTIONS
+  --format=VALUE                    Output format (table, json) (default: "table")
+  --[no-]quiet, -q                  Suppress non-essential output (default: false)
+  --[no-]debug, -d                  Show debug output (default: false)
+  --[no-]watch, -w                  Auto-refresh dashboard (default: false)
+  --help, -h                        Show this help
+NAME
+  ace-overseer prune - Clean up completed task worktrees
+
+USAGE
+  ace-overseer prune [TARGETS] [OPTIONS]
+
+ARGUMENTS
+  [TARGETS]                         Task refs or folder names to prune
+
+OPTIONS
+  --assignment=VALUE, -a            Prune a specific assignment by ID
+  --[no-]force, -f                  Force-remove unsafe worktrees (default: false)
+  --[no-]yes, -y                    Skip confirmation (default: false)
+  --[no-]dry-run                    Show candidates only (default: false)
+  --[no-]quiet, -q                  Suppress non-essential output (default: false)
+  --[no-]debug, -d                  Show debug output (default: false)
+  --help, -h                        Show this help
