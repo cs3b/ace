@@ -2,6 +2,6 @@
 
 module Ace
   module Docs
-    VERSION = '0.31.8'
+    VERSION = '0.32.0'
   end
 end
