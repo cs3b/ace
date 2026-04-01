@@ -33,11 +33,13 @@ module Ace
 
           # Instance method: check if a provider string refers to a CLI provider
           #
-          # @param provider_string [String] Provider:model string
+          # Resolves role: references to their concrete provider before checking.
+          #
+          # @param provider_string [String] Provider:model string (e.g., "claude:sonnet", "role:e2e-executor")
           # @return [Boolean]
           def cli_provider?(provider_string)
-            name = self.class.provider_name(provider_string)
-            @cli_providers.include?(name)
+            resolved = resolve_provider_name(provider_string)
+            @cli_providers.include?(resolved)
           end
 
           def build_execution_prompt(command:, tc_mode:)
@@ -138,6 +140,23 @@ module Ace
               - **Issues**: ...
             PROMPT
           end
+
+          private
+
+          # Resolve the bare provider name from a provider string.
+          # For role: references, resolves via ProviderModelParser to find the
+          # concrete provider (e.g. "role:e2e-executor" → "claude").
+          def resolve_provider_name(provider_string)
+            name = self.class.provider_name(provider_string)
+            return name unless name == "role"
+
+            parse_result = Ace::LLM::Molecules::ProviderModelParser.new.parse(provider_string)
+            parse_result.valid? ? parse_result.provider : name
+          rescue
+            name
+          end
+
+          public
 
           # Lazily-loaded default instance backed by ConfigLoader
           # @return [CliProviderAdapter]
