@@ -54,8 +54,6 @@ ace-docs:
 - Canonical package skills: `ace-handbook/handbook/skills/`
 - Canonical package guides: `ace-handbook/handbook/guides/`
 - Canonical package cookbooks: `ace-handbook/handbook/cookbooks/`
-
 - Canonical package templates: `ace-handbook/handbook/templates/`
-- Project-level overlays (outside monorepo): `.ace-handbook/workflow-instructions/`, `.ace-handbook/guides/`,
-  `.ace-handbook/templates/`, `.ace-handbook/skills/`
+- Project-level overlays (outside monorepo): `.ace-handbook/workflow-instructions/`, `.ace-handbook/guides/`, `.ace-handbook/templates/`, `.ace-handbook/skills/`
 - Landing and docs: `ace-handbook/README.md`, `ace-handbook/docs/`
