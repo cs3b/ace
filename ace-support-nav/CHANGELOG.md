@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `cookbook://` protocol defaults, extension inference, categories, and create template for cookbook resource discovery.
+
 ## [0.25.2] - 2026-03-29
 
 ### Technical
