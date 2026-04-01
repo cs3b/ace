@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.7] - 2026-04-01
+
+### Fixed
+- Embedded concrete rule-heavy fixture content in TC-004 E2E runner so policy classifier reliably triggers refusal.
+
 ## [0.24.6] - 2026-03-31
 
 ### Changed

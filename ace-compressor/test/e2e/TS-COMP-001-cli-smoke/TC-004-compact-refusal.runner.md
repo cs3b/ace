@@ -9,7 +9,25 @@ Verify compact mode refusal semantics for rule-heavy content with explicit guida
 Save artifacts to `results/tc/04/`.
 
 Actions:
-1. Create `results/tc/04/rules.md` containing rule-heavy policy language.
+1. Create `results/tc/04/rules.md` with **exactly** this content (copy verbatim, no changes):
+
+```markdown
+# Policy Decisions
+
+All workflows must be self-contained.
+
+## Impact
+
+Agents should never load external templates.
+
+Commands must include explicit evidence on failure.
+
+Outputs required for every run shall be saved locally.
+
+- Only allow approved file paths
+- Users must not bypass validation
+```
+
 2. Run `ace-compressor results/tc/04/rules.md --mode compact --format stdio`.
 3. Capture stdout/stderr/exit to:
    - `results/tc/04/compact.stdout`
