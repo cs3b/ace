@@ -1,0 +1,30 @@
+# Protocol definition for cookbooks
+protocol: cookbook
+name: "Cookbooks"
+description: "Operational runbooks and implementation recipes"
+enabled: true
+
+extensions:
+  - .cookbook.md
+  - .md
+
+inferred_extensions:
+  - .cookbook
+  - .cookbook.md
+  - .md
+
+categories:
+  - setup
+  - migration
+  - integration
+  - debugging
+  - automation
+  - pattern
+
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true
