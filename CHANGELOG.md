@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - **ace-llm v0.32.0**: Shipped canonical role catalog with gem defaults; added type guard for non-Hash role config input.
 - **ace-docs v0.31.8**: Fixed analyze CLI to read nested `llm.model` config path after roles migration.
 - **ace-git v0.19.3**: Added Gemfile.lock sync step to rebase workflow to prevent stale lockfiles after version conflict resolution.
+- **ace-llm v0.32.1**: Made role-based fallback chain-aware so remaining role candidates are tried before global fallback providers on query failure.
 
 ### Added
 - **ace-llm v0.32.0**: Added named `role:<name>` model resolution via `role:*` selectors in `ProviderModelParser`, with strict runtime availability checks and caller override precedence for `:thinking` / `@preset`.
