@@ -8,7 +8,7 @@ PASS when:
 - `results/tc/02/run-tree.txt` includes `03-work/input.md` and `03-work/output.md`
 - `results/tc/02/session.yml` exists and contains `preset: validate-idea`
 - `results/tc/02/session.yml` contains `synthesis_workflow: wfi://idea/review`
-- `results/tc/02/session.yml` contains `synthesis_provider: claude:haiku`
+- `results/tc/02/session.yml` contains `synthesis_provider: role:sim-synthesis`
 - `results/tc/02/synthesis.yml` exists and contains `chains:`
 - `results/tc/02/handoff-check.txt` exists and indicates plan input matches draft output
 - and one of these synthesis outcomes is true:

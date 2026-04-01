@@ -9,7 +9,7 @@ PASS when:
 - `results/tc/05/run-tree.txt` does not include `chains/glite-1/01-draft/`
 - `results/tc/05/session.yml` exists and contains `preset: validate-task`
 - `results/tc/05/session.yml` contains `synthesis_workflow: wfi://task/review`
-- `results/tc/05/session.yml` contains `synthesis_provider: claude:haiku`
+- `results/tc/05/session.yml` contains `synthesis_provider: role:sim-synthesis`
 - `results/tc/05/synthesis.yml` exists and contains `final_stage:`
 - `results/tc/05/final.input.md` contains `#### Step plan`
 - `results/tc/05/final.input.md` contains `#### Step work`
