@@ -110,8 +110,8 @@ class TestExecutorTest < Minitest::Test
       assert File.exist?(File.join(report_dir, "metadata.yml")), "pipeline should write metadata"
       assert_equal "value", calls.first[:kwargs][:subprocess_env]["CUSTOM"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:subprocess_env]["PROJECT_ROOT_PATH"]
-      assert_nil calls.first[:kwargs][:working_dir], "pipeline should chdir instead of passing working_dir"
-      assert_nil calls.last[:kwargs][:working_dir], "pipeline should chdir instead of passing working_dir"
+      assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
+      assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
     end
   end
 
