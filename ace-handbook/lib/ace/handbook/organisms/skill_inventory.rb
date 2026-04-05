@@ -3,6 +3,7 @@
 require "date"
 require "yaml"
 require "ace/support/nav"
+require "pathname"
 
 module Ace
   module Handbook
@@ -17,21 +18,80 @@ module Ace
         end
 
         def all
-          scanner.find_resources("skill").filter_map do |resource|
-            parse_skill(resource.fetch(:path))
-          end
+          skill_paths.filter_map { |path| parse_skill(path) }
         end
 
         private
 
-        def scanner
-          source_registry = Ace::Support::Nav::Molecules::SourceRegistry.new(start_path: project_root)
-          config_loader = Ace::Support::Nav::Molecules::ConfigLoader.new(
-            File.join(project_root, ".ace", "nav"),
-            source_registry: source_registry
-          )
+        def skill_paths
+          index = {}
 
-          Ace::Support::Nav::Molecules::ProtocolScanner.new(config_loader: config_loader)
+          source_directories.each do |directory|
+            Dir.glob(File.join(directory, "**", "SKILL.md")).sort.each do |path|
+              frontmatter = parse_frontmatter(File.read(path))
+              name = frontmatter["name"]&.to_s
+              next if name.nil? || name.empty? || index.key?(name)
+
+              index[name] = path
+            rescue
+              next
+            end
+          end
+
+          index.values
+        end
+
+        def source_directories
+          registry = Ace::Support::Nav::Molecules::SourceRegistry.new(start_path: project_root)
+          registry.sources_for_protocol("skill").filter_map do |source|
+            next if source.config.is_a?(Hash) && source.config["enabled"] == false
+
+            directory = resolve_source_directory(source)
+            next unless File.directory?(directory)
+            next if external_implicit_source?(source, directory)
+
+            directory
+          rescue
+            nil
+          end.uniq
+        end
+
+        def resolve_source_directory(source)
+          candidate = source.full_path
+          return candidate if File.directory?(candidate)
+
+          relative_path = source.config&.dig("relative_path")&.to_s&.strip
+          return nil if relative_path.nil? || relative_path.empty?
+
+          return nil unless source.config_file&.include?("/.ace-defaults/")
+
+          package_root = source.config_file.split("/.ace-defaults/").first
+          fallback = File.expand_path(relative_path, package_root)
+          File.directory?(fallback) ? fallback : nil
+        end
+
+        def external_implicit_source?(source, directory)
+          return false if path_within_project?(directory)
+          return false if explicit_registration?(source)
+
+          true
+        end
+
+        def explicit_registration?(source)
+          %w[project user].include?(source.origin.to_s)
+        end
+
+        def path_within_project?(path)
+          candidate = Pathname.new(File.expand_path(path))
+          root = Pathname.new(File.expand_path(project_root))
+          candidate == root || candidate.to_s.start_with?("#{root}/")
+        end
+
+        def parse_frontmatter(content)
+          match = content.match(FRONTMATTER_PATTERN)
+          return {} unless match
+
+          YAML.safe_load(match[1], permitted_classes: [Date, Time], aliases: true) || {}
         end
 
         def parse_skill(path)
