@@ -20,6 +20,7 @@ ace-hitl list
 **Expected Output**
 
 Shows pending HITL items for the current worktree only. If no pending items exist locally, output is empty but not an error.
+The default status filter is `pending` unless overridden with `--status`.
 
 ### Scenario 2: Review all pending HITL items from the main checkout
 
@@ -69,6 +70,18 @@ ace-hitl show t.abc --content
 **Expected Output**
 
 If `t.abc` is not found in the current scope but is found via smart fallback, both command forms include an explicit resolved-location line (path/worktree).
+
+### Scenario 6: Ambiguous global lookup fails with candidate paths
+
+**Goal**: Ensure all-scope `show` does not silently choose when shortcut refs collide across worktrees.
+
+```bash
+ace-hitl show 123 --scope all
+```
+
+**Expected Output**
+
+Returns an ambiguity error that lists candidate paths for disambiguation.
 
 ## Notes for Implementer
 
