@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/hitl"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+trap("INT") { exit 130 }
+
+begin
+  Ace::Hitl::HitlCLI.start(args)
+rescue Ace::Support::Cli::Error => e
+  warn e.message
+  exit(e.exit_code)
+rescue ArgumentError => e
+  warn "Error: #{e.message}"
+  exit(1)
+end

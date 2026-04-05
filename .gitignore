@@ -11,10 +11,12 @@ node_modules
 .cache
 .ace-local
 ace-*/.ace-local
+ace-*/.ace-hitl
 *.bak
 *.backup
 *.backup.*
 .ace-local/
+.ace-hitl/
 tmp
 tmp/
 **/test-reports

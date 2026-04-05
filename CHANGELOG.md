@@ -11,13 +11,38 @@ All notable changes to this project will be documented in this file.
 - **ace-handbook v0.25.2**: Embedded cookbook standards directly in handbook cookbook workflows and aligned package-owned vs project-local cookbook path guidance.
 
 ### Changed
-- **ace-test-runner-e2e v0.29.7**: Strengthened monorepo RubyGems-install and quick-start local E2E scenarios with isolated install/freshness checks, explicit Bundler context assertions, and command output/exit evidence rules. Added false-positive risk metadata and output-focused review guidance to `ace-test-runner-e2e` workflow documentation.
+- **ace-hitl v0.8.0**: Made `ace-hitl list` include all statuses by default within the selected folder scope (no implicit pending-only filter) and switched rows to task-like icon-led compact output.
+- **ace-hitl v0.7.0**: Renamed the canonical HITL object model to "event" across CLI/code/docs, switched manager result keys to `:event`, and added `ace-hitl list` stats footer output (`HITL Events: ...`) with the `hitl.event.*` lifecycle naming contract.
+- **ace-hitl v0.6.0**: Switched the default HITL runtime store to `.ace-local/hitl` (hard switch, no legacy `.ace-hitl` fallback) to align with ACE local-artifact conventions.
+- **ace-hitl v0.5.0**: Added per-item HITL polling (`ace-hitl wait <id>`), requester session metadata capture, and `--resume` fallback dispatch semantics for answered items.
+- **ace-hitl v0.4.3**: Switched to shared ACE namespace config resolution, added a package-owned handbook skeleton, and unified combined answer/field updates into one locked write path.
+- **ace-test-runner-e2e v0.29.8**: Strengthened monorepo RubyGems-install and quick-start local E2E scenarios with isolated install/freshness checks, explicit Bundler context assertions, and command output/exit evidence rules. Added false-positive risk metadata and output-focused review guidance to `ace-test-runner-e2e` workflow documentation.
+- **ace-hitl v0.4.0**: Added smart multi-worktree HITL read scoping (`--scope current|all`), pending-by-default list behavior, strict ambiguous all-scope show failures, and explicit resolved-location output for cross-worktree lookups.
 - **ace-handbook v0.25.0**: Added handbook-owned cookbook management/review workflows and skills, promoted `.cookbook.md` as a first-class handbook asset in docs/templates, introduced provenance + concise propagation guidance standards, and seeded canonical Astro + multi-ruby-gem monorepo cookbook examples.
 - **ace-handbook v0.25.1**: Corrected Astro cookbook command guidance to match current CLI support, added `.ace-handbook/cookbooks` usage docs, and standardized cookbook review skill metadata formatting.
 - **ace-docs v0.32.0**: Removed active cookbook workflow ownership by deleting `create-cookbook.wf.md` and updating package handbook catalog references.
 
 ### Added
 - **ace-support-nav v0.26.0**: Added native `cookbook://` protocol defaults (extensions, inference, categories, and create template) to enable cookbook discovery via `ace-nav`/`ace-bundle`.
+
+### Fixed
+- **ace-assign v0.42.1**: Updated status/operator HITL guidance and drive workflow contract to polling-first (`ace-hitl wait <id>`) with explicit `--resume` fallback dispatch.
+- **ace-hitl v0.4.2**: Fixed scoped HITL mutation behavior so `update` can modify cross-worktree items discovered by smart scope resolution, prevented duplicate HITL ID collisions during rapid create calls, and stopped masking programming errors in `HitlLoader` with broad rescue handling.
+- **ace-assign v0.42.0**: Added HITL-aware status guidance for `Stall Reason: HITL: ...` output and standardized drive workflow instructions for `ace-hitl`-based human-judgment pauses without reintroducing gate-state mechanics.
+- **ace-assign v0.41.12**: Restored parent-only fork semantics in split-subtree execution by preventing implicit child `context: fork` inheritance during workflow-backed step materialization, including subtree sibling insertion paths and symbolized fork-context inputs.
+- **ace-assign v0.41.12**: Removed default fork context declarations from canonical `plan-task`, `work-on-task`, and `review-pr` catalog steps so only explicitly fork-root parent steps run in forked context.
+- **ace-test-runner-e2e v0.29.8**: Prevented parallel E2E pipeline crashes by replacing process-global `Dir.chdir` usage with explicit sandbox `working_dir` threading in runner/verifier LLM calls.
+
+### Added
+- **ace-hitl v0.3.0**: Implemented package-owned HITL item store behavior with full CLI workflows for create/list/show/update, answer-body/status updates, and item filtering/mutation coverage with usage docs.
+- **ace-hitl v0.2.0**: Added the initial `ace-hitl` package skeleton with workspace wiring, CLI entrypoints (`list`, `show`, `create`, `update`), baseline docs/changelog, and package smoke tests.
+
+### Technical
+- **ace-assign v0.42.3**: Updated `status` HITL guidance wording/tests from "Review item" to canonical "Review event" and aligned drive/usage docs with HITL event terminology.
+- **ace-assign v0.42.2**: Updated HITL stall-path fixture/test expectations to `.ace-local/hitl/...` after the default HITL root migration.
+- Dependency-following patch release after the `ace-assign` 0.42 line update: `ace-overseer v0.13.9`.
+- **ace-assign v0.41.12**: Added regression coverage for split-subtree child materialization and scoped status guidance to prevent nested fork delegation on child `plan-task`/`work-on-task`.
+- **ace-hitl v0.4.1**: Aligned CLI version contract tests with the current released `Ace::Hitl::VERSION`.
 
 ## [0.9.937] - 2026-04-01
 

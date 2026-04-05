@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.41.10)
+    ace-assign (0.42.3)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -143,6 +143,17 @@ PATH
       ace-support-nav (~> 0.25)
 
 PATH
+  remote: ace-hitl
+  specs:
+    ace-hitl (0.8.0)
+      ace-b36ts (~> 0.13)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.9)
+      ace-support-core (~> 0.29)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+
+PATH
   remote: ace-idea
   specs:
     ace-idea (0.18.5)
@@ -185,8 +196,8 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.13.8)
-      ace-assign (~> 0.41)
+    ace-overseer (0.13.9)
+      ace-assign (~> 0.42)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -335,7 +346,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.29.7)
+    ace-test-runner-e2e (0.29.8)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -493,6 +504,7 @@ DEPENDENCIES
   ace-handbook-integration-gemini!
   ace-handbook-integration-opencode!
   ace-handbook-integration-pi!
+  ace-hitl!
   ace-idea!
   ace-lint!
   ace-llm!
