@@ -233,7 +233,8 @@ module Ace
         # @param parameters [Hash] Parameter values
         # @return [Hash] Step with substituted values
         def self.substitute_parameters(step, parameters)
-          substitute_value(step, parameters)
+          substituted = substitute_value(step, parameters)
+          mark_preset_sub_steps_origin(substituted)
         end
         private_class_method :substitute_parameters
 
@@ -252,6 +253,16 @@ module Ace
           end
         end
         private_class_method :substitute_value
+
+        def self.mark_preset_sub_steps_origin(step)
+          return step unless step.is_a?(Hash)
+
+          sub_steps = step["sub_steps"] || step["sub-steps"]
+          return step unless sub_steps.is_a?(Array) && sub_steps.any?
+
+          step.merge("sub_steps_origin" => "preset")
+        end
+        private_class_method :mark_preset_sub_steps_origin
 
         # Substitute {{placeholder}} tokens in a string.
         #

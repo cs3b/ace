@@ -479,7 +479,11 @@ module Ace
             next step unless step.is_a?(Hash)
 
             sub_steps = step["sub_steps"] || step["sub-steps"]
-            next step if sub_steps.is_a?(Array) && sub_steps.any?
+            if sub_steps.is_a?(Array) && sub_steps.any?
+              explicit = step.dup
+              explicit["sub_steps_origin"] ||= "explicit"
+              next explicit
+            end
 
             assign_config = resolve_step_assign_config(step)
             next step unless assign_config
@@ -487,7 +491,10 @@ module Ace
             resolved_sub_steps = assign_config[:sub_steps]
             next step unless resolved_sub_steps.is_a?(Array) && resolved_sub_steps.any?
 
-            enriched = step.merge("sub_steps" => resolved_sub_steps)
+            enriched = step.merge(
+              "sub_steps" => resolved_sub_steps,
+              "sub_steps_origin" => "inferred"
+            )
             enriched["context"] ||= assign_config[:context] if assign_config[:context]
             enriched
           end
@@ -523,6 +530,7 @@ module Ace
               # Create split parent orchestration node
               parent_context = step["context"] || "fork"
               parent_instructions = step["instructions"]
+              sub_steps_origin = step["sub_steps_origin"] || "explicit"
               parent_step = build_split_parent_step(
                 step: step,
                 parent_number: parent_number,
@@ -540,7 +548,8 @@ module Ace
                   parent_number: parent_number,
                   parent_step: step,
                   parent_instructions: parent_instructions,
-                  parent_context: parent_context
+                  parent_context: parent_context,
+                  sub_steps_origin: sub_steps_origin
                 )
               end
             else
@@ -680,8 +689,9 @@ module Ace
         # @param parent_step [Hash] Parent step config
         # @param parent_instructions [String, Array<String>, nil] Parent instructions
         # @param parent_context [String, nil] Parent execution context
+        # @param sub_steps_origin [String] Whether the subtree was declared explicitly or inferred
         # @return [Hash] Child step config
-        def build_child_sub_step(sub_name:, child_number:, parent_number:, parent_step:, parent_instructions:, parent_context:)
+        def build_child_sub_step(sub_name:, child_number:, parent_number:, parent_step:, parent_instructions:, parent_context:, sub_steps_origin: "inferred")
           step_def = find_step_definition(sub_name)
           parent_task_ref = extract_parent_taskref(parent_step, parent_instructions)
           instructions = if step_def&.dig("skill")
@@ -693,13 +703,15 @@ module Ace
             "number" => child_number,
             "name" => sub_name,
             "instructions" => instructions,
-            "parent" => parent_number
+            "parent" => parent_number,
+            "sub_steps_origin" => sub_steps_origin
           }
           child["taskref"] = parent_task_ref if parent_task_ref
 
           if step_def
             child["workflow"] = step_def["workflow"] if step_def["workflow"]
-            child["skill"] = step_def["skill"] if step_def["skill"] && !step_def["workflow"]
+            preserve_explicit_skill = (sub_steps_origin == "explicit")
+            child["skill"] = step_def["skill"] if step_def["skill"] && (preserve_explicit_skill || !step_def["workflow"])
 
             context_default = step_def.dig("context", "default")
             child["context"] = context_default if context_default && !fork_context_value?(parent_context)
@@ -862,7 +874,7 @@ module Ace
           end
           materialized["source_skill"] = rendering["source_skill"] || rendering["skill"] if rendering["source_skill"] || rendering["skill"]
           materialized["source_workflow"] = rendering["workflow"] if rendering["workflow"] && !rendering["workflow"].empty?
-          materialized.delete("skill")
+          materialized.delete("skill") unless preserve_explicit_child_skill?(step)
           materialized
         end
 
@@ -902,6 +914,10 @@ module Ace
 
         def split_child_without_explicit_fork?(step)
           step["parent"] && !step.key?("context") && !step.key?("fork")
+        end
+
+        def preserve_explicit_child_skill?(step)
+          step["parent"] && step["sub_steps_origin"] == "explicit"
         end
 
         def fork_context_value?(value)
