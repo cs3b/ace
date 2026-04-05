@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.4] - 2026-04-05
+
+### Fixed
+- Scoped canonical `skill://` and `wfi://` source discovery to in-project defaults and explicitly registered external sources so ambient installed gems no longer leak into assign resolution.
+- Preserved child `skill` metadata only for hand-authored explicit split sub-steps while keeping inferred and preset-expanded canonical sub-steps fully materialized.
+
 ## [0.42.3] - 2026-04-02
 
 ### Changed

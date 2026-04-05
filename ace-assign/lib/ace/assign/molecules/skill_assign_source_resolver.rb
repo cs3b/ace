@@ -297,19 +297,28 @@ module Ace
         end
 
         def discover_protocol_source_paths(protocol:, package_glob:)
-          registry_paths = Dir.chdir(project_root) do
-            registry = Ace::Support::Nav::Molecules::SourceRegistry.new
+          registry_paths = with_project_root do
+            registry = Ace::Support::Nav::Molecules::SourceRegistry.new(start_path: project_root)
             registry.sources_for_protocol(protocol).filter_map do |source|
               next if source.config.is_a?(Hash) && source.config["enabled"] == false
 
               candidate = resolve_source_directory(source)
-              File.directory?(candidate) ? candidate : nil
+              next unless File.directory?(candidate)
+              next if external_implicit_source?(source, candidate)
+
+              candidate
             rescue
               nil
             end
           end
 
           (registry_paths + discover_package_default_source_paths(package_glob)).uniq
+        end
+
+        def with_project_root
+          Dir.chdir(project_root) { yield }
+        rescue Errno::ENOENT
+          yield
         end
 
         def resolve_source_directory(source)
@@ -324,6 +333,23 @@ module Ace
           package_root = source.config_file.split("/.ace-defaults/").first
           fallback = File.expand_path(relative_path, package_root)
           File.directory?(fallback) ? fallback : nil
+        end
+
+        def external_implicit_source?(source, directory)
+          return false if path_within_project?(directory)
+          return false if explicit_registration?(source)
+
+          true
+        end
+
+        def explicit_registration?(source)
+          %w[project user].include?(source.origin.to_s)
+        end
+
+        def path_within_project?(path)
+          candidate = Pathname.new(File.expand_path(path))
+          root = Pathname.new(File.expand_path(project_root))
+          candidate == root || candidate.to_s.start_with?("#{root}/")
         end
 
         def discover_package_default_source_paths(source_glob)
