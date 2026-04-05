@@ -48,9 +48,9 @@ execution:
 providers:
   # CLI providers use deterministic pipeline execution (runner + verifier)
   cli:
-    - claude
-    - gemini
     - codex
+    - gemini
+    - claude
     - codexoss
     - opencode
     - pi

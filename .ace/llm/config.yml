@@ -13,34 +13,34 @@ llm:
     # --- Reusable candidate lists ---
     _utility: &utility
       - codex:mini
-      - claude:haiku
       - gemini:flash-latest
+      - claude:haiku
     _assign-worker: &assign-worker
       - codex:codex:medium@yolo
-      - claude:sonnet:medium@yolo
       - gemini:flash-latest@yolo
+      - claude:sonnet:medium@yolo
 
     # --- Diagnostic ---
     doctor:
+      - codex:mini:low@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
-      - codex:mini:low@yolo
 
     # --- Planning ---
     planner:
       - codex:gpt:high@ro
-      - claude:opus:high@ro
       - gemini:pro-latest@ro
+      - claude:opus:high@ro
 
     # --- Review ---
     review-default:
       - codex:codex:medium@ro
-      - claude:sonnet:medium@ro
       - gemini:pro-latest@ro
+      - claude:sonnet:medium@ro
     review-synthesizer:
       - codex:gpt:low@ro
-      - claude:sonnet:medium@ro
       - gemini:flash-latest@ro
+      - claude:sonnet:medium@ro
     review-claude:
       - claude:opus:high@ro
     review-codex:
@@ -52,19 +52,19 @@ llm:
     assign-executor: *assign-worker
     assign-engineer: *assign-worker
     assign-orchestrator:
-      - claude:opus:medium@yolo
       - codex:gpt:medium@yolo
       - gemini:pro-latest@yolo
+      - claude:opus:medium@yolo
 
     # --- E2E testing ---
     e2e-executor:
-      - claude:haiku:low@yolo
       - codex:mini:low@yolo
       - gemini:flash-latest@yolo
+      - claude:haiku:low@yolo
     e2e-reporter:
-      - claude:haiku:low@ro
       - codex:mini:low@ro
       - gemini:flash-latest@ro
+      - claude:haiku:low@ro
 
     # --- Utility ---
     prompt-enhance: *utility
@@ -72,19 +72,19 @@ llm:
     docs-analysis: *utility
     compressor: *utility
     idea-enhance:
-      - gemini:flash-latest@ro
       - codex:mini@ro
+      - gemini:flash-latest@ro
       - claude:haiku@ro
 
     # --- Simulation ---
     sim-primary:
+      - codex:mini@ro
       - gemini:flash-latest@ro
       - claude:haiku@ro
-      - codex:mini@ro
     sim-synthesis:
-      - claude:opus:medium
       - codex:gpt:medium
       - gemini:pro-latest
+      - claude:opus:medium
   fallback:
     enabled: true
     retry_count: 2

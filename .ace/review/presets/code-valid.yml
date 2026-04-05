@@ -35,6 +35,6 @@ instructions:
 bundle: "project"
 
 models:
-  - role:review-claude
   - role:review-codex
   - role:review-gemini
+  # - role:review-claude
