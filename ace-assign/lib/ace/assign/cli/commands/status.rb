@@ -90,6 +90,7 @@ module Ace
                   lines = current_for_display.stall_reason.to_s.strip.lines
                   puts "Stall Reason: #{lines.first&.chomp}"
                   lines[1..].each { |l| puts "             #{l.chomp}" } if lines.length > 1
+                  print_hitl_stall_guidance(lines.first.to_s)
                 end
                 if current_for_display.workflow
                   puts "Workflow: #{current_for_display.workflow}"
@@ -367,6 +368,29 @@ module Ace
             puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(", ")}" if has_tree
             puts "Scoped Fork PID File: #{step.fork_pid_file}" if has_file
             puts
+          end
+
+          def print_hitl_stall_guidance(first_line)
+            hitl = parse_hitl_stall_reason(first_line)
+            return unless hitl
+
+            puts "HITL Guidance:"
+            puts "  Review event: ace-hitl show #{hitl[:id]}"
+            puts "  Stored path: #{hitl[:path]}" if hitl[:path]
+            puts "  Requester default: ace-hitl wait #{hitl[:id]}"
+            puts "  Fallback dispatch: ace-hitl update #{hitl[:id]} --answer \"<decision>\" --resume"
+          end
+
+          def parse_hitl_stall_reason(line)
+            stripped = line.to_s.strip
+            return nil unless stripped.start_with?("HITL:")
+
+            payload = stripped.sub(/^HITL:\s*/, "")
+            id, path = payload.split(/\s+/, 2)
+            return nil if id.to_s.strip.empty?
+
+            path = path.to_s.strip
+            {id: id, path: path.empty? ? nil : path}
           end
 
           # Print other assignments section

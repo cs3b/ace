@@ -437,6 +437,41 @@ For external-facing steps (for example PR/review/release/push/update lifecycle s
 ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assignment "$ASSIGNMENT_TARGET"
 ```
 
+### Human-in-the-Loop (HITL) Stall Protocol
+
+Canonical source of truth: `wfi://hitl`.
+
+Use HITL when:
+
+- the active step is blocked by human judgment (ambiguity, product decision, policy choice), or
+- the assignment is complete but explicit user attention is required before next action.
+
+For a blocked step:
+
+1. Create a HITL event with assignment and step context:
+   ```bash
+   ace-hitl create "Need product decision" --question "Should retries be visible?" --assignment <id> --step <number> --step-name <name> --resume "/as-assign-drive <id>"
+   ```
+2. Fail the step using canonical stall format:
+   ```bash
+   ace-assign fail --message "HITL: <hitl-id> <hitl-path>" --assignment "$ASSIGNMENT_TARGET"
+   ```
+3. Human/operator resolves:
+   ```bash
+   ace-hitl show <hitl-id>
+   ace-hitl update <hitl-id> --answer "Yes, show retries in user-facing output."
+   ace-hitl wait <hitl-id>
+   ```
+4. Discover pending HITL work:
+   - Main checkout default (smart local-first): `ace-hitl list`
+   - Explicit scope controls: `ace-hitl list --scope current` and `ace-hitl list --scope all`
+5. Polling is default: requesting agent waits on its own HITL id (`ace-hitl wait <hitl-id>`), not global queues.
+6. Resume dispatch is fallback: if waiter is no longer active, run:
+   ```bash
+   ace-hitl update <hitl-id> --answer "<decision>" --resume
+   ```
+7. On retry/resume, read the answer from the HITL event and continue normal fail/retry mechanics. Do not introduce gate phases, assignment-level paused state, or extra resume commands in `ace-assign`.
+
 ### 5. Write Report (Only After Real Execution)
 
 After completing the step work, write a brief report summarizing what was accomplished:
@@ -535,6 +570,12 @@ Summarize the assignment results to the user:
 - What was accomplished
 - Any artifacts created (PRs, commits, etc.)
 - Next steps or follow-up actions
+
+If completion requires explicit user action/decision, create an approval HITL event:
+
+```bash
+ace-hitl create "Review completed assignment results" --kind approval --question "Please confirm next action for <assignment-id>." --assignment <assignment-id> --step completion --step-name assignment-complete --resume "/as-assign-drive <assignment-id>"
+```
 
 ## Skill Invocation Pattern
 

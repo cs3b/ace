@@ -11,10 +11,6 @@ intent:
 produces: [code-changes, commits]
 consumes: [project-base-context, task-spec]
 
-context:
-  default: fork
-  reason: "Substantial implementation benefits from focused agent"
-
 when_to_skip:
   - "Task is documentation-only"
   - "Changes are already implemented"

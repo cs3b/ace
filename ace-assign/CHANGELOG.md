@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.3] - 2026-04-02
+
+### Changed
+- Updated HITL guidance wording in `ace-assign status` and assignment workflow/docs to use canonical "event" terminology (`Review event`, `HITL event`).
+
+### Technical
+- Refreshed status command test expectations for the updated HITL wording contract.
+
+## [0.42.2] - 2026-04-02
+
+### Technical
+- Updated HITL stall-path fixture expectations in status command coverage from `.ace-hitl/...` to `.ace-local/hitl/...` to match the new default HITL root.
+
+## [0.42.1] - 2026-04-02
+
+### Changed
+- Updated `wfi://assign/drive` HITL guidance to use per-item polling (`ace-hitl wait <id>`) as the default requester path and `ace-hitl update --resume` as fallback dispatch.
+
+### Fixed
+- Updated `ace-assign status` HITL operator guidance output to display polling-first and fallback resume commands aligned with the current HITL contract.
+
+### Technical
+- Refreshed command-level status tests for the new HITL guidance text contract.
+
+## [0.42.0] - 2026-04-01
+
+### Changed
+- Added a dedicated HITL stall protocol to `wfi://assign/drive`, documenting `ace-hitl` create/list/show/update usage, canonical `ace-assign fail --message "HITL: <id> <path>"` formatting, and resume/archive flow without reintroducing gate-state mechanics.
+
+### Fixed
+- `ace-assign status` now detects HITL-formatted stall reasons and prints direct operator guidance for `ace-hitl show <id>` plus stored-path hints.
+
+### Technical
+- Added command-level status coverage for HITL and non-HITL stall reason rendering to prevent regressions in current-step guidance output.
+
+## [0.41.12] - 2026-04-01
+
+### Fixed
+- Restored parent-only fork boundaries for generated split subtrees by preventing child steps from inheriting fork context defaults when the parent step is the fork root.
+- Removed default fork context declarations from canonical `plan-task`, `work-on-task`, and `review-pr` catalog steps so only explicitly fork-root parent steps run in forked context.
+
+### Technical
+- Added regression coverage for symbolized/string fork-context normalization in child-step materialization paths.
+
+## [0.41.11] - 2026-04-01
+
+### Fixed
+- Restored parent-only fork semantics for split-subtree execution by preventing canonical child-step `context: fork` defaults from being materialized onto generated subtree children (notably `plan-task` and `work-on-task`).
+- Updated workflow-backed child-step rendering to strip inherited fork context/provider metadata when the child did not explicitly declare fork settings.
+
+### Technical
+- Added regression coverage for split-subtree child materialization and scoped status output to ensure child `plan-task` does not emit fork-execution guidance.
+
 ## [0.41.10] - 2026-03-31
 
 ### Changed

@@ -712,6 +712,98 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_add_batch_sibling_under_subtree_does_not_inherit_fork_context
+    with_temp_cache do |cache_dir|
+      project_root = File.expand_path("../../..", __dir__)
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_steps" => %w[onboard-base task-load]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      with_real_config do
+        Dir.chdir(project_root) do
+          original_project_root = ENV["PROJECT_ROOT_PATH"]
+          original_home = ENV["HOME"]
+          Dir.mktmpdir("ace-assign-home") do |temp_home|
+            ENV["PROJECT_ROOT_PATH"] = project_root
+            ENV["HOME"] = temp_home
+            Ace::Assign.reset_config!
+
+            executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+            executor.start(config_path)
+
+            result = executor.add_batch(
+              steps: [
+                {
+                  "name" => "review-pr",
+                  "workflow" => "wfi://review/pr",
+                  "instructions" => "Review in subtree"
+                }
+              ],
+              after: "010.02",
+              source_file: "/tmp/recovery.yml"
+            )
+
+            added = result[:state].find_by_number("010.03")
+            refute_nil added
+            assert_equal "review-pr", added.name
+            assert_nil added.context
+            assert_nil added.fork_provider
+          end
+        ensure
+          if original_home.nil?
+            ENV.delete("HOME")
+          else
+            ENV["HOME"] = original_home
+          end
+          if original_project_root.nil?
+            ENV.delete("PROJECT_ROOT_PATH")
+          else
+            ENV["PROJECT_ROOT_PATH"] = original_project_root
+          end
+          Ace::Assign.reset_config!
+        end
+      end
+    end
+  end
+
+  def test_start_review_split_subtree_children_do_not_inherit_fork_context
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "review-valid-1",
+          "context" => "fork",
+          "sub_steps" => %w[review-pr apply-feedback release],
+          "instructions" => "Execute the valid review cycle via child steps."
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      state = result[:state]
+
+      parent = state.find_by_number("010")
+      review = state.find_by_number("010.01")
+      apply_feedback = state.find_by_number("010.02")
+      release = state.find_by_number("010.03")
+
+      assert_equal "fork", parent.context
+      assert_equal "review-pr", review.name
+      assert_equal "apply-feedback", apply_feedback.name
+      assert_equal "release", release.name
+      assert_nil review.context
+      assert_nil apply_feedback.context
+      assert_nil release.context
+      assert_nil review.fork_provider
+    end
+  end
+
   def test_hierarchical_display
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -1255,6 +1347,8 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes File.read(work_step.file_path), "taskref: '235.01'"
         assert_equal "as-task-plan", plan_step.skill
         assert_equal "as-task-work", work_step.skill
+        assert_nil plan_step.context
+        assert_nil work_step.context
         refute_includes plan_step.instructions, "Verification checklist (from parent step goals):"
         refute_includes work_step.instructions, "Verification checklist (from parent step goals):"
       ensure
@@ -1443,6 +1537,76 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       assert_equal "fork", materialized["context"]
       assert_equal({"provider" => "codex:gpt-5"}, materialized["fork"])
+    end
+  end
+
+  def test_materialize_explicit_workflow_child_does_not_inherit_catalog_fork_context
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      canonical_step = {
+        "name" => "work-on-task",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "codex:gpt-5"}
+        }
+      }
+
+      resolver = Object.new
+      resolver.define_singleton_method(:resolve_workflow_rendering) do |_workflow_source, **_kwargs|
+        {
+          "workflow" => "wfi://task/work",
+          "body" => "Work body"
+        }
+      end
+      resolver.define_singleton_method(:resolve_skill_rendering) { |_skill_name| nil }
+      resolver.define_singleton_method(:resolve_step_rendering) { |_step_name| nil }
+
+      executor.define_singleton_method(:find_step_definition) { |_name| canonical_step }
+      executor.define_singleton_method(:skill_source_resolver) { resolver }
+      executor.define_singleton_method(:render_skill_backed_step_instructions) do |step:, rendering:|
+        "Rendered instructions for #{step["name"]} via #{rendering["workflow"]}"
+      end
+
+      materialized = executor.send(
+        :materialize_skill_backed_step,
+        {
+          "name" => "work-on-task",
+          "workflow" => "wfi://task/work",
+          "instructions" => "Do work",
+          "parent" => "010.01"
+        }
+      )
+
+      assert_nil materialized["context"]
+      assert_nil materialized["fork"]
+    end
+  end
+
+  def test_build_child_sub_step_treats_symbolized_parent_fork_context_as_fork_boundary
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      step_def = {
+        "name" => "review-pr",
+        "workflow" => "wfi://review/pr",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "codex:gpt-5"}
+        }
+      }
+
+      executor.define_singleton_method(:find_step_definition) { |_name| step_def }
+      child = executor.send(
+        :build_child_sub_step,
+        sub_name: "review-pr",
+        child_number: "040.01",
+        parent_number: "040",
+        parent_step: {"name" => "review-valid-1"},
+        parent_instructions: "Execute valid review cycle",
+        parent_context: :fork
+      )
+
+      assert_nil child["context"]
+      assert_nil child["fork"]
     end
   end
 
