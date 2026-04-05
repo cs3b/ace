@@ -102,18 +102,17 @@ module Ace
             system = File.read(system_path)
             sandbox_dir = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
 
-            Dir.chdir(sandbox_dir) do
-              Ace::LLM::QueryInterface.query(
-                @provider,
-                prompt,
-                system: system,
-                cli_args: cli_args,
-                timeout: @timeout,
-                fallback: false,
-                output: output_path,
-                subprocess_env: env_vars
-              )
-            end
+            Ace::LLM::QueryInterface.query(
+              @provider,
+              prompt,
+              system: system,
+              cli_args: cli_args,
+              timeout: @timeout,
+              fallback: false,
+              output: output_path,
+              subprocess_env: env_vars,
+              working_dir: sandbox_dir
+            )
           end
         end
       end
