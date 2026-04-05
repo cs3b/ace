@@ -1,0 +1,10 @@
+---
+name: ace-hitl
+type: gem
+description: HITL workflow instructions from ace-hitl gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true
