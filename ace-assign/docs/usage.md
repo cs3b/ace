@@ -1,10 +1,11 @@
 ---
 doc-type: user
 title: ace-assign Usage Guide
-purpose: Complete command reference for ace-assign queue orchestration, hierarchy, and fork execution.
+purpose: Complete command reference for ace-assign queue orchestration, hierarchy,
+  and fork execution.
 ace-docs:
-  last-updated: 2026-03-26
-  last-checked: 2026-03-26
+  last-updated: '2026-04-01'
+  last-checked: '2026-04-01'
 ---
 
 # ace-assign Usage Guide
@@ -91,6 +92,18 @@ Options:
 - `--all, -a`
 - `--quiet, -q`
 - `--debug, -d`
+
+HITL stall behavior:
+
+- Canonical contract lives in `wfi://hitl` (`ace-hitl` package workflow).
+- If a step is failed with canonical message format `HITL: <id> <path>`, `ace-assign status` prints operator guidance with the matching `ace-hitl show <id>` command and available path hint.
+- Recommended resume flow:
+  - `ace-hitl show <id>`
+  - requester path (default): `ace-hitl wait <id>`
+  - fallback path (when waiter inactive): `ace-hitl update <id> --answer "<decision>" --resume`
+  - `ace-assign retry <failed-step> --assignment <assignment-id>`
+- Completion-attention flow:
+  - When assignment work is complete but explicit user action is needed, create an approval HITL event (`kind=approval`) and include the resume instruction for `/as-assign-drive <assignment-id>`.
 
 ### `ace-assign start [STEP]`
 

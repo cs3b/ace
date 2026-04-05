@@ -702,7 +702,7 @@ module Ace
             child["skill"] = step_def["skill"] if step_def["skill"] && !step_def["workflow"]
 
             context_default = step_def.dig("context", "default")
-            child["context"] = context_default if context_default && parent_context != "fork"
+            child["context"] = context_default if context_default && !fork_context_value?(parent_context)
             fork_context = step_def.dig("context", "fork")
             if child["context"] == "fork" && fork_context.is_a?(Hash) && !fork_context.empty?
               # Generated child sub-steps have no explicit frontmatter overrides.
@@ -849,14 +849,16 @@ module Ace
             "instructions" => rendered_instructions,
             "workflow" => rendering["workflow"]
           )
-          context_default = rendering.dig("context", "default")
-          materialized["context"] ||= context_default if context_default
-          fork_context = rendering.dig("context", "fork")
-          if materialized["context"] == "fork" && fork_context.is_a?(Hash) && !fork_context.empty?
-            # For materialized explicit steps, preserve frontmatter-provided fork config
-            # (`||=` semantics). Rendering contributes defaults only when the step
-            # itself did not declare fork options.
-            materialized["fork"] ||= fork_context
+          unless split_child_without_explicit_fork?(step)
+            context_default = rendering.dig("context", "default")
+            materialized["context"] ||= context_default if context_default
+            fork_context = rendering.dig("context", "fork")
+            if materialized["context"] == "fork" && fork_context.is_a?(Hash) && !fork_context.empty?
+              # For materialized explicit steps, preserve frontmatter-provided fork config
+              # (`||=` semantics). Rendering contributes defaults only when the step
+              # itself did not declare fork options.
+              materialized["fork"] ||= fork_context
+            end
           end
           materialized["source_skill"] = rendering["source_skill"] || rendering["skill"] if rendering["source_skill"] || rendering["skill"]
           materialized["source_workflow"] = rendering["workflow"] if rendering["workflow"] && !rendering["workflow"].empty?
@@ -868,6 +870,11 @@ module Ace
           explicit_workflow = step["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
             canonical_step = find_step_definition(step["name"]&.to_s)
+            if canonical_step && split_child_without_explicit_fork?(step)
+              canonical_step = canonical_step.dup
+              canonical_step.delete("context")
+              canonical_step.delete("fork")
+            end
             source_skill = step["source_skill"]&.to_s&.strip
             source_skill = canonical_step&.dig("source_skill") if source_skill.nil? || source_skill.empty?
             rendering = skill_source_resolver.resolve_workflow_rendering(
@@ -891,6 +898,16 @@ module Ace
           end
 
           skill_source_resolver.resolve_step_rendering(step["name"]&.to_s)
+        end
+
+        def split_child_without_explicit_fork?(step)
+          step["parent"] && !step.key?("context") && !step.key?("fork")
+        end
+
+        def fork_context_value?(value)
+          normalized = value.to_s.strip.downcase
+          normalized = normalized.delete_prefix(":")
+          normalized == "fork"
         end
 
         def render_skill_backed_step_instructions(step:, rendering:)
@@ -1201,6 +1218,7 @@ module Ace
 
         def insert_batch_step_tree(step_config, after:, as_child:, added_by:, location:)
           normalized = normalize_batch_step_hash(step_config, location: location)
+          normalized = apply_inferred_parent_for_sibling_insert(normalized, after: after, as_child: as_child)
 
           if canonical_batch_insert_requested?(normalized)
             canonical_inserted = insert_canonical_batch_step_tree(
@@ -1454,6 +1472,27 @@ module Ace
             next if reserved_keys.include?(key_str)
             memo[key_str] = value
           end
+        end
+
+        def apply_inferred_parent_for_sibling_insert(step_config, after:, as_child:)
+          return step_config unless step_config.is_a?(Hash)
+          return step_config if as_child
+          return step_config if after.nil? || after.to_s.strip.empty?
+          return step_config if step_config.key?("parent")
+
+          inferred_parent = infer_parent_from_anchor(after)
+          return step_config if inferred_parent.nil? || inferred_parent.to_s.strip.empty?
+
+          step_config.merge("parent" => inferred_parent)
+        end
+
+        def infer_parent_from_anchor(anchor_number)
+          assignment = assignment_manager.find_active
+          return nil unless assignment
+
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          anchor = state.find_by_number(anchor_number.to_s.strip)
+          anchor&.parent
         end
 
         def default_dynamic_step_instructions

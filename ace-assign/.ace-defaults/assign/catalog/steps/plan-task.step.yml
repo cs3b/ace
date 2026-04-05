@@ -5,10 +5,6 @@ description: Analyze task requirements and create an implementation plan
 produces: [implementation-plan]
 consumes: [project-base-context, task-spec]
 
-context:
-  default: fork
-  reason: "Planning benefits from focused exploration"
-
 when_to_skip:
   - "Task is trivial and doesn't need a plan"
   - "Implementation plan already exists"

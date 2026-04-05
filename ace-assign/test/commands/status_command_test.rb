@@ -293,6 +293,97 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_shows_hitl_guidance_for_hitl_stall_reason
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "decision-point", "instructions" => "Need human judgment"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      step_path = File.join(cache_dir, result[:assignment].id, "steps", "010-decision-point.st.md")
+      Ace::Assign::Molecules::StepWriter.new.update_frontmatter(
+        step_path,
+        {"stall_reason" => "HITL: htl123 .ace-local/hitl/next/htl123-need-decision.md"}
+      )
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
+      end
+
+      assert_includes output.first, "Stall Reason: HITL: htl123 .ace-local/hitl/next/htl123-need-decision.md"
+      assert_includes output.first, "HITL Guidance:"
+      assert_includes output.first, "Review event: ace-hitl show htl123"
+      assert_includes output.first, "Stored path: .ace-local/hitl/next/htl123-need-decision.md"
+      assert_includes output.first, "Requester default: ace-hitl wait htl123"
+      assert_includes output.first, "Fallback dispatch: ace-hitl update htl123 --answer \"<decision>\" --resume"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_does_not_show_hitl_guidance_for_non_hitl_stall_reason
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "wait", "instructions" => "Wait for dependency"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      step_path = File.join(cache_dir, result[:assignment].id, "steps", "010-wait.st.md")
+      Ace::Assign::Molecules::StepWriter.new.update_frontmatter(
+        step_path,
+        {"stall_reason" => "Waiting for external dependency."}
+      )
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
+      end
+
+      assert_includes output.first, "Stall Reason: Waiting for external dependency."
+      refute_includes output.first, "HITL Guidance:"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_scoped_child_plan_task_omits_fork_execution_guidance
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_steps" => %w[onboard-base task-load plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      report = create_report(cache_dir, "progress")
+      executor.advance(report, fork_root: "010")
+      executor.advance(report, fork_root: "010")
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
+      end
+
+      assert_includes output.first, "Current Step: 010.03 - plan-task"
+      assert_includes output.first, "Instructions:"
+      refute_includes output.first, "Execute this step in a forked context:"
+      refute_includes output.first, "To execute entire subtree in one forked process:"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_with_assignment_scope_shows_scoped_step_when_global_current_is_elsewhere
     with_temp_cache do |cache_dir|
       steps = [

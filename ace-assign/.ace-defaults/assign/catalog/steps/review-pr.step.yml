@@ -10,10 +10,6 @@ prerequisites:
 produces: [review-feedback]
 consumes: [pull-request]
 
-context:
-  default: fork
-  reason: "Review benefits from isolated analysis without implementation bias"
-
 when_to_skip:
   - "No code changes since last review"
   - "Changes are trivial (typo fix, config update)"
