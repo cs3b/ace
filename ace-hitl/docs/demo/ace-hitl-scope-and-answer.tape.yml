@@ -1,0 +1,37 @@
+---
+description: Showcase ace-hitl scope-aware CLI surface and answer markdown preservation regression coverage
+tags:
+- ace-hitl
+- feature-demo
+- scope
+settings:
+  font_size: 16
+  width: 1100
+  height: 620
+  format: gif
+setup:
+- sandbox
+- copy-fixtures
+scenes:
+- name: Demo context
+  commands:
+  - type: cat fixtures/demo-context.md
+    sleep: 4s
+- name: Show scope-aware list/show CLI flags
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-hitl list --help
+    sleep: 5s
+  - type: ace-hitl show --help
+    sleep: 5s
+- name: Verify ambiguity and heading-preservation behavior
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-test test/commands/hitl_cli_test.rb --filter test_show_scope_all_errors_on_ambiguous_ref_with_candidates
+    sleep: 5s
+  - type: ace-test test/commands/hitl_cli_test.rb --filter test_update_answer_preserves_markdown_headings_in_answer_body
+    sleep: 5s
+teardown:
+- cleanup
