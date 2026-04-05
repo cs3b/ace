@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Human-in-the-loop workflow package for ACE"
-  spec.description = "Provides the dedicated ace-hitl package surface for HITL semantics and CLI workflows."
+  spec.description = "Provides the dedicated ace-hitl package surface for human in the loop (HITL) semantics and CLI workflows."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
