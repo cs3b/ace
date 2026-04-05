@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.3] - 2026-04-05
+
+### Fixed
+- Scoped canonical skill inventory discovery to in-project defaults and explicitly registered external sources so status and sync no longer pick up ambient installed gems.
+
 ## [0.25.2] - 2026-04-01
 
 ### Changed
