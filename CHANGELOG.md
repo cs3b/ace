@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.42.4**: Scoped canonical `skill://` and `wfi://` discovery to in-project defaults and explicitly registered external sources, and preserved child `skill` metadata only for hand-authored explicit split sub-steps.
+- **ace-handbook v0.25.3**: Scoped canonical skill inventory discovery to in-project defaults and explicitly registered external sources so status and sync no longer pick up ambient installed gems.
+
+### Fixed
 - **ace-support-nav v0.26.1**: Deduplicated `cookbook://` listing results, added explicit project-local cookbook source support (`.ace-handbook/cookbooks`), and aligned cookbook create-target path handling.
 - **ace-support-nav v0.26.2**: Restricted `cookbook://` extension inference to cookbook-specific forms so plain `.md` files are no longer inferred as cookbook assets.
 - **ace-support-nav v0.26.3**: Hardened protocol source loading with `YAML.safe_load_file` and documented the project-local `cookbook://` override intent for monorepo development.
