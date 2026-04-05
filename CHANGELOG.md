@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.938] - 2026-04-05
+
 ### Fixed
 - **ace-assign v0.42.4**: Scoped canonical `skill://` and `wfi://` discovery to in-project defaults and explicitly registered external sources, and preserved child `skill` metadata only for hand-authored explicit split sub-steps.
 - **ace-handbook v0.25.3**: Scoped canonical skill inventory discovery to in-project defaults and explicitly registered external sources so status and sync no longer pick up ambient installed gems.
