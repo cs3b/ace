@@ -29,9 +29,9 @@ The composed assignment resolves `work-on-task` and `create-pr` from canonical s
 
 When a step references `source: skill://as-task-work`, `ace-assign` resolves execution through `skill.execution.workflow`, reads runtime `assign.sub-steps` from the workflow, and materializes the expected subtree deterministically.
 
-### Scenario 3: Execute a direct skill with no workflow binding
+### Scenario 3: Execute a fallback-only direct skill with no workflow binding
 
-**Goal**: `ace-assign` can compose and execute a skill directly when it has no workflow binding and no `assign:` metadata.
+**Goal**: `ace-assign` can compose and execute a skill directly when it has no workflow binding and no `assign:` metadata, using only fallback name/description matching instead of explicit skill-side composition metadata.
 
 `ace-assign create .ace-local/assign/jobs/direct-skill.yml`
 
@@ -39,15 +39,15 @@ When a step references `source: skill://as-task-work`, `ace-assign` resolves exe
 
 When a step references `source: skill://external-review`, `ace-assign` renders the skill body directly, without requiring a duplicated workflow reference or workflow-level `assign:` frontmatter.
 
-### Scenario 4: Internal helper step discovery
+### Scenario 4: Internal helper or explicit workflow step
 
-**Goal**: A non-user-invocable helper step such as `task-load` is still discoverable to `ace-assign` through an internal skill rather than a permanent `skill: null` YAML step definition.
+**Goal**: A non-user-invocable helper step such as `task-load`, or an explicitly authored `wfi://...` step, remains executable without turning workflows into a second public discovery surface.
 
 `/as-assign-compose "work on task 123"`
 
 #### Expected Output
 
-The resulting assignment can include helper behavior via internal skills/workflows without requiring a duplicated public step YAML definition.
+The resulting assignment can include helper behavior via internal skills/workflows, or explicit `wfi://...` references, without requiring a duplicated public step YAML definition or workflow discovery inventory.
 
 ## Notes for Implementer
 
