@@ -8,6 +8,8 @@ module Ace
     module Molecules
       # Synchronize ACE task linkage metadata to GitHub issues.
       class GithubIssueSync
+        class OwnershipConflict < StandardError; end
+
         STICKY_MARKER = "<!-- ace-task:tracked -->"
         TRACKED_LABEL = "ace:tracked"
         TERMINAL_STATUSES = %w[done completed shipped closed cancelled skipped archived].freeze
@@ -42,6 +44,7 @@ module Ace
           sticky = find_sticky_comment(issue["comments"] || [])
 
           lines = tracked_lines(sticky&.dig("body"))
+          validate_link!(issue_id: issue_id, task_id: task_id, previous_task_id: previous&.[](:id), lines: lines) if currently_linked
           lines = remove_previous_line(lines, previous)
           lines = upsert_line(lines, task_id: task_id, task_title: task_title, task_path: task_path) if currently_linked
           if lines.empty?
@@ -62,8 +65,7 @@ module Ace
             sync_lifecycle(
               issue_id: issue_id,
               issue_state: issue["state"],
-              task_status: task_status,
-              line_count: lines.length
+              task_status: task_status
             )
           end
 
@@ -159,12 +161,23 @@ module Ace
           raise "Failed to remove #{TRACKED_LABEL} label from issue #{issue_id}: #{result[:stderr]}" unless result[:success]
         end
 
-        def self.sync_lifecycle(issue_id:, issue_state:, task_status:, line_count:)
+        def self.validate_link!(issue_id:, task_id:, previous_task_id: nil, lines: nil)
+          issue = fetch_issue(issue_id)
+          sticky = find_sticky_comment(issue["comments"] || [])
+          lines ||= tracked_lines(sticky&.dig("body"))
+          owners = lines.map { |line| extract_task_id(line) }.compact.uniq
+          return true if owners.empty?
+          return true if owners == [task_id.to_s]
+          return true if previous_task_id && owners == [previous_task_id.to_s]
+
+          raise OwnershipConflict, "GitHub issue ##{issue_id} is already owned by task #{owners.first}"
+        end
+
+        def self.sync_lifecycle(issue_id:, issue_state:, task_status:)
           terminal = TERMINAL_STATUSES.include?(task_status.to_s.downcase)
           issue_open = issue_state.to_s.upcase == "OPEN"
 
-          # For shared issues, avoid closing while multiple tracked task lines remain.
-          if terminal && issue_open && line_count <= 1
+          if terminal && issue_open
             close_result = GhCliExecutor.execute("issue", ["close", issue_id.to_s])
             raise "Failed to close issue #{issue_id}: #{close_result[:stderr]}" unless close_result[:success]
           elsif !terminal && !issue_open

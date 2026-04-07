@@ -70,8 +70,8 @@ class GithubIssueSyncTest < AceGitTestCase
     Ace::Git::Molecules::GhCliExecutor.stub :execute, executor do
       stub_git_identity do
         result = Ace::Git::Molecules::GithubIssueSync.sync_task(
-          task_id: "8r4.t.ilo.2",
-          task_title: "Expand ace-git with reusable GitHub issue sync primitives",
+          task_id: "8r4.t.ilo.1",
+          task_title: "Add linked issue metadata and auto-sync",
           task_status: "pending",
           task_path: "#{Dir.pwd}/.ace-tasks/new.s.md",
           issue_ids: [276],
@@ -123,6 +123,38 @@ class GithubIssueSyncTest < AceGitTestCase
     end
 
     assert commands.any? { |cmd, args| cmd == "issue" && args[0] == "close" && args[1] == "276" }
+  end
+
+  def test_validate_link_rejects_issue_owned_by_another_task
+    existing_body = <<~BODY
+      <!-- ace-task:tracked -->
+      Tracked in ace-task: [8r4.t.i68](https://github.com/cs3b/ace/blob/HEAD/.ace-tasks/8r4.t.i68.s.md)
+    BODY
+
+    executor = lambda do |subcommand, args, **_opts|
+      if subcommand == "issue" && args[0..2] == ["view", "276", "--json"]
+        return {
+          success: true,
+          stdout: {
+            "state" => "OPEN",
+            "comments" => [{"id" => "12345", "body" => existing_body}],
+            "labels" => [{"name" => "ace:tracked"}]
+          }.to_json,
+          stderr: "",
+          exit_code: 0
+        }
+      end
+
+      {success: true, stdout: "", stderr: "", exit_code: 0}
+    end
+
+    Ace::Git::Molecules::GhCliExecutor.stub :execute, executor do
+      err = assert_raises(Ace::Git::Molecules::GithubIssueSync::OwnershipConflict) do
+        Ace::Git::Molecules::GithubIssueSync.validate_link!(issue_id: 276, task_id: "8r4.t.i68.1")
+      end
+
+      assert_match(/already owned by task 8r4\.t\.i68/, err.message)
+    end
   end
 
   def test_sync_task_reconciles_removed_issue_without_readding_or_lifecycle_changes
