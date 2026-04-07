@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.2] - 2026-04-07
+
+### Changed
+- Updated the live GitHub sync demo tape to declare semantic verification expectations for exported issue/task refs, forbidden error output, and final closed-issue state.
+
 ## [0.33.1] - 2026-04-07
 
 ### Fixed
