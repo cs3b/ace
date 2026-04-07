@@ -18,6 +18,11 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.20.0**: Enforced one-owner GitHub issue sync so ACE now rejects duplicate task ownership and keeps linked issue lifecycle transitions scoped to a single canonical task.
 - **ace-git v0.20.1**: Fixed sticky-comment update/delete calls to use the REST issue-comment ID derived from GitHub comment URLs, restoring close-time issue sync after task archive/update.
 - **ace-task v0.33.1**: Fixed create-time sync dispatch to the reusable GitHub issue integration and repaired the live demo tape task-ref lookup so the recorded issue lifecycle completes end to end.
+- **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
+- **ace-assign v0.44.3**: Added missing internal-helper `ace-bundle` tool permissions and canonical skill headers, and fixed source-based canonical metadata fallback for custom-named explicit-source assignment steps (with regression coverage).
+- **ace-assign v0.44.2**: Preserved project catalog override precedence over canonical step metadata and restored canonical metadata in `CatalogLoader.load_all` for migrated public steps (with explicit raw-YAML opt-out support).
+- **ace-assign v0.44.1**: Preserved canonical step-level `assign.steps` `name`/`description` during skill-backed step rendering so step-specific descriptions are not replaced by top-level skill text.
+- **ace-lint v0.28.1**: Allowed canonical `assign.steps` metadata in skill validation and added regression coverage for the updated schema contract.
 
 ### Added
 - **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
@@ -33,6 +38,21 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.20.2**: Added shared GitHub issue sync primitives for broader reuse and strengthened sync ownership/error handling.
 - **ace-task v0.33.3**: Updated linked-issue metadata and sync behavior around singular ownership and reusable sync flow routing.
 - **ace-review v0.51.10**: Switched review GitHub CLI integrations to the shared `ace-git` executor to reduce package-specific duplication.
+- **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
+- **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
+- **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.
+- **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
+- **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
+- **ace-assign v0.43.0**: Migrated internal helper-step ownership to canonical non-public skills/workflows and tightened assign-step discovery to `user-invocable: true` skills only.
+- **ace-assign v0.43.1**: Migrated public step metadata ownership to canonical skill `assign.steps` and updated assign resolution to prefer `skill.execution.workflow` with legacy fallback.
+- **ace-assign v0.44.0**: Normalized runtime execution around canonical step `source` (`skill://...` and explicit `wfi://...`) with legacy compatibility fallback, and aligned assign workflow docs to source-first contracts.
+- **ace-bundle v0.41.4**: Expanded `as-onboard` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-git v0.19.4**: Expanded `as-github-pr-create` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-review v0.51.8**: Expanded `as-review-pr` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-task v0.31.10**: Expanded canonical `as-task-plan`/`as-task-work` skill metadata for skill-owned public assign-step discovery.
+- **ace-test v0.6.3**: Expanded `as-test-verify-suite` canonical skill metadata while retaining template rendering in catalog YAML.
+- **ace-lint v0.28.0**: Aligned canonical skill validation with the skill-first contract by allowing capability skills without workflow bindings while keeping workflow/orchestration binding requirements and capability `assign:` restrictions.
+- Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 ### Technical
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
@@ -40,6 +60,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.
 - **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
 - **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
+- Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 ## [0.9.938] - 2026-04-05
 
