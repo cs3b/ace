@@ -31,6 +31,69 @@ class AceAssignTestCase < AceTestCase
     end
   end
 
+  class InertSkillAssignSourceResolver
+    def assign_step_catalog
+      []
+    end
+
+    def assign_capable_skill_names
+      []
+    end
+
+    def resolve_step_rendering(_step_name)
+      nil
+    end
+
+    def resolve_skill_rendering(_skill_name)
+      nil
+    end
+
+    def resolve_workflow_rendering(*)
+      nil
+    end
+
+    def resolve_workflow_assign_config(*)
+      nil
+    end
+
+    def resolve_assign_config(_skill_name)
+      nil
+    end
+
+    def cache_signature
+      "inert-test-skill-source-resolver"
+    end
+  end
+
+  def build_fast_executor(cache_base:)
+    Ace::Assign::Organisms::AssignmentExecutor.new(
+      cache_base: cache_base,
+      skill_source_resolver: InertSkillAssignSourceResolver.new,
+      step_catalog: []
+    )
+  end
+
+  def build_fast_command_executor(cache_base:, target: nil)
+    executor = build_fast_executor(cache_base: cache_base)
+    return executor if target.nil? || target.assignment_id.to_s.strip.empty?
+
+    assignment_id = target.assignment_id
+    manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_base)
+    assignment = manager.load(assignment_id)
+    raise Ace::Assign::AssignmentErrors::NotFound, "Assignment '#{assignment_id}' not found" unless assignment
+
+    executor.assignment_manager.define_singleton_method(:find_active) { assignment }
+    executor
+  end
+
+  def with_fast_command_executor(command, cache_base:, &block)
+    command.stub(:build_executor_for_target, ->(target) do
+      build_fast_command_executor(cache_base: cache_base, target: target)
+    end) do
+      yield
+    end
+  end
+
   Minitest.after_run do
     AceAssignTestCase.subclasses.each do |klass|
       next unless klass.instance_variable_get(:@class_temp_dir)
