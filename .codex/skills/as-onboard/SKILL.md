@@ -10,10 +10,20 @@ argument-hint:
 last_modified: 2026-01-17
 source: ace-bundle
 assign:
-  source: wfi://onboard
   steps:
   - name: onboard
     description: Load project context and understand the codebase
+    prerequisites: []
+    produces:
+    - project-context
+    consumes: []
+    context:
+      default:
+      reason: Onboarding needs access to the main conversation context
+    when_to_skip:
+    - Already onboarded in a previous assignment
+    - Working in a context where project is already loaded
+    effort: light
     tags:
     - setup
     - context-loading
