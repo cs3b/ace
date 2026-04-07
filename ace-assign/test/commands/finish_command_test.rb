@@ -11,12 +11,15 @@ class FinishCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       # Start an assignment first
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       result = nil
       output = capture_io do
-        result = Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          result = command.call(message: report_path)
+        end
       end
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Step 010 (init) completed"
@@ -33,11 +36,14 @@ class FinishCommandTest < AceAssignTestCase
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path) # 010 in_progress
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(step: "010", message: report_path)
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(step: "010", message: report_path)
+        end
       end
 
       assert_includes output.first, "Step 010 (init) completed"
@@ -53,11 +59,14 @@ class FinishCommandTest < AceAssignTestCase
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: "nonexistent.md")
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: "nonexistent.md")
+        end
       end
       assert_includes output.first, "Step 010 (init) completed"
 
@@ -76,7 +85,10 @@ class FinishCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: report_path)
+        end
       end
 
       assert_equal 2, error.exit_code
@@ -92,7 +104,7 @@ class FinishCommandTest < AceAssignTestCase
 
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
 
       config1 = create_test_config(cache_dir, name: "first-task")
       result1 = executor.start(config1)
@@ -102,10 +114,13 @@ class FinishCommandTest < AceAssignTestCase
       target_id = result2[:assignment].id
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(
-          message: report_path,
-          assignment: target_id
-        )
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(
+            message: report_path,
+            assignment: target_id
+          )
+        end
       end
 
       assert_includes output.first, "Step 010 (init) completed"
@@ -140,16 +155,19 @@ class FinishCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       start = executor.start(config_path)
       target_id = start[:assignment].id
       executor.advance(report_path) # complete 010 precheck, activate 020.01
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(
-          message: report_path,
-          assignment: "#{target_id}@020"
-        )
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(
+            message: report_path,
+            assignment: "#{target_id}@020"
+          )
+        end
       end
 
       assert_includes output.first, "Step 020.01 (onboard) completed"
@@ -170,7 +188,7 @@ class FinishCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
@@ -180,7 +198,9 @@ class FinishCommandTest < AceAssignTestCase
       $stdin = stdin
 
       output = capture_io do
-        cmd.call
+        with_fast_command_executor(cmd, cache_base: cache_dir) do
+          cmd.call
+        end
       end
 
       assert_includes output.first, "Step 010 (init) completed"
@@ -195,7 +215,7 @@ class FinishCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
@@ -205,7 +225,9 @@ class FinishCommandTest < AceAssignTestCase
       $stdin = stdin
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        cmd.call
+        with_fast_command_executor(cmd, cache_base: cache_dir) do
+          cmd.call
+        end
       end
 
       assert_equal 1, error.exit_code
@@ -222,7 +244,7 @@ class FinishCommandTest < AceAssignTestCase
       report_path = create_report(cache_dir, "file report content")
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
@@ -232,7 +254,9 @@ class FinishCommandTest < AceAssignTestCase
       $stdin = stdin
 
       output = capture_io do
-        cmd.call(message: report_path)
+        with_fast_command_executor(cmd, cache_base: cache_dir) do
+          cmd.call(message: report_path)
+        end
       end
 
       assert_includes output.first, "Step 010 (init) completed"
@@ -255,12 +279,15 @@ class FinishCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       # Create assignment via executor — 010 is in_progress
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       # Finish 010 via CLI — auto-advances to 020
       finish_output = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: report_path)
+        end
       end
       assert_includes finish_output.first, "Step 010 (init) completed"
       assert_includes finish_output.first, "Advancing to step 020"
@@ -273,7 +300,10 @@ class FinishCommandTest < AceAssignTestCase
 
       # Finish 020 via CLI — auto-advances to 030
       finish_output2 = capture_io do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: report_path)
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: report_path)
+        end
       end
       assert_includes finish_output2.first, "Step 020 (build) completed"
       assert_includes finish_output2.first, "Advancing to step 030"
@@ -295,11 +325,14 @@ class FinishCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: "")
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: "")
+        end
       end
 
       assert_equal 1, error.exit_code
@@ -314,11 +347,14 @@ class FinishCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Finish.new.call(message: "   ")
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: "   ")
+        end
       end
 
       assert_equal 1, error.exit_code

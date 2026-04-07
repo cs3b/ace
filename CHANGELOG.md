@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.33.0**: Switched linked issue metadata to singular `github_issue` ownership, updated task lifecycle sync hooks and docs around canonical task-owned GitHub issues, and reworked the GitHub sync demo to show live issue creation and automatic closure.
 
 ### Technical
+- **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
 
 ## [0.9.938] - 2026-04-05

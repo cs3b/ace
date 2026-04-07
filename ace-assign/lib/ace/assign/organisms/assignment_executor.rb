@@ -12,15 +12,40 @@ module Ace
       # start → advance → complete (with fail/add/retry branches)
       class AssignmentExecutor
         DEFAULT_DYNAMIC_STEP_INSTRUCTIONS = "Complete this step and finish with: ace-assign finish --message report.md".freeze
+        PROJECT_ROOT_SIGNAL = "project_root".freeze
+        CATALOG_SIGNAL = "catalog".freeze
 
         attr_reader :assignment_manager, :queue_scanner, :step_writer, :step_renumberer, :skill_source_resolver
 
-        def initialize(cache_base: nil)
+        class << self
+          def clear_caches!
+            @cache_store = { step_catalog_cache: {} }
+          end
+
+          def cache_store
+            @cache_store ||= { step_catalog_cache: {} }
+          end
+
+          private
+
+          def cached_value(store_key, key)
+            cache_store[store_key][key]
+          end
+
+          def store_cached_value(store_key, key, value)
+            cache_store[store_key][key] = value
+          end
+        end
+
+        def initialize(cache_base: nil, skill_source_resolver: nil, step_catalog: nil)
           @assignment_manager = Molecules::AssignmentManager.new(cache_base: cache_base)
           @queue_scanner = Molecules::QueueScanner.new
           @step_writer = Molecules::StepWriter.new
-          @skill_source_resolver = Molecules::SkillAssignSourceResolver.new
+          @skill_source_resolver = skill_source_resolver || Molecules::SkillAssignSourceResolver.new
           @step_catalog = nil
+          @step_catalog_from_fixture = step_catalog
+          @step_catalog_from_fixture_set = !step_catalog.nil?
+          @step_catalog_loaded = false
           @step_renumberer = Molecules::StepRenumberer.new(
             step_writer: @step_writer,
             queue_scanner: @queue_scanner
@@ -1123,24 +1148,88 @@ module Ace
         #
         # @return [Array<Hash>] Loaded step definitions
         def step_catalog
-          @step_catalog ||= begin
-            project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-            gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir || File.expand_path("../../../..", __dir__)
+          return @step_catalog if @step_catalog_loaded
 
-            project_catalog = File.join(project_root, ".ace", "assign", "catalog", "steps")
-            default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "steps")
-
-            default_steps = Atoms::CatalogLoader.load_all(default_catalog)
-            base_catalog = if File.directory?(project_catalog)
-              project_steps = Atoms::CatalogLoader.load_all(project_catalog)
-              merge_step_catalog(default_steps, project_steps)
-            else
-              default_steps
-            end
-
-            canonical_steps = skill_source_resolver.assign_step_catalog
-            merge_step_catalog(base_catalog, canonical_steps)
+          if @step_catalog_from_fixture_set
+            @step_catalog_loaded = true
+            @step_catalog = @step_catalog_from_fixture
+            return @step_catalog
           end
+
+          cached = self.class.send(:cached_value, :step_catalog_cache, step_catalog_signature)
+          return @step_catalog = cached if cached
+
+          @step_catalog_loaded = true
+          @step_catalog = load_step_catalog
+          self.class.send(:store_cached_value, :step_catalog_cache, step_catalog_signature, @step_catalog)
+          @step_catalog
+        end
+
+        def step_catalog_signature
+          [
+            PROJECT_ROOT_SIGNAL,
+            project_catalog_signature,
+            default_catalog_signature,
+            step_catalog_cache_token,
+            CATALOG_SIGNAL
+          ].join("|")
+        end
+
+        def project_catalog_signature
+          @project_catalog_signature ||= catalog_signature(File.join(project_root, ".ace", "assign", "catalog", "steps"))
+        end
+
+        def default_catalog_signature
+          @default_catalog_signature ||= catalog_signature(File.join(gem_root, ".ace-defaults", "assign", "catalog", "steps"))
+        end
+
+        def load_step_catalog
+          project_catalog = File.join(project_root, ".ace", "assign", "catalog", "steps")
+          default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "steps")
+
+          default_steps = Atoms::CatalogLoader.load_all(default_catalog)
+          base_catalog = if File.directory?(project_catalog)
+            project_steps = Atoms::CatalogLoader.load_all(project_catalog)
+            merge_step_catalog(default_steps, project_steps)
+          else
+            default_steps
+          end
+
+          canonical_steps = @skill_source_resolver.assign_step_catalog
+          merge_step_catalog(base_catalog, canonical_steps)
+        end
+
+        def catalog_signature(catalog_dir)
+          return "missing" unless File.directory?(catalog_dir)
+
+          Dir.glob(File.join(catalog_dir, "*.step.yml")).sort.map do |path|
+            "#{path}:#{file_signature(path)}"
+          end.join("|")
+        end
+
+        def file_signature(path)
+          stat = File.stat(path)
+          "#{stat.mtime.to_f}:#{stat.size}"
+        rescue
+          "missing"
+        end
+
+        def step_catalog_cache_token
+          token = if @skill_source_resolver.respond_to?(:cache_signature)
+            @skill_source_resolver.cache_signature
+          else
+            "resolver:#{@skill_source_resolver.object_id}"
+          end
+
+          "resolver:#{token}"
+        end
+
+        def project_root
+          @project_root ||= Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+        end
+
+        def gem_root
+          @gem_root ||= Gem.loaded_specs["ace-assign"]&.gem_dir || File.expand_path("../../../..", __dir__)
         end
 
         # Merge default and project step catalogs by step name.

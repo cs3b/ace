@@ -4,6 +4,19 @@ require_relative "../test_helper"
 require "json"
 
 class StatusCommandTest < AceAssignTestCase
+  def run_status_command(cache_base:, **kwargs)
+    command = Ace::Assign::CLI::Commands::Status.new
+    with_fast_command_executor(command, cache_base: cache_base) do
+      command.call(**kwargs)
+    end
+  end
+
+  def capture_status_command(cache_base:, **kwargs)
+    capture_io do
+      run_status_command(cache_base: cache_base, **kwargs)
+    end
+  end
+
   def test_status_with_active_assignment
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -11,13 +24,11 @@ class StatusCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       # Start an assignment first
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       result = nil
-      output = capture_io do
-        result = Ace::Assign::CLI::Commands::Status.new.call
-      end
+      output = capture_status_command(cache_base: cache_dir)
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "QUEUE - Assignment: test-session"
       assert_includes output.first, "010-init.st.md"
@@ -32,7 +43,7 @@ class StatusCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::Status.new.call
+        run_status_command(cache_base: cache_dir)
       end
 
       assert_equal 2, error.exit_code
@@ -47,12 +58,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(format: "json")
-      end
+      output = capture_status_command(cache_base: cache_dir, format: "json")
 
       payload = JSON.parse(output.first)
       assert_equal result[:assignment].id, payload.dig("assignment", "id")
@@ -77,14 +86,12 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
       report = create_report(cache_dir, "done")
       3.times { executor.advance(report) }
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(format: "json")
-      end
+      output = capture_status_command(cache_base: cache_dir, format: "json")
 
       payload = JSON.parse(output.first)
       assert_equal "completed", payload.dig("assignment", "state")
@@ -110,12 +117,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, format: "json", assignment: result[:assignment].id)
 
       payload = JSON.parse(output.first)
       step = payload.fetch("steps").first
@@ -141,12 +146,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, format: "json", assignment: result[:assignment].id)
 
       payload = JSON.parse(output.first)
       step = payload.fetch("steps").first
@@ -170,12 +173,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Fork Provider: claude:sonnet@yolo"
 
@@ -197,12 +198,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Current Step: 010.01 - onboard"
       assert_includes output.first, "Fork Provider: codex:gpt-fit"
@@ -225,12 +224,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(format: "json", assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, format: "json", assignment: "#{result[:assignment].id}@010")
 
       payload = JSON.parse(output.first)
       assert_equal "010.01", payload.dig("current_step", "number")
@@ -248,14 +245,12 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       report = create_report(cache_dir, "done")
       executor.advance(report)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Assignment completed!"
       refute_includes output.first, "Current Step:"
@@ -279,12 +274,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Current Step: 010.01 - onboard"
       assert_includes output.first, "Instructions:"
@@ -301,7 +294,7 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       step_path = File.join(cache_dir, result[:assignment].id, "steps", "010-decision-point.st.md")
       Ace::Assign::Molecules::StepWriter.new.update_frontmatter(
@@ -309,9 +302,7 @@ class StatusCommandTest < AceAssignTestCase
         {"stall_reason" => "HITL: htl123 .ace-local/hitl/next/htl123-need-decision.md"}
       )
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id)
 
       assert_includes output.first, "Stall Reason: HITL: htl123 .ace-local/hitl/next/htl123-need-decision.md"
       assert_includes output.first, "HITL Guidance:"
@@ -332,7 +323,7 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       step_path = File.join(cache_dir, result[:assignment].id, "steps", "010-wait.st.md")
       Ace::Assign::Molecules::StepWriter.new.update_frontmatter(
@@ -340,9 +331,7 @@ class StatusCommandTest < AceAssignTestCase
         {"stall_reason" => "Waiting for external dependency."}
       )
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id)
 
       assert_includes output.first, "Stall Reason: Waiting for external dependency."
       refute_includes output.first, "HITL Guidance:"
@@ -364,16 +353,14 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       report = create_report(cache_dir, "progress")
       executor.advance(report, fork_root: "010")
       executor.advance(report, fork_root: "010")
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Current Step: 010.03 - plan-task"
       assert_includes output.first, "Instructions:"
@@ -394,12 +381,10 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@020")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@020")
 
       assert_includes output.first, "020-midcheck.st.md"
       assert_includes output.first, "Current Step: 020 - midcheck"
@@ -426,13 +411,11 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       # Global current is 010.01 (onboard), and scoped status should show actionable step inside scope.
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Current Step: 010.01 - onboard"
 
@@ -454,13 +437,11 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id)
 
       # Env var is ignored; without explicit scope full assignment status is shown.
       assert_includes output.first, "010.01"
@@ -485,13 +466,11 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@020")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@020")
 
       assert_includes output.first, "020-post-step.st.md"
       assert_includes output.first, "Current Step: 020 - post-step"
@@ -511,14 +490,12 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       executor.add("child-step", "Child work", after: "010", as_child: true)
       executor.add("grandchild-step", "Grandchild work", after: "010.01", as_child: true)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010.01")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010.01")
 
       assert_includes output.first, "010.01"
       assert_includes output.first, "010.01.01"
@@ -543,15 +520,14 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(
-          assignment: "#{result[:assignment].id}@020",
-          filter: "010.01"
-        )
-      end
+      output = capture_status_command(
+        cache_base: cache_dir,
+        assignment: "#{result[:assignment].id}@020",
+        filter: "010.01"
+      )
 
       assert_includes output.first, "020-post-step.st.md"
       assert_includes output.first, "Current Step: 020 - post-step"
@@ -574,7 +550,7 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       step_writer = Ace::Assign::Molecules::StepWriter.new
       step_writer.record_fork_pid_info(
@@ -584,9 +560,7 @@ class StatusCommandTest < AceAssignTestCase
         pid_file: File.join(cache_dir, result[:assignment].id, "pids", "010.pid.yml")
       )
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010")
 
       assert_includes output.first, "Scoped Fork PID: 355349"
       assert_includes output.first, "Scoped Fork PID Tree: 3553666, 3553667"
@@ -611,13 +585,11 @@ class StatusCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       executor.add("child-inline", "Inline child", after: "010", as_child: true)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
-      end
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id)
 
       # Header should include FORK column
       assert_includes output.first, "FORK"

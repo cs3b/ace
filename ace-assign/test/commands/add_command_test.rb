@@ -15,6 +15,39 @@ class AddCommandTest < AceAssignTestCase
     end
   end
 
+  TEST_ITER_COLLISION_PRESET = {
+    "name" => "test-iter-collision",
+    "steps" => [
+      {
+        "name" => "review-fit-1",
+        "instructions" => "First review",
+        "sub_steps" => [
+          {"name" => "review-fit-2", "instructions" => "Expanded child"}
+        ]
+      },
+      {"name" => "review-fit-1", "instructions" => "Second review"}
+    ]
+  }.freeze
+
+  TEST_TASK_TOKENS_PRESET = {
+    "name" => "test-task-tokens",
+    "expansion" => {
+      "child-template" => {
+        "name" => "work-on-{{item}}",
+        "instructions" => "Implement {{item}} from {{task_id}}"
+      }
+    }
+  }.freeze
+
+  def with_preset_loader_stubs(presets = {})
+    original = Ace::Assign::Atoms::PresetLoader.method(:load)
+    Ace::Assign::Atoms::PresetLoader.stub(:load, ->(preset_name) do
+      presets.fetch(preset_name.to_s) { original.call(preset_name) }
+    end) do
+      yield
+    end
+  end
+
   def test_add_with_yaml_inserts_steps
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -27,10 +60,13 @@ class AddCommandTest < AceAssignTestCase
       }.to_yaml)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
+      build_fast_executor(cache_base: cache_dir).start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(yaml: steps_path, after: "010")
+        command = Ace::Assign::CLI::Commands::Add.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(yaml: steps_path, after: "010")
+        end
       end
 
       assert_includes output.first, "Added 2 step(s) from batch-steps.yml"
@@ -73,11 +109,14 @@ class AddCommandTest < AceAssignTestCase
       ])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(step: "review-fit", preset: "work-on-task", after: "010")
+        command = Ace::Assign::CLI::Commands::Add.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(step: "review-fit", preset: "work-on-task", after: "010")
+        end
       end
 
       assert_includes output.first, "Added review-fit-2"
@@ -96,13 +135,15 @@ class AddCommandTest < AceAssignTestCase
       ])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Add.new
         command.stub(:task_manager, FakeTaskManager.new(["t.456"])) do
-          command.call(task: "t.456", preset: "work-on-task")
+          with_fast_command_executor(command, cache_base: cache_dir) do
+            command.call(task: "t.456", preset: "work-on-task")
+          end
         end
       end
 
@@ -119,12 +160,14 @@ class AddCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
+      build_fast_executor(cache_base: cache_dir).start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
         command = Ace::Assign::CLI::Commands::Add.new
         command.stub(:task_manager, FakeTaskManager.new(["t.456"])) do
-          command.call(task: "t.456", preset: "work-on-task")
+          with_fast_command_executor(command, cache_base: cache_dir) do
+            command.call(task: "t.456", preset: "work-on-task")
+          end
         end
       end
 
@@ -140,12 +183,14 @@ class AddCommandTest < AceAssignTestCase
       ])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir).start(config_path)
+      build_fast_executor(cache_base: cache_dir).start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
         command = Ace::Assign::CLI::Commands::Add.new
         command.stub(:task_manager, FakeTaskManager.new([])) do
-          command.call(task: "t.missing", preset: "work-on-task")
+          with_fast_command_executor(command, cache_base: cache_dir) do
+            command.call(task: "t.missing", preset: "work-on-task")
+          end
         end
       end
 
@@ -163,13 +208,15 @@ class AddCommandTest < AceAssignTestCase
       ])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Add.new
         command.stub(:task_manager, FakeTaskManager.new(["t.900"])) do
-          command.call(task: "t.900", preset: "work-on-task", after: "010")
+          with_fast_command_executor(command, cache_base: cache_dir) do
+            command.call(task: "t.900", preset: "work-on-task", after: "010")
+          end
         end
       end
 
@@ -185,33 +232,20 @@ class AddCommandTest < AceAssignTestCase
   end
 
   def test_add_step_mode_refreshes_existing_names_between_preset_insertions
-    project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-    preset_dir = File.join(project_root, ".ace", "assign", "presets")
-    preset_path = File.join(preset_dir, "test-iter-collision.yml")
-    FileUtils.mkdir_p(preset_dir)
-    File.write(preset_path, {
-      "name" => "test-iter-collision",
-      "steps" => [
-        {
-          "name" => "review-fit-1",
-          "instructions" => "First review",
-          "sub_steps" => [
-            {"name" => "review-fit-2", "instructions" => "Expanded child"}
-          ]
-        },
-        {"name" => "review-fit-1", "instructions" => "Second review"}
-      ]
-    }.to_yaml)
-
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [{"name" => "seed", "instructions" => "Seed"}])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       capture_io do
-        Ace::Assign::CLI::Commands::Add.new.call(step: "review-fit,review-fit", preset: "test-iter-collision", after: "010")
+        command = Ace::Assign::CLI::Commands::Add.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          with_preset_loader_stubs("test-iter-collision" => TEST_ITER_COLLISION_PRESET) do
+            command.call(step: "review-fit,review-fit", preset: "test-iter-collision", after: "010")
+          end
+        end
       end
 
       state = executor.status[:state]
@@ -222,25 +256,9 @@ class AddCommandTest < AceAssignTestCase
 
       Ace::Assign.reset_config!
     end
-  ensure
-    FileUtils.rm_f(preset_path)
   end
 
   def test_add_task_mode_warns_for_unexpanded_tokens_in_debug_mode
-    project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-    preset_dir = File.join(project_root, ".ace", "assign", "presets")
-    preset_path = File.join(preset_dir, "test-task-tokens.yml")
-    FileUtils.mkdir_p(preset_dir)
-    File.write(preset_path, {
-      "name" => "test-task-tokens",
-      "expansion" => {
-        "child-template" => {
-          "name" => "work-on-{{item}}",
-          "instructions" => "Implement {{item}} from {{task_id}}"
-        }
-      }
-    }.to_yaml)
-
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [
         {"name" => "batch-tasks", "instructions" => "Batch container"},
@@ -248,13 +266,17 @@ class AddCommandTest < AceAssignTestCase
       ])
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Add.new
         command.stub(:task_manager, FakeTaskManager.new(["t.789"])) do
-          command.call(task: "t.789", preset: "test-task-tokens", debug: true)
+          with_fast_command_executor(command, cache_base: cache_dir) do
+            with_preset_loader_stubs("test-task-tokens" => TEST_TASK_TOKENS_PRESET) do
+              command.call(task: "t.789", preset: "test-task-tokens", debug: true)
+            end
+          end
         end
       end
 
@@ -265,7 +287,5 @@ class AddCommandTest < AceAssignTestCase
 
       Ace::Assign.reset_config!
     end
-  ensure
-    FileUtils.rm_f(preset_path)
   end
 end

@@ -3,6 +3,19 @@
 require_relative "../test_helper"
 
 class ForkRunCommandTest < AceAssignTestCase
+  def run_fork_run_command(cache_base:, launcher: nil, **kwargs)
+    command = Ace::Assign::CLI::Commands::ForkRun.new(launcher: launcher)
+    with_fast_command_executor(command, cache_base: cache_base) do
+      command.call(**kwargs)
+    end
+  end
+
+  def capture_fork_run_command(cache_base:, launcher: nil, **kwargs)
+    capture_io do
+      run_fork_run_command(cache_base: cache_base, launcher: launcher, **kwargs)
+    end
+  end
+
   class CompletingLauncher
     def initialize(cache_base:)
       @cache_base = cache_base
@@ -66,14 +79,15 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: CompletingLauncher.new(cache_base: cache_dir)
-        ).call(root: "010", assignment: result[:assignment].id)
-      end
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: CompletingLauncher.new(cache_base: cache_dir),
+        root: "010",
+        assignment: result[:assignment].id
+      )
 
       assert_includes output.first, "Starting fork subtree execution: 010 - work-on-task"
       assert_includes output.first, "Fork subtree 010 completed successfully."
@@ -95,14 +109,14 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: CompletingLauncher.new(cache_base: cache_dir)
-        ).call(assignment: result[:assignment].id)
-      end
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: CompletingLauncher.new(cache_base: cache_dir),
+        assignment: result[:assignment].id
+      )
 
       assert_includes output.first, "Starting fork subtree execution: 010 - work-on-task"
 
@@ -115,11 +129,11 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new.call(root: "010", assignment: result[:assignment].id)
+        run_fork_run_command(cache_base: cache_dir, root: "010", assignment: result[:assignment].id)
       end
 
       assert_includes error.message, "not fork-enabled"
@@ -141,13 +155,17 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: result[:assignment].id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: result[:assignment].id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "did not complete"
@@ -172,7 +190,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       # Verify first child of fork subtree starts as pending
@@ -201,11 +219,12 @@ class ForkRunCommandTest < AceAssignTestCase
         end
       end
 
-      capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: spy_launcher.new(cache_base: cache_dir)
-        ).call(root: "020", assignment: result[:assignment].id)
-      end
+      capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir),
+        root: "020",
+        assignment: result[:assignment].id
+      )
 
       assert_equal :in_progress, marked_status, "First workable child should be marked in_progress before launch"
 
@@ -222,7 +241,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       launch_snapshot = {}
@@ -246,11 +265,11 @@ class ForkRunCommandTest < AceAssignTestCase
         end
       end
 
-      capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
-        ).call(assignment: "#{result[:assignment].id}@020")
-      end
+      capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020"
+      )
 
       assert_equal :in_progress, launch_snapshot[:leaf_status]
 
@@ -272,7 +291,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -306,11 +325,12 @@ class ForkRunCommandTest < AceAssignTestCase
         end
       end
 
-      capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
-        ).call(root: "020", assignment: assignment.id)
-      end
+      capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        root: "020",
+        assignment: assignment.id
+      )
 
       assert_equal :in_progress, launch_snapshot[:child_a]
       assert_equal :pending, launch_snapshot[:child_b]
@@ -333,7 +353,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -344,9 +364,13 @@ class ForkRunCommandTest < AceAssignTestCase
       writer.mark_in_progress(state_before.find_by_number("020.02").file_path)
 
       error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "020", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "020",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "multiple steps are already in progress"
@@ -369,15 +393,15 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       # Initial current step is 010 (pre-step), while requested fork scope is 020.
-      output = capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: DirectSubtreeCompletingLauncher.new(cache_base: cache_dir)
-        ).call(assignment: "#{result[:assignment].id}@020")
-      end
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: DirectSubtreeCompletingLauncher.new(cache_base: cache_dir),
+        assignment: "#{result[:assignment].id}@020"
+      )
 
       assert_includes output.first, "Starting fork subtree execution: 020 - work-on-task"
       assert_includes output.first, "Fork subtree 020 completed successfully."
@@ -404,7 +428,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -413,9 +437,13 @@ class ForkRunCommandTest < AceAssignTestCase
       File.write(File.join(sessions_dir, "010-last-message.md"), "I need your direction before I continue.")
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "did not complete"
@@ -439,7 +467,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -448,9 +476,13 @@ class ForkRunCommandTest < AceAssignTestCase
       File.write(File.join(sessions_dir, "010-session.yml"), {"session_id" => "sess-xyz789", "provider" => "claude"}.to_yaml)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "Session: sess-xyz789"
@@ -472,13 +504,17 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: result[:assignment].id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: result[:assignment].id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "did not complete"
@@ -501,13 +537,17 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: result[:assignment].id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: result[:assignment].id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "did not complete"
@@ -530,7 +570,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -539,9 +579,13 @@ class ForkRunCommandTest < AceAssignTestCase
       File.write(File.join(sessions_dir, "010-last-message.md"), "Unexpected state change encountered.")
 
       assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
@@ -566,7 +610,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       assignment = result[:assignment]
@@ -576,9 +620,13 @@ class ForkRunCommandTest < AceAssignTestCase
       File.write(File.join(sessions_dir, "010-last-message.md"), long_message)
 
       error = assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       assert_includes error.message, "... (truncated)"
@@ -603,7 +651,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
       assignment = result[:assignment]
 
@@ -613,9 +661,13 @@ class ForkRunCommandTest < AceAssignTestCase
       File.write(File.join(sessions_dir, "010-last-message.md"), "Something went wrong.")
 
       assert_raises(Ace::Support::Cli::Error) do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: NoopLauncher.new
-        ).call(root: "010", assignment: assignment.id, quiet: true)
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: NoopLauncher.new,
+          root: "010",
+          assignment: assignment.id,
+          quiet: true
+        )
       end
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
@@ -623,11 +675,13 @@ class ForkRunCommandTest < AceAssignTestCase
       assert state.current.stall_reason, "expected stall_reason to be set after stall"
 
       # Second run: complete successfully and verify stall_reason is cleared
-      capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: CompletingLauncher.new(cache_base: cache_dir)
-        ).call(root: "010", assignment: assignment.id, quiet: true)
-      end
+      capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: CompletingLauncher.new(cache_base: cache_dir),
+        root: "010",
+        assignment: assignment.id,
+        quiet: true
+      )
 
       state2 = scanner.scan(assignment.steps_dir, assignment: assignment)
       state2.subtree_steps("010").each do |step|
@@ -653,7 +707,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       launch_snapshot = {}
@@ -676,11 +730,11 @@ class ForkRunCommandTest < AceAssignTestCase
         end
       end
 
-      output = capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
-        ).call(assignment: "#{result[:assignment].id}@020")
-      end
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020"
+      )
 
       assert_equal "claude:sonnet@yolo", launch_snapshot[:provider]
       assert_includes output.first, "Provider: claude:sonnet@yolo"
@@ -703,7 +757,7 @@ class ForkRunCommandTest < AceAssignTestCase
       config_path = create_test_config(cache_dir, steps: steps)
 
       Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
       launch_snapshot = {}
@@ -726,11 +780,12 @@ class ForkRunCommandTest < AceAssignTestCase
         end
       end
 
-      capture_io do
-        Ace::Assign::CLI::Commands::ForkRun.new(
-          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
-        ).call(assignment: "#{result[:assignment].id}@020", provider: "codex:gpt-5")
-      end
+      capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020",
+        provider: "codex:gpt-5"
+      )
 
       assert_equal "codex:gpt-5", launch_snapshot[:provider]
 
