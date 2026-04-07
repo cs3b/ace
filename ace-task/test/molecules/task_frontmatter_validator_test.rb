@@ -256,7 +256,7 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
 
   # --- github linkage fields ---
 
-  def test_valid_github_issues_array
+  def test_valid_github_issue
     with_tasks_dir do |root|
       file = write_task_file(root, "github-valid", <<~CONTENT)
         ---
@@ -265,17 +265,16 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
         title: Linked task
         tags: []
         created_at: 2026-02-28 12:00:00
-        github:
-          issues: [276, 278]
+        github_issue: 276
         ---
       CONTENT
 
       issues = Validator.validate(file)
-      refute issues.any? { |i| i[:message].include?("github.issues") }
+      refute issues.any? { |i| i[:message].include?("github_issue") }
     end
   end
 
-  def test_invalid_github_issues_type
+  def test_invalid_github_issue_type
     with_tasks_dir do |root|
       file = write_task_file(root, "github-type", <<~CONTENT)
         ---
@@ -284,13 +283,13 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
         title: Linked task
         tags: []
         created_at: 2026-02-28 12:00:00
-        github:
-          issues: 276
+        github_issue:
+          - 276
         ---
       CONTENT
 
       issues = Validator.validate(file)
-      assert issues.any? { |i| i[:message].include?("github.issues") && i[:type] == :error }
+      assert issues.any? { |i| i[:message].include?("github_issue") && i[:type] == :error }
     end
   end
 
@@ -303,8 +302,7 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
         title: Linked task
         tags: []
         created_at: 2026-02-28 12:00:00
-        github:
-          issues: [276, "abc"]
+        github_issue: abc
         ---
       CONTENT
 

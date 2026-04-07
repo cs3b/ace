@@ -40,7 +40,7 @@ module Ace
           tags: [],
           time: Time.now.utc,
           estimate: nil,
-          github_issues: []
+          github_issue: nil
         )
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
@@ -70,7 +70,7 @@ module Ace
             created_at: time,
             parent: parent_task.id,
             estimate: estimate,
-            github_issues: github_issues
+            github_issue: github_issue
           )
 
           # Write spec file

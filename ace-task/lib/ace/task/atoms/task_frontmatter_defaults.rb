@@ -27,7 +27,7 @@ module Ace
           created_at: nil,
           parent: nil,
           estimate: nil,
-          github_issues: []
+          github_issue: nil
         )
           fm = {
             "id" => id,
@@ -39,9 +39,7 @@ module Ace
           fm["dependencies"] = dependencies || []
           fm["tags"] = tags || []
           fm["parent"] = parent if parent
-          if github_issues && !github_issues.empty?
-            fm["github"] = {"issues" => github_issues}
-          end
+          fm["github_issue"] = github_issue if github_issue
           fm
         end
 

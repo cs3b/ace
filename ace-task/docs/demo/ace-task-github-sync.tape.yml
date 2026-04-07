@@ -1,9 +1,10 @@
 ---
-description: Showcase linked GitHub issue sync from ace-task without touching live GitHub
+description: Showcase live GitHub issue sync from ace-task by creating, linking, and auto-closing a disposable issue
 tags:
 - ace-task
 - github-sync
 - docs
+- live-github
 settings:
   font_size: 16
   width: 1100
@@ -11,22 +12,42 @@ settings:
   format: gif
 setup:
 - sandbox
-- copy-fixtures
 - git-init
 scenes:
-- name: Create a task linked to a GitHub issue
+- name: Create a disposable GitHub issue
   commands:
-  - type: PATH=fixtures/gh-sync/bin:$PATH ace-task create "Add soft GitHub issue integration" --github-issue 276
+  - type: git remote add origin https://github.com/cs3b/ace.git
+    sleep: 2s
+  - type: >-
+      export DEMO_ISSUE_URL=$(gh issue create -R cs3b/ace --title "demo: ace-task github-sync $(date -u +%Y%m%d%H%M%S)" --body "Disposable demo issue for ace-task GitHub sync recording.")
     sleep: 5s
-  - type: rg -n "github:|issues:|276" .ace-tasks
+  - type: export DEMO_ISSUE_NUMBER=${DEMO_ISSUE_URL##*/}
+    sleep: 2s
+  - type: printf 'DEMO_ISSUE_NUMBER=%s\n' "$DEMO_ISSUE_NUMBER"
     sleep: 4s
-  - type: cat gh.log
+  - type: >-
+      gh issue view "$DEMO_ISSUE_NUMBER" -R cs3b/ace --json number,state,title,url --jq '{number, state, title, url}'
     sleep: 4s
-- name: Repair linked issue tracking without duplicating comments
+- name: Create a sandbox task linked to the issue
   commands:
-  - type: PATH=fixtures/gh-sync/bin:$PATH ace-task github-sync --all
+  - type: ace-task create "Demo GitHub sync task" --status pending --tags demo,github-sync --github-issue "$DEMO_ISSUE_NUMBER"
     sleep: 5s
-  - type: cat gh.log
+  - type: >-
+      export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*Demo GitHub sync task*.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
+    sleep: 2s
+  - type: ace-task show "$DEMO_TASK_REF"
+    sleep: 4s
+  - type: >-
+      gh issue view "$DEMO_ISSUE_NUMBER" -R cs3b/ace --json number,state,title,url,labels,comments --jq '{number, state, title, url, labels: [.labels[].name], tracked_comment: ([.comments[].body | contains("Tracked in ace-task:")] | any)}'
+    sleep: 4s
+- name: Close the task and auto-close the GitHub issue
+  commands:
+  - type: ace-task update "$DEMO_TASK_REF" --set status=done --move-to archive
+    sleep: 5s
+  - type: ace-task show "$DEMO_TASK_REF"
+    sleep: 4s
+  - type: >-
+      gh issue view "$DEMO_ISSUE_NUMBER" -R cs3b/ace --json number,state,title,url,closed --jq '{number, state, closed, title, url}'
     sleep: 4s
 teardown:
 - cleanup

@@ -32,7 +32,7 @@ module Ace
           option :tags, type: :string, aliases: %w[-T], desc: "Tags (comma-separated)"
           option :status, type: :string, aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
           option :estimate, type: :string, aliases: %w[-e], desc: "Effort estimate (e.g. TBD, 2h, 1d)"
-          option :"github-issue", type: :array, desc: "Linked GitHub issue number (repeatable)"
+          option :"github-issue", type: :array, desc: "Linked GitHub issue number"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
           option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
@@ -50,7 +50,7 @@ module Ace
             tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
             status = options[:status]
             estimate = options[:estimate]
-            github_issues = parse_github_issues(options[:"github-issue"])
+            github_issue = parse_github_issue(options[:"github-issue"])
             child_of = options[:"child-of"]
             in_folder = options[:in]
 
@@ -67,7 +67,7 @@ module Ace
               puts "  Status:   #{status}" if status
               puts "  Priority: #{priority}" if priority
               puts "  Estimate: #{estimate}" if estimate
-              puts "  GitHub:   #{github_issues.join(", ")}" if github_issues.any?
+              puts "  GitHub:   #{github_issue}" if github_issue
               puts "  Tags:     #{tags.join(", ")}" if tags.any?
               puts "  Parent:   #{child_of}" if child_of
               puts "  Folder:   #{in_folder}" if in_folder
@@ -84,7 +84,7 @@ module Ace
                 priority: priority,
                 tags: tags,
                 estimate: estimate,
-                github_issues: github_issues
+                github_issue: github_issue
               )
             else
               manager.create(
@@ -93,7 +93,7 @@ module Ace
                 priority: priority,
                 tags: tags,
                 estimate: estimate,
-                github_issues: github_issues
+                github_issue: github_issue
               )
             end
 
@@ -123,18 +123,18 @@ module Ace
 
           private
 
-          def parse_github_issues(raw_values)
+          def parse_github_issue(raw_values)
             values = Array(raw_values).flatten.compact
-            parsed = values.map do |raw|
-              candidate = raw.to_s.strip
-              raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{raw}': expected numeric ID") unless candidate.match?(/\A\d+\z/)
+            return nil if values.empty?
+            raise Ace::Support::Cli::Error.new("Only one --github-issue may be provided") if values.length > 1
 
-              id = candidate.to_i
-              raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{raw}': expected positive numeric ID") if id <= 0
+            candidate = values.first.to_s.strip
+            raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{values.first}': expected numeric ID") unless candidate.match?(/\A\d+\z/)
 
-              id
-            end
-            parsed.uniq
+            id = candidate.to_i
+            raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{values.first}': expected positive numeric ID") if id <= 0
+
+            id
           end
         end
       end

@@ -8,6 +8,7 @@ class GithubIssueSyncAdapterTest < AceTaskTestCase
     captured = nil
 
     fake_receiver = Object.new
+    fake_receiver.define_singleton_method(:validate_link!) { |**_payload| }
     fake_receiver.define_singleton_method(:sync_task) do |**payload|
       captured = payload
       {success: true}
@@ -19,7 +20,7 @@ class GithubIssueSyncAdapterTest < AceTaskTestCase
       status: "pending",
       path: "/tmp/tasks/8pp.t.q7w-example",
       file_path: "/tmp/tasks/8pp.t.q7w-example/8pp.t.q7w-example.s.md",
-      metadata: {"github" => {"issues" => [276]}}
+      metadata: {"github_issue" => 276}
     )
 
     adapter.stub(:resolve_integration, [fake_receiver, :sync_task]) do
