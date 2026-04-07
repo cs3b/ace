@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Expanded `as-test-verify-suite` canonical skill metadata so public `verify-test-suite` assign-step discovery is skill-owned while keeping step-template rendering in catalog YAML.
+
 ## [0.6.2] - 2026-03-29
 
 ### Technical
