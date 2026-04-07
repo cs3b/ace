@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.10] - 2026-04-07
+
+### Changed
+- Strengthened the canonical `as-task-draft` skill contract so drafting runs in explicit Plan mode and treats follow-up "implement" requests as spec work unless the workflow switches to `as-task-work`.
+
 ## [0.31.9] - 2026-03-31
 
 ### Changed
