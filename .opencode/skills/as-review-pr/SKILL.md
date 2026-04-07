@@ -11,10 +11,21 @@ argument-hint: "[#]"
 last_modified: 2026-01-10
 source: ace-review
 assign:
-  source: wfi://review/pr
   steps:
   - name: review-pr
     description: Review code changes for correctness, style, and best practices
+    prerequisites:
+    - name: create-pr
+      strength: required
+      reason: Must have a PR to review
+    produces:
+    - review-feedback
+    consumes:
+    - pull-request
+    when_to_skip:
+    - No code changes since last review
+    - Changes are trivial (typo fix, config update)
+    effort: medium
     tags:
     - review
     - quality
