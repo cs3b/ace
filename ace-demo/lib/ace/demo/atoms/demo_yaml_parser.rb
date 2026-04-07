@@ -6,7 +6,7 @@ module Ace
   module Demo
     module Atoms
       module DemoYamlParser
-        ALLOWED_ROOT_KEYS = %w[description tags settings setup scenes teardown].freeze
+        ALLOWED_ROOT_KEYS = %w[description tags settings setup scenes verify teardown].freeze
 
         module_function
 
@@ -35,6 +35,7 @@ module Ace
             "settings" => normalize_settings(data["settings"], source_path: source_path),
             "setup" => normalize_directives(data["setup"], "setup", source_path: source_path),
             "scenes" => normalize_scenes(data["scenes"], source_path: source_path),
+            "verify" => normalize_verify(data["verify"], source_path: source_path),
             "teardown" => normalize_directives(data["teardown"], "teardown", source_path: source_path)
           }
 
@@ -163,6 +164,32 @@ module Ace
           end
         end
         private_class_method :normalize_scenes
+
+        def normalize_verify(verify, source_path:)
+          return {} if verify.nil?
+          raise DemoYamlParseError, "verify must be a map in #{source_path}" unless verify.is_a?(Hash)
+
+          normalized = {}
+          normalized["require_vars"] = normalize_string_list(verify["require_vars"], "verify.require_vars", source_path) if verify.key?("require_vars")
+          normalized["forbid_output"] = normalize_string_list(verify["forbid_output"], "verify.forbid_output", source_path) if verify.key?("forbid_output")
+          normalized["assert_commands"] = normalize_string_list(verify["assert_commands"], "verify.assert_commands", source_path) if verify.key?("assert_commands")
+          normalized
+        end
+        private_class_method :normalize_verify
+
+        def normalize_string_list(value, field, source_path)
+          raise DemoYamlParseError, "#{field} must be an array in #{source_path}" unless value.is_a?(Array)
+
+          value.map.with_index do |item, index|
+            text = item&.to_s
+            if text.nil? || text.strip.empty?
+              raise DemoYamlParseError, "#{field}[#{index}] must be a non-empty string in #{source_path}"
+            end
+
+            text
+          end
+        end
+        private_class_method :normalize_string_list
 
         def normalize_command(command, scene_index, command_index, source_path:)
           unless command.is_a?(Hash)

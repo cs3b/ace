@@ -143,7 +143,9 @@ ace-demo record hello --pr 42 --dry-run
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
 - `.tape.yml` paths default to `asciinema` backend: scenes compile to script, record to `.cast`, then convert to GIF with `agg`.
-- Asciinema YAML recordings are automatically verified against tape scene commands; command mismatches emit warnings but do not fail the record command.
+- Asciinema YAML recordings are verified after capture. `verify:` rules can require exported variables, forbid error output, and run final-state assertions.
+- Verification failures are classified as `instruction_defect`, `product_bug`, or `verification_error`.
+- Any non-pass verification fails the record command, writes an error report to `.ace-local/demo/`, and prevents PR upload/comment.
 - `.tape.yml` settings can define `backend`, `playback_speed`, and `output`; CLI flags override those values.
 - Raw `.tape` and inline recordings use VHS-compatible flow.
 - `mp4` recording output is unsupported; use `gif`, or use `--backend vhs --format webm` for compatibility output.

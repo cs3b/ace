@@ -125,8 +125,8 @@ class DemoRecorderTest < AceDemoTestCase
       @result = result
     end
 
-    def verify(cast_path:, tape_spec:)
-      @args = {cast_path: cast_path, tape_spec: tape_spec}
+    def verify(cast_path:, tape_spec:, sandbox_path:, env:)
+      @args = {cast_path: cast_path, tape_spec: tape_spec, sandbox_path: sandbox_path, env: env}
       @result
     end
   end
@@ -478,6 +478,8 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal File.expand_path(".ace-local/demo/demo.cast", @tmp), output.cast_path
     assert_equal verification_result, output.verification
     assert_equal output.cast_path, cast_verifier.args[:cast_path]
+    assert_equal sandbox_path, cast_verifier.args[:sandbox_path]
+    assert_equal sandbox_path, cast_verifier.args[:env]["PROJECT_ROOT_PATH"]
     assert_equal "asciinema", asciinema_executor.cmd.first
     assert_equal "bash --noprofile --norc -i", asciinema_executor.cmd[4]
     assert_equal [{"command" => "echo ok", "sleep" => "1s"}], [

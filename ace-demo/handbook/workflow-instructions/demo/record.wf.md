@@ -139,8 +139,32 @@ TEST_PATH=ace-bundle ace-demo record test
 | `--font-size <n>` | Font size — inline mode (default: 16) |
 | `--playback-speed <speed>` | Postprocess speed: `1x`, `2x`, `4x`, `8x` |
 
+## Verification and Recovery
+
+For YAML/asciinema demos, recording is not complete when the GIF exists. The cast must pass semantic verification.
+
+Use tape `verify:` rules to express:
+- required exported variables (`require_vars`)
+- forbidden output/error signatures (`forbid_output`)
+- final-state assertions (`assert_commands`)
+
+After recording:
+
+1. If verification passes, continue normally.
+2. If verification fails with `instruction_defect`:
+   - inspect the generated report in `.ace-local/demo/`
+   - fix the tape instructions
+   - retry recording once
+3. If verification fails with `product_bug`:
+   - stop
+   - keep the generated report in `.ace-local/demo/`
+   - treat it as a code bug, not a demo issue
+4. Never upload or comment on a PR when verification is not a true pass.
+
 ## Success Criteria
 
 - Recording file produced in `.ace-local/demo/` (plus optional retimed artifact)
-- If `--pr` used: demo uploaded to `demo-assets` release and comment posted on PR
+- YAML/asciinema recordings pass semantic verification
+- If `--pr` used: demo uploaded to `demo-assets` release and comment posted on PR only after verification passes
+- If verification fails: error report written to `.ace-local/demo/`
 - If `--dry-run`: preview printed, no side effects

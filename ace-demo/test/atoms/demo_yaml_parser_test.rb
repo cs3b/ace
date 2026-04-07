@@ -33,6 +33,44 @@ class DemoYamlParserTest < AceDemoTestCase
     assert_equal "Hack Nerd Font Mono", settings["agg_font_family"]
   end
 
+  def test_accepts_verify_block
+    parsed = Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+      {
+        "description" => "demo",
+        "verify" => {
+          "require_vars" => ["DEMO_ISSUE_NUMBER"],
+          "forbid_output" => ["GitHub sync warning"],
+          "assert_commands" => ['test "$DEMO_ISSUE_NUMBER" = "123"']
+        },
+        "scenes" => [
+          {"name" => "main", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}
+        ]
+      },
+      source_path: "demo.tape.yml"
+    )
+
+    assert_equal ["DEMO_ISSUE_NUMBER"], parsed["verify"]["require_vars"]
+    assert_equal ["GitHub sync warning"], parsed["verify"]["forbid_output"]
+    assert_equal ['test "$DEMO_ISSUE_NUMBER" = "123"'], parsed["verify"]["assert_commands"]
+  end
+
+  def test_rejects_non_array_verify_require_vars
+    error = assert_raises(Ace::Demo::DemoYamlParseError) do
+      Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+        {
+          "description" => "demo",
+          "verify" => {"require_vars" => "DEMO_ISSUE_NUMBER"},
+          "scenes" => [
+            {"name" => "main", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}
+          ]
+        },
+        source_path: "demo.tape.yml"
+      )
+    end
+
+    assert_includes error.message, "verify.require_vars must be an array"
+  end
+
   def test_rejects_unknown_backend
     error = assert_raises(Ace::Demo::DemoYamlParseError) do
       parse_hash("backend" => "foo")
