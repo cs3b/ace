@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
+- **ace-task v0.31.10**: Hardened the canonical `as-task-draft` skill so drafting runs in explicit Plan mode and does not drift from spec work into package implementation without an explicit workflow handoff.
 
 ## [0.9.938] - 2026-04-05
 
