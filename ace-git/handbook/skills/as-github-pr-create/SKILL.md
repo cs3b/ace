@@ -25,7 +25,6 @@ integration:
         context: fork
         model: haiku
 assign:
-  source: wfi://github/pr/create
   steps:
     - name: create-pr
       description: Create a pull request for the implemented changes
@@ -35,6 +34,19 @@ assign:
           - "create a pr"
           - "open pr"
           - "open pull request"
+      prerequisites:
+        - name: work-on-task
+          strength: required
+          reason: "Must have code changes to create a PR"
+      produces: [pull-request]
+      consumes: [code-changes, commits]
+      context:
+        default: null
+        reason: "PR creation needs access to git state in main context"
+      when_to_skip:
+        - "PR already exists for this branch"
+        - "Changes don't warrant a PR (e.g., direct push allowed)"
+      effort: light
       tags: [git, pr, publishing]
 skill:
   kind: workflow
