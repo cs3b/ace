@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Expanded canonical `as-task-plan` and `as-task-work` skill metadata so public `plan-task` and `work-on-task` assign-step discovery is skill-owned rather than catalog-owned.
+
 ## [0.33.3] - 2026-04-07
 
 ### Changed
