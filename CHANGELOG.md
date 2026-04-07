@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.19.7**: Made linked task URLs branch-agnostic by switching sticky-comment links from `blob/main` to `blob/HEAD`.
 - **ace-review v0.51.9**: Updated GitHub review flows to re-raise `Ace::Git` CLI auth/install errors after shared executor migration.
 - **ace-git v0.20.0**: Enforced one-owner GitHub issue sync so ACE now rejects duplicate task ownership and keeps linked issue lifecycle transitions scoped to a single canonical task.
+- **ace-git v0.20.1**: Fixed sticky-comment update/delete calls to use the REST issue-comment ID derived from GitHub comment URLs, restoring close-time issue sync after task archive/update.
+- **ace-task v0.33.1**: Fixed create-time sync dispatch to the reusable GitHub issue integration and repaired the live demo tape task-ref lookup so the recorded issue lifecycle completes end to end.
 
 ### Changed
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
