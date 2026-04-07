@@ -19,10 +19,19 @@ integration:
     - pi
   providers: {}
 assign:
-  source: wfi://onboard
   steps:
     - name: onboard
       description: Load project context and understand the codebase
+      prerequisites: []
+      produces: [project-context]
+      consumes: []
+      context:
+        default: null
+        reason: "Onboarding needs access to the main conversation context"
+      when_to_skip:
+        - "Already onboarded in a previous assignment"
+        - "Working in a context where project is already loaded"
+      effort: light
       tags: [setup, context-loading]
 skill:
   kind: workflow
