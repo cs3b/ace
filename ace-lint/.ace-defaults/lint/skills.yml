@@ -83,7 +83,6 @@ schemas:
       - skill
     required_nested_fields:
       - skill.kind
-      - skill.execution.workflow
     required_comments:
       - "# bundle:"
       - "# agent:"
