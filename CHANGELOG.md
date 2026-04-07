@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.32.3**: Surfaced create-time linked-issue sync warnings so `ace-task create` now prints non-blocking GitHub sync failures recorded by task manager sync hooks.
 - **ace-git v0.19.7**: Made linked task URLs branch-agnostic by switching sticky-comment links from `blob/main` to `blob/HEAD`.
 - **ace-review v0.51.9**: Updated GitHub review flows to re-raise `Ace::Git` CLI auth/install errors after shared executor migration.
+- **ace-git v0.20.0**: Enforced one-owner GitHub issue sync so ACE now rejects duplicate task ownership and keeps linked issue lifecycle transitions scoped to a single canonical task.
 
 ### Changed
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
@@ -21,6 +22,10 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.32.0**: Added linked GitHub issue lifecycle support with `--github-issue`, `ace-task github-sync`, frontmatter validation for `github.issues`, and task lifecycle sync hooks.
 - **ace-git v0.19.4**: Added reusable GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for shared ACE issue lifecycle operations.
 - **ace-review v0.51.8**: Migrated GitHub CLI execution to the shared `ace-git` executor and removed package-local executor duplication.
+- **ace-task v0.33.0**: Switched linked issue metadata to singular `github_issue` ownership, updated task lifecycle sync hooks and docs around canonical task-owned GitHub issues, and reworked the GitHub sync demo to show live issue creation and automatic closure.
+
+### Technical
+- **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
 
 ## [0.9.938] - 2026-04-05
 
