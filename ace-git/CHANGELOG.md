@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-04-07
+
+### Fixed
+- Corrected sticky-comment mutation to derive the REST comment ID from GitHub issue comment URLs when `gh issue view` returns GraphQL node IDs, so linked issues continue closing cleanly on task archive/update.
+
 ## [0.20.0] - 2026-04-07
 
 ### Fixed

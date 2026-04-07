@@ -55,7 +55,7 @@ module Ace
           body = render_body(lines)
 
           if sticky
-            update_comment(issue_id: issue_id, comment_id: sticky["id"], body: body)
+            update_comment(issue_id: issue_id, comment: sticky, body: body)
           else
             create_comment(issue_id: issue_id, body: body)
           end
@@ -73,7 +73,7 @@ module Ace
         end
 
         def self.cleanup_tracking_artifacts(issue_id:, sticky:, labels:)
-          delete_comment(issue_id: issue_id, comment_id: sticky["id"]) if sticky
+          delete_comment(issue_id: issue_id, comment: sticky) if sticky
           remove_label(issue_id, labels)
         end
 
@@ -128,7 +128,8 @@ module Ace
           end
         end
 
-        def self.update_comment(issue_id:, comment_id:, body:)
+        def self.update_comment(issue_id:, comment:, body:)
+          comment_id = comment_api_id(comment)
           GhCliExecutor.execute("api", [
             "repos/{owner}/{repo}/issues/comments/#{comment_id}",
             "--method", "PATCH",
@@ -138,13 +139,24 @@ module Ace
           end
         end
 
-        def self.delete_comment(issue_id:, comment_id:)
+        def self.delete_comment(issue_id:, comment:)
+          comment_id = comment_api_id(comment)
           GhCliExecutor.execute("api", [
             "repos/{owner}/{repo}/issues/comments/#{comment_id}",
             "--method", "DELETE"
           ]).tap do |result|
             raise "Failed to delete sticky comment for issue #{issue_id}: #{result[:stderr]}" unless result[:success]
           end
+        end
+
+        def self.comment_api_id(comment)
+          database_id = comment["databaseId"] || comment[:databaseId]
+          return database_id.to_s if database_id.to_s.match?(/\A\d+\z/)
+
+          url = comment["url"] || comment[:url]
+          return Regexp.last_match(1) if url.to_s.match(/issuecomment-(\d+)/)
+
+          (comment["id"] || comment[:id]).to_s
         end
 
         def self.ensure_label(issue_id, labels)
@@ -225,7 +237,7 @@ module Ace
 
         private_class_method :sync_issue, :fetch_issue, :find_sticky_comment, :tracked_lines, :remove_previous_line,
           :upsert_line, :tracked_line, :extract_task_id, :render_body, :create_comment, :update_comment, :delete_comment,
-          :ensure_label, :remove_label, :cleanup_tracking_artifacts, :sync_lifecycle, :task_url, :repo_root_path,
+          :comment_api_id, :ensure_label, :remove_label, :cleanup_tracking_artifacts, :sync_lifecycle, :task_url, :repo_root_path,
           :github_repo_slug
       end
 
