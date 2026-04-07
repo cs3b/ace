@@ -53,7 +53,8 @@ module Ace
               error: "Failed to post comment: #{result[:stderr]}"
             }
           end
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           raise
         rescue => e
           {
@@ -68,7 +69,7 @@ module Ace
         # @return [Hash] Result with :success or :error
         def self.check_pr_state(gh_format)
           # Fetch PR metadata
-          result = Ace::Review::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Molecules::GhCliExecutor.execute(
             "pr",
             ["view", gh_format, "--json", "state,number"]
           )
@@ -169,7 +170,7 @@ module Ace
             file.flush
 
             # Post using gh pr comment
-            Ace::Review::Molecules::GhCliExecutor.execute(
+            Ace::Git::Molecules::GhCliExecutor.execute(
               "pr",
               ["comment", gh_format, "--body-file", file.path]
             )

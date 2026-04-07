@@ -66,7 +66,7 @@ module Ace
           end
 
           valid_ids.each do |valid_id|
-            GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
               result = GhCommentResolver.resolve_thread(valid_id)
               # Should proceed past validation (may fail for other reasons in tests)
               refute_match(/Invalid thread ID format/, result[:error].to_s)
@@ -80,7 +80,7 @@ module Ace
             stdout: '{"data":{"resolveReviewThread":{"thread":{"isResolved":true}}}}'
           }
 
-          GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_kwDOPzGJW85lJfEC")
 
             assert result[:success]
@@ -94,7 +94,7 @@ module Ace
             stdout: '{"errors":[{"message":"Could not resolve thread"}]}'
           }
 
-          GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -108,7 +108,7 @@ module Ace
             stderr: "gh: Not logged in"
           }
 
-          GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -122,7 +122,7 @@ module Ace
             stdout: "not valid json"
           }
 
-          GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -160,7 +160,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", nil, message: "Custom message without SHA")
 
@@ -184,7 +184,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234")
 
@@ -207,7 +207,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234", message: "Custom fix message")
 
@@ -232,7 +232,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, custom_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, custom_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234567890full")
 
@@ -254,12 +254,29 @@ module Ace
             number: "invalid", repo: nil, gh_format: "invalid"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("invalid", "abc123")
 
               refute result[:success]
               assert_match(/Failed to post reply/, result[:error])
+            end
+          end
+        end
+
+        def test_reply_reraises_ace_git_not_installed_error
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+          mock_executor = lambda do |_cmd, _args, **_opts|
+            raise Ace::Git::GhNotInstalledError, "missing gh"
+          end
+
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+              assert_raises(Ace::Git::GhNotInstalledError) do
+                GhCommentResolver.reply("69", "abc123")
+              end
             end
           end
         end
@@ -289,7 +306,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
@@ -313,7 +330,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123")
 
@@ -336,7 +353,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
@@ -368,7 +385,7 @@ module Ace
             number: "69", repo: nil, gh_format: "69"
           )
 
-          GhCliExecutor.stub :execute, mock_executor do
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
             Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
@@ -378,6 +395,18 @@ module Ace
               assert result[:reply_result][:success]
               refute result[:resolve_result][:success]
               assert_match(/Reply posted but thread not resolved/, result[:warning])
+            end
+          end
+        end
+
+        def test_resolve_thread_reraises_ace_git_authentication_error
+          mock_executor = lambda do |_cmd, _args, **_opts|
+            raise Ace::Git::GhAuthenticationError, "auth required"
+          end
+
+          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+            assert_raises(Ace::Git::GhAuthenticationError) do
+              GhCommentResolver.resolve_thread("PRRT_valid123")
             end
           end
         end

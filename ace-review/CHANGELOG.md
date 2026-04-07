@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Added `diff:RANGE -- path` subject parsing so reviews can scope git diffs to specific files or directories with git-style path filters.
+- Updated review GitHub workflows to correctly re-raise `Ace::Git` authentication/install errors after migrating to shared `GhCliExecutor`.
+
+### Changed
+- Switched review GitHub CLI operations to use `Ace::Git::Molecules::GhCliExecutor` and removed the package-local `GhCliExecutor` implementation.
 
 ## [0.51.6] - 2026-03-31
 
