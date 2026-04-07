@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Expanded `as-github-pr-create` canonical skill metadata so public `create-pr` assign-step discovery is skill-owned rather than catalog-owned.
+
 ## [0.20.2] - 2026-04-07
 
 ### Added
