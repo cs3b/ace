@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Expanded `as-review-pr` canonical skill metadata so public `review-pr` assign-step discovery is skill-owned rather than catalog-owned.
+
 ### Fixed
 - Added `diff:RANGE -- path` subject parsing so reviews can scope git diffs to specific files or directories with git-style path filters.
 - Updated review GitHub workflows to correctly re-raise `Ace::Git` authentication/install errors after migrating to shared `GhCliExecutor`.
