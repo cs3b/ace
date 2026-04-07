@@ -1,0 +1,51 @@
+---
+description: Show canonical skill-owned assign metadata materializing into assignment steps and accepted by lint
+tags:
+- ace-assign
+- canonical-skills
+- assign-source
+- docs
+settings:
+  font_size: 16
+  width: 1200
+  height: 700
+  format: gif
+  playback_speed: 4x
+  output: ace-assign/docs/demo/canonical-skill-source.gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.h3e
+scenes:
+- name: Canonical skills own assign step metadata
+  commands:
+  - type: sed -n '20,33p' $PROJECT_ROOT_PATH/ace-task/handbook/skills/as-task-plan/SKILL.md
+    sleep: 3s
+  - type: sed -n '27,50p' $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-github-pr-create/SKILL.md
+    sleep: 3s
+- name: Assignment steps keep the canonical source contract
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: sed -n '1,12p' $PROJECT_ROOT_PATH/.ace-local/assign/8r4i7n/steps/010.03.03-plan-task.st.md
+    sleep: 3s
+  - type: sed -n '1,12p' $PROJECT_ROOT_PATH/.ace-local/assign/8r4i7n/steps/030-create-pr.st.md
+    sleep: 3s
+- name: Provider projections mirror the canonical metadata
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: sed -n '13,36p' $PROJECT_ROOT_PATH/.codex/skills/as-task-plan/SKILL.md
+    sleep: 3s
+  - type: sed -n '13,49p' $PROJECT_ROOT_PATH/.claude/skills/as-github-pr-create/SKILL.md
+    sleep: 3s
+- name: Lint accepts the canonical skill contract
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: ace-lint $PROJECT_ROOT_PATH/ace-lint/handbook/skills/as-lint-run/SKILL.md $PROJECT_ROOT_PATH/ace-task/handbook/skills/as-task-plan/SKILL.md $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-github-pr-create/SKILL.md
+    sleep: 4s
+verify:
+  forbid_output:
+  - No such file or directory
+  - No active assignment
+  - "invalid option: --dry-run"
+  - Error:
