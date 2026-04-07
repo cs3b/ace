@@ -4,9 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-assign v0.42.5**: Hardened `wfi://assign/drive` and related handoff docs so `/as-assign-drive` treats intermediate progress as non-terminal and resumes paused assignments with runnable pending work.
+- **ace-assign v0.42.6**: Tightened the assignment-drive contract so waiting on `fork-run` stays inside the live drive loop and subtree completion immediately resumes the parent assignment queue.
+- **ace-task v0.32.1**: Hardened linked-issue sync by loading `ace/git` on runtime boot, reconciling previous/current issue IDs, and downgrading GitHub sync failures to non-blocking task warnings.
+- **ace-git v0.19.5**: Reconciled removed or retargeted linked issues without re-adding stale sticky lines and without applying lifecycle actions to unlinked issues.
+- **ace-task v0.32.2**: Made manual `ace-task github-sync` report per-task sync failures, fail fast when requested sync work is incomplete, and use task spec-file links in sticky issue comments.
+- **ace-git v0.19.6**: Removed stale unlinked-issue tracking artifacts by deleting empty sticky tracking comments and removing the `ace:tracked` label.
+- **ace-task v0.32.3**: Surfaced create-time linked-issue sync warnings so `ace-task create` now prints non-blocking GitHub sync failures recorded by task manager sync hooks.
+- **ace-git v0.19.7**: Made linked task URLs branch-agnostic by switching sticky-comment links from `blob/main` to `blob/HEAD`.
+- **ace-review v0.51.9**: Updated GitHub review flows to re-raise `Ace::Git` CLI auth/install errors after shared executor migration.
+
 ### Changed
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
-- **ace-task v0.31.10**: Hardened the canonical `as-task-draft` skill so drafting runs in explicit Plan mode and does not drift from spec work into package implementation without an explicit workflow handoff.
+- **ace-task v0.31.10**: Updated ACE-linked issue lifecycle guidance to prefer task metadata plus ACE-managed sync over PR footer closure requirements, while retaining PR closure keywords as optional manual guidance.
+- **ace-task v0.32.0**: Added linked GitHub issue lifecycle support with `--github-issue`, `ace-task github-sync`, frontmatter validation for `github.issues`, and task lifecycle sync hooks.
+- **ace-git v0.19.4**: Added reusable GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for shared ACE issue lifecycle operations.
+- **ace-review v0.51.8**: Migrated GitHub CLI execution to the shared `ace-git` executor and removed package-local executor duplication.
 
 ## [0.9.938] - 2026-04-05
 
