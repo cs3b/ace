@@ -7,31 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-04-07
+
 ### Fixed
 - Hardened linked-issue synchronization by loading `ace/git` on the main runtime path, reconciling previous/current issue ID sets during updates, and treating GitHub sync failures as non-blocking task warnings.
 - Surfaced manual `github-sync` failures with per-task error details and an explicit non-zero CLI failure when requested sync work does not complete.
 - Updated linked issue sync payloads to use task spec file paths for sticky comment links so GitHub issue references land on `.s.md` source-of-truth files.
 - Updated `ace-task create` to print non-blocking GitHub sync warnings (`last_update_note`) so create-time linked-issue sync failures are visible to operators.
+- Replaced array-style linked issue metadata with singular `github_issue` ownership and reject duplicate `--github-issue` flags.
 
 ### Changed
 - Updated ACE-linked GitHub issue lifecycle guidance to treat task metadata and ACE-managed sync as the canonical path, while keeping PR footer closure keywords as optional manual guidance.
+- Updated linked GitHub issue storage and task-manager sync hooks to enforce one canonical owning task per GitHub issue.
+- Reworked the GitHub sync demo to show live issue creation, task linkage, and automatic issue closure.
 
 ### Technical
 - Added linked-issue metadata contract checks to task draft/review workflow instructions and aligned related task spec examples for consistency.
+- Expanded create/update/frontmatter/manager test coverage for singular `github_issue` ownership and conflict handling.
 
 ## [0.32.0] - 2026-04-05
 
 ### Added
 - Added `ace-task github-sync` command for manual linked-issue synchronization by task reference or `--all`.
-- Added `--github-issue` create-time linkage support for storing machine-readable `github.issues` task metadata.
+- Added `--github-issue` create-time linkage support for storing machine-readable `github_issue` task metadata.
 - Added lifecycle sync orchestration through `TaskManager` and `GithubIssueSyncAdapter` for linked task create/update/reparent flows.
 
 ### Changed
-- Extended task frontmatter defaults to emit structured `github.issues` metadata when linked issues are provided.
+- Extended task frontmatter defaults to emit structured `github_issue` metadata when linked issues are provided.
 - Updated `ace-task` usage documentation with linked issue create flags and manual sync command usage.
 
 ### Technical
-- Added validation rules for `github` and `github.issues` frontmatter structure and numeric issue IDs.
+- Added validation rules for `github` and `github_issue` frontmatter structure and numeric issue IDs.
 - Expanded command/organism/validator/defaults test coverage for linked issue metadata and sync behavior.
 
 ## [0.31.9] - 2026-03-31

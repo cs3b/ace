@@ -32,15 +32,14 @@ All commands support these flags:
 
 For ACE-linked workflows, treat task metadata as the source of truth for issue lifecycle.
 
-- Link issues in task frontmatter with machine-readable metadata (for example `github.issues`).
+- Link issues in task frontmatter with machine-readable metadata (`github_issue`).
 - Keep issue lifecycle updates task-driven through ACE tooling and workflows.
 - PR closing keywords such as `Closes #123` remain optional GitHub-native guidance for manual or non-ACE-linked work.
 
 Example task frontmatter pattern:
 
 ```yaml
-github:
-  issues: [276, 278]
+github_issue: 276
 ```
 
 ### ace-task create TITLE
@@ -53,7 +52,7 @@ Create a new task with a B36TS-based ID.
 | `--tags` | `-T` | Tags (comma-separated) |
 | `--status` | `-s` | Initial status: draft, pending, blocked, ... |
 | `--estimate` | `-e` | Effort estimate (e.g. TBD, 2h, 1d) |
-| `--github-issue` | | Linked GitHub issue number (repeatable) |
+| `--github-issue` | | Linked GitHub issue number |
 | `--child-of` | | Parent task reference (creates subtask) |
 | `--in` | `-i` | Target folder (next, maybe) |
 | `--dry-run` | `-n` | Preview without writing |
@@ -66,7 +65,6 @@ ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe
 ace-task create "Draft spec" --status draft --estimate TBD
 ace-task create "Track issue" --github-issue 276
-ace-task create "Track multiple" --github-issue 276 --github-issue 278
 ace-task create "Preview only" --dry-run
 ```
 

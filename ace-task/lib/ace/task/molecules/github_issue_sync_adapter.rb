@@ -9,13 +9,29 @@ module Ace
           "Complete dependency task 8r4.t.ilo.2 or update ace-git."
 
         CANDIDATE_INTEGRATIONS = [
+          ["Ace::Git::Molecules::GithubIssueSync", :validate_link!],
+          ["Ace::Git::Molecules::IssueSync", :validate_link!],
           ["Ace::Git::Molecules::GithubIssueSync", :sync_task],
           ["Ace::Git::Molecules::IssueSync", :sync_task]
         ].freeze
 
+        def validate_link!(issue_id:, previous_task: nil)
+          return unless issue_id.to_i.positive?
+
+          receiver, method_name = resolve_integration(:validate_link!)
+          raise UNAVAILABLE_MESSAGE unless receiver && method_name
+
+          receiver.public_send(
+            method_name,
+            issue_id: issue_id.to_i,
+            task_id: previous_task&.id,
+            previous_task_id: previous_task&.id
+          )
+        end
+
         def sync_task(task:, reason:, previous_task: nil)
-          current_issue_ids = Array(task.metadata.dig("github", "issues")).map(&:to_i).uniq
-          previous_issue_ids = Array(previous_task&.metadata&.dig("github", "issues")).map(&:to_i).uniq
+          current_issue_ids = [task.metadata["github_issue"]].compact.map(&:to_i).uniq
+          previous_issue_ids = [previous_task&.metadata&.[]("github_issue")].compact.map(&:to_i).uniq
           issue_ids = (current_issue_ids + previous_issue_ids).uniq
           return {synced: 0, issues: []} if issue_ids.empty?
 
@@ -43,8 +59,10 @@ module Ace
 
         private
 
-        def resolve_integration
+        def resolve_integration(expected_method = nil)
           CANDIDATE_INTEGRATIONS.each do |constant_name, method_name|
+            next if expected_method && method_name != expected_method
+
             klass = constant_name.split("::").reject(&:empty?).inject(Object) { |ctx, name| ctx.const_get(name) }
             return [klass, method_name] if klass.respond_to?(method_name)
           rescue NameError

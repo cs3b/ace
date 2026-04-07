@@ -44,9 +44,10 @@ module Ace
           dependencies: [],
           use_llm_slug: false,
           estimate: nil,
-          github_issues: []
+          github_issue: nil
         )
           ensure_root_dir
+          ensure_github_issue_linkable!(github_issue)
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           created_task = creator.create(
             title,
@@ -56,7 +57,7 @@ module Ace
             dependencies: dependencies,
             use_llm_slug: use_llm_slug,
             estimate: estimate,
-            github_issues: github_issues
+            github_issue: github_issue
           )
           sync_linked_issues_for(created_task, reason: "create")
           created_task
@@ -129,6 +130,8 @@ module Ace
 
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
+          desired_issue = extract_desired_github_issue(task, set: set, remove: remove)
+          ensure_github_issue_linkable!(desired_issue, previous_task: task) if desired_issue
           if has_field_updates
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: set, add: add, remove: remove
@@ -192,10 +195,11 @@ module Ace
         # @param priority [String, nil] Priority level
         # @param tags [Array<String>] Tags
         # @return [Models::Task, nil] Created subtask or nil if parent not found
-        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, github_issues: [])
+        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, github_issue: nil)
           parent = show(parent_ref)
           return nil unless parent
 
+          ensure_github_issue_linkable!(github_issue)
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
           created_subtask = subtask_creator.create(
             parent,
@@ -204,7 +208,7 @@ module Ace
             priority: priority,
             tags: tags,
             estimate: estimate,
-            github_issues: github_issues
+            github_issue: github_issue
           )
           sync_linked_issues_for(created_subtask, reason: "create")
           created_subtask
@@ -215,7 +219,7 @@ module Ace
 
           if all
             tasks = list(in_folder: "all")
-            linked_tasks = tasks.select { |t| linked_issue_ids(t).any? }
+            linked_tasks = tasks.select { |t| linked_issue_id(t) }
             results = linked_tasks.map { |task| sync_linked_issues_for(task, reason: "manual-sync") }
             return summarize_manual_sync_results(results, skipped: tasks.length - linked_tasks.length)
           end
@@ -223,7 +227,7 @@ module Ace
           task = show(ref)
           return nil unless task
 
-          if linked_issue_ids(task).empty?
+          unless linked_issue_id(task)
             return {synced: 0, failed: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
@@ -410,22 +414,39 @@ module Ace
           return false unless after_task
           return true if move_to
           return true if before_task.path != after_task.path
-          return true if linked_issue_ids(before_task) != linked_issue_ids(after_task)
+          return true if linked_issue_id(before_task) != linked_issue_id(after_task)
 
           touched_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           touched_keys.any? do |key|
-            key == "title" || key == "status" || key.start_with?("github.")
+            key == "title" || key == "status" || key == "github_issue"
           end
         end
 
-        def linked_issue_ids(task)
-          return [] unless task&.metadata
+        def linked_issue_id(task)
+          return nil unless task&.metadata
 
-          Array(task.metadata.dig("github", "issues")).map(&:to_i).select(&:positive?).uniq
+          issue_id = task.metadata["github_issue"]
+          return nil unless issue_id.to_i.positive?
+
+          issue_id.to_i
+        end
+
+        def extract_desired_github_issue(task, set:, remove:)
+          return nil if set&.key?("github_issue") && !set["github_issue"].to_i.positive?
+          return set["github_issue"].to_i if set&.key?("github_issue") && set["github_issue"].to_i.positive?
+          return nil if Array(remove&.keys).map(&:to_s).include?("github_issue")
+
+          linked_issue_id(task)
+        end
+
+        def ensure_github_issue_linkable!(github_issue, previous_task: nil)
+          return unless github_issue
+
+          Molecules::GithubIssueSyncAdapter.new.validate_link!(issue_id: github_issue, previous_task: previous_task)
         end
 
         def sync_linked_issues_for(task, reason:, previous_task: nil)
-          issue_ids = (linked_issue_ids(task) + linked_issue_ids(previous_task)).uniq
+          issue_ids = [linked_issue_id(task), linked_issue_id(previous_task)].compact.uniq
           return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason) if issue_ids.empty?
 
           adapter = Molecules::GithubIssueSyncAdapter.new

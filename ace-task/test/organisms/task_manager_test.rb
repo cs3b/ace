@@ -273,26 +273,28 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal @tmpdir, @manager.root_dir
   end
 
-  def test_create_with_github_issues_triggers_sync
+  def test_create_with_github_issue_triggers_sync
     sync_calls = []
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
     end
 
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Linked task", github_issues: [276])
+      @manager.create("Linked task", github_issue: 276)
     end
 
     assert_equal 1, sync_calls.length
     assert_equal "create", sync_calls.first[:reason]
-    assert_equal [276], sync_calls.first[:task].metadata.dig("github", "issues")
+    assert_equal 276, sync_calls.first[:task].metadata["github_issue"]
   end
 
   def test_github_sync_all_only_processes_linked_tasks
     sync_calls = []
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -300,8 +302,8 @@ class TaskManagerTest < AceTaskTestCase
 
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
       @manager.create("Unlinked task")
-      @manager.create("Linked task A", github_issues: [276])
-      @manager.create("Linked task B", github_issues: [278])
+      @manager.create("Linked task A", github_issue: 276)
+      @manager.create("Linked task B", github_issue: 278)
       sync_calls.clear
       result = @manager.github_sync(all: true)
       assert_equal 2, result[:synced]
@@ -314,6 +316,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_github_sync_all_reports_failures
     calls = 0
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       calls += 1
       raise "gh unavailable for #{payload[:task]&.id}" if calls == 2
@@ -323,8 +326,8 @@ class TaskManagerTest < AceTaskTestCase
 
     result = nil
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Linked task A", github_issues: [276])
-      @manager.create("Linked task B", github_issues: [278])
+      @manager.create("Linked task A", github_issue: 276)
+      @manager.create("Linked task B", github_issue: 278)
       calls = 0
       result = @manager.github_sync(all: true)
     end
@@ -337,13 +340,14 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_create_records_sync_warning_instead_of_raising
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**_payload|
       raise "gh unavailable"
     end
 
     task = nil
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      task = @manager.create("Linked task", github_issues: [276])
+      task = @manager.create("Linked task", github_issue: 276)
     end
 
     assert_equal "Linked task", task.title
@@ -354,19 +358,20 @@ class TaskManagerTest < AceTaskTestCase
   def test_update_syncs_removed_linked_issues_using_previous_task_context
     sync_calls = []
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
     end
 
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      task = @manager.create("Linked task", github_issues: [276])
+      task = @manager.create("Linked task", github_issue: 276)
       sync_calls.clear
-      @manager.update(task.id, remove: {"github.issues" => 276})
+      @manager.update(task.id, set: {"github_issue" => nil})
     end
 
     assert_equal 1, sync_calls.length
     assert_equal "update", sync_calls.first[:reason]
-    assert_equal [276], sync_calls.first[:previous_task].metadata.dig("github", "issues")
+    assert_equal 276, sync_calls.first[:previous_task].metadata["github_issue"]
   end
 end

@@ -167,13 +167,14 @@ class CreateCommandTest < AceTaskTestCase
 
   def test_create_with_github_issue_persists_frontmatter
     fake_sync = Object.new
+    def fake_sync.validate_link!(**_payload); end
     def fake_sync.sync_task(**_payload)
       {synced: 1}
     end
 
     Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
       capture_io do
-        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276", "--github-issue", "278"])
+        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276"])
       end
     end
 
@@ -183,10 +184,17 @@ class CreateCommandTest < AceTaskTestCase
     spec_file = Dir.glob(File.join(task_dir, "*.s.md")).first
     content = File.read(spec_file)
 
-    assert_match(/github:/, content)
-    assert_match(/issues:/, content)
-    assert_match(/276/, content)
-    assert_match(/278/, content)
+    assert_match(/github_issue: 276/, content)
+  end
+
+  def test_create_with_multiple_github_issue_flags_raises_error
+    err = assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276", "--github-issue", "278"])
+      end
+    end
+
+    assert_match(/Only one --github-issue may be provided/, err.message)
   end
 
   def test_create_with_invalid_github_issue_raises_error

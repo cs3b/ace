@@ -265,8 +265,7 @@ class UpdateCommandTest < AceTaskTestCase
       priority: medium
       tags:
         - auth
-      github:
-        issues: [276]
+      github_issue: 276
       ---
 
       # Fix Login Bug
@@ -274,6 +273,7 @@ class UpdateCommandTest < AceTaskTestCase
 
     sync_calls = []
     fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
