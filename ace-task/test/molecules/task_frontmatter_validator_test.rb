@@ -254,6 +254,65 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
     end
   end
 
+  # --- github linkage fields ---
+
+  def test_valid_github_issues_array
+    with_tasks_dir do |root|
+      file = write_task_file(root, "github-valid", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        github:
+          issues: [276, 278]
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      refute issues.any? { |i| i[:message].include?("github.issues") }
+    end
+  end
+
+  def test_invalid_github_issues_type
+    with_tasks_dir do |root|
+      file = write_task_file(root, "github-type", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        github:
+          issues: 276
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("github.issues") && i[:type] == :error }
+    end
+  end
+
+  def test_invalid_github_issue_value
+    with_tasks_dir do |root|
+      file = write_task_file(root, "github-value", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        github:
+          issues: [276, "abc"]
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("Invalid GitHub issue ID") && i[:type] == :error }
+    end
+  end
+
   # --- nonexistent file ---
 
   def test_nonexistent_file

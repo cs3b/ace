@@ -20,6 +20,7 @@ module Ace
             '"Fix login bug"                              # Create task with title',
             '"Fix auth" --priority high --tags auth,security  # With priority and tags',
             '"Setup DB" --child-of q7w                    # Create as subtask',
+            '"Track issue" --github-issue 276             # Link GitHub issue',
             '"Quick task" --in maybe                      # Create in _maybe/ folder',
             '"Draft spec" --status draft --estimate TBD   # Create as draft with estimate',
             '"Preview only" --dry-run                     # Show what would be created'
@@ -31,6 +32,7 @@ module Ace
           option :tags, type: :string, aliases: %w[-T], desc: "Tags (comma-separated)"
           option :status, type: :string, aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
           option :estimate, type: :string, aliases: %w[-e], desc: "Effort estimate (e.g. TBD, 2h, 1d)"
+          option :"github-issue", type: :array, desc: "Linked GitHub issue number (repeatable)"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
           option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
@@ -48,6 +50,7 @@ module Ace
             tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
             status = options[:status]
             estimate = options[:estimate]
+            github_issues = parse_github_issues(options[:"github-issue"])
             child_of = options[:"child-of"]
             in_folder = options[:in]
 
@@ -64,6 +67,7 @@ module Ace
               puts "  Status:   #{status}" if status
               puts "  Priority: #{priority}" if priority
               puts "  Estimate: #{estimate}" if estimate
+              puts "  GitHub:   #{github_issues.join(", ")}" if github_issues.any?
               puts "  Tags:     #{tags.join(", ")}" if tags.any?
               puts "  Parent:   #{child_of}" if child_of
               puts "  Folder:   #{in_folder}" if in_folder
@@ -73,9 +77,24 @@ module Ace
             manager = Ace::Task::Organisms::TaskManager.new
 
             task = if child_of
-              manager.create_subtask(child_of, title, status: status, priority: priority, tags: tags, estimate: estimate)
+              manager.create_subtask(
+                child_of,
+                title,
+                status: status,
+                priority: priority,
+                tags: tags,
+                estimate: estimate,
+                github_issues: github_issues
+              )
             else
-              manager.create(title, status: status, priority: priority, tags: tags, estimate: estimate)
+              manager.create(
+                title,
+                status: status,
+                priority: priority,
+                tags: tags,
+                estimate: estimate,
+                github_issues: github_issues
+              )
             end
 
             unless task
@@ -90,6 +109,9 @@ module Ace
 
             puts "Created task #{task.id}"
             puts "  Path: #{task.file_path}"
+            if manager.last_update_note && !manager.last_update_note.strip.empty?
+              puts "Info: #{manager.last_update_note}"
+            end
 
             if options[:git_commit]
               Ace::Support::Items::Molecules::GitCommitter.commit(
@@ -97,6 +119,22 @@ module Ace
                 intention: "create task #{task.id}"
               )
             end
+          end
+
+          private
+
+          def parse_github_issues(raw_values)
+            values = Array(raw_values).flatten.compact
+            parsed = values.map do |raw|
+              candidate = raw.to_s.strip
+              raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{raw}': expected numeric ID") unless candidate.match?(/\A\d+\z/)
+
+              id = candidate.to_i
+              raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{raw}': expected positive numeric ID") if id <= 0
+
+              id
+            end
+            parsed.uniq
           end
         end
       end

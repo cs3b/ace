@@ -32,7 +32,16 @@ module Ace
         # @param time [Time] Creation time (default: now)
         # @return [Models::Task] Created subtask
         # @raise [RangeError] If parent already has 36 subtasks
-        def create(parent_task, title, status: nil, priority: nil, tags: [], time: Time.now.utc, estimate: nil)
+        def create(
+          parent_task,
+          title,
+          status: nil,
+          priority: nil,
+          tags: [],
+          time: Time.now.utc,
+          estimate: nil,
+          github_issues: []
+        )
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
           # Find next available subtask character
@@ -60,7 +69,8 @@ module Ace
             tags: tags,
             created_at: time,
             parent: parent_task.id,
-            estimate: estimate
+            estimate: estimate,
+            github_issues: github_issues
           )
 
           # Write spec file

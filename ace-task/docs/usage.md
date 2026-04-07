@@ -28,6 +28,21 @@ All commands support these flags:
 
 ## Commands
 
+## Linked GitHub Issues (ACE-Linked Work)
+
+For ACE-linked workflows, treat task metadata as the source of truth for issue lifecycle.
+
+- Link issues in task frontmatter with machine-readable metadata (for example `github.issues`).
+- Keep issue lifecycle updates task-driven through ACE tooling and workflows.
+- PR closing keywords such as `Closes #123` remain optional GitHub-native guidance for manual or non-ACE-linked work.
+
+Example task frontmatter pattern:
+
+```yaml
+github:
+  issues: [276, 278]
+```
+
 ### ace-task create TITLE
 
 Create a new task with a B36TS-based ID.
@@ -38,6 +53,7 @@ Create a new task with a B36TS-based ID.
 | `--tags` | `-T` | Tags (comma-separated) |
 | `--status` | `-s` | Initial status: draft, pending, blocked, ... |
 | `--estimate` | `-e` | Effort estimate (e.g. TBD, 2h, 1d) |
+| `--github-issue` | | Linked GitHub issue number (repeatable) |
 | `--child-of` | | Parent task reference (creates subtask) |
 | `--in` | `-i` | Target folder (next, maybe) |
 | `--dry-run` | `-n` | Preview without writing |
@@ -49,6 +65,8 @@ ace-task create "Fix auth" --priority high --tags auth,security
 ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe
 ace-task create "Draft spec" --status draft --estimate TBD
+ace-task create "Track issue" --github-issue 276
+ace-task create "Track multiple" --github-issue 276 --github-issue 278
 ace-task create "Preview only" --dry-run
 ```
 
@@ -155,6 +173,19 @@ ace-task plan q7w --model gemini:flash-latest
 
 For automation, prefer `ace-task plan <ref>` (path output) and read the plan file directly.
 Use `--content` only when inline output is needed. If `--content` appears stalled for ~3 minutes, cancel and rerun path mode.
+
+### ace-task github-sync [REF]
+
+Synchronize linked GitHub issues for one task or all linked tasks.
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--all` | `-a` | Sync all linked tasks |
+
+```bash
+ace-task github-sync q7w
+ace-task github-sync --all
+```
 
 ### ace-task doctor
 

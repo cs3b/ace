@@ -10,6 +10,7 @@ require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/status"
 require_relative "cli/commands/plan"
+require_relative "cli/commands/github_sync"
 
 module Ace
   module Task
@@ -26,7 +27,8 @@ module Ace
         ["update", "Update task metadata (fields, move, reparent)"],
         ["doctor", "Run health checks on tasks"],
         ["status", "Show task status overview"],
-        ["plan", "Resolve or generate implementation plan"]
+        ["plan", "Resolve or generate implementation plan"],
+        ["github-sync", "Sync linked GitHub issues for task(s)"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -45,7 +47,9 @@ module Ace
         "ace-task status --up-next-limit 5",
         "ace-task plan q7w",
         "ace-task plan q7w --refresh",
-        "ace-task plan q7w --content"
+        "ace-task plan q7w --content",
+        "ace-task github-sync q7w",
+        "ace-task github-sync --all"
       ].freeze
 
       register "create", CLI::Commands::Create
@@ -55,6 +59,7 @@ module Ace
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
       register "plan", CLI::Commands::Plan
+      register "github-sync", CLI::Commands::GithubSync
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-task",

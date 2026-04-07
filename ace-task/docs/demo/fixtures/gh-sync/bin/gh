@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log_file="${PWD}/gh.log"
+state_dir="${PWD}/.gh-state"
+mkdir -p "$state_dir"
+printf '%s\n' "$*" >> "$log_file"
+
+issue_state_file() {
+  printf '%s/issue-%s.state' "$state_dir" "$1"
+}
+
+issue_comment_file() {
+  printf '%s/issue-%s.comment' "$state_dir" "$1"
+}
+
+issue_label_file() {
+  printf '%s/issue-%s.label' "$state_dir" "$1"
+}
+
+json_view() {
+  local issue_id="$1"
+  local state="OPEN"
+  local body=""
+  local label=0
+
+  [ -f "$(issue_state_file "$issue_id")" ] && state="$(cat "$(issue_state_file "$issue_id")")"
+  [ -f "$(issue_comment_file "$issue_id")" ] && body="$(cat "$(issue_comment_file "$issue_id")")"
+  [ -f "$(issue_label_file "$issue_id")" ] && label=1
+
+  ruby -rjson -e '
+    issue_id, state, body, label = ARGV
+    comments = body.empty? ? [] : [{"id" => "12345", "body" => body}]
+    labels = label == "1" ? [{"name" => "ace:tracked"}] : []
+    puts({"state" => state, "comments" => comments, "labels" => labels}.to_json)
+  ' "$issue_id" "$state" "$body" "$label"
+}
+
+subcommand="${1:-}"
+shift || true
+
+case "$subcommand" in
+  issue)
+    action="${1:-}"
+    shift || true
+    case "$action" in
+      view)
+        issue_id="$1"
+        json_view "$issue_id"
+        ;;
+      comment)
+        issue_id="$1"
+        shift
+        body=""
+        while [ "$#" -gt 0 ]; do
+          case "$1" in
+            --body)
+              body="$2"
+              shift 2
+              ;;
+            *)
+              shift
+              ;;
+          esac
+        done
+        printf '%s' "$body" > "$(issue_comment_file "$issue_id")"
+        ;;
+      edit)
+        issue_id="$1"
+        shift
+        while [ "$#" -gt 0 ]; do
+          case "$1" in
+            --add-label)
+              printf 'ace:tracked' > "$(issue_label_file "$issue_id")"
+              shift 2
+              ;;
+            --remove-label)
+              rm -f "$(issue_label_file "$issue_id")"
+              shift 2
+              ;;
+            *)
+              shift
+              ;;
+          esac
+        done
+        ;;
+      close)
+        issue_id="$1"
+        printf 'CLOSED' > "$(issue_state_file "$issue_id")"
+        ;;
+      reopen)
+        issue_id="$1"
+        printf 'OPEN' > "$(issue_state_file "$issue_id")"
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+    ;;
+  api)
+    endpoint="${1:-}"
+    shift || true
+    method="PATCH"
+    body=""
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        --method)
+          method="$2"
+          shift 2
+          ;;
+        -f)
+          case "$2" in
+            body=*) body="${2#body=}" ;;
+          esac
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    issue_id="276"
+    if [ "$method" = "DELETE" ]; then
+      rm -f "$(issue_comment_file "$issue_id")"
+    else
+      printf '%s' "$body" > "$(issue_comment_file "$issue_id")"
+    fi
+    ;;
+  *)
+    exit 0
+    ;;
+esac

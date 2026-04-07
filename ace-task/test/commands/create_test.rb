@@ -164,4 +164,56 @@ class CreateCommandTest < AceTaskTestCase
 
     refute commit_called, "Expected GitCommitter.commit NOT to be called during dry-run"
   end
+
+  def test_create_with_github_issue_persists_frontmatter
+    fake_sync = Object.new
+    def fake_sync.sync_task(**_payload)
+      {synced: 1}
+    end
+
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276", "--github-issue", "278"])
+      end
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    task_dirs = Dir.entries(tasks_dir).reject { |e| e.start_with?(".") }
+    task_dir = File.join(tasks_dir, task_dirs.first)
+    spec_file = Dir.glob(File.join(task_dir, "*.s.md")).first
+    content = File.read(spec_file)
+
+    assert_match(/github:/, content)
+    assert_match(/issues:/, content)
+    assert_match(/276/, content)
+    assert_match(/278/, content)
+  end
+
+  def test_create_with_invalid_github_issue_raises_error
+    err = assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Bad issue", "--github-issue", "abc"])
+      end
+    end
+
+    assert_match(/Invalid GitHub issue/, err.message)
+  end
+
+  def test_create_prints_sync_warning_note_when_present
+    fake_task = Struct.new(:id, :file_path, :path).new(
+      "8pp.t.abc",
+      File.join(@tmpdir, ".ace-tasks/8pp.t.abc/8pp.t.abc.s.md"),
+      File.join(@tmpdir, ".ace-tasks/8pp.t.abc")
+    )
+    fake_manager = Object.new
+    fake_manager.define_singleton_method(:create) { |_title, **_opts| fake_task }
+    fake_manager.define_singleton_method(:last_update_note) { "GitHub sync warning for task 8pp.t.abc: gh unavailable" }
+
+    Ace::Task::Organisms::TaskManager.stub(:new, fake_manager) do
+      output = capture_io do
+        Ace::Task::TaskCLI.start(["create", "Warn on sync"])
+      end.first
+      assert_match(/Info: GitHub sync warning for task 8pp\.t\.abc: gh unavailable/, output)
+    end
+  end
 end

@@ -109,6 +109,8 @@ module Ace
             if title.length > Atoms::TaskValidationRules::MAX_TITLE_LENGTH
               issues << {type: :warning, message: "Title exceeds #{Atoms::TaskValidationRules::MAX_TITLE_LENGTH} characters (#{title.length} chars)", location: file_path}
             end
+
+            validate_github_fields(frontmatter, file_path, issues)
           end
 
           def validate_recommended_fields(frontmatter, file_path, issues)
@@ -129,6 +131,34 @@ module Ace
 
             scope_issues.each do |issue|
               issues << issue.merge(location: file_path)
+            end
+          end
+
+          def validate_github_fields(frontmatter, file_path, issues)
+            github = frontmatter["github"]
+            return if github.nil?
+
+            unless github.is_a?(Hash)
+              issues << {type: :error, message: "Field 'github' must be a map", location: file_path}
+              return
+            end
+
+            linked = github["issues"]
+            return if linked.nil?
+
+            unless linked.is_a?(Array)
+              issues << {type: :error, message: "Field 'github.issues' must be an array", location: file_path}
+              return
+            end
+
+            linked.each do |issue_id|
+              unless issue_id.is_a?(Integer) && issue_id.positive?
+                issues << {
+                  type: :error,
+                  message: "Invalid GitHub issue ID '#{issue_id}' in github.issues (expected positive integer)",
+                  location: file_path
+                }
+              end
             end
           end
         end
