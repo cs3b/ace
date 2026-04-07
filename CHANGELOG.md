@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-demo v0.24.0**: Added semantic YAML/asciinema demo verification with classified failure reports in `.ace-local/demo/`, and made `ace-demo record` fail closed instead of uploading broken recordings.
 - **ace-assign v0.42.5**: Hardened `wfi://assign/drive` and related handoff docs so `/as-assign-drive` treats intermediate progress as non-terminal and resumes paused assignments with runnable pending work.
 - **ace-assign v0.42.6**: Tightened the assignment-drive contract so waiting on `fork-run` stays inside the live drive loop and subtree completion immediately resumes the parent assignment queue.
 - **ace-task v0.32.1**: Hardened linked-issue sync by loading `ace/git` on runtime boot, reconciling previous/current issue IDs, and downgrading GitHub sync failures to non-blocking task warnings.
@@ -19,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.33.1**: Fixed create-time sync dispatch to the reusable GitHub issue integration and repaired the live demo tape task-ref lookup so the recorded issue lifecycle completes end to end.
 
 ### Changed
+- **ace-task v0.33.2**: Updated the live GitHub sync demo tape to assert exported task/issue refs, forbid known sync/runtime errors, and verify final issue closure during recording.
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
 - **ace-task v0.31.10**: Updated ACE-linked issue lifecycle guidance to prefer task metadata plus ACE-managed sync over PR footer closure requirements, while retaining PR closure keywords as optional manual guidance.
 - **ace-task v0.32.0**: Added linked GitHub issue lifecycle support with `--github-issue`, `ace-task github-sync`, frontmatter validation for `github.issues`, and task lifecycle sync hooks.
