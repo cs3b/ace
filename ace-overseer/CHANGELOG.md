@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.10] - 2026-04-07
+
+### Fixed
+- Updated the `ace-assign` runtime dependency constraint to `~> 0.44` so overseer remains compatible with the new assign minor release line.
+
 ## [0.13.9] - 2026-04-01
 
 ### Fixed
