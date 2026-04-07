@@ -82,7 +82,7 @@ module Ace
           fields = "comments,reviews,number,title,author"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Review::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -116,7 +116,8 @@ module Ace
             success: false,
             error: "Failed to parse PR comments: #{e.message}"
           }
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           raise
         rescue => e
           {
@@ -250,7 +251,7 @@ module Ace
 
           # Execute GraphQL query
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Review::Molecules::GhCliExecutor.execute(
+            Ace::Git::Molecules::GhCliExecutor.execute(
               "api",
               [
                 "graphql",
@@ -382,7 +383,7 @@ module Ace
         # @return [String, nil] "owner/name" format or nil if not a GitHub repo
         def self.discover_repo_from_remote(options = {})
           timeout = options[:timeout] || 10
-          result = Ace::Review::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Molecules::GhCliExecutor.execute(
             "repo",
             ["view", "--json", "owner,name"],
             timeout: timeout

@@ -34,7 +34,7 @@ module Ace
           timeout = options[:timeout] || 30
 
           # Post comment using gh CLI
-          result = Ace::Review::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Molecules::GhCliExecutor.execute(
             "pr",
             ["comment", gh_format, "--body", body],
             timeout: timeout
@@ -54,7 +54,8 @@ module Ace
               error: "Failed to post reply: #{result[:stderr]}"
             }
           end
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           raise
         rescue => e
           {
@@ -91,7 +92,7 @@ module Ace
           mutation = build_resolve_thread_mutation(thread_id)
 
           # Execute via gh api graphql
-          result = Ace::Review::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Molecules::GhCliExecutor.execute(
             "api",
             ["graphql", "-f", "query=#{mutation}"],
             timeout: timeout
@@ -118,7 +119,8 @@ module Ace
               error: "Failed to resolve thread: #{result[:stderr]}"
             }
           end
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           raise
         rescue => e
           {

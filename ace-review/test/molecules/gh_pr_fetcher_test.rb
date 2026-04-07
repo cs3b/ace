@@ -76,7 +76,7 @@ module Ace
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
-            GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
               GhPrFetcher.stub :run_local_command, mock_local do
                 result = GhPrFetcher.fetch_diff("42")
 
@@ -101,7 +101,7 @@ module Ace
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
-            GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
               result = GhPrFetcher.send(:fetch_local_diff_fallback, "42")
 
               refute result[:success]
@@ -126,7 +126,7 @@ module Ace
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
-            GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
               GhPrFetcher.stub :run_local_command, mock_local do
                 result = GhPrFetcher.send(:fetch_local_diff_fallback, "42")
 
@@ -159,7 +159,7 @@ module Ace
           end
 
           Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
-            GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
               GhPrFetcher.stub :run_local_command, mock_local do
                 result = GhPrFetcher.send(:fetch_local_diff_fallback, "42")
 
@@ -179,6 +179,36 @@ module Ace
                 assert_equal merge_base_args[3], diff_args[3]
                 assert_equal ["git", "update-ref", "-d"], cleanup_args.first(3)
                 assert_equal merge_base_args[3], cleanup_args[3]
+              end
+            end
+          end
+        end
+
+        def test_fetch_diff_reraises_ace_git_authentication_errors
+          parse_stub = ->(_id) { @parsed }
+          mock_executor = lambda do |_cmd, _args, **_opts|
+            raise Ace::Git::GhAuthenticationError, "auth required"
+          end
+
+          Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+              assert_raises(Ace::Git::GhAuthenticationError) do
+                GhPrFetcher.fetch_diff("42")
+              end
+            end
+          end
+        end
+
+        def test_fetch_metadata_reraises_ace_git_not_installed_errors
+          parse_stub = ->(_id) { @parsed }
+          mock_executor = lambda do |_cmd, _args, **_opts|
+            raise Ace::Git::GhNotInstalledError, "install gh"
+          end
+
+          Ace::Git::Atoms::PrIdentifierParser.stub :parse, parse_stub do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+              assert_raises(Ace::Git::GhNotInstalledError) do
+                GhPrFetcher.fetch_metadata("42")
               end
             end
           end

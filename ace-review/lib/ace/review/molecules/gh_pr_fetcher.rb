@@ -26,7 +26,7 @@ module Ace
 
           # Fetch diff with retry logic
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Review::Molecules::GhCliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
+            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
           end
 
           if result[:success]
@@ -42,7 +42,8 @@ module Ace
         rescue Ace::Review::Errors::DiffTooLargeError
           # Fall back to local git diff when GitHub API rejects large diffs
           fetch_local_diff_fallback(pr_identifier, options)
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           # Re-raise authentication and installation errors
           raise
         rescue => e
@@ -70,7 +71,7 @@ module Ace
           fields = "number,state,isDraft,title,body,author,headRefName,baseRefName,url"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Review::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -89,7 +90,8 @@ module Ace
             success: false,
             error: "Failed to parse PR metadata: #{e.message}"
           }
-        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
+          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
           raise
         rescue => e
           {

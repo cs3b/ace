@@ -226,6 +226,23 @@ module Ace
           # When no repo info, falls back to just the number (malformed but graceful)
           assert_equal "https://github.com/123/pull/123", result
         end
+
+        def test_post_comment_reraises_ace_git_authentication_error
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+          mock_executor = lambda do |_cmd, _args, **_opts|
+            raise Ace::Git::GhAuthenticationError, "auth required"
+          end
+
+          Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+              assert_raises(Ace::Git::GhAuthenticationError) do
+                GhCommentPoster.post_comment("69", "review")
+              end
+            end
+          end
+        end
       end
     end
   end
