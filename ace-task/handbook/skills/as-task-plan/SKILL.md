@@ -18,10 +18,15 @@ skill:
   execution:
     workflow: wfi://task/plan
 assign:
-  source: wfi://task/plan
   steps:
     - name: plan-task
       description: Analyze task requirements and create an implementation plan
+      produces: [implementation-plan]
+      consumes: [project-base-context, task-spec]
+      when_to_skip:
+        - "Task is trivial and doesn't need a plan"
+        - "Implementation plan already exists"
+      effort: light
       tags: [planning, analysis]
       context:
         default: fork

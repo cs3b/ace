@@ -17,7 +17,6 @@ argument-hint: [task-id like 123]
 last_modified: 2026-02-17
 source: ace-task
 assign:
-  source: wfi://task/work
   steps:
     - name: work-on-task
       description: Implement task changes following project conventions
@@ -27,6 +26,12 @@ assign:
           - "implement task"
           - "task work"
           - "build feature"
+      produces: [code-changes, commits]
+      consumes: [project-base-context, task-spec]
+      when_to_skip:
+        - "Task is documentation-only"
+        - "Changes are already implemented"
+      effort: medium
       tags: [implementation, core-workflow]
       context:
         default: fork
