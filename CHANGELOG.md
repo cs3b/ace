@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.20.1**: Fixed sticky-comment update/delete calls to use the REST issue-comment ID derived from GitHub comment URLs, restoring close-time issue sync after task archive/update.
 - **ace-task v0.33.1**: Fixed create-time sync dispatch to the reusable GitHub issue integration and repaired the live demo tape task-ref lookup so the recorded issue lifecycle completes end to end.
 
+### Added
+- **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
+
 ### Changed
 - **ace-task v0.33.2**: Updated the live GitHub sync demo tape to assert exported task/issue refs, forbid known sync/runtime errors, and verify final issue closure during recording.
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
@@ -27,10 +30,16 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.19.4**: Added reusable GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for shared ACE issue lifecycle operations.
 - **ace-review v0.51.8**: Migrated GitHub CLI execution to the shared `ace-git` executor and removed package-local executor duplication.
 - **ace-task v0.33.0**: Switched linked issue metadata to singular `github_issue` ownership, updated task lifecycle sync hooks and docs around canonical task-owned GitHub issues, and reworked the GitHub sync demo to show live issue creation and automatic closure.
+- **ace-git v0.20.2**: Added shared GitHub issue sync primitives for broader reuse and strengthened sync ownership/error handling.
+- **ace-task v0.33.3**: Updated linked-issue metadata and sync behavior around singular ownership and reusable sync flow routing.
+- **ace-review v0.51.10**: Switched review GitHub CLI integrations to the shared `ace-git` executor to reduce package-specific duplication.
 
 ### Technical
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
+- **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.
+- **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
+- **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
 
 ## [0.9.938] - 2026-04-05
 

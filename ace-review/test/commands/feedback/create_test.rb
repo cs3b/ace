@@ -3,15 +3,18 @@
 require "test_helper"
 
 class FeedbackCreateCommandTest < AceReviewTest
+  def self.use_shared_temp_dir?
+    true
+  end
+
   def setup
     super
-    @temp_dir = Dir.mktmpdir("feedback-create-test")
+    @temp_dir = @test_dir
     @session_dir = File.join(@temp_dir, "sessions", "review-abc123")
     FileUtils.mkdir_p(@session_dir)
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
     super
   end
 
@@ -112,7 +115,7 @@ class FeedbackCreateCommandTest < AceReviewTest
     old_session = File.join(cache_dir, "review-old123")
     new_session = File.join(cache_dir, "review-new456")
     FileUtils.mkdir_p(old_session)
-    sleep(0.1) # Ensure different mtime
+    File.utime(Time.now - 120, Time.now - 120, old_session)
     FileUtils.mkdir_p(new_session)
 
     # Create review reports in the newer session

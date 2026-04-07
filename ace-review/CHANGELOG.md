@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Switched review GitHub CLI operations to use `Ace::Git::Molecules::GhCliExecutor` and removed the package-local `GhCliExecutor` implementation.
 
+## [0.51.10] - 2026-04-07
+
+### Changed
+- Switched review GitHub CLI integrations to shared `Ace::Git::Molecules::GhCliExecutor` to remove duplicate implementations and align error handling with other packages.
+
+### Fixed
+- Preserved review-path authentication and install error behavior after the executor migration.
+
 ## [0.51.6] - 2026-03-31
 
 ### Changed

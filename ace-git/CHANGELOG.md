@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-04-07
+
+### Added
+- Added shared GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for broader package reuse.
+
+### Fixed
+- Prevented cross-task GitHub issue ownership conflicts during sync and derived sticky-comment update/delete IDs from `gh issue view` URLs.
+
 ## [0.20.1] - 2026-04-07
 
 ### Fixed
