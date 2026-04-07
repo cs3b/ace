@@ -1,4 +1,4 @@
-# Visible tmux-backed fork execution - Draft Usage
+# ACE tmux runtime visibility and recording - Draft Usage
 
 ## API Surface
 
@@ -24,7 +24,7 @@ ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
 - The subtree appears in its own pane within that fork window.
 - `ace-assign` still reports subtree completion or failure from assignment state rather than from pane visibility alone.
 
-### Scenario 2: Inspect runtime tmux state for active forks
+### Scenario 2: Inspect runtime tmux state for active forks and recorded panes
 
 **Goal**: An operator or higher-level ACE tool queries tmux runtime state to find active fork windows and panes.
 
@@ -38,9 +38,38 @@ ace-tmux state --format json
   - the current session
   - the `<current-window>-fork` window
   - active and completed panes
-  - pane ids, current commands, and liveness hints
+  - pane ids, current commands, liveness hints, and effective recording status
+  - artifact directories for recorded panes
 
-### Scenario 3: Visible mode requested outside tmux
+### Scenario 3: Start an ACE-managed tmux session with recording enabled
+
+**Goal**: An operator starts an ACE-managed tmux session that records later manual takeover activity for inspection.
+
+```bash
+ace-tmux start --record
+```
+
+#### Expected Output
+
+- `ace-tmux` starts the session with recording enabled for ACE-managed panes unless overridden at a lower scope.
+- Recording remains scoped to ACE-managed panes rather than arbitrary existing tmux panes.
+- Recorded artifacts are stored under `.ace-local/tmux/`.
+
+### Scenario 4: Inspect recorded evidence after manual takeover work
+
+**Goal**: An operator inspects what happened in a recorded pane after switching from agent-driven flow to manual work.
+
+```bash
+ace-tmux state --format json
+```
+
+#### Expected Output
+
+- Runtime state identifies the recorded pane and its artifact directory.
+- The operator can inspect raw evidence files under `.ace-local/tmux/`.
+- The system does not claim semantic learning, redaction, or perfect action attribution from those logs.
+
+### Scenario 5: Visible mode requested outside tmux
 
 **Goal**: A user requests visible mode without an active tmux session and still gets a usable fork execution path.
 
