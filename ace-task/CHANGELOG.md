@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-04-07
+
+### Fixed
+- Corrected create-time GitHub sync dispatch so `ace-task` resolves the reusable `sync_task` integration instead of the ownership-validator entrypoint.
+- Fixed the live GitHub sync demo tape to recover the created task ref from slugified task filenames during recording.
+
 ## [0.33.0] - 2026-04-07
 
 ### Fixed
