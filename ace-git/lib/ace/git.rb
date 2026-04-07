@@ -221,6 +221,8 @@ require_relative "git/molecules/branch_reader"
 require_relative "git/molecules/pr_metadata_fetcher"
 require_relative "git/molecules/recent_commits_fetcher"
 require_relative "git/molecules/git_status_fetcher"
+require_relative "git/molecules/gh_cli_executor"
+require_relative "git/molecules/github_issue_sync"
 
 require_relative "git/organisms/diff_orchestrator"
 require_relative "git/organisms/repo_status_loader"
