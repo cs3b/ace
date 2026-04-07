@@ -33,7 +33,7 @@ scenes:
   - type: ace-task create "Demo GitHub sync task" --status pending --tags demo,github-sync --github-issue "$DEMO_ISSUE_NUMBER"
     sleep: 5s
   - type: >-
-      export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*Demo GitHub sync task*.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
+      export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*demo-github-sync-task*.s.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
     sleep: 2s
   - type: ace-task show "$DEMO_TASK_REF"
     sleep: 4s

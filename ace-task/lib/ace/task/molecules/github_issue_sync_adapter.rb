@@ -35,7 +35,7 @@ module Ace
           issue_ids = (current_issue_ids + previous_issue_ids).uniq
           return {synced: 0, issues: []} if issue_ids.empty?
 
-          receiver, method_name = resolve_integration
+          receiver, method_name = resolve_integration(:sync_task)
           raise UNAVAILABLE_MESSAGE unless receiver && method_name
 
           payload = {
