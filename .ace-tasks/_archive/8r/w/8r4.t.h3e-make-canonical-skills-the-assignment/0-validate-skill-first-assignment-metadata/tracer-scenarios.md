@@ -15,6 +15,7 @@
 - Workflow binding source: none required
 - Runtime rendering source: skill body directly
 - Expected behavior: capability skill may omit `skill.execution.workflow`; runtime executes the skill body and no workflow-level `assign:` is required
+- Validation note: if no current canonical capability skill cleanly fits this path, use this as a contract-only tracer and keep it synthetic until a concrete capability skill is introduced
 
 ## 3. Internal Explicit Workflow
 
@@ -23,3 +24,10 @@
 - Workflow binding source: the `wfi://...` URI itself
 - Runtime expansion source: workflow frontmatter if present
 - Expected behavior: runtime may execute this step, but public discovery and canonical public `assign.steps` must not surface `wfi://...` as public inventory
+
+## Migration Contract for Legacy Fields
+
+- Legacy step payloads using `skill:` and/or `workflow:` remain parser-compatible only during migration.
+- Runtime normalization target is `source:`.
+- `skill: as-task-work` -> `source: skill://as-task-work`.
+- `workflow: wfi://task/update` -> `source: wfi://task/update`.
