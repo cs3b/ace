@@ -23,6 +23,7 @@ ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
 - tmux creates or reuses a sibling window named from the current window with a `-fork` suffix.
 - The subtree appears in its own pane within that fork window.
 - `ace-assign` still reports subtree completion or failure from assignment state rather than from pane visibility alone.
+- If the pane exits early before assignment state is terminal, the operator-facing diagnostics include recent pane tail output plus any available recording artifact paths.
 
 ### Scenario 2: Inspect runtime tmux state for active forks and recorded panes
 
@@ -38,10 +39,37 @@ ace-tmux state --format json
   - the current session
   - the `<current-window>-fork` window
   - active and completed panes
-  - pane ids, current commands, liveness hints, and effective recording status
+  - pane ids, current commands, liveness hints, effective recording status, and the `source_scope` that enabled recording
   - artifact directories for recorded panes
 
-### Scenario 3: Start an ACE-managed tmux session with recording enabled
+### Scenario 3: Configure recording through ACE-managed tmux presets
+
+**Goal**: An operator or implementer configures recording in ACE-managed preset files and relies on session-to-window-to-pane inheritance with lower-scope overrides.
+
+```yaml
+# sessions/dev.yml
+name: dev
+recording:
+  enabled: true
+windows:
+  - preset: work
+    recording:
+      enabled: false
+  - preset: takeover
+    panes:
+      - commands: ["ace-task show 8r6.t.u53 --content"]
+        recording:
+          enabled: true
+```
+
+#### Expected Output
+
+- Session-level recording enables recording by default for ACE-managed panes in that session.
+- Window-level overrides can disable or refine recording for one window without changing sibling windows.
+- Pane-level overrides can re-enable recording for one ACE-managed pane even if the containing window disabled it.
+- `ace-tmux state --format json` reports the effective recording status plus the `source_scope` that set it for each pane.
+
+### Scenario 4: Start an ACE-managed tmux session with recording enabled via CLI convenience flag
 
 **Goal**: An operator starts an ACE-managed tmux session that records later manual takeover activity for inspection.
 
@@ -55,7 +83,7 @@ ace-tmux start --record
 - Recording remains scoped to ACE-managed panes rather than arbitrary existing tmux panes.
 - Recorded artifacts are stored under `.ace-local/tmux/`.
 
-### Scenario 4: Inspect recorded evidence after manual takeover work
+### Scenario 5: Inspect recorded evidence after manual takeover work
 
 **Goal**: An operator inspects what happened in a recorded pane after switching from agent-driven flow to manual work.
 
@@ -66,10 +94,11 @@ ace-tmux state --format json
 #### Expected Output
 
 - Runtime state identifies the recorded pane and its artifact directory.
+- Runtime state reports the effective recording state and `source_scope` that enabled the recording.
 - The operator can inspect raw evidence files under `.ace-local/tmux/`.
 - The system does not claim semantic learning, redaction, or perfect action attribution from those logs.
 
-### Scenario 5: Visible mode requested outside tmux
+### Scenario 6: Visible mode requested outside tmux
 
 **Goal**: A user requests visible mode without an active tmux session and still gets a usable fork execution path.
 
