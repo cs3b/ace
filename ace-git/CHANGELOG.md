@@ -7,16 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-04-07
+
 ### Fixed
 - Reconciled removed/retargeted task issue links by honoring explicit current issue sets during sync so unlinked issues are cleaned without re-adding stale tracked lines or applying lifecycle actions.
 - Removed stale tracking artifacts when the last linked task is detached by deleting the sticky tracking comment and removing the `ace:tracked` label.
 - Switched tracked task links to `blob/HEAD` URLs so issue comments resolve against repositories whose default branch is not `main`.
+- Enforced one-owner issue sync semantics by rejecting attempts to link a GitHub issue already owned by a different ACE task.
 
 ### Added
 - Added reusable GitHub issue sync primitives in `ace-git` (`GhCliExecutor` and `GithubIssueSync`) for shared ACE issue lifecycle integration.
 
 ### Changed
 - Migrated `ace-review` GitHub CLI execution ownership to the shared `ace-git` executor boundary.
+- Simplified linked-issue lifecycle handling by treating each tracked GitHub issue as owned by exactly one ACE task.
 
 ## [0.19.3] - 2026-03-31
 
