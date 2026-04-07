@@ -3,7 +3,7 @@ doc-type: workflow
 title: Run In Batches Workflow
 purpose: workflow instruction for reusable repeated-item orchestration with deterministic assignment creation
 ace-docs:
-  last-updated: 2026-03-18
+  last-updated: 2026-04-07
   last-checked: 2026-03-21
 ---
 
@@ -163,6 +163,8 @@ If `--run` is present:
 /as-assign-drive <assignment-id>
 ```
 
+This handoff must continue through the full batch execution, including all child fork subtrees, until the assignment is complete or an explicit blocker/failure stop condition is reached. Child completion is not a valid stop boundary.
+
 If no workable step is available, keep creation successful and report why drive did not continue.
 
 ### 7. Report Result
@@ -203,6 +205,7 @@ Show:
 - Parent/child metadata reflects scheduler intent (`parallel`, `max_parallel`, `fork_retry_limit`)
 - `{{item}}` substitution and `Target item:` fallback are deterministic
 - Optional `--run` handoff delegates to `/as-assign-drive`
+- Optional `--run` handoff preserves drive's run-until-complete-or-blocked semantics across the whole batch
 
 ## Verification
 

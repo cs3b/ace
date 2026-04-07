@@ -3,7 +3,7 @@ doc-type: workflow
 title: Start Assignment Workflow (Legacy Compatibility)
 purpose: preserve compatibility for as-assign-start while routing to public assign/create + assign/drive flow
 ace-docs:
-  last-updated: 2026-03-18
+  last-updated: 2026-04-07
   last-checked: 2026-03-21
 ---
 
@@ -39,8 +39,11 @@ Primary public UX remains:
 /as-assign-drive <assignment-id>
 ```
 
+When this handoff occurs, `/as-assign-drive` must continue until the assignment is complete or explicitly blocked. It is not a single-step progress probe.
+
 ## Success Criteria
 
 - Preserves compatibility entrypoint for orchestration examples.
 - Delegates behavior to `assign/create` and `assign/drive`.
 - Does not redefine the public assignment flow.
+- Preserves drive's run-until-complete-or-blocked semantics.

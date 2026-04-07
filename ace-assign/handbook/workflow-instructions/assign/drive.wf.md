@@ -1,9 +1,18 @@
 ---
+name: assign-drive
+description: Drive an ace-assign assignment until completion or an explicit blocker.
+allowed-tools:
+- Bash(ace-assign:*)
+- Bash(ace-bundle:*)
+- Read
+- Write
+- AskUserQuestion
+- Skill
 doc-type: workflow
 title: Drive Assignment Workflow
 purpose: workflow instruction for driving ace-assign assignment execution
 ace-docs:
-  last-updated: 2026-03-18
+  last-updated: 2026-04-07
   last-checked: 2026-03-21
 ---
 
@@ -104,12 +113,30 @@ ace-assign finish --message done.md --assignment <id>
 
 Repeat the following cycle until all steps are done or failed:
 
+### Run-Until-Blocked Contract
+
+Once `ASSIGNMENT_TARGET` is pinned, keep driving the same assignment until exactly one of these stop conditions is true:
+
+1. `ace-assign status --assignment "$ASSIGNMENT_TARGET"` shows all steps complete
+2. A workflow step explicitly requires HITL or other user judgment before execution can continue
+3. A step reaches an unrecoverable failure path and this workflow instructs you to stop
+4. The user explicitly interrupts or cancels execution
+
+Do **not** stop merely because you have useful progress to report.
+
+- Intermediate progress belongs in short progress updates, not in a final completion response.
+- `pending` steps with no active step are not a stop condition. They mean the queue must be advanced and the loop must continue.
+- A batch child subtree finishing is not a completion boundary for the parent assignment.
+- A paused assignment with remaining runnable work is not "done"; treat it as a recoverable scheduler state and resume the loop.
+
 ### Step Execution Policy
 
 - Planned steps are mandatory work items. Do not skip them by judgment.
 - For each active step, do exactly one of:
+
   1. Execute the step and report completion with `ace-assign finish --message`
   2. Attempt execution, capture blocker evidence, and mark failed with `ace-assign fail`
+
 - Never use report text to "skip" or synthesize completion for planned steps.
 - **Fork-delegation constraint**: If the active step has `FORK: yes`, the driver MUST delegate via `ace-assign fork-run`. The driver MUST NOT execute fork-marked steps inline, absorb remaining fork children after partial failure, or inject retry steps as top-level siblings. All fork recovery goes through re-fork (see [Fork-Run Crash Recovery](#fork-run-crash-recovery-partial-completion)).
 - **Conditional release in review subtrees**: A `release` step inside a review cycle (e.g., `[review-pr, apply-feedback, release]`) MUST skip the version bump when prior sibling steps produced no code changes. If `apply-feedback` reported no findings or `git diff HEAD~1 --stat` shows only report files, mark release done with "no-op: no changes to release" instead of bumping.
@@ -119,30 +146,34 @@ Repeat the following cycle until all steps are done or failed:
 After completing or failing each step, evaluate whether the assignment needs adaptation:
 
 - **Test failures detected** → Consider adding a fix-tests step:
+
   ```bash
   ace-assign add "fix-tests" --instructions "Fix failing tests identified in step NNN" --assignment "$ASSIGNMENT_TARGET"
    ```
 
 - **Review found critical issues** → Consider adding an apply-critical-fixes step:
+
   ```bash
   ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding" --assignment "$ASSIGNMENT_TARGET"
   ```
 
 - **Missing prerequisite discovered** → Consider adding the prerequisite step:
+
   ```bash
   ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during step NNN" --assignment "$ASSIGNMENT_TARGET"
   ```
 
-- **Metadata hint**: Step file contains `trigger_on_failure` — if the step failed, inject the referenced step type
+- **Metadata hint**: Step file contains `trigger_on_failure` -- if the step failed, inject the referenced step type
 
 Use `decision_notes` from step metadata (if present) as additional guidance for these assessments.
 
 - **Review-cycle circuit breaker**: When a review fork subtree fails due to provider unavailability (not code bugs), evaluate whether to attempt the next review cycle:
+
   - If the **first** review cycle (valid) failed on providers: skip remaining cycles (fit, shine). Mark them done with "skipped: provider unavailable for prior cycle" reports.
   - If the **second** cycle (fit) failed after valid succeeded: skip shine. Valid already captured correctness issues.
   - **Never retry a provider-failed review cycle more than once.** If the re-fork also fails on providers, mark the cycle done-with-skip and move on.
 
-- **Transient network failure retry**: When a fork subtree fails due to a transient network error (connection reset, DNS timeout, socket hangup) — as opposed to provider unavailability or auth failure — wait 30 seconds and re-fork once. If the re-fork also fails on a network error, treat it as a hard failure and apply the circuit breaker rules above. Auth errors (401/403) and not-found errors (404) are never transient — fail immediately on those.
+- **Transient network failure retry**: When a fork subtree fails due to a transient network error (connection reset, DNS timeout, socket hangup) -- as opposed to provider unavailability or auth failure -- wait 30 seconds and re-fork once. If the re-fork also fails on a network error, treat it as a hard failure and apply the circuit breaker rules above. Auth errors (401/403) and not-found errors (404) are never transient -- fail immediately on those.
 
 ### 1. Check Status
 
@@ -152,6 +183,7 @@ echo "$STATUS_OUTPUT"
 ```
 
 Read the output to identify:
+
 - Assignment ID (must remain equal to pinned `ASSIGNMENT_ID`)
 - Current step number, name, and status
 - Current step's instructions
@@ -194,6 +226,7 @@ This prevents fork agents from stalling on pre-existing unrelated changes. Assig
 | `FORK: ` (empty) | Step is not fork-enabled | Execute inline (or inspect fork-enabled children if batch parent) |
 
 **Example status output:**
+
 ```
 NUMBER       STATUS       NAME                           FORK   CHILDREN
 ------------------------------------------------------------------------------
@@ -202,6 +235,7 @@ NUMBER       STATUS       NAME                           FORK   CHILDREN
 ```
 
 Step 020 shows `FORK: yes` → run:
+
 ```bash
 ace-assign fork-run --assignment <id>@020
 ```
@@ -222,10 +256,12 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 - `fork_retry_limit: <N>` (default `1`)
 
 **How to distinguish:**
+
 - **Direct fork target**: `FORK: yes` on the current step → fork-run the current step.
 - **Batch container**: `FORK: ` on parent, but children include `FORK: yes` steps.
 
 **Pattern for batch containers:**
+
 ```bash
 # Read scheduler metadata from parent step 010
 # parallel=false  => sequential, still fork every child
@@ -236,9 +272,11 @@ A batch container (e.g., `010`) may have children but no fork context itself (`F
 
 - Iterate pending child steps in number order.
 - For each child with `FORK: yes`, run:
+
   - `ace-assign fork-run --assignment <id>@<child>`
+
 - Re-check status after each child.
-- Do not pause for user input between children — treat the batch loop as a single unit (see Batch Continuation Rule below).
+- Do not pause for user input between children -- treat the batch loop as a single unit (see Batch Continuation Rule below).
 
 **Parallel mode (`parallel: true`)**
 
@@ -262,12 +300,19 @@ The driver MUST NOT pause for user input between child fork-runs within a batch 
 
 1. Verify the child's reports (see Subtree Guard below).
 2. If reports indicate successful completion, immediately launch the next pending child.
-3. Treat the entire batch loop as a single unit of execution — only pause on quality concerns flagged during report review.
+3. Treat the entire batch loop as a single unit of execution -- only pause on quality concerns flagged during report review.
 4. For timeout-constrained environments: launch `fork-run` in background, poll for completion, then loop to the next child without pausing.
+
+Conversational boundary rule:
+
+- Do not end the turn or emit a final user-facing completion summary after a child subtree unless the entire assignment now satisfies a real stop condition from [Run-Until-Blocked Contract](#run-until-blocked-contract).
+- If child `010.01` completes, reports are clean, and `010.02` is still pending, immediately advance/resume the queue and continue driving.
+- Treat child-subtree completion as progress within the same drive session, not as permission to stop.
 
 **Failure policy (retry-then-stop)**
 
 - On any child failure:
+
   - Pause launching new children immediately.
   - Wait for in-flight children to finish.
   - Retry failed child once (`fork_retry_limit=1` default).
@@ -292,6 +337,42 @@ fi
 
 `fork-run` executes the entire subtree in one dedicated process and returns when the subtree is complete or failed.
 
+#### Fork Wait Continuation Rule
+
+After launching `ace-assign fork-run`, the driver remains inside the same drive session.
+
+- Treat "fork subtree is still running" as an internal progress state, not as a stop condition.
+- Do not end the turn, emit a final user-facing completion summary, or hand control back to the user merely because the driver is waiting on fork completion.
+- Continue polling until one of these is true:
+
+  - the `fork-run` process exits
+  - scoped status for the subtree proves every step inside that subtree is terminal (`done` or `failed`)
+  - the workflow reaches a documented blocker or failure path
+
+- When the wait ends, immediately re-enter the parent drive loop. Do not stop between "fork finished" and "next runnable step started."
+
+#### Post-Fork Resume Checklist
+
+Immediately after the fork wait ends, run this checklist in order:
+
+1. If `fork-run` exited non-zero, enter [Fork-Run Recovery](#fork-run-recovery).
+2. Read and review subtree reports.
+3. Check for uncommitted changes and commit safety-net leftovers if needed.
+4. Query parent assignment status.
+5. If no active step exists but pending work remains, run:
+
+   ```bash
+   ace-assign start --assignment "$ASSIGNMENT_TARGET"
+   ```
+
+6. If pending or `in_progress` work remains and no blocker was recorded, continue the main loop immediately.
+7. Only stop if the assignment now satisfies a real stop condition from [Run-Until-Blocked Contract](#run-until-blocked-contract).
+
+Concrete example:
+
+- Incorrect: launch `fork-run` for `040`, post "waiting on subtree", stop responding, and never resume `070`.
+- Correct: launch `fork-run` for `040`, poll until it finishes, review reports, re-check `ace-assign status --assignment "$ASSIGNMENT_TARGET"`, then advance and launch `070` if it is the next runnable step.
+
 > **Long-running execution:** `fork-run` typically takes 10-30 minutes depending on subtree complexity. If your environment has bash timeout limits (e.g., Claude Code's 10-minute Bash tool limit), run `fork-run` in background and poll for completion:
 >
 > ```bash
@@ -309,6 +390,7 @@ fi
 >   [ "$COMPLETE" = "true" ] && break
 >   sleep 300
 > done
+> ace-assign status --assignment "$ASSIGNMENT_TARGET"
 > ```
 
 #### Subtree Completion: Task Status Verification
@@ -318,6 +400,7 @@ After a fork subtree completes (work-on-task finishes successfully):
 1. **Verify ace-taskflow status matches assignment status.** If the assignment shows `work-on-task` as done but ace-taskflow still shows `in-progress`, status drift has occurred.
 
 2. **If mark-task-done step was NOT included in the assignment** (common for ad-hoc assignments):
+
    ```bash
    # Manually sync status before reporting subtree complete
    ace-task done {taskref}
@@ -331,12 +414,15 @@ After a fork subtree completes (work-on-task finishes successfully):
 After fork-run returns and completion is verified, the driver acts as the **guard** for the subtree. Before continuing to the next step:
 
 1. **Read all subtree report files** from `.ace-local/assign/<assignment-id>/reports/`:
+
    ```bash
    # List and read all reports for the completed subtree
    ls .ace-local/assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
    # Read each report file to review the forked agent's work
    ```
+
 2. **Check for uncommitted changes** left by the fork agent:
+
    ```bash
    DIRTY=$(git status --short)
    if [ -n "$DIRTY" ]; then
@@ -346,7 +432,8 @@ After fork-run returns and completion is verified, the driver acts as the **guar
      ace-git-commit -i "commit changes left by fork subtree ${FORK_ROOT}"
    fi
    ```
-   Fork agents are expected to commit all their work. Uncommitted files indicate incomplete commit discipline — note this when reviewing reports.
+
+   Fork agents are expected to commit all their work. Uncommitted files indicate incomplete commit discipline -- note this when reviewing reports.
 3. **Verify quality**: Check that reports indicate successful completion, not just step advancement.
 4. **Flag concerns**: If any report indicates partial work, errors, or skipped steps, stop and ask the user before continuing.
 5. **Only then continue** the main drive loop to the next step.
@@ -358,10 +445,31 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 After all fork subtrees within a batch container complete, the container auto-marks as Done. However, the queue pointer may not automatically advance to the next top-level step.
 
 **After verifying all fork subtree reports**, if `ace-assign status` shows no Active step (all completed steps but no new in-progress step), run:
+
 ```bash
 ace-assign start --assignment "$ASSIGNMENT_TARGET"
 ```
+
 This advances the queue to the next pending top-level step.
+
+If pending steps still remain after this queue advancement, continue the drive loop immediately. Do not stop after printing a partial progress summary.
+
+Concrete example:
+
+```text
+010.01 done
+010.02 pending
+010.03 pending
+Current Step: none
+```
+
+This state means "resume driving", not "return final status". Run:
+
+```bash
+ace-assign start --assignment "$ASSIGNMENT_TARGET"
+```
+
+then continue the loop from status check.
 
 #### Fork-Run Recovery
 
@@ -428,9 +536,11 @@ For external-facing steps (for example PR/review/release/push/update lifecycle s
 
 - Attempt the step command(s) first.
 - If blocked, capture concrete evidence:
+
   - command attempted
   - exact error output
   - why the step cannot proceed
+
 - Mark step failed with evidence (do not report synthetic completion).
 
 ```bash
@@ -449,27 +559,35 @@ Use HITL when:
 For a blocked step:
 
 1. Create a HITL event with assignment and step context:
+
    ```bash
    ace-hitl create "Need product decision" --question "Should retries be visible?" --assignment <id> --step <number> --step-name <name> --resume "/as-assign-drive <id>"
    ```
+
 2. Fail the step using canonical stall format:
+
    ```bash
    ace-assign fail --message "HITL: <hitl-id> <hitl-path>" --assignment "$ASSIGNMENT_TARGET"
    ```
+
 3. Human/operator resolves:
+
    ```bash
    ace-hitl show <hitl-id>
    ace-hitl update <hitl-id> --answer "Yes, show retries in user-facing output."
    ace-hitl wait <hitl-id>
    ```
+
 4. Discover pending HITL work:
    - Main checkout default (smart local-first): `ace-hitl list`
    - Explicit scope controls: `ace-hitl list --scope current` and `ace-hitl list --scope all`
 5. Polling is default: requesting agent waits on its own HITL id (`ace-hitl wait <hitl-id>`), not global queues.
 6. Resume dispatch is fallback: if waiter is no longer active, run:
+
    ```bash
    ace-hitl update <hitl-id> --answer "<decision>" --resume
    ```
+
 7. On retry/resume, read the answer from the HITL event and continue normal fail/retry mechanics. Do not introduce gate phases, assignment-level paused state, or extra resume commands in `ace-assign`.
 
 ### 5. Write Report (Only After Real Execution)
@@ -504,6 +622,7 @@ echo "$POST_STATUS"
 ```
 
 Required checks:
+
 - If report succeeded: active step advanced consistently with work performed
 - If fail succeeded: assignment is stalled or moved according to retry/add logic
 - If output mismatches expected transition: stop and ask user before continuing
@@ -542,9 +661,32 @@ If uncertain, ask the user whether to retry, add a fix step, or abort.
 ### 8. Repeat
 
 Check status again:
+
 - If there is a next step, continue the loop from step 1
 - If all steps are `done`, proceed to Completion
 - If assignment has failed steps and no fix is planned, report to user
+
+### 9. Pre-Exit Verification (Required)
+
+Before ending the drive session with a final user-facing response, re-run:
+
+```bash
+FINAL_STATUS=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
+echo "$FINAL_STATUS"
+```
+
+Required checks:
+
+- If any steps remain `pending` or `in_progress` and no explicit blocker was recorded, resume the loop instead of stopping.
+- If the assignment is `paused`, `current_step` is `null`, and pending steps remain, run:
+
+  ```bash
+  ace-assign start --assignment "$ASSIGNMENT_TARGET"
+  ```
+
+  then continue the loop.
+
+- Only produce a final completion response when the assignment is actually complete or when this workflow has already reached a documented blocker/failure stop condition.
 
 ## Completion
 
@@ -555,6 +697,7 @@ ace-assign status --assignment "$ASSIGNMENT_TARGET"
 ```
 
 Example output:
+
 ```
 Assignment: work-on-task-123 (8or5kx)
 
@@ -567,6 +710,7 @@ All steps complete!
 ```
 
 Summarize the assignment results to the user:
+
 - What was accomplished
 - Any artifacts created (PRs, commits, etc.)
 - Next steps or follow-up actions
@@ -604,6 +748,7 @@ When executing a step with a `skill:` field:
 |----------|--------|
 | No active assignment | Create an assignment first via `/as-assign-create` |
 | All steps done | Report completion to user |
+| Assignment paused with pending work | Run `ace-assign start --assignment "$ASSIGNMENT_TARGET"` and continue driving |
 | Step fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
 | Unclear instructions | Ask user for clarification |
@@ -642,6 +787,7 @@ When executing a step with a `skill:` field:
 ```
 
 Each step has:
+
 - **Step file** (`steps/NNN-name.st.md`) - Contains step instructions and status
 - **Report file** (`reports/NNN-name.r.md`) - Contains completion report (created when step is done)
 
