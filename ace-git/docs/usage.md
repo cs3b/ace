@@ -257,3 +257,12 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 - **ace-git-worktree** - Git worktree management
 - **ace-bundle** - Load ACE workflow instructions directly
 - **ace-nav** - Discover workflow and template protocol paths
+
+## Reusable GitHub Issue Primitives
+
+`ace-git` also exposes reusable library primitives for issue synchronization flows used by other ACE packages:
+
+- `Ace::Git::Molecules::GhCliExecutor` - shared `gh` command execution with timeout and auth/install error handling
+- `Ace::Git::Molecules::GithubIssueSync.sync_task(...)` - sticky comment upsert, `ace:tracked` label management, and close/reopen lifecycle actions
+
+These are intended for package integrations such as `ace-task` and are not invoked directly through `ace-git` CLI commands.
