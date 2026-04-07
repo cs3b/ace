@@ -19,3 +19,9 @@ skill:
 ---
 
 Load and run `ace-bundle wfi://task/draft` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+
+This skill is for specification work only.
+
+- Create or update draft task artifacts only.
+- Do not implement package code, tests, or runtime behavior changes.
+- If the user later says "implement", treat that as continuing the drafting/spec workflow unless they explicitly switch to `as-task-work` / `wfi://task/work`.

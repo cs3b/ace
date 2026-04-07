@@ -9,8 +9,7 @@ allowed-tools:
 - Glob
 - LS
 - TodoWrite
-argument-hint:
-- cookbook-name
+argument-hint: "[cookbook-name]"
 last_modified: 2026-04-01
 source: ace-handbook
 skill:
