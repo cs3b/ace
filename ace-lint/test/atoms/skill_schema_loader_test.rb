@@ -46,10 +46,11 @@ class Ace::Lint::Atoms::SkillSchemaLoaderTest < Minitest::Test
     assert_includes schema["required_fields"], "allowed-tools"
     assert_includes schema["required_fields"], "source"
     assert_includes schema["required_nested_fields"], "skill.kind"
-    assert_includes schema["required_nested_fields"], "skill.execution.workflow"
+    refute_includes schema["required_nested_fields"], "skill.execution.workflow"
     assert_includes schema["required_comments"], "# bundle:"
     assert_includes schema["required_comments"], "# agent:"
     assert_equal "string", schema.dig("field_validations", "skill.kind", "type")
+    assert_equal "string", schema.dig("field_validations", "skill.execution.workflow", "type")
   end
 
   def test_schema_for_workflow

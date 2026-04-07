@@ -434,7 +434,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     assert_equal 2, name_error.line, "Expected error to report line 2 for name field"
   end
 
-  def test_requires_skill_kind_and_workflow
+  def test_requires_skill_kind
     content = <<~MARKDOWN
       ---
       name: as-missing-skill-fields
@@ -455,7 +455,71 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     refute result.success?
     error_messages = result.errors.map(&:message)
     assert error_messages.any? { |msg| msg.include?("skill.kind") }
-    assert error_messages.any? { |msg| msg.include?("skill.execution.workflow") }
+  end
+
+  def test_requires_workflow_for_workflow_skill_kind
+    content = <<~MARKDOWN
+      ---
+      name: as-workflow-missing-binding
+      description: Workflow skills must include workflow binding
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: workflow
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    assert result.errors.any? { |e| e.message.include?("skill.execution.workflow") }
+  end
+
+  def test_requires_workflow_for_orchestration_skill_kind
+    content = <<~MARKDOWN
+      ---
+      name: as-orchestration-missing-binding
+      description: Orchestration skills must include workflow binding
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: orchestration
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    refute result.success?
+    assert result.errors.any? { |e| e.message.include?("skill.execution.workflow") }
+  end
+
+  def test_allows_capability_without_workflow_binding
+    content = <<~MARKDOWN
+      ---
+      name: as-capability-direct
+      description: Capability skill may omit workflow binding
+      # bundle: no-fork
+      # agent: Bash
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: capability
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
   end
 
   def test_rejects_assign_on_capability_skill
@@ -511,6 +575,34 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
 
     refute result.success?
     assert result.errors.any? { |e| e.message.include?("Duplicate assign phase name") }
+  end
+
+  def test_allows_assign_steps_metadata
+    content = <<~MARKDOWN
+      ---
+      name: as-assign-steps-supported
+      description: Workflow skill with assign steps metadata
+      # bundle: wfi://assign/drive
+      # agent: general-purpose
+      user-invocable: true
+      allowed-tools:
+        - Read
+      source: test
+      skill:
+        kind: workflow
+        execution:
+          workflow: wfi://assign/drive
+      assign:
+        source: wfi://assign/drive
+        steps:
+          - name: drive-assignment
+            description: Drive assignment execution loop
+      ---
+    MARKDOWN
+
+    result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
+
+    assert result.success?, "Expected success but got errors: #{result.errors.map(&:message).join(", ")}"
   end
 
   def test_rejects_unknown_skill_nested_fields

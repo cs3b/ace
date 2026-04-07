@@ -305,6 +305,7 @@ module Ace
               return errors
             end
 
+            kind = skill_data["kind"]
             unknown_skill_keys = skill_data.keys - %w[kind execution]
             unknown_skill_keys.each do |key|
               errors << Models::ValidationError.new(
@@ -329,10 +330,18 @@ module Ace
               end
             end
 
+            workflow_line = field_lines["skill"] || 2
+            workflow = execution_data.is_a?(Hash) ? execution_data["workflow"] : nil
+            if %w[workflow orchestration].include?(kind) && !present_value?(workflow)
+              errors << Models::ValidationError.new(
+                line: workflow_line,
+                message: "Missing required field: 'skill.execution.workflow'"
+              )
+            end
+
             assign_data = frontmatter["assign"]
             if assign_data
               assign_line = field_lines["assign"] || 2
-              kind = skill_data["kind"]
               if kind == "capability"
                 errors << Models::ValidationError.new(
                   line: assign_line,
@@ -348,7 +357,7 @@ module Ace
                 return errors
               end
 
-              unknown_assign_keys = assign_data.keys - %w[source phases]
+              unknown_assign_keys = assign_data.keys - %w[source phases steps]
               unknown_assign_keys.each do |key|
                 errors << Models::ValidationError.new(
                   line: assign_line,

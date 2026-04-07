@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Changed
+- Allowed canonical `capability` skills without `skill.execution.workflow` while requiring workflow bindings for `workflow` and `orchestration` skills.
+- Updated skill validator/schema coverage to enforce the kind-specific workflow-binding matrix and preserve `assign:` restrictions for capability skills.
+
+## [0.28.1] - 2026-04-07
+
+### Fixed
+- Allowed canonical `assign.steps` metadata in skill validation for workflow/orchestration skills.
+
+### Technical
+- Added regression coverage ensuring skills with `assign.steps` pass lint validation.
+
 ## [0.27.8] - 2026-03-31
 
 ### Changed
