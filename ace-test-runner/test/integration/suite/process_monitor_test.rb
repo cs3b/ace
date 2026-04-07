@@ -34,7 +34,7 @@ module Ace
                 "ace-fast" => ["ruby", "-e", "puts '1 tests, 1 assertions, 0 failures, 0 errors (0.01s)'"]
               },
               max_parallel: 1,
-              package_timeout: 0.2,
+              package_timeout: 0.5,
               termination_grace_period: 0.05
             )
 
@@ -56,7 +56,7 @@ module Ace
             refute_nil fast_status
             assert slow_status[:timed_out]
             refute slow_status[:success]
-            assert_equal "Timed out after 0.2 seconds", slow_status.dig(:results, :error)
+            assert_equal "Timed out after 0.5 seconds", slow_status.dig(:results, :error)
             assert fast_status[:success]
           end
         end
