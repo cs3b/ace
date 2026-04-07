@@ -177,7 +177,12 @@ module Ace
               agg_bin: @agg_bin
             )
             @agg_executor.run(convert_cmd, chdir: sandbox[:path])
-            verification = @cast_verifier.verify(cast_path: cast_output_path, tape_spec: spec)
+            verification = @cast_verifier.verify(
+              cast_path: cast_output_path,
+              tape_spec: spec,
+              sandbox_path: sandbox[:path],
+              env: env.merge("PROJECT_ROOT_PATH" => sandbox[:path])
+            )
 
             visual_path =
               if selected_speed

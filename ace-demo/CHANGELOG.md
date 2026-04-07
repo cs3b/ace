@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-04-07
+
+### Added
+- Added semantic `verify:` support for YAML/asciinema demo tapes, including required exported variables, forbidden output signatures, and final-state assertion commands.
+- Added structured demo verification reports under `.ace-local/demo/` so failed recordings preserve actionable evidence for retry or bug triage.
+
+### Changed
+- Made `ace-demo record` fail closed on verification errors instead of treating cast mismatches as warning-only output.
+- Classified recording failures as `instruction_defect`, `product_bug`, or `verification_error`, and blocked PR upload/comment when verification does not pass.
+
+### Technical
+- Expanded parser, verifier, recorder, and CLI coverage for semantic verification, report writing, and fail-closed record behavior.
+
 ## [0.23.3] - 2026-03-29
 
 ### Technical

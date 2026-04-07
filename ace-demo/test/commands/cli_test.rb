@@ -351,6 +351,56 @@ class CliTest < AceDemoTestCase
     end
   end
 
+  def test_record_with_failed_verification_writes_report_and_does_not_attach
+    verification = Ace::Demo::Models::VerificationResult.new(
+      success: false,
+      status: "product-bug",
+      commands_found: ["ace-task create demo"],
+      commands_missing: [],
+      classification: "product_bug",
+      summary: "Recorded product behavior failed verification",
+      details: {forbidden_hits: [{pattern: "GitHub sync warning", line: "GitHub sync warning for task"}]}
+    )
+    fake_recorder = Class.new do
+      def initialize(verification)
+        @verification = verification
+      end
+
+      def record(**_kwargs)
+        Ace::Demo::Models::RecordingResult.new(
+          backend: "asciinema",
+          visual_path: ".ace-local/demo/hello.gif",
+          cast_path: ".ace-local/demo/hello.cast",
+          verification: @verification
+        )
+      end
+    end.new(verification)
+    fake_writer = Class.new do
+      def write(demo_name:, verification:)
+        raise "bad demo name" unless demo_name == "hello"
+        raise "bad classification" unless verification.classification == "product_bug"
+        ".ace-local/demo/hello-error-report.md"
+      end
+    end.new
+    fake_attacher = Class.new do
+      def attach(**_kwargs)
+        raise "attach should not run"
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      Ace::Demo::Molecules::VerificationReportWriter.stub(:new, fake_writer) do
+        Ace::Demo::Organisms::DemoAttacher.stub(:new, fake_attacher) do
+          result = invoke(["record", "hello", "--pr", "123"])
+          assert_equal 1, result[:result]
+          assert_includes result[:stdout], "Verification: product-bug"
+          assert_includes result[:stdout], "Verification report: .ace-local/demo/hello-error-report.md"
+          assert_includes result[:stderr], "Demo verification failed (product_bug)"
+        end
+      end
+    end
+  end
+
   def test_record_with_pr_dry_run_prints_preview
     result = invoke(["record", "hello", "--pr", "123", "--dry-run"])
     assert_includes result[:stdout], "[dry-run] Would record tape: hello (format: gif)"

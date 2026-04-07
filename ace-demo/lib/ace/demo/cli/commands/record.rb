@@ -156,7 +156,7 @@ module Ace
             recording = normalize_recording_result(recorder.record(**record_kwargs))
             puts "Recorded backend: #{recording.backend}"
             puts "Cast: #{recording.cast_path}" if recording.cast_path
-            print_verification(recording.verification) if recording.verification
+            ensure_successful_verification!(recording)
             puts "Recorded: #{recording.visual_path}"
 
             attach_path = recording.visual_path
@@ -310,8 +310,32 @@ module Ace
             puts "Verification: #{verification.status}"
             return if verification.success?
 
+            puts "Classification: #{verification.classification}" if verification.classification
+            puts "Summary: #{verification.summary}" if verification.summary
             missing = verification.commands_missing
-            puts "Warning: missing commands in cast: #{missing.join(', ')}" unless missing.empty?
+            puts "Missing commands: #{missing.join(', ')}" unless missing.empty?
+            missing_vars = verification.details&.fetch(:missing_vars, [])
+            puts "Missing vars: #{missing_vars.join(', ')}" unless missing_vars.empty?
+          end
+
+          def ensure_successful_verification!(recording)
+            verification = recording.verification
+            return unless verification
+
+            print_verification(verification)
+            return if verification.success?
+
+            report_path = Molecules::VerificationReportWriter.new.write(
+              demo_name: verification_demo_name(recording),
+              verification: verification
+            )
+            puts "Verification report: #{report_path}"
+            raise Ace::Support::Cli::Error, "Demo verification failed (#{verification.classification}). Report: #{report_path}"
+          end
+
+          def verification_demo_name(recording)
+            source = recording.cast_path || recording.visual_path || "demo"
+            File.basename(source, File.extname(source))
           end
         end
       end
