@@ -256,4 +256,37 @@ class UpdateCommandTest < AceTaskTestCase
     assert_match(/Info: Archived parent task 8pp\.t\.zzz because all subtasks are terminal\./, output)
     assert_equal 1, Dir.glob(File.join(@tasks_dir, "_archive", "**", "8pp.t.zzz-parent-task")).length
   end
+
+  def test_update_linked_task_status_triggers_sync
+    File.write(@task_file, <<~CONTENT)
+      ---
+      id: 8pp.t.q7w
+      status: pending
+      priority: medium
+      tags:
+        - auth
+      github:
+        issues: [276]
+      ---
+
+      # Fix Login Bug
+    CONTENT
+
+    sync_calls = []
+    fake_sync = Object.new
+    fake_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done"])
+      end
+    end
+
+    assert_equal 1, sync_calls.length
+    assert_equal "update", sync_calls.first[:reason]
+    assert_equal "done", sync_calls.first[:task].status
+  end
 end

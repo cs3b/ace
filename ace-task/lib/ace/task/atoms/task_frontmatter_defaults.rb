@@ -18,7 +18,17 @@ module Ace
         # @param created_at [Time, nil] Creation time
         # @param parent [String, nil] Parent task ID for subtasks
         # @return [Hash] Frontmatter hash
-        def self.build(id:, status: "pending", priority: nil, tags: [], dependencies: [], created_at: nil, parent: nil, estimate: nil)
+        def self.build(
+          id:,
+          status: "pending",
+          priority: nil,
+          tags: [],
+          dependencies: [],
+          created_at: nil,
+          parent: nil,
+          estimate: nil,
+          github_issues: []
+        )
           fm = {
             "id" => id,
             "status" => status || "pending",
@@ -29,6 +39,9 @@ module Ace
           fm["dependencies"] = dependencies || []
           fm["tags"] = tags || []
           fm["parent"] = parent if parent
+          if github_issues && !github_issues.empty?
+            fm["github"] = {"issues" => github_issues}
+          end
           fm
         end
 

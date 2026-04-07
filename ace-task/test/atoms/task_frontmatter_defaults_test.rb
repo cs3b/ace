@@ -55,4 +55,9 @@ class TaskFrontmatterDefaultsTest < AceTaskTestCase
     time = Time.utc(2026, 3, 1, 14, 30, 0)
     assert_equal "2026-03-01 14:30:00", Defaults.format_time(time)
   end
+
+  def test_build_with_github_issues
+    fm = Defaults.build(id: "8pp.t.q7w", github_issues: [276, 278])
+    assert_equal({"issues" => [276, 278]}, fm["github"])
+  end
 end

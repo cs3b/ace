@@ -1,0 +1,32 @@
+---
+description: Showcase linked GitHub issue sync from ace-task without touching live GitHub
+tags:
+- ace-task
+- github-sync
+- docs
+settings:
+  font_size: 16
+  width: 1100
+  height: 720
+  format: gif
+setup:
+- sandbox
+- copy-fixtures
+- git-init
+scenes:
+- name: Create a task linked to a GitHub issue
+  commands:
+  - type: PATH=fixtures/gh-sync/bin:$PATH ace-task create "Add soft GitHub issue integration" --github-issue 276
+    sleep: 5s
+  - type: rg -n "github:|issues:|276" .ace-tasks
+    sleep: 4s
+  - type: cat gh.log
+    sleep: 4s
+- name: Repair linked issue tracking without duplicating comments
+  commands:
+  - type: PATH=fixtures/gh-sync/bin:$PATH ace-task github-sync --all
+    sleep: 5s
+  - type: cat gh.log
+    sleep: 4s
+teardown:
+- cleanup

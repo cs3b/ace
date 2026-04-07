@@ -7,6 +7,7 @@ require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
 require_relative "../molecules/task_reparenter"
+require_relative "../molecules/github_issue_sync_adapter"
 require_relative "../atoms/task_validation_rules"
 
 module Ace
@@ -35,11 +36,30 @@ module Ace
         # @param dependencies [Array<String>] Dependency task IDs
         # @param use_llm_slug [Boolean] Whether to attempt LLM slug generation
         # @return [Models::Task] Created task
-        def create(title, status: nil, priority: nil, tags: [], dependencies: [], use_llm_slug: false, estimate: nil)
+        def create(
+          title,
+          status: nil,
+          priority: nil,
+          tags: [],
+          dependencies: [],
+          use_llm_slug: false,
+          estimate: nil,
+          github_issues: []
+        )
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
-          creator.create(title, status: status, priority: priority, tags: tags,
-            dependencies: dependencies, use_llm_slug: use_llm_slug, estimate: estimate)
+          created_task = creator.create(
+            title,
+            status: status,
+            priority: priority,
+            tags: tags,
+            dependencies: dependencies,
+            use_llm_slug: use_llm_slug,
+            estimate: estimate,
+            github_issues: github_issues
+          )
+          sync_linked_issues_for(created_task, reason: "create")
+          created_task
         end
 
         # Show (load) a single task by reference, including subtasks.
@@ -146,7 +166,9 @@ module Ace
             resolve_fn = ->(r) { show(r) }
             # Reload task from current path before reparenting (may have been field-updated)
             task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
-            return reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
+            reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
+            sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            return reparented
           end
 
           # Auto-archive hook: if a subtask status was set to terminal,
@@ -156,7 +178,11 @@ module Ace
           end
 
           # Reload and return updated task
-          loader.load(current_path, id: current_id, special_folder: current_special)
+          updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
+          if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
+            sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+          end
+          updated_task
         end
 
         # Create a subtask within a parent task.
@@ -166,12 +192,44 @@ module Ace
         # @param priority [String, nil] Priority level
         # @param tags [Array<String>] Tags
         # @return [Models::Task, nil] Created subtask or nil if parent not found
-        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil)
+        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, github_issues: [])
           parent = show(parent_ref)
           return nil unless parent
 
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
-          subtask_creator.create(parent, title, status: status, priority: priority, tags: tags, estimate: estimate)
+          created_subtask = subtask_creator.create(
+            parent,
+            title,
+            status: status,
+            priority: priority,
+            tags: tags,
+            estimate: estimate,
+            github_issues: github_issues
+          )
+          sync_linked_issues_for(created_subtask, reason: "create")
+          created_subtask
+        end
+
+        def github_sync(ref: nil, all: false)
+          raise ArgumentError, "Provide --all or a task reference" if !all && (ref.nil? || ref.strip.empty?)
+
+          if all
+            tasks = list(in_folder: "all")
+            linked_tasks = tasks.select { |t| linked_issue_ids(t).any? }
+            results = linked_tasks.map { |task| sync_linked_issues_for(task, reason: "manual-sync") }
+            return summarize_manual_sync_results(results, skipped: tasks.length - linked_tasks.length)
+          end
+
+          task = show(ref)
+          return nil unless task
+
+          if linked_issue_ids(task).empty?
+            return {synced: 0, failed: 0, skipped: 1, task_id: task.id, failures: []}
+          end
+
+          result = sync_linked_issues_for(task, reason: "manual-sync")
+          summary = summarize_manual_sync_results([result], skipped: 0)
+          summary.merge(task_id: task.id)
         end
 
         # Get the root directory.
@@ -346,6 +404,63 @@ module Ace
           else
             item.metadata[key] || item.metadata[key.to_sym] if item.respond_to?(:metadata) && item.metadata
           end
+        end
+
+        def sync_needed_after_update?(before_task, after_task, set:, add:, remove:, move_to:)
+          return false unless after_task
+          return true if move_to
+          return true if before_task.path != after_task.path
+          return true if linked_issue_ids(before_task) != linked_issue_ids(after_task)
+
+          touched_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
+          touched_keys.any? do |key|
+            key == "title" || key == "status" || key.start_with?("github.")
+          end
+        end
+
+        def linked_issue_ids(task)
+          return [] unless task&.metadata
+
+          Array(task.metadata.dig("github", "issues")).map(&:to_i).select(&:positive?).uniq
+        end
+
+        def sync_linked_issues_for(task, reason:, previous_task: nil)
+          issue_ids = (linked_issue_ids(task) + linked_issue_ids(previous_task)).uniq
+          return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason) if issue_ids.empty?
+
+          adapter = Molecules::GithubIssueSyncAdapter.new
+          adapter.sync_task(task: task, reason: reason, previous_task: previous_task)
+          sync_result_for(task: task, issues: issue_ids, success: true, reason: reason)
+        rescue StandardError => e
+          @last_update_note = "GitHub sync warning for task #{task&.id}: #{e.message}"
+          sync_result_for(task: task, issues: issue_ids, success: false, reason: reason, error: e.message)
+        end
+
+        def sync_result_for(task:, issues:, success:, reason:, error: nil)
+          {
+            task_id: task&.id,
+            issue_ids: issues,
+            success: success,
+            reason: reason,
+            error: error
+          }
+        end
+
+        def summarize_manual_sync_results(results, skipped:)
+          failures = results.reject { |result| result[:success] }.map do |result|
+            {
+              task_id: result[:task_id],
+              issue_ids: result[:issue_ids],
+              error: result[:error]
+            }
+          end
+
+          {
+            synced: results.length - failures.length,
+            failed: failures.length,
+            skipped: skipped,
+            failures: failures
+          }
         end
       end
     end
