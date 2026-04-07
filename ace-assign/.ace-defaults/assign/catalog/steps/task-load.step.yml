@@ -1,5 +1,5 @@
 name: task-load
-skill: null
+skill: as-task-load-internal
 description: "Load task behavioral spec: run `ace-bundle task://<taskref>`"
 
 prerequisites:

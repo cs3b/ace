@@ -1,6 +1,9 @@
 name: pre-commit-review
 skill: null
 description: Run /review agent command (conversation slash command, not bash) when supported; fall back to ace-lint
+migration_state: transitional-exception
+migration_target: internal orchestration skill/workflow
+migration_reason: "Nested review mode and runtime client detection still encoded in step-template YAML."
 
 prerequisites:
   - name: work-on-task

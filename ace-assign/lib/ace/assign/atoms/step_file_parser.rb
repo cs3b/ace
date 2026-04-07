@@ -49,6 +49,7 @@ module Ace
           {
             name: fm["name"],
             status: (fm["status"] || "pending").to_sym,
+            source: normalize_source(fm["source"], fm["workflow"], fm["skill"]),
             skill: fm["skill"],
             workflow: fm["workflow"],
             context: context, # "fork" triggers Task tool execution
@@ -212,6 +213,20 @@ module Ace
           parsed
         end
         private_class_method :parse_non_negative_integer
+
+        def self.normalize_source(source, workflow, skill)
+          source_ref = source.to_s.strip
+          return source_ref unless source_ref.empty?
+
+          workflow_ref = workflow.to_s.strip
+          return workflow_ref unless workflow_ref.empty?
+
+          skill_ref = skill.to_s.strip
+          return nil if skill_ref.empty?
+
+          "skill://#{skill_ref}"
+        end
+        private_class_method :normalize_source
       end
     end
   end

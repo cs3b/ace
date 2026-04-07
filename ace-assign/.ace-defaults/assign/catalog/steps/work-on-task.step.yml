@@ -1,19 +1,2 @@
 name: work-on-task
 skill: as-task-work
-description: Implement task changes following project conventions
-intent:
-  phrases:
-    - "work on task"
-    - "implement task"
-    - "task work"
-    - "build feature"
-
-produces: [code-changes, commits]
-consumes: [project-base-context, task-spec]
-
-when_to_skip:
-  - "Task is documentation-only"
-  - "Changes are already implemented"
-
-effort: medium
-tags: [implementation, core-workflow]

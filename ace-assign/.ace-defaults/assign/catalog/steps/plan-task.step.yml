@@ -1,13 +1,2 @@
 name: plan-task
 skill: as-task-plan
-description: Analyze task requirements and create an implementation plan
-
-produces: [implementation-plan]
-consumes: [project-base-context, task-spec]
-
-when_to_skip:
-  - "Task is trivial and doesn't need a plan"
-  - "Implementation plan already exists"
-
-effort: light
-tags: [planning, analysis]

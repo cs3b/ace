@@ -1582,6 +1582,46 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_materialize_explicit_source_with_custom_name_uses_canonical_source_metadata
+    with_temp_cache do |cache_dir|
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      canonical_step = {
+        "name" => "work-on-task",
+        "source" => "wfi://task/work",
+        "context" => {
+          "default" => "fork",
+          "fork" => {"provider" => "codex:gpt-5"}
+        }
+      }
+
+      resolver = Object.new
+      resolver.define_singleton_method(:resolve_source_rendering) do |_source, **_kwargs|
+        {
+          "workflow" => "wfi://task/work",
+          "body" => "Work body"
+        }
+      end
+      resolver.define_singleton_method(:resolve_skill_rendering) { |_skill_name| nil }
+      resolver.define_singleton_method(:resolve_workflow_rendering) { |_workflow, **_kwargs| nil }
+      resolver.define_singleton_method(:resolve_step_rendering) { |_step_name| nil }
+
+      executor.define_singleton_method(:find_step_definition) { |_name| nil }
+      executor.define_singleton_method(:step_catalog) { [canonical_step] }
+      executor.define_singleton_method(:skill_source_resolver) { resolver }
+      executor.define_singleton_method(:render_skill_backed_step_instructions) do |step:, rendering:|
+        "Rendered instructions for #{step["name"]} via #{rendering["workflow"]}"
+      end
+
+      materialized = executor.send(
+        :materialize_skill_backed_step,
+        {"name" => "custom-work-step", "source" => "wfi://task/work", "instructions" => "Do work"}
+      )
+
+      assert_equal "fork", materialized["context"]
+      assert_equal({"provider" => "codex:gpt-5"}, materialized["fork"])
+    end
+  end
+
   def test_build_child_sub_step_treats_symbolized_parent_fork_context_as_fork_boundary
     with_temp_cache do |cache_dir|
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)

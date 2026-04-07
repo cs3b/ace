@@ -26,7 +26,7 @@ class CatalogLoaderTest < AceAssignTestCase
 
   def test_load_all_each_step_has_description
     @steps.each do |step|
-      assert step["description"], "Step '#{step["name"]}' missing description"
+      assert step["description"], "Step missing description after canonical merge: #{step.inspect}"
     end
   end
 
@@ -83,7 +83,7 @@ class CatalogLoaderTest < AceAssignTestCase
 
     assert result.length >= 1
     names = result.map { |p| p["name"] }
-    assert_includes names, "review-pr"
+    assert_includes names, "pre-commit-review"
   end
 
   def test_filter_by_tag_no_match
@@ -99,7 +99,7 @@ class CatalogLoaderTest < AceAssignTestCase
 
     assert result.length >= 1
     names = result.map { |p| p["name"] }
-    assert_includes names, "work-on-task"
+    assert_includes names, "apply-feedback"
   end
 
   def test_producers_of_pull_request
@@ -118,21 +118,20 @@ class CatalogLoaderTest < AceAssignTestCase
   # validate_prerequisites tests
 
   def test_validate_prerequisites_all_satisfied
-    selected = ["onboard", "work-on-task", "create-pr"]
+    selected = ["work-on-task", "create-pr", "review-pr", "apply-feedback"]
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @steps)
 
-    # onboard has no prerequisites, work-on-task has no explicit prerequisite
-    # entries, create-pr requires work-on-task (present)
+    # apply-feedback requires review-pr, review-pr requires create-pr, and create-pr requires work-on-task.
     assert_empty issues
   end
 
   def test_validate_prerequisites_missing_required
-    selected = ["create-pr"]
+    selected = ["apply-feedback"]
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @steps)
 
     assert issues.length >= 1
     prereq_names = issues.map { |i| i[:prerequisite] }
-    assert_includes prereq_names, "work-on-task"
+    assert_includes prereq_names, "review-pr"
   end
 
   def test_validate_prerequisites_no_recommended_missing
@@ -140,6 +139,16 @@ class CatalogLoaderTest < AceAssignTestCase
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @steps)
 
     assert_empty issues
+  end
+
+  def test_load_all_can_return_raw_yaml_without_canonical_merge
+    raw_steps = Ace::Assign::Atoms::CatalogLoader.load_all(@catalog_dir, canonical_steps: false)
+    work_on_task = Ace::Assign::Atoms::CatalogLoader.find_by_name(raw_steps, "work-on-task")
+    create_pr = Ace::Assign::Atoms::CatalogLoader.find_by_name(raw_steps, "create-pr")
+
+    assert_equal "as-task-work", work_on_task["skill"]
+    assert_nil work_on_task["description"]
+    assert_nil create_pr["produces"]
   end
 
   def test_validate_prerequisites_empty_selection

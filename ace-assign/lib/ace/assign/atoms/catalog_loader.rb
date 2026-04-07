@@ -21,13 +21,19 @@ module Ace
         # Load all step definitions from a catalog directory.
         #
         # @param steps_dir [String] Path to catalog/steps/ directory
+        # @param canonical_steps [Array<Hash>, Symbol, Boolean, nil] Canonical
+        #   step metadata to merge. `:auto` (default) loads from skill sources.
+        #   `false` disables canonical merge and returns raw YAML definitions.
         # @return [Array<Hash>] Array of step definition hashes
-        def self.load_all(steps_dir)
+        def self.load_all(steps_dir, canonical_steps: :auto)
           return [] unless File.directory?(steps_dir)
 
-          Dir.glob(File.join(steps_dir, "*.step.yml")).sort.filter_map do |path|
+          yaml_steps = Dir.glob(File.join(steps_dir, "*.step.yml")).sort.filter_map do |path|
             parse_step_file(path)
           end
+          return [] if yaml_steps.empty?
+
+          merge_step_catalog(yaml_steps, resolve_canonical_steps(canonical_steps))
         end
 
         # Find a step definition by name.
@@ -94,6 +100,67 @@ module Ace
           warn "Warning: Failed to parse step file #{path}: #{e.message}"
           nil
         end
+
+        def self.resolve_canonical_steps(canonical_steps)
+          case canonical_steps
+          when false
+            []
+          when :auto, nil
+            begin
+              require_relative "../molecules/skill_assign_source_resolver"
+              Molecules::SkillAssignSourceResolver.new.assign_step_catalog
+            rescue LoadError, StandardError
+              []
+            end
+          when Array
+            canonical_steps
+          else
+            []
+          end
+        end
+        private_class_method :resolve_canonical_steps
+
+        def self.merge_step_catalog(base_steps, override_steps)
+          index = {}
+          order = []
+
+          Array(base_steps).each do |step|
+            name = step["name"]
+            next if name.nil? || name.empty?
+
+            index[name] = step
+            order << name
+          end
+
+          Array(override_steps).each do |step|
+            name = step["name"]
+            next if name.nil? || name.empty?
+
+            order << name unless index.key?(name)
+            index[name] = deep_merge_step_definition(index[name], step)
+          end
+
+          order.map { |name| index[name] }.compact
+        end
+        private_class_method :merge_step_catalog
+
+        def self.deep_merge_step_definition(base, override)
+          return override unless base.is_a?(Hash)
+          return base unless override.is_a?(Hash)
+
+          merged = base.dup
+          override.each do |key, value|
+            merged[key] =
+              if merged[key].is_a?(Hash) && value.is_a?(Hash)
+                deep_merge_step_definition(merged[key], value)
+              else
+                value
+              end
+          end
+          merged
+        end
+        private_class_method :deep_merge_step_definition
+
         private_class_method :parse_step_file
       end
     end

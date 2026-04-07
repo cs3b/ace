@@ -45,9 +45,54 @@ class StepFileParserTest < AceAssignTestCase
 
     assert_equal "build", result[:name]
     assert_equal :in_progress, result[:status]
+    assert_nil result[:source]
     assert_equal "Build the project.", result[:instructions]
     assert_nil result[:report] # Reports are now in separate files
     assert_equal "dynamic", result[:added_by]
+  end
+
+  def test_extract_fields_prefers_explicit_source
+    parsed = {
+      frontmatter: {
+        "name" => "work-on-task",
+        "status" => "pending",
+        "source" => "skill://as-task-work",
+        "skill" => "as-task-work",
+        "workflow" => "wfi://task/work"
+      },
+      body: "Do work."
+    }
+
+    result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
+    assert_equal "skill://as-task-work", result[:source]
+  end
+
+  def test_extract_fields_derives_source_from_workflow
+    parsed = {
+      frontmatter: {
+        "name" => "task-load",
+        "status" => "pending",
+        "workflow" => "wfi://task/load"
+      },
+      body: "Load task."
+    }
+
+    result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
+    assert_equal "wfi://task/load", result[:source]
+  end
+
+  def test_extract_fields_derives_source_from_skill
+    parsed = {
+      frontmatter: {
+        "name" => "plan-task",
+        "status" => "pending",
+        "skill" => "as-task-plan"
+      },
+      body: "Plan task."
+    }
+
+    result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
+    assert_equal "skill://as-task-plan", result[:source]
   end
 
   def test_extract_fields_with_context_fork

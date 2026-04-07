@@ -128,12 +128,12 @@ session:
 
 steps:
   - name: <step-name>
-    workflow: <workflow-ref-if-public-step>
+    source: <source-ref-skill-or-wfi>
     instructions:
       - <instruction line>
 ```
 
-`instructions` are assignment overlay only. The reusable execution body comes from the referenced workflow during `ace-assign create`.
+`instructions` are assignment overlay only. The reusable execution body comes from the canonical source resolution during `ace-assign create`.
 
 Rules:
 - Each invocation writes a new file (no in-place mutation of prior hidden specs).
