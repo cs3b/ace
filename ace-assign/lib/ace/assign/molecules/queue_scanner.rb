@@ -81,6 +81,7 @@ module Ace
             fork_pid_file: fields[:fork_pid_file],
             added_by: fields[:added_by],
             parent: fields[:parent],
+            source: fields[:source],
             skill: fields[:skill],
             workflow: fields[:workflow],
             context: fields[:context],

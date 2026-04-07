@@ -1,7 +1,6 @@
 name: mark-task-done
-skill: null
+skill: as-mark-task-done-internal
 description: Mark task as done in ace-task after successful implementation
-workflow: wfi://task/update
 
 prerequisites:
   - name: work-on-task

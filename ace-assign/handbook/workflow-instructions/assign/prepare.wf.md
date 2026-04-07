@@ -336,7 +336,7 @@ session:
 
 steps:
   - name: <step-name>
-    skill: <skill-reference>  # If present in preset
+    source: <source-reference>  # Canonical: skill://... or wfi://...
     instructions:
       - <resolved instruction line>
   # ... more steps
@@ -379,19 +379,19 @@ session:
 
 steps:
   - name: onboard
-    skill: as-onboard
+    source: skill://as-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: as-task-work
+    source: skill://as-task-work
     instructions:
       - Work on task 123.
       - Implement the required changes following project conventions.
 
   - name: create-pr
-    skill: as-github-pr-create
+    source: skill://as-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.

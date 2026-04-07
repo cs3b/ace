@@ -1,5 +1,5 @@
 name: create-retro
-skill: null
+skill: as-create-retro-internal
 description: Create a retrospective summarizing what was accomplished and lessons learned
 
 prerequisites:

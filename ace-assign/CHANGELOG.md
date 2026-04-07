@@ -7,18 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Technical
-- **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected source resolution and cached, test-scope loading paths while preserving production behavior.
-
-## [0.42.8] - 2026-04-07
-
-### Technical
-- **ace-assign v0.42.8**: Optimized command execution tests by injecting catalog/source resolvers and caching step catalog, skill index, and workflow metadata at test scope.
-
-## [0.42.6] - 2026-04-07
+## [0.44.3] - 2026-04-07
 
 ### Fixed
-- Hardened the shipped `wfi://assign/drive` and `as-assign-drive` skill contract so fork waits remain inside the live drive loop and subtree completion immediately resumes the parent queue instead of stopping at a waiting boundary.
+- Added missing `Bash(ace-bundle:*)` permissions to internal helper skills that execute `ace-bundle` workflows (`as-create-retro-internal`, `as-mark-task-done-internal`, `as-reflect-and-refactor-internal`).
+- Restored required canonical skill metadata headers (`# bundle`, `# agent`) for internal helper skills `as-create-retro-internal` and `as-reflect-and-refactor-internal`.
+- Added source-based canonical step-definition fallback in assignment step materialization so custom-named steps with explicit `source` preserve canonical metadata.
+
+### Technical
+- Added regression coverage for custom-named explicit-source step materialization preserving canonical fork metadata.
+
+## [0.44.2] - 2026-04-07
+
+### Fixed
+- Preserved project-level `.ace/assign/catalog/steps/*.step.yml` overrides when canonical skill metadata is present by applying project definitions after canonical merge in assignment step catalog resolution.
+- Restored canonical step metadata in `CatalogLoader.load_all` results for migrated public steps so direct catalog consumers retain description/prerequisite/artifact semantics, while keeping raw-YAML opt-out support via `canonical_steps: false`.
+
+## [0.44.1] - 2026-04-07
+
+### Fixed
+- Preserved canonical step-level `assign.steps` presentation fields (`name` and `description`) when resolving skill-backed step rendering.
+
+### Technical
+- Added required canonical metadata headers (`# bundle`, `# agent`) to internal helper skills `as-task-load-internal` and `as-mark-task-done-internal`.
+- Added regression coverage for step-level description preservation in `SkillAssignSourceResolver`.
+
+## [0.44.0] - 2026-04-07
+
+### Changed
+- Migrated helper-step ownership for `task-load`, `mark-task-done`, `reflect-and-refactor`, and `create-retro` from permanent `skill: null` templates to internal canonical helper skills.
+- Migrated public step metadata ownership for `onboard`, `plan-task`, `work-on-task`, `review-pr`, `create-pr`, and `verify-test-suite` into canonical skill `assign.steps`, with public workflow binding resolved from `skill.execution.workflow` (legacy `assign.source` fallback retained).
+- Normalized runtime execution and materialization paths around canonical step `source` (`skill://...` and explicit `wfi://...`) while preserving legacy `skill`/`workflow` compatibility as migration fallback.
+- Updated shipped assign compose/create/prepare workflow docs to use source-first step contract examples.
+
+### Fixed
+- Restricted public assign-step discovery to canonical skills with `user-invocable: true`, preventing internal helper skills from appearing in public assignment composition inventory.
+
+### Technical
+- Added internal helper workflows and skills under `ace-assign/handbook` to preserve helper execution contracts while keeping them non-discoverable.
+- Marked `pre-commit-review` and `verify-test` helper templates as explicit transitional exceptions with migration metadata.
 
 ## [0.42.4] - 2026-04-05
 

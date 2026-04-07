@@ -598,7 +598,10 @@ module Ace
         # @param sub_steps [Array<String>] Declared sub-step names
         # @return [Hash] Parent step config for runtime queue
         def build_split_parent_step(step:, parent_number:, parent_context:, sub_steps:)
-          source_skill = step["skill"]
+          source_skill = step["source_skill"] || step["skill"]
+          if (source_skill.nil? || source_skill.to_s.strip.empty?) && step["source"].to_s.start_with?("skill://")
+            source_skill = step["source"].to_s.delete_prefix("skill://").strip
+          end
           original_text = normalize_instructions(step["instructions"]).strip
           definition = find_step_definition("split-subtree-root") || {}
 
@@ -625,6 +628,7 @@ module Ace
           )
           parent_step.delete("sub_steps")
           parent_step.delete("sub-steps")
+          parent_step.delete("source")
           parent_step.delete("skill")
           parent_step.delete("workflow")
           parent_step["source_skill"] = source_skill if source_skill
@@ -737,6 +741,13 @@ module Ace
             child["workflow"] = step_def["workflow"] if step_def["workflow"]
             preserve_explicit_skill = (sub_steps_origin == "explicit")
             child["skill"] = step_def["skill"] if step_def["skill"] && (preserve_explicit_skill || !step_def["workflow"])
+            child["source"] = if step_def["source"]
+              step_def["source"]
+            elsif step_def["workflow"]
+              step_def["workflow"]
+            elsif step_def["skill"]
+              "skill://#{step_def["skill"]}"
+            end
 
             context_default = step_def.dig("context", "default")
             child["context"] = context_default if context_default && !fork_context_value?(parent_context)
@@ -886,6 +897,8 @@ module Ace
             "instructions" => rendered_instructions,
             "workflow" => rendering["workflow"]
           )
+          resolved_source = resolved_step_source(step, rendering)
+          materialized["source"] = resolved_source if resolved_source && !resolved_source.empty?
           unless split_child_without_explicit_fork?(step)
             context_default = rendering.dig("context", "default")
             materialized["context"] ||= context_default if context_default
@@ -904,6 +917,24 @@ module Ace
         end
 
         def resolve_step_rendering(step)
+          explicit_source = step["source"]&.to_s&.strip
+          if explicit_source && !explicit_source.empty?
+            canonical_step = find_step_definition_with_source_fallback(step, explicit_source: explicit_source)
+            if canonical_step && split_child_without_explicit_fork?(step)
+              canonical_step = canonical_step.dup
+              canonical_step.delete("context")
+              canonical_step.delete("fork")
+            end
+            source_skill = step["source_skill"]&.to_s&.strip
+            source_skill = canonical_step&.dig("source_skill") if source_skill.nil? || source_skill.empty?
+            rendering = skill_source_resolver.resolve_source_rendering(
+              explicit_source,
+              step_name: step["name"]&.to_s,
+              source_skill: source_skill
+            )
+            return canonical_step ? canonical_step.merge(rendering || {}) : rendering if rendering
+          end
+
           explicit_workflow = step["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
             canonical_step = find_step_definition(step["name"]&.to_s)
@@ -1064,6 +1095,15 @@ module Ace
         end
 
         def resolve_step_assign_config(step)
+          source_ref = step["source"]&.to_s&.strip
+          if source_ref && !source_ref.empty?
+            return skill_source_resolver.resolve_source_assign_config(
+              source_ref,
+              step_name: step["name"]&.to_s,
+              source_skill: step["source_skill"]&.to_s
+            )
+          end
+
           explicit_workflow = step["workflow"]&.to_s&.strip
           if explicit_workflow && !explicit_workflow.empty?
             return skill_source_resolver.resolve_workflow_assign_config(
@@ -1144,6 +1184,32 @@ module Ace
           Atoms::CatalogLoader.find_by_name(step_catalog, step_name)
         end
 
+        def find_step_definition_with_source_fallback(step, explicit_source:)
+          step_name = step["name"]&.to_s
+          canonical_step = find_step_definition(step_name)
+          return canonical_step if canonical_step
+
+          source = explicit_source.to_s.strip
+          return nil if source.empty?
+
+          source_skill = step["source_skill"]&.to_s&.strip
+          source_skill = source.delete_prefix("skill://").strip if source_skill.to_s.empty? && source.start_with?("skill://")
+
+          step_catalog.find do |entry|
+            next unless entry.is_a?(Hash)
+
+            entry_source = entry["source"]&.to_s&.strip
+            entry_workflow = entry["workflow"]&.to_s&.strip
+            entry_source_skill = entry["source_skill"]&.to_s&.strip
+            entry_skill = entry["skill"]&.to_s&.strip
+
+            next true if entry_source == source || entry_workflow == source
+            next true if !source_skill.to_s.empty? && (entry_source_skill == source_skill || entry_skill == source_skill)
+
+            false
+          end
+        end
+
         # Load step catalog from project override or gem defaults.
         #
         # @return [Array<Hash>] Loaded step definitions
@@ -1187,16 +1253,16 @@ module Ace
           project_catalog = File.join(project_root, ".ace", "assign", "catalog", "steps")
           default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "steps")
 
-          default_steps = Atoms::CatalogLoader.load_all(default_catalog)
-          base_catalog = if File.directory?(project_catalog)
-            project_steps = Atoms::CatalogLoader.load_all(project_catalog)
-            merge_step_catalog(default_steps, project_steps)
-          else
-            default_steps
-          end
-
           canonical_steps = @skill_source_resolver.assign_step_catalog
-          merge_step_catalog(base_catalog, canonical_steps)
+          default_steps = Atoms::CatalogLoader.load_all(default_catalog, canonical_steps: false)
+          base_catalog = merge_step_catalog(default_steps, canonical_steps)
+
+          if File.directory?(project_catalog)
+            project_steps = Atoms::CatalogLoader.load_all(project_catalog, canonical_steps: false)
+            merge_step_catalog(base_catalog, project_steps)
+          else
+            base_catalog
+          end
         end
 
         def catalog_signature(catalog_dir)
@@ -1370,10 +1436,27 @@ module Ace
         def canonical_batch_insert_requested?(step_config)
           raw_sub_steps = step_config["sub_steps"] || step_config["sub-steps"]
           has_declared_sub_steps = raw_sub_steps.is_a?(Array) && raw_sub_steps.any?
+          has_source = !step_config["source"].to_s.strip.empty?
           has_workflow = !step_config["workflow"].to_s.strip.empty?
           has_skill = !step_config["skill"].to_s.strip.empty?
 
-          has_declared_sub_steps || has_workflow || has_skill
+          has_declared_sub_steps || has_source || has_workflow || has_skill
+        end
+
+        def resolved_step_source(step, rendering)
+          explicit_source = step["source"]&.to_s&.strip
+          return explicit_source unless explicit_source.nil? || explicit_source.empty?
+
+          rendered_source = rendering["source"]&.to_s&.strip
+          return rendered_source unless rendered_source.nil? || rendered_source.empty?
+
+          workflow_source = rendering["workflow"]&.to_s&.strip
+          return workflow_source unless workflow_source.nil? || workflow_source.empty?
+
+          skill_name = rendering["skill"]&.to_s&.strip
+          return nil if skill_name.nil? || skill_name.empty?
+
+          "skill://#{skill_name}"
         end
 
         def insert_canonical_batch_step_tree(step_config, after:, as_child:, added_by:, location:)

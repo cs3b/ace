@@ -1,6 +1,9 @@
 name: verify-test
 skill: null
 description: Run profile-guided tests for modified packages only; no full-suite run in subtree
+migration_state: transitional-exception
+migration_target: internal orchestration skill/workflow
+migration_reason: "Nested per-package test sequencing and budget checks still encoded in step-template YAML."
 
 prerequisites:
   - name: work-on-task

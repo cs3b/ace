@@ -1,5 +1,6 @@
 name: reflect-and-refactor
-skill: null  # No dedicated skill — the driving agent follows the steps directly, using ace-review and ace-git-commit as tools
+skill: as-reflect-and-refactor-internal
+render: step_template
 description: Analyze implementation against ATOM principles and execute targeted refactoring before PR creation
 
 prerequisites:

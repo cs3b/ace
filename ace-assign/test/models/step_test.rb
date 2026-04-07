@@ -126,6 +126,19 @@ class StepTest < AceAssignTestCase
     assert_equal "2026-01-28T12:00:00Z", fm["started_at"]
   end
 
+  def test_source_round_trip
+    step = Ace::Assign::Models::Step.new(
+      number: "010",
+      name: "work-on-task",
+      status: :pending,
+      instructions: "Do work",
+      source: "skill://as-task-work"
+    )
+
+    assert_equal "skill://as-task-work", step.source
+    assert_equal "skill://as-task-work", step.to_frontmatter["source"]
+  end
+
   def test_fork_detection
     step = Ace::Assign::Models::Step.new(
       number: "020",

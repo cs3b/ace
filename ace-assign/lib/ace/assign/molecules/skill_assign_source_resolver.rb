@@ -11,7 +11,7 @@ module Ace
       #
       # Flow:
       # 1) Find SKILL.md by skill name (e.g., "ace-task-work")
-      # 2) Read assign.source URI from skill frontmatter (e.g., wfi://task/work)
+      # 2) Read workflow binding from skill.execution.workflow (fallback: assign.source)
       # 3) Resolve workflow file from URI
       # 4) Parse workflow assign frontmatter (sub-steps/context)
       class SkillAssignSourceResolver
@@ -91,14 +91,12 @@ module Ace
           return nil unless skill_path
 
           skill_frontmatter = cached_parse_frontmatter_from_file(skill_path)
-          if assign_capable_skill_frontmatter?(skill_frontmatter) && skill_frontmatter["assign"]
-            validate_assign_source!(skill_frontmatter["assign"], skill_name)
-          end
-
           assign_block = skill_frontmatter["assign"]
           return nil unless assign_block.is_a?(Hash)
 
-          source = assign_block["source"]&.to_s&.strip
+          validate_workflow_binding!(skill_frontmatter, skill_name) if assign_capable_skill_frontmatter?(skill_frontmatter)
+
+          source = workflow_binding_for_skill_frontmatter(skill_frontmatter)
           return nil if source.nil? || source.empty?
 
           workflow_path = resolve_source_uri(source, skill_name)
@@ -116,7 +114,7 @@ module Ace
         #
         # Assign-capable skills are canonical skills with:
         # - skill.kind: workflow|orchestration
-        # - assign.source present and non-empty
+        # - workflow binding present (skill.execution.workflow or assign.source)
         #
         # @return [Array<String>] Skill names
         # @raise [Ace::Assign::Error] When assign-capable skill has invalid assign metadata
@@ -127,9 +125,10 @@ module Ace
           names = skill_index.keys.sort.filter do |skill_name|
             frontmatter = skill_index_frontmatter(skill_name)
             next false unless assign_capable_skill_frontmatter?(frontmatter)
+            next false unless public_discovery_skill_frontmatter?(frontmatter)
             next false unless frontmatter["assign"].is_a?(Hash)
 
-            validate_assign_source!(frontmatter["assign"], skill_name)
+            validate_workflow_binding!(frontmatter, skill_name)
             true
           end
 
@@ -152,8 +151,7 @@ module Ace
 
           each_assign_capable_skill do |skill_name, frontmatter|
             steps = frontmatter.dig("assign", "steps")
-            workflow_source = frontmatter.dig("assign", "source")&.to_s&.strip
-            workflow_source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip if workflow_source.nil? || workflow_source.empty?
+            workflow_source = workflow_binding_for_skill_frontmatter(frontmatter)
             next unless steps.is_a?(Array)
 
             steps.each do |step|
@@ -165,6 +163,7 @@ module Ace
 
               entry = step.dup
               entry["name"] = step_name
+              entry["source"] = "skill://#{skill_name}"
               entry["skill"] = skill_name
               entry["source_skill"] = skill_name
               entry["workflow"] = workflow_source if workflow_source && !workflow_source.empty?
@@ -187,10 +186,7 @@ module Ace
           return nil unless skill_path
 
           frontmatter, skill_body = cached_parse_frontmatter_and_body_from_file(skill_path)
-          workflow_source = frontmatter.dig("assign", "source")&.to_s&.strip
-          if workflow_source.nil? || workflow_source.empty?
-            workflow_source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip
-          end
+          workflow_source = workflow_binding_for_skill_frontmatter(frontmatter)
 
           workflow_path = resolve_workflow_path(workflow_source, skill_name)
           workflow_body = workflow_path ? cached_parse_frontmatter_and_body_from_file(workflow_path).last.to_s.strip : ""
@@ -198,6 +194,7 @@ module Ace
           {
             "name" => frontmatter["name"] || skill_name,
             "description" => frontmatter["description"],
+            "source" => "skill://#{skill_name}",
             "skill" => skill_name,
             "workflow" => workflow_source,
             "workflow_path" => workflow_path,
@@ -216,11 +213,32 @@ module Ace
           {
             "name" => step_name || frontmatter["name"],
             "description" => frontmatter["description"],
+            "source" => workflow_ref,
             "workflow" => workflow_ref,
             "workflow_path" => workflow_path,
             "source_skill" => source_skill,
             "body" => body.to_s.strip
           }
+        end
+
+        # Resolve rendering details from canonical source reference.
+        #
+        # @param source [String]
+        # @return [Hash, nil]
+        def resolve_source_rendering(source, step_name: nil, source_skill: nil)
+          source_ref = source&.to_s&.strip
+          return nil if source_ref.nil? || source_ref.empty?
+
+          if source_ref.start_with?("skill://")
+            skill_name = source_ref.delete_prefix("skill://").strip
+            return nil if skill_name.empty?
+
+            return resolve_skill_rendering(skill_name)
+          end
+
+          return resolve_workflow_rendering(source_ref, step_name: step_name, source_skill: source_skill) if source_ref.start_with?("wfi://")
+
+          raise Error, "Unsupported source '#{source_ref}'. Supported: skill://..., wfi://..."
         end
 
         def resolve_workflow_assign_config(workflow_source, step_name: nil, source_skill: nil)
@@ -234,6 +252,26 @@ module Ace
           parsed[:config]
         end
 
+        # Resolve assign config from canonical source reference.
+        #
+        # @param source [String]
+        # @return [Hash, nil]
+        def resolve_source_assign_config(source, step_name: nil, source_skill: nil)
+          source_ref = source&.to_s&.strip
+          return nil if source_ref.nil? || source_ref.empty?
+
+          if source_ref.start_with?("skill://")
+            skill_name = source_ref.delete_prefix("skill://").strip
+            return nil if skill_name.empty?
+
+            return resolve_assign_config(skill_name)
+          end
+
+          return resolve_workflow_assign_config(source_ref, step_name: step_name, source_skill: source_skill) if source_ref.start_with?("wfi://")
+
+          raise Error, "Unsupported source '#{source_ref}'. Supported: skill://..., wfi://..."
+        end
+
         # Resolve canonical rendering details for a public step name.
         #
         # @param step_name [String]
@@ -242,12 +280,17 @@ module Ace
           entry = assign_step_catalog.find { |step| step["name"] == step_name }
           return nil unless entry
 
-          workflow_rendering = resolve_workflow_rendering(
-            entry["workflow"],
+          source_rendering = resolve_source_rendering(
+            entry["source"] || entry["workflow"],
             step_name: entry["name"],
             source_skill: entry["source_skill"] || entry["skill"]
           )
-          return entry.merge(workflow_rendering) if workflow_rendering
+          if source_rendering
+            merged = entry.merge(source_rendering)
+            merged["name"] = entry["name"] if entry["name"]
+            merged["description"] = entry["description"] if entry["description"]
+            return merged
+          end
 
           rendering = resolve_skill_rendering(entry["skill"])
           return nil unless rendering
@@ -349,10 +392,17 @@ module Ace
           ASSIGN_CAPABLE_KINDS.include?(kind)
         end
 
-        def validate_assign_source!(assign_block, skill_name)
-          source = assign_block["source"]&.to_s&.strip
+        def workflow_binding_for_skill_frontmatter(frontmatter)
+          source = frontmatter.dig("skill", "execution", "workflow")&.to_s&.strip
+          return source unless source.nil? || source.empty?
+
+          frontmatter.dig("assign", "source")&.to_s&.strip
+        end
+
+        def validate_workflow_binding!(frontmatter, skill_name)
+          source = workflow_binding_for_skill_frontmatter(frontmatter)
           if source.nil? || source.empty?
-            raise Error, "Missing assign.source for assign-capable skill '#{skill_name}'"
+            raise Error, "Missing workflow binding (skill.execution.workflow or assign.source) for assign-capable skill '#{skill_name}'"
           end
         end
 
@@ -367,11 +417,16 @@ module Ace
           skill_index.each do |skill_name, skill_path|
             frontmatter = cached_parse_frontmatter_from_file(skill_path)
             next unless assign_capable_skill_frontmatter?(frontmatter)
+            next unless public_discovery_skill_frontmatter?(frontmatter)
             next unless frontmatter["assign"].is_a?(Hash)
 
-            validate_assign_source!(frontmatter["assign"], skill_name)
+            validate_workflow_binding!(frontmatter, skill_name)
             yield skill_name, frontmatter
           end
+        end
+
+        def public_discovery_skill_frontmatter?(frontmatter)
+          frontmatter["user-invocable"] == true
         end
 
         def discover_canonical_skill_source_paths
@@ -481,7 +536,7 @@ module Ace
           if uri.start_with?("wfi://")
             resolve_wfi_uri(uri, skill_name)
           else
-            raise Error, "Unsupported assign.source '#{uri}' for skill '#{skill_name}'. Supported: wfi://..."
+            raise Error, "Unsupported workflow binding '#{uri}' for skill '#{skill_name}'. Supported: wfi://..."
           end
         end
 
@@ -496,7 +551,7 @@ module Ace
 
           workflow_name = uri.delete_prefix("wfi://").strip
           if workflow_name.empty?
-            raise Error, "Empty workflow name in assign.source '#{uri}' for skill '#{skill_name}'"
+            raise Error, "Empty workflow name in workflow binding '#{uri}' for skill '#{skill_name}'"
           end
 
           workflow_paths.each do |base_path|
@@ -508,7 +563,7 @@ module Ace
           end
 
           searched = workflow_paths.join(", ")
-          raise Error, "Could not resolve assign.source '#{uri}' for skill '#{skill_name}'. Searched: #{searched}"
+          raise Error, "Could not resolve workflow binding '#{uri}' for skill '#{skill_name}'. Searched: #{searched}"
         end
       end
     end

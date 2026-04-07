@@ -23,7 +23,7 @@ module Ace
         VALID_CONTEXTS = %w[fork].freeze
 
         attr_reader :number, :name, :status, :instructions, :report, :error,
-          :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
+          :started_at, :completed_at, :added_by, :parent, :file_path, :source, :skill, :context,
           :workflow,
           :batch_parent, :parallel, :max_parallel, :fork_retry_limit, :fork_options,
           :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file,
@@ -54,7 +54,7 @@ module Ace
         # @param stall_reason [String, nil] Last agent message captured when fork stalled
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
           started_at: nil, completed_at: nil, added_by: nil, parent: nil,
-          file_path: nil, skill: nil, workflow: nil, context: nil,
+          file_path: nil, source: nil, skill: nil, workflow: nil, context: nil,
           batch_parent: nil, parallel: nil, max_parallel: nil, fork_retry_limit: nil,
           fork_options: nil,
           fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
@@ -78,6 +78,7 @@ module Ace
           @added_by = added_by&.freeze
           @parent = parent&.freeze
           @file_path = file_path&.freeze
+          @source = source&.freeze
           @skill = skill&.freeze
           @workflow = workflow&.freeze
           @context = context&.freeze
@@ -141,6 +142,7 @@ module Ace
           {
             "name" => name,
             "status" => status.to_s,
+            "source" => source,
             "skill" => skill,
             "workflow" => workflow,
             "context" => context,

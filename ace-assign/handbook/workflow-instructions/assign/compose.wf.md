@@ -172,14 +172,14 @@ session:
 
 steps:
   - name: verify-test-suite
-    workflow: wfi://test/verify-suite
+    source: skill://as-test-verify-suite
     instructions:
       - Run package test verification.
 ```
 
 Step mapping source of truth:
 - `name` from canonicalized step catalog entry
-- `workflow` from canonicalized step catalog entry
+- `source` from canonicalized step catalog entry (canonical runtime contract)
 - `context` from canonicalized step catalog entry (if set)
 - `instructions` as assignment overlay from catalog description + request-specific context
 
