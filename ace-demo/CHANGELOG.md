@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-04-07
+
+### Added
+- Added fail-closed verification behavior for recording workflows with richer report classification when verification fails.
+
+### Changed
+- Updated demo CLI/recording paths and parser logic to preserve typed failure semantics through verification and recorder execution.
+
 ## [0.24.0] - 2026-04-07
 
 ### Added

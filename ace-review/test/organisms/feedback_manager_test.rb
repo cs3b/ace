@@ -3,14 +3,17 @@
 require "test_helper"
 
 class FeedbackManagerTest < AceReviewTest
+  def self.use_shared_temp_dir?
+    true
+  end
+
   def setup
     super
-    @temp_dir = Dir.mktmpdir("feedback-manager-test")
+    @temp_dir = @test_dir
     @manager = Ace::Review::Organisms::FeedbackManager.new
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
     super
   end
 

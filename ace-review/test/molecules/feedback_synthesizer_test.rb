@@ -5,6 +5,103 @@ require "fileutils"
 require "json"
 
 class FeedbackSynthesizerTest < AceReviewTest
+  SAMPLE_REPORT_CONTENT = <<~MARKDOWN.freeze
+    # Code Review Report
+
+    ## Security Issues
+
+    ### SQL Injection Vulnerability
+    File: src/db/query.rb, lines 42-55
+
+    The query builder uses string interpolation without sanitization.
+
+    ### Missing Authentication
+    File: src/api/users.rb:28
+
+    The endpoint lacks authentication checks.
+  MARKDOWN
+
+  SINGLE_REPORT_RESPONSE = {
+    findings: [
+      {
+        title: "Fix SQL injection vulnerability",
+        files: ["src/db/query.rb:42-55"],
+        priority: "critical",
+        finding: "The query builder uses string interpolation without sanitization.",
+        context: "Security vulnerability"
+      },
+      {
+        title: "Add error handling to user endpoint",
+        files: ["src/api/users.rb:28"],
+        priority: "high",
+        finding: "Missing error handling.",
+        context: "Code quality"
+      }
+    ]
+  }.to_json.freeze
+
+  MULTI_REPORT_RESPONSE = {
+    findings: [
+      {
+        title: "Fix SQL injection vulnerability",
+        files: ["src/db/query.rb:42-55"],
+        reviewers: ["google:gemini-2.5-flash", "anthropic:claude-3.5-sonnet", "openai:gpt-4"],
+        consensus: true,
+        priority: "critical",
+        finding: "The query builder uses string interpolation without sanitization.",
+        context: "All three reviewers identified this critical security issue."
+      },
+      {
+        title: "Add error handling to user endpoint",
+        files: ["src/api/users.rb:28"],
+        reviewers: ["google:gemini-2.5-flash", "anthropic:claude-3.5-sonnet"],
+        consensus: false,
+        priority: "high",
+        finding: "Missing error handling.",
+        context: "Two reviewers identified this issue."
+      }
+    ]
+  }.to_json.freeze
+
+  MERGED_FILES_RESPONSE = {
+    findings: [
+      {
+        title: "Fix SQL injection vulnerability",
+        files: ["src/db/query.rb:42-55", "src/db/query.rb:60-70"],
+        reviewers: ["r1", "r2"],
+        consensus: false,
+        priority: "critical",
+        finding: "SQL injection in multiple locations.",
+        context: "Merged from both reviewers."
+      }
+    ]
+  }.to_json.freeze
+
+  INVALID_JSON_RESPONSE = "This is not valid JSON".freeze
+  INVALID_JSON_REPAIR_RESPONSE = "Still not valid JSON".freeze
+
+  INVALID_JSON_WITH_TRAILING_COMMA = <<~JSON.freeze
+    {
+      "findings": [
+        {
+          "title": "Fix SQL injection vulnerability",
+          "finding": "The query builder uses string interpolation without sanitization.",
+          "priority": "critical",
+        }
+      ]
+    }
+  JSON
+
+  TRUNCATED_JSON_WITH_SECOND_PASS = <<~BROKEN.freeze
+    {
+      "findings": [
+        {
+          "title": "Fix SQL injection vulnerability",
+          "finding": "The query builder uses string interpolation
+  BROKEN
+
+  EMPTY_FINDINGS_RESPONSE = '{"findings": []}'.freeze
+
   # Opt into shared temp directory for performance
   def self.use_shared_temp_dir?
     true
@@ -198,8 +295,8 @@ class FeedbackSynthesizerTest < AceReviewTest
     report_path = create_report_file("report.md", sample_report_content)
 
     @mock_executor.set_responses([
-      "This is not valid JSON",
-      "Still not valid JSON"
+      INVALID_JSON_RESPONSE,
+      INVALID_JSON_REPAIR_RESPONSE
     ])
 
     result = @synthesizer.synthesize(
@@ -214,18 +311,7 @@ class FeedbackSynthesizerTest < AceReviewTest
   def test_synthesize_repairs_trailing_comma_json
     report_path = create_report_file("report.md", sample_report_content)
 
-    response = <<~JSON
-      {
-        "findings": [
-          {
-            "title": "Fix SQL injection vulnerability",
-            "finding": "The query builder uses string interpolation without sanitization.",
-            "priority": "critical",
-          }
-        ]
-      }
-    JSON
-    @mock_executor.set_response(response)
+    @mock_executor.set_response(INVALID_JSON_WITH_TRAILING_COMMA)
 
     result = @synthesizer.synthesize(
       report_paths: [report_path],
@@ -241,14 +327,8 @@ class FeedbackSynthesizerTest < AceReviewTest
     report_path = create_report_file("report.md", sample_report_content)
 
     @mock_executor.set_responses([
-      <<~BROKEN,
-        {
-          "findings": [
-            {
-              "title": "Fix SQL injection vulnerability",
-              "finding": "The query builder uses string interpolation
-      BROKEN
-      single_report_response
+      TRUNCATED_JSON_WITH_SECOND_PASS,
+      SINGLE_REPORT_RESPONSE
     ])
 
     result = @synthesizer.synthesize(
@@ -265,7 +345,7 @@ class FeedbackSynthesizerTest < AceReviewTest
   def test_synthesize_handles_json_with_markdown_fences
     report_path = create_report_file("report.md", sample_report_content)
 
-    response_with_fences = "```json\n#{single_report_response}\n```"
+    response_with_fences = "```json\n#{SINGLE_REPORT_RESPONSE}\n```"
     @mock_executor.set_response(response_with_fences)
 
     result = @synthesizer.synthesize(
@@ -285,7 +365,7 @@ class FeedbackSynthesizerTest < AceReviewTest
       Based on my analysis of the code review reports, I have identified the following findings:
 
       ```json
-      #{single_report_response}
+      #{SINGLE_REPORT_RESPONSE}
       ```
 
       These findings represent the key issues identified in the review.
@@ -304,7 +384,7 @@ class FeedbackSynthesizerTest < AceReviewTest
   def test_synthesize_handles_empty_findings_array
     report_path = create_report_file("report.md", sample_report_content)
 
-    @mock_executor.set_response('{"findings": []}')
+    @mock_executor.set_response(EMPTY_FINDINGS_RESPONSE)
 
     result = @synthesizer.synthesize(
       report_paths: [report_path],
@@ -547,86 +627,22 @@ class FeedbackSynthesizerTest < AceReviewTest
 
   # Sample report content
   def sample_report_content
-    <<~MARKDOWN
-      # Code Review Report
-
-      ## Security Issues
-
-      ### SQL Injection Vulnerability
-      File: src/db/query.rb, lines 42-55
-
-      The query builder uses string interpolation without sanitization.
-
-      ### Missing Authentication
-      File: src/api/users.rb:28
-
-      The endpoint lacks authentication checks.
-    MARKDOWN
+    SAMPLE_REPORT_CONTENT
   end
 
   # Sample LLM response for single report
   def single_report_response
-    {
-      findings: [
-        {
-          title: "Fix SQL injection vulnerability",
-          files: ["src/db/query.rb:42-55"],
-          priority: "critical",
-          finding: "The query builder uses string interpolation without sanitization.",
-          context: "Security vulnerability"
-        },
-        {
-          title: "Add error handling to user endpoint",
-          files: ["src/api/users.rb:28"],
-          priority: "high",
-          finding: "Missing error handling.",
-          context: "Code quality"
-        }
-      ]
-    }.to_json
+    SINGLE_REPORT_RESPONSE
   end
 
   # Sample LLM response for multi-report synthesis
   def multi_report_response
-    {
-      findings: [
-        {
-          title: "Fix SQL injection vulnerability",
-          files: ["src/db/query.rb:42-55"],
-          reviewers: ["google:gemini-2.5-flash", "anthropic:claude-3.5-sonnet", "openai:gpt-4"],
-          consensus: true,
-          priority: "critical",
-          finding: "The query builder uses string interpolation without sanitization.",
-          context: "All three reviewers identified this critical security issue."
-        },
-        {
-          title: "Add error handling to user endpoint",
-          files: ["src/api/users.rb:28"],
-          reviewers: ["google:gemini-2.5-flash", "anthropic:claude-3.5-sonnet"],
-          consensus: false,
-          priority: "high",
-          finding: "Missing error handling.",
-          context: "Two reviewers identified this issue."
-        }
-      ]
-    }.to_json
+    MULTI_REPORT_RESPONSE
   end
 
   # Sample response with merged files
   def merged_files_response
-    {
-      findings: [
-        {
-          title: "Fix SQL injection vulnerability",
-          files: ["src/db/query.rb:42-55", "src/db/query.rb:60-70"],
-          reviewers: ["r1", "r2"],
-          consensus: false,
-          priority: "critical",
-          finding: "SQL injection in multiple locations.",
-          context: "Merged from both reviewers."
-        }
-      ]
-    }.to_json
+    MERGED_FILES_RESPONSE
   end
 
   # Single finding response with specific reviewer

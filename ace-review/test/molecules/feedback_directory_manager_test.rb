@@ -2,17 +2,17 @@
 
 require "test_helper"
 require "fileutils"
-require "tmpdir"
 
 class FeedbackDirectoryManagerTest < AceReviewTest
-  def setup
-    @temp_dir = Dir.mktmpdir("feedback-directory-test")
-    @manager = Ace::Review::Molecules::FeedbackDirectoryManager.new
-    @writer = Ace::Review::Molecules::FeedbackFileWriter.new
+  def self.use_shared_temp_dir?
+    true
   end
 
-  def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+  def setup
+    super
+    @temp_dir = @test_dir
+    @manager = Ace::Review::Molecules::FeedbackDirectoryManager.new
+    @writer = Ace::Review::Molecules::FeedbackFileWriter.new
   end
 
   # ============================================================================

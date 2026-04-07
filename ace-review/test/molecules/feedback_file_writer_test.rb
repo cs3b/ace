@@ -2,11 +2,15 @@
 
 require "test_helper"
 require "fileutils"
-require "tmpdir"
 
 class FeedbackFileWriterTest < AceReviewTest
+  def self.use_shared_temp_dir?
+    true
+  end
+
   def setup
-    @temp_dir = Dir.mktmpdir("feedback-writer-test")
+    super
+    @temp_dir = @test_dir
     @writer = Ace::Review::Molecules::FeedbackFileWriter.new
     @valid_item = Ace::Review::Models::FeedbackItem.new(
       id: "8o7abc",
@@ -20,10 +24,6 @@ class FeedbackFileWriterTest < AceReviewTest
       research: "Verified by static analysis.",
       resolution: nil
     )
-  end
-
-  def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
   # ============================================================================

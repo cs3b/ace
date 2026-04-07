@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected source resolution and cached, test-scope loading paths while preserving production behavior.
 
+## [0.42.8] - 2026-04-07
+
+### Technical
+- **ace-assign v0.42.8**: Optimized command execution tests by injecting catalog/source resolvers and caching step catalog, skill index, and workflow metadata at test scope.
+
 ## [0.42.6] - 2026-04-07
 
 ### Fixed

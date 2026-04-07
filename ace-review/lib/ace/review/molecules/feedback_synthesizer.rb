@@ -26,6 +26,97 @@ module Ace
       #   result[:items]   #=> [FeedbackItem, ...] (with reviewers arrays)
       #
       class FeedbackSynthesizer
+        # Cached system prompt and prompt-path lookups to avoid repeated
+        # shell/file reads during test and command-heavy runs.
+        FALLBACK_SYSTEM_PROMPT = <<~PROMPT.freeze
+          Synthesize feedback from code review reports into unique findings.
+
+          For each unique issue found:
+          1. Track which reviewers identified it (by their model names)
+          2. Merge file references from all sources
+          3. Use the most comprehensive description
+          4. Mark consensus=true if 3+ reviewers agree
+
+          Return valid JSON with this schema:
+          {
+            "findings": [
+              {
+                "title": "Short title (max 60 chars)",
+                "files": ["path/file.rb:10-20"],
+                "reviewers": ["gemini-2.5-flash", "claude-3.5-sonnet"],
+                "consensus": false,
+                "priority": "high|medium|low|critical",
+                "finding": "Description of the issue",
+                "context": "Why this matters"
+              }
+            ]
+          }
+
+          IMPORTANT:
+          - When only one report: extract all findings as-is with that reviewer
+          - When multiple reports: deduplicate findings that describe the same issue
+          - When multiple reviewers find the same issue, list ALL of them in reviewers array
+          - Merge file arrays from all sources for each finding
+          - Return ONLY the JSON, no markdown code fences
+        PROMPT
+
+        class << self
+          def system_prompt(prompt_name)
+            system_prompt_cache_mutex.synchronize do
+              system_prompt_cache.fetch(prompt_name) do
+                prompt_path = resolve_prompt_path_cached(prompt_name)
+
+                if prompt_path && File.exist?(prompt_path)
+                  system_prompt_cache[prompt_name] = File.read(prompt_path)
+                else
+                  system_prompt_cache[prompt_name] = FALLBACK_SYSTEM_PROMPT
+                end
+              end
+            end
+          end
+
+          def resolve_prompt_path_cached(prompt_name)
+            prompt_path_cache[prompt_name] ||= begin
+              nav_result = begin
+                `ace-nav prompt://#{prompt_name} 2>/dev/null`.strip
+              rescue
+                ""
+              end
+
+              return nav_result unless nav_result.empty?
+
+              File.join(__dir__, "../../../../handbook/prompts", prompt_name)
+            end
+          end
+
+          def clear_prompt_cache!
+            system_prompt_cache_mutex.synchronize do
+              @system_prompt_cache = {}
+            end
+            prompt_path_cache_mutex.synchronize do
+              @prompt_path_cache = {}
+            end
+          end
+
+          private
+
+          def system_prompt_cache
+            @system_prompt_cache ||= {}
+          end
+
+          def prompt_path_cache
+            @prompt_path_cache ||= {}
+          end
+
+          def system_prompt_cache_mutex
+            @system_prompt_cache_mutex ||= Mutex.new
+          end
+
+          def prompt_path_cache_mutex
+            @prompt_path_cache_mutex ||= Mutex.new
+          end
+        end
+
         # Maximum combined report size before truncation (characters)
         MAX_COMBINED_SIZE = 200_000
 
@@ -138,51 +229,14 @@ module Ace
         #
         # @return [String] System prompt content
         def load_system_prompt
-          prompt_name = "synthesize-feedback.system.md"
-          prompt_path = resolve_prompt_path(prompt_name)
-
-          if File.exist?(prompt_path)
-            File.read(prompt_path)
-          else
-            fallback_synthesis_prompt
-          end
+          self.class.system_prompt("synthesize-feedback.system.md")
         end
 
         # Fallback synthesis prompt (used when prompt file not found)
         #
         # @return [String] Basic synthesis prompt
         def fallback_synthesis_prompt
-          <<~PROMPT
-            Synthesize feedback from code review reports into unique findings.
-
-            For each unique issue found:
-            1. Track which reviewers identified it (by their model names)
-            2. Merge file references from all sources
-            3. Use the most comprehensive description
-            4. Mark consensus=true if 3+ reviewers agree
-
-            Return valid JSON with this schema:
-            {
-              "findings": [
-                {
-                  "title": "Short title (max 60 chars)",
-                  "files": ["path/file.rb:10-20"],
-                  "reviewers": ["gemini-2.5-flash", "claude-3.5-sonnet"],
-                  "consensus": false,
-                  "priority": "high|medium|low|critical",
-                  "finding": "Description of the issue",
-                  "context": "Why this matters"
-                }
-              ]
-            }
-
-            IMPORTANT:
-            - When only one report: extract all findings as-is with that reviewer
-            - When multiple reports: deduplicate findings that describe the same issue
-            - When multiple reviewers find the same issue, list ALL of them in reviewers array
-            - Merge file arrays from all sources for each finding
-            - Return ONLY the JSON, no markdown code fences
-          PROMPT
+          FALLBACK_SYSTEM_PROMPT
         end
 
         # Build user prompt for report synthesis
@@ -522,16 +576,7 @@ module Ace
         # @param prompt_name [String] Prompt filename
         # @return [String] Resolved file path
         def resolve_prompt_path(prompt_name)
-          # Try ace-nav first if available
-          nav_result = begin
-            `ace-nav prompt://#{prompt_name} 2>/dev/null`.strip
-          rescue
-            ""
-          end
-          return nav_result unless nav_result.empty?
-
-          # Fallback to direct path
-          File.join(__dir__, "../../../../handbook/prompts", prompt_name)
+          self.class.resolve_prompt_path_cached(prompt_name)
         end
 
         # Get default synthesis model from config

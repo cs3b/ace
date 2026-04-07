@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.3] - 2026-04-07
+
+### Changed
+- Added linked GitHub issue metadata handling as a single ownership model and kept task/task manager sync behavior aligned with linked-task life cycle updates.
+
+### Fixed
+- Fixed GitHub sync dispatch and manual sync verification paths by routing through the reusable sync flow and tightening demo-task linkage checks.
+
+### Technical
+- Expanded test coverage around GitHub sync assertions, frontmatter ownership validation, and workflow-level linked issue behavior.
+
 ## [0.33.2] - 2026-04-07
 
 ### Changed
