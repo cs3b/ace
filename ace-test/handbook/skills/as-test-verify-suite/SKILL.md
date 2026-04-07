@@ -24,7 +24,6 @@ integration:
     - opencode
     - pi
 assign:
-  source: wfi://test/verify-suite
   steps:
     - name: verify-test-suite
       description: Run package test suites with profiling to verify correctness and performance
@@ -35,6 +34,19 @@ assign:
           - "verify tests"
           - "test changes"
           - "check tests"
+      prerequisites:
+        - name: work-on-task
+          strength: recommended
+          reason: "Should have code changes to verify"
+      produces: [test-results]
+      consumes: [code-changes]
+      context:
+        default: null
+        reason: "Test execution needs access to project environment"
+      when_to_skip:
+        - "No code changes that could affect tests (documentation-only)"
+        - "Tests were already run and profiled in a previous step"
+      effort: light
       tags: [testing, verification, performance]
 skill:
   kind: workflow
