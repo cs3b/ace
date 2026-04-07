@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.42.8)
+    ace-assign (0.44.3)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.41.3)
+    ace-bundle (0.41.4)
       ace-compressor (~> 0.24)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -166,7 +166,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.27.8)
+    ace-lint (0.28.1)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -196,8 +196,8 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.13.9)
-      ace-assign (~> 0.42)
+    ace-overseer (0.13.10)
+      ace-assign (~> 0.44)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -370,7 +370,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.6.2)
+    ace-test (0.6.3)
 
 PATH
   remote: ace-tmux
