@@ -35,6 +35,8 @@ scenes:
   - type: >-
       export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*demo-github-sync-task*.s.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
     sleep: 2s
+  - type: printf 'DEMO_TASK_REF=%s\n' "$DEMO_TASK_REF"
+    sleep: 2s
   - type: ace-task show "$DEMO_TASK_REF"
     sleep: 4s
   - type: >-
@@ -49,5 +51,18 @@ scenes:
   - type: >-
       gh issue view "$DEMO_ISSUE_NUMBER" -R cs3b/ace --json number,state,title,url,closed --jq '{number, state, closed, title, url}'
     sleep: 4s
+verify:
+  require_vars:
+  - DEMO_ISSUE_NUMBER
+  - DEMO_TASK_REF
+  forbid_output:
+  - GitHub sync warning
+  - "Task '' not found"
+  - No demo task file found
+  - HTTP 404
+  assert_commands:
+  - test -n "$DEMO_ISSUE_NUMBER"
+  - test -n "$DEMO_TASK_REF"
+  - gh issue view "$DEMO_ISSUE_NUMBER" -R cs3b/ace --json state,closed --jq '.state == "CLOSED" and .closed == true'
 teardown:
 - cleanup
