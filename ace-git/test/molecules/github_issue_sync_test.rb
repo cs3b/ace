@@ -56,7 +56,11 @@ class GithubIssueSyncTest < AceGitTestCase
           success: true,
           stdout: {
             "state" => "CLOSED",
-            "comments" => [{"id" => "12345", "body" => existing_body}],
+            "comments" => [{
+              "id" => "IC_kwDOPzGJW876eMHw",
+              "url" => "https://github.com/cs3b/ace/issues/276#issuecomment-12345",
+              "body" => existing_body
+            }],
             "labels" => [{"name" => "ace:tracked"}]
           }.to_json,
           stderr: "",
