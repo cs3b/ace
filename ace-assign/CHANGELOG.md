@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.6] - 2026-04-07
+
+### Fixed
+- Hardened the shipped `wfi://assign/drive` and `as-assign-drive` skill contract so fork waits remain inside the live drive loop and subtree completion immediately resumes the parent queue instead of stopping at a waiting boundary.
+
 ## [0.42.4] - 2026-04-05
 
 ### Fixed

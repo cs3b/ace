@@ -3,7 +3,7 @@ doc-type: workflow
 title: Create Assignment Workflow
 purpose: workflow instruction for smart public create UX that renders hidden specs and calls deterministic ace-assign create
 ace-docs:
-  last-updated: 2026-03-18
+  last-updated: 2026-04-07
   last-checked: 2026-03-21
 ---
 
@@ -156,6 +156,8 @@ If `--run` is present, hand off to drive as the last step:
 /as-assign-drive <assignment-id>
 ```
 
+`/as-assign-drive` is a run-until-complete-or-blocked handoff, not a one-step progress check. Once handed off, it should keep driving until the assignment is actually complete or reaches an explicit blocker/failure stop condition.
+
 If no workable step exists, keep creation successful and report why drive cannot continue.
 
 ### 7. Report Result
@@ -203,6 +205,7 @@ Step 010: ...
 - Capability skills remain excluded from assign composition
 - Skill-backed steps still expand through runtime `assign.source` metadata
 - `--run` (when requested) triggers drive handoff as the final workflow step
+- Drive handoff semantics are run-until-complete-or-blocked, not stop-after-first-progress
 
 ## Verification
 
