@@ -17,6 +17,7 @@ PASS when:
     - `results/tc/02/output.sequence.md` exists and contains both `<suggestions-report>` and `<source-revised>`
     - `results/tc/02/suggestions.report.md` exists and is non-empty
     - `results/tc/02/source.revised.md` exists and is non-empty
+    - the copied final artifacts are the source of truth for synthesis success, not only the run-tree listing
   - recorded external failure path:
     - `results/tc/02/run.exit` is non-zero
     - `results/tc/02/run.stderr` mentions `Final synthesis failed`
