@@ -26,6 +26,6 @@ requires:
 
 setup:
   - git-init
-  - run: "echo $PROJECT_ROOT_PATH > .monorepo-root"
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
-  - run: "mkdir -p .ace/test && cp $PROJECT_ROOT_PATH/.ace/test/suite.yml .ace/test/suite.yml"
+  - run: "echo $ACE_E2E_SOURCE_ROOT > .monorepo-root"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
+  - run: "mkdir -p .ace/test && cp $ACE_E2E_SOURCE_ROOT/.ace/test/suite.yml .ace/test/suite.yml"

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Updated `TS-TEST-002` E2E setup and verification to use `ACE_E2E_SOURCE_ROOT` for repo fixtures and to validate suite execution through captured command output rather than a synthetic `command.txt` artifact.
+
 ## [0.19.3] - 2026-04-07
 
 ### Technical
