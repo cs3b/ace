@@ -123,7 +123,7 @@ ace-task create "Implement backoff calculator" --child-of 8r3
 ```bash
 ace-task list                      # list all tasks
 ace-task show 8r3                  # show task details
-ace-task show 8r3 --format full    # show with full spec content
+ace-task show 8r3 --content        # show full spec content
 ```
 
 ## 3. Review the spec

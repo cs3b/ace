@@ -3,7 +3,7 @@
 ## Goal
 
 Follow quick-start section 2 ("Draft a task from the idea") and verify that `ace-task`
-creates a task spec, returns success, and can be shown by its resolved ID.
+creates a task spec, returns success, and can be shown by its resolved ID using the current CLI contract.
 
 ## Workspace
 
@@ -33,7 +33,7 @@ Save all output to `results/tc/02/`.
    ```
 4. Show the created task with full output capture:
    ```bash
-   ace-task show "$task_id" --format full \
+   ace-task show "$task_id" --content \
      > results/tc/02/show.stdout 2> results/tc/02/show.stderr
    echo $? > results/tc/02/show.exit
    ```

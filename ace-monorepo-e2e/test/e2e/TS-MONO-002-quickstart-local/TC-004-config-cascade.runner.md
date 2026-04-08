@@ -21,7 +21,7 @@ Save all output to `results/tc/04/`.
    echo .ace/git/commit.yml > results/tc/04/override-path.txt
    cat .ace/git/commit.yml > results/tc/04/override-content.txt
    ```
-2. Run `ace-config diff --file .ace/git/commit.yml` to confirm local override visibility.
+2. Run `ace-config diff --file .ace/git/commit.yml` as diagnostic evidence only.
    ```bash
    ace-config diff --file .ace/git/commit.yml \
      > results/tc/04/config-diff.stdout 2> results/tc/04/config-diff.stderr
@@ -58,5 +58,6 @@ Save all output to `results/tc/04/`.
 ## Constraints
 
 - Use only `ace-config`, `ace-handbook`, and `ruby` command-line tools
+- Treat `cascade-resolution.stdout` as the source of truth for effective override resolution. `ace-config diff` is diagnostic only and may report that no shipped example file exists for this project override path.
 - Do not fabricate output.
 - Keep all output artifacts in `results/tc/04/`.
