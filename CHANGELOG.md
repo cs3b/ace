@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.9**: Hardened the remaining assign E2E scenarios by capturing lifecycle structure output directly and making hierarchy runs resolve `ace-assign` consistently inside the sandbox.
+- **ace-git-worktree v0.19.8**: Updated the remaining worktree E2E scenarios to use the current create/list command forms, including explicit branch-aware create syntax and explicit task-aware list filters.
+- **ace-idea v0.18.7**: Added direct archive filesystem proof to the idea-lifecycle E2E so archive success is validated from the moved `.idea.s.md` file, not only CLI output.
+- **ace-lint v0.28.3**: Corrected the no-report E2E oracle to compare lint cache snapshots instead of assuming the cache root never exists.
+- **ace-overseer v0.13.12**: Switched prune-workflow E2E coverage to the current `ace-task update <ref> --set status=done` contract and explicit prune safety/completion evidence.
+- **ace-sim v0.13.7**: Corrected the validate-idea E2E success oracle to use copied final synthesis artifacts directly.
+- **ace-task v0.33.5**: Fixed the task smoke E2E to reuse the exact created task reference for `ace-task show`.
 - **ace-assign v0.44.8**: Updated `TS-ASSIGN-002` renumbering E2E coverage to capture a real descendant-cascade renumber event with explicit before/after subtree listings and grandchild metadata evidence.
 - **ace-assign v0.44.7**: Updated `TS-ASSIGN-002` auto-completion E2E coverage to use the current cross-assignment `finish --assignment <id>` contract instead of positional step targeting.
 - **ace-assign v0.44.6**: Updated `TS-ASSIGN-002` hierarchy E2E coverage to match the current CLI error contract and require real `.st.md` metadata evidence for audit-trail checks.

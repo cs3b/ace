@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.44.8)
+    ace-assign (0.44.9)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.7)
+    ace-git-worktree (0.19.8)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -156,7 +156,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.18.6)
+    ace-idea (0.18.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -166,7 +166,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.28.2)
+    ace-lint (0.28.3)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -196,7 +196,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.13.11)
+    ace-overseer (0.13.12)
       ace-assign (~> 0.44)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.19)
@@ -257,7 +257,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.13.6)
+    ace-sim (0.13.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -335,7 +335,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.33.4)
+    ace-task (0.33.5)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
