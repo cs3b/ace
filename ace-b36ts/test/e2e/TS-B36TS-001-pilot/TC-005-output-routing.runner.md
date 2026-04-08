@@ -12,6 +12,7 @@ Save all output to `results/tc/05/` using this exact naming contract:
 - `default.stdout`, `default.stderr`, `default.exit`
 - `quiet.stdout`, `quiet.stderr`, `quiet.exit`
 - `verbose.stdout`, `verbose.stderr`, `verbose.exit`
+- `routing-notes.md`
 
 ## Constraints
 
@@ -20,5 +21,5 @@ Save all output to `results/tc/05/` using this exact naming contract:
 - Use the same command shape each time:
   - `ace-b36ts encode <timestamp> [mode-flag]`
 - Capture stdout/stderr/exit separately for each mode.
+- Write `routing-notes.md` explicitly before leaving the goal. It must compare at least one observable difference between modes.
 - Do not fabricate output — all captures must come from real tool execution.
-- Include one short note file `routing-notes.md` summarizing observed differences.

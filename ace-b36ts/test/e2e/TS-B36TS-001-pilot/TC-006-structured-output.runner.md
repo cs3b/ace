@@ -17,7 +17,8 @@ Save all output to `results/tc/06/` with this contract:
 ## Constraints
 
 - Use this deterministic command intent:
-  - Generate three IDs with JSON output using `--count 3 --format day --json` and a fixed timestamp.
+  - generate three IDs with JSON output using `--count 3 --format day --json` and a fixed timestamp.
 - Use `jq` directly against the generated JSON file (no sed/awk/manual parsing).
 - Ensure extracted values come from actual `jq` execution.
+- Write `integration-notes.md` explicitly before leaving the goal. It must state that `jq` consumed `encode.json` directly.
 - Do not fabricate output.
