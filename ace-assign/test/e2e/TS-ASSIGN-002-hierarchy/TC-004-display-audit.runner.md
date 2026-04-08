@@ -13,6 +13,7 @@ Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/create-audit.stdout`, `.exit` — audit trail assignment creation
 - `results/tc/04/child-of-metadata.stdout` — child_of audit trail evidence
 - `results/tc/04/inject-sibling.stdout` — sibling injection output
+- `results/tc/04/assignment-id-audit.txt` — captured assignment ID for audit lookups
 - `results/tc/04/injected-after-metadata.stdout` — injected_after audit trail
 - `results/tc/04/renumbered-metadata.stdout` — renumbered_from/renumbered_at audit trail
 - `results/tc/04/dynamic-metadata.stdout` — dynamic add audit trail
@@ -39,12 +40,13 @@ Save all output to `results/tc/04/`. Capture:
   - `renumbered-metadata.stdout` must contain metadata from `010.03-*.st.md` and include `renumbered_from`/`renumbered_at`
   - `dynamic-metadata.stdout` must contain metadata from dynamic step file (`011-*.st.md` in this fixture flow) and include `added_by: dynamic`
 - Capture renumbered metadata before marking parent done / adding dynamic step. Do not overwrite `renumbered-metadata.stdout` afterward.
+- Capture real step-file metadata into the named artifacts. Do not use `ace-assign add` stdout as metadata evidence.
 - Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
 - Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
 - Verify renumbered step has `renumbered_from` and `renumbered_at` (ISO8601 format).
 - Mark parent done, then add dynamic step using plain add (NO `--after`, NO `--child`):
   - `ace-assign add "dynamic-step" --assignment "<assignment-id>"`
-  - This step must create a top-level dynamic step (e.g., `011-*.st.md`) with `added_by: dynamic`.
+- This step must create a top-level dynamic step (e.g., `011-*.st.md`) with `added_by: dynamic`.
 - If `--after` is used for this step, the step is injection (`added_by: injected_after:*`) and does not satisfy dynamic audit.
 - If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
 - All artifacts must come from real tool execution.
