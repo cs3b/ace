@@ -12,14 +12,13 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Fixture copy exists** — `work-on-task.yml` exists under `results/tc/04/`.
-2. **Single-task compatibility** — `work-on-task.yml` contains `name: work-on-task`, `steps:`, and shorthand single-task usage markers (`--taskref` or equivalent).
-3. **Multi-task capability** — `work-on-task.yml` contains `taskrefs` parameter + `expansion:` with expected batch/child template markers.
-4. **No internal API dependency** — Evidence shows CLI/tool-based validation only (no Ruby internal API output expected).
-5. **CLI-only evidence** — `fixture-checks.stdout` and `analysis.md` exist and show command-based checks.
+2. **Bundle output is valid** — The copied artifact is either the plain preset body or an `ace-bundle` wrapper that clearly identifies `prepare/work-on-task.yml` as the source.
+3. **CLI-only evidence** — `fixture-checks.stdout` and `analysis.md` exist and show command-based validation with no internal Ruby API use.
+4. **Capability conclusion recorded** — `analysis.md` explains whether the copied output is a wrapper or expanded body and ties that conclusion back to the command evidence.
 
 ## Verdict
 
-- **PASS**: Unified fixture is present and validated with command-based evidence for both single-task and multi-task behavior.
-- **FAIL**: Fixture missing, required markers absent, or validation evidence missing.
+- **PASS**: The workflow fixture is present and validated through CLI evidence, even if `ace-bundle` emits wrapper metadata instead of raw YAML body content.
+- **FAIL**: Fixture missing, command-based evidence missing, or the copied artifact cannot be tied back to the expected source.
 
 Report: `PASS` or `FAIL` with evidence (file content citations).

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Updated `TS-ASSIGN-001` E2E expectations to match the current assignment lifecycle, fork-status output, bundled prepare fixture shape, and drive-policy evidence surface.
+
 ## [0.44.3] - 2026-04-07
 
 ### Fixed

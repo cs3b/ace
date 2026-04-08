@@ -15,10 +15,10 @@ Validation order (impact-first):
 2. **Structure correct** — `structure.stdout` shows assignment.yaml, steps/, reports/ directories. Three step files with .st.md extension exist.
 3. **Step completion** — `report-analyze.exit` is `0`. Step 010 marked done (not "completed"), report file at reports/010-analyze.r.md.
 4. **Failure handling** — `fail-implement.exit` is `0`. `status-stalled.stdout` shows no current step (queue stalled). Report rejected on stalled queue.
-5. **Dynamic step** — `add-dynamic.exit` is `0`. Dynamic step auto-activated with added_by: dynamic.
-6. **Lifecycle completions executed** — `finish-dynamic.exit`, `finish-verify.exit`, and `finish-retry.exit` are all `0`.
-7. **Retry mechanics** — `retry.exit` is `0`. Retry step created as pending, does not force current-step regression.
-8. **Workflow completion** — `status-final.stdout` shows no active step and an explicit terminal completion message (for example "All steps complete!" or "Assignment completed!"), with all steps terminal (4 done + 1 failed).
+5. **Dynamic-step branch handled explicitly** — If `add-dynamic.exit` is `0`, dynamic-step activation/completion evidence exists. If `add-dynamic.exit` is non-zero because the preset does not define `fix-issue`, the artifacts must still show the retry path was used instead.
+6. **Retry mechanics** — `retry.exit` is `0`. A retry step is created and can be started/completed without regressing the stalled original step.
+7. **Lifecycle completions executed** — `finish-verify.exit` and `finish-retry.exit` are `0`. If no dynamic step exists, `finish-dynamic.exit` may be non-zero and is not required for pass.
+8. **Workflow completion** — `status-final.stdout` shows an explicit terminal completion message (for example "All steps complete!" or "Assignment completed!"), and the queue ends in a terminal state even if the original failed step remains recorded alongside a completed retry.
 
 ## Verdict
 

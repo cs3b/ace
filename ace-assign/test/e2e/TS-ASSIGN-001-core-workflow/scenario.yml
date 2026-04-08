@@ -39,10 +39,10 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: |
-      ROOT_PATH="${PROJECT_ROOT_PATH:-$(pwd)}"
+      ROOT_PATH="${ACE_E2E_SOURCE_ROOT:-${PROJECT_ROOT_PATH:-$(pwd)}}"
       mkdir -p ace-assign/handbook/workflow-instructions/assign .claude/skills/as-assign-drive
       if [ ! -f "$ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" ]; then
         echo "Source workflow file not found: $ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" >&2
