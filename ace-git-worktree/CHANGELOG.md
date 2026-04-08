@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Relaxed `TS-WORKTREE-002` branch-name verification so task-aware worktree creation accepts the current task-derived branch naming contract instead of requiring the full task ID string.
+
 ## [0.19.4] - 2026-03-29
 
 ### Technical

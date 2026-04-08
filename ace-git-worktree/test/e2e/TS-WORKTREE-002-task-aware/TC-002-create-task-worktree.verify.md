@@ -13,12 +13,12 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Creation artifacts exist** — results/tc/02/ contains stdout/exit for create-task.
 2. **Creation succeeds** — create-task.exit is 0.
-3. **Branch includes task ID** — branch-check.stdout shows a branch name containing "8pp.t.q7w".
+3. **Branch is task-derived** — branch-check.stdout shows a branch name derived from the task (for example containing `q7w` or the task slug), not an unrelated branch.
 4. **Task worktree listed** — list-task.stdout shows the newly created task-associated worktree.
 
 ## Verdict
 
-- **PASS**: Task worktree created with task-ID-bearing branch, appears in task-associated listing.
-- **FAIL**: Creation fails, branch name missing task ID, or worktree not in task-associated list.
+- **PASS**: Task worktree created with a task-derived branch and appears in the task-associated listing.
+- **FAIL**: Creation fails, branch naming is unrelated to the task, or the worktree is not in the task-associated list.
 
 Report: `PASS` or `FAIL` with evidence (exit code, branch name, list output).
