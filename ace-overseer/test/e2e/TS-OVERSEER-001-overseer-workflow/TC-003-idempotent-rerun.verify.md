@@ -12,13 +12,14 @@ Validation order (impact-first):
 - Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 Checks:
-1. **Artifacts exist** — results/tc/03/ contains stdout/exit and count evidence.
-2. **Zero exit code** — Re-run succeeded.
-3. **No duplicates** — Exactly 1 worktree for task 8pp.t.q7w, exactly 1 tmux window.
+1. **Artifacts exist** — `results/tc/03/` contains stdout/exit and count evidence.
+2. **Zero exit code** — re-run succeeded.
+3. **No duplicate task state** — exactly 1 worktree for task `8pp.t.q7w` and exactly 1 task-specific tmux window for `q7w`.
+4. **Baseline shell window allowed** — an additional non-task shell window in the same tmux session does not count as a duplicate.
 
 ## Verdict
 
-- **PASS**: Re-run succeeded without creating duplicates.
-- **FAIL**: Duplicates created or command failed.
+- **PASS**: Re-run succeeded without creating duplicate task windows or duplicate worktrees.
+- **FAIL**: Duplicate task windows/worktrees created or command failed.
 
-Report: `PASS` or `FAIL` with evidence (counts).
+Report: `PASS` or `FAIL` with evidence (counts, window names).
