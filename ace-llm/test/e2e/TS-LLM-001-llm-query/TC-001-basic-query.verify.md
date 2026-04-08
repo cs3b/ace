@@ -11,12 +11,12 @@ Validation order (impact-first):
    one `*.stderr`, and one `*.exit` file.
 2. Exit code evidence is explicit and numeric in `*.exit`.
 3. Output evidence in `*.stdout`/`*.stderr` shows either:
-   - a valid model response, or
+   - a substantive non-empty model response, or
    - a clear provider auth/config failure message.
 4. Evidence files must correspond to the Goal 1 command execution, not unrelated
    setup commands.
 
 ## Verdict
 
-- **PASS**: Artifacts clearly show real execution outcome.
+- **PASS**: Artifacts clearly show real execution outcome, including a substantive provider response even if the model answered generically.
 - **FAIL**: Missing captures or ambiguous/no output.
