@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.8**: Updated `TS-ASSIGN-002` renumbering E2E coverage to capture a real descendant-cascade renumber event with explicit before/after subtree listings and grandchild metadata evidence.
 - **ace-assign v0.44.7**: Updated `TS-ASSIGN-002` auto-completion E2E coverage to use the current cross-assignment `finish --assignment <id>` contract instead of positional step targeting.
 - **ace-assign v0.44.6**: Updated `TS-ASSIGN-002` hierarchy E2E coverage to match the current CLI error contract and require real `.st.md` metadata evidence for audit-trail checks.
 - **ace-git-worktree v0.19.7**: Corrected `TS-WORKTREE-001` lifecycle E2E coverage to create new worktrees beneath `.ace-wt/` and treat explicit missing-path filesystem captures as valid no-op/delete evidence.
