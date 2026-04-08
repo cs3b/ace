@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.44.5)
+    ace-assign (0.44.6)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.6)
+    ace-git-worktree (0.19.7)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -184,7 +184,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.33.2)
+    ace-llm (0.33.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
