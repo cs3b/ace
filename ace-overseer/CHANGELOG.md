@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Updated the prune-workflow E2E to use the current `ace-task update <ref> --set status=done` contract and to verify prune results against explicit safety or completion evidence.
 - Updated `TS-OVERSEER-001` sandbox setup to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of the sandbox-root `PROJECT_ROOT_PATH`.
 
 ## [0.13.10] - 2026-04-07

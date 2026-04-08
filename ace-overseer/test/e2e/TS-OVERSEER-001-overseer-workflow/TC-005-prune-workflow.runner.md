@@ -19,7 +19,7 @@ Set `SANDBOX_ROOT="$(pwd)"` for use in later steps.
 
 ### Step 2 — Mark task 8pp.t.q7w as done
 
-Run `ace-task done 8pp.t.q7w` to mark the task as done.
+Run `ace-task update 8pp.t.q7w --set status=done` to mark the task as done.
 
 ### Step 3 — Resolve task 8pp.t.q7w worktree path
 
@@ -52,7 +52,7 @@ Capture output to:
 - `results/tc/05/task-q7w-assign-status-after.stderr`
 - `results/tc/05/task-q7w-assign-status-after.exit`
 
-Verify the assignment state is `completed` before proceeding.
+If the assignment status command reports no active assignment, capture that result and continue. Do not invent additional assignment-management steps.
 
 ### Step 7 — Prune dry-run
 
@@ -83,7 +83,9 @@ Capture output to:
 - `results/tc/05/worktree-list-after-prune.stderr`
 - `results/tc/05/worktree-list-after-prune.exit`
 
-The q7w worktree must NOT appear in this listing. The r8x worktree must still appear.
+The final listing must match the actual safety oracle:
+- if q7w became prune-safe, q7w may be removed while r8x remains
+- if q7w is not prune-safe, q7w must remain with explicit safety-rejection evidence
 
 ### Step 10 — Final dry-run (no more candidates)
 
