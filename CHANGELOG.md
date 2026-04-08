@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-llm v0.32.2**: Corrected role fallback execution so each fallback provider rebuilds its own preset and CLI options instead of inheriting Codex-specific flags or suffixes from earlier attempts.
+- **ace-llm-providers-cli v0.27.3**: Threaded sandbox subprocess environment and working-directory resolution through Codex and Gemini CLI adapters so provider subprocesses stay inside the E2E execution root.
+
+### Added
+- **ace-test-runner-e2e v0.30.0**: Added explicit source-root threading for E2E setup (`ACE_E2E_SOURCE_ROOT`) plus separate runner/verifier provider roles in pipeline configuration.
+
+### Changed
+- **ace-test-runner-e2e v0.30.0**: Hardened verifier prompt bundling and report parsing so large artifact sets and compact aggregate verifier outputs produce diagnosable results instead of empty reports.
+
+### Fixed
 - **ace-demo v0.24.0**: Added semantic YAML/asciinema demo verification with classified failure reports in `.ace-local/demo/`, and made `ace-demo record` fail closed instead of uploading broken recordings.
 - **ace-assign v0.42.5**: Hardened `wfi://assign/drive` and related handoff docs so `/as-assign-drive` treats intermediate progress as non-terminal and resumes paused assignments with runnable pending work.
 - **ace-assign v0.42.6**: Tightened the assignment-drive contract so waiting on `fork-run` stays inside the live drive loop and subtree completion immediately resumes the parent assignment queue.
