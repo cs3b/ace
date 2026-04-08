@@ -34,10 +34,10 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - run: |
       # Copy the quick-start doc into sandbox for reference
-      cp "$PROJECT_ROOT_PATH/docs/quick-start.md" quick-start.md
+      cp "$ACE_E2E_SOURCE_ROOT/docs/quick-start.md" quick-start.md
   - run: |
       # Follow quick-start steps 3-4: initialize config and sync handbook
       ace-config init
