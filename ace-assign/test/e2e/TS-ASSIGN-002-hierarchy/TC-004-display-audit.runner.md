@@ -32,6 +32,8 @@ Save all output to `results/tc/04/`. Capture:
 - Step files are markdown files under `"$CACHE_BASE/<assignment-id>/steps/"` with `.st.md` extension (not `.yaml`).
 - Derive `<assignment-id>` from real command output and/or `results/tc/04/assignment-id-audit.txt` captured during this TC.
 - Resolve the audit `steps/` directory once and save it to `audit-steps-dir.txt`; use that exact directory for all metadata reads.
+- Treat `create-audit.stdout` as the source of truth for the audit assignment id when writing `assignment-id-audit.txt` and resolving `audit-steps-dir.txt`.
+- Before each metadata capture, confirm the resolved `audit-steps-dir.txt` path still exists. If it does not, write explicit failure output to the target artifact instead of silently omitting the file.
 - For metadata checks, read the concrete step files by number prefix, e.g.:
   - child: `010.01-*.st.md`
   - injected sibling: `010.02-*.st.md` immediately after sibling injection
@@ -47,10 +49,16 @@ Save all output to `results/tc/04/`. Capture:
 - Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
 - Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
 - Verify the renumbered step capture targets the actual shifted child after sibling injection and has `renumbered_from` and `renumbered_at` (ISO8601 format).
-- Mark parent done, then add dynamic step using plain add (NO `--after`, NO `--child`):
-  - `ace-assign add "dynamic-step" --assignment "<assignment-id>"`
+- Mark parent done, then add the dynamic step using the current CLI contract with a YAML file (NO `--after`, NO `--child`):
+  - write `results/tc/04/dynamic.yaml`
+  - run `ace-assign add --yaml results/tc/04/dynamic.yaml --assignment "<assignment-id>"`
 - This step must create a top-level dynamic step (e.g., `011-*.st.md`) with `added_by: dynamic`.
 - If `--after` is used for this step, the step is injection (`added_by: injected_after:*`) and does not satisfy dynamic audit.
-- For `dynamic-metadata.stdout`, select the new top-level dynamic step by its real step file and `added_by: dynamic`, not by a guessed path that might be stale after renumbering.
+- After dynamic add, capture a fresh listing of the resolved steps dir.
+- For `dynamic-metadata.stdout`, select the new top-level dynamic step from the post-add listing by real file content:
+  - top-level `.st.md` file
+  - `name: dynamic-step`
+  - `added_by: dynamic`
+- Do not guess the file path from a stale assignment id or stale number alone.
 - If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
 - All artifacts must come from real tool execution.
