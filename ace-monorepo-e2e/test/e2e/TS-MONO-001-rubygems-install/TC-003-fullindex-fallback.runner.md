@@ -49,6 +49,7 @@ echo $? > results/tc/03/fullindex.exit
      GEM_HOME="$PWD/results/tc/03/.gem" \
      PROJECT_ROOT_PATH="$PWD" \
      bundle list > results/tc/03/bundle-list.stdout 2> results/tc/03/bundle-list.stderr
+   echo $? > results/tc/03/bundle-list.exit
    env -i HOME="$HOME" PATH="$PATH" \
      BUNDLE_GEMFILE="$PWD/Gemfile" \
      BUNDLE_APP_CONFIG="$PWD/results/tc/03/.bundle/config" \
@@ -56,6 +57,7 @@ echo $? > results/tc/03/fullindex.exit
      GEM_HOME="$PWD/results/tc/03/.gem" \
      PROJECT_ROOT_PATH="$PWD" \
      bundle env > results/tc/03/bundle-env-install.stdout 2> results/tc/03/bundle-env-install.stderr
+   echo $? > results/tc/03/bundle-env-install.exit
    ```
    - Verify ace gem resolution freshness against RubyGems and write artifacts:
    ```bash
@@ -129,6 +131,7 @@ end
 RUBY
 echo $? > results/tc/03/version-check.exit
 ```
+5. If `fullindex.exit` is `0`, the success branch must leave `bundle-list.stdout` and `version-check.stdout` on disk. If either proof command fails, still write its `.exit` file and preserve stderr/stdout so the verifier sees a proof-generation failure instead of a missing artifact.
 
 ## Constraints
 
