@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Corrected the basic-query E2E runner input to use explicit `provider:model` invocation with real prompt text.
+- Switched the model-selection E2E runner away from environment-specific OpenAI auth assumptions so Goal 2 exercises the active provider stack.
 
 
 ### Fixed

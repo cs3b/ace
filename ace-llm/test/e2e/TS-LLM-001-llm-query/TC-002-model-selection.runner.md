@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-llm openai "Reply with token OK" --model gpt-4o-mini --format json`
+Run `ace-llm codex "Reply with token OK" --model gpt-5.4-mini --format json`
 and capture output that indicates requested model routing and response format.
 
 ## Workspace
