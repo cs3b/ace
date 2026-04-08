@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Aligned worktree lifecycle E2E setup with `ACE_E2E_SOURCE_ROOT`, pre-created the worktree parent path, and updated dry-run/remove expectations to match current behavior.
+- Corrected `TS-WORKTREE-001` lifecycle E2E coverage to create new worktrees beneath `.ace-wt/` and accept explicit missing-path filesystem evidence for dry-run, remove, and prune checks.
 
 
 ### Fixed

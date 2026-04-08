@@ -14,7 +14,7 @@ Validation order (impact-first):
 1. **Remove artifacts exist** — results/tc/05/ contains stdout/exit for remove and list-after.
 2. **Remove succeeds** — remove.exit is 0 for the final removal attempt captured for this goal.
 3. **Worktree gone from list** — list-after.stdout no longer includes the removed worktree.
-4. **Directory deleted** — fs-check.txt confirms the worktree directory no longer exists on disk.
+4. **Directory deleted** — fs-check.txt confirms the worktree directory no longer exists on disk. An explicit missing-path result such as `MISSING` is valid evidence.
 
 ## Verdict
 
