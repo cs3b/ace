@@ -19,8 +19,8 @@ Validation order (impact-first):
 ### Audit Trail
 4. **Child audit** — `child-of-metadata.stdout` shows `added_by: child_of:010` and `parent: "010"` from real step `.st.md` content.
 5. **Injection audit** — `injected-after-metadata.stdout` shows `added_by: injected_after:010.01` from injected step `.st.md`.
-6. **Renumbering audit** — `renumbered-metadata.stdout` shows `renumbered_from` with old number and `renumbered_at` with ISO8601 timestamp from renumbered step `.st.md`.
-7. **Dynamic audit** — `dynamic-metadata.stdout` shows `added_by: dynamic` (not `injected_after:*`).
+6. **Renumbering audit** — `renumbered-metadata.stdout` is non-empty and shows `renumbered_from` with old number and `renumbered_at` with ISO8601 timestamp from the real renumbered step `.st.md`.
+7. **Dynamic audit** — `dynamic-metadata.stdout` is non-empty and shows `added_by: dynamic` (not `injected_after:*`).
 8. **Artifact integrity** — `renumbered-metadata.stdout` and `dynamic-metadata.stdout` represent different steps (renumbered vs dynamic) and are not swapped.
 
 Path discipline for verdict:

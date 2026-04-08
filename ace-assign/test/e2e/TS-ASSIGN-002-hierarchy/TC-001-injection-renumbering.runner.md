@@ -8,6 +8,7 @@ Test child injection and subtree cascade renumbering in two phases: first prove 
 
 Save all output to `results/tc/01/`. Capture:
 - `results/tc/01/create.stdout`, `.exit` — assignment creation
+- `results/tc/01/steps-dir.txt` — resolved steps directory for the created assignment
 - `results/tc/01/child-inject-1.stdout`, `.exit` — first child injection
 - `results/tc/01/child-inject-2.stdout`, `.exit` — second child injection
 - `results/tc/01/child-inject-3.stdout`, `.exit` — third child injection
@@ -23,11 +24,13 @@ Save all output to `results/tc/01/`. Capture:
 ## Constraints
 
 - Create assignment from the fixture job file.
+- Resolve the created assignment's `steps/` directory once after create and save it to `steps-dir.txt`; use that exact directory for every later listing and metadata read in this TC.
 - Add child steps under 010 (`add --after 010 --child`): three children should become 010.01, 010.02, 010.03.
 - First renumber phase:
   - Inject sibling after 010.01 (`add --after 010.01`).
   - The new sibling becomes 010.02 and the old `child-b` shifts from 010.02 to 010.03.
-  - Capture the post-renumber listing and read the real `010.03-*.st.md` file into `renumbered-parent.stdout`.
+  - Capture the post-renumber listing from the resolved `steps/` directory after the injection command completes.
+  - Read the real shifted `child-b` step file into `renumbered-parent.stdout`; do not capture `child-c` or any stale pre-renumber path.
 - Cascade phase:
   - Add grandchild under the renumbered parent so it appears as `010.03.01`.
   - Capture `step-listing-before-cascade.stdout` after the grandchild exists.
@@ -35,4 +38,5 @@ Save all output to `results/tc/01/`. Capture:
   - Capture `step-listing-after-cascade.stdout` after the second sibling injection.
   - Read the real `010.04.01-*.st.md` file into `renumbered-grandchild.stdout`.
 - The cascade proof must come from the second sibling injection and the before/after listings, not inferred from grandchild creation alone.
+- If the shifted parent or grandchild file cannot be resolved unambiguously, fail the artifact lookup rather than writing metadata from the wrong step.
 - All artifacts must come from real tool execution.
