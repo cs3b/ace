@@ -66,13 +66,13 @@ llm:
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
     e2e-verifier:
-      - claude:haiku:low@ro
-      - gemini:flash-latest@ro
       - codex:mini:low@ro
+      - gemini:flash-latest@ro
+      - claude:haiku:low@ro
     e2e-reporter:
-      - claude:haiku:low@ro
-      - gemini:flash-latest@ro
       - codex:mini:low@ro
+      - gemini:flash-latest@ro
+      - claude:haiku:low@ro
 
     # --- Utility ---
     prompt-enhance: *utility
