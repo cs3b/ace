@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-search --json --type content "class Search" "$PROJECT_ROOT_PATH/ace-search/lib"`
+Run `ace-search --json --type content "class Search" "$ACE_E2E_SOURCE_ROOT/ace-search/lib"`
 and capture structured output evidence proving JSON mode behavior for content search.
 
 ## Workspace
@@ -19,4 +19,4 @@ Capture:
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/04/`.
 - Do not write outside the sandbox.
-- Search path must remain `$PROJECT_ROOT_PATH/ace-search/lib` for deterministic matches.
+- Search path must remain `$ACE_E2E_SOURCE_ROOT/ace-search/lib` for deterministic matches.

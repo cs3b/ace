@@ -2,7 +2,7 @@
 
 ## Goal
 
-Remove one of the worktrees created in Goal 2. Verify it is gone from both the worktree list and the filesystem.
+Remove one of the clean worktrees created in Goal 2. Verify it is gone from both the worktree list and the filesystem.
 
 ## Workspace
 
@@ -14,5 +14,8 @@ Save all output to `results/tc/05/`. Capture:
 ## Constraints
 
 - Using what you learned from Goal 1, invoke ace-git-worktree remove on one of the worktrees from Goal 2.
+- Prefer removing a clean worktree that was not modified by later goals. If the
+  tool reports local changes, capture that real output and rerun with the
+  documented force option so the final state is still verified.
 - After removal, run list and check the filesystem to confirm the worktree is gone.
 - All artifacts must come from real tool execution, not fabricated.

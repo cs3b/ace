@@ -102,9 +102,9 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param timestamp [String] Timestamp for sandbox directory naming
           # @param output [IO] Output stream for progress messages
-          # @return [Array(String, Hash, SetupExecutor)] [sandbox_path, env_vars, setup_executor] or [nil, nil, nil]
+          # @return [Array(String, Hash, SetupExecutor, String)] [sandbox_path, env_vars, setup_executor, error]
           def setup_sandbox_if_ts(scenario, timestamp, output)
-            return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
+            return [nil, nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
             setup_executor = Molecules::SetupExecutor.new
@@ -118,9 +118,9 @@ module Ace
             )
 
             unless result[:success]
-              output.puts "Warning: sandbox setup failed: #{result[:error]}"
+              output.puts "Setup failed: #{result[:error]}"
               setup_executor.teardown
-              return [nil, nil, nil]
+              return [nil, nil, nil, result[:error]]
             end
 
             env = result[:env]
@@ -128,7 +128,7 @@ module Ace
               env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_dir)
             end
 
-            [File.expand_path(sandbox_dir), env, setup_executor]
+            [File.expand_path(sandbox_dir), env, setup_executor, nil]
           end
 
           # Run a single test
@@ -150,20 +150,25 @@ module Ace
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
             if report_dir
               sandbox_path = report_dir.sub(/-reports\z/, "")
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
+              sandbox_path, env_vars, setup_executor, setup_error = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
             else
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+              sandbox_path, env_vars, setup_executor, setup_error = setup_sandbox_if_ts(scenario, timestamp, output)
             end
-            result = execute_scenario(
-              scenario,
-              cli_args: cli_args,
-              run_id: run_id,
-              test_cases: test_cases,
-              sandbox_path: sandbox_path,
-              env_vars: env_vars,
-              report_dir: report_dir,
-              verify: verify
-            )
+
+            if setup_error
+              result = setup_failure_result(scenario, setup_error)
+            else
+              result = execute_scenario(
+                scenario,
+                cli_args: cli_args,
+                run_id: run_id,
+                test_cases: test_cases,
+                sandbox_path: sandbox_path,
+                env_vars: env_vars,
+                report_dir: report_dir,
+                verify: verify
+              )
+            end
 
             # Use explicit report_dir when provided, otherwise compute from scenario
             expected_dir = report_dir || report_dir_for(scenario, timestamp)
@@ -171,7 +176,9 @@ module Ace
             if cli_provider?
               # CLI providers write reports via workflow at a deterministic path.
               # Do not fall back to older report directories from other runs.
-              result = if Dir.exist?(expected_dir)
+              result = if setup_failure_result?(result)
+                result.with_report_dir(expected_dir)
+              elsif Dir.exist?(expected_dir)
                 verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
               else
                 missing_agent_report_result(scenario, expected_dir, result)
@@ -250,16 +257,20 @@ module Ace
                     )
                   else
                     begin
-                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
-                      result = execute_scenario(
-                        scenario,
-                        cli_args: cli_args,
-                        run_id: run_id,
-                        test_cases: scenario_test_cases,
-                        sandbox_path: sandbox_path,
-                        env_vars: env_vars,
-                        verify: verify
-                      )
+                      sandbox_path, env_vars, setup_executor, setup_error = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
+                      result = if setup_error
+                        setup_failure_result(scenario, setup_error)
+                      else
+                        execute_scenario(
+                          scenario,
+                          cli_args: cli_args,
+                          run_id: run_id,
+                          test_cases: scenario_test_cases,
+                          sandbox_path: sandbox_path,
+                          env_vars: env_vars,
+                          verify: verify
+                        )
+                      end
                     ensure
                       setup_executor&.teardown
                     end
@@ -269,7 +280,9 @@ module Ace
 
                   if cli_provider?
                     expected_dir = report_dir_for(scenario, run_id || timestamp)
-                    result = if Dir.exist?(expected_dir)
+                    result = if setup_failure_result?(result)
+                      result.with_report_dir(expected_dir)
+                    elsif Dir.exist?(expected_dir)
                       verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
                     else
                       missing_agent_report_result(scenario, expected_dir, result)
@@ -435,6 +448,23 @@ module Ace
             kwargs[:verify] = verify if supports_verify
 
             @executor.execute(scenario, **kwargs)
+          end
+
+          def setup_failure_result(scenario, error)
+            now = Time.now
+            Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: "error",
+              test_cases: [],
+              summary: "Sandbox setup failed",
+              error: "Sandbox setup failed: #{error}",
+              started_at: now,
+              completed_at: now
+            )
+          end
+
+          def setup_failure_result?(result)
+            result.status == "error" && result.error.to_s.start_with?("Sandbox setup failed:")
           end
         end
       end

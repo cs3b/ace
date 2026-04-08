@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Aligned worktree lifecycle E2E setup with `ACE_E2E_SOURCE_ROOT`, pre-created the worktree parent path, and updated dry-run/remove expectations to match current behavior.
+
+
+### Fixed
 - Relaxed `TS-WORKTREE-002` branch-name verification so task-aware worktree creation accepts the current task-derived branch naming contract instead of requiring the full task ID string.
 
 ## [0.19.4] - 2026-03-29

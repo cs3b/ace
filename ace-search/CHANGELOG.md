@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Switched search E2E runners and sandbox bootstrap to use `ACE_E2E_SOURCE_ROOT` for repo-root package paths.
+
+
 ## [0.24.4] - 2026-03-29
 
 ### Technical

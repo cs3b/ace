@@ -11,9 +11,9 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-- **Both commit sets exist** — results/tc/04/ contains captures for delete and rename commits.
-- **Delete commit succeeds** — Exit code 0, git show shows deletion of the file.
-- **Rename commit succeeds** — Exit code 0, git show shows rename and modification.
+- **Both commit sets exist** — results/tc/04/ contains captures for delete and rename commits, including SHA captures.
+- **Delete commit succeeds** — Exit code 0, captured delete SHA is non-empty, and git show for that SHA shows deletion of the file.
+- **Rename commit succeeds** — Exit code 0, captured rename SHA is non-empty, and git show for that SHA shows rename and modification.
 - **Final state correct** — Deleted file is absent, renamed file exists, keeper file contains new content.
 
 ## Verdict

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Stopped CLI E2E scenarios immediately after sandbox setup failure and aligned runner-smoke fixture setup with `ACE_E2E_SOURCE_ROOT`.
+
+
 ### Added
 - Added explicit `ACE_E2E_SOURCE_ROOT` support so setup steps can read repo fixtures without reusing sandbox-root `PROJECT_ROOT_PATH`.
 - Added separate `execution.runner_provider` and `execution.verifier_provider` configuration for pipeline E2E runs.

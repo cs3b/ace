@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.31.1**: Stopped CLI E2E scenarios after sandbox setup failure and aligned runner-smoke fixture setup with `ACE_E2E_SOURCE_ROOT`, so broken setup no longer degrades into misleading partial reports.
+- **ace-git-commit v0.23.7**: Made packaged split defaults explicit and tightened commit-workflow E2E setup/evidence around source-root bootstrap and SHA-based commit verification.
+- **ace-git-secrets v0.13.4**: Added committed-removal proof to history-persistence E2E checks and moved setup bootstrap to `ACE_E2E_SOURCE_ROOT`.
+- **ace-git-worktree v0.19.6**: Updated lifecycle E2E setup and expectations for source-root bootstrap, worktree parent directory creation, and current dry-run/remove semantics.
+- **ace-llm v0.33.2**: Corrected basic-query E2E runner input so Goal 1 now exercises an explicit `provider:model` invocation with real prompt text.
+- **ace-search v0.24.5** and **ace-test-runner v0.19.5**: Switched remaining repo-root E2E runner paths to `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 - **ace-assign v0.44.4**: Realigned `TS-ASSIGN-001` with the current assignment lifecycle and drive-policy evidence contract so the E2E scenario checks the shipped workflow behavior instead of stale dynamic-step assumptions.
 - **ace-git-worktree v0.19.5**: Updated task-aware worktree E2E expectations to accept the current task-derived branch naming contract.
 - **ace-llm v0.33.1**: Relaxed the basic-query E2E verifier so substantive provider responses no longer fail just because the wording differs from the test prompt.
@@ -73,6 +79,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 ### Technical
+- Coordinated patch releases aligning E2E sandbox bootstrap with `ACE_E2E_SOURCE_ROOT`: `ace-assign v0.44.5`, `ace-b36ts v0.13.4`, `ace-bundle v0.41.5`, `ace-compressor v0.24.8`, `ace-demo v0.24.2`, `ace-docs v0.32.1`, `ace-git v0.20.3`, `ace-handbook v0.25.4`, `ace-idea v0.18.6`, `ace-lint v0.28.2`, `ace-prompt-prep v0.23.7`, `ace-retro v0.16.7`, `ace-sim v0.13.6`, `ace-support-models v0.9.4`, `ace-support-nav v0.26.4`, `ace-task v0.33.4`, `ace-tmux v0.11.4`.
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
 - **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.

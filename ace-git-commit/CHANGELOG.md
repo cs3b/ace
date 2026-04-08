@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Made packaged split defaults explicit and aligned commit-workflow E2E setup and verifier evidence with `ACE_E2E_SOURCE_ROOT` plus SHA-based commit verification.
+
+
 ## [0.23.6] - 2026-03-31
 
 ### Changed

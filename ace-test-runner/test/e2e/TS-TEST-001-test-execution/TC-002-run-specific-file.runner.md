@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-test "$PROJECT_ROOT_PATH/ace-search" test/atoms/tool_checker_test.rb --report-dir results/tc/02/reports`
+Run `ace-test "$ACE_E2E_SOURCE_ROOT/ace-search" test/atoms/tool_checker_test.rb --report-dir results/tc/02/reports`
 and verify output is scoped to that file.
 
 ## Workspace

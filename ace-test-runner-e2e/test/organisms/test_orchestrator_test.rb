@@ -393,6 +393,78 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_cli_provider_stops_on_setup_failure
+    Dir.mktmpdir do |tmpdir|
+      ts_dir = File.join(tmpdir, "my-pkg", "test", "e2e", "TS-TEST-001-failing-setup")
+      FileUtils.mkdir_p(ts_dir)
+
+      File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+        test-id: TS-TEST-001
+        title: Failing setup
+        area: test
+        package: my-pkg
+        priority: medium
+        setup:
+          - run: exit 7
+      YAML
+
+      File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+        ---
+        bundle:
+          files:
+            - ./TC-001-check.runner.md
+        ---
+
+        # Runner
+      MD
+
+      File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+        ---
+        bundle:
+          files:
+            - ./TC-001-check.verify.md
+        ---
+
+        # Verifier
+      MD
+
+      File.write(File.join(ts_dir, "TC-001-check.runner.md"), "# Goal 1")
+      File.write(File.join(ts_dir, "TC-001-check.verify.md"), "# Verify 1")
+
+      executed = false
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
+        executed = true
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "should not run",
+          started_at: Time.now,
+          completed_at: Time.now
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor,
+        timestamp_generator: -> { "set999" }
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal 1, results.size
+      assert_equal "error", results.first.status
+      assert_includes results.first.error, "Sandbox setup failed"
+      assert_includes @output.string, "Setup failed:"
+      refute executed, "scenario executor should not run after setup failure"
+    end
+  end
+
   def test_api_provider_writes_reports
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
@@ -1083,6 +1155,59 @@ class TestOrchestratorTest < Minitest::Test
       orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", verify: false, output: @output)
 
       assert_equal false, captured_verify
+    end
+  end
+
+  def test_setup_failure_result_keeps_expected_report_dir_for_cli_provider
+    Dir.mktmpdir do |tmpdir|
+      ts_dir = File.join(tmpdir, "my-pkg", "test", "e2e", "TS-TEST-001-failing-setup")
+      FileUtils.mkdir_p(ts_dir)
+
+      File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+        test-id: TS-TEST-001
+        title: Failing setup
+        area: test
+        package: my-pkg
+        priority: medium
+        setup:
+          - run: exit 9
+      YAML
+
+      File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+        ---
+        bundle:
+          files:
+            - ./TC-001-check.runner.md
+        ---
+      MD
+
+      File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+        ---
+        bundle:
+          files:
+            - ./TC-001-check.verify.md
+        ---
+      MD
+
+      File.write(File.join(ts_dir, "TC-001-check.runner.md"), "# Goal 1")
+      File.write(File.join(ts_dir, "TC-001-check.verify.md"), "# Verify 1")
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        timestamp_generator: -> { "dir123" }
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      expected_dir = File.join(tmpdir, ".ace-local", "test-e2e", "dir123-my-pkg-ts001-reports")
+      assert_equal expected_dir, results.first.report_dir
+      assert_equal "error", results.first.status
+      refute_includes results.first.error, "Expected report directory was not created"
     end
   end
 

@@ -2,7 +2,7 @@
 
 ## Goal
 
-List worktrees in the fresh repo, then create a worktree from an existing branch (`feature/test-worktree`) and create another worktree with a new branch (`--from main`). Capture list output before and after creation, plus directory listings of the created worktrees.
+List worktrees in the fresh repo, then create a worktree from an existing branch (`feature/test-worktree`) and create another worktree with a new branch based on the repo's main line. Capture list output before and after creation, plus directory listings of the created worktrees.
 
 ## Workspace
 
@@ -16,5 +16,6 @@ Save all output to `results/tc/02/`. Capture:
 ## Constraints
 
 - Using what you learned from Goal 1, invoke ace-git-worktree list and create commands.
+- Use `.ace-wt/` as the intended worktree parent path; the sandbox setup pre-creates it.
 - The sandbox has branches `feature/test-worktree` and `bugfix/test-fix` available.
 - All artifacts must come from real tool execution, not fabricated.

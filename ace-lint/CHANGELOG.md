@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Fixed
+- Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
+
+
 ### Changed
 - Allowed canonical `capability` skills without `skill.execution.workflow` while requiring workflow bindings for `workflow` and `orchestration` skills.
 - Updated skill validator/schema coverage to enforce the kind-specific workflow-binding matrix and preserve `assign:` restrictions for capability skills.

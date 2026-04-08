@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Aligned the secrets-workflow E2E setup and history-persistence evidence with `ACE_E2E_SOURCE_ROOT` and explicit committed-removal proof.
+
+
 ## [0.13.3] - 2026-03-29
 
 ### Technical

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-test "$PROJECT_ROOT_PATH/ace-search" atoms --report-dir results/tc/01/reports`
+Run `ace-test "$ACE_E2E_SOURCE_ROOT/ace-search" atoms --report-dir results/tc/01/reports`
 and capture output proving tests execute with exit code `0`.
 
 ## Workspace

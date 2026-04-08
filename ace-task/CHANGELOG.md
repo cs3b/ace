@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
+
+
 ### Changed
 - Expanded canonical `as-task-plan` and `as-task-work` skill metadata so public `plan-task` and `work-on-task` assign-step discovery is skill-owned rather than catalog-owned.
 

@@ -35,5 +35,5 @@ requires:
 setup:
   - git-init
   - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
-  - run: "mkdir -p ace-demo/test/e2e && cp -r $PROJECT_ROOT_PATH/ace-demo/test/e2e/TS-DEMO-001-cli-smoke ace-demo/test/e2e/"
+  - run: "mkdir -p ace-demo/test/e2e && cp -r $ACE_E2E_SOURCE_ROOT/ace-demo/test/e2e/TS-DEMO-001-cli-smoke ace-demo/test/e2e/"
   - run: git add -A && git commit -m "initial" --quiet

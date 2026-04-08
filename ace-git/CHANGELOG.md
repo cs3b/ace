@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
+
+
 ### Changed
 - Expanded `as-github-pr-create` canonical skill metadata so public `create-pr` assign-step discovery is skill-owned rather than catalog-owned.
 

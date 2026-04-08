@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-llm gflash "Summarize this test in one sentence."` and capture the
+Run `ace-llm google:gemini-2.5-flash "What is Ruby?"` and capture the
 response output and exit code.
 
 ## Workspace

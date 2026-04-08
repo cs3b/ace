@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-search --files "*.rb" "$PROJECT_ROOT_PATH/ace-search"` and capture
+Run `ace-search --files "*.rb" "$ACE_E2E_SOURCE_ROOT/ace-search"` and capture
 file-list output showing glob-based file discovery against a deterministic
 project path.
 

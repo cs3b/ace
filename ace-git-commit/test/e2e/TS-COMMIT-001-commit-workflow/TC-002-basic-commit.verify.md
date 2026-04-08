@@ -11,10 +11,10 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-- **Artifacts exist** — results/tc/02/ contains stdout/exit captures and git log/show output.
+- **Artifacts exist** — results/tc/02/ contains stdout/exit captures plus SHA/log/show output.
 - **Zero exit code** — The commit command exited successfully.
-- **Commit created** — Git log shows a new commit with the specified message.
-- **Files included** — Git show --stat shows the modified file(s) in the commit.
+- **Commit created** — The captured SHA is non-empty and git log shows a new commit with the specified message.
+- **Files included** — Git show for the captured SHA shows the modified file(s) in the commit.
 
 ## Verdict
 

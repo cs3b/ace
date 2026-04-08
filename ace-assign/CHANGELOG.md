@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Aligned the remaining E2E sandbox bootstrap to copy repo-root setup assets from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
+
+
+### Fixed
 - Updated `TS-ASSIGN-001` E2E expectations to match the current assignment lifecycle, fork-status output, bundled prepare fixture shape, and drive-policy evidence surface.
 
 ## [0.44.3] - 2026-04-07

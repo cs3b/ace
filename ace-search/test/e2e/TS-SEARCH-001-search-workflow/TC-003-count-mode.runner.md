@@ -2,8 +2,8 @@
 
 ## Goal
 
-Run `ace-search --type content --files-with-matches "test" "$PROJECT_ROOT_PATH/ace-search"`
-and `ace-search --type content --count "def" "$PROJECT_ROOT_PATH/ace-search/test"`,
+Run `ace-search --type content --files-with-matches "test" "$ACE_E2E_SOURCE_ROOT/ace-search"`
+and `ace-search --type content --count "def" "$ACE_E2E_SOURCE_ROOT/ace-search/test"`,
 then capture count-style output summary.
 
 ## Workspace

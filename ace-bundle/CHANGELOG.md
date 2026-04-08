@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Fixed
+- Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
+
+
 ### Changed
 - Expanded `as-onboard` canonical skill metadata so the public `onboard` assign step is fully described via skill-owned `assign.steps`.
 
