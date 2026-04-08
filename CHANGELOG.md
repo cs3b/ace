@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.4**: Realigned `TS-ASSIGN-001` with the current assignment lifecycle and drive-policy evidence contract so the E2E scenario checks the shipped workflow behavior instead of stale dynamic-step assumptions.
+- **ace-git-worktree v0.19.5**: Updated task-aware worktree E2E expectations to accept the current task-derived branch naming contract.
+- **ace-llm v0.33.1**: Relaxed the basic-query E2E verifier so substantive provider responses no longer fail just because the wording differs from the test prompt.
+- **ace-overseer v0.13.11**: Switched the overseer E2E setup to `ACE_E2E_SOURCE_ROOT` so repo-root setup assets no longer leak through sandbox-root `PROJECT_ROOT_PATH`.
+- **ace-review v0.51.11**: Fixed review E2E setup and verifier expectations for repo-root preset loading and prepared-session execution paths.
+- **ace-test-runner v0.19.4**: Fixed suite E2E setup and verification to use `ACE_E2E_SOURCE_ROOT` and captured suite output rather than a synthetic command artifact.
 - **ace-llm v0.32.2**: Corrected role fallback execution so each fallback provider rebuilds its own preset and CLI options instead of inheriting Codex-specific flags or suffixes from earlier attempts.
 - **ace-llm-providers-cli v0.27.3**: Threaded sandbox subprocess environment and working-directory resolution through Codex and Gemini CLI adapters so provider subprocesses stay inside the E2E execution root.
 
