@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Added direct archive filesystem proof to `TS-IDEA-001` so the archive lifecycle E2E validates the moved `.idea.s.md` file instead of relying on CLI output alone.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
 
