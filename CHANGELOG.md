@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.30.0**: Added explicit source-root threading for E2E setup (`ACE_E2E_SOURCE_ROOT`) plus separate runner/verifier provider roles in pipeline configuration.
 
 ### Changed
+- **ace-llm v0.33.0**: Removed the legacy `role:e2e-executor` alias from default E2E role config so runner selection uses `role:e2e-runner` only.
+- **ace-test-runner-e2e v0.31.0**: Removed the shipped `role:e2e-executor` compatibility path from E2E defaults and runner guidance so the pipeline contract is `runner`, `verifier`, and `reporter` only.
 - **ace-test-runner-e2e v0.30.0**: Hardened verifier prompt bundling and report parsing so large artifact sets and compact aggregate verifier outputs produce diagnosable results instead of empty reports.
 
 ### Fixed

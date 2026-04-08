@@ -184,7 +184,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.32.2)
+    ace-llm (0.33.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -347,7 +347,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.30.0)
+    ace-test-runner-e2e (0.31.0)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
