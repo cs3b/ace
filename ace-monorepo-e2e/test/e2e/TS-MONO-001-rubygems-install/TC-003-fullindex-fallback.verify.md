@@ -13,7 +13,7 @@ Validation order (impact-first):
 1. **Core artifacts captured** — `results/tc/03/fullindex.exit`, `results/tc/03/fullindex.stdout`, and `results/tc/03/bundle-env.stdout` all exist.
 2. **Install path isolation** — `results/tc/03/bundle-env.stdout` includes the sandbox Gemfile path and does not indicate `/home/mc/ace/Gemfile`.
 3. **Install command result** — `results/tc/03/fullindex.exit` is numeric.
-4. **Version freshness check exists** — `results/tc/03/version-check.exit` and `results/tc/03/version-check.stdout` exist.
+4. **Version freshness check exists on success** — If `results/tc/03/fullindex.exit` is `0`, then `results/tc/03/version-check.exit` and `results/tc/03/version-check.stdout` exist.
 5. **Success evidence** — If exit code is `0`:
    - `results/tc/03/bundle-list.stdout` exists and mentions at least one `ace-*` gem.
    - `results/tc/03/version-check.exit` is `0`.
@@ -22,7 +22,7 @@ Validation order (impact-first):
 
 ## Verdict
 
-- **PASS**: All required artifacts are captured and evidence is consistent with the exit code and version freshness check.
+- **PASS**: Artifacts are consistent with the install outcome; success runs include freshness checks, and failed fallback runs include clear error output.
 - **FAIL**: Missing artifacts, unresolved stale versions, missing isolation evidence, or missing error detail on failure.
 
 Report: `PASS` or `FAIL` with evidence (exit code value, key output snippets).
