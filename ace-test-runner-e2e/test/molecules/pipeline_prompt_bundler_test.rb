@@ -57,6 +57,27 @@ class PipelinePromptBundlerTest < Minitest::Test
     end
   end
 
+  def test_prepare_verifier_truncates_large_artifacts
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_goal_scenario_files(tmpdir)
+      sandbox = File.join(tmpdir, "sandbox")
+      FileUtils.mkdir_p(File.join(sandbox, "results", "tc", "02"))
+      File.write(File.join(sandbox, "results", "tc", "02", "large.txt"), "x" * 20_000)
+
+      bundler = PromptBundler.new
+      scenario = build_scenario(scenario_dir)
+      output = bundler.prepare_verifier(
+        scenario: scenario,
+        sandbox_path: sandbox,
+        test_cases: ["TC-002"]
+      )
+
+      content = File.read(output[:prompt_path])
+      assert_includes content, "[truncated: original_bytes=20000]"
+      assert_includes content, "results/tc/02/large.txt"
+    end
+  end
+
   private
 
   def build_scenario(scenario_dir)

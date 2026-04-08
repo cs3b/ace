@@ -25,9 +25,13 @@ module Ace
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
-          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil)
+          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, source_root: nil)
             FileUtils.mkdir_p(sandbox_dir)
-            env = {}
+            sandbox_dir = File.expand_path(sandbox_dir)
+            env = {
+              "PROJECT_ROOT_PATH" => sandbox_dir,
+              "ACE_E2E_SOURCE_ROOT" => File.expand_path(source_root || sandbox_dir)
+            }
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
@@ -131,9 +135,6 @@ module Ace
             # Re-export env vars after profile sourcing to protect against
             # mise's shell hook clobbering.
             export_vars = env.dup
-            %w[PROJECT_ROOT_PATH].each do |key|
-              export_vars[key] ||= ENV[key] if ENV[key]
-            end
             exports = export_vars.map { |k, v| "export #{k}=#{Shellwords.shellescape(v.to_s)}" }.join("; ")
             wrapped = exports.empty? ? command : "#{exports}; #{command}"
             stdout, stderr, status = Open3.capture3(full_env, "bash", "-lc", wrapped, chdir: sandbox_dir)

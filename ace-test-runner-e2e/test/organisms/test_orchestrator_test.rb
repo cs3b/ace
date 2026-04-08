@@ -258,6 +258,33 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_initializer_does_not_force_single_provider_when_none_explicitly_requested
+    config = {
+      "execution" => {
+        "provider" => "role:e2e-runner",
+        "runner_provider" => "role:e2e-runner",
+        "verifier_provider" => "role:e2e-verifier",
+        "timeout" => 10,
+        "parallel" => 1
+      }
+    }
+    captured = nil
+    fake_executor = Object.new
+
+    Ace::Test::EndToEndRunner::Molecules::ConfigLoader.stub(:load, config) do
+      Ace::Test::EndToEndRunner::Molecules::TestExecutor.stub(:new, lambda { |**kwargs|
+        captured = kwargs
+        fake_executor
+      }) do
+        TestOrchestrator.new(base_dir: Dir.pwd, timestamp_generator: -> { "cfg123" })
+      end
+    end
+
+    assert_nil captured[:provider]
+    assert_equal 10, captured[:timeout]
+    assert_equal config, captured[:config]
+  end
+
   def test_failed_test_result_propagated
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])

@@ -38,7 +38,7 @@ module Ace
             @progress = progress
             @discoverer = Molecules::TestDiscoverer.new
             @loader = Molecules::ScenarioLoader.new
-            @executor = executor || Molecules::TestExecutor.new(provider: @provider, timeout: @timeout, config: config)
+            @executor = executor || Molecules::TestExecutor.new(provider: provider, timeout: @timeout, config: config)
             @report_writer = Molecules::ReportWriter.new
             @suite_report_writer = Molecules::SuiteReportWriter.new(config: config)
           end
@@ -113,7 +113,8 @@ module Ace
               sandbox_dir: sandbox_dir,
               fixture_source: scenario.fixture_path,
               scenario_name: scenario.test_id,
-              run_id: timestamp
+              run_id: timestamp,
+              source_root: @base_dir
             )
 
             unless result[:success]

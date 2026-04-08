@@ -45,7 +45,36 @@ class PipelineReportGeneratorTest < Minitest::Test
 
       goal_report = File.read(File.join(report_dir, "report.md"))
       assert_includes goal_report, "runner-provider: claude:haiku"
+      assert_includes goal_report, "verifier-provider: claude:haiku"
       assert_includes goal_report, "| TC-002 | FAIL |"
+    end
+  end
+
+  def test_generate_writes_distinct_runner_and_verifier_provider_frontmatter
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: PASS
+          - **Evidence**: results/tc/01/help.txt exists
+
+          ### Goal 2 - Roundtrip
+          - **Verdict**: PASS
+          - **Evidence**: results/tc/02/output.txt exists
+        OUT
+        report_dir: report_dir,
+        provider: {runner: "codex:mini", verifier: "claude:haiku"},
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      goal_report = File.read(File.join(report_dir, "report.md"))
+      assert_includes goal_report, "runner-provider: codex:mini"
+      assert_includes goal_report, "verifier-provider: claude:haiku"
     end
   end
 
@@ -169,6 +198,45 @@ class PipelineReportGeneratorTest < Minitest::Test
 
       summary = File.read(File.join(report_dir, "summary.r.md"))
       assert_includes summary, "no sandbox artifacts were provided"
+    end
+  end
+
+  def test_generate_accepts_aggregate_all_pass_results
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: "**Results: 2/2 passed**\n",
+        report_dir: report_dir,
+        provider: {runner: "codex:mini", verifier: "gemini:flash"},
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "pass", result.status
+      assert_equal 2, result.total_count
+      assert_equal 0, result.failed_count
+    end
+  end
+
+  def test_generate_rejects_aggregate_partial_results_without_goal_details
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: "**Results: 1/2 passed**\n",
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "error", result.status
+      assert_equal "Verifier returned aggregate partial output without per-goal details", result.summary
     end
   end
 

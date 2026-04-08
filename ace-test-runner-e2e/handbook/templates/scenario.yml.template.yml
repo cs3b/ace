@@ -55,7 +55,7 @@ setup:
   # Optional detached tmux session for test isolation (uses unique run ID)
   # - tmux-session:
   #     name-source: run-id
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   # Uncomment as needed:
   # - copy-fixtures         # Copy fixtures/ directory to sandbox
   # - agent-env:            # Environment variables passed to runner/verifier agent subprocess

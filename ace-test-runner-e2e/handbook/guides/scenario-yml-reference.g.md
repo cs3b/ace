@@ -112,7 +112,7 @@ setup:
   - git-init
   - tmux-session:
       name-source: run-id
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - agent-env:
@@ -123,6 +123,8 @@ Setup rules:
 - Setup is fail-fast. Do not hide setup failures with `|| true`.
 - Setup belongs in `scenario.yml` and fixtures, not in TC runner instructions.
 - If setup fails (for example, missing `mise trust` support), stop scenario execution and report infrastructure failure.
+- `ACE_E2E_SOURCE_ROOT` is the original repository root for setup-time file copies.
+- `PROJECT_ROOT_PATH` remains the sandbox root for agent execution.
 
 ## Complete Example
 
@@ -147,7 +149,7 @@ requires:
   ruby: ">= 3.0"
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: "."

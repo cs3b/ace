@@ -205,7 +205,10 @@ class SetupExecutorTest < Minitest::Test
       )
 
       assert result[:success]
-      assert_equal({"FOO" => "bar", "BAZ" => "qux"}, result[:env])
+      assert_equal "bar", result[:env]["FOO"]
+      assert_equal "qux", result[:env]["BAZ"]
+      assert result[:env].key?("PROJECT_ROOT_PATH")
+      assert result[:env].key?("ACE_E2E_SOURCE_ROOT")
     end
   end
 
@@ -217,7 +220,8 @@ class SetupExecutorTest < Minitest::Test
       )
 
       assert result[:success]
-      assert_equal({}, result[:env])
+      assert result[:env].key?("PROJECT_ROOT_PATH")
+      assert result[:env].key?("ACE_E2E_SOURCE_ROOT")
     end
   end
 
@@ -345,13 +349,27 @@ class SetupExecutorTest < Minitest::Test
       )
 
       assert result[:success]
-      assert_equal "/from/process/env\n", File.read(File.join(sandbox, "prp_out.txt"))
+      assert_equal "#{File.expand_path(sandbox)}\n", File.read(File.join(sandbox, "prp_out.txt"))
     ensure
       if original
         ENV["PROJECT_ROOT_PATH"] = original
       else
         ENV.delete("PROJECT_ROOT_PATH")
       end
+    end
+  end
+
+  def test_run_exports_source_root_for_repo_root_setup_steps
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      result = @executor.execute(
+        setup_steps: [{"run" => "echo $ACE_E2E_SOURCE_ROOT > source_root.txt"}],
+        sandbox_dir: sandbox,
+        source_root: tmpdir
+      )
+
+      assert result[:success]
+      assert_equal "#{File.expand_path(tmpdir)}\n", File.read(File.join(sandbox, "source_root.txt"))
     end
   end
 end

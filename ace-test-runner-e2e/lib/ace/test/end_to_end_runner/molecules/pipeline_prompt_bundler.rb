@@ -10,6 +10,9 @@ module Ace
       module Molecules
         # Prepares deterministic runner/verifier prompt files for pipeline execution.
         class PipelinePromptBundler
+          MAX_FILE_EMBED_BYTES = 8_192
+          MAX_ARTIFACT_EMBED_BYTES = 200_000
+
           RUNNER_SYSTEM_PROMPT = <<~PROMPT
             You are an E2E test executor working in a sandbox directory.
 
@@ -157,12 +160,15 @@ module Ace
             parts << "## File contents"
             parts << ""
 
+            remaining_budget = MAX_ARTIFACT_EMBED_BYTES
             files.each do |file|
+              excerpt, bytes_used = bounded_file_excerpt(file, remaining_budget)
               parts << "### `#{relative_path(file, sandbox_path)}`"
               parts << "```"
-              parts << safe_read(file)
+              parts << excerpt
               parts << "```"
               parts << ""
+              remaining_budget -= bytes_used
             end
 
             parts.join("\n").rstrip
@@ -174,6 +180,29 @@ module Ace
 
           def safe_read(path)
             File.binread(path).encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
+          end
+
+          def bounded_file_excerpt(path, remaining_budget)
+            content = safe_read(path)
+            return ["[omitted: verifier artifact budget exhausted]", 0] if remaining_budget <= 0
+
+            if content.bytesize <= [MAX_FILE_EMBED_BYTES, remaining_budget].min
+              return [content, content.bytesize]
+            end
+
+            cap = [MAX_FILE_EMBED_BYTES, remaining_budget].min
+            head_budget = [cap / 2, 1].max
+            tail_budget = [cap - head_budget, 1].max
+            head = content.byteslice(0, head_budget).to_s
+            tail = content.byteslice(-tail_budget, tail_budget).to_s
+            excerpt = [
+              "[truncated: original_bytes=#{content.bytesize}]",
+              head,
+              "...",
+              tail
+            ].join("\n")
+
+            [excerpt, cap]
           end
         end
       end

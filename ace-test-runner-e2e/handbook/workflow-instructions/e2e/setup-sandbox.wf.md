@@ -321,7 +321,7 @@ Add setup directives to `scenario.yml`:
 # scenario.yml
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: "."
@@ -366,6 +366,7 @@ cd "$TEST_DIR"
 
 # Set isolation environment
 export PROJECT_ROOT_PATH="$TEST_DIR"
+export ACE_E2E_SOURCE_ROOT="$PROJECT_ROOT"
 export ACE_TEST_MODE=true
 export ACE_CONFIG_PATH="$TEST_DIR/.ace"
 

@@ -85,6 +85,9 @@ module Ace
             goals = parse_goal_sections(text, scenario)
             return build_result_from_goals(goals) unless goals.empty?
 
+            aggregate = parse_aggregate_results(text, scenario)
+            return aggregate if aggregate
+
             parsed = Atoms::SkillResultParser.parse_verifier(text)
             {
               status: parsed[:status],
@@ -99,6 +102,54 @@ module Ace
               test_cases: [],
               summary: "Verifier returned unstructured output",
               error: issue || e.message
+            }
+          end
+
+          def parse_aggregate_results(text, scenario)
+            match = text.to_s.match(/\*\*Results:\s*(\d+)\/(\d+)\s+passed\*\*/i)
+            return nil unless match
+
+            passed = match[1].to_i
+            total = match[2].to_i
+            test_cases = Array(scenario.test_cases)
+            return nil unless total == test_cases.size && total.positive?
+
+            if passed == total
+              return {
+                status: "pass",
+                test_cases: test_cases.map do |test_case|
+                  {
+                    id: test_case.tc_id,
+                    description: test_case.title,
+                    status: "pass",
+                    notes: "Verifier returned aggregate pass result"
+                  }
+                end,
+                summary: "#{passed}/#{total} passed"
+              }
+            end
+
+            if passed.zero?
+              return {
+                status: "fail",
+                test_cases: test_cases.map do |test_case|
+                  {
+                    id: test_case.tc_id,
+                    description: test_case.title,
+                    status: "fail",
+                    notes: "Verifier returned aggregate fail result",
+                    category: "runner-error"
+                  }
+                end,
+                summary: "#{passed}/#{total} passed"
+              }
+            end
+
+            {
+              status: "error",
+              test_cases: [],
+              summary: "Verifier returned aggregate partial output without per-goal details",
+              error: "Aggregate verifier output reported #{passed}/#{total} passed without identifying failed goals"
             }
           end
 
@@ -262,12 +313,14 @@ module Ace
               "partial"
             end
 
+            runner_provider, verifier_provider = normalize_provider_pair(provider)
+
             frontmatter = {
               "test-id" => scenario.test_id,
               "title" => scenario.title,
               "package" => scenario.package,
-              "runner-provider" => provider,
-              "verifier-provider" => provider,
+              "runner-provider" => runner_provider,
+              "verifier-provider" => verifier_provider,
               "timestamp" => result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
               "tcs-passed" => passed,
               "tcs-failed" => failed,
@@ -313,6 +366,12 @@ module Ace
             REPORT
 
             File.write(path, content)
+          end
+
+          def normalize_provider_pair(provider)
+            return [provider[:runner] || provider["runner"], provider[:verifier] || provider["verifier"]] if provider.is_a?(Hash)
+
+            [provider, provider]
           end
         end
       end

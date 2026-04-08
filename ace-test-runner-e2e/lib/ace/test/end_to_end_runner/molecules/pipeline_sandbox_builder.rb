@@ -31,7 +31,8 @@ module Ace
             verify_tool_access(scenario, sandbox_path)
 
             {
-              "PROJECT_ROOT_PATH" => sandbox_path
+              "PROJECT_ROOT_PATH" => sandbox_path,
+              "ACE_E2E_SOURCE_ROOT" => @config_root
             }
           end
 

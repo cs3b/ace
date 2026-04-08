@@ -18,7 +18,9 @@ module Ace
           # @param config [Hash] Configuration hash (string keys) from ConfigLoader
           def initialize(provider: nil, timeout: nil, config: nil)
             config ||= Molecules::ConfigLoader.load
-            @provider = provider || config.dig("execution", "provider") || "claude:sonnet"
+            @runner_provider = provider || config.dig("execution", "runner_provider") || config.dig("execution", "provider") || "role:e2e-runner"
+            @verifier_provider = provider || config.dig("execution", "verifier_provider") || @runner_provider
+            @provider = @runner_provider
             @timeout = timeout || config.dig("execution", "timeout") || 300
             @prompt_builder = Atoms::PromptBuilder.new
             @cli_provider_adapter = Atoms::CliProviderAdapter.new(config)
@@ -37,7 +39,7 @@ module Ace
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
             env_vars: nil, report_dir: nil, timeout: nil, verify: false)
             resolved_timeout = timeout || @timeout
-            if Atoms::CliProviderAdapter.cli_provider?(@provider)
+            if Atoms::CliProviderAdapter.cli_provider?(@runner_provider)
               execute_via_pipeline(
                 scenario,
                 cli_args: cli_args,
@@ -63,7 +65,7 @@ module Ace
           # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [Models::TestResult] Test execution result
           def execute_tc(test_case:, sandbox_path:, scenario:, cli_args: nil, run_id: nil, env_vars: nil)
-            if Atoms::CliProviderAdapter.cli_provider?(@provider)
+            if Atoms::CliProviderAdapter.cli_provider?(@runner_provider)
               execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: cli_args, run_id: run_id, env_vars: env_vars)
             else
               execute_tc_via_prompt(test_case, sandbox_path, scenario, cli_args: cli_args)
@@ -125,7 +127,7 @@ module Ace
             prompt = @prompt_builder.build(scenario, test_cases: test_cases)
 
             response = Ace::LLM::QueryInterface.query(
-              @provider,
+              @runner_provider,
               prompt,
               system: Atoms::PromptBuilder::SYSTEM_PROMPT,
               cli_args: cli_args,
@@ -198,7 +200,7 @@ module Ace
               )
 
               response = Ace::LLM::QueryInterface.query(
-                @provider, prompt,
+                @runner_provider, prompt,
                 system: nil, cli_args: cli_args,
                 timeout: @timeout, fallback: false,
                 working_dir: sandbox_path,
@@ -240,7 +242,7 @@ module Ace
               )
 
               response = Ace::LLM::QueryInterface.query(
-                @provider, prompt,
+                @runner_provider, prompt,
                 system: Atoms::PromptBuilder::TC_SYSTEM_PROMPT,
                 cli_args: cli_args, timeout: @timeout, fallback: false
               )
@@ -321,7 +323,8 @@ module Ace
             timeout ||= @timeout
             @pipeline_executors ||= {}
             @pipeline_executors[timeout] ||= Molecules::PipelineExecutor.new(
-              provider: @provider,
+              runner_provider: @runner_provider,
+              verifier_provider: @verifier_provider,
               timeout: timeout
             )
           end
