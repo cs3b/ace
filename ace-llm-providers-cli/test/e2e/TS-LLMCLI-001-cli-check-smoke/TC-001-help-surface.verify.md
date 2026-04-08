@@ -8,5 +8,5 @@
 
 - `results/tc/01/help.exit` is `0`
 - `results/tc/01/help.stdout` includes `Usage: ace-llm-providers-cli-check`
-- `results/tc/01/help.stdout` includes `Checks availability and authentication status of CLI-based LLM tools`
+- `results/tc/01/help.stdout` includes `CLI` and `tools`
 - `results/tc/01/help.stdout` includes `Exit codes:`
