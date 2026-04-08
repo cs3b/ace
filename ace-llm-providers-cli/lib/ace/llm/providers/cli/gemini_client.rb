@@ -245,7 +245,11 @@ module Ace
           end
 
           def create_prompt_cache_dir(working_dir = nil, subprocess_env: nil)
-            cache_dir = File.join(find_project_root(working_dir, subprocess_env: subprocess_env), ".ace-local", "llm", "prompts")
+            resolved_working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: working_dir,
+              subprocess_env: subprocess_env
+            )
+            cache_dir = File.join(resolved_working_dir, ".ace-local", "llm", "prompts")
             FileUtils.mkdir_p(cache_dir) unless Dir.exist?(cache_dir)
             cache_dir
           end
@@ -256,17 +260,17 @@ module Ace
 
           def execute_gemini_command(cmd, prompt, options)
             timeout_val = options[:timeout] || @options[:timeout] || 120
-            project_root = find_project_root(options[:working_dir], subprocess_env: options[:subprocess_env])
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, chdir: project_root, provider_name: "Gemini")
-          end
-
-          def find_project_root(working_dir = nil, subprocess_env: nil)
-            require "ace/support/fs"
-            start_path = Atoms::ExecutionContext.resolve_working_dir(
-              working_dir: working_dir,
-              subprocess_env: subprocess_env
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env]
             )
-            Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: start_path) || start_path
+            Molecules::SafeCapture.call(
+              cmd,
+              timeout: timeout_val,
+              chdir: working_dir,
+              env: options[:subprocess_env],
+              provider_name: "Gemini"
+            )
           end
 
           def parse_gemini_response(stdout, stderr, status, prompt, options)

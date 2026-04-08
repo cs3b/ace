@@ -264,6 +264,24 @@ describe "GeminiClient" do
       assert_equal "/tmp/e2e-sandbox", captured_kwargs[:chdir]
     end
 
+    it "passes subprocess_env to SafeCapture env" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:gemini_available?, true) do
+        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+          captured_kwargs = kwargs
+          ['{"response":"ok"}', "", mock_status]
+        }) do
+          @client.generate("Hi", subprocess_env: {"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"})
+        end
+      end
+
+      assert_equal({"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"}, captured_kwargs[:env])
+    end
+
     it "builds command with pre-existing files when system_file and prompt_file provided" do
       # Test the code path used by ace-review to avoid double-writing files
       cmd = @client.send(:build_gemini_command, "ignored prompt", {
