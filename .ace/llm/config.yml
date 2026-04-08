@@ -61,10 +61,6 @@ llm:
       - codex:mini:low@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
-    e2e-executor:
-      - codex:mini:low@yolo
-      - gemini:flash-latest@yolo
-      - claude:haiku:low@yolo
     e2e-verifier:
       - codex:mini:low@ro
       - gemini:flash-latest@ro
