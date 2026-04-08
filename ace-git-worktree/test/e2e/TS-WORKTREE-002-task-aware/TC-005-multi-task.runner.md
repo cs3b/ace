@@ -8,12 +8,12 @@ Create a second task worktree for task 8pp.t.r8x. Verify both task worktrees (8p
 
 Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/create-888.stdout`, `.stderr`, `.exit` — create worktree for task 8pp.t.r8x
-- `results/tc/05/list-all-tasks.stdout`, `.stderr`, `.exit` — list with task-associated filter showing both tasks
-- `results/tc/05/list-full.stdout`, `.stderr`, `.exit` — full list showing all worktrees (main + both tasks)
+- `results/tc/05/list-all-tasks.stdout`, `.stderr`, `.exit` — `ace-git-worktree list --task-associated`
+- `results/tc/05/list-full.stdout`, `.stderr`, `.exit` — `ace-git-worktree list --show-tasks`
 
 ## Constraints
 
 - Using what you learned from Goal 1, invoke ace-git-worktree create with task-aware flags for task 8pp.t.r8x.
 - The sandbox has taskflow fixtures with task 8pp.t.r8x (8pp.t.r8x-second-task) already defined.
-- After creation, list worktrees to confirm both task worktrees coexist.
+- After creation, use the explicit current list filters above to confirm both task worktrees coexist.
 - All artifacts must come from real tool execution, not fabricated.

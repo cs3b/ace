@@ -13,8 +13,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Creation artifacts exist** — results/tc/05/ contains stdout/exit for create-888.
 2. **Creation succeeds** — create-888.exit is 0.
-3. **Both tasks listed** — list-all-tasks.stdout contains references to both task 8pp.t.q7w and task 8pp.t.r8x worktrees.
-4. **Full list complete** — list-full.stdout shows at least 3 worktrees (main + task 8pp.t.q7w + task 8pp.t.r8x).
+3. **Both tasks listed** — `list-all-tasks.stdout` contains both task-associated worktrees (`q7w` and `r8x`).
+4. **Full list complete** — `list-full.stdout` shows at least 3 worktrees (main + task `q7w` + task `r8x`) with task metadata visible.
 
 ## Verdict
 

@@ -16,6 +16,7 @@ Save all output to `results/tc/04/`. Capture:
 ## Constraints
 
 - Using what you learned from Goal 1, invoke create and remove with --dry-run.
-- For create --dry-run: use a branch not yet checked out as a worktree (e.g., bugfix/test-fix).
+- For create --dry-run: use the current valid create syntax with a branch not yet checked out as a worktree, for example `ace-git-worktree create --branch bugfix/test-fix --dry-run`.
 - For remove --dry-run: target one of the worktrees created in Goal 2.
+- `create-dry-check.txt` must prove the specific planned child worktree path is absent after dry-run, not just that the parent `.ace-wt` exists.
 - All artifacts must come from real tool execution, not fabricated.
