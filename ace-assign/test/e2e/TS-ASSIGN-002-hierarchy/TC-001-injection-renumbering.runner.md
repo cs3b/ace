@@ -9,9 +9,9 @@ Test child injection and subtree cascade renumbering in two phases: first prove 
 Save all output to `results/tc/01/`. Capture:
 - `results/tc/01/create.stdout`, `.exit` — assignment creation
 - `results/tc/01/steps-dir.txt` — resolved steps directory for the created assignment
-- `results/tc/01/child-inject-1.stdout`, `.exit` — first child injection
-- `results/tc/01/child-inject-2.stdout`, `.exit` — second child injection
-- `results/tc/01/child-inject-3.stdout`, `.exit` — third child injection
+- `results/tc/01/child-inject-1.stdout`, `.stderr`, `.exit` — first child injection
+- `results/tc/01/child-inject-2.stdout`, `.stderr`, `.exit` — second child injection
+- `results/tc/01/child-inject-3.stdout`, `.stderr`, `.exit` — third child injection
 - `results/tc/01/first-sibling-inject.stdout`, `.exit` — first sibling injection under 010 (direct renumber)
 - `results/tc/01/step-listing-after-first-renumber.stdout` — step files after the first sibling injection
 - `results/tc/01/renumbered-parent.stdout` — metadata for the child step renumbered by the first sibling injection
@@ -25,16 +25,18 @@ Save all output to `results/tc/01/`. Capture:
 
 - Create assignment from the fixture job file.
 - Resolve the created assignment's `steps/` directory once after create and save it to `steps-dir.txt`; use that exact directory for every later listing and metadata read in this TC.
-- Add child steps under 010 (`add --after 010 --child`): three children should become 010.01, 010.02, 010.03.
+- Add child steps under 010 using explicit YAML files and `ace-assign add --yaml ... --after 010 --child --assignment "<id>"`.
+- Do not use `--step work-on-task`, `--step child*`, or any preset-backed insertion in this TC.
+- The three child YAML inserts must produce `child-a`, `child-b`, and `child-c`, becoming 010.01, 010.02, 010.03.
 - First renumber phase:
-  - Inject sibling after 010.01 (`add --after 010.01`).
+  - Inject sibling after 010.01 using explicit YAML insertion (`ace-assign add --yaml ... --after 010.01 --assignment "<id>"`).
   - The new sibling becomes 010.02 and the old `child-b` shifts from 010.02 to 010.03.
   - Capture the post-renumber listing from the resolved `steps/` directory after the injection command completes.
   - Read the real shifted `child-b` step file into `renumbered-parent.stdout`; do not capture `child-c` or any stale pre-renumber path.
 - Cascade phase:
-  - Add grandchild under the renumbered parent so it appears as `010.03.01`.
+  - Add grandchild under the renumbered parent using explicit YAML insertion with `--after 010.03 --child --assignment "<id>"` so it appears as `010.03.01`.
   - Capture `step-listing-before-cascade.stdout` after the grandchild exists.
-  - Inject another sibling after 010.02 so the existing `010.03` subtree shifts to `010.04`.
+  - Inject another sibling after 010.02 using explicit YAML insertion so the existing `010.03` subtree shifts to `010.04`.
   - Capture `step-listing-after-cascade.stdout` after the second sibling injection.
   - Read the real `010.04.01-*.st.md` file into `renumbered-grandchild.stdout`.
 - The cascade proof must come from the second sibling injection and the before/after listings, not inferred from grandchild creation alone.

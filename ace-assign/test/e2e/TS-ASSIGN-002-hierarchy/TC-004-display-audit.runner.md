@@ -8,22 +8,29 @@ Verify status displays tree structure with hierarchy indicators, and audit trail
 
 Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/create-tree.stdout`, `.exit` — tree display assignment creation
-- `results/tc/04/add-tree-children.stdout` — children added under two parents
+- `results/tc/04/add-tree-children.stdout`, `.stderr`, `.exit` — children added under two parents
 - `results/tc/04/status-tree.stdout` — hierarchical status display
 - `results/tc/04/create-audit.stdout`, `.exit` — audit trail assignment creation
 - `results/tc/04/audit-steps-dir.txt` — resolved steps directory for audit-trail lookups
+- `results/tc/04/child-add-1.stdout`, `.stderr`, `.exit` — first audit child insertion
+- `results/tc/04/child-add-2.stdout`, `.stderr`, `.exit` — second audit child insertion
 - `results/tc/04/child-of-metadata.stdout` — child_of audit trail evidence
-- `results/tc/04/inject-sibling.stdout` — sibling injection output
+- `results/tc/04/inject-sibling.stdout`, `.stderr`, `.exit` — sibling injection output
 - `results/tc/04/assignment-id-audit.txt` — captured assignment ID for audit lookups
 - `results/tc/04/injected-after-metadata.stdout` — injected_after audit trail
 - `results/tc/04/renumbered-metadata.stdout` — renumbered_from/renumbered_at audit trail
+- `results/tc/04/audit-step-listing-before.txt` — step listing before sibling injection
+- `results/tc/04/audit-step-listing-after.txt` — step listing after dynamic add
 - `results/tc/04/dynamic-metadata.stdout` — dynamic add audit trail
 
 ## Constraints
 
 ### Tree Display
 - Create assignment from `fixtures/display/job-tree.yaml`.
-- Add children: a-subtask-1 and a-subtask-2 under 010, b-subtask-1 under 020.
+- Add children via explicit YAML inserts:
+  - `a-subtask-1` under `010`
+  - `a-subtask-2` under `010`
+  - `b-subtask-1` under `020`
 - Capture status output. Verify all 5 steps displayed.
 - Verify hierarchical display indicators (tree characters: pipe, tee, elbow) and nested step numbers (010.01, 010.02, 020.01).
 
@@ -46,8 +53,10 @@ Save all output to `results/tc/04/`. Capture:
 - Capture renumbered metadata before marking parent done / adding dynamic step. Do not overwrite `renumbered-metadata.stdout` afterward.
 - Capture real step-file metadata into the named artifacts. Do not use `ace-assign add` stdout as metadata evidence.
 - Do not write empty placeholder files. If a metadata lookup fails, stop that lookup with explicit failure output instead of leaving an empty artifact.
-- Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
-- Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
+- Add `child-a` under 010 using explicit YAML insertion; capture the command as `child-add-1.*`. Verify `added_by: child_of:010` and `parent: "010"`.
+- Add `child-b` under 010 using explicit YAML insertion; capture the command as `child-add-2.*`.
+- Capture `audit-step-listing-before.txt` after the second child exists and before sibling injection.
+- Inject `sibling-a` after first child using explicit YAML insertion. Verify `added_by: injected_after:010.01`.
 - Verify the renumbered step capture targets the actual shifted child after sibling injection and has `renumbered_from` and `renumbered_at` (ISO8601 format).
 - Mark parent done, then add the dynamic step using the current CLI contract with a YAML file (NO `--after`, NO `--child`):
   - write `results/tc/04/dynamic.yaml`
@@ -59,6 +68,7 @@ Save all output to `results/tc/04/`. Capture:
   - top-level `.st.md` file
   - `name: dynamic-step`
   - `added_by: dynamic`
+- Do not use `--step child2`, `--step work-on-task`, or any preset-backed insertion in this TC.
 - Do not guess the file path from a stale assignment id or stale number alone.
 - If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
 - All artifacts must come from real tool execution.
