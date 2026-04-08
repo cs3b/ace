@@ -54,9 +54,9 @@ class SkillPromptBuilderTest < Minitest::Test
   def test_cli_provider_resolves_role_references
     builder = SkillPromptBuilder.new({})
 
-    # role:e2e-executor resolves to claude:haiku (a CLI provider)
-    assert builder.cli_provider?("role:e2e-executor"),
-      "role:e2e-executor should resolve to a CLI provider"
+    # role:e2e-runner resolves to a CLI provider
+    assert builder.cli_provider?("role:e2e-runner"),
+      "role:e2e-runner should resolve to a CLI provider"
   end
 
   def test_cli_provider_rejects_unknown_role

@@ -39,7 +39,9 @@ reporting:
 # Execution defaults
 execution:
   # Default LLM provider:model for test execution
-  provider: "role:e2e-executor"
+  provider: "role:e2e-runner"
+  runner_provider: "role:e2e-runner"
+  verifier_provider: "role:e2e-verifier"
   # Timeout per test in seconds
   timeout: 600
   # Number of tests to run in parallel (1 = sequential)
@@ -49,9 +51,9 @@ execution:
 providers:
   # CLI providers use deterministic pipeline execution (runner + verifier)
   cli:
-    - claude
-    - gemini
     - codex
+    - gemini
+    - claude
     - codexoss
     - opencode
     - pi

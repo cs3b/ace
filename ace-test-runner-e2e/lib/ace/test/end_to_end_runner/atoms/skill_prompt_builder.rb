@@ -35,7 +35,7 @@ module Ace
           #
           # Resolves role: references to their concrete provider before checking.
           #
-          # @param provider_string [String] Provider:model string (e.g., "claude:sonnet", "role:e2e-executor")
+          # @param provider_string [String] Provider:model string (e.g., "claude:sonnet", "role:e2e-runner")
           # @return [Boolean]
           def cli_provider?(provider_string)
             resolved = resolve_provider_name(provider_string)
@@ -145,7 +145,7 @@ module Ace
 
           # Resolve the bare provider name from a provider string.
           # For role: references, resolves via ProviderModelParser to find the
-          # concrete provider (e.g. "role:e2e-executor" → "claude").
+          # concrete provider (e.g. "role:e2e-runner" → "claude").
           def resolve_provider_name(provider_string)
             name = self.class.provider_name(provider_string)
             return name unless name == "role"

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added explicit `ACE_E2E_SOURCE_ROOT` support so setup steps can read repo fixtures without reusing sandbox-root `PROJECT_ROOT_PATH`.
 - Added separate `execution.runner_provider` and `execution.verifier_provider` configuration for pipeline E2E runs.
 
+### Changed
+- Removed the legacy `role:e2e-executor` E2E execution alias from shipped defaults, tests, and runner-facing guidance; `role:e2e-runner` is now the only supported runner role.
+
 ### Fixed
 - Stop inheriting ambient host `PROJECT_ROOT_PATH` during setup and thread sandbox-root and source-root environment separately through runner and verifier execution.
 - Bound verifier artifact bundling and persist raw provider error output so oversized or malformed verifier responses fail diagnostically instead of collapsing into empty reports.
