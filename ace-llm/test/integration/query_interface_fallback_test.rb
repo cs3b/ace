@@ -210,11 +210,105 @@ module Ace
         assert_equal ["google:gemini-2.0-flash-lite", "openai:gpt-5"], config.providers
       end
 
+      def test_execute_with_fallback_rebuilds_provider_specific_generation_opts
+        codex_client = FakeClient.new
+        gemini_client = FakeClient.new
+        registry = FakeFallbackRegistry.new(
+          "codex" => codex_client,
+          "gemini" => gemini_client
+        )
+        fallback_config = Models::FallbackConfig.new(
+          enabled: true,
+          providers: ["gemini:gemini-2.5-flash"]
+        )
+
+        codex_client.define_singleton_method(:generate) do |_messages, **_options|
+          raise Ace::LLM::ProviderError, "codex failed"
+        end
+
+        gemini_client.define_singleton_method(:generate) do |_messages, **options|
+          self.received_options = options
+          {text: "ok", metadata: {}}
+        end
+
+          result = QueryInterface.send(
+            :execute_with_fallback,
+          provider: "codex",
+          model: "gpt-5.4-mini",
+          messages: [{role: "user", content: "hi"}],
+          generation_opts: {},
+          registry: registry,
+          fallback_config: fallback_config,
+          timeout: 60,
+          debug: false,
+          role_fallbacks: nil,
+          preset: "ro",
+          thinking_level: nil,
+          option_builder: lambda { |attempt_provider|
+            {cli_args: ["--#{attempt_provider}-only"]}
+          }
+        )
+
+        assert_equal "ok", result[:text]
+        assert_equal ["--gemini-only"], gemini_client.received_options[:cli_args]
+      end
+
+      def test_execute_with_fallback_preserves_per_target_role_suffixes
+        claude_client = FakeClient.new
+        gemini_client = FakeClient.new
+        registry = FakeFallbackRegistry.new(
+          "claude" => claude_client,
+          "gemini" => gemini_client
+        )
+        fallback_config = Models::FallbackConfig.new(
+          enabled: true,
+          chains: {
+            "claude:claude-haiku-4-5" => ["gemini:gemini-3-flash-preview@ro"]
+          }
+        )
+
+        claude_client.define_singleton_method(:generate) do |_messages, **_options|
+          raise Ace::LLM::ProviderError, "claude failed"
+        end
+
+        gemini_client.define_singleton_method(:generate) do |_messages, **options|
+          self.received_options = options
+          {text: "ok", metadata: {}}
+        end
+
+        result = QueryInterface.send(
+          :execute_with_fallback,
+          provider: "claude",
+          model: "claude-haiku-4-5",
+          messages: [{role: "user", content: "hi"}],
+          generation_opts: {cli_args: ["--claude-only"]},
+          registry: registry,
+          fallback_config: fallback_config,
+          timeout: 60,
+          debug: false,
+          role_fallbacks: ["gemini:gemini-3-flash-preview@ro"],
+          preset: "ro",
+          thinking_level: "low",
+          option_builder: lambda { |target_selector|
+            {cli_args: ["target=#{target_selector}"]}
+          }
+        )
+
+        assert_equal "ok", result[:text]
+        assert_equal ["target=gemini:gemini-3-flash-preview@ro"], gemini_client.received_options[:cli_args]
+      end
+
       private
+
+      FakeClient = Struct.new(:received_options)
 
       FakeParseResult = Struct.new(:provider, :model, :valid) do
         def valid?
           valid
+        end
+
+        def to_s
+          "#{provider}:#{model}"
         end
       end
 
@@ -225,6 +319,37 @@ module Ace
 
         def parse(input)
           @results.fetch(input.to_s.strip, FakeParseResult.new(nil, nil, false))
+        end
+      end
+
+      class FakeFallbackRegistry
+        def initialize(clients)
+          @clients = clients
+        end
+
+        def available_providers
+          @clients.keys
+        end
+
+        def models_for_provider(provider)
+          case provider
+          when "codex"
+            ["gpt-5.4-mini"]
+          when "gemini"
+            ["gemini-2.5-flash", "gemini-3-flash-preview"]
+          when "claude"
+            ["claude-haiku-4-5"]
+          else
+            []
+          end
+        end
+
+        def resolve_alias(input)
+          input
+        end
+
+        def get_client(provider, model:, timeout: nil)
+          @clients.fetch(provider)
         end
       end
 

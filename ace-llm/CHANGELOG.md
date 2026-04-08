@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Recompute provider-specific preset and CLI execution options for each fallback attempt so Codex-only flags do not leak into Gemini or Claude fallback calls.
+- Preserve full role fallback selectors during execution so later role candidates keep their own `:thinking` and `@preset` suffixes.
+
 ## [0.32.1] - 2026-04-01
 
 ### Fixed

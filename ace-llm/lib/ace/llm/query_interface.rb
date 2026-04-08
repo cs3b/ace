@@ -43,12 +43,6 @@ module Ace
         raise Error, parse_result.error unless parse_result.valid?
 
         resolved_preset = resolve_preset_name(parse_result.preset, preset)
-        execution_overrides = load_execution_overrides(
-          provider: parse_result.provider,
-          preset: resolved_preset,
-          thinking_level: parse_result.thinking_level
-        )
-
         final_model = model || parse_result.model
         if final_model.nil? || final_model.empty?
           raise Error, "No model specified and no default available for #{parse_result.provider}"
@@ -63,38 +57,41 @@ module Ace
         messages << {role: "system", content: system} if system && !system.empty?
         messages << {role: "user", content: final_prompt}
 
-        generation_opts = {}
-        resolved_temperature = first_non_nil(temperature, execution_overrides["temperature"])
-        resolved_max_tokens = first_non_nil(max_tokens, execution_overrides["max_tokens"])
-        resolved_cli_args = first_non_nil(cli_args, execution_overrides["cli_args"])
-        resolved_system_append = first_non_empty(system_append, execution_overrides["system_append"])
-        resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
-        resolved_working_dir = first_non_nil(working_dir, execution_overrides["working_dir"])
-        resolved_subprocess_env = merge_hash_values(execution_overrides["subprocess_env"], subprocess_env)
-
-        generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
-        generation_opts[:max_tokens] = resolved_max_tokens unless resolved_max_tokens.nil?
-        generation_opts[:system_file] = system_file if system_file
-        generation_opts[:prompt_file] = prompt_file if prompt_file
-        generation_opts[:cli_args] = resolved_cli_args unless blank_value?(resolved_cli_args)
-        generation_opts[:system_append] = resolved_system_append unless blank_value?(resolved_system_append)
-        generation_opts[:sandbox] = resolved_sandbox if resolved_sandbox
-        generation_opts[:working_dir] = resolved_working_dir unless blank_value?(resolved_working_dir)
-        generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
-        generation_opts[:last_message_file] = last_message_file if last_message_file
+        generation_opts = build_generation_opts(
+          provider: parse_result.provider,
+          preset: resolved_preset,
+          thinking_level: parse_result.thinking_level,
+          temperature: temperature,
+          max_tokens: max_tokens,
+          system_file: system_file,
+          prompt_file: prompt_file,
+          cli_args: cli_args,
+          system_append: system_append,
+          sandbox: sandbox,
+          working_dir: working_dir,
+          subprocess_env: subprocess_env,
+          last_message_file: last_message_file
+        )
+        execution_overrides = load_execution_overrides(
+          provider: parse_result.provider,
+          preset: resolved_preset,
+          thinking_level: parse_result.thinking_level
+        )
 
         if debug
           warn "Provider: #{parse_result.provider}"
           warn "Model: #{final_model}"
           warn "Preset: #{resolved_preset}" if resolved_preset
           warn "Thinking level: #{parse_result.thinking_level}" if parse_result.thinking_level
-          warn "Temperature: #{resolved_temperature}" unless resolved_temperature.nil?
-          warn "Max tokens: #{resolved_max_tokens}" unless resolved_max_tokens.nil?
+          warn "Temperature: #{generation_opts[:temperature]}" unless generation_opts[:temperature].nil?
+          warn "Max tokens: #{generation_opts[:max_tokens]}" unless generation_opts[:max_tokens].nil?
         end
 
         fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
         timeout_value = first_non_nil(timeout, execution_overrides["timeout"], Molecules::ConfigLoader.get("llm.timeout"), 120)
         resolved_timeout = normalize_timeout(timeout_value)
+
+        parser_for_options = Molecules::ProviderModelParser.new(registry: registry)
 
         response = execute_with_fallback(
           provider: parse_result.provider,
@@ -105,7 +102,38 @@ module Ace
           fallback_config: fallback_config,
           timeout: resolved_timeout,
           debug: debug,
-          role_fallbacks: parse_result.role_fallbacks
+          role_fallbacks: parse_result.role_fallbacks,
+          preset: resolved_preset,
+          thinking_level: parse_result.thinking_level,
+          option_builder: lambda { |target_selector|
+            parsed_target = parser_for_options.parse(target_selector.to_s)
+            target_provider = parsed_target.valid? ? parsed_target.provider : parse_result.provider
+            target_preset = if parsed_target.valid? && parsed_target.preset
+              parsed_target.preset
+            else
+              resolved_preset
+            end
+            target_thinking = if parsed_target.valid?
+              parsed_target.thinking_level
+            else
+              parse_result.thinking_level
+            end
+            build_generation_opts(
+              provider: target_provider,
+              preset: target_preset,
+              thinking_level: target_thinking,
+              temperature: temperature,
+              max_tokens: max_tokens,
+              system_file: system_file,
+              prompt_file: prompt_file,
+              cli_args: cli_args,
+              system_append: system_append,
+              sandbox: sandbox,
+              working_dir: working_dir,
+              subprocess_env: subprocess_env,
+              last_message_file: last_message_file
+            )
+          }
         )
 
         text_content = extract_text_content(response)
@@ -173,6 +201,37 @@ module Ace
         merged
       end
       private_class_method :load_execution_overrides
+
+      def self.build_generation_opts(provider:, preset:, thinking_level:, temperature:, max_tokens:, system_file:,
+        prompt_file:, cli_args:, system_append:, sandbox:, working_dir:, subprocess_env:, last_message_file:)
+        execution_overrides = load_execution_overrides(
+          provider: provider,
+          preset: preset,
+          thinking_level: thinking_level
+        )
+
+        generation_opts = {}
+        resolved_temperature = first_non_nil(temperature, execution_overrides["temperature"])
+        resolved_max_tokens = first_non_nil(max_tokens, execution_overrides["max_tokens"])
+        resolved_cli_args = first_non_nil(cli_args, execution_overrides["cli_args"])
+        resolved_system_append = first_non_empty(system_append, execution_overrides["system_append"])
+        resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
+        resolved_working_dir = first_non_nil(working_dir, execution_overrides["working_dir"])
+        resolved_subprocess_env = merge_hash_values(execution_overrides["subprocess_env"], subprocess_env)
+
+        generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
+        generation_opts[:max_tokens] = resolved_max_tokens unless resolved_max_tokens.nil?
+        generation_opts[:system_file] = system_file if system_file
+        generation_opts[:prompt_file] = prompt_file if prompt_file
+        generation_opts[:cli_args] = resolved_cli_args unless blank_value?(resolved_cli_args)
+        generation_opts[:system_append] = resolved_system_append unless blank_value?(resolved_system_append)
+        generation_opts[:sandbox] = resolved_sandbox if resolved_sandbox
+        generation_opts[:working_dir] = resolved_working_dir unless blank_value?(resolved_working_dir)
+        generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
+        generation_opts[:last_message_file] = last_message_file if last_message_file
+        generation_opts
+      end
+      private_class_method :build_generation_opts
 
       def self.merge_execution_overrides(base, overlay)
         left = base.respond_to?(:to_h) ? deep_stringify_keys(base.to_h) : deep_stringify_keys(base || {})
@@ -291,7 +350,7 @@ module Ace
       end
 
       def self.execute_with_fallback(provider:, model:, messages:, generation_opts:,
-        registry:, fallback_config:, timeout:, debug:, role_fallbacks: nil)
+        registry:, fallback_config:, timeout:, debug:, role_fallbacks: nil, preset: nil, thinking_level: nil, option_builder:)
         if fallback_config.disabled?
           client = registry.get_client(provider, model: model, timeout: timeout)
           return client.generate(messages, **generation_opts)
@@ -300,9 +359,10 @@ module Ace
         primary_provider_string = model ? "#{provider}:#{model}" : provider
 
         # Inject remaining role candidates ahead of the global fallback chain
+        normalized_role_fallbacks = normalize_fallback_providers(role_fallbacks, Molecules::ProviderModelParser.new(registry: registry))
         if role_fallbacks&.any?
           existing_chain = fallback_config.providers_for(primary_provider_string)
-          merged_chain = role_fallbacks + (existing_chain - role_fallbacks)
+          merged_chain = normalized_role_fallbacks + (existing_chain - normalized_role_fallbacks)
           fallback_config = fallback_config.merge(chains: {primary_provider_string => merged_chain})
         end
 
@@ -314,8 +374,13 @@ module Ace
           timeout: timeout
         )
 
-        orchestrator.execute(primary_provider: primary_provider_string, registry: registry) do |client|
-          client.generate(messages, **generation_opts)
+        orchestrator.execute(primary_provider: primary_provider_string, registry: registry) do |client, target_selector|
+          opts = if target_selector.to_s == primary_provider_string
+            generation_opts
+          else
+            option_builder.call(target_selector)
+          end
+          client.generate(messages, **opts)
         end
       end
 
@@ -380,7 +445,7 @@ module Ace
 
           parse_result = parser.parse(provider)
           canonical_provider = if parse_result.valid?
-            "#{parse_result.provider}:#{parse_result.model}"
+            parse_result.to_s
           else
             provider
           end
