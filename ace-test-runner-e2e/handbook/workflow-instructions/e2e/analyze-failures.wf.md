@@ -3,7 +3,7 @@ doc-type: workflow
 title: Analyze E2E Failures Workflow
 purpose: analyze-e2e-failures workflow instruction
 ace-docs:
-  last-updated: 2026-03-04
+  last-updated: 2026-04-08
   last-checked: 2026-03-21
 ---
 
@@ -57,6 +57,20 @@ Use these files as primary evidence:
 - `metadata.yml`
 - Relevant artifacts in `results/tc/{NN}/`
 
+Use these as mandatory corroborating evidence before classification:
+- relevant scenario files:
+  - `scenario.yml`
+  - relevant `TC-*.runner.md`
+  - relevant `TC-*.verify.md`
+- relevant implementation path for the behavior under test
+- at least one product-contract source:
+  - unit or command tests, or
+  - CLI help/docs, or
+  - a clear implementation invariant
+
+Do not classify from summary text alone when raw artifacts exist.
+Do not classify a TC as `test-issue` until the implementation path has been inspected.
+
 ## Analysis Procedure
 
 1. Locate latest failing report directories
@@ -68,24 +82,58 @@ ls -lt .ace-local/test-e2e/*-reports/ 2>/dev/null | head -20
 - failed TC IDs
 - reported category/evidence from metadata
 - corroborating artifact evidence
+- current scenario contract from runner/verifier files
+- relevant implementation path for the claimed behavior
+- at least one product-contract source establishing desired behavior
 
-3. Reclassify each failed TC if needed
+3. Establish desired behavior before classification
+- Name the desired behavior source for each failed TC
+- State why that source is authoritative for the observed behavior
+- If artifacts and implementation disagree, continue diagnostic reading before final classification
+
+4. Reclassify each failed TC if needed
 - Use `code-issue`, `test-issue`, or `runner-infrastructure-issue`
+- `test-issue` is allowed only when implementation-backed analysis shows the product behavior is correct and the mismatch is in setup, runner capture, verifier logic, artifact naming, command contract drift, or stale expectation
 - Add confidence: `high|medium|low`
-- Add one disconfirming check per TC
+- Add one disconfirming check per TC that targets the strongest competing explanation
 - If confidence is `medium` or `low`, run at least one additional diagnostic read/search before final decision
 
-4. Recommend rerun scope (cost-aware)
+5. Recommend rerun scope (cost-aware)
 - `scenario` (default)
 - `package`
 - `suite`
 with explicit rationale
 
-5. Choose autonomous fix decision per failed TC
+6. Choose autonomous fix decision per failed TC
 - Select a single primary fix action
 - Provide concrete file targets in priority order
 - Define explicit no-touch boundaries
 - Do not emit option lists that require user selection
+
+## Classification Gates
+
+Before labeling a failure `test-issue`, confirm all of the following:
+- the relevant implementation path was inspected
+- the desired behavior source is explicit
+- the mismatch is truly in artifact capture, naming, timing, selector choice, command shape, or stale expectation
+
+Before labeling a failure `code-issue`, confirm all of the following:
+- the failure is not already explained by stale runner/verifier/setup capture
+- implementation or product-contract evidence contradicts the observed behavior
+
+Examples:
+- artifact drift:
+  - verifier expects `cache.before/cache.after/cache.diff`
+  - runner still emits `noreport.files`
+  - classify `test-issue`
+- stale command contract:
+  - scenario uses `ace-task done`
+  - current contract is `ace-task update <ref> --set status=done`
+  - classify `test-issue`
+- mixed evidence:
+  - runner captures the wrong shifted step file
+  - implementation also writes renumber metadata
+  - inspect implementation before deciding whether the fix is runner-only or code+runner
 
 ## Required Output Contract
 
@@ -94,9 +142,9 @@ Produce this section before exiting:
 ```markdown
 ## E2E Failure Analysis Report
 
-| Scenario / TC | Category | Evidence | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
+| Scenario / TC | Category | Evidence | Desired Behavior Source | Implementation Evidence Path | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
 |---|---|---|---|---|---|---|---|---|---|---|
-| TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | re-run scenario after spec adjustment | scenario |
+| TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | current CLI help text + command test | ace-foo/lib/... | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | replay the same command with corrected artifact capture | scenario |
 ```
 
 Then include:
@@ -117,7 +165,10 @@ Then include:
 ## Success Criteria
 
 - Every failed TC has a category and evidence
+- Every failed TC has an explicit desired behavior source
+- Every failed TC has an implementation evidence path
 - Category is traceable to report/artifact facts
+- `test-issue` classifications are implementation-backed, not assumed
 - Fix target is explicit per failed TC
 - Fix target files are explicit per failed TC (primary + fallback)
 - No-touch boundaries are explicit per failed TC

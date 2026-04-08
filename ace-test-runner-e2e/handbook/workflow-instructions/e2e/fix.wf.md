@@ -3,7 +3,7 @@ doc-type: workflow
 title: Fix E2E Tests Workflow
 purpose: fix-e2e-tests workflow instruction
 ace-docs:
-  last-updated: 2026-03-13
+  last-updated: 2026-04-08
   last-checked: 2026-03-21
 ---
 
@@ -21,6 +21,8 @@ Do not apply any fix until an analysis report exists with:
 - scenario / TC identifier
 - category (`code-issue`, `test-issue`, `runner-infrastructure-issue`)
 - evidence from reports/artifacts
+- desired behavior source
+- implementation evidence path
 - fix target
 - fix target layer
 - primary candidate files
@@ -42,7 +44,7 @@ Use the output section from `e2e/analyze-failures`:
 ## Autonomy Rule
 
 - Do not ask the user to choose fix target, category, or rerun scope.
-- If analysis is incomplete, auto-complete missing decision fields via local evidence (reports, artifacts, scenario files, implementation), then proceed.
+- If analysis is incomplete, return to `wfi://e2e/analyze-failures` instead of guessing through missing behavior evidence.
 - Only stop for hard blockers (missing files/tools/permissions).
 
 ## Execution Environment Guardrail
@@ -66,7 +68,13 @@ Apply fixes in this order:
 - Confirm category, fix target, and rerun scope
 - Apply the "Chosen fix decision" and primary candidate files directly
 
-2. Apply category-specific fix
+2. Validate analysis quality before editing
+- Confirm the failed TC has an explicit desired behavior source
+- Confirm the failed TC has an implementation evidence path
+- If a `test-issue` classification lacks implementation-backed justification, stop and return to `wfi://e2e/analyze-failures`
+- If a `code-issue` classification may still be explained by stale runner/verifier/setup capture, stop and refine the analysis first
+
+3. Apply category-specific fix
 
 ### Category: runner-infrastructure-issue
 - Fix runner/sandbox/provider/reporting/orchestration behavior
@@ -79,9 +87,10 @@ Apply fixes in this order:
 ### Category: test-issue
 - Fix scenario definition, runner/verifier criteria, fixtures, or setup steps
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
+- State which implementation evidence justifies leaving product code unchanged
 - Keep implementation unchanged unless analysis is revised
 
-3. Rerun the selected failing scope after each fix
+4. Rerun the selected failing scope after each fix
 
 After every implemented fix, rerun the analysis-selected failing scope before moving to the next item or recommending release.
 
@@ -106,15 +115,15 @@ ace-test-e2e ace-bundle TS-BUNDLE-001
 ```
 - Record the rerun command and result in the execution summary for every fix item.
 
-4. Re-check classification when evidence conflicts
+5. Re-check classification when evidence conflicts
 - If outcome contradicts analysis, return to `e2e/analyze-failures`
 - Update analysis report and re-select a new autonomous chosen fix decision before continuing
 
-5. Iterate until all targeted failures are resolved
+6. Iterate until all targeted failures are resolved
 - Keep one active scenario/TC at a time
 - Preserve cost-conscious rerun discipline
 
-6. Run a final explicit failing-scenario checkpoint before concluding the fix session
+7. Run a final explicit failing-scenario checkpoint before concluding the fix session
 
 After the currently targeted failures are addressed, require one final:
 
@@ -145,6 +154,7 @@ Include one final row for the batch checkpoint:
 - Verification Command: one explicit rerun command per remaining failed scenario (`ace-test-e2e {package} {test-id}`)
 - Result: `pass` or remaining failing scenarios
 - If failures remain, continue the fix loop instead of treating the session as complete
+- For every `test-issue` fix, add one short line naming the implementation evidence that justified leaving product code unchanged
 
 If unresolved:
 
@@ -161,6 +171,7 @@ If unresolved:
 - Fixes are traceable to analyzed failures
 - Verification scope matches analysis recommendation, including mandatory reruns after each fix
 - Cost-conscious rerun strategy was followed
+- `test-issue` fixes were not applied as a shortcut around implementation inspection
 - Final explicit per-scenario rerun checkpoint for all targeted failures was completed before concluding the fix session
 - No user clarification was required for fix targeting/scope in normal flow
 - Targeted failures pass, or blockers are explicitly documented

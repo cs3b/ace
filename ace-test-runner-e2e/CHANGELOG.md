@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-04-08
+
+### Changed
+- Strengthened `e2e/analyze-failures` and `e2e/fix` workflow instructions to require implementation-backed classification, explicit desired-behavior sources, and analysis-quality gates before treating failures as test-only drift.
+
 ### Fixed
 - Stopped CLI E2E scenarios immediately after sandbox setup failure and aligned runner-smoke fixture setup with `ACE_E2E_SOURCE_ROOT`.
 
