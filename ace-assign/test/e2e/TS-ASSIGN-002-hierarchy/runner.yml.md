@@ -27,6 +27,7 @@ ace-assign's hierarchical step management.
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
 - Execute each goal in order (1 through 5)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
+- Invoke the tool under test as `ace-assign`, never `./exe/ace-assign`; the sandbox shim exists only as compatibility protection
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output — all artifacts must come from real tool execution

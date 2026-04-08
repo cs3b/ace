@@ -23,7 +23,7 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 ## Constraints
 
 - Create assignment from `fixtures/lifecycle/job.yaml`.
-- After creation, verify assignment.yaml, steps/, reports/ directories exist.
+- After creation, capture `structure.stdout` with a real directory listing of the created assignment root showing `assignment.yaml`, `steps/`, `reports/`, and the step files.
 - Verify 3 step files (010-analyze, 020-implement, 030-verify) with .st.md extension.
 - First step should be in_progress with skill field and array instructions.
 - Complete analyze step with `fixtures/lifecycle/report.md`, verify step 010 marked done and 020 advances.

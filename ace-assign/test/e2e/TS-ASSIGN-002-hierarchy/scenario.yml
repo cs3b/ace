@@ -40,5 +40,12 @@ setup:
   - git-init
   - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
+  - run: |
+      mkdir -p exe
+      cat > exe/ace-assign <<'EOF'
+      #!/usr/bin/env bash
+      exec ace-assign "$@"
+      EOF
+      chmod +x exe/ace-assign
   - agent-env:
       PROJECT_ROOT_PATH: .

@@ -12,7 +12,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Assignment created** — `create.exit` contains `0`. `create.stdout` mentions assignment info and first step.
-2. **Structure correct** — `structure.stdout` shows assignment.yaml, steps/, reports/ directories. Three step files with .st.md extension exist.
+2. **Structure correct** — `structure.stdout` exists and shows `assignment.yaml`, `steps/`, `reports/`, and the three `.st.md` step files.
 3. **Step completion** — `report-analyze.exit` is `0`. Step 010 marked done (not "completed"), report file at reports/010-analyze.r.md.
 4. **Failure handling** — `fail-implement.exit` is `0`. `status-stalled.stdout` shows no current step (queue stalled). Report rejected on stalled queue.
 5. **Dynamic-step branch handled explicitly** — If `add-dynamic.exit` is `0`, dynamic-step activation/completion evidence exists. If `add-dynamic.exit` is non-zero because the preset does not define `fix-issue`, the artifacts must still show the retry path was used instead.
