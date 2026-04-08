@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Aligned the remaining E2E sandbox bootstrap to copy repo-root setup assets from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 - Updated `TS-ASSIGN-002` hierarchy E2E coverage to match the current CLI error contract and require real step-file metadata evidence for audit-trail checks.
+- Updated `TS-ASSIGN-002` auto-completion coverage to use the current cross-assignment `finish --assignment <id>` contract instead of positional step targeting.
 
 
 ### Fixed
