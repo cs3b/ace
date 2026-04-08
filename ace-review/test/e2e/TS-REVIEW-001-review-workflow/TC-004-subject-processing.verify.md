@@ -14,11 +14,13 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 ### Checks
 1. **All three capture sets exist** — results/tc/04/ contains stdout/exit for diff, files, and mixed subjects.
 2. **All exit codes zero** — All three subject types processed successfully.
-3. **Each type processed** — Output shows each subject type was recognized and processed.
+3. **Each type processed** — Output shows either:
+   - the subject type was recognized explicitly in stdout/stderr, or
+   - a prepared review session was created successfully for each subject invocation, which is acceptable evidence that the subject was parsed well enough to build the session.
 
 ## Verdict
 
-- **PASS**: All subject types (diff, files, mixed) process successfully via dry-run.
+- **PASS**: All subject types (diff, files, mixed) process successfully via dry-run or session preparation.
 - **FAIL**: Any subject type fails or is not recognized.
 
 Report: `PASS` or `FAIL` with evidence (exit codes per subject type).

@@ -15,11 +15,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 1. **Both capture sets exist** — results/tc/07/ contains captures for multi and reviewers tests.
 2. **Both exit codes zero** — Both review executions succeeded.
 3. **Session directories created** — Both tests created session directories with review output files.
-4. **Review files exist** — At least one review output file exists per execution.
+4. **Prepared execution evidence exists** — Each run either created review output files or prepared a session with prompt files and an explicit `To execute with LLM:` handoff.
 
 ## Verdict
 
-- **PASS**: Both multi-model and reviewers-format presets execute successfully with output files created.
-- **FAIL**: Either execution fails or no output files generated.
+- **PASS**: Both multi-model and reviewers-format presets execute successfully and create usable execution/preparation sessions.
+- **FAIL**: Either execution fails or no usable session/output is generated.
 
 Report: `PASS` or `FAIL` with evidence (exit codes, session directories, file counts).

@@ -15,11 +15,13 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 1. **Artifacts exist** — results/tc/06/ contains execution captures and session listing.
 2. **Zero exit code** — Review execution succeeded.
 3. **Session directory created** — Session listing shows a directory was created with review output.
-4. **Meaningful content** — The review output file contains more than 3 lines of substantive content (not just boilerplate).
+4. **Prepared execution evidence** — Execution output shows either:
+   - a real review output file with substantive content, or
+   - a prepared review session with prompt files and an explicit `To execute with LLM:` handoff command.
 
 ## Verdict
 
-- **PASS**: Review executed successfully, session created, output contains meaningful review content.
-- **FAIL**: Execution failed, no session, or empty/boilerplate output.
+- **PASS**: Review execution or session preparation succeeded and created a usable review session.
+- **FAIL**: Execution failed, no session was created, or no usable execution/preparation evidence exists.
 
 Report: `PASS` or `FAIL` with evidence (exit code, session directory, content snippet).

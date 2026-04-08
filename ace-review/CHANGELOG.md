@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Updated `TS-REVIEW-001` setup to load repo-root assets via `ACE_E2E_SOURCE_ROOT` and aligned E2E verification with the current review-session preparation contract for dry-run and prepared-session execution paths.
+
 ### Changed
 - Expanded `as-review-pr` canonical skill metadata so public `review-pr` assign-step discovery is skill-owned rather than catalog-owned.
 
