@@ -20,9 +20,9 @@ module Ace
             desc <<~DESC.strip
               Run E2E tests via LLM execution
 
-              Discovers and executes TS-* test scenarios in a package's test/e2e/ directory.
-              Tests are sent to an LLM provider which executes the test steps and returns
-              structured results.
+              Runs a 2-phase sandboxed test pipeline for one package:
+              1. deterministic Minitest from test-e2e/integration/
+              2. LLM-driven TS-* scenarios from test-e2e/scenarios/
 
               Output:
                 Exit codes: 0 (all pass), 1 (any fail/error)
@@ -118,6 +118,7 @@ module Ace
             def handle_dry_run(package, test_id, output, tags: [])
               discoverer = Molecules::TestDiscoverer.new
               loader = Molecules::ScenarioLoader.new
+              integration_files = discoverer.find_integration_tests(package: package, base_dir: Dir.pwd)
 
               files = discoverer.find_tests(
                 package: package,
@@ -125,16 +126,30 @@ module Ace
                 tags: tags,
                 base_dir: Dir.pwd
               )
-              if files.empty?
+              if files.empty? && integration_files.empty?
                 raise Ace::Support::Cli::Error.new(
                   "No tests found for package '#{package}'" +
                   (test_id ? " with ID '#{test_id}'" : "")
                 )
               end
 
-              output.puts "Dry run: preview of scenarios to execute"
+              output.puts "Dry run: preview of package phases to execute"
               output.puts ""
 
+              output.puts "Phase 1/2: sandboxed integration"
+              if integration_files.empty?
+                output.puts "  [skip] no integration files discovered"
+              else
+                output.puts "  [run] #{integration_files.size} integration file(s)"
+                integration_files.each do |file|
+                  output.puts "    - #{file.sub(%r{\\A#{Regexp.escape(File.join(Dir.pwd, package))}/?}, "")}"
+                end
+              end
+              output.puts ""
+
+              return if files.empty?
+
+              output.puts "Phase 2/2: LLM scenarios"
               files.each do |file|
                 scenario = loader.load(File.dirname(file))
                 output.puts "#{scenario.test_id}: #{scenario.title}"

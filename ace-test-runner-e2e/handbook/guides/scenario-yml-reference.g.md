@@ -24,10 +24,10 @@ Legacy fields `mode` and `execution-model` are not supported.
 ## Location
 
 ```text
-{package}/test/e2e/TS-{AREA}-{NNN}-{slug}/scenario.yml
+{package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/scenario.yml
 ```
 
-Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
+Example: `ace-lint/test-e2e/scenarios/TS-LINT-001-lint-pipeline/scenario.yml`
 
 ## Schema
 
@@ -178,7 +178,7 @@ The `tags` field enables discovery-time filtering with `--tags` and `--exclude-t
 ## Directory Structure
 
 ```text
-test/e2e/TS-LINT-001-lint-pipeline/
+test-e2e/scenarios/TS-LINT-001-lint-pipeline/
 ├── scenario.yml
 ├── runner.yml.md
 ├── verifier.yml.md

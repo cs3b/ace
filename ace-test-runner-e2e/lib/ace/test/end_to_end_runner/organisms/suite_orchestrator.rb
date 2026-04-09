@@ -42,6 +42,7 @@ module Ace
             @use_color = use_color.nil? ? output.respond_to?(:tty?) && output.tty? : use_color
             @progress = progress
             config = Molecules::ConfigLoader.load
+            @integration_runner = Molecules::IntegrationRunner.new(base_dir: @base_dir, config: config)
             @suite_report_writer = suite_report_writer || Molecules::SuiteReportWriter.new(config: config)
             @loader = scenario_loader || Molecules::ScenarioLoader.new
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
@@ -119,8 +120,20 @@ module Ace
               exclude_tags: options[:exclude_tags]
             }
 
+            integration_results = run_integration_gate(packages)
+            integration_summary = summarize_integration_results(integration_results)
+            if integration_summary[:total] > 0
+              @output.puts "Integration Phase: #{integration_summary[:passed]}/#{integration_summary[:total]} package(s) passed"
+            end
+
+            if integration_summary[:failed] > 0
+              @output.puts "Scenario Phase: skipped because integration phase failed"
+              return integration_only_results(integration_results)
+            end
+
             # Discover tests in each package
             package_tests = discover_package_tests(packages)
+            return integration_only_results(integration_results) if package_tests.empty?
 
             total_tests = package_tests.values.flatten.size
             pkg_count = package_tests.keys.size
@@ -137,13 +150,44 @@ module Ace
 
             # Execute tests
             if options[:parallel]
-              run_parallel(package_tests, options)
+              run_parallel(package_tests, options).merge(integration: integration_summary)
             else
-              run_sequential(package_tests, options)
+              run_sequential(package_tests, options).merge(integration: integration_summary)
             end
           end
 
           private
+
+          def run_integration_gate(packages)
+            packages.map do |package|
+              @integration_runner.run(
+                package: package,
+                run_id: @timestamp_generator.call,
+                output: @output
+              )
+            end.reject(&:skipped?)
+          end
+
+          def summarize_integration_results(results)
+            {
+              total: results.size,
+              passed: results.count(&:success?),
+              failed: results.count(&:failed?)
+            }
+          end
+
+          def integration_only_results(results)
+            summary = summarize_integration_results(results)
+            {
+              total: summary[:total],
+              passed: summary[:passed],
+              failed: summary[:failed],
+              errors: 0,
+              total_cases: summary[:total],
+              passed_cases: summary[:passed],
+              packages: {}
+            }
+          end
 
           # Build the appropriate display manager based on progress flag
           #

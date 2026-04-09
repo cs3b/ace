@@ -395,7 +395,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_stops_on_setup_failure
     Dir.mktmpdir do |tmpdir|
-      ts_dir = File.join(tmpdir, "my-pkg", "test", "e2e", "TS-TEST-001-failing-setup")
+      ts_dir = File.join(tmpdir, "my-pkg", "test-e2e", "scenarios", "TS-TEST-001-failing-setup")
       FileUtils.mkdir_p(ts_dir)
 
       File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
@@ -1160,7 +1160,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_setup_failure_result_keeps_expected_report_dir_for_cli_provider
     Dir.mktmpdir do |tmpdir|
-      ts_dir = File.join(tmpdir, "my-pkg", "test", "e2e", "TS-TEST-001-failing-setup")
+      ts_dir = File.join(tmpdir, "my-pkg", "test-e2e", "scenarios", "TS-TEST-001-failing-setup")
       FileUtils.mkdir_p(ts_dir)
 
       File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
@@ -1226,7 +1226,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package(tmpdir, package, scenario_id, tc_ids, timeout: nil)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-test")
     FileUtils.mkdir_p(ts_dir)
 
     scenario_yaml = <<~YAML
@@ -1276,7 +1276,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package_with_setup(tmpdir, package, scenario_id, tc_ids)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-test")
     fixtures_dir = File.join(ts_dir, "fixtures")
     FileUtils.mkdir_p(fixtures_dir)
     File.write(File.join(fixtures_dir, "sample.txt"), "fixture content")
@@ -1330,7 +1330,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package_with_run_id_tmux_setup(tmpdir, package, scenario_id, tc_ids)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-tmux-runid")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-tmux-runid")
     FileUtils.mkdir_p(ts_dir)
 
     File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
@@ -1383,7 +1383,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_goal_ts_test_package(tmpdir, package, scenario_id)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-goal")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-goal")
     FileUtils.mkdir_p(ts_dir)
 
     File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)

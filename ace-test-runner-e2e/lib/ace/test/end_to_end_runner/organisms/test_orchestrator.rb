@@ -37,6 +37,7 @@ module Ace
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
             @discoverer = Molecules::TestDiscoverer.new
+            @integration_runner = Molecules::IntegrationRunner.new(base_dir: @base_dir, config: config)
             @loader = Molecules::ScenarioLoader.new
             @executor = executor || Molecules::TestExecutor.new(provider: provider, timeout: @timeout, config: config)
             @report_writer = Molecules::ReportWriter.new
@@ -54,7 +55,7 @@ module Ace
           # @return [Array<Models::TestResult>] List of test results
           def run(package:, test_id: nil, test_cases: nil, verify: false, tags: nil,
             cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
-            # Discover tests
+            integration_files = @integration_runner.discover(package: package)
             files = @discoverer.find_tests(
               package: package,
               test_id: test_id,
@@ -62,7 +63,7 @@ module Ace
               base_dir: @base_dir
             )
 
-            if files.empty?
+            if files.empty? && integration_files.empty?
               output.puts "No E2E tests found in #{package}" +
                 (test_id ? " matching #{test_id}" : "")
               return []
@@ -70,8 +71,23 @@ module Ace
 
             # Generate timestamp for this run (use external run_id when provided)
             timestamp = run_id || generate_timestamp
+            results = []
 
-            if files.size == 1
+            if integration_files.any?
+              integration_result = @integration_runner.run(
+                package: package,
+                run_id: timestamp,
+                output: output
+              )
+              results << integration_result
+              return results if integration_result.failed?
+            end
+
+            if files.empty?
+              return test_id ? [] : results
+            end
+
+            scenario_results = if files.size == 1
               run_single_test(
                 files.first,
                 timestamp,
@@ -84,6 +100,8 @@ module Ace
             else
               run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases, verify: verify)
             end
+
+            results.concat(scenario_results)
           end
 
           private
@@ -349,8 +367,10 @@ module Ace
           # @param count [Integer] Number of unique timestamps needed
           # @return [Array<String>] Array of unique timestamp strings
           def generate_timestamps(count)
+            base_time = Time.now.utc
+
             count.times.map do |i|
-              time = Time.now.utc + (i * 0.05) # 50ms offset per ID
+              time = base_time + (i * 0.05) # 50ms offset per ID
               Ace::B36ts.encode(time, format: :"50ms")
             end
           end

@@ -36,7 +36,7 @@ ace-test-e2e ace-lint TS-LINT-001
 
 What happens:
 
-- Scenario metadata is discovered from `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`.
+- Scenario metadata is discovered from `ace-lint/test-e2e/scenarios/TS-LINT-001-*/scenario.yml`.
 - Setup runs in an isolated sandbox.
 - Runner and verifier outputs are written to `.ace-local/test-e2e/...`.
 

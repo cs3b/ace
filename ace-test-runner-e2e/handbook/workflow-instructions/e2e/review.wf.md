@@ -111,7 +111,7 @@ Build a unit test map:
 Discover all E2E tests for the package:
 
 ```bash
-find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
+find {PACKAGE}/test-e2e/scenarios -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **For each scenario/TC:**

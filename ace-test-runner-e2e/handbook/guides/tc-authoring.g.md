@@ -48,7 +48,7 @@ Examples:
 TC files are placed in the scenario directory alongside `scenario.yml`:
 
 ```text
-{package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+{package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
 ├── scenario.yml
 ├── runner.yml.md
 ├── verifier.yml.md

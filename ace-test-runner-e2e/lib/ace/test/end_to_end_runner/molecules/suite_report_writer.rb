@@ -44,7 +44,8 @@ module Ace
               package: package,
               timestamp: timestamp,
               overall_status: overall_status,
-              executed_at: executed_at
+              executed_at: executed_at,
+              base_dir: base_dir
             )
 
             File.write(report_path, content)
@@ -54,7 +55,7 @@ module Ace
           private
 
           # Attempt LLM synthesis, falling back to static template
-          def synthesize_report(results, scenarios, package:, timestamp:, overall_status:, executed_at:)
+          def synthesize_report(results, scenarios, package:, timestamp:, overall_status:, executed_at:, base_dir:)
             results_data = build_results_data(results, scenarios, cache_dir: File.join(base_dir, ".ace-local", "test-e2e"))
 
             prompt_builder = Atoms::SuiteReportPromptBuilder.new

@@ -44,6 +44,12 @@ class TestExecutorTest < Minitest::Test
       stub_sandbox_builder do
         Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **kwargs|
           captured_timeouts << kwargs[:timeout]
+          if captured_timeouts.size == 1
+            FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "01"))
+            FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "02"))
+            File.write(File.join(sandbox_path, "results", "tc", "01", "out.txt"), "ok\n")
+            File.write(File.join(sandbox_path, "results", "tc", "02", "out.txt"), "ok\n")
+          end
           responses.shift
         }) do
           result = executor.execute(
@@ -90,6 +96,12 @@ class TestExecutorTest < Minitest::Test
       stub_sandbox_builder do
         Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
           calls << {prompt: args[1], kwargs: kwargs}
+          if calls.size == 1
+            FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "01"))
+            FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "02"))
+            File.write(File.join(sandbox_path, "results", "tc", "01", "out.txt"), "ok\n")
+            File.write(File.join(sandbox_path, "results", "tc", "02", "out.txt"), "mismatch\n")
+          end
           responses.shift
         }) do
           result = executor.execute(

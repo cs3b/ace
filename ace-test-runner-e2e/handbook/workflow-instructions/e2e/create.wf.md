@@ -62,7 +62,7 @@ Find the next available test ID:
 
 ```bash
 # Search TS-format directories
-find {PACKAGE}/test/e2e -maxdepth 1 -type d -name "TS-{AREA}-*" 2>/dev/null | \
+find {PACKAGE}/test-e2e/scenarios -maxdepth 1 -type d -name "TS-{AREA}-*" 2>/dev/null | \
   sed 's/.*TS-{AREA}-\([0-9]*\).*/\1/'
 ```
 
@@ -78,7 +78,7 @@ Result: `TS-{AREA}-{NNN}` (e.g., `TS-LINT-003`)
 Ensure the E2E test directory exists:
 
 ```bash
-mkdir -p {PACKAGE}/test/e2e
+mkdir -p {PACKAGE}/test-e2e/scenarios
 ```
 
 ### 4. Generate Test Slug
@@ -325,32 +325,32 @@ bundle exec ruby -e '
 
 Create the scenario directory with separate files:
 ```bash
-mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}
+mkdir -p {PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}
 ```
 
 Write `scenario.yml` (metadata and setup):
 ```
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/scenario.yml
+{PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/scenario.yml
 ```
 
 Write scenario pair configs:
 ```
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/runner.yml.md
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/verifier.yml.md
+{PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/runner.yml.md
+{PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/verifier.yml.md
 ```
 
 Write individual TC runner/verifier files for each test case:
 ```
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.runner.md
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.verify.md
+{PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.runner.md
+{PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.verify.md
 ```
 
 Optionally create a fixtures directory if test data is needed:
 ```bash
-mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/fixtures
+mkdir -p {PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/fixtures
 ```
 
-Example: `ace-lint/test/e2e/TS-LINT-003-config-file-validation/scenario.yml`
+Example: `ace-lint/test-e2e/scenarios/TS-LINT-003-config-file-validation/scenario.yml`
 
 ### 10. Report Result
 
@@ -362,7 +362,7 @@ Output a summary:
 **Test ID:** TS-{AREA}-{NNN}
 **Format:** TS (directory-based)
 **Package:** {package}
-**Directory:** {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+**Directory:** {PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
 **Files:**
 - scenario.yml
 - runner.yml.md
@@ -386,21 +386,21 @@ Output a summary:
 ace-bundle wfi://e2e/create
 ```
 
-Creates: `ace-lint/test/e2e/TS-LINT-003-new-test-scenario/` with `scenario.yml` and TC files.
+Creates: `ace-lint/test-e2e/scenarios/TS-LINT-003-new-test-scenario/` with `scenario.yml` and TC files.
 
 **Create a contextual test:**
 ```bash
 ace-bundle wfi://e2e/create
 ```
 
-Creates: `ace-lint/test/e2e/TS-LINT-003-config-file-validation/` with `scenario.yml` and TC files for config validation.
+Creates: `ace-lint/test-e2e/scenarios/TS-LINT-003-config-file-validation/` with `scenario.yml` and TC files for config validation.
 
 **Create test for new area:**
 ```bash
 ace-bundle wfi://e2e/create
 ```
 
-Creates: `ace-review/test/e2e/TS-COMMENT-001-pr-comment-threading/` with `scenario.yml` and TC files.
+Creates: `ace-review/test-e2e/scenarios/TS-COMMENT-001-pr-comment-threading/` with `scenario.yml` and TC files.
 
 ## Error Handling
 

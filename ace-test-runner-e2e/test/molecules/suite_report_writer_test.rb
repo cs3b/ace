@@ -9,6 +9,7 @@ class SuiteReportWriterTest < Minitest::Test
 
   def setup
     @writer = SuiteReportWriter.new(config: {})
+    @original_llm_query = Ace::LLM::QueryInterface.method(:query)
   end
 
   def test_writes_report_to_correct_path
@@ -359,9 +360,7 @@ class SuiteReportWriterTest < Minitest::Test
 
   # Restore original LLM query method
   def restore_llm_query
-    if Ace::LLM::QueryInterface.singleton_class.method_defined?(:query)
-      Ace::LLM::QueryInterface.singleton_class.remove_method(:query)
-    end
+    Ace::LLM::QueryInterface.define_singleton_method(:query, @original_llm_query)
   end
 
   def make_scenario(test_id, title)

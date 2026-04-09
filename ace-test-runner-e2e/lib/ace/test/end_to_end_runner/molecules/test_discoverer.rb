@@ -7,16 +7,17 @@ module Ace
     module EndToEndRunner
       module Molecules
         # Discovers E2E test scenario directories (TS-*/scenario.yml) in packages
-        #
-        # Finds test scenarios in the TS-format directory structure:
-        #   {package}/test/e2e/TS-*/scenario.yml
-        #
-        # Note: This is a Molecule (not an Atom) because it performs filesystem
-        # I/O via Dir.glob.
         class TestDiscoverer
-          TEST_DIR = "test/e2e"
           SCENARIO_FILE = "scenario.yml"
           SCENARIO_DIR_PATTERN = "TS-*"
+
+          def initialize(config: ConfigLoader.load)
+            @config = config || {}
+            @scenario_dir = @config.dig("paths", "scenarios") || "test-e2e/scenarios"
+            @integration_dir = @config.dig("paths", "integration") || "test-e2e/integration"
+            @scenario_pattern = @config.dig("patterns", "discovery") || File.join(@scenario_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
+            @integration_pattern = @config.dig("patterns", "integration") || File.join(@integration_dir, "**/*_test.rb")
+          end
 
           # Find E2E test scenario files matching criteria
           #
@@ -56,7 +57,7 @@ module Ace
           # @param base_dir [String] Base directory to search from
           # @return [Array<Models::TestScenario>] Loaded scenario models with test_cases
           def find_scenarios(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
-            test_dir = File.join(base_dir, package, TEST_DIR)
+            test_dir = File.join(base_dir, package, @scenario_dir)
             pattern = File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
             scenario_files = Dir.glob(pattern).sort
 
@@ -77,16 +78,29 @@ module Ace
             )
           end
 
+          # Find sandboxed deterministic integration test files in a package.
+          #
+          # @param package [String] Package name
+          # @param base_dir [String] Base directory to search from
+          # @return [Array<String>] Sorted list of matching *_test.rb files
+          def find_integration_tests(package:, base_dir: Dir.pwd)
+            Dir.glob(File.join(base_dir, package, @integration_pattern))
+              .select { |path| File.file?(path) }
+              .sort
+          end
+
           # List all packages that have E2E tests
           #
           # @param base_dir [String] Base directory to search from
           # @return [Array<String>] Sorted list of package names
           def list_packages(base_dir: Dir.pwd)
-            pattern = File.join(base_dir, "*/#{TEST_DIR}/#{SCENARIO_DIR_PATTERN}/#{SCENARIO_FILE}")
-
             base = Pathname.new(base_dir)
+            scenario_pattern = File.join(base_dir, "*/#{@scenario_pattern}")
+            integration_pattern = File.join(base_dir, "*/#{@integration_pattern}")
 
-            Dir.glob(pattern)
+            Dir.glob(scenario_pattern)
+              .concat(Dir.glob(integration_pattern))
+              .select { |f| File.file?(f) }
               .map { |f| Pathname.new(f).relative_path_from(base).each_filename.first }
               .uniq
               .sort
@@ -96,7 +110,7 @@ module Ace
 
           # Build glob pattern for finding TS-format scenario.yml files
           def build_scenario_pattern(package, test_id, base_dir)
-            test_dir = File.join(base_dir, package, TEST_DIR)
+            test_dir = File.join(base_dir, package, @scenario_dir)
 
             if test_id
               File.join(test_dir, "*#{test_id}*", SCENARIO_FILE)

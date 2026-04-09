@@ -77,29 +77,29 @@ For each TC classified as REMOVE:
 
 **Entire scenario removal** (all TCs in a scenario are REMOVE):
 ```bash
-rm -rf {PACKAGE}/test/e2e/{scenario-dir}/
+rm -rf {PACKAGE}/test-e2e/scenarios/{scenario-dir}/
 ```
 
 **Individual TC removal** (some TCs in a scenario survive):
 ```bash
-rm {PACKAGE}/test/e2e/{scenario-dir}/{tc-file}.runner.md
-rm {PACKAGE}/test/e2e/{scenario-dir}/{tc-file}.verify.md
+rm {PACKAGE}/test-e2e/scenarios/{scenario-dir}/{tc-file}.runner.md
+rm {PACKAGE}/test-e2e/scenarios/{scenario-dir}/{tc-file}.verify.md
 ```
 
 After all deletions, check if any scenario directories are now empty:
 ```bash
 # Find scenarios with no remaining TC files
-find {PACKAGE}/test/e2e/TS-* -maxdepth 1 -name "TC-*.runner.md" 2>/dev/null | sort
+find {PACKAGE}/test-e2e/scenarios/TS-* -maxdepth 1 -name "TC-*.runner.md" 2>/dev/null | sort
 ```
 
 Remove empty scenario directories (no TCs left):
 ```bash
-rm -rf {PACKAGE}/test/e2e/{empty-scenario-dir}/
+rm -rf {PACKAGE}/test-e2e/scenarios/{empty-scenario-dir}/
 ```
 
 Stage the deletions:
 ```bash
-git add {PACKAGE}/test/e2e/
+git add {PACKAGE}/test-e2e/scenarios/
 ```
 
 ### 3. Create New Scenarios and TCs
@@ -108,7 +108,7 @@ For each ADD group in the proposed scenario structure:
 
 **Create scenario directory:**
 ```bash
-mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}
+mkdir -p {PACKAGE}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}
 ```
 
 **Write `scenario.yml`:**
@@ -183,7 +183,7 @@ After all changes are applied (or in `--dry-run` mode, report what would happen)
 
 **List all remaining E2E test files:**
 ```bash
-find {PACKAGE}/test/e2e -name "scenario.yml" -o -name "runner.yml.md" -o -name "verifier.yml.md" -o -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
+find {PACKAGE}/test-e2e/scenarios -name "scenario.yml" -o -name "runner.yml.md" -o -name "verifier.yml.md" -o -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
 ```
 
 **Verify counts match the plan:**
@@ -297,5 +297,5 @@ If a file to be created already exists:
 If execution fails partway through:
 1. Report which actions completed and which failed
 2. Do not attempt to roll back completed actions
-3. Show the state of `{PACKAGE}/test/e2e/` after partial execution
+3. Show the state of `{PACKAGE}/test-e2e/scenarios/` after partial execution
 4. Suggest re-running with the remaining actions

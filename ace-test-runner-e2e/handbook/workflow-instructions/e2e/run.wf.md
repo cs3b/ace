@@ -13,7 +13,7 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 ## Arguments
 
-- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
+- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, looks for `test-e2e/scenarios/` in project root.
 - `TEST_ID` (optional) - Test identifier (e.g., `TS-LINT-001`). If omitted, runs all tests.
 - `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths.
 - `--report-dir PATH` (optional) - Explicit report directory path (skips computed `${TEST_DIR}-reports`).
@@ -124,13 +124,13 @@ Discover scenarios based on arguments:
 
 ```bash
 # No arguments — project root
-find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
+find test-e2e/scenarios -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 
 # PACKAGE only — all tests in package
-find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
+find {PACKAGE}/test-e2e/scenarios -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 
 # PACKAGE + TEST_ID — specific test
-find {PACKAGE}/test/e2e -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
+find {PACKAGE}/test-e2e/scenarios -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
 ```
 
 If `--tags` or `--exclude-tags` provided, filter discovered scenarios by reading each `scenario.yml` and checking the `tags` array. Tags use OR semantics: a scenario matches `--tags` if it has **any** listed tag, and is excluded by `--exclude-tags` if it has **any** listed tag.

@@ -140,7 +140,7 @@ Use the verification model that matches the scenario boundary:
 ## Scenario Layout
 
 ```text
-{package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+{package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
   scenario.yml
   runner.yml.md
   verifier.yml.md
