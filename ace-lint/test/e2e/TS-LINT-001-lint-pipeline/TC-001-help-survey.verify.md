@@ -12,14 +12,13 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 ### Checks
-1. **File exists** — At least one file exists in `results/tc/01/`.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions key flags** — The content references at least two of: --fix, --no-report, --validators, --doctor.
-4. **Observations present** — The content includes at least one observation or assessment about the tool's interface.
+1. **Help captures exist** — `help.stdout`, `help.stderr`, and `help.exit` are present.
+2. **Help succeeded** — `help.exit` reports success.
+3. **Mentions key flags** — `help.stdout` references at least two of: --fix, --no-report, --validators, --doctor.
 
 ## Verdict
 
-- **PASS**: All expectations met. File exists with substantive observations about ace-lint's interface.
-- **FAIL**: File missing, empty, boilerplate-only, or lacks mention of key flags.
+- **PASS**: The help command succeeds and exposes the expected lint command surface.
+- **FAIL**: Captures are missing, help fails, or key flags are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence (quote relevant lines or note their absence).
+Report: `PASS` or `FAIL` with evidence from `help.*`.
