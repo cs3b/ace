@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.10**: Hardened `TS-ASSIGN-002` runner artifact handling so hierarchy E2E runs emit explicit lookup-failure evidence instead of silently dropping required files.
+- **ace-bundle v0.41.6**: Corrected `TS-BUNDLE-001` verification to accept semantic README inclusion from transformed bundle output rather than requiring the literal source heading.
+- **ace-git-worktree v0.19.9**: Updated worktree E2E runners to use the current positional create syntax and explicit forced-cleanup capture rules for task-aware removal.
+- **ace-lint v0.28.4**: Relaxed `TS-LINT-001` no-report verification to accept the actual snapshot artifact names emitted by the runner while still proving cache suppression.
+- **ace-support-nav v0.26.5**: Corrected cross-protocol navigation E2E verification to require a resolved workflow path without brittle path-ending wording.
+- **ace-test-runner v0.19.6**: Relaxed `TS-TEST-002` suite verification so grouped multi-package execution evidence is sufficient without an explicitly echoed command line.
 - **ace-assign v0.44.9**: Hardened the remaining assign E2E scenarios by capturing lifecycle structure output directly and making hierarchy runs resolve `ace-assign` consistently inside the sandbox.
 - **ace-git-worktree v0.19.8**: Updated the remaining worktree E2E scenarios to use the current create/list command forms, including explicit branch-aware create syntax and explicit task-aware list filters.
 - **ace-idea v0.18.7**: Added direct archive filesystem proof to the idea-lifecycle E2E so archive success is validated from the moved `.idea.s.md` file, not only CLI output.
@@ -38,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.30.0**: Added explicit source-root threading for E2E setup (`ACE_E2E_SOURCE_ROOT`) plus separate runner/verifier provider roles in pipeline configuration.
 
 ### Changed
+- **ace-test-runner-e2e v0.32.0**: Added execution-tier aware suite scheduling, stricter missing-artifact failure classification, safer artifact-manifest extraction, and verifier guidance for transformed-output contracts.
 - **ace-test-runner-e2e v0.31.2**: Tightened the E2E analyze/fix workflow contract so failure classification must cite desired behavior and implementation evidence before applying test-only fixes.
 - **ace-llm v0.33.0**: Removed the legacy `role:e2e-executor` alias from default E2E role config so runner selection uses `role:e2e-runner` only.
 - **ace-test-runner-e2e v0.31.0**: Removed the shipped `role:e2e-executor` compatibility path from E2E defaults and runner guidance so the pipeline contract is `runner`, `verifier`, and `reporter` only.
