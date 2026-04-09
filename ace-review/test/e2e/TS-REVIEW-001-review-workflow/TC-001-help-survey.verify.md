@@ -12,14 +12,13 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 ### Checks
-1. **File exists** — At least one file exists in `results/tc/01/`.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions key concepts** — The content references at least two of: presets, subjects, models, dry-run.
-4. **Observations present** — The content includes at least one observation about the tool's interface.
+1. **Help captures exist** — `help.stdout`, `help.stderr`, and `help.exit` are present.
+2. **Help succeeded** — `help.exit` reports success.
+3. **Mentions key concepts** — `help.stdout` references at least two of: presets, subjects, models, dry-run.
 
 ## Verdict
 
-- **PASS**: File exists with substantive observations about ace-review's interface.
-- **FAIL**: File missing, empty, or lacks mention of key concepts.
+- **PASS**: The help command succeeds and exposes the expected review command surface.
+- **FAIL**: Captures are missing, help fails, or key concepts are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence.
+Report: `PASS` or `FAIL` with evidence from `help.*`.

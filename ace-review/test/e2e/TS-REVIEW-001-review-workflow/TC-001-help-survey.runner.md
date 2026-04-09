@@ -2,14 +2,16 @@
 
 ## Goal
 
-Explore `ace-review --help` and any subcommand help it provides. Summarize what the tool does, list its flags (especially --preset, --list-presets, --dry-run, --model, --subject), subject types (diff:, files:, staged), and output/session behavior.
+Capture the real `ace-review --help` surface.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
 
 ## Constraints
 
-- Use only `ace-review` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-review` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or options.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
