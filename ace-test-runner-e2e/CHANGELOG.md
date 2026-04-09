@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Tightened expected-artifact extraction so only declared runner capture artifacts are gated; wildcard examples, code-block snippets, and incidental env-var paths no longer become false required outputs.
+- Restricted artifact extraction to explicit `Capture:` bullet blocks and taught the loader the `foo.stdout|stderr|exit` shorthand so prose suffixes like `.g.md`, `.st.md`, and directory names no longer become fake required artifacts.
 - Documented and enforced a stronger verifier contract for transformed output: semantic or structural evidence first, literal source strings only when verbatim output is part of the product contract.
 
 ### Fixed

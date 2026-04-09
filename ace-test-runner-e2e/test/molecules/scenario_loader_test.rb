@@ -280,7 +280,13 @@ class ScenarioLoaderTest < Minitest::Test
               Save all output to `results/tc/01/`. Capture:
               - `results/tc/01/run.stdout`, `.stderr`, `.exit`
               - `results/tc/01/report.txt`
-              - Optional bootstrap at `results/tc/01/setup.*`
+              - `results/tc/01/setup.stdout|stderr|exit`
+
+              Optional capture:
+              - `results/tc/01/setup.*`
+              - `results/tc/01/dynamic.st.md`
+
+              Save proof that `.g.md`, `.guide.md`, `.md`, `.ace-wt/`, and `.ace-tasks` resolved correctly.
 
               ```bash
               env -i BUNDLE_APP_CONFIG="$PWD/results/tc/01/.bundle/config" bundle env
@@ -297,7 +303,10 @@ class ScenarioLoaderTest < Minitest::Test
         "results/tc/01/run.stdout",
         "results/tc/01/run.stderr",
         "results/tc/01/run.exit",
-        "results/tc/01/report.txt"
+        "results/tc/01/report.txt",
+        "results/tc/01/setup.stdout",
+        "results/tc/01/setup.stderr",
+        "results/tc/01/setup.exit"
       ], artifacts
     end
   end

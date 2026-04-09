@@ -243,6 +243,7 @@ module Ace
           def extract_expected_artifacts(runner_content)
             artifacts = []
             in_code_block = false
+            capture_mode = nil
             current_base = nil
 
             runner_content.to_s.each_line do |line|
@@ -253,9 +254,33 @@ module Ace
               end
               next if in_code_block
 
-              unless stripped.lstrip.start_with?("-") || stripped.lstrip.match?(/^\d+\./)
+              normalized = stripped.strip
+
+              if normalized.match?(/\AOptional capture:\s*\z/i)
+                capture_mode = :optional
+                current_base = nil
+                next
+              end
+
+              if normalized.match?(/\bCapture:\s*\z/i) || normalized.match?(/\bCapture [^:]*:\s*\z/i)
+                capture_mode = :required
+                current_base = nil
+                next
+              end
+
+              if capture_mode && (normalized.empty? || normalized.start_with?("##"))
+                capture_mode = nil
+                current_base = nil
+                next
+              end
+
+              if capture_mode && !stripped.lstrip.start_with?("-")
+                capture_mode = nil
                 current_base = nil
               end
+
+              next unless capture_mode == :required
+              next unless stripped.lstrip.start_with?("-")
 
               tokens = stripped.scan(/`([^`]+)`/).flatten
               next if tokens.empty?
@@ -264,11 +289,10 @@ module Ace
                 if token.start_with?("results/tc/")
                   next if token.include?("*") || token.end_with?("/")
 
-                  artifacts << token
-                  current_base = token
-                elsif token.start_with?(".") && current_base
-                  next if token.include?("*")
-
+                  expanded = expand_artifact_token(token)
+                  artifacts.concat(expanded)
+                  current_base = expanded.last
+                elsif token.start_with?(".") && current_base && %w[.stdout .stderr .exit].include?(token)
                   base = current_base.sub(/\.[^.\/]+\z/, "")
                   artifacts << "#{base}#{token}"
                 end
@@ -276,6 +300,16 @@ module Ace
             end
 
             artifacts.uniq
+          end
+
+          def expand_artifact_token(token)
+            return [token] unless token.include?("|")
+
+            first, *suffixes = token.split("|")
+            return [token] if suffixes.empty?
+
+            base = first.sub(/\.[^.\/]+\z/, "")
+            [first] + suffixes.map { |suffix| "#{base}.#{suffix.sub(/\A\./, "")}" }
           end
 
           # Detect fixtures directory if it exists
