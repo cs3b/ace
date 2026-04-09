@@ -16,11 +16,11 @@ Capture:
 - `results/tc/02/handoff-check.txt`
 
 Optional capture:
-- `results/tc/02/final.input.md`
-- `results/tc/02/source.original.md`
-- `results/tc/02/output.sequence.md`
-- `results/tc/02/suggestions.report.md`
-- `results/tc/02/source.revised.md`
+- `results/tc/02/final.input.md` — support evidence only
+- `results/tc/02/source.original.md` — support evidence only
+- `results/tc/02/output.sequence.md` — support evidence only
+- `results/tc/02/suggestions.report.md` — support evidence only
+- `results/tc/02/source.revised.md` — support evidence only
 
 ## Steps
 1. Create source file `results/tc/02/source.md` with realistic markdown task content.
