@@ -250,7 +250,7 @@ module Ace
         )
 
         assert_equal "ok", result[:text]
-        assert_equal ["--gemini-only"], gemini_client.received_options[:cli_args]
+        assert_equal ["--gemini:gemini-2.5-flash-only"], gemini_client.received_options[:cli_args]
       end
 
       def test_execute_with_fallback_preserves_per_target_role_suffixes

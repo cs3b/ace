@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recompute provider-specific preset and CLI execution options for each fallback attempt so Codex-only flags do not leak into Gemini or Claude fallback calls.
 - Preserve full role fallback selectors during execution so later role candidates keep their own `:thinking` and `@preset` suffixes.
 - Updated `TS-LLM-001` basic-query verification to accept substantive non-empty provider responses, not only on-topic phrasing.
+- **ace-llm v0.33.4**: Restored test-time fallback coverage for parser-aware provider selectors and model-qualified fallback targeting after `ProviderModelParser` integration changes.
 
 ### Changed
 - Removed the legacy `role:e2e-executor` E2E alias from default LLM role config; E2E execution now uses `role:e2e-runner` only.
