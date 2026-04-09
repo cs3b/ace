@@ -82,7 +82,7 @@ Quick win: document existing `@gem-name` support + fix collision + update skills
 ## Original Idea
 
 ```
-ace-* all packages - we need to prefix the skills as we have too much of them ( workflows generally ) so we should define namespaces subfolders and sllow to use them wfi::/test/e2e-create  wfi://git/commit -> and this should translate to /ace:git:commit .... 
+ace-* all packages - we need to prefix the skills as we have too much of them ( workflows generally ) so we should define namespaces subfolders and sllow to use them wfi::/test-e2e/scenarios-create  wfi://git/commit -> and this should translate to /ace:git:commit .... 
 
 * 27bdef40e (HEAD -> 227-feedback-based-review-output-architecture) chore(deps): Update ace-review to v0.36.16
 * 6fbcd58c1 feat(feedback): Introduce session discovery for feedback commands
