@@ -1,9 +1,0 @@
-name: hierarchical-test
-description: Test nested steps and completion
-
-steps:
-  - name: implement-feature
-    instructions: Implement the main feature
-
-  - name: document
-    instructions: Write documentation

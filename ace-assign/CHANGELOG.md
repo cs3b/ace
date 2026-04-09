@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.13] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Relaxed the no-skip policy E2E contract so fallback `analysis.md` evidence is sufficient for synthetic-skip, Skip Assessment removal, and evidence-rule checks.
 - Moved optional hierarchy E2E report copies out of the required artifact manifest and removed stale subtree state-snapshot requirements so `TS-ASSIGN-002` can fail on real behavior instead of missing optional evidence.

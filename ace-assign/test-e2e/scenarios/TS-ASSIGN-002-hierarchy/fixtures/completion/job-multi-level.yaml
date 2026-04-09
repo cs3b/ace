@@ -1,9 +1,0 @@
-name: multi-level-test
-description: Test multi-level auto-completion
-
-steps:
-  - name: grandparent
-    instructions: Top level step
-
-  - name: next-task
-    instructions: Should become current after auto-completion chain

@@ -1,9 +1,0 @@
-name: auto-complete-test
-description: Test auto-completion of parent steps
-
-steps:
-  - name: parent-job
-    instructions: This parent should auto-complete when children finish
-
-  - name: final-step
-    instructions: Final step after parent completes

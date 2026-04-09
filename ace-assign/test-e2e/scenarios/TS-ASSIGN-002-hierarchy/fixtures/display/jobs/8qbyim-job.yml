@@ -1,9 +1,0 @@
-name: audit-trail-test
-description: Test audit trail metadata
-
-steps:
-  - name: initial-job
-    instructions: Starting step
-
-  - name: second-job
-    instructions: Second step
