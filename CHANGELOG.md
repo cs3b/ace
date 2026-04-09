@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.32.2**: Synchronized the E2E guide and all lifecycle workflows around a behavior-first evidence contract so review, planning, rewriting, and failure handling all prefer command/state oracles over synthetic support artifacts.
 - **ace-b36ts v0.13.5**: Simplified the `TS-B36TS-001` encode-today E2E to validate the emitted token from stdout instead of requiring a token-named file.
 
+- **ace-test-runner-e2e v0.33.0**: Split `ace-test-e2e` into a two-phase sandbox pipeline that runs deterministic integration Minitest from `test-e2e/integration/**/*_test.rb` before LLM-driven `test-e2e/scenarios/TS-*`, while keeping both phases on the same prepared package copy.
 ### Fixed
 - **ace-assign v0.44.12**: Relaxed the no-skip policy E2E to rely on fallback `analysis.md` evidence for synthetic-skip and legacy-section checks instead of requiring separate grep artifacts.
 - **ace-git-worktree v0.19.10**: Stabilized multi-task worktree E2E listing by requiring explicit post-create cwd evidence and preventing create-time navigation drift before list checks.
@@ -125,6 +126,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.938] - 2026-04-05
 
+- Coordinated sandboxed E2E integration migration releases: `ace-assign v0.44.13`, `ace-b36ts v0.13.6`, `ace-bundle v0.41.7`, `ace-compressor v0.24.9`, `ace-demo v0.24.3`, `ace-docs v0.32.3`, `ace-git v0.20.5`, `ace-git-commit v0.23.8`, `ace-git-secrets v0.13.5`, `ace-git-worktree v0.19.11`, `ace-handbook v0.25.5`, `ace-idea v0.18.8`, `ace-lint v0.28.5`, `ace-llm-providers-cli v0.27.4`, `ace-overseer v0.13.13`, `ace-prompt-prep v0.23.8`, `ace-retro v0.16.8`, `ace-search v0.24.6`, `ace-sim v0.13.10`, `ace-support-models v0.9.6`, `ace-support-nav v0.26.6`, `ace-task v0.33.6`, `ace-test-runner v0.19.8`, `ace-tmux v0.11.5`.
 ### Fixed
 - **ace-assign v0.42.4**: Scoped canonical `skill://` and `wfi://` discovery to in-project defaults and explicitly registered external sources, and preserved child `skill` metadata only for hand-authored explicit split sub-steps.
 - **ace-handbook v0.25.3**: Scoped canonical skill inventory discovery to in-project defaults and explicitly registered external sources so status and sync no longer pick up ambient installed gems.
