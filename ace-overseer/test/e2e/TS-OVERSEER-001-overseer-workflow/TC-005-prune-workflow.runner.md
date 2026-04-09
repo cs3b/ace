@@ -95,6 +95,11 @@ Capture output to:
 - `results/tc/05/dry-run-final.stderr`
 - `results/tc/05/dry-run-final.exit`
 
+Optional capture:
+- `results/tc/05/task-q7w-assign-status-after.stdout`
+- `results/tc/05/task-q7w-assign-status-after.stderr`
+- `results/tc/05/task-q7w-assign-status-after.exit`
+
 ## Constraints
 
 - Do **not** use assignment prune mode/flags (for example `--assignment`).
