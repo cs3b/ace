@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 ## [Unreleased]
 
 ### Fixed
+- Corrected `TS-BUNDLE-001` file-pattern verification to accept semantic README inclusion from transformed bundle output instead of requiring the literal source heading text.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
 

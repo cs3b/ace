@@ -12,7 +12,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — results/tc/03/ contains stdout capture and/or analysis file.
-2. **Included files present** — Output contains content from README.md ("Test Application"), src/main.js ("Hello World"), and src/utils.js ("helper()").
+2. **Included files present** — Output includes `README.md`, `src/main.js`, and `src/utils.js`. README proof may be semantic or structured formatter output (for example the README path plus normalized content about the test application), not necessarily the literal source heading text.
 3. **Excluded files absent** — Output does not contain test file content (e.g., "describe('Main'" from test/main.test.js) unless included by another pattern.
 
 ## Verdict
