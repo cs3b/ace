@@ -10,10 +10,12 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/preflight.stdout` — confirm required policy source files exist in test environment
 - `results/tc/05/preflight.stderr`
 - `results/tc/05/preflight.exit` — `0` if prerequisites are present, non-zero otherwise
-- `results/tc/05/no-skip-rule.stdout` — search for mandatory no-skip rule
-- `results/tc/05/attempt-first.stdout` — search for attempt-first section
-- `results/tc/05/skill-thin.stdout` — verify skill does not duplicate policy
 - `results/tc/05/analysis.md` — summary of policy enforcement findings
+
+Optional capture:
+- `results/tc/05/no-skip-rule.stdout` — exact grep output for mandatory no-skip rule
+- `results/tc/05/attempt-first.stdout` — exact grep output for attempt-first section
+- `results/tc/05/skill-thin.stdout` — exact grep output proving the skill wrapper stays thin
 
 Run a short pre-flight check first and fail fast if prerequisites are missing.
 
@@ -39,8 +41,8 @@ echo $? > results/tc/05/preflight.exit
 - Use `rg` (ripgrep) to search the workflow file at `ace-assign/handbook/workflow-instructions/assign/drive.wf.md`.
 - If preflight fails, stop here and mark Goal 5 as incomplete.
 - Verify: mandatory no-skip rule text ("Planned steps are mandatory work items. Do not skip them by judgment.").
-- Verify: synthetic skip prohibition and Skip Assessment removal, but record that evidence in `analysis.md` rather than requiring separate grep capture files.
+- Verify: synthetic skip prohibition and Skip Assessment removal in `analysis.md`; per-grep stdout files are helpful but not required.
 - Verify: attempt-first external action section ("External Action Rule (Attempt-First)").
-- Verify: command evidence and exact error output requirements, with `analysis.md` acceptable as the canonical evidence summary.
-- Verify: `.claude/skills/as-assign-drive/SKILL.md` does NOT duplicate policy guardrails.
+- Verify: command evidence and exact error output requirements, with `analysis.md` as the canonical evidence summary for Goal 5.
+- Verify: `.claude/skills/as-assign-drive/SKILL.md` does NOT duplicate policy guardrails; `skill-thin.stdout` is optional supporting evidence only.
 - All artifacts must come from real tool execution.

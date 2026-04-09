@@ -32,6 +32,7 @@ Save all output to `results/tc/04/`. Capture:
   - `a-subtask-2` under `010`
   - `b-subtask-1` under `020`
 - Capture status output. Verify all 5 steps displayed.
+- Verify the displayed steps match this fixture flow: `initial-job`, `a-subtask-1`, `a-subtask-2`, `second-job`, `b-subtask-1`.
 - Verify hierarchical display indicators (tree characters: pipe, tee, elbow) and nested step numbers (010.01, 010.02, 020.01).
 
 ### Audit Trail

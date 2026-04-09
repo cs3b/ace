@@ -28,20 +28,26 @@ Save all output to `results/tc/01/`. Capture:
 - Add child steps under 010 using explicit YAML files and `ace-assign add --yaml ... --after 010 --child --assignment "<id>"`.
 - Do not use `--step work-on-task`, `--step child*`, or any preset-backed insertion in this TC.
 - The three child YAML inserts must produce `child-a`, `child-b`, and `child-c`, becoming 010.01, 010.02, 010.03.
+- Each YAML file must define a real one-step payload under a top-level `steps:` key. Write the files explicitly in this shape:
+  ```yaml
+  steps:
+    - name: child-a
+  ```
+  and likewise for `child-b`, `child-c`, `sibling-a`, `sibling-b`, and `grandchild-a`.
 - Execute those three child inserts as three separate captured commands and write their outputs exactly to:
   - `child-inject-1.stdout|stderr|exit`
   - `child-inject-2.stdout|stderr|exit`
   - `child-inject-3.stdout|stderr|exit`
 - If any child insert fails, still write the exact named artifacts with the real failure output instead of collapsing the three inserts into one combined capture.
 - First renumber phase:
-  - Inject sibling after 010.01 using explicit YAML insertion (`ace-assign add --yaml ... --after 010.01 --assignment "<id>"`).
+  - Inject sibling after 010.01 using an explicit one-step YAML file for `sibling-a` (`ace-assign add --yaml ... --after 010.01 --assignment "<id>"`).
   - The new sibling becomes 010.02 and the old `child-b` shifts from 010.02 to 010.03.
   - Capture the post-renumber listing from the resolved `steps/` directory after the injection command completes.
   - Read the real shifted `child-b` step file into `renumbered-parent.stdout`; do not capture `child-c` or any stale pre-renumber path.
 - Cascade phase:
-  - Add grandchild under the renumbered parent using explicit YAML insertion with `--after 010.03 --child --assignment "<id>"` so it appears as `010.03.01`.
+  - Add grandchild under the renumbered parent using an explicit one-step YAML file for `grandchild-a` with `--after 010.03 --child --assignment "<id>"` so it appears as `010.03.01`.
   - Capture `step-listing-before-cascade.stdout` after the grandchild exists.
-  - Inject another sibling after 010.02 using explicit YAML insertion so the existing `010.03` subtree shifts to `010.04`.
+  - Inject another sibling after 010.02 using an explicit one-step YAML file for `sibling-b` so the existing `010.03` subtree shifts to `010.04`.
   - Capture `step-listing-after-cascade.stdout` after the second sibling injection.
   - Read the real `010.04.01-*.st.md` file into `renumbered-grandchild.stdout`.
 - The cascade proof must come from the second sibling injection and the before/after listings, not inferred from grandchild creation alone.

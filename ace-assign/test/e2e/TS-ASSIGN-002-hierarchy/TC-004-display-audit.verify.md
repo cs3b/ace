@@ -12,7 +12,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 ### Tree Display
-1. **All steps shown** — `status-tree.stdout` contains feature-a, a-subtask-1, a-subtask-2, feature-b, b-subtask-1.
+1. **All steps shown** — `status-tree.stdout` contains `initial-job`, `a-subtask-1`, `a-subtask-2`, `second-job`, and `b-subtask-1`.
 2. **Hierarchy indicators** — Status uses tree characters (pipe |, tee, elbow, or similar hierarchy markers).
 3. **Nested numbers** — Status shows nested step numbers 010.01, 010.02, 020.01.
 
