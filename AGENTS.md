@@ -25,6 +25,21 @@ When user requests a scoped commit/release:
 - Use path-scoped commit commands, e.g. `ace-git-commit <path1> <path2> ...`.
 - Treat unrelated modified files as acceptable background state unless user explicitly asks to clean/revert them.
 
+## Mess Resolution Rule
+
+When the worktree is messy, fix it using your best local judgment.
+
+- Prefer the least destructive corrective action:
+  - remove obvious generated leftovers
+  - restore deleted tracked files when the active scenario still depends on them
+  - remove stray untracked outputs under `results/` or similar accidental artifact paths
+  - keep plausibly intentional user edits untouched unless they clearly break the current task
+- Do not stop to ask the user about routine cleanup decisions when the correct repair is clear from repo state.
+- Escalate only when cleanup could plausibly destroy intentional user-authored work or when two competing interpretations both look intentional.
+
+Example:
+- If a tracked fixture file is deleted, a timestamped replacement appears in an untracked subdirectory, and the active scenario still references the original fixture path, restore the tracked fixture and remove the stray untracked replacement.
+
 ## Skill-First Planning and Execution (Hard Rule)
 
 If a user names a skill (for example `/as-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
