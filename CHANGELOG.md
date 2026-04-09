@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-test-runner-e2e v0.32.2**: Synchronized the E2E guide and all lifecycle workflows around a behavior-first evidence contract so review, planning, rewriting, and failure handling all prefer command/state oracles over synthetic support artifacts.
+- **ace-b36ts v0.13.5**: Simplified the `TS-B36TS-001` encode-today E2E to validate the emitted token from stdout instead of requiring a token-named file.
+
 ### Fixed
 - **ace-assign v0.44.12**: Relaxed the no-skip policy E2E to rely on fallback `analysis.md` evidence for synthetic-skip and legacy-section checks instead of requiring separate grep artifacts.
 - **ace-git-worktree v0.19.10**: Stabilized multi-task worktree E2E listing by requiring explicit post-create cwd evidence and preventing create-time navigation drift before list checks.
