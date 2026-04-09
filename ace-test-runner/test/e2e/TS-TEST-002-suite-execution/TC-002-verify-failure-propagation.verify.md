@@ -8,7 +8,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. `results/tc/02/` contains failure-injection and run captures.
-2. `results/tc/02/goal2.exit` exists and records a non-zero exit code.
+2. `results/tc/02/ace-test.exit` exists and records a non-zero exit code.
 3. Captured output indicates failure was detected/reported.
 4. Failure evidence and exit status are internally consistent.
 
