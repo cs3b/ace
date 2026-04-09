@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Relaxed the no-skip policy E2E contract so fallback `analysis.md` evidence is sufficient for synthetic-skip, Skip Assessment removal, and evidence-rule checks.
 - Moved optional hierarchy E2E report copies out of the required artifact manifest and removed stale subtree state-snapshot requirements so `TS-ASSIGN-002` can fail on real behavior instead of missing optional evidence.
 - Hardened `TS-ASSIGN-002` runner contracts so hierarchy E2E artifacts are always emitted with explicit lookup-failure evidence instead of disappearing when step resolution is ambiguous.
 - Captured assignment lifecycle structure output directly in `TS-ASSIGN-001` and hardened `TS-ASSIGN-002` sandbox execution so hierarchy E2E runs resolve `ace-assign` consistently inside the sandbox.
