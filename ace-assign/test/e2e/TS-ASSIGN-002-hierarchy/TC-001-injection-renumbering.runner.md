@@ -28,6 +28,11 @@ Save all output to `results/tc/01/`. Capture:
 - Add child steps under 010 using explicit YAML files and `ace-assign add --yaml ... --after 010 --child --assignment "<id>"`.
 - Do not use `--step work-on-task`, `--step child*`, or any preset-backed insertion in this TC.
 - The three child YAML inserts must produce `child-a`, `child-b`, and `child-c`, becoming 010.01, 010.02, 010.03.
+- Execute those three child inserts as three separate captured commands and write their outputs exactly to:
+  - `child-inject-1.stdout|stderr|exit`
+  - `child-inject-2.stdout|stderr|exit`
+  - `child-inject-3.stdout|stderr|exit`
+- If any child insert fails, still write the exact named artifacts with the real failure output instead of collapsing the three inserts into one combined capture.
 - First renumber phase:
   - Inject sibling after 010.01 using explicit YAML insertion (`ace-assign add --yaml ... --after 010.01 --assignment "<id>"`).
   - The new sibling becomes 010.02 and the old `child-b` shifts from 010.02 to 010.03.

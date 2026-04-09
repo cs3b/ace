@@ -8,7 +8,7 @@ Verify status displays tree structure with hierarchy indicators, and audit trail
 
 Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/create-tree.stdout`, `.exit` — tree display assignment creation
-- `results/tc/04/add-tree-children.stdout`, `.stderr`, `.exit` — children added under two parents
+- `results/tc/04/add-tree-children.stdout`, `.stderr` — children added under two parents
 - `results/tc/04/status-tree.stdout` — hierarchical status display
 - `results/tc/04/create-audit.stdout`, `.exit` — audit trail assignment creation
 - `results/tc/04/audit-steps-dir.txt` — resolved steps directory for audit-trail lookups

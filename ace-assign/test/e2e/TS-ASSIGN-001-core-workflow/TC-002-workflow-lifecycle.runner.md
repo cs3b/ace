@@ -30,6 +30,8 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - Mark 020 as failed via `ace-assign fail -m "..."`, verify queue stalls.
 - Verify report is rejected on stalled queue.
 - Add dynamic step "fix-issue" (auto-activates on stalled queue), complete it.
+- The dynamic-step completion must always write `finish-dynamic.stdout`, `finish-dynamic.stderr`, and `finish-dynamic.exit`.
+- If the dynamic step cannot be completed, still write those artifacts with the real command failure/output instead of omitting them.
 - Retry failed step 020 (should NOT change current step).
 - Complete verify step, then complete retry step, and capture each finish command exit/status output.
 - Final status must show no active step and an all-done terminal queue (for example "All steps complete!" or "Assignment completed!").
