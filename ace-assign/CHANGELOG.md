@@ -8,15 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Moved optional hierarchy E2E report copies out of the required artifact manifest and removed stale subtree state-snapshot requirements so `TS-ASSIGN-002` can fail on real behavior instead of missing optional evidence.
 - Hardened `TS-ASSIGN-002` runner contracts so hierarchy E2E artifacts are always emitted with explicit lookup-failure evidence instead of disappearing when step resolution is ambiguous.
 - Captured assignment lifecycle structure output directly in `TS-ASSIGN-001` and hardened `TS-ASSIGN-002` sandbox execution so hierarchy E2E runs resolve `ace-assign` consistently inside the sandbox.
 - Aligned the remaining E2E sandbox bootstrap to copy repo-root setup assets from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 - Updated `TS-ASSIGN-002` hierarchy E2E coverage to match the current CLI error contract and require real step-file metadata evidence for audit-trail checks.
 - Updated `TS-ASSIGN-002` auto-completion coverage to use the current cross-assignment `finish --assignment <id>` contract instead of positional step targeting.
 - Updated `TS-ASSIGN-002` renumbering coverage to capture a real descendant-cascade renumber event with explicit before/after subtree listings and grandchild metadata evidence.
-
-
-### Fixed
 - Updated `TS-ASSIGN-001` E2E expectations to match the current assignment lifecycle, fork-status output, bundled prepare fixture shape, and drive-policy evidence surface.
 
 ## [0.44.3] - 2026-04-07

@@ -2,6 +2,6 @@
 
 module Ace
   module Assign
-    VERSION = '0.44.10'
+    VERSION = '0.44.11'
   end
 end

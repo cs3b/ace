@@ -14,14 +14,16 @@ Save all output to `results/tc/02/`. Capture:
 - `results/tc/02/status-after-child1.stdout` — status showing child two is current, parent still pending
 - `results/tc/02/complete-child2.stdout`, `.exit` — second child completion
 - `results/tc/02/parent-auto-complete.stdout` — evidence parent auto-completed
-- `results/tc/02/010-parent-job.r.md` — copied parent auto-completion report when present
 - `results/tc/02/create-multi.stdout`, `.exit` — multi-level assignment creation
 - `results/tc/02/multi-assignment-id.txt` — resolved assignment ID for the multi-level flow
 - `results/tc/02/add-hierarchy.stdout` — parent + grandchild addition
 - `results/tc/02/complete-grandchild.stdout`, `.exit` — grandchild completion
 - `results/tc/02/cascade-auto-complete.stdout` — evidence of multi-level cascade
-- `results/tc/02/010.01-parent-job.r.md` — copied parent cascade report when present
-- `results/tc/02/010-grandparent-job.r.md` — copied grandparent cascade report when present
+
+Optional capture:
+- `results/tc/02/010-parent-job.r.md`
+- `results/tc/02/010.01-parent-job.r.md`
+- `results/tc/02/010-grandparent-job.r.md`
 
 ## Constraints
 
@@ -43,7 +45,7 @@ Save all output to `results/tc/02/`. Capture:
 - Complete second child with:
   - `ace-assign finish --assignment "<single-assignment-id>" --message fixtures/completion/child2-report.md`
 - Verify parent auto-completes with "Auto-completed" report at reports/010-parent-job.r.md.
-- If the report exists, copy it into `results/tc/02/010-parent-job.r.md`.
+- If the report exists, optionally copy it into `results/tc/02/010-parent-job.r.md`.
 - `parent-auto-complete.stdout` must always be written; if no dedicated report file is present, capture the direct status/output evidence that shows the parent auto-completed.
 - Verify workflow advances to next top-level step (020-final-step).
 
@@ -56,6 +58,6 @@ Save all output to `results/tc/02/`. Capture:
   - `ace-assign finish --assignment "<multi-assignment-id>" --message fixtures/completion/grandchild-report.md`
 - Verify cascade: grandchild done, parent auto-completes, grandparent auto-completes.
 - `cascade-auto-complete.stdout` must always be written; if dedicated cascade report files are absent, capture the status/output evidence that proves the cascade outcome.
-- If cascade reports exist, copy them into `results/tc/02/` using the filenames above.
+- If cascade reports exist, optionally copy them into `results/tc/02/` using the filenames above.
 - Next top-level step (020-next-task) becomes current.
 - All artifacts must come from real tool execution.

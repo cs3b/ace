@@ -15,8 +15,6 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/status-scoped.json` — scoped subtree status as JSON oracle
 - `results/tc/05/status-after-scope.stdout` — status after scoped inspection (unchanged)
 - `results/tc/05/status-after-scope.json` — unscoped status as JSON oracle
-- `results/tc/05/step-states-before.stdout` — step states before scoped inspection
-- `results/tc/05/step-states-after.stdout` — step states after scoped inspection
 
 ## Constraints
 
