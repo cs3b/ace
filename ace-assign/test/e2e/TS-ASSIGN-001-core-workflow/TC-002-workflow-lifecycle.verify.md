@@ -14,7 +14,7 @@ Validation order (impact-first):
 1. **Assignment created** — `create.exit` contains `0`. `create.stdout` mentions assignment info and first step.
 2. **Structure correct** — `structure.stdout` exists and shows `assignment.yaml`, `steps/`, `reports/`, and the three `.st.md` step files.
 3. **Step completion** — `report-analyze.exit` is `0`. Step 010 marked done (not "completed"), report file at reports/010-analyze.r.md.
-4. **Failure handling** — `fail-implement.exit` is `0`. `status-stalled.stdout` shows no current step (queue stalled). Report rejected on stalled queue.
+4. **Failure handling** — `fail-implement.exit` is `0`. Failure evidence shows step 020 was marked failed and the queue did not auto-advance to step 030; `status-stalled.stdout` should keep 020 as the blocking step or otherwise show a failed/non-advanced queue state, with 030 still not active.
 5. **Dynamic-step branch handled explicitly** — If `add-dynamic.exit` is `0`, dynamic-step activation/completion evidence exists. If `add-dynamic.exit` is non-zero because the preset does not define `fix-issue`, the artifacts must still show the retry path was used instead.
 6. **Retry mechanics** — `retry.exit` is `0`. A retry step is created and can be started/completed without regressing the stalled original step.
 7. **Lifecycle completions executed** — `finish-verify.exit` and `finish-retry.exit` are `0`. If no dynamic step exists, `finish-dynamic.exit` may be non-zero and is not required for pass.

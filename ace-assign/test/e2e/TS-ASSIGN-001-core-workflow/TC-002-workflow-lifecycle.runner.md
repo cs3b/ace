@@ -12,7 +12,7 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - `results/tc/02/status-initial.stdout` — initial status
 - `results/tc/02/report-analyze.stdout`, `.exit` — first step completion
 - `results/tc/02/fail-implement.stdout`, `.exit` — failure handling
-- `results/tc/02/status-stalled.stdout` — stalled queue status
+- `results/tc/02/status-stalled.stdout` — blocked-after-failure queue status
 - `results/tc/02/add-dynamic.stdout`, `.exit` — dynamic step addition
 - `results/tc/02/finish-dynamic.stdout`, `.exit` — dynamic step completion
 - `results/tc/02/retry.stdout`, `.exit` — retry mechanics
@@ -27,9 +27,9 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - Verify 3 step files (010-analyze, 020-implement, 030-verify) with .st.md extension.
 - First step should be in_progress with skill field and array instructions.
 - Complete analyze step with `fixtures/lifecycle/report.md`, verify step 010 marked done and 020 advances.
-- Mark 020 as failed via `ace-assign fail -m "..."`, verify queue stalls.
-- Verify report is rejected on stalled queue.
-- Add dynamic step "fix-issue" (auto-activates on stalled queue), complete it.
+- Mark 020 as failed via `ace-assign fail -m "..."`, verify the queue does not auto-advance past the failed step.
+- Verify report-driven advancement is rejected while the failed step still blocks normal progression.
+- Add dynamic step "fix-issue" (it may become the active recovery step after the failure), complete it.
 - The dynamic-step completion must always write `finish-dynamic.stdout`, `finish-dynamic.stderr`, and `finish-dynamic.exit`.
 - If the dynamic step cannot be completed, still write those artifacts with the real command failure/output instead of omitting them.
 - Retry failed step 020 (should NOT change current step).
