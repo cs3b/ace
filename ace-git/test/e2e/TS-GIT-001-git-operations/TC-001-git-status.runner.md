@@ -8,6 +8,11 @@ working tree state.
 ## Workspace
 
 Save artifacts to `results/tc/01/`.
+
+Capture:
+- `results/tc/01/bootstrap.stdout|stderr|exit`
+- `results/tc/01/status.stdout|stderr|exit`
+
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
@@ -15,4 +20,4 @@ Save artifacts to `results/tc/01/`.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
 - Bootstrap a real branch context first: create one tracked file, run `git add -A`, and commit once so later `branch` and `diff` goals run against an initialized repository.
-- Capture bootstrap command output in `results/tc/01/bootstrap.stdout|stderr|exit`.
+- Capture bootstrap command output.

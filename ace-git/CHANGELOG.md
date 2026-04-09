@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Switched git-operations E2E capture declarations to explicit artifact lists so bootstrap and status process outputs are gated correctly.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
 
