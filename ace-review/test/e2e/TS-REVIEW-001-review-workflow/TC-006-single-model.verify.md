@@ -18,6 +18,7 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 4. **Prepared execution evidence** — Execution output shows either:
    - a real review output file with substantive content, or
    - a prepared review session with prompt files and an explicit `To execute with LLM:` handoff command.
+5. **Support capture optional** — `review-output.md` may be present as support evidence, but its absence alone is not a failure when execution output and session listing already prove the run.
 
 ## Verdict
 

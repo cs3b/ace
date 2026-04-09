@@ -9,10 +9,16 @@ Execute reviews using two different preset formats: (1) the `multi` preset which
 Save all output to `results/tc/07/`. Capture:
 - `results/tc/07/multi.stdout`, `.stderr`, `.exit` — multi-model execution
 - `results/tc/07/reviewers.stdout`, `.stderr`, `.exit` — reviewers format execution
-- Session directory listings for both
+- `results/tc/07/multi-session-listing.txt`
+- `results/tc/07/reviewers-session-listing.txt`
+
+Optional capture:
+- `results/tc/07/multi-review-output.md`
+- `results/tc/07/reviewers-review-output.md`
 
 ## Constraints
 
 - Both goals make real API calls. Requires valid API keys.
 - Use the `multi` and `reviewers-test` presets from the sandbox fixtures.
+- Prefer execution captures plus session listings as the primary evidence. Copied review outputs are support evidence only.
 - All artifacts must come from real tool execution, not fabricated.
