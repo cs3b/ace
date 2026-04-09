@@ -41,6 +41,12 @@ ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bu
 - Normalize runner files to execution-only language.
 - Normalize verifier files to verdict-only, impact-first validation.
 - Keep setup concerns in `scenario.yml` and fixtures, not in TC runner setup sections.
+- Use one shared evidence taxonomy:
+  - `command-capture`
+  - `state-oracle`
+  - `optional-support`
+- Keep required artifacts limited to `command-capture` and `state-oracle`.
+- Do not create or preserve synthetic primary oracles unless the product itself creates that artifact.
 
 ## Workflow Steps
 
@@ -120,16 +126,21 @@ Follow the E2E test writing rules:
 
 - **Run the tool first** to verify actual behavior before writing assertions
 - Apply the E2E Value Gate — every TC must require real CLI binary + external tools + filesystem I/O
-- Use `&& echo "PASS" || echo "FAIL"` patterns for every verification step
 - Follow TC ordering: error paths first, happy path, structure verification, lifecycle, end state
 - Consolidate assertions sharing the same CLI invocation into a single TC
 - Target 2-5 TCs per scenario
 - Test through the CLI interface, not library imports
+- Keep runners short:
+  - goal
+  - capture
+  - constraints
 - Add command-level evidence in every runner:
   - command output (`*.stdout`/`*.stderr`)
   - command exit status (`*.exit`)
-- Add at least one behavioral/content assertion per command assertion set
+- Add 1-2 state oracles only when the behavior requires them
+- Keep verifier expectations short and behavior-first
 - Remove duplicate command-only TCs; fold related assertions into one TC where possible
+- Never create convenience files, notes, grep extracts, or copied outputs as the primary oracle when stdout/state already proves the behavior
 
 **Load the TC template for reference:**
 ```bash
@@ -146,6 +157,7 @@ For each TC classified as MODIFY:
    - **Narrow scope** — remove assertions that unit tests cover, keep only E2E-exclusive checks
    - **Broaden scope** — add assertions for related behavior tested by the same CLI invocation
    - **Fix structure** — add missing sections, fix formatting issues
+   - **Simplify evidence** — if the existing TC relies on optional-support or synthetic artifacts, replace them with stdout/state evidence and downgrade support files to optional
    - **Add evidence gates** — if the existing TC relies on existence-only or missing exit/status checks, add explicit command output assertions and `.exit` captures
 3. Update the `last-verified` field if the TC was re-run during modification
 4. Write the updated TC runner/verifier files
@@ -234,7 +246,8 @@ Present the execution summary:
 - [ ] TC count matches plan: {yes/no}
 - [ ] No stale references: {yes/no}
 - [ ] All scenarios have 2-5 TCs: {yes/no}
-- [ ] All modified/created TCs include command output + exit artifacts: {yes/no}
+- [ ] All modified/created TCs use minimal required evidence: {yes/no}
+- [ ] No modified/created TC depends on a synthetic primary oracle: {yes/no}
 
 ### Next Steps
 

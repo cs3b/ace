@@ -119,6 +119,8 @@ ls -lt .ace-local/test-e2e/*-reports/ 2>/dev/null | head -20
 4. Reclassify each failed TC if needed
 - Use `code-issue`, `test-issue`, or `runner-infrastructure-issue`
 - `test-issue` is allowed only when implementation-backed analysis shows the product behavior is correct and the mismatch is in setup, runner capture, verifier logic, artifact naming, command contract drift, or stale expectation
+- Before adding or preserving more artifacts, ask whether the failing artifact is actually part of the product behavior:
+  - if it is only a runner-invented convenience file, classify the failure as `test-issue`
 - Add confidence: `high|medium|low`
 - Add one disconfirming check per TC that targets the strongest competing explanation
 - If confidence is `medium` or `low`, run at least one additional diagnostic read/search before final decision
@@ -165,6 +167,10 @@ Examples:
 - transformed output with brittle verifier:
   - verifier requires a raw README heading string
   - product emits normalized markdown-xml tokens and semantic content instead
+  - classify `test-issue`
+- synthetic artifact oracle:
+  - runner requires a file whose filename is the token printed by the tool
+  - stdout already contains the token and the product does not promise the file
   - classify `test-issue`
 
 ## Required Output Contract

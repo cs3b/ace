@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.2] - 2026-04-09
+
+### Changed
+- Synchronized the E2E guide and lifecycle workflows (`manage`, `review`, `plan-changes`, `rewrite`, `analyze-failures`, `fix`) around one behavior-first evidence contract:
+  - required artifacts are limited to `command-capture` and `state-oracle`
+  - `optional-support` artifacts cannot be the sole fail reason
+  - synthetic runner-owned artifacts are treated as design debt, not primary proof
+- Added oracle-quality and synthetic-artifact-debt review/planning rules so E2E rewrites simplify brittle scenarios instead of adding more support captures.
+
 ### Added
 - Added execution-tier aware suite scheduling (`serial`, `low-parallel`, `safe-parallel`) so stateful or provider-sensitive E2E scenarios can be isolated during suite runs.
 

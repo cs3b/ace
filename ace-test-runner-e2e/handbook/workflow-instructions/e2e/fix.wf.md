@@ -105,11 +105,27 @@ Apply fixes in this order:
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
 - State which implementation evidence justifies leaving product code unchanged
 - Keep implementation unchanged unless analysis is revised
+- Before adding more captures, ask whether the failing artifact is part of the product behavior at all.
+- Prefer shrinking the required evidence set over adding new support artifacts.
+- First keep only:
+  - `command-capture`
+  - `state-oracle`
+  and downgrade copied convenience files, grep extracts, summaries, and notes to optional support
 - Do not respond to flaky semantic failures by upgrading the verifier model first.
 - First repair brittle verifier oracles:
   - raw source strings asserted against transformed output
   - incidental wording asserted where only semantic behavior matters
+- First repair synthetic artifact oracles:
+  - token-named files
+  - copied outputs created only for verifier comfort
+  - notes/debug artifacts used as the sole pass/fail proof
 - Only consider a stronger verifier model after the contract is structurally grounded and provider-pinned reruns still show ambiguity
+
+Test-issue simplification checklist:
+- Does stdout already prove the behavior?
+- Does status/list/json or filesystem state already prove the behavior?
+- Is the artifact product-owned or runner-invented?
+- Can the verifier conclude from stronger evidence already present?
 
 4. Rerun the selected failing scope after each fix
 

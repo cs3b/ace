@@ -9,7 +9,12 @@ ace-docs:
 
 # Manage E2E Tests Workflow
 
-This workflow is a lightweight orchestrator that chains the 3-stage E2E test pipeline. It delegates all logic to the specialized stage workflows.
+This workflow orchestrates the 3-stage E2E test pipeline around one shared contract:
+- runners capture minimal deterministic evidence
+- verifiers judge behavior from state and real command output
+- synthetic support artifacts are never primary oracles
+
+It delegates execution details to the specialized stage workflows, but it must enforce that all stages follow the same behavior-first model.
 
 ```text
 ace-bundle wfi://e2e/manage
@@ -51,7 +56,12 @@ Run the exploration stage to produce a coverage matrix:
 ace-bundle wfi://e2e/review
 ```
 
-Capture the full review report output including coverage matrix, overlap analysis, gap analysis, and health status.
+Capture the full review report output including:
+- coverage matrix
+- overlap analysis
+- gap analysis
+- health status
+- oracle quality / false-positive risk findings
 
 If the review finds no E2E tests and no features worth testing, report this and stop.
 
@@ -64,6 +74,10 @@ ace-bundle wfi://e2e/plan-changes
 ```
 
 Capture the change plan with its REMOVE / KEEP / MODIFY / CONSOLIDATE / ADD classifications and the proposed scenario structure.
+Confirm that the plan also includes:
+- primary oracle per TC or scenario group
+- evidence simplification actions for brittle/synthetic tests
+- behavior-first rationale for every MODIFY or ADD item
 
 ### 3. Present Plan for Confirmation
 
@@ -86,7 +100,11 @@ After user confirms the plan, execute it:
 ace-bundle wfi://e2e/rewrite
 ```
 
-Capture the execution summary with files created, modified, and deleted.
+Capture the execution summary with:
+- files created, modified, and deleted
+- synthetic primary oracles removed
+- required artifacts reduced or simplified
+- scenarios shifted to command/state evidence where applicable
 
 ### 5. Run Tests (if --run-tests)
 
@@ -115,9 +133,9 @@ Produce a combined summary of the full pipeline run:
 
 | Stage | Status | Key Output |
 |-------|--------|------------|
-| Review | Done | {n} features, {n} unit tests, {n} E2E TCs mapped |
-| Plan | Done | {n} REMOVE, {n} KEEP, {n} MODIFY, {n} CONSOLIDATE, {n} ADD |
-| Rewrite | Done | {n} files created, {n} modified, {n} deleted |
+| Review | Done | {n} features, {n} unit tests, {n} E2E TCs mapped; {n} high-risk oracles |
+| Plan | Done | {n} REMOVE, {n} KEEP, {n} MODIFY, {n} CONSOLIDATE, {n} ADD; {n} simplification actions |
+| Rewrite | Done | {n} files created, {n} modified, {n} deleted; {n} synthetic oracles removed |
 | Test | {Done/Skipped} | {n}/{n} passed or "not run" |
 
 ### Final State
@@ -126,6 +144,7 @@ Produce a combined summary of the full pipeline run:
 |--------|--------|-------|
 | Scenarios | {n} | {n} |
 | Test Cases | {n} | {n} |
+| High-risk false-positive TCs | {n} | {n} |
 
 ### Next Steps
 

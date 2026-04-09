@@ -11,6 +11,11 @@ ace-docs:
 
 This workflow takes the review output (coverage matrix) from Stage 1 and produces a concrete change plan with classified actions for each existing and proposed TC.
 
+Planning must preserve one shared E2E contract:
+- required evidence is minimal and behavior-first
+- support artifacts are optional by default
+- synthetic runner-owned artifacts are design debt unless the product itself creates them
+
 **Pipeline position:** Stage 2 of 3 (Decide)
 
 ```text
@@ -79,6 +84,7 @@ For REMOVE due to overlap, replacement evidence is mandatory:
 - TC scope is too broad (should be narrowed to only E2E-exclusive aspects)
 - TC scope is too narrow (missing assertions for related behavior in same CLI invocation)
 - TC has structure issues flagged in the review
+- TC depends on optional-support or synthetic artifacts as its primary oracle
 
 **CONSOLIDATE** — The TC should merge with another TC. Criteria (any one is sufficient):
 - Multiple TCs share the same CLI invocation and could be a single TC with multiple assertions
@@ -106,6 +112,8 @@ Review the coverage matrix for gaps that warrant new E2E tests:
 - What CLI command it exercises
 - What it verifies that unit tests cannot
 - Which scenario it belongs to (existing or new)
+- The primary oracle (`state-oracle` or `command-capture`)
+- The minimal required evidence set
 
 **Filter through Value Gate:**
 For each candidate, answer: "Does this require the full CLI binary + real external tools + real filesystem I/O?"
@@ -127,6 +135,7 @@ Group all planned TCs (KEEP + MODIFY + CONSOLIDATE targets + ADD) into scenarios
 - List of TCs with ordering (errors first, happy path, structure verification, lifecycle)
 - Shared setup requirements
 - Fixtures needed
+- Oracle simplification opportunities
 
 **Cost estimation:**
 - Each TC ≈ 1 LLM invocation when run
@@ -172,10 +181,11 @@ Format the complete change plan:
 
 ### MODIFY ({n} TCs)
 
-| TC | Change Needed |
-|----|---------------|
-| {tc-id} | Update assertions — {feature} behavior changed in {commit} |
-| {tc-id} | Narrow scope — remove assertions covered by unit tests |
+| TC | Primary Oracle | Change Needed |
+|----|----------------|---------------|
+| {tc-id} | {oracle} | Update assertions — {feature} behavior changed in {commit} |
+| {tc-id} | synthetic | Simplify evidence — replace support-file choreography with stdout/state checks |
+| {tc-id} | {oracle} | Narrow scope — remove assertions covered by unit tests |
 
 ### CONSOLIDATE ({n} TCs → {n} TCs)
 
@@ -185,9 +195,9 @@ Format the complete change plan:
 
 ### ADD ({n} new TCs)
 
-| Proposed TC | Scenario | Verifies |
-|-------------|----------|----------|
-| {title} | {scenario-id} | {what it tests that units cannot} |
+| Proposed TC | Scenario | Primary Oracle | Verifies |
+|-------------|----------|----------------|----------|
+| {title} | {scenario-id} | {state-oracle/command-capture} | {what it tests that units cannot} |
 
 ### Proposed Scenario Structure
 
@@ -210,6 +220,12 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 ```
 
 **If any classifications are uncertain**, flag them with a `?` and ask the user to confirm before proceeding.
+
+Behavior-first planning rules:
+- Prefer shrinking required evidence over adding more captures.
+- Prefer one TC with one real CLI flow plus several semantic assertions over several support-artifact TCs.
+- Treat copied convenience files, grep extracts, summaries, and notes as `optional-support` unless the product contract explicitly depends on them.
+- Treat synthetic runner-owned artifacts as removal or simplification candidates by default.
 
 ## Example Invocations
 

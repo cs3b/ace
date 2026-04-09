@@ -49,6 +49,23 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
   - sandbox preparation belongs to `scenario.yml` `setup:` + `fixtures/`
   - TC runner files must not define independent environment setup procedures
 
+## Artifact Classes
+
+Every required TC artifact must belong to exactly one of these classes:
+
+- `command-capture`
+  - raw command evidence such as `.stdout`, `.stderr`, `.exit`
+- `state-oracle`
+  - real side effects such as filesystem state, list output, status output, JSON snapshots, or product-owned output files
+- `optional-support`
+  - copied convenience files, grep extracts, summaries, notes, or other debug-only material
+
+Rules:
+- Required artifacts must be only `command-capture` or `state-oracle`.
+- `optional-support` must never be the sole reason a semantically correct TC fails.
+- Runner-invented synthetic artifacts are not valid primary oracles unless the tested behavior is specifically “create this file”.
+- Keep the artifact gate strict by feeding it only deterministic behavior evidence.
+
 ## E2E Value Gate
 
 Before adding a TC, confirm the behavior needs:
@@ -107,10 +124,15 @@ This prevents duplicate assertions across test layers.
 
 - Keep runner goals outcome-oriented and deterministic.
 - Keep verifier expectations impact-first, then artifacts, then debug fallback.
+- Keep required artifact sets small. Prefer fewer stable captures over many convenience files.
 - Do not anchor verifier expectations to raw source strings when the tool emits transformed output.
 - Prefer path inclusion, semantic content, and structural markers over exact source headings or incidental wording.
 - If the product intentionally preserves verbatim output, say that explicitly in the verifier contract.
 - Declare concrete runner artifacts; if a runner-owned artifact is optional in practice, remove it from the contract instead of leaving it implicit.
+- Do not make up side quests for the runner:
+  - no token-named files
+  - no copied outputs just to satisfy the verifier
+  - no notes file as the only pass/fail oracle unless the product itself is generating a note/report
 - Preserve strict TC pairing (`runner` + `verify`).
 - Keep outputs inside `results/tc/{NN}/`.
 - Avoid hidden dependencies between TCs unless explicitly intended.
@@ -120,6 +142,70 @@ This prevents duplicate assertions across test layers.
 Example:
 - Bad: require `README.md ("Test Application")` when the formatter normalizes markdown into structured tokens.
 - Good: require `README.md` inclusion plus semantic README content or formatter-emitted structural markers actually produced by the tool.
+
+## Runner Pattern
+
+Keep runner files short and explicit:
+
+- one short goal
+- one explicit `Capture:` block
+- one short `Constraints:` block
+- behavior-focused steps only
+
+Good runner behavior:
+- run the real CLI flow
+- capture the command result
+- capture one or two real state oracles when needed
+
+Bad runner behavior:
+- invent support artifacts as primary proof
+- create custom filenames derived from command output only for verifier convenience
+- capture many overlapping files “just in case”
+
+## Verifier Pattern
+
+Verifier judgment should be semantic but bounded.
+
+Evidence order:
+1. `state-oracle`
+2. `command-capture`
+3. `optional-support`
+
+Verifier responsibilities:
+- report what behavior was confirmed working
+- report what behavior was contradicted or not confirmed
+- fail only when:
+  - behavior is contradicted, or
+  - required `command-capture` / `state-oracle` evidence is missing
+
+Verifier prohibitions:
+- do not fail solely because an `optional-support` artifact is absent
+- do not require runner-invented synthetic artifacts when stdout/state already proves the behavior
+- do not use exact string checks when semantic or structural checks are the real product contract
+
+## Examples
+
+### `ace-b36ts`
+
+- Bad:
+  - run `ace-b36ts`, then create a token-named file and verify the filename
+- Good:
+  - capture `encode-today.stdout`, `.stderr`, `.exit`
+  - verify the token format from stdout
+
+### Transformed output
+
+- Bad:
+  - require a raw source heading after the formatter normalizes the content
+- Good:
+  - verify semantic content, inclusion, and structure actually emitted by the formatter
+
+### Stateful lifecycle
+
+- Bad:
+  - require an extra notes file after `remove`
+- Good:
+  - verify exit status, list output, and real filesystem state
 
 ## Execution Artifacts
 

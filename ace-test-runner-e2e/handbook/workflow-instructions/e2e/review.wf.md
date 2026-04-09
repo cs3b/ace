@@ -14,6 +14,10 @@ This workflow performs deep exploration of a package to produce a **coverage mat
 During review, treat the runner/verifier split as a first-class quality check:
 - Runner must be execution-only (no verdict language).
 - Verifier must be impact-first (sandbox impact before artifacts/debug).
+- Required evidence must be behavior-first:
+  - `command-capture`
+  - `state-oracle`
+- `optional-support` and synthetic runner-owned artifacts are false-positive risk signals, not strong evidence.
 
 **Pipeline position:** Stage 1 of 3 (Explore)
 
@@ -120,18 +124,27 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 - Record command fingerprint (`command + key flags`) for each command assertion
 - Count verification steps (PASS/FAIL checks)
 - Map to the feature it tests
+- Classify the TC's primary oracle:
+  - `state-oracle`
+  - `command-capture`
+  - `optional-support`
+  - `synthetic`
 - Mark TC evidence status:
   - `complete` when `e2e-justification` is present, command artifacts are present, and `unit-coverage-reviewed` has at least one path
   - `missing` otherwise
   - `at-risk` when evidence is existence-only or duplicate command invocations are detected
+- Assess oracle quality:
+  - `strong` when pass/fail is driven by state impact or direct command output
+  - `mixed` when support artifacts are present but not primary
+  - `weak` when pass/fail depends on optional-support or synthetic artifacts
 
 If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | Command Invocations | Feature Tested | Verifications | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
+| TC ID | Title | Command Invocations | Feature Tested | Verifications | Primary Oracle | Oracle Quality | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
 |-------|-------|-------------|----------------|---------------|------|-----------|-------------------|------------------------|----------|
-| {id} | {title} | {command list} | {feature} | {n} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
+| {id} | {title} | {command list} | {feature} | {n} | {state-oracle/command-capture/optional-support/synthetic} | {strong/mixed/weak} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
 
 ### 5. Build Coverage Matrix
 
@@ -145,13 +158,13 @@ Combine the three inventories into a single coverage matrix:
 ```markdown
 ### Coverage Matrix
 
-| Feature | Unit Tests | E2E Tests | Evidence Strength | False-Positive Risk | Status |
-|---------|-----------|-----------|------------------|----------------------|--------|
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output/state+content | low | Covered |
+| Feature | Unit Tests | E2E Tests | Evidence Strength | Primary Oracle | False-Positive Risk | Status |
+|---------|-----------|-----------|------------------|----------------|----------------------|--------|
+| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output/state+content | state-oracle | low | Covered |
 | {feature} | {test files} ({n} assertions) | none | none | n/a | Unit-only |
-| {feature} | none | {TC IDs} ({n} verifications) | command-output | low | E2E-only |
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output or existence-only | medium/high | Overlap |
-| {feature} | none | none | none | high | Gap |
+| {feature} | none | {TC IDs} ({n} verifications) | command-output | command-capture | low | E2E-only |
+| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output or existence-only | optional-support/synthetic | medium/high | Overlap |
+| {feature} | none | none | none | none | high | Gap |
 ```
 
 **Classify each row:**
@@ -161,6 +174,7 @@ Combine the three inventories into a single coverage matrix:
 - **Overlap** — Both unit and E2E test the same assertions. E2E TC is a candidate for removal.
 - **Gap** — Neither unit nor E2E test covers this feature. Needs investigation.
 - If a row has `false-positive risk` `high`, downgrade Covered/Overlap to **manual-review** until evidence is corrected.
+- If a TC uses a `synthetic` primary oracle, recommend `Strengthen` unless the product itself creates that artifact.
 
 ### 6. Generate Review Report
 
@@ -184,6 +198,7 @@ Produce the full review report with actionable findings:
 | E2E test cases | {n} |
 | TCs with decision evidence | {n}/{total} |
 | High-risk false-positive TCs | {n}/{total} |
+| TCs with synthetic primary oracles | {n}/{total} |
 
 ### Coverage Matrix
 
@@ -197,7 +212,7 @@ TCs that may fail the E2E Value Gate (unit tests cover the same behavior or high
 |-------|---------|----------------------|----------------|
 | {id} | {feature} | {test files} | Remove — unit tests cover this fully |
 | {id} | {feature} | {test files} | Keep — TC tests CLI pipeline, units test logic |
-| {id} | {feature} | {test files} | Strengthen — currently existence-only or duplicate command assertions |
+| {id} | {feature} | {test files} | Strengthen — currently existence-only, synthetic, or duplicate command assertions |
 
 **Candidates for removal:** {n} TCs have full overlap with unit tests
 
@@ -209,6 +224,12 @@ TCs that may fail the E2E Value Gate (unit tests cover the same behavior or high
 | {id} | missing | e2e-justification, unit-coverage-reviewed |
 
 **Action:** Any TC with missing evidence should be updated in `scenario.yml` during the next rewrite cycle.
+
+### Oracle Quality Review
+
+| TC ID | Primary Oracle | Oracle Quality | Synthetic Artifact Debt | Action |
+|-------|----------------|----------------|-------------------------|--------|
+| {id} | {oracle} | {strong/mixed/weak} | {none/yes} | {keep / simplify / remove} |
 
 ### Gap Analysis
 
@@ -238,8 +259,8 @@ TCs sharing the same CLI invocation that could be merged:
 ### Recommendations
 
 1. {Priority recommendation based on overlap analysis}
-2. {Recommendation based on gap analysis}
-3. {Recommendation based on health status}
+2. {Recommendation based on oracle quality and synthetic artifact debt}
+3. {Recommendation based on gap analysis or health status}
 
 ### Next Step
 
