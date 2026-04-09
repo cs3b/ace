@@ -13,7 +13,9 @@ Save artifacts to `results/tc/03/`.
 Capture:
 - `results/tc/03/files-with-matches.stdout`, `.stderr`, `.exit`
 - `results/tc/03/count.stdout`, `.stderr`, `.exit`
-- `results/tc/03/summary.md` (optional) with observed count semantics
+
+Optional capture:
+- `results/tc/03/summary.md`
 
 ## Constraints
 

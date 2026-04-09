@@ -12,7 +12,9 @@ Save artifacts to `results/tc/02/`.
 
 Capture:
 - `results/tc/02/file-search.stdout`, `.stderr`, `.exit`
-- `results/tc/02/summary.md` (optional) with command scope and representative paths
+
+Optional capture:
+- `results/tc/02/summary.md`
 
 ## Constraints
 

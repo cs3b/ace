@@ -11,7 +11,9 @@ Save artifacts to `results/tc/04/`.
 
 Capture:
 - `results/tc/04/json-search.stdout`, `.stderr`, `.exit`
-- `results/tc/04/summary.md` (optional) with high-level payload shape notes
+
+Optional capture:
+- `results/tc/04/summary.md`
 
 ## Constraints
 

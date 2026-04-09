@@ -11,7 +11,9 @@ Save artifacts to `results/tc/01/`.
 
 Capture:
 - `results/tc/01/content-search.stdout`, `.stderr`, `.exit`
-- `results/tc/01/summary.md` (optional) with concise command/evidence notes
+
+Optional capture:
+- `results/tc/01/summary.md`
 
 ## Constraints
 
