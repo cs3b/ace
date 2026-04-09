@@ -9,7 +9,7 @@ cost-tier: happy-path
 tool-under-test: ace-overseer
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Work-on happy path evidence (worktree, tmux, assignment)"
   results/tc/03/:  "Idempotent re-run evidence"
   results/tc/04/:  "Preset override evidence"
