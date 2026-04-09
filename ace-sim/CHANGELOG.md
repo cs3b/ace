@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.13.10] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Stopped `TS-SIM-001` from gating on copied final synthesis artifacts when `run-tree.txt` and `synthesis.yml` already prove success or recorded final-stage failure.
 - Split required chain artifacts from optional final synthesis outputs in `TS-SIM-001` so provider-side final-stage failures no longer masquerade as missing-evidence regressions.
