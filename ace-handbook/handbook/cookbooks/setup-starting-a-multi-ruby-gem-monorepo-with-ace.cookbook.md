@@ -81,7 +81,7 @@ ace-bundle project
 
 **Commands/Actions:**
 
-1. Create `ace-monorepo-e2e/test/e2e/TS-*/scenario.yml` entries for repository-wide behaviors.
+1. Create `ace-monorepo-e2e/test-e2e/scenarios/TS-*/scenario.yml` entries for repository-wide behaviors.
 2. Use one scenario for install verification and one for quickstart/docs validation.
 3. Keep per-package scenarios in their package folders; keep only cross-cutting cases here.
 
