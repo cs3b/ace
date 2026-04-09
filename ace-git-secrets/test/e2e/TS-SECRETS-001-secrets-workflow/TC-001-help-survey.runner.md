@@ -2,14 +2,16 @@
 
 ## Goal
 
-Explore `ace-git-secrets --help` and any subcommand help it provides. Summarize what the tool does, list its subcommands (scan, rewrite-history, revoke), flags (--format, --dry-run, --whitelist), and configuration options.
+Capture the real `ace-git-secrets --help` surface.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
 
 ## Constraints
 
-- Use only `ace-git-secrets` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-git-secrets` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume subcommand names or flags.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
