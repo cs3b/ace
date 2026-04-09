@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-prompt-prep
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Setup workspace artifacts (directory listing, template content)"
   results/tc/03/:  "Archive workflow artifacts (archive file, symlink verification)"
   results/tc/04/:  "Context-mode processing artifacts (bundle output and archive evidence)"
