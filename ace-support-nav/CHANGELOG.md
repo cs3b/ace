@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Corrected cross-protocol E2E verification to require a resolved workflow `.wf.md` path without depending on brittle end-of-line path wording.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
 
