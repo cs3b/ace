@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-bundle
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Preset loading artifacts (section output, simple preset output)"
   results/tc/03/:  "File pattern matching evidence (included/excluded files)"
   results/tc/04/:  "Output routing evidence (auto-format threshold + explicit --output overrides)"
