@@ -6,6 +6,6 @@ module Ace
     # Namespace changed from Ace::Timestamp to Ace::Support::Timestamp
     # Version 0.6.0: Gem renamed from ace-support-timestamp to ace-b36ts
     # Namespace changed from Ace::Support::Timestamp to Ace::B36ts
-    VERSION = '0.13.5'
+    VERSION = '0.13.6'
   end
 end
