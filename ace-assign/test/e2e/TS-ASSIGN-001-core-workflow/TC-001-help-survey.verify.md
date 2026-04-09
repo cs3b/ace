@@ -11,14 +11,13 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **File exists** — At least one file exists in `results/tc/01/`.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions key subcommands** — The content references create, status, report, add, drive, fail, or retry.
-4. **Observations present** — The content includes at least one observation about the tool's step management interface.
+1. **Help captures exist** — `help.stdout`, `help.stderr`, and `help.exit` are present.
+2. **Help succeeded** — `help.exit` reports success.
+3. **Mentions key subcommands** — `help.stdout` references create, status, report, add, drive, fail, or retry.
 
 ## Verdict
 
-- **PASS**: All expectations met. File exists with substantive observations about ace-assign's interface.
-- **FAIL**: File missing, empty, boilerplate-only, or lacks mention of key subcommands.
+- **PASS**: The help command succeeds and exposes the expected assignment command surface.
+- **FAIL**: Captures are missing, help fails, or key subcommands are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence.
+Report: `PASS` or `FAIL` with evidence from `help.*`.

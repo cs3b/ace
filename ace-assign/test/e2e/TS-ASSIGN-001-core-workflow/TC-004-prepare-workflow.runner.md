@@ -9,7 +9,9 @@ Validate prepare preset fixtures for single-task and multi-task workflows using 
 Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/work-on-task.yml` — copied unified fixture (single + multi support)
 - `results/tc/04/fixture-checks.stdout` — command-based checks over fixture content
-- `results/tc/04/analysis.md` — analysis of unified fixture capabilities
+
+Optional capture:
+- `results/tc/04/analysis.md` — summary of unified fixture capabilities
 
 ## Constraints
 
@@ -26,5 +28,5 @@ Save all output to `results/tc/04/`. Capture:
   - contains `taskrefs` parameter definition
   - contains `expansion:`
   - contains expected batch/child markers (for example `batch-tasks`, `work-on-{{item}}`)
-- Save command evidence in `fixture-checks.stdout` using `ace-search` queries over copied files, then summarize findings in `analysis.md`.
+- Save command evidence in `fixture-checks.stdout` using `ace-search` queries over copied files. `analysis.md` may summarize findings, but it is support evidence only.
 - All artifacts must come from real tool execution.

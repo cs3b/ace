@@ -11,16 +11,15 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **No-skip rule present** — `analysis.md` or `no-skip-rule.stdout` contains the mandatory no-skip policy text about planned steps being mandatory.
-2. **Synthetic skip prohibited** — The prohibition against using report text to skip or synthesize completion appears in `analysis.md` or adjacent captured policy evidence.
-3. **Skip Assessment removed** — `analysis.md` confirms the old "Skip Assessment" section is absent.
-4. **Attempt-first section** — `analysis.md` or `attempt-first.stdout` identifies the External Action Rule (Attempt-First) section.
-5. **Evidence requirements** — Policy evidence confirms the workflow requires concrete command/evidence details, including `exact error output`; the verifier may rely on `analysis.md` as the primary source of truth.
-6. **Setup preflight** — `preflight.stdout` shows prerequisite verification passed and `preflight.exit` is `0`.
-7. **Skill stays thin** — `analysis.md` or `skill-thin.stdout` confirms the skill file does NOT duplicate policy text.
+1. **Setup preflight** — `preflight.stdout` shows prerequisite verification passed and `preflight.exit` is `0`.
+2. **No-skip rule present** — `no-skip-rule.stdout` contains the mandatory no-skip policy text about planned steps being mandatory.
+3. **Attempt-first section** — `attempt-first.stdout` identifies the External Action Rule (Attempt-First) section.
+4. **Evidence requirements** — `evidence-rules.stdout` shows workflow text requiring concrete command/evidence details, including exact error output.
+5. **Synthetic skip prohibited / Skip Assessment removed** — `analysis.md` confirms the prohibition against synthetic completion and the absence of the old "Skip Assessment" section.
+6. **Skill stays thin** — `skill-thin.stdout` or `analysis.md` confirms the skill file does NOT duplicate policy text.
 
-Fallback evidence rule:
-- `analysis.md` is the canonical verification source when it explicitly records the no-skip rule, synthetic-skip prohibition, Skip Assessment removal, attempt-first section, evidence requirements, and thin-skill conclusion.
+Evidence rule:
+- `analysis.md` is support evidence for the synthetic-skip and thin-skill checks, but the primary oracle is the real grep output plus preflight captures.
 
 ## Verdict
 
