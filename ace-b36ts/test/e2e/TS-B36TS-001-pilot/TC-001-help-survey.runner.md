@@ -20,4 +20,4 @@ Survey the real `ace-b36ts` help surface: root help plus the encode and decode c
 
 - Use only `ace-b36ts` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or subcommands.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.
+- **Foundation for later goals**: These command captures are the reference for all subsequent goals. Later goals will build on the discovered interface and will not re-run `--help`.

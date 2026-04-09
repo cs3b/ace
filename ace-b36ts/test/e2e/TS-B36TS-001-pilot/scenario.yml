@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-b36ts
 
 sandbox-layout:
-  results/tc/01/: "Help survey observations"
+  results/tc/01/: "Help command captures"
   results/tc/02/: "Encoded today-date file"
   results/tc/03/: "Decoded i50jj3 token file"
   results/tc/04/: "Error behavior captures (exit code, stdout, stderr)"
