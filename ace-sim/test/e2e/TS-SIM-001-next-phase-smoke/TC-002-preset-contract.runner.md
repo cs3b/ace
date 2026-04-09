@@ -33,7 +33,7 @@ Optional capture:
 ## Steps
 1. Create source file `results/tc/02/source.md` with realistic markdown task content.
 2. Run:
-   `ace-sim run --preset validate-idea --source results/tc/02/source.md --provider glite --repeat 1`
+   `ace-sim run --preset validate-idea --source results/tc/02/source.md --provider codex:mini --repeat 1`
    Save stdout/stderr/exit to `results/tc/02/run.*`.
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/02/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/02/run-tree.txt`.

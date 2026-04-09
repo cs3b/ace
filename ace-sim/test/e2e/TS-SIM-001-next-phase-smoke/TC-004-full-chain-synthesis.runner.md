@@ -15,16 +15,10 @@ Capture:
 - `results/tc/04/synthesis.yml`
 - `results/tc/04/final.input.md`
 
-Optional capture:
-- `results/tc/04/source.original.md`
-- `results/tc/04/output.sequence.md`
-- `results/tc/04/suggestions.report.md`
-- `results/tc/04/source.revised.md`
-
 ## Steps
 1. Create source file `results/tc/04/source.md` with realistic markdown content.
 2. Run:
-   `ace-sim run --preset validate-idea --source results/tc/04/source.md --provider glite --repeat 1 --synthesis-workflow wfi://task/review --synthesis-provider claude:haiku`
+   `ace-sim run --preset validate-idea --source results/tc/04/source.md --provider codex:mini --repeat 1 --synthesis-workflow wfi://task/review --synthesis-provider codex:mini`
    Save stdout/stderr/exit to `results/tc/04/run.*`.
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/04/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/04/run-tree.txt`.
@@ -32,10 +26,6 @@ Optional capture:
    - `session.yml` -> `results/tc/04/session.yml`
    - `synthesis.yml` -> `results/tc/04/synthesis.yml`
    - `final/input.md` -> `results/tc/04/final.input.md`
-   - `final/source.original.md` -> `results/tc/04/source.original.md`
-   - `final/output.sequence.md` -> `results/tc/04/output.sequence.md`
-   - `final/suggestions.report.md` -> `results/tc/04/suggestions.report.md`
-   - `final/source.revised.md` -> `results/tc/04/source.revised.md`
 6. Preserve the actual run outcome. Do not fabricate success. The verifier will accept either:
    - a successful synthesis run with final output artifacts, or
    - a failed final synthesis where the full chain completed and `synthesis.yml` clearly records the final-stage failure.
