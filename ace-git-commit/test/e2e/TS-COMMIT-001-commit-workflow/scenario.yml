@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-git-commit
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Basic commit artifacts (git log, git show)"
   results/tc/03/:  "Dry run and path handling evidence"
   results/tc/04/:  "Delete and rename commit evidence"
