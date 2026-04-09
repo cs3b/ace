@@ -133,7 +133,7 @@ Implementation Notes:
 - **`--dry-run` alias:** `-n` (ecosystem consistency with ace-task doctor, ace-retro doctor)
 - **Non-interactive:** `--auto-fix` does NOT prompt for confirmation (diverges from doctor pattern; matches user expectation of `--fix` as fire-and-forget)
 - **Re-lint after fix is new behavior:** Currently `--fix` on markdown returns early without running lint (orchestrator line 117). `--auto-fix` introduces fix → re-lint → report flow. This requires restructuring the orchestrator's `lint_single_file_by_type` control flow.
-- **Consumer packages needing updates:** `ace-lint/docs/usage.md`, `ace-lint/docs/getting-started.md`, `docs/tools.md`, `ace-lint/lib/ace/lint/cli/commands/lint.rb` (help text/examples), `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/TC-003-fix-mode.runner.md`
+- **Consumer packages needing updates:** `ace-lint/docs/usage.md`, `ace-lint/docs/getting-started.md`, `docs/tools.md`, `ace-lint/lib/ace/lint/cli/commands/lint.rb` (help text/examples), `ace-lint/test-e2e/scenarios/TS-LINT-001-lint-pipeline/TC-003-fix-mode.runner.md`
 
 ### Success Criteria
 

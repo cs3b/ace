@@ -31,7 +31,7 @@ needs_review: false
 
 ### Success Criteria
 
-- [x] E2E test directory structure created in `ace-llm-providers-cli/test/e2e/`
+- [x] E2E test directory structure created in `ace-llm-providers-cli/test-e2e/scenarios/`
 - [x] 1-2 value-gated smoke scenarios are created with 2-5 TCs each
 - [x] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence
 - [x] Tests use proper sandbox isolation

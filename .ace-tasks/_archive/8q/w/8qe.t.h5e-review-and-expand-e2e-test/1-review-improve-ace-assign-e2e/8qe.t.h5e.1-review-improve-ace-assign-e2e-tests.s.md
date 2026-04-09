@@ -9,7 +9,7 @@ tags: [e2e, testing, review]
 parent: 8qe.t.h5e
 bundle:
   presets: [project]
-  files: [ace-assign/test/e2e]
+  files: [ace-assign/test-e2e/scenarios]
 needs_review: false
 ---
 
@@ -42,7 +42,7 @@ needs_review: false
 - **Slice Type**: Subtask (review)
 - **Slice Outcome**: `ace-assign` E2E tests managed through review, plan, rewrite, and package-scoped verification
 - **Advisory Size**: small
-- **Context Dependencies**: Existing E2E test files in `ace-assign/test/e2e/`
+- **Context Dependencies**: Existing E2E test files in `ace-assign/test-e2e/scenarios/`
 
 ### Verification Plan
 

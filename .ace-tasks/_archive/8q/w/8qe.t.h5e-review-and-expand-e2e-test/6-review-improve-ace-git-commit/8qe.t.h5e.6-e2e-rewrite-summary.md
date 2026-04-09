@@ -17,17 +17,17 @@
 ### Files Changed
 
 **Modified:**
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/runner.yml.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-002-basic-commit.runner.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-003-dry-run-and-paths.runner.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-005-auto-split.runner.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-006-no-split.runner.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-001-help-survey.verify.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-002-basic-commit.verify.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-003-dry-run-and-paths.verify.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-004-delete-and-rename.verify.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-005-auto-split.verify.md`
-- `ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-006-no-split.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/runner.yml.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-002-basic-commit.runner.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-003-dry-run-and-paths.runner.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-005-auto-split.runner.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-006-no-split.runner.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-001-help-survey.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-002-basic-commit.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-003-dry-run-and-paths.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-004-delete-and-rename.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-005-auto-split.verify.md`
+- `ace-git-commit/test-e2e/scenarios/TS-COMMIT-001-commit-workflow/TC-006-no-split.verify.md`
 
 ### Final State
 

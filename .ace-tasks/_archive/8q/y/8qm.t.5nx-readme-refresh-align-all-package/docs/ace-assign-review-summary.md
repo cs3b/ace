@@ -27,7 +27,7 @@ Based on what we found in ace-assign, here's what to check in each package:
 
 | Check | What to look for |
 |-------|-----------------|
-| **Stale terminology** | grep for renamed concepts (e.g., "phases" after a rename to "steps") in docs/, handbook/, test/e2e/ |
+| **Stale terminology** | grep for renamed concepts (e.g., "phases" after a rename to "steps") in docs/, handbook/, test-e2e/scenarios/ |
 | **Gemspec matches README** | `spec.summary` and `spec.description` should match the current tagline, not an old one |
 | **Broken doc cross-links** | `docs/*.md` "See Also" sections often link to README anchors that no longer exist after rewrites |
 | **Undocumented executables** | Compare `ls exe/` against what the README mentions (we found `ace-review-feedback` and `ace-test-e2e-sh` missing) |

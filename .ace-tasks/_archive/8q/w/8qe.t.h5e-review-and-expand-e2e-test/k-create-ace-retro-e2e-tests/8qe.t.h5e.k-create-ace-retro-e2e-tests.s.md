@@ -31,7 +31,7 @@ needs_review: false
 
 ### Success Criteria
 
-- [ ] E2E test directory structure created in `ace-retro/test/e2e/`
+- [ ] E2E test directory structure created in `ace-retro/test-e2e/scenarios/`
 - [ ] 1-2 value-gated smoke scenarios are created with 2-5 TCs each
 - [ ] E2E Decision Record documents ADD/SKIP decisions and unit-test evidence
 - [ ] Tests use proper sandbox isolation
