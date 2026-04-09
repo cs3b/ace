@@ -12,10 +12,11 @@ Save all output to `results/tc/02/`.
 
 1. Run task create and capture execution evidence.
 2. Enumerate task specs and resolve the newest path into `results/tc/02/spec-path.txt`.
-3. Derive the canonical task ID from the created spec path without truncating dotted segments:
+3. Derive the canonical task ID from the created spec path:
    - extract the basename without the trailing `.s.md`
-   - keep the full task ID prefix (for example `8r7.t.xti`), not just the text before the first `.`
-   - write that exact value to `results/tc/02/task-id.txt`
+   - then extract only the canonical task ref prefix matching `^[a-z0-9]+\.t\.[a-z0-9]+`
+   - for example, from `8r8.t.0ah-implement-webhook-retry-with-exponential-backoff`, write `8r8.t.0ah`
+   - write that exact canonical ref to `results/tc/02/task-id.txt`
 4. Show the created task with full output capture using that exact task ID:
    - `ace-task show "$task_id" --content`
 5. Capture normalized task tree snapshot:
@@ -26,4 +27,4 @@ Save all output to `results/tc/02/`.
 - Use only `ace-task` commands as documented in `docs/quick-start.md`.
 - Do not create files manually.
 - Keep all output under `results/tc/02/`.
-- `task-id.txt` must be the single source of truth for later lookup; do not re-derive a shortened ID for `show`.
+- `task-id.txt` must be the single source of truth for later lookup; do not pass the full slugified filename to `show`.
