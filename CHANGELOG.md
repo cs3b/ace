@@ -109,7 +109,7 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.19.4**: Expanded `as-github-pr-create` canonical skill metadata for skill-owned public assign-step discovery.
 - **ace-review v0.51.8**: Expanded `as-review-pr` canonical skill metadata for skill-owned public assign-step discovery.
 - **ace-task v0.31.10**: Expanded canonical `as-task-plan`/`as-task-work` skill metadata for skill-owned public assign-step discovery.
-- **ace-test v0.6.3**: Expanded `as-test-verify-suite` canonical skill metadata while retaining template rendering in catalog YAML.
+- **ace-test v0.6.4**: Expanded `as-test-verify-suite` canonical skill metadata while retaining template rendering in catalog YAML.
 - **ace-lint v0.28.0**: Aligned canonical skill validation with the skill-first contract by allowing capability skills without workflow bindings while keeping workflow/orchestration binding requirements and capability `assign:` restrictions.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
