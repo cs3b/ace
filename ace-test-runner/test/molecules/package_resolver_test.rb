@@ -4,6 +4,7 @@ require_relative "../test_helper"
 require "ace/test_runner/molecules/package_resolver"
 require "tmpdir"
 require "fileutils"
+require "yaml"
 
 class PackageResolverTest < Minitest::Test
   def setup
@@ -132,6 +133,18 @@ class PackageResolverTest < Minitest::Test
     assert packages.include?("ace-bundle"), "Should include ace-bundle"
     assert packages.include?("ace-support-nav"), "Should include ace-support-nav"
     assert packages.include?("ace-test-runner"), "Should include ace-test-runner"
+  end
+
+  def test_suite_config_includes_all_testable_packages
+    suite_path = File.join(mono_repo_root, ".ace", "test", "suite.yml")
+    suite_config = YAML.load_file(suite_path)
+    configured = suite_config["test_suite"]["packages"].map { |pkg| pkg["name"] }
+
+    resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
+    available = resolver.available_packages
+
+    missing = available - configured
+    assert_equal [], missing, "Suite config is missing packages: #{missing.join(", ")}"
   end
 
   def test_available_packages_only_includes_packages_with_tests
