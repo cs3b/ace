@@ -2,6 +2,6 @@
 
 module Ace
   module Task
-    VERSION = '0.33.5'
+    VERSION = '0.33.6'
   end
 end
