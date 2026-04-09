@@ -36,7 +36,7 @@ If any fail → detailed review needed.
 |-------|------|------|
 | Unit tests have NO real I/O | ✓ | Subprocess, network, or filesystem calls |
 | Integration tests stub external deps | ✓ | Real API or subprocess calls |
-| E2E tests are in `test/e2e/TS-*/` | ✓ | E2E behavior in unit test file |
+| E2E tests are in `test-e2e/scenarios/TS-*/` | ✓ | E2E behavior in unit test file |
 | No flag permutations in E2E | ✓ | Multiple E2E tests for CLI flags |
 | Max ONE CLI parity test per integration file | ✓ | Multiple subprocess tests |
 
@@ -140,7 +140,7 @@ end
 
 ### 7. E2E Specific
 
-For tests in `test/e2e/TS-*/`:
+For tests in `test-e2e/scenarios/TS-*/`:
 
 | Check | Pass | Fail |
 |-------|------|------|
@@ -165,7 +165,7 @@ For tests in `test/e2e/TS-*/`:
 
 > "This test uses real subprocess calls but is in `test/atoms/`. Either:
 > - Stub the subprocess and keep in atoms
-> - Move to `test/e2e/` as an E2E test"
+> - Move to `test-e2e/scenarios/` as an E2E test"
 
 ### Implementation Testing
 

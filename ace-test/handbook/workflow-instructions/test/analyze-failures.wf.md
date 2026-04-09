@@ -90,7 +90,7 @@ Produce this section before exiting:
 
 | Failure | Category | Evidence | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check |
 |---|---|---|---|---|---|---|---|---|---|
-| path/to/test_file.rb:TestName | implementation-bug | stacktrace + behavior mismatch summary | implementation code | implementation | app/service.rb, app/model.rb | test/integration/foo_test.rb | test/e2e/** | high | run related tests after patch |
+| path/to/test_file.rb:TestName | implementation-bug | stacktrace + behavior mismatch summary | implementation code | implementation | app/service.rb, app/model.rb | test/integration/foo_test.rb | test-e2e/scenarios/** | high | run related tests after patch |
 ```
 
 Then include:

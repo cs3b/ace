@@ -178,7 +178,7 @@ Tests that should move to E2E:
 
 ```bash
 # Create E2E test scenario directory
-mkdir -p <package>/test/e2e/TS-<AREA>-00N-<slug>
+mkdir -p <package>/test-e2e/scenarios/TS-<AREA>-00N-<slug>
 ```
 
 **scenario.yml:**
@@ -277,7 +277,7 @@ Create retro or update test helper comments:
 # Performance Optimizations Applied:
 # - Pre-warm validator caches at startup (prevents subprocess on first access)
 # - with_mock_lint_context helper stubs all validators
-# - Real CLI tests moved to test/e2e/
+# - Real CLI tests moved to test-e2e/scenarios/
 #
 # See: .ace-taskflow/.../retros/<timestamp>-<package>-test-optimization.md
 ```

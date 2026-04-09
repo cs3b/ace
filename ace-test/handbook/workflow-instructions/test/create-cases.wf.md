@@ -49,7 +49,7 @@ All ACE packages use Minitest with layer-specific conventions:
 | Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
 | Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
 | Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
-| E2E | `test/e2e/TS-*/` | **Real IO** | <2s (max 5s) |
+| E2E | `test-e2e/scenarios/TS-*/` | **Real IO** | <2s (max 5s) |
 
 **All tests MUST inherit from the package test base class:**
 
@@ -122,7 +122,7 @@ end
    | Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
    | Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
    | Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
-   | E2E | `test/e2e/TS-*/` | **Real IO** | <2s (max 5s) |
+   | E2E | `test-e2e/scenarios/TS-*/` | **Real IO** | <2s (max 5s) |
 
    **Layer Decision Matrix:**
 
@@ -627,7 +627,7 @@ end
 ### E2E Test Example
 
 ```
-<!-- test/e2e/TS-REVIEW-001-basic-workflow/ -->
+<!-- test-e2e/scenarios/TS-REVIEW-001-basic-workflow/ -->
 scenario.yml          # Metadata + setup (git-init, copy-fixtures, env)
 TC-001-basic-review.tc.md
 TC-002-missing-git-repo.tc.md

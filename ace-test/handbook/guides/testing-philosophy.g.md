@@ -19,7 +19,7 @@ ACE follows a strict testing pyramid with clear IO boundaries:
 | **Unit (molecules)** | `test/molecules/` | **No IO** | Test component composition |
 | **Unit (organisms)** | `test/organisms/` | **Mocked IO** | Test business logic with stubbed boundaries |
 | **Integration** | `test/integration/` | **Mocked IO** | Test CLI/API surface with stubbed externals |
-| **E2E** | `test/e2e/TS-*/scenario.yml` | **Real IO** | Validate the real system works |
+| **E2E** | `test-e2e/scenarios/TS-*/scenario.yml` | **Real IO** | Validate the real system works |
 
 ## IO Isolation Principle
 
@@ -38,7 +38,7 @@ ACE follows a strict testing pyramid with clear IO boundaries:
 
 ## When Real IO is Allowed
 
-Real IO belongs in **E2E tests only** (`test/e2e/TS-*/`):
+Real IO belongs in **E2E tests only** (`test-e2e/scenarios/TS-*/`):
 
 - Executed by an agent, not the test runner
 - Verify the full system works end-to-end

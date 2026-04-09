@@ -262,7 +262,7 @@ Output the Test Responsibility Map document:
 
 ## E2E Tests
 
-### Directory: test/e2e/TS-FEATURE-001-workflow-execution/
+### Directory: test-e2e/scenarios/TS-FEATURE-001-workflow-execution/
 
 #### TC-001: Complete workflow success
 - Steps: Create config, run CLI, verify output
