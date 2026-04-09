@@ -13,7 +13,6 @@ Capture:
 - `results/tc/03/run-tree.txt`
 - `results/tc/03/session.yml`
 - `results/tc/03/synthesis.yml`
-- `results/tc/03/draft.output.md`
 
 ## Steps
 1. Create source file `results/tc/03/source.md` with sample markdown content.
@@ -25,4 +24,3 @@ Capture:
 5. If present, capture:
    - `session.yml` -> `results/tc/03/session.yml`
    - `synthesis.yml` -> `results/tc/03/synthesis.yml`
-   - `chains/codex-mini-1/01-draft/output.md` -> `results/tc/03/draft.output.md`

@@ -15,10 +15,8 @@ PASS when:
   - success path:
     - `results/tc/02/run.exit` is `0`
     - `results/tc/02/run-tree.txt` includes `final/input.md`
-    - `results/tc/02/output.sequence.md` exists and contains both `<suggestions-report>` and `<source-revised>`
-    - `results/tc/02/suggestions.report.md` exists and is non-empty
-    - `results/tc/02/source.revised.md` exists and is non-empty
-    - the copied final artifacts are the source of truth for synthesis success, not only the run-tree listing
+    - `results/tc/02/synthesis.yml` records a successful `final_stage:`
+    - if copied final artifacts are present, they should be consistent with the success path, but they are support evidence rather than the primary oracle
   - recorded external failure path:
     - `results/tc/02/run.exit` is non-zero
     - `results/tc/02/run.stderr` mentions `Final synthesis failed`

@@ -16,6 +16,7 @@ PASS when:
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/05/run.exit` is `0`
+    - `results/tc/05/synthesis.yml` records a successful `final_stage:`
   - recorded external failure path:
     - `results/tc/05/run.exit` is non-zero
     - `results/tc/05/run.stderr` mentions `Final synthesis failed`
