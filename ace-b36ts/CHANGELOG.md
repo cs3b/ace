@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.5] - 2026-04-09
+
+### Changed
+- Simplified `TS-B36TS-001` Goal 2 to verify the encoded token from `encode-today.stdout` instead of requiring a synthetic token-named file artifact.
+
 ### Fixed
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 

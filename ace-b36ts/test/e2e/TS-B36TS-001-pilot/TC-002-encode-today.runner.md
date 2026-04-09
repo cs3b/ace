@@ -2,14 +2,16 @@
 
 ## Goal
 
-Encode today's date using `ace-b36ts`. Create a file in the workspace whose **filename is the encoded token** (the file content is not important — the filename is the artifact).
+Encode today's date using `ace-b36ts` and capture the real command result.
 
-## Workspace
+## Capture
 
-Save the file to `results/tc/02/`.
+- `results/tc/02/encode-today.stdout`
+- `results/tc/02/encode-today.stderr`
+- `results/tc/02/encode-today.exit`
 
 ## Constraints
 
 - Use only `ace-b36ts` to perform the encoding. Do not compute the token manually.
 - Using what you learned from Goal 1, encode a date. Do not assume syntax beyond what Goal 1 revealed.
-- The file must be created from the tool's actual output, not fabricated.
+- Do not create synthetic token-named files or extra proof artifacts.
