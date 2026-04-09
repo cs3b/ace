@@ -8,7 +8,9 @@ Using the `comprehensive-review` preset, verify that file glob patterns correctl
 
 Save all output to `results/tc/03/`. Capture:
 - `results/tc/03/pattern-output.stdout`, `.stderr`, `.exit` — full preset output
-- `results/tc/03/analysis.md` — analysis of which files were included/excluded
+
+Optional capture:
+- `results/tc/03/analysis.md` — summary of which files were included/excluded
 
 ## Constraints
 

@@ -2,15 +2,16 @@
 
 ## Goal
 
-Explore `ace-bundle --help` and any subcommand help it provides. Summarize what the tool does, list its flags (especially --output, --format, --timeout), preset loading behavior, and section workflow features.
+Capture the real `ace-bundle --help` surface.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
 
 ## Constraints
 
-- Use only `ace-bundle` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-bundle` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or options.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.

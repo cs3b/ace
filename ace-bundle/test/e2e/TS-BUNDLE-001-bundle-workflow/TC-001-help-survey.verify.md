@@ -11,14 +11,13 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **File exists** — At least one file exists in `results/tc/01/`.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions key concepts** — The content references presets, output modes, or bundling behavior.
-4. **Observations present** — The content includes at least one observation about the tool's interface.
+1. **Help captures exist** — `help.stdout`, `help.stderr`, and `help.exit` are present.
+2. **Help succeeded** — `help.exit` reports success.
+3. **Mentions key concepts** — `help.stdout` references presets, output modes, or bundling behavior.
 
 ## Verdict
 
-- **PASS**: All expectations met. File exists with substantive observations about ace-bundle's interface.
-- **FAIL**: File missing, empty, boilerplate-only, or lacks mention of key concepts.
+- **PASS**: The help command succeeds and exposes the expected `ace-bundle` command surface.
+- **FAIL**: Captures are missing, help fails, or key concepts are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence.
+Report: `PASS` or `FAIL` with evidence from `help.*`.
