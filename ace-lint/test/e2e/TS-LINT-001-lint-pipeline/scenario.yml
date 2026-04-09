@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-lint
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Valid file lint report artifacts (report.json, ok.md)"
   results/tc/03/:  "Fix mode artifacts (modified file diff, fixed.md)"
   results/tc/04/:  "Syntax error artifacts (pending.md, exit code)"
