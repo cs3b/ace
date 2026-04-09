@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.28.5] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Relaxed `TS-LINT-001` no-report verification to accept the actual before/after snapshot artifact names emitted by the runner while still proving no new lint cache entries were created.
 - Updated `TS-LINT-001` no-report verification to prove no new lint cache entries were created by comparing pre/post cache snapshots instead of assuming the cache root never exists.
