@@ -32,7 +32,7 @@ During branch cleanup, I selectively cherry-picked 5 of 6 commits, excluding the
 Used `git checkout --theirs` for version.rb during rebase, but in rebase context `--theirs` = the branch commit (lower version), not main. This caused version regressions for ace-assign (0.41.9→0.41.6) and ace-llm (0.31.3→0.31.2). Had to fix during release. Should have used `--ours` or manually picked the higher version.
 
 ### E2E test runner ran in scenario source directory
-The overseer E2E test created a `.git` inside `ace-overseer/test/e2e/TS-OVERSEER-001/` (the source dir, not a sandbox). This made the parent repo see all scenario files as deleted. The `Dir.chdir` fix should prevent this going forward, but the root cause of WHY the sandbox path pointed to the source dir was not fully traced.
+The overseer E2E test created a `.git` inside `ace-overseer/test-e2e/scenarios/TS-OVERSEER-001/` (the source dir, not a sandbox). This made the parent repo see all scenario files as deleted. The `Dir.chdir` fix should prevent this going forward, but the root cause of WHY the sandbox path pointed to the source dir was not fully traced.
 
 ### Test-created commits polluted the branch
 E2E worktree tests created commits (`initial`, `Add feature`, `Add bugfix`) and branches (`q7w-test-feature`, `r8x-second-feature`, `bugfix/test-fix`) that ended up on the working branch. The agent session continued on `bugfix/test-fix` without noticing it was the wrong branch.

@@ -114,6 +114,6 @@ migrated_from: ".ace-taskflow/v.0.9.0/retros/8oii42-e2e-test-execution.md"
 
 ## Additional Context
 
-- Test scenario: `ace-lint/test/e2e/MT-LINT-001-ruby-validator-fallback.mt.md`
+- Test scenario: `ace-lint/test-e2e/scenarios/MT-LINT-001-ruby-validator-fallback.mt.md`
 - Workflow: `ace-test-e2e-runner/handbook/workflow-instructions/run-e2e-test.wf.md`
 - Related task: Task 216 (Add RuboCop as fallback for StandardRB)

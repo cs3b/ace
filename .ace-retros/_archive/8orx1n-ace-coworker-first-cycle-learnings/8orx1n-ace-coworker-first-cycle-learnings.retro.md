@@ -123,7 +123,7 @@ The proposed change affects multiple files:
 | `ace-coworker/lib/ace/coworker/cli/commands/report.rb` | Update output message: "Report saved to: reports/010-onboard.md" |
 | `ace-coworker/test/molecules/step_writer_test.rb` | Update tests for new report storage |
 | `ace-coworker/test/organisms/workflow_executor_test.rb` | Update advance tests |
-| `ace-coworker/test/e2e/MT-COWORKER-001-workflow-lifecycle.mt.md` | TC-006: add `reports/` positive assertion; TC-008: verify report in separate file |
+| `ace-coworker/test-e2e/scenarios/MT-COWORKER-001-workflow-lifecycle.mt.md` | TC-006: add `reports/` positive assertion; TC-008: verify report in separate file |
 
 New session directory structure:
 ```

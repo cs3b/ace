@@ -30,7 +30,7 @@ Assignment: 8qkmvy | PR: #251
 
 ## Key Learnings
 
-- **Docs-only batches don't need release/test/e2e steps**: All release, verify-test, and verify-e2e steps correctly resolved as no-ops. For future docs-only assignments, these steps could be omitted from the job template
+- **Docs-only batches don't need release/test-e2e/scenarios steps**: All release, verify-test, and verify-e2e steps correctly resolved as no-ops. For future docs-only assignments, these steps could be omitted from the job template
 - **Fork crash recovery is repetitive for systemic failures**: When the same environment issue affects all forks, recovery should be batched rather than per-fork
 - **Review cycles need connectivity fallback**: When fork providers can't reach GitHub, the driver should attempt review inline rather than circuit-breaking all cycles
 

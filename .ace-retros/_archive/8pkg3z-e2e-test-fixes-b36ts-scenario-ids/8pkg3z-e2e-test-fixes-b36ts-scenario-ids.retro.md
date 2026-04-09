@@ -57,9 +57,9 @@ migrated_from: ".ace-taskflow/v.0.9.0/retros/8pkg3z-e2e-test-fixes-b36ts-scenari
 ## Technical Details
 
 Files modified:
-- `ace-b36ts/test/e2e/TS-B36TS-002-cli-configuration-and-defaults/scenario.yml`: `TS-TIMESTAMP-002` → `TS-B36TS-002`
-- `ace-b36ts/test/e2e/TS-B36TS-003-hierarchical-split-format/scenario.yml`: `TS-TIMESTAMP-003` → `TS-B36TS-003`
-- `ace-b36ts/test/e2e/TS-B36TS-004-cli-integration/scenario.yml`: `TS-TIMESTAMP-004` → `TS-B36TS-004`
+- `ace-b36ts/test-e2e/scenarios/TS-B36TS-002-cli-configuration-and-defaults/scenario.yml`: `TS-TIMESTAMP-002` → `TS-B36TS-002`
+- `ace-b36ts/test-e2e/scenarios/TS-B36TS-003-hierarchical-split-format/scenario.yml`: `TS-TIMESTAMP-003` → `TS-B36TS-003`
+- `ace-b36ts/test-e2e/scenarios/TS-B36TS-004-cli-integration/scenario.yml`: `TS-TIMESTAMP-004` → `TS-B36TS-004`
 
 Result: 9/9 test cases pass across all three suites.
 

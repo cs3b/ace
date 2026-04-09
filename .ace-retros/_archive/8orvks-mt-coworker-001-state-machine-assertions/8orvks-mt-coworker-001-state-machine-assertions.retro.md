@@ -77,6 +77,6 @@ The test passed because `report` doesn't care about filenames — it just comple
 
 ## Additional Context
 
-- File modified: `ace-coworker/test/e2e/MT-COWORKER-001-workflow-lifecycle.mt.md`
+- File modified: `ace-coworker/test-e2e/scenarios/MT-COWORKER-001-workflow-lifecycle.mt.md`
 - Related earlier retro: `8ortz8-ace-coworker-e2e-test-fixes.md` (same day, earlier session focused on error paths)
 - The E2E markdown tests are manual execution scripts, not automated — assertions use PASS/FAIL echo patterns

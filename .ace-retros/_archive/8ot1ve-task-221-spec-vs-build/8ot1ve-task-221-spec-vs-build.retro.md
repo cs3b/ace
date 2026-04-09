@@ -108,7 +108,7 @@ The most actionable improvement from this retrospective is adding an **"Expected
 
 ### Single Test Run
 
-When I run: `ace-e2e-test run test/e2e/scenarios/001-basic-test.md`
+When I run: `ace-e2e-test run test-e2e/scenarios/scenarios/001-basic-test.md`
 
 I expect to see:
 ```

@@ -104,12 +104,12 @@ migrated_from: ".ace-taskflow/v.0.9.0/retros/8pkgym-e2e-test-fixes.md"
 ## Technical Details
 
 **Files changed:**
-- `ace-assign/test/e2e/TS-ASSIGN-003d-display-audit/scenario.yml` — CACHE_BASE fix
-- `ace-assign/test/e2e/TS-ASSIGN-003d-display-audit/TC-002-audit-trail-verification.tc.md` — ISO8601 regex with YAML quote support
-- `ace-overseer/test/e2e/TS-OVERSEER-002-prune-workflow/scenario.yml` — flexible sed status pattern
-- `ace-overseer/test/e2e/TS-OVERSEER-002-prune-workflow/TC-001-dry-run-lists-candidates.tc.md` — output text match fix
-- `ace-overseer/test/e2e/TS-OVERSEER-001-work-on-workflow/fixtures/.ace/tmux/config.yml` — new: defaults.window: task
-- `ace-overseer/test/e2e/TS-OVERSEER-001-work-on-workflow/fixtures/.ace/tmux/windows/task.yml` — new: minimal preset with automatic-rename off
+- `ace-assign/test-e2e/scenarios/TS-ASSIGN-003d-display-audit/scenario.yml` — CACHE_BASE fix
+- `ace-assign/test-e2e/scenarios/TS-ASSIGN-003d-display-audit/TC-002-audit-trail-verification.tc.md` — ISO8601 regex with YAML quote support
+- `ace-overseer/test-e2e/scenarios/TS-OVERSEER-002-prune-workflow/scenario.yml` — flexible sed status pattern
+- `ace-overseer/test-e2e/scenarios/TS-OVERSEER-002-prune-workflow/TC-001-dry-run-lists-candidates.tc.md` — output text match fix
+- `ace-overseer/test-e2e/scenarios/TS-OVERSEER-001-work-on-workflow/fixtures/.ace/tmux/config.yml` — new: defaults.window: task
+- `ace-overseer/test-e2e/scenarios/TS-OVERSEER-001-work-on-workflow/fixtures/.ace/tmux/windows/task.yml` — new: minimal preset with automatic-rename off
 - `ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb` — idempotency via window_already_open? check
 - `ace-git-worktree/lib/ace/git/worktree/molecules/worktree_remover.rb` — pass --force when ignore_untracked
 - 6 TC files in `TS-WORKTREE-001`: `$(pwd)/../worktrees` → `$(pwd)/worktrees`

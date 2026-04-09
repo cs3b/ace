@@ -29,7 +29,7 @@ status: active
 
 ## Key Learnings
 
-- **Skip-condition detection should precede fork delegation**: Before delegating a fork step that may be a no-op (like verify-e2e), the driver can pre-check the skip condition (e.g., `find <pkg>/test/e2e -name scenario.yml | wc -l`) and short-circuit without a full fork-run.
+- **Skip-condition detection should precede fork delegation**: Before delegating a fork step that may be a no-op (like verify-e2e), the driver can pre-check the skip condition (e.g., `find <pkg>/test-e2e/scenarios -name scenario.yml | wc -l`) and short-circuit without a full fork-run.
 - **CHANGELOG promotion must be validated post-release**: Release steps should verify that the resulting CHANGELOG has a versioned section (not just updated [Unreleased]) before marking done. A quick `grep -m2 "## \[" CHANGELOG.md` check is sufficient.
 - **Review cycle circuit breaker was not needed**: All 3 review providers succeeded in this batch. The circuit breaker logic (skip fit/shine if valid failed) was not triggered.
 

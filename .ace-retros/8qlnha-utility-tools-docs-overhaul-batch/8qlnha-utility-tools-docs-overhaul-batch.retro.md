@@ -23,7 +23,7 @@ Assignment: 8qllb7, PR #255, branch: unp-documentation-overhaul-utility-tools.
 
 - **Provider exhaustion mid-run** — Codex Spark quota ran out during the first fork-run attempt for verify-e2e (step 015). Required manual config change to switch to `codex:codex@yolo` and restart. The assignment had to retry the step 3 times before it advanced.
 - **Retry step proliferation** — the retry mechanism created steps 021, 022, 023 (all verify-e2e) when only one was needed. The first retry (021) resolved the issue, but the queue already had extra retries queued from the failed fork recovery flow.
-- **E2E test false positive** — `find` initially reported 1 scenario per package, but the packages actually have no `test/e2e/` directories. The count came from unrelated glob matches. Wasted time investigating before confirming no E2E tests exist.
+- **E2E test false positive** — `find` initially reported 1 scenario per package, but the packages actually have no `test-e2e/scenarios/` directories. The count came from unrelated glob matches. Wasted time investigating before confirming no E2E tests exist.
 - **Fork reports lack detail on what was actually changed** — the subtree completion report (`010.0x-work-on-8q4-t-unp-x.r.md`) just says "Auto-completed: all child steps finished" without summarizing what the fork actually produced. The work-on-task report (010.0x.04) has the plan but not the outcome.
 
 ## Key Learnings

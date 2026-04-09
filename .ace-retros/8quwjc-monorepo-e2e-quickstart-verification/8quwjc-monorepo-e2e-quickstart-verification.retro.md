@@ -13,7 +13,7 @@ Context: Converted the `rubygems-verify-install` workflow to an E2E scenario, cr
 
 ## What Went Well
 
-- **Auto-discovery works out of the box.** `TestDiscoverer#list_packages` uses a generic `*/test/e2e/TS-*/scenario.yml` glob — no framework changes were needed to add `ace-monorepo-e2e` as a new "package" for E2E purposes.
+- **Auto-discovery works out of the box.** `TestDiscoverer#list_packages` uses a generic `*/test-e2e/scenarios/TS-*/scenario.yml` glob — no framework changes were needed to add `ace-monorepo-e2e` as a new "package" for E2E purposes.
 - **TS-MONO-001 fully replaces the workflow.** The RubyGems install verification E2E scenario produces the same SAFE/LAG_DETECTED/METADATA_BROKEN classification as the old workflow, but with deterministic runner/verifier separation and repeatable execution via `ace-test-e2e`.
 - **TS-MONO-002 caught a real setup gap.** The quick-start doc validation revealed that `ace-nav` and `ace-bundle project` require `ace-config init` + `ace-handbook sync` to work in a fresh project — a prerequisite that was documented in quick-start.md but not enforced by the test setup. Adding those steps to `scenario.yml` setup fixed all 4 TCs.
 - **Classification result confirmed SAFE.** The 37-gem install from RubyGems.org succeeded on both normal and `--full-index` paths, producing a valid proof artifact with Ruby 3.4.8.

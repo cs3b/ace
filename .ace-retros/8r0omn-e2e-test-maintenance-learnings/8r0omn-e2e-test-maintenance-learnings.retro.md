@@ -52,7 +52,7 @@ SECRETS TC-005 expected `raw_value` in JSON stdout, but `to_json` defaults to `i
 
 ### Feature commits need an E2E verify grep
 
-**Lesson**: When changing defaults or config values that E2E tests assert on (preset fields, provider names, output schemas), the commit should include verify.md updates. A simple grep for the old value across `test/e2e/**/*.verify.md` would catch these.
+**Lesson**: When changing defaults or config values that E2E tests assert on (preset fields, provider names, output schemas), the commit should include verify.md updates. A simple grep for the old value across `test-e2e/scenarios/**/*.verify.md` would catch these.
 
 ### Sandbox setup must match runner scope
 
@@ -67,7 +67,7 @@ SECRETS TC-005 expected `raw_value` in JSON stdout, but `to_json` defaults to `i
 ### Start
 
 - **Specify exact commands in runner.md**: New and updated runner.md files should list literal commands with arguments, not indirect "use what you learned" instructions. Template: numbered list of `command` -> `artifact` mappings.
-- **Add verify-grep to feature commit checklist**: When changing config defaults or output schemas, grep `test/e2e/**/*.verify.md` for the old value before pushing.
+- **Add verify-grep to feature commit checklist**: When changing config defaults or output schemas, grep `test-e2e/scenarios/**/*.verify.md` for the old value before pushing.
 - **Lint boolean option aliases**: Add a check (in ace-lint or a test) that boolean CLI options don't have aliases matching their auto-generated `--flag-name` form.
 
 ### Stop
