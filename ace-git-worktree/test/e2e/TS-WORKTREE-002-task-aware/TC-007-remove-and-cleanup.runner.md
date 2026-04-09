@@ -21,4 +21,5 @@ Save all output to `results/tc/07/`. Capture:
   - `8pp.t.q7w`: remove by task ID with `--force --delete-branch`
 - After removal, verify clean state via list, git branch, and filesystem checks.
 - `branch-check.stdout` must specifically show whether the `q7w` task branch still exists after `--delete-branch`.
+- Even if either remove command fails, you must still write `remove-888.stdout`, `remove-888.stderr`, `remove-888.exit`, `remove-999.stdout`, `remove-999.stderr`, and `remove-999.exit` with the real command output.
 - All artifacts must come from real tool execution, not fabricated.

@@ -17,7 +17,7 @@ Save all output to `results/tc/02/`. Capture:
 
 - Using what you learned from Goal 1, invoke ace-git-worktree list and create commands.
 - Use `.ace-wt/` as the intended worktree parent path; the sandbox setup pre-creates it.
-- For the existing branch case, use the current branch-aware create form, for example `ace-git-worktree create --branch feature/test-worktree`.
+- For the existing branch case, use the current positional branch create form and an explicit child path, for example `ace-git-worktree create feature/test-worktree --path .ace-wt/feature-test-worktree`.
 - For the new-branch creation, target a child path under that parent such as `.ace-wt/feature-test-create`, not the parent directory itself.
 - For the new branch case, use the current positional branch-name create form, for example `ace-git-worktree create feature-test-create --path .ace-wt/feature-test-create`.
 - The sandbox has branches `feature/test-worktree` and `bugfix/test-fix` available.

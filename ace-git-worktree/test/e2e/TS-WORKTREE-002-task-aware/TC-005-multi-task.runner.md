@@ -16,4 +16,5 @@ Save all output to `results/tc/05/`. Capture:
 - Using what you learned from Goal 1, invoke ace-git-worktree create with task-aware flags for task 8pp.t.r8x.
 - The sandbox has taskflow fixtures with task 8pp.t.r8x (8pp.t.r8x-second-task) already defined.
 - After creation, use the explicit current list filters above to confirm both task worktrees coexist.
+- Even if the create step fails, you must still write the exact capture files `create-888.stdout`, `create-888.stderr`, and `create-888.exit`; do not omit them.
 - All artifacts must come from real tool execution, not fabricated.

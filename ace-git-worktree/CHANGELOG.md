@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Updated remaining worktree E2E runners to use the current positional create syntax and explicit forced cleanup captures for task-aware remove flows.
 - Updated the remaining worktree E2E scenarios to use the current create/list command forms, including explicit branch-aware create syntax and explicit task-aware list filters.
 - Aligned worktree lifecycle E2E setup with `ACE_E2E_SOURCE_ROOT`, pre-created the worktree parent path, and updated dry-run/remove expectations to match current behavior.
 - Corrected `TS-WORKTREE-001` lifecycle E2E coverage to create new worktrees beneath `.ace-wt/` and accept explicit missing-path filesystem evidence for dry-run, remove, and prune checks.
