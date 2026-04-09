@@ -11,14 +11,14 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **File exists** — At least one file exists in `results/tc/01/`.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions task-aware concepts** — The content references task-related flags or options (--task, --show-tasks, --task-associated, --no-task-associated, or --delete-branch).
-4. **Observations present** — The content includes at least one observation about how task flags integrate with worktree operations.
+1. **Help captures exist** — `help.*`, `create-help.*`, and `list-help.*` are present.
+2. **Help commands succeeded** — all three `.exit` files report success.
+3. **Task-aware concepts are evidenced** — the combined help captures reference task-related flags or options such as `--task`, `--show-tasks`, `--task-associated`, `--no-task-associated`, or `--delete-branch`.
+4. **Subcommand help carries task flags** — at least one of `create-help.stdout` or `list-help.stdout` includes task-aware option text beyond the root help banner.
 
 ## Verdict
 
-- **PASS**: All expectations met. File exists with substantive observations about task-aware worktree flags.
-- **FAIL**: File missing, empty, boilerplate-only, or lacks mention of task-aware concepts.
+- **PASS**: The help captures exist, succeed, and expose the expected task-aware worktree help surface.
+- **FAIL**: Captures are missing, help fails, or task-aware flags are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence.
+Report: `PASS` or `FAIL` with evidence from the help captures.

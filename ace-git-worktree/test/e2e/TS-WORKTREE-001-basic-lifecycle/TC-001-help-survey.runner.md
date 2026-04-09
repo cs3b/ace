@@ -2,15 +2,16 @@
 
 ## Goal
 
-Explore `ace-git-worktree --help` and any subcommand help it provides. Discover the available subcommands (list, create, remove, switch, prune), flags (--dry-run, --format, --task, --delete-branch), and overall tool behavior. Summarize your findings.
+Capture the real `ace-git-worktree --help` surface for the basic lifecycle commands.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
 
 ## Constraints
 
-- Use only `ace-git-worktree` to gather information. Do not create files manually or fabricate output.
-- Start with `--help` to discover the tool's interface. Explore subcommand help (e.g., `ace-git-worktree create --help`) as needed.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
+- Use only `ace-git-worktree` to gather information.
+- Start with `--help` to discover the tool's interface.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.

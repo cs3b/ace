@@ -2,15 +2,22 @@
 
 ## Goal
 
-Explore `ace-git-worktree --help` and subcommand help, focusing on task-aware features. Discover task-related flags (--task, --show-tasks, --task-associated, --no-task-associated, --delete-branch) and how they integrate with the standard worktree subcommands. Summarize your findings.
+Capture the real task-aware help surface from `ace-git-worktree` root help plus relevant subcommand help.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
+- `results/tc/01/create-help.stdout`
+- `results/tc/01/create-help.stderr`
+- `results/tc/01/create-help.exit`
+- `results/tc/01/list-help.stdout`
+- `results/tc/01/list-help.stderr`
+- `results/tc/01/list-help.exit`
 
 ## Constraints
 
-- Use only `ace-git-worktree` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-git-worktree` to gather information.
 - Start with `--help` and explore subcommand help (create, list, remove, switch) for task-related options.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
