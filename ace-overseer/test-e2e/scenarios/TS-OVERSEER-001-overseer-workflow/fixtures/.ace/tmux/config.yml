@@ -1,4 +1,0 @@
-# ace-tmux config for TS-OVERSEER-001 e2e tests
-# Use a minimal window preset to ensure reliable window creation
-defaults:
-  window: task

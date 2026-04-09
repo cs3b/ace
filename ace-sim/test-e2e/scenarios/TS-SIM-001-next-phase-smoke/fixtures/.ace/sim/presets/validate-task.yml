@@ -1,9 +1,0 @@
-name: validate-task
-steps:
-  - plan
-  - work
-provider:
-  - role:sim-primary
-repeat: 1
-synthesis_workflow: wfi://task/review
-synthesis_provider: role:sim-synthesis

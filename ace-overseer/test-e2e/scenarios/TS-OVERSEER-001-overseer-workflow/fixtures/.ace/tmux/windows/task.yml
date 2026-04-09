@@ -1,7 +1,0 @@
-# Minimal window preset for e2e tests
-# Single pane with automatic-rename disabled so the window name (e.g. "task.001")
-# is preserved for test assertions
-panes:
-  - commands: []
-options:
-  automatic-rename: "off"
