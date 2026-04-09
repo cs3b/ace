@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-git-secrets
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Secret detection evidence (scan output, exit code)"
   results/tc/03/:  "History persistence evidence (scan after git rm)"
   results/tc/04/:  "Output format and filtering evidence (JSON report, whitelist)"
