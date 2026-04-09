@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-assign
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Workflow lifecycle evidence (create, complete steps, finish)"
   results/tc/03/:  "Fork context evidence (regular vs fork steps)"
   results/tc/04/:  "Prepare workflow evidence (preset expansion, multi-task)"
