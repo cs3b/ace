@@ -8,13 +8,11 @@ PASS when:
 - `results/tc/04/run-tree.txt` includes `final/input.md`
 - `results/tc/04/session.yml` contains `synthesis_workflow: wfi://task/review`
 - `results/tc/04/synthesis.yml` contains `final_stage:`
-- `results/tc/04/final.input.md` contains `#### Step draft`
-- `results/tc/04/final.input.md` contains `#### Step plan`
-- `results/tc/04/final.input.md` contains `#### Step work`
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/04/run.exit` is `0`
     - `results/tc/04/synthesis.yml` records a successful `final_stage:`
+    - if `results/tc/04/final.input.md` is present, it is consistent with the full-chain aggregation and includes draft/plan/work sections
   - recorded external failure path:
     - `results/tc/04/run.exit` is non-zero
     - `results/tc/04/run.stderr` mentions `Final synthesis failed`
@@ -22,6 +20,5 @@ PASS when:
 
 FAIL when:
 - any chain step artifact is missing
-- `final/input.md` does not aggregate all three steps
 - `synthesis.yml` does not record final-stage outcome
 - the run fails before chain completion

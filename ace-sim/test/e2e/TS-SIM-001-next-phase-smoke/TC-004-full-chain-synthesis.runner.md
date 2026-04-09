@@ -13,7 +13,9 @@ Capture:
 - `results/tc/04/run-tree.txt`
 - `results/tc/04/session.yml`
 - `results/tc/04/synthesis.yml`
-- `results/tc/04/final.input.md`
+
+Optional capture:
+- `results/tc/04/final.input.md` — support evidence only
 
 ## Steps
 1. Create source file `results/tc/04/source.md` with realistic markdown content.

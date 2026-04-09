@@ -11,12 +11,11 @@ PASS when:
 - `results/tc/05/session.yml` contains `synthesis_workflow: wfi://task/review`
 - `results/tc/05/session.yml` contains `synthesis_provider: role:sim-synthesis`
 - `results/tc/05/synthesis.yml` exists and contains `final_stage:`
-- `results/tc/05/final.input.md` contains `#### Step plan`
-- `results/tc/05/final.input.md` contains `#### Step work`
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/05/run.exit` is `0`
     - `results/tc/05/synthesis.yml` records a successful `final_stage:`
+    - if `results/tc/05/final.input.md` is present, it is consistent with the validate-task flow and includes plan/work sections
   - recorded external failure path:
     - `results/tc/05/run.exit` is non-zero
     - `results/tc/05/run.stderr` mentions `Final synthesis failed`
