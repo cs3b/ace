@@ -58,11 +58,11 @@ llm:
 
     # --- E2E testing ---
     e2e-runner:
-      - codex:mini:low@yolo
+      - codex:mini:medium@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
     e2e-verifier:
-      - codex:mini:low@ro
+      - codex:mini:medium@ro
       - gemini:flash-latest@ro
       - claude:haiku:low@ro
     e2e-reporter:

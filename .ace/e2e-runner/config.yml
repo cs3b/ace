@@ -2,13 +2,15 @@
 
 paths:
   # Where test scenarios are stored in packages
-  scenarios: "test/e2e"
+  scenarios: "test-e2e/scenarios"
+  integration: "test-e2e/integration"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".ace-local/test-e2e"
 
 patterns:
   # Glob pattern for finding test scenarios (TS-format directories)
-  discovery: "test/e2e/TS-*/scenario.yml"
+  discovery: "test-e2e/scenarios/TS-*/scenario.yml"
+  integration: "test-e2e/integration/**/*_test.rb"
 
 # Test scenario frontmatter requirements
 required_fields:
