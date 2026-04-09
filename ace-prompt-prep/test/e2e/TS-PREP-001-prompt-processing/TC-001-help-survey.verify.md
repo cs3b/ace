@@ -10,14 +10,14 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-4. **Primary captures exist** — `help.stdout`, `help.stderr`, and `help.exit` exist in `results/tc/01/`.
-5. **Help succeeded** — `help.exit` reports `0`.
-6. **Subcommands documented** — `subcommands.md` references concrete commands or flags from `help.stdout`.
-7. **Observations present** — `observations.md` contains at least one assessment grounded in captured help output.
+4. **Primary captures exist** — `help.*` and `command-help.*` exist in `results/tc/01/`.
+5. **Help succeeded** — `help.exit` and `command-help.exit` report `0`.
+6. **Root help exposes command surface** — `help.stdout` references a command path that matches the command-specific help capture.
+7. **Command-specific help is present** — `command-help.stdout` contains usage or option text beyond the root help banner.
 
 ## Verdict
 
-- **PASS**: All expectations met. File exists with substantive observations about the tool's help interface.
-- **FAIL**: File missing, empty, boilerplate-only, or lacks any mention of tool subcommands/flags.
+- **PASS**: The help captures exist, succeed, and expose both the root and command-specific help surface.
+- **FAIL**: Captures are missing, commands fail, or the command-specific help path is not evidenced.
 
-Report: `PASS` or `FAIL` with evidence (cite filenames and relevant lines or note their absence).
+Report: `PASS` or `FAIL` with evidence from the help captures.
