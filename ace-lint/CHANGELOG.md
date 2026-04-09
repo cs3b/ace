@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 ## [Unreleased]
 
 ### Fixed
+- Relaxed `TS-LINT-001` no-report verification to accept the actual before/after snapshot artifact names emitted by the runner while still proving no new lint cache entries were created.
 - Updated `TS-LINT-001` no-report verification to prove no new lint cache entries were created by comparing pre/post cache snapshots instead of assuming the cache root never exists.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
