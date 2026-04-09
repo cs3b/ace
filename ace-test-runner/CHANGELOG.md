@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Relaxed `TS-TEST-002` suite verification so grouped multi-package execution evidence is sufficient without requiring an explicitly echoed `ace-test-suite` command line.
 - Switched test-execution E2E runners and sandbox bootstrap to use `ACE_E2E_SOURCE_ROOT` for repo-root package paths.
 
 
