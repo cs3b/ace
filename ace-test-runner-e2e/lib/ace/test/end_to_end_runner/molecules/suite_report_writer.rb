@@ -240,7 +240,7 @@ module Ace
 
               failed_tcs = result.test_cases.select { |tc| tc[:status] == "fail" }
               if failed_tcs.any?
-                parts << "**Failed Test Cases:**"
+                parts << "**Failed Test Cases (canonical):**"
                 failed_tcs.each do |tc|
                   parts << "- #{tc[:id]}: #{tc[:description]}"
                 end

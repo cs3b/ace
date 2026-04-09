@@ -19,6 +19,7 @@ This workflow is execution-only. Root cause classification is handled by `wfi://
 
 Do not apply any fix until an analysis report exists with:
 - scenario / TC identifier
+- report ID / canonical evidence source
 - category (`code-issue`, `test-issue`, `runner-infrastructure-issue`)
 - evidence from reports/artifacts
 - desired behavior source
@@ -65,14 +66,29 @@ Apply fixes in this order:
 
 1. Pick the first prioritized item from analysis
 - Use the selected "First item to fix"
-- Confirm category, fix target, and rerun scope
+- Confirm category, fix target, rerun scope, and failure identity lock
 - Apply the "Chosen fix decision" and primary candidate files directly
 
 2. Validate analysis quality before editing
 - Confirm the failed TC has an explicit desired behavior source
 - Confirm the failed TC has an implementation evidence path
+- Confirm the active failure tuple is explicit:
+  - `report_id`
+  - `scenario`
+  - `tc`
+  - `canonical_evidence_source`
 - If a `test-issue` classification lacks implementation-backed justification, stop and return to `wfi://e2e/analyze-failures`
 - If a `code-issue` classification may still be explained by stale runner/verifier/setup capture, stop and refine the analysis first
+- If the active tuple is missing or was derived from suite prose instead of `summary.r.md`, stop and return to `wfi://e2e/analyze-failures`
+
+2a. Review the whole failing scenario before the first edit
+- Read every `TC-*.runner.md` and `TC-*.verify.md` in the active scenario once before editing.
+- Identify shared contract drift:
+  - artifact naming
+  - required vs optional captures
+  - shared setup assumptions
+  - shared state expectations
+- Fix scope review is scenario-wide, even when the chosen edit remains TC-local.
 
 3. Apply category-specific fix
 
@@ -123,6 +139,8 @@ ace-test-e2e ace-bundle TS-BUNDLE-001
 5. Re-check classification when evidence conflicts
 - If outcome contradicts analysis, return to `e2e/analyze-failures`
 - Update analysis report and re-select a new autonomous chosen fix decision before continuing
+- Invalidate the previous active tuple after every rerun
+- If the scenario is still red, re-read the latest `summary.r.md` and bind a new `report_id / scenario / tc / canonical_evidence_source` tuple before any further edit
 
 6. Iterate until all targeted failures are resolved
 - Keep one active scenario/TC at a time
@@ -150,9 +168,9 @@ Use one explicit command per previously failing scenario to confirm no targeted 
 ```markdown
 ## E2E Fix Execution Summary
 
-| Scenario / TC | Category | Change Applied | Verification Command | Result |
+| Report ID | Scenario / TC | Canonical TC Source | Category | Change Applied | Verification Command | Result |
 |---|---|---|---|---|
-| ... | ... | ... | ... | pass/fail |
+| ... | ... | ... | ... | ... | ... | pass/fail |
 ```
 
 Include one final row for the batch checkpoint:
@@ -160,6 +178,9 @@ Include one final row for the batch checkpoint:
 - Result: `pass` or remaining failing scenarios
 - If failures remain, continue the fix loop instead of treating the session as complete
 - For every `test-issue` fix, add one short line naming the implementation evidence that justified leaving product code unchanged
+- If a rerun changes the failed TC inside the same scenario, explicitly record:
+  - previous tuple invalidated
+  - new active tuple selected
 
 If unresolved:
 
@@ -174,9 +195,11 @@ If unresolved:
 ## Success Criteria
 
 - Fixes are traceable to analyzed failures
+- Every fix item was bound to an explicit failure identity tuple
 - Verification scope matches analysis recommendation, including mandatory reruns after each fix
 - Cost-conscious rerun strategy was followed
 - `test-issue` fixes were not applied as a shortcut around implementation inspection
+- Scenario-wide contract review was completed before the first edit in each red scenario
 - Final explicit per-scenario rerun checkpoint for all targeted failures was completed before concluding the fix session
 - No user clarification was required for fix targeting/scope in normal flow
 - Targeted failures pass, or blockers are explicitly documented

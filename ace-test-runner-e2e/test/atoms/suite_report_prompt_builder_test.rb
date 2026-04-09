@@ -124,6 +124,29 @@ class SuiteReportPromptBuilderTest < Minitest::Test
     assert_match(/TC-002.*Verify format.*fail/, prompt)
   end
 
+  def test_prompt_includes_canonical_failed_tc_ids_for_failed_results
+    test_cases = [
+      {id: "TC-001", description: "Check output", status: "pass"},
+      {id: "TC-002", description: "Verify format", status: "fail"},
+      {id: "TC-003", description: "Inspect state", status: "fail"}
+    ]
+    results_data = [
+      make_result_data("TS-TEST-001", "Test One", "fail",
+        passed: 1, failed: 2, total: 3, test_cases: test_cases)
+    ]
+
+    prompt = @builder.build(results_data,
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "fail",
+      executed_at: "2025-01-01T00:00:00Z")
+
+    assert_match(/Canonical Failed TC IDs:/, prompt)
+    assert_match(/- TC-002/, prompt)
+    assert_match(/- TC-003/, prompt)
+    assert_match(/Use these failed TC IDs verbatim/, prompt)
+  end
+
   def test_prompt_includes_report_dir_name
     results_data = [
       make_result_data("TS-TEST-001", "Test One", "pass",

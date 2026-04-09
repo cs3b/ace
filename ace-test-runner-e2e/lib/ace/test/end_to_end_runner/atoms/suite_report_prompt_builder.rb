@@ -19,7 +19,7 @@ module Ace
             1. **YAML Frontmatter** — suite-id, package, status, tests-run, executed timestamp
             2. **Summary Table** — Test ID, Title, Status, Passed, Failed, Total columns
             3. **Overall Line** — "X/Y test cases passed (Z%)"
-            4. **Failed Tests** (if any) — For each failed test: root cause analysis, failed test case details
+            4. **Failed Tests** (if any) — For each failed test: preserve the exact failed TC IDs provided in the canonical data block, then add root cause analysis and failed test case details
             5. **Friction Analysis** — Developer experience issues, tooling pain points, environment problems observed across tests
             6. **Improvement Suggestions** — Concrete, actionable recommendations based on the failures and friction observed
             7. **Positive Observations** — What worked well, reliable patterns, strengths
@@ -30,6 +30,7 @@ module Ace
             - Use GitHub-flavored markdown
             - Frontmatter must be valid YAML between --- fences
             - Keep root cause analysis concise but specific
+            - Failed TC identity is deterministic: copy the exact TC IDs from the canonical failed-TC block, do not infer, rename, merge, or hedge between multiple TC IDs
             - Friction analysis should focus on patterns across tests, not individual failures
             - Suggestions should be actionable (not vague like "improve testing")
             - If all tests pass, skip Failed Tests section and focus on positive observations and any friction
@@ -77,6 +78,16 @@ module Ace
                 r[:test_cases].each do |tc|
                   parts << "- #{tc[:id]}: #{tc[:description]} — #{tc[:status]}"
                 end
+              end
+
+              failed_tcs = Array(r[:test_cases]).select { |tc| tc[:status] == "fail" }
+              if failed_tcs.any?
+                parts << ""
+                parts << "**Canonical Failed TC IDs:**"
+                failed_tcs.each do |tc|
+                  parts << "- #{tc[:id]}"
+                end
+                parts << "Use these failed TC IDs verbatim in the Failed Tests section."
               end
 
               if r[:summary_content]

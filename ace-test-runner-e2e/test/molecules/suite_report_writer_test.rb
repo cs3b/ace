@@ -119,6 +119,28 @@ class SuiteReportWriterTest < Minitest::Test
       assert_match(/TS-TEST-002/, content)
       assert_match(/TC-002/, content)
       assert_match(/Second check/, content)
+      assert_match(/Failed Test Cases \(canonical\):/, content)
+    end
+  end
+
+  def test_llm_prompt_includes_canonical_failed_tc_ids
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_results_and_scenarios(tmpdir)
+
+      captured_prompt = nil
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |_model, prompt, **_opts|
+        captured_prompt = prompt
+        {text: "# LLM Report\n\n**Overall:** 3/4 test cases passed (75%)"}
+      end
+
+      @writer.write(results, scenarios,
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+
+      assert_match(/Canonical Failed TC IDs:/, captured_prompt)
+      assert_match(/- TC-002/, captured_prompt)
+      assert_match(/Use these failed TC IDs verbatim/, captured_prompt)
+    ensure
+      restore_llm_query
     end
   end
 

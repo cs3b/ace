@@ -70,6 +70,7 @@ Use these as mandatory corroborating evidence before classification:
 
 Do not classify from summary text alone when raw artifacts exist.
 Do not classify a TC as `test-issue` until the implementation path has been inspected.
+Treat `summary.r.md` as the canonical failed-TC source when suite-level prose disagrees.
 
 ## Analysis Procedure
 
@@ -80,11 +81,35 @@ ls -lt .ace-local/test-e2e/*-reports/ 2>/dev/null | head -20
 
 2. For each failing scenario, extract:
 - failed TC IDs
+- report ID and report directory
+- canonical failed-TC source path
 - reported category/evidence from metadata
 - corroborating artifact evidence
 - current scenario contract from runner/verifier files
 - relevant implementation path for the claimed behavior
 - at least one product-contract source establishing desired behavior
+
+2a. Lock failure identity before classification
+- Record the active failure tuple:
+  - `report_id`
+  - `report_dir`
+  - `scenario`
+  - `tc`
+  - `canonical_evidence_source`
+- Resolve the active TC in this order:
+  1. `summary.r.md`
+  2. raw `results/tc/{NN}/` artifacts
+  3. `metadata.yml`
+  4. suite final report prose only as narrative context
+- If suite prose and scenario summary disagree, record `report-inconsistency` in the evidence notes and continue with the `summary.r.md` TC.
+
+2b. Review the whole scenario before choosing a fix target
+- Read every `TC-*.runner.md` and `TC-*.verify.md` in the failing scenario once.
+- Note any shared contract drift that could affect multiple TCs:
+  - artifact naming
+  - required vs optional captures
+  - reused setup assumptions
+  - shared state-model expectations
 
 3. Establish desired behavior before classification
 - Name the desired behavior source for each failed TC
@@ -117,6 +142,8 @@ Before labeling a failure `test-issue`, confirm all of the following:
 - the desired behavior source is explicit
 - the mismatch is truly in artifact capture, naming, timing, selector choice, command shape, or stale expectation
 - if output is transformed, normalized, or structured, the verifier is not incorrectly asserting a pre-transform literal string unless verbatim output is the product contract
+- the active failure tuple is locked to the latest `summary.r.md`
+- the scenario-wide runner/verifier review was completed and any shared drift was noted
 
 Before labeling a failure `code-issue`, confirm all of the following:
 - the failure is not already explained by stale runner/verifier/setup capture
@@ -147,9 +174,9 @@ Produce this section before exiting:
 ```markdown
 ## E2E Failure Analysis Report
 
-| Scenario / TC | Category | Evidence | Desired Behavior Source | Implementation Evidence Path | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
-|---|---|---|---|---|---|---|---|---|---|---|
-| TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | current CLI help text + command test | ace-foo/lib/... | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | replay the same command with corrected artifact capture | scenario |
+| Report ID | Scenario / TC | Canonical TC Source | Category | Evidence | Desired Behavior Source | Implementation Evidence Path | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 8r8e38c | TS-FOO-001 / TC-003 | .ace-local/test-e2e/.../summary.r.md | test-issue | summary + artifact mismatch details | current CLI help text + command test | ace-foo/lib/... | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | replay the same command with corrected artifact capture | scenario |
 ```
 
 Then include:
@@ -165,15 +192,19 @@ Then include:
 - Why first (unblocks most): ...
 - Required verification commands: ...
 - Expected pass criteria per command: ...
+- Failure identity lock: `report_id / scenario / tc / canonical_evidence_source`
+- Scenario-wide drift notes: ...
 ```
 
 ## Success Criteria
 
 - Every failed TC has a category and evidence
+- Every failed TC has a locked failure identity tuple
 - Every failed TC has an explicit desired behavior source
 - Every failed TC has an implementation evidence path
 - Category is traceable to report/artifact facts
 - `test-issue` classifications are implementation-backed, not assumed
+- Scenario-wide runner/verifier review was completed before fix targeting
 - Fix target is explicit per failed TC
 - Fix target files are explicit per failed TC (primary + fallback)
 - No-touch boundaries are explicit per failed TC

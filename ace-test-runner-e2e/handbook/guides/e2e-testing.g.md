@@ -114,6 +114,8 @@ This prevents duplicate assertions across test layers.
 - Preserve strict TC pairing (`runner` + `verify`).
 - Keep outputs inside `results/tc/{NN}/`.
 - Avoid hidden dependencies between TCs unless explicitly intended.
+- When fixing a red scenario, use `summary.r.md` as the canonical failed-TC source and review the entire scenario contract before editing any single TC.
+- A scenario-wide review does not mean every TC must be edited; it means shared runner/verifier drift must be checked before a TC-local fix is declared complete.
 
 Example:
 - Bad: require `README.md ("Test Application")` when the formatter normalizes markdown into structured tokens.
@@ -125,6 +127,7 @@ Reports are written under `.ace-local/test-e2e/`:
 - `{run-id}-{pkg}-{scenario}-reports/summary.r.md`
 - `{run-id}-{pkg}-{scenario}-reports/experience.r.md`
 - `{run-id}-{pkg}-{scenario}-reports/metadata.yml`
+- `{run-id}-final-report.md` suite report prose is narrative only; canonical failed-TC identity comes from the scenario report directory, especially `summary.r.md`
 
 ## Review Checklist
 
