@@ -414,11 +414,11 @@ module Ace
         end
 
         def test_default_frontmatter_free_patterns_ignore_nested_fixture_readme
-          FileUtils.mkdir_p("ace-review/test/e2e/fixture")
-          File.write("ace-review/test/e2e/fixture/README.md", "# Fixture\n")
+          FileUtils.mkdir_p("ace-review/test-e2e/scenarios/fixture")
+          File.write("ace-review/test-e2e/scenarios/fixture/README.md", "# Fixture\n")
 
           registry = DocumentRegistry.new(project_root: @temp_dir)
-          doc = registry.find_by_path(File.join(@temp_dir, "ace-review/test/e2e/fixture/README.md"))
+          doc = registry.find_by_path(File.join(@temp_dir, "ace-review/test-e2e/scenarios/fixture/README.md"))
 
           assert_nil doc
         end
