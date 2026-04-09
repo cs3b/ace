@@ -10,7 +10,7 @@ Validation order (impact-first):
 1. `results/tc/03/status.stdout`, `.stderr`, and `.exit` exist.
 2. `results/tc/03/status.exit` is `0`.
 3. `results/tc/03/status.stdout` includes status-style summary indicators (for example `Managed Documents`, `Outdated`, or similar counts/health sections).
-4. If fallback setup was needed, `results/tc/03/setup.*` exists.
+4. If fallback setup artifacts are present, they should be consistent with a seeded docs corpus; their absence alone is not a failure when status output already proves managed documents exist.
 
 ## Verdict
 
