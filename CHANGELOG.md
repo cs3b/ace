@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.11**: Removed optional report copies and stale subtree snapshot files from the `TS-ASSIGN-002` required artifact contract so hierarchy E2E failures track real behavior instead of missing optional evidence.
+- **ace-docs v0.32.2**: Switched docs-operation E2E capture declarations to explicit artifact lists so setup evidence is parsed correctly.
+- **ace-git v0.20.4**: Switched git-operations E2E capture declarations to explicit artifact lists so bootstrap/status evidence is parsed correctly.
+- **ace-sim v0.13.8**: Split required chain artifacts from optional final synthesis outputs in `TS-SIM-001` so provider-side final-stage failures do not surface as false missing-artifact regressions.
 - **ace-assign v0.44.10**: Hardened `TS-ASSIGN-002` runner artifact handling so hierarchy E2E runs emit explicit lookup-failure evidence instead of silently dropping required files.
 - **ace-bundle v0.41.6**: Corrected `TS-BUNDLE-001` verification to accept semantic README inclusion from transformed bundle output rather than requiring the literal source heading.
 - **ace-git-worktree v0.19.9**: Updated worktree E2E runners to use the current positional create syntax and explicit forced-cleanup capture rules for task-aware removal.
@@ -101,6 +105,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 ### Technical
+- **ace-test-runner-e2e v0.32.1**: Restricted artifact extraction to explicit `Capture:` blocks and added `stdout|stderr|exit` shorthand parsing so prose suffixes and directory names no longer become fake required artifacts.
 - Coordinated patch releases aligning E2E sandbox bootstrap with `ACE_E2E_SOURCE_ROOT`: `ace-assign v0.44.5`, `ace-b36ts v0.13.4`, `ace-bundle v0.41.5`, `ace-compressor v0.24.8`, `ace-demo v0.24.2`, `ace-docs v0.32.1`, `ace-git v0.20.3`, `ace-handbook v0.25.4`, `ace-idea v0.18.6`, `ace-lint v0.28.2`, `ace-prompt-prep v0.23.7`, `ace-retro v0.16.7`, `ace-sim v0.13.6`, `ace-support-models v0.9.4`, `ace-support-nav v0.26.4`, `ace-task v0.33.4`, `ace-tmux v0.11.4`.
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
