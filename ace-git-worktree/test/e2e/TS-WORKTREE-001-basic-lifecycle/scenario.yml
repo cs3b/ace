@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-git-worktree
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "List and create evidence"
   results/tc/03/:  "Switch and output format evidence"
   results/tc/04/:  "Dry-run operations evidence"

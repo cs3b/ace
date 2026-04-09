@@ -14,4 +14,4 @@ Capture the real `ace-git-worktree --help` surface for the basic lifecycle comma
 
 - Use only `ace-git-worktree` to gather information.
 - Start with `--help` to discover the tool's interface.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
+- **Foundation for later goals**: These command captures are the reference for all subsequent goals.

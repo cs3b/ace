@@ -20,4 +20,4 @@ Capture the real task-aware help surface from `ace-git-worktree` root help plus 
 
 - Use only `ace-git-worktree` to gather information.
 - Start with `--help` and explore subcommand help (create, list, remove, switch) for task-related options.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
+- **Foundation for later goals**: These command captures are the reference for all subsequent goals.
