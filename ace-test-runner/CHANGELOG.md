@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.8] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Corrected `TS-TEST-002` failure-propagation verification to use the actual emitted `ace-test.exit` artifact name.
 - Relaxed `TS-TEST-002` suite verification so grouped multi-package execution evidence is sufficient without requiring an explicitly echoed `ace-test-suite` command line.
