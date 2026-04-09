@@ -45,7 +45,7 @@ Optional capture:
 - Complete second child with:
   - `ace-assign finish --assignment "<single-assignment-id>" --message fixtures/completion/child2-report.md`
 - Verify parent auto-completes with "Auto-completed" report at reports/010-parent-job.r.md.
-- If the report exists, optionally copy it into `results/tc/02/010-parent-job.r.md`.
+- If the report exists, optionally copy it into `results/tc/02/010-parent-job.r.md` as support evidence only.
 - `parent-auto-complete.stdout` must always be written; if no dedicated report file is present, capture the direct status/output evidence that shows the parent auto-completed.
 - Verify workflow advances to next top-level step (020-final-step).
 
@@ -58,6 +58,6 @@ Optional capture:
   - `ace-assign finish --assignment "<multi-assignment-id>" --message fixtures/completion/grandchild-report.md`
 - Verify cascade: grandchild done, parent auto-completes, grandparent auto-completes.
 - `cascade-auto-complete.stdout` must always be written; if dedicated cascade report files are absent, capture the status/output evidence that proves the cascade outcome.
-- If cascade reports exist, optionally copy them into `results/tc/02/` using the filenames above.
+- If cascade reports exist, optionally copy them into `results/tc/02/` using the filenames above as support evidence only.
 - Next top-level step (020-next-task) becomes current.
 - All artifacts must come from real tool execution.
