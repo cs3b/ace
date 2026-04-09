@@ -40,5 +40,5 @@ Save all output to `results/tc/01/`. Capture:
   - Capture `step-listing-after-cascade.stdout` after the second sibling injection.
   - Read the real `010.04.01-*.st.md` file into `renumbered-grandchild.stdout`.
 - The cascade proof must come from the second sibling injection and the before/after listings, not inferred from grandchild creation alone.
-- If the shifted parent or grandchild file cannot be resolved unambiguously, fail the artifact lookup rather than writing metadata from the wrong step.
+- If the shifted parent or grandchild file cannot be resolved unambiguously, still write `renumbered-parent.stdout` or `renumbered-grandchild.stdout` with an explicit lookup-failure explanation rather than omitting the artifact or writing metadata from the wrong step.
 - All artifacts must come from real tool execution.

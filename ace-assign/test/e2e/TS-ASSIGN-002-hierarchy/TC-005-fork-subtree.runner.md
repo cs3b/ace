@@ -21,6 +21,7 @@ Save all output to `results/tc/05/`. Capture:
 ## Constraints
 
 - Create assignment from `fixtures/subtree/job.yaml`. Capture assignment ID.
+- `assignment-id.txt` must always be written; if ID parsing fails, write an explicit resolution failure marker plus the create output context instead of omitting the artifact.
 - Verify initial current step is outside the subtree (010-precheck).
 - Capture both table and JSON output for each status snapshot.
 - Use scoped syntax exactly: `ace-assign status --assignment "<id>@020"` for `status-scoped.stdout` and `status-scoped.json`.
