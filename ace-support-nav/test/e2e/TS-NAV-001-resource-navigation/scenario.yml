@@ -8,7 +8,7 @@ cost-tier: smoke
 tool-under-test: ace-nav
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations + sources command captures"
+  results/tc/01/:  "Help and sources command captures"
   results/tc/02/:  "Extension inference chain evidence (shorthand, full, generic)"
   results/tc/03/:  "Inference priority and exact-match evidence"
   results/tc/04/:  "Error handling captures (missing resource, informative errors)"

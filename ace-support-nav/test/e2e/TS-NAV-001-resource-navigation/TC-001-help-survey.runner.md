@@ -18,4 +18,4 @@ Capture the real `ace-nav` help surface and the `sources` listing output.
 - Use only `ace-nav` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or protocols.
 - Run `ace-nav sources` after the help survey and persist raw captures to the files above.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.
+- **Foundation for later goals**: These command captures are the reference for all subsequent goals. Later goals will build on the discovered interface and will not re-run `--help`.
