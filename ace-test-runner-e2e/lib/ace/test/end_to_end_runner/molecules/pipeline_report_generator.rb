@@ -9,7 +9,7 @@ module Ace
       module Molecules
         # Generates TC-first reports from standalone verifier output.
         class PipelineReportGenerator
-          FAILURE_CATEGORIES = %w[test-spec-error tool-bug runner-error infrastructure-error].freeze
+          FAILURE_CATEGORIES = %w[test-spec-error tool-bug runner-error infrastructure-error missing-artifact state-drift behavior-regression].freeze
 
           # @param report_writer [Molecules::ReportWriter]
           def initialize(report_writer: nil)
@@ -57,12 +57,12 @@ module Ace
           # @param completed_at [Time]
           # @param error_message [String]
           # @return [Models::TestResult]
-          def write_failure_report(scenario:, report_dir:, provider:, started_at:, completed_at:, error_message:)
+          def write_failure_report(scenario:, report_dir:, provider:, started_at:, completed_at:, error_message:, summary: "Execution pipeline failed", test_cases: [])
             result = Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
-              test_cases: [],
-              summary: "Execution pipeline failed",
+              test_cases: test_cases,
+              summary: summary,
               error: error_message,
               started_at: started_at,
               completed_at: completed_at
@@ -231,10 +231,10 @@ module Ace
             explicit = extract_field_token(block, %w[Category])
             return normalize_category(explicit) if explicit
 
-            inline = block.to_s.match(/`(test-spec-error|tool-bug|runner-error|infrastructure-error)`/i)
+            inline = block.to_s.match(/`(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)`/i)
             return normalize_category(inline[1]) if inline
 
-            paren = block.to_s.match(/\((test-spec-error|tool-bug|runner-error|infrastructure-error)\)/i)
+            paren = block.to_s.match(/\((test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)\)/i)
             return normalize_category(paren[1]) if paren
 
             normalize_category("#{block}\n#{evidence}")
@@ -242,7 +242,7 @@ module Ace
 
           def normalize_category(value)
             category = value.to_s.strip.downcase
-            match = category.match(/\b(test-spec-error|tool-bug|runner-error|infrastructure-error)\b/)
+            match = category.match(/\b(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)\b/)
             return match[1] if match
 
             "runner-error"

@@ -27,6 +27,7 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
 - TC artifacts use `results/tc/{NN}/`
 - Summary reports use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
 - Scenarios declare `tags` for discovery-time filtering via `--tags`/`--exclude-tags`
+- Scenarios may declare `execution-tier` to control suite scheduling (`safe-parallel`, `low-parallel`, `serial`)
 
 ## Runner vs Verifier Contract
 
@@ -70,7 +71,8 @@ CLI providers (`ace-test-e2e`, `ace-test-e2e-suite`) use a deterministic 6-phase
 3. **Runner LLM** — Agent executes TC steps in sandbox, produces artifacts
 4. **Verifier prompt** — `SkillPromptBuilder` assembles context from `verifier.yml.md` and `TC-*.verify.md`
 5. **Verifier LLM** — Independent agent evaluates artifacts against expectations
-6. **Report** — `PipelineReportGenerator` produces deterministic summary from verifier output
+6. **Artifact gate** — required runner artifacts are checked before verifier execution; missing artifacts fail as infrastructure issues
+7. **Report** — `PipelineReportGenerator` produces deterministic summary from verifier output
 
 API providers use a single-prompt approach (runner and verifier in one pass).
 
@@ -102,6 +104,7 @@ This prevents duplicate assertions across test layers.
 
 - Keep runner goals outcome-oriented and deterministic.
 - Keep verifier expectations impact-first, then artifacts, then debug fallback.
+- Declare concrete runner artifacts; if a runner-owned artifact is optional in practice, remove it from the contract instead of leaving it implicit.
 - Preserve strict TC pairing (`runner` + `verify`).
 - Keep outputs inside `results/tc/{NN}/`.
 - Avoid hidden dependencies between TCs unless explicitly intended.

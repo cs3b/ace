@@ -82,6 +82,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal [], scenario.tags
     assert_nil scenario.tool_under_test
     assert_equal({}, scenario.sandbox_layout)
+    assert_equal "safe-parallel", scenario.execution_tier
   end
 
   def test_new_fields_set
@@ -96,7 +97,8 @@ class TestScenarioTest < Minitest::Test
       test_cases: [tc],
       tags: ["smoke", "happy-path"],
       tool_under_test: "ace-lint",
-      sandbox_layout: {"output/" => "Report output"}
+      sandbox_layout: {"output/" => "Report output"},
+      execution_tier: "serial"
     )
     assert_equal 900, scenario.timeout
     assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
@@ -106,6 +108,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal ["smoke", "happy-path"], scenario.tags
     assert_equal "ace-lint", scenario.tool_under_test
     assert_equal({"output/" => "Report output"}, scenario.sandbox_layout)
+    assert_equal "serial", scenario.execution_tier
   end
 
   # test_case_ids from test_cases array

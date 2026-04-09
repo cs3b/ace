@@ -47,7 +47,8 @@ module Ace
               test_cases: test_cases,
               tags: parse_tags(frontmatter["tags"]),
               tool_under_test: frontmatter["tool-under-test"],
-              sandbox_layout: frontmatter["sandbox-layout"] || {}
+              sandbox_layout: frontmatter["sandbox-layout"] || {},
+              execution_tier: parse_execution_tier(frontmatter["execution-tier"], yml_path)
             )
           end
 
@@ -71,7 +72,7 @@ module Ace
               when String
                 stripped = raw_timeout.strip
                 return nil if stripped.empty?
-                raise ArgumentError, "Invalid timeout in #{source_path}: #{raw_timeout.inspect}" unless stripped.match?(/\\A\\d+\\z/)
+                raise ArgumentError, "Invalid timeout in #{source_path}: #{raw_timeout.inspect}" unless stripped.match?(/\A\d+\z/)
                 stripped.to_i
               else
                 raise ArgumentError, "Invalid timeout in #{source_path}: #{raw_timeout.inspect}"
@@ -161,7 +162,8 @@ module Ace
               content: build_standalone_content(runner_content, verify_content),
               file_path: File.expand_path(runner_file),
               pending: nil,
-              goal_format: "standalone"
+              goal_format: "standalone",
+              expected_artifacts: extract_expected_artifacts(runner_content)
             )
           end
 
@@ -221,6 +223,29 @@ module Ace
 
             tags = raw_tags.is_a?(Array) ? raw_tags : [raw_tags]
             tags.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
+          end
+
+
+          def parse_execution_tier(raw_tier, source_path)
+            return "safe-parallel" if raw_tier.nil?
+
+            value = raw_tier.to_s.strip.downcase
+            return "safe-parallel" if value.empty?
+
+            allowed = %w[safe-parallel low-parallel serial]
+            unless allowed.include?(value)
+              raise ArgumentError, "Invalid execution-tier in #{source_path}: #{raw_tier.inspect}"
+            end
+
+            value
+          end
+
+          def extract_expected_artifacts(runner_content)
+            runner_content.to_s
+              .scan(%r{results/tc/\d{1,3}/[A-Za-z0-9._\-/]+})
+              .map { |path| path.sub(/[),.;:]+\z/, "") }
+              .reject { |path| path.end_with?("/") }
+              .uniq
           end
 
           # Detect fixtures directory if it exists

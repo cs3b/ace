@@ -115,6 +115,41 @@ class TestExecutorTest < Minitest::Test
     end
   end
 
+
+  def test_execute_pipeline_fails_early_when_declared_artifacts_are_missing
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_pipeline_files(tmpdir)
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_pipeline_scenario(scenario_dir)
+      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+
+      calls = 0
+      stub_sandbox_builder do
+        Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **_kwargs|
+          calls += 1
+          {text: "Runner completed."}
+        }) do
+          result = executor.execute(
+            scenario,
+            sandbox_path: sandbox_path,
+            report_dir: report_dir
+          )
+
+          assert_equal "error", result.status
+          assert_equal report_dir, result.report_dir
+        end
+      end
+
+      assert_equal 1, calls, "verifier should not run when declared artifacts are missing"
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+      assert_equal ["TC-001", "TC-002"], metadata["failed_test_cases"]
+      assert_equal "missing-artifact", metadata.fetch("failed").first.fetch("category")
+    end
+  end
+
   def test_execute_via_prompt_uses_timeout_override
     executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
     scenario = create_scenario
@@ -309,14 +344,16 @@ class TestExecutorTest < Minitest::Test
           title: "First",
           content: "",
           file_path: File.join(dir_path, "TC-001-first.runner.md"),
-          goal_format: "standalone"
+          goal_format: "standalone",
+          expected_artifacts: ["results/tc/01/out.txt"]
         ),
         Ace::Test::EndToEndRunner::Models::TestCase.new(
           tc_id: "TC-002",
           title: "Second",
           content: "",
           file_path: File.join(dir_path, "TC-002-second.runner.md"),
-          goal_format: "standalone"
+          goal_format: "standalone",
+          expected_artifacts: ["results/tc/02/out.txt"]
         )
       ],
       sandbox_layout: {

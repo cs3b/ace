@@ -17,6 +17,8 @@ module Ace
         class SuiteOrchestrator
           attr_reader :max_parallel, :base_dir
 
+          LOW_PARALLEL_LIMIT = 2
+
           # @param max_parallel [Integer] Number of parallel workers
           # @param base_dir [String] Base directory for test discovery
           # @param discoverer [#find_tests, #list_packages] Test discoverer (injectable)
@@ -280,22 +282,15 @@ module Ace
             queue.each_with_index { |item, i| item[:run_id] = run_ids[i] }
             start_time = Time.now
 
-            running = {}
+            grouped = {
+              "serial" => queue.select { |item| item[:execution_tier] == "serial" },
+              "low-parallel" => queue.select { |item| item[:execution_tier] == "low-parallel" },
+              "safe-parallel" => queue.select { |item| item[:execution_tier] == "safe-parallel" }
+            }
 
-            while !queue.empty? || !running.empty?
-              # Start new processes up to max_parallel
-              while running.size < @max_parallel && !queue.empty?
-                test_item = queue.shift
-                @display.test_started(test_item[:package], test_item[:test_file])
-                process = spawn_test_process(test_item, options)
-                running[process[:pid]] = process.merge(started_at: Time.now)
-              end
-
-              # Check for completed processes
-              sleep 0.1
-              @display.refresh
-              check_running_processes(running, results)
-            end
+            run_parallel_group(grouped["serial"], options, results, max_parallel: 1)
+            run_parallel_group(grouped["low-parallel"], options, results, max_parallel: [@max_parallel, LOW_PARALLEL_LIMIT].min)
+            run_parallel_group(grouped["safe-parallel"], options, results, max_parallel: @max_parallel)
 
             finalize_run(results, package_tests, start_time)
           end
@@ -308,10 +303,45 @@ module Ace
             queue = []
             package_tests.each do |package, tests|
               tests.each do |test_file|
-                queue << {package: package, test_file: test_file}
+                scenario = parse_scenario(package, test_file)
+                queue << {
+                  package: package,
+                  test_file: test_file,
+                  execution_tier: normalize_execution_tier(scenario.execution_tier)
+                }
               end
             end
             queue
+          end
+
+          def run_parallel_group(queue, options, results, max_parallel:)
+            queue = queue.dup
+            running = {}
+            return if queue.empty?
+
+            while !queue.empty? || !running.empty?
+              while running.size < max_parallel && !queue.empty?
+                test_item = queue.shift
+                @display.test_started(test_item[:package], test_item[:test_file])
+                process = spawn_test_process(test_item, options)
+                running[process[:pid]] = process.merge(started_at: Time.now)
+              end
+
+              sleep 0.1
+              @display.refresh
+              check_running_processes(running, results)
+            end
+          end
+
+          def normalize_execution_tier(value)
+            case value.to_s.strip.downcase
+            when "serial"
+              "serial"
+            when "low-parallel"
+              "low-parallel"
+            else
+              "safe-parallel"
+            end
           end
 
           # Spawn a subprocess for a single test

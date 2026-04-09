@@ -182,6 +182,26 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal 0, results[:total]
   end
 
+
+  def test_build_test_queue_reads_execution_tier_from_scenario
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output,
+      scenario_loader: StubScenarioLoader.new
+    )
+
+    queue = orchestrator.send(:build_test_queue, {
+      "ace-test" => [
+        "/tmp/TS-SERIAL-001-test/scenario.yml",
+        "/tmp/TS-LOW-001-test/scenario.yml",
+        "/tmp/TS-SAFE-001-test/scenario.yml"
+      ]
+    })
+
+    assert_equal ["serial", "low-parallel", "safe-parallel"], queue.map { |item| item[:execution_tier] }
+  end
+
   def test_build_test_command_includes_options
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(
@@ -573,7 +593,8 @@ class SuiteOrchestratorTest < Minitest::Test
         file_path: dir_path,
         content: "",
         dir_path: dir_path,
-        test_cases: []
+        test_cases: [],
+        execution_tier: (dir_name.include?("SERIAL") ? "serial" : (dir_name.include?("LOW") ? "low-parallel" : "safe-parallel"))
       )
     end
   end

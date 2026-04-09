@@ -238,6 +238,37 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+
+  def test_load_parses_execution_tier
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-TIER-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-TIER-001
+          title: Tiered Scenario
+          area: test
+          execution-tier: serial
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+      assert_equal "serial", scenario.execution_tier
+    end
+  end
+
+  def test_load_rejects_invalid_execution_tier
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-TIER-002",
+        scenario_yml: <<~YAML)
+          test-id: TS-TIER-002
+          title: Bad Tier
+          area: test
+          execution-tier: bursty
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid execution-tier/, error.message)
+    end
+  end
+
   def test_load_with_timeout_override
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-TIMEOUT-001",

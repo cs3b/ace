@@ -49,6 +49,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 | `sandbox-layout` | object | `{}` | Declared artifact paths and expected outputs |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `timeout` | integer | — | Optional per-scenario execution timeout in seconds |
+| `execution-tier` | string | `safe-parallel` | Scheduler tier: `safe-parallel`, `low-parallel`, `serial` |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
 | `tags` | array | `[]` | Scenario tags for filtering with `--tags`/`--exclude-tags` (OR semantics) |
 | `cost-tier` | string | `smoke` | Run profile: `smoke`, `happy-path`, `deep` |
@@ -81,6 +82,7 @@ Canonical summary report fields:
 - `failed[].tc`
 
 Role contract:
+- Runner-declared artifacts are mandatory. Missing required artifacts are infrastructure failures and should stop verification early.
 - `runner.yml.md` + `TC-*.runner.md` are execution-only.
 - `verifier.yml.md` + `TC-*.verify.md` are verification-only with impact-first checks.
 
@@ -120,6 +122,8 @@ setup:
 ```
 
 Setup rules:
+- `execution-tier: serial` is recommended for stateful local tools such as worktrees, tmux, and assignment workflows.
+- `execution-tier: low-parallel` is recommended for provider-sensitive or cache-sensitive scenarios.
 - Setup is fail-fast. Do not hide setup failures with `|| true`.
 - Setup belongs in `scenario.yml` and fixtures, not in TC runner instructions.
 - If setup fails (for example, missing `mise trust` support), stop scenario execution and report infrastructure failure.

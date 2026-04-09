@@ -12,7 +12,7 @@ module Ace
           attr_reader :test_id, :title, :area, :package, :priority, :duration,
             :requires, :file_path, :content, :timeout,
             :setup_steps, :dir_path, :fixture_path, :test_cases,
-            :tags, :tool_under_test, :sandbox_layout
+            :tags, :tool_under_test, :sandbox_layout, :execution_tier
 
           # @param test_id [String] Test identifier (e.g., "TS-LINT-001")
           # @param title [String] Test title
@@ -31,11 +31,12 @@ module Ace
           # @param tags [Array<String>] Scenario-level tags for discovery-time filtering
           # @param tool_under_test [String, nil] Primary tool under test
           # @param sandbox_layout [Hash] Declared sandbox artifact layout
+          # @param execution_tier [String] Suite scheduling tier: safe-parallel, low-parallel, serial
           def initialize(test_id:, title:, area:, package:, file_path:, content:,
             priority: "medium", duration: "~5min", requires: {},
             setup_steps: [], dir_path: nil, fixture_path: nil, test_cases: [],
             timeout: nil, tags: [], tool_under_test: nil,
-            sandbox_layout: {})
+            sandbox_layout: {}, execution_tier: "safe-parallel")
             @test_id = test_id
             @title = title
             @area = area
@@ -53,6 +54,7 @@ module Ace
             @tags = tags
             @tool_under_test = tool_under_test
             @sandbox_layout = sandbox_layout
+            @execution_tier = execution_tier
           end
 
           # Generate short package name (without ace- prefix)

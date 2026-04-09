@@ -9,7 +9,7 @@ module Ace
         # Contains parsed frontmatter metadata and the full markdown body
         # from an independent test case file within a scenario directory.
         class TestCase
-          attr_reader :tc_id, :title, :content, :file_path, :pending, :goal_format
+          attr_reader :tc_id, :title, :content, :file_path, :pending, :goal_format, :expected_artifacts
 
           # @param tc_id [String] Test case identifier (e.g., "TC-001")
           # @param title [String] Test case title from frontmatter
@@ -17,13 +17,15 @@ module Ace
           # @param file_path [String] Absolute path to the source test file
           # @param pending [String, nil] Pending reason (presence = pending, value = reason)
           # @param goal_format [String, nil] Test case source format ("standalone")
-          def initialize(tc_id:, title:, content:, file_path:, pending: nil, goal_format: nil)
+          # @param expected_artifacts [Array<String>] Declared runner-owned artifact paths under results/tc/{NN}/
+          def initialize(tc_id:, title:, content:, file_path:, pending: nil, goal_format: nil, expected_artifacts: [])
             @tc_id = tc_id
             @title = title
             @content = content
             @file_path = file_path
             @pending = pending
             @goal_format = goal_format
+            @expected_artifacts = expected_artifacts
           end
 
           # Whether this test case is pending (should be skipped)
