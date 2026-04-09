@@ -55,7 +55,7 @@ module Ace
           # @return [Array<Models::TestResult>] List of test results
           def run(package:, test_id: nil, test_cases: nil, verify: false, tags: nil,
             cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
-            integration_files = @integration_runner.discover(package: package)
+            integration_files = @integration_runner.discover(package: package, test_id: test_id)
             files = @discoverer.find_tests(
               package: package,
               test_id: test_id,
@@ -77,14 +77,15 @@ module Ace
               integration_result = @integration_runner.run(
                 package: package,
                 run_id: timestamp,
-                output: output
+                output: output,
+                test_id: test_id
               )
               results << integration_result
               return results if integration_result.failed?
             end
 
             if files.empty?
-              return test_id ? [] : results
+              return results
             end
 
             scenario_results = if files.size == 1

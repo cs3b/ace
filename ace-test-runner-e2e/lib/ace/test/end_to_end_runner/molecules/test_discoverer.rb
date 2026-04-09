@@ -83,10 +83,17 @@ module Ace
           # @param package [String] Package name
           # @param base_dir [String] Base directory to search from
           # @return [Array<String>] Sorted list of matching *_test.rb files
-          def find_integration_tests(package:, base_dir: Dir.pwd)
-            Dir.glob(File.join(base_dir, package, @integration_pattern))
+          def find_integration_tests(package:, test_id: nil, base_dir: Dir.pwd)
+            files = Dir.glob(File.join(base_dir, package, @integration_pattern))
               .select { |path| File.file?(path) }
               .sort
+
+            return files if test_id.nil? || test_id.to_s.strip.empty?
+
+            requested_ids = test_id.split(",").map(&:strip).reject(&:empty?)
+            files.select do |path|
+              requested_ids.any? { |requested_id| integration_matches_test_id?(path, requested_id) }
+            end
           end
 
           # List all packages that have E2E tests
@@ -117,6 +124,18 @@ module Ace
             else
               File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
             end
+          end
+
+          def integration_matches_test_id?(path, requested_id)
+            normalized = normalize_integration_identifier(requested_id)
+            return false if normalized.empty?
+
+            candidate = normalize_integration_identifier(File.basename(path, ".rb"))
+            candidate.include?(normalized)
+          end
+
+          def normalize_integration_identifier(value)
+            value.to_s.downcase.gsub(/[^a-z0-9]/, "")
           end
 
           def no_filters?(tags, exclude_tags)

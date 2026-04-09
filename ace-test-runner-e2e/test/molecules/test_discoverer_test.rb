@@ -227,6 +227,32 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
+  def test_find_integration_tests_filters_by_test_id
+    Dir.mktmpdir do |tmpdir|
+      create_integration_test(tmpdir, "my-package", "TS-TEST-001")
+      create_integration_test(tmpdir, "my-package", "TS-TEST-002")
+
+      files = @discoverer.find_integration_tests(
+        package: "my-package",
+        test_id: "TS-TEST-001",
+        base_dir: tmpdir
+      )
+
+      assert_equal 1, files.size
+      assert_match(/ts[_-]?test[_-]?001/i, files.first)
+    end
+  end
+
+  def test_list_packages_includes_integration_only_packages
+    Dir.mktmpdir do |tmpdir|
+      create_integration_test(tmpdir, "ace-integration", "TS-INTEG-001")
+
+      packages = @discoverer.list_packages(base_dir: tmpdir)
+
+      assert_includes packages, "ace-integration"
+    end
+  end
+
   private
 
   def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
@@ -274,5 +300,22 @@ class TestDiscovererTest < Minitest::Test
       File.write(File.join(scenario_dir, "#{tc_id}-test.runner.md"), "# Goal #{tc_id}\nRun #{tc_id}\n")
       File.write(File.join(scenario_dir, "#{tc_id}-test.verify.md"), "# Verify #{tc_id}\nCheck #{tc_id}\n")
     end
+  end
+
+  def create_integration_test(base_dir, package, test_id)
+    integration_dir = File.join(base_dir, package, "test-e2e", "integration")
+    FileUtils.mkdir_p(integration_dir)
+    File.write(
+      File.join(integration_dir, "#{test_id.downcase.tr('-', '_')}_test.rb"),
+      <<~RUBY
+        require "minitest/autorun"
+
+        class #{test_id.gsub(/[^A-Za-z0-9]/, "")}Test < Minitest::Test
+          def test_smoke
+            assert true
+          end
+        end
+      RUBY
+    )
   end
 end

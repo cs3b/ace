@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-04-09
+
+### Changed
+- Split `ace-test-e2e` into sandboxed integration and scenario phases so deterministic `test-e2e/integration/**/*_test.rb` runs before LLM-driven `test-e2e/scenarios/TS-*` on the same prepared package copy.
+
 ## [0.32.2] - 2026-04-09
 
 ### Changed

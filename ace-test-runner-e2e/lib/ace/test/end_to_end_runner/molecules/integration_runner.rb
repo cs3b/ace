@@ -19,12 +19,12 @@ module Ace
             @sandbox_builder = sandbox_builder || PipelineSandboxBuilder.new(config_root: @base_dir)
           end
 
-          def discover(package:)
-            discoverer.find_integration_tests(package: package, base_dir: @base_dir)
+          def discover(package:, test_id: nil)
+            discoverer.find_integration_tests(package: package, test_id: test_id, base_dir: @base_dir)
           end
 
-          def run(package:, run_id:, output: $stdout)
-            files = discover(package: package)
+          def run(package:, run_id:, output: $stdout, test_id: nil)
+            files = discover(package: package, test_id: test_id)
             return skipped_result(package, run_id) if files.empty?
 
             started_at = Time.now

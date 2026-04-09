@@ -118,7 +118,7 @@ module Ace
             def handle_dry_run(package, test_id, output, tags: [])
               discoverer = Molecules::TestDiscoverer.new
               loader = Molecules::ScenarioLoader.new
-              integration_files = discoverer.find_integration_tests(package: package, base_dir: Dir.pwd)
+              integration_files = discoverer.find_integration_tests(package: package, test_id: test_id, base_dir: Dir.pwd)
 
               files = discoverer.find_tests(
                 package: package,
