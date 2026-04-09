@@ -8,7 +8,7 @@ cost-tier: happy-path
 tool-under-test: ace-review
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help command captures"
   results/tc/02/:  "Preset discovery and listing evidence"
   results/tc/03/:  "Multi-level composition and inheritance evidence"
   results/tc/04/:  "Subject processing evidence (diff, files, mixed)"

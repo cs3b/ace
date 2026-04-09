@@ -14,4 +14,4 @@ Capture the real `ace-review --help` surface.
 
 - Use only `ace-review` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or options.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
+- **Foundation for later goals**: These command captures are the reference for all subsequent goals.
