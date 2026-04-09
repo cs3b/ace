@@ -25,10 +25,10 @@ PASS when EITHER:
 - `results/tc/03/session.yml` contains `synthesis_workflow: wfi://idea/review`
 - `results/tc/03/session.yml` contains `synthesis_provider: claude:haiku`
 - `results/tc/03/synthesis.yml` exists and contains `final_stage:`
-- `results/tc/03/source.original.md` exists and is non-empty
-- `results/tc/03/output.sequence.md` exists and contains both `<suggestions-report>` and `<source-revised>`
-- `results/tc/03/suggestions.report.md` exists and is non-empty
-- `results/tc/03/source.revised.md` exists and is non-empty
+- `results/tc/03/run-tree.txt` includes `final/source.original.md`
+- `results/tc/03/run-tree.txt` includes `final/output.sequence.md`
+- `results/tc/03/run-tree.txt` includes `final/suggestions.report.md`
+- `results/tc/03/run-tree.txt` includes `final/source.revised.md`
 
 ### Path B: Provider unavailable (conditional pass)
 - `results/tc/03/run.exit` is non-zero

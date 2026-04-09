@@ -14,6 +14,7 @@ PASS when:
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/02/run.exit` is `0`
+    - `results/tc/02/run-tree.txt` includes `final/input.md`
     - `results/tc/02/output.sequence.md` exists and contains both `<suggestions-report>` and `<source-revised>`
     - `results/tc/02/suggestions.report.md` exists and is non-empty
     - `results/tc/02/source.revised.md` exists and is non-empty

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Stopped `TS-SIM-001` from gating on copied final synthesis artifacts when `run-tree.txt` and `synthesis.yml` already prove success or recorded final-stage failure.
 - Split required chain artifacts from optional final synthesis outputs in `TS-SIM-001` so provider-side final-stage failures no longer masquerade as missing-evidence regressions.
 - Updated `TS-SIM-001` success-path verification to treat the copied final synthesis artifacts as the primary oracle instead of relying only on directory listing evidence.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
