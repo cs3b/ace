@@ -13,9 +13,9 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/no-skip-rule.stdout` — exact grep output for the mandatory no-skip rule
 - `results/tc/05/attempt-first.stdout` — exact grep output for the attempt-first section
 - `results/tc/05/evidence-rules.stdout` — exact grep output for evidence requirements
-- `results/tc/05/analysis.md` — summary of policy enforcement findings
 
 Optional capture:
+- `results/tc/05/analysis.md` — summary of policy enforcement findings
 - `results/tc/05/skill-thin.stdout` — exact grep output proving the skill wrapper stays thin
 
 Run a short pre-flight check first and fail fast if prerequisites are missing.
@@ -42,7 +42,7 @@ echo $? > results/tc/05/preflight.exit
 - Use `rg` (ripgrep) to search the workflow file at `ace-assign/handbook/workflow-instructions/assign/drive.wf.md`.
 - If preflight fails, stop here and mark Goal 5 as incomplete.
 - Verify: mandatory no-skip rule text ("Planned steps are mandatory work items. Do not skip them by judgment.").
-- Verify: synthetic skip prohibition and Skip Assessment removal in `analysis.md`.
+- Verify: synthetic skip prohibition and Skip Assessment removal using real grep output where possible; `analysis.md` may summarize the conclusion as support evidence.
 - Verify: attempt-first external action section ("External Action Rule (Attempt-First)").
 - Verify: command evidence and exact error output requirements; `evidence-rules.stdout` should capture the relevant workflow text and `analysis.md` may summarize it.
 - Verify: `.claude/skills/as-assign-drive/SKILL.md` does NOT duplicate policy guardrails; `skill-thin.stdout` is optional supporting evidence only.

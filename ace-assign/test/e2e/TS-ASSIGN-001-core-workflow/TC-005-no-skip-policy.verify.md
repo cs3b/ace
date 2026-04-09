@@ -15,11 +15,11 @@ Validation order (impact-first):
 2. **No-skip rule present** — `no-skip-rule.stdout` contains the mandatory no-skip policy text about planned steps being mandatory.
 3. **Attempt-first section** — `attempt-first.stdout` identifies the External Action Rule (Attempt-First) section.
 4. **Evidence requirements** — `evidence-rules.stdout` shows workflow text requiring concrete command/evidence details, including exact error output.
-5. **Synthetic skip prohibited / Skip Assessment removed** — `analysis.md` confirms the prohibition against synthetic completion and the absence of the old "Skip Assessment" section.
-6. **Skill stays thin** — `skill-thin.stdout` or `analysis.md` confirms the skill file does NOT duplicate policy text.
+5. **Synthetic skip prohibited / Skip Assessment removed** — command evidence confirms the workflow enforces concrete no-skip / attempt-first execution rules and no longer depends on a legacy skip-assessment path; `analysis.md` may summarize this, but it is support evidence only.
+6. **Skill stays thin** — `skill-thin.stdout` confirms the skill file does NOT duplicate policy text, or `analysis.md` records that conclusion as support evidence when direct grep capture is absent.
 
 Evidence rule:
-- `analysis.md` is support evidence for the synthetic-skip and thin-skill checks, but the primary oracle is the real grep output plus preflight captures.
+- `analysis.md` is optional support evidence only. The primary oracle is the real grep output plus preflight captures.
 
 ## Verdict
 
