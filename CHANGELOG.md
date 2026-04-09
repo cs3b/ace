@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - **ace-git-worktree v0.19.7**: Corrected `TS-WORKTREE-001` lifecycle E2E coverage to create new worktrees beneath `.ace-wt/` and treat explicit missing-path filesystem captures as valid no-op/delete evidence.
 - **ace-llm v0.33.3**: Switched the Goal 2 model-selection E2E runner away from environment-specific OpenAI auth assumptions to the active provider stack.
 - **ace-llm v0.33.4**: Restored fallback parser compatibility coverage for model-qualified provider targeting by ensuring release-grade fallback paths preserve provider/model selectors.
+- **ace-llm v0.33.5**: Added parser-aware provider fallback coverage for model-qualified selectors and stronger per-attempt option isolation during role fallback orchestration.
 - **ace-test-runner-e2e v0.31.1**: Stopped CLI E2E scenarios after sandbox setup failure and aligned runner-smoke fixture setup with `ACE_E2E_SOURCE_ROOT`, so broken setup no longer degrades into misleading partial reports.
 - **ace-git-commit v0.23.7**: Made packaged split defaults explicit and tightened commit-workflow E2E setup/evidence around source-root bootstrap and SHA-based commit verification.
 - **ace-git-secrets v0.13.4**: Added committed-removal proof to history-persistence E2E checks and moved setup bootstrap to `ACE_E2E_SOURCE_ROOT`.

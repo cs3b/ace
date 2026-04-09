@@ -184,7 +184,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.33.4)
+    ace-llm (0.33.5)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
