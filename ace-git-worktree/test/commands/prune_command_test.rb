@@ -29,6 +29,21 @@ class PruneCommandTest < Minitest::Test
     mock_worktree_manager.verify
   end
 
+  def test_prune_command_uses_expire_now_in_remover
+    remover = Ace::Git::Worktree::Molecules::WorktreeRemover.new
+    calls = []
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, lambda { |*args, **kwargs|
+      calls << [args, kwargs]
+      {success: true, output: "", error: nil}
+    }) do
+      result = remover.prune
+      assert result[:success]
+    end
+
+    assert_equal [["prune", "--expire", "now"], {timeout: Ace::Git::Worktree.remove_timeout}], calls.first
+  end
+
   def test_run_with_dry_run_flag
     # Mock successful dry run pruning
     mock_worktree_manager = Minitest::Mock.new
