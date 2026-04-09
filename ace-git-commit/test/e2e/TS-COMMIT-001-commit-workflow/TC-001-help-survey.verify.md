@@ -11,14 +11,13 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-- **File exists** — At least one file exists in `results/tc/01/`.
-- **Substantive content** — The file contains more than 5 lines of non-empty text.
-- **Mentions key flags** — The content references at least two of: -m, --dry-run, --no-split, path arguments.
-- **Observations present** — The content includes at least one observation about the tool's interface.
+1. **Help captures exist** — `help.stdout`, `help.stderr`, and `help.exit` are present.
+2. **Help succeeded** — `help.exit` reports success.
+3. **Mentions key flags** — `help.stdout` references at least two of: `-m`, `--dry-run`, `--no-split`, or path arguments.
 
 ## Verdict
 
-- **PASS**: File exists with substantive observations about ace-git-commit's interface.
-- **FAIL**: File missing, empty, or lacks mention of key flags.
+- **PASS**: The help command succeeds and exposes the expected git-commit command surface.
+- **FAIL**: Captures are missing, help fails, or key flags are not evidenced.
 
-Report: `PASS` or `FAIL` with evidence.
+Report: `PASS` or `FAIL` with evidence from `help.*`.
