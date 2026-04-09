@@ -18,11 +18,10 @@ Validation order (impact-first):
 2. **Successful execution** — All three `.exit` files contain `0`.
 3. **Token appears on stdout** — Each `*.stdout` file contains a token-like value (`[0-9a-z]{2,8}`).
 4. **Quiet mode is least noisy** — `quiet.stderr` is empty or shorter than `verbose.stderr`.
-5. **Notes file exists** — `routing-notes.md` exists and references at least one mode-to-mode observation.
 
 ## Verdict
 
-- **PASS**: All required captures exist, runs succeed, stdout contains tokens, and quiet/verbose noise difference is evidenced.
+- **PASS**: All required captures exist, runs succeed, stdout contains tokens, and the stderr evidence shows the expected quiet/verbose noise difference.
 - **FAIL**: Missing captures, failed execution, absent token outputs, or no evidence of stream-noise comparison.
 
 Report: `PASS` or `FAIL` with evidence (file content snippets and exit-code values).

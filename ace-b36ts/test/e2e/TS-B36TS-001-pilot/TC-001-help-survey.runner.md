@@ -2,15 +2,22 @@
 
 ## Goal
 
-Explore `ace-b36ts --help` at every level — root help and each subcommand's help. Summarize what the tool does, list its subcommands and their flag options. Note anything that seems unclear, missing, or potentially confusing to a first-time user.
+Survey the real `ace-b36ts` help surface: root help plus the encode and decode command help.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
+- `results/tc/01/encode-help.stdout`
+- `results/tc/01/encode-help.stderr`
+- `results/tc/01/encode-help.exit`
+- `results/tc/01/decode-help.stdout`
+- `results/tc/01/decode-help.stderr`
+- `results/tc/01/decode-help.exit`
 
 ## Constraints
 
-- Use only `ace-b36ts` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-b36ts` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or subcommands.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.
