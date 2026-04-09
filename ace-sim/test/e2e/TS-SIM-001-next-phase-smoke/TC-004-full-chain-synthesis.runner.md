@@ -3,6 +3,24 @@
 ## Objective
 Verify the default full chain (`draft,plan,work`) is aggregated into final synthesis inputs and that synthesis outcome is recorded cleanly. If the external synthesis provider succeeds, capture the final artifacts; if it fails, preserve the failure evidence and artifact paths without treating missing live-provider success as a scenario defect.
 
+## Workspace
+
+Save all output to `results/tc/04/`.
+
+Capture:
+- `results/tc/04/run.stdout|stderr|exit`
+- `results/tc/04/run-dir.txt`
+- `results/tc/04/run-tree.txt`
+- `results/tc/04/session.yml`
+- `results/tc/04/synthesis.yml`
+- `results/tc/04/final.input.md`
+
+Optional capture:
+- `results/tc/04/source.original.md`
+- `results/tc/04/output.sequence.md`
+- `results/tc/04/suggestions.report.md`
+- `results/tc/04/source.revised.md`
+
 ## Steps
 1. Create source file `results/tc/04/source.md` with realistic markdown content.
 2. Run:

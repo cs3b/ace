@@ -3,6 +3,24 @@
 ## Objective
 Verify explicit CLI custom values override preset defaults and run one-step final synthesis.
 
+## Workspace
+
+Save all output to `results/tc/03/`.
+
+Capture:
+- `results/tc/03/run.stdout|stderr|exit`
+- `results/tc/03/run-dir.txt`
+- `results/tc/03/run-tree.txt`
+- `results/tc/03/session.yml`
+- `results/tc/03/synthesis.yml`
+- `results/tc/03/draft.output.md`
+
+Optional capture:
+- `results/tc/03/source.original.md`
+- `results/tc/03/output.sequence.md`
+- `results/tc/03/suggestions.report.md`
+- `results/tc/03/source.revised.md`
+
 ## Steps
 1. Create source file `results/tc/03/source.md` with sample markdown content.
 2. Run:

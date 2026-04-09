@@ -3,6 +3,33 @@
 ## Objective
 Run the default preset flow and capture artifacts that prove the shipped preset contract and chained generation behavior are intact. If the final synthesis succeeds, capture its outputs. If it fails, preserve the recorded final-stage failure without treating that external synthesis outcome as a chain regression.
 
+## Workspace
+
+Save all output to `results/tc/02/`.
+
+Capture:
+- `results/tc/02/run.stdout|stderr|exit`
+- `results/tc/02/run-dir.txt`
+- `results/tc/02/run-tree.txt`
+- `results/tc/02/session.yml`
+- `results/tc/02/synthesis.yml`
+- `results/tc/02/01-draft.input.md`
+- `results/tc/02/01-draft.user.bundle.md`
+- `results/tc/02/01-draft.user.prompt.md`
+- `results/tc/02/01-draft.output.md`
+- `results/tc/02/02-plan.input.md`
+- `results/tc/02/02-plan.output.md`
+- `results/tc/02/03-work.input.md`
+- `results/tc/02/03-work.output.md`
+- `results/tc/02/handoff-check.txt`
+
+Optional capture:
+- `results/tc/02/final.input.md`
+- `results/tc/02/source.original.md`
+- `results/tc/02/output.sequence.md`
+- `results/tc/02/suggestions.report.md`
+- `results/tc/02/source.revised.md`
+
 ## Steps
 1. Create source file `results/tc/02/source.md` with realistic markdown task content.
 2. Run:
