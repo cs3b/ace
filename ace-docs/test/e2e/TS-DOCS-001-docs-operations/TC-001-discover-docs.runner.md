@@ -8,6 +8,11 @@ the CLI reports managed documents.
 ## Workspace
 
 Save artifacts to `results/tc/01/`.
+
+Capture:
+- `results/tc/01/setup.stdout|stderr|exit`
+- `results/tc/01/discover.stdout|stderr|exit`
+
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
@@ -15,9 +20,6 @@ Save artifacts to `results/tc/01/`.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
 - Seed a minimal managed docs set before running discover (for example `docs/guide.md` and `docs/reference.md`), each with valid frontmatter including `doc-type` and `last-updated`.
-- Capture the create/setup commands in `results/tc/01/setup.stdout|stderr|exit` so later goals can reuse the same docs corpus.
-- Capture discover command output as:
-  - `results/tc/01/discover.stdout`
-  - `results/tc/01/discover.stderr`
-  - `results/tc/01/discover.exit`
+- Capture the create/setup commands so later goals can reuse the same docs corpus.
+- Capture discover command output.
 - Ensure at least two markdown documents are present in `docs/` before running discover.

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Switched docs-operation E2E capture declarations to explicit artifact lists so `setup.stdout|stderr|exit` is parsed as real process evidence instead of one fake filename.
 - Aligned the E2E sandbox bootstrap to copy `mise.toml` from `ACE_E2E_SOURCE_ROOT` instead of sandbox `PROJECT_ROOT_PATH`.
 
 
