@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.44.12**: Relaxed the no-skip policy E2E to rely on fallback `analysis.md` evidence for synthetic-skip and legacy-section checks instead of requiring separate grep artifacts.
+- **ace-git-worktree v0.19.10**: Stabilized multi-task worktree E2E listing by requiring explicit post-create cwd evidence and preventing create-time navigation drift before list checks.
+- **ace-sim v0.13.9**: Stopped validate-idea E2E from treating copied final synthesis outputs as mandatory when `run-tree.txt` and `synthesis.yml` already prove success or recorded final-stage failure.
+- **ace-support-models v0.9.5**: Hardened the seeded-cache providers E2E to capture the exact cache payload and `XDG_CACHE_HOME` binding used by `ace-llm-providers`.
+- **ace-test-runner v0.19.7**: Corrected suite failure-propagation E2E verification to use the actual `ace-test.exit` artifact name.
 - **ace-assign v0.44.11**: Removed optional report copies and stale subtree snapshot files from the `TS-ASSIGN-002` required artifact contract so hierarchy E2E failures track real behavior instead of missing optional evidence.
 - **ace-docs v0.32.2**: Switched docs-operation E2E capture declarations to explicit artifact lists so setup evidence is parsed correctly.
 - **ace-git v0.20.4**: Switched git-operations E2E capture declarations to explicit artifact lists so bootstrap/status evidence is parsed correctly.

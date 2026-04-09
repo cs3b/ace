@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.44.11)
+    ace-assign (0.44.12)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.9)
+    ace-git-worktree (0.19.10)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -257,7 +257,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.13.8)
+    ace-sim (0.13.9)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -310,7 +310,7 @@ PATH
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.9.4)
+    ace-support-models (0.9.5)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
       faraday (~> 2.0)
@@ -357,7 +357,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.19.6)
+    ace-test-runner (0.19.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
