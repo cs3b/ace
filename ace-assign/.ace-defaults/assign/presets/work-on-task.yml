@@ -34,13 +34,13 @@ steps:
     instructions:
       - "Run E2E tests for packages modified across batch tasks: {{taskrefs}}."
       - "Detect modified packages from the current diff: `git diff origin/main --name-only | grep '^ace-' | cut -d/ -f1 | sort -u`."
-      - "Run `ace-test-e2e <package>` for each modified package that has test/e2e/ scenarios."
+      - "Run `ace-test-e2e <package>` for each modified package that has test-e2e/scenarios/ scenarios."
       - "If more than 5 packages were modified with cross-dependencies, run the full suite: `ace-test-e2e-suite`."
       - "If any scenarios fail, use /as-e2e-fix to diagnose and fix each failing scenario."
       - "After fixing, rerun the failing scenarios to confirm they pass."
       - "Repeat fix→rerun cycle up to 3 times if new failures appear."
       - "Final gate: all previously-failing scenarios must pass before completing this step."
-      - "Skip only when no modified package has test/e2e/ scenarios."
+      - "Skip only when no modified package has test-e2e/scenarios/ scenarios."
 
   - name: release-minor
     number: "020"
