@@ -22,9 +22,9 @@ Capture:
 - `results/tc/02/03-work.input.md`
 - `results/tc/02/03-work.output.md`
 - `results/tc/02/handoff-check.txt`
+- `results/tc/02/final.input.md`
 
 Optional capture:
-- `results/tc/02/final.input.md`
 - `results/tc/02/source.original.md`
 - `results/tc/02/output.sequence.md`
 - `results/tc/02/suggestions.report.md`
