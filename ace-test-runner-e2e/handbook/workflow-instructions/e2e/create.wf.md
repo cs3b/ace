@@ -34,8 +34,9 @@ This workflow guides an agent through creating a new E2E test scenario.
 - Verifier files (`verifier.yml.md`, `TC-*.verify.md`) are verdict-only with impact-first evidence order:
   1. sandbox/project state impact
   2. explicit artifacts
-  3. debug captures as fallback
+  3. harness manifests and debug captures as fallback
 - Setup belongs to `scenario.yml` `setup:` and fixtures; do not duplicate setup in runner TC instructions.
+- Default architecture is independent runner + independent verifier. Do not design TCs around a same-session verifier needing runner memory.
 
 ## Workflow Steps
 
@@ -163,6 +164,13 @@ All proposed behaviors are already covered by unit tests in {PACKAGE}/test/.
 No E2E test needed. Consider adding unit tests instead if coverage gaps exist.
 ```
 
+Move coverage to `minitest` instead of E2E when the behavior is primarily:
+- parsing or validation logic
+- formatter normalization
+- fallback naming/path rules
+- config/default precedence
+- helper artifact creation that is not itself a user-visible product contract
+
 ### 7a. Evidence-Gate Review Before Writing Files
 
 Before finalizing the test plan, block weak coverage patterns:
@@ -183,6 +191,7 @@ Rules:
 - Non-skipped rows must include command-level artifacts (`stdout`, `stderr`, `exit`, and/or explicit proof files).
 - At least one `unit tests reviewed` path is required for every row.
 - The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
+- For live-provider flows, prefer chain/session/synthesis state oracles over copied final success-path files.
 
 ### 7b. E2E Decision Record (Required)
 

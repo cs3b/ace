@@ -37,11 +37,12 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
   - do not issue PASS/FAIL verdicts
   - do not perform verifier-style assertion/classification
 - Verifier is **verification-only**:
+  - remain independent from the runner; do not reuse the same agent/session as the default verifier path
   - evaluate TC outcome from sandbox evidence
   - apply an **impact-first** evidence order:
     1. sandbox/project state impact
     2. explicit TC artifacts
-    3. debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
+    3. harness manifests and debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
   - verify the output contract that the tool actually promises:
     - use semantic/structural checks for transformed or normalized output
     - use literal string checks only when verbatim preservation is part of the product contract
@@ -66,6 +67,22 @@ Rules:
 - Runner-invented synthetic artifacts are not valid primary oracles unless the tested behavior is specifically “create this file”.
 - Keep the artifact gate strict by feeding it only deterministic behavior evidence.
 
+## Harness Manifests
+
+Every started TC should also have deterministic harness meta-artifacts under `results/tc/{NN}/`:
+
+- `tc.start.json`
+- `commands.ndjson`
+- `artifacts.json`
+- `tc.final.json`
+
+These are not primary behavior oracles. They exist to distinguish:
+- command never started
+- command ran but evidence was incomplete
+- verifier reached a real behavior judgment
+
+Use them to strengthen diagnosis, not to replace `command-capture` or `state-oracle`.
+
 ## E2E Value Gate
 
 Before adding a TC, confirm the behavior needs:
@@ -74,6 +91,13 @@ Before adding a TC, confirm the behavior needs:
 - real filesystem I/O and environment state
 
 If not, keep coverage in unit/integration tests.
+
+Prefer `minitest` instead of E2E when the behavior is mainly:
+- parsing
+- formatter normalization
+- fallback naming logic
+- config/default resolution
+- helper-file materialization that is not itself product behavior
 
 ## Cost and Scope
 
@@ -97,6 +121,21 @@ CLI providers (`ace-test-e2e`, `ace-test-e2e-suite`) use a deterministic 6-phase
 API providers use a single-prompt approach (runner and verifier in one pass).
 
 The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For procedural runs guided by `ace-bundle wfi://e2e/run`, the verifier is opt-in via `--verify`.
+
+## Scenario Classes
+
+Use the verification model that matches the scenario boundary:
+
+- `local-deterministic`
+  - no live provider dependency
+  - must always produce the full required evidence set
+- `stateful-deterministic`
+  - persistent git/filesystem/task state
+  - must include preflight state proof plus post-state oracle
+- `provider-live`
+  - external provider/final synthesis may fail legitimately
+  - verify chain completion and recorded final-stage outcome
+  - do not require all success-path copied artifacts as mandatory evidence
 
 ## Scenario Layout
 
@@ -178,10 +217,16 @@ Verifier responsibilities:
   - behavior is contradicted, or
   - required `command-capture` / `state-oracle` evidence is missing
 
+Failure reporting should distinguish:
+- `behavior-status`: `pass | fail | not_reached`
+- `evidence-status`: `complete | incomplete | invalid-contract`
+- `failure-class`: `behavior-fail | artifact-incomplete | invalid-contract | setup-error`
+
 Verifier prohibitions:
 - do not fail solely because an `optional-support` artifact is absent
 - do not require runner-invented synthetic artifacts when stdout/state already proves the behavior
 - do not use exact string checks when semantic or structural checks are the real product contract
+- do not use same-session runner memory as the primary oracle when sandbox evidence disagrees
 
 ## Examples
 

@@ -51,7 +51,10 @@ module Ace
                 {
                   "tc" => tc[:id],
                   "category" => tc[:category] || "runner-error",
-                  "evidence" => tc[:notes].to_s
+                  "evidence" => tc[:notes].to_s,
+                  "behavior-status" => tc[:behavior_status],
+                  "evidence-status" => tc[:evidence_status],
+                  "failure-class" => tc[:failure_class]
                 }
             end
             verdict = if result.failed_count.zero?
@@ -214,7 +217,10 @@ module Ace
                   {
                     "tc" => tc[:id],
                     "category" => tc[:category] || "runner-error",
-                    "evidence" => tc[:notes].to_s
+                    "evidence" => tc[:notes].to_s,
+                    "behavior-status" => tc[:behavior_status],
+                    "evidence-status" => tc[:evidence_status],
+                    "failure-class" => tc[:failure_class]
                   }
               end,
               "failed_test_cases" => result.failed_test_case_ids

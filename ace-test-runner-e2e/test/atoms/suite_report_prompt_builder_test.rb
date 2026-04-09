@@ -162,12 +162,44 @@ class SuiteReportPromptBuilderTest < Minitest::Test
     assert_match(/ts1234-lint-ts001-reports/, prompt)
   end
 
+  def test_prompt_includes_recent_history_when_present
+    results_data = [
+      make_result_data("TS-TEST-001", "Test One", "fail",
+        recent_history: [
+          {
+            report_dir_name: "aaa111-test-one-reports",
+            status: "error",
+            failed_test_cases: ["TC-002"],
+            failed_classes: ["artifact-incomplete"]
+          },
+          {
+            report_dir_name: "bbb222-test-one-reports",
+            status: "partial",
+            failed_test_cases: ["TC-003"],
+            failed_classes: ["invalid-contract"]
+          }
+        ])
+    ]
+
+    prompt = @builder.build(results_data,
+      package: "ace-lint",
+      timestamp: "ts1234",
+      overall_status: "partial",
+      executed_at: "2025-01-01T00:00:00Z")
+
+    assert_match(/Recent History:/, prompt)
+    assert_match(/aaa111-test-one-reports/, prompt)
+    assert_match(/artifact-incomplete/, prompt)
+    assert_match(/bbb222-test-one-reports/, prompt)
+    assert_match(/invalid-contract/, prompt)
+  end
+
   private
 
   def make_result_data(test_id, title, status,
     passed: 1, failed: 0, total: 1,
     test_cases: [], report_dir_name: nil,
-    summary_content: nil, experience_content: nil)
+    summary_content: nil, experience_content: nil, recent_history: [])
     {
       test_id: test_id,
       title: title,
@@ -178,7 +210,8 @@ class SuiteReportPromptBuilderTest < Minitest::Test
       test_cases: test_cases,
       report_dir_name: report_dir_name,
       summary_content: summary_content,
-      experience_content: experience_content
+      experience_content: experience_content,
+      recent_history: recent_history
     }
   end
 end

@@ -147,6 +147,15 @@ class TestExecutorTest < Minitest::Test
       assert_equal "error", metadata["status"]
       assert_equal ["TC-001", "TC-002"], metadata["failed_test_cases"]
       assert_equal "missing-artifact", metadata.fetch("failed").first.fetch("category")
+      assert_equal "not_reached", metadata.fetch("failed").first.fetch("behavior-status")
+      assert_equal "incomplete", metadata.fetch("failed").first.fetch("evidence-status")
+      assert_equal "artifact-incomplete", metadata.fetch("failed").first.fetch("failure-class")
+
+      tc01_dir = File.join(sandbox_path, "results", "tc", "01")
+      assert File.exist?(File.join(tc01_dir, "tc.start.json"))
+      assert File.exist?(File.join(tc01_dir, "commands.ndjson"))
+      assert File.exist?(File.join(tc01_dir, "artifacts.json"))
+      assert File.exist?(File.join(tc01_dir, "tc.final.json"))
     end
   end
 

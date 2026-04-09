@@ -40,7 +40,7 @@ module Ace
           #
           # @param results_data [Array<Hash>] Pre-read result data, each with:
           #   :test_id, :title, :status, :passed, :failed, :total,
-          #   :test_cases, :report_dir_name, :summary_content, :experience_content
+          #   :test_cases, :report_dir_name, :summary_content, :experience_content, :recent_history
           # @param package [String] Package name
           # @param timestamp [String] Suite timestamp ID
           # @param overall_status [String] "pass", "partial", or "fail"
@@ -88,6 +88,14 @@ module Ace
                   parts << "- #{tc[:id]}"
                 end
                 parts << "Use these failed TC IDs verbatim in the Failed Tests section."
+              end
+
+              if r[:recent_history]&.any?
+                parts << ""
+                parts << "**Recent History:**"
+                r[:recent_history].each do |entry|
+                  parts << "- #{entry[:report_dir_name]} — status=#{entry[:status]} failed_tcs=#{Array(entry[:failed_test_cases]).join(', ')} failure_classes=#{Array(entry[:failed_classes]).join(', ')}"
+                end
               end
 
               if r[:summary_content]

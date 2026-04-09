@@ -43,8 +43,9 @@ This workflow guides an agent through executing an E2E test scenario. It support
 - Verifier instructions are verification-only: assign verdicts using impact-first checks:
   1. sandbox/project state impact
   2. explicit artifacts
-  3. debug captures as fallback
+  3. harness manifests and debug captures as fallback
 - Do not place ad-hoc setup logic in TC runner files; sandbox setup belongs to `scenario.yml` and fixtures.
+- Keep verifier independence. Do not treat “runner verifies its own run in the same session” as the default architecture.
 
 ## Execution Environment Guardrail
 
@@ -60,7 +61,8 @@ For CLI providers (`ace-test-e2e`), the deterministic 6-phase pipeline handles e
 3. **Runner LLM** — Agent executes TC steps in sandbox, produces artifacts
 4. **Verifier prompt** — `SkillPromptBuilder` assembles context from `verifier.yml.md` + `TC-*.verify.md`
 5. **Verifier LLM** — Independent agent evaluates artifacts against expectations
-6. **Report** — `PipelineReportGenerator` produces deterministic summary
+6. **Harness manifests** — deterministic per-TC meta-artifacts (`tc.start.json`, `commands.ndjson`, `artifacts.json`, `tc.final.json`)
+7. **Report** — `PipelineReportGenerator` produces deterministic summary
 
 When this workflow is invoked directly (not via CLI pipeline), the agent performs steps 1-6 manually using the workflow steps below.
 
@@ -222,8 +224,11 @@ For each TC (TC-NNN):
 1. **Check filter** — skip if not in `FILTERED_CASES`
 2. **Read** the runner file (`TC-NNN-*.runner.md`)
 3. **Execute** runner steps, save artifacts to `results/tc/{NN}/`
-4. **Verify** against paired `.verify.md` expectations
-5. **Record** status (Pass/Fail) with evidence
+4. **Write harness manifests** proving start, attempted stages, produced artifacts, and final execution state
+5. **Verify** against paired `.verify.md` expectations
+6. **Record** status with both:
+   - behavior judgment
+   - evidence completeness judgment
 
 Track friction points during execution for the experience report.
 

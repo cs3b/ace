@@ -55,7 +55,7 @@ module Ace
 
           # Attempt LLM synthesis, falling back to static template
           def synthesize_report(results, scenarios, package:, timestamp:, overall_status:, executed_at:)
-            results_data = build_results_data(results, scenarios)
+            results_data = build_results_data(results, scenarios, cache_dir: File.join(base_dir, ".ace-local", "test-e2e"))
 
             prompt_builder = Atoms::SuiteReportPromptBuilder.new
             user_prompt = prompt_builder.build(
@@ -99,7 +99,7 @@ module Ace
           end
 
           # Read summary and experience report content from each result's report dir
-          def build_results_data(results, scenarios)
+          def build_results_data(results, scenarios, cache_dir:)
             results.each_with_index.map do |result, i|
               scenario = scenarios[i]
               report_dir = result.report_dir
@@ -117,9 +117,31 @@ module Ace
                 test_cases: result.test_cases,
                 report_dir_name: report_dir ? File.basename(report_dir) : nil,
                 summary_content: summary_content,
-                experience_content: experience_content
+                experience_content: experience_content,
+                recent_history: recent_history_for(result.test_id, cache_dir: cache_dir, exclude_report_dir: report_dir)
               }
             end
+          end
+
+          def recent_history_for(test_id, cache_dir:, exclude_report_dir:)
+            exclude_name = exclude_report_dir ? File.basename(exclude_report_dir) : nil
+            Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml")).filter_map do |path|
+              metadata = YAML.safe_load_file(path, permitted_classes: [Date]) || {}
+              next unless metadata["test-id"] == test_id
+
+              report_dir_name = File.basename(File.dirname(path))
+              next if exclude_name == report_dir_name
+
+              {
+                report_dir_name: report_dir_name,
+                executed: metadata["completed"] || metadata["executed"],
+                status: metadata["status"],
+                failed_test_cases: Array(metadata["failed_test_cases"]),
+                failed_classes: Array(metadata["failed"]).map { |entry| entry["failure-class"] || entry["category"] }.compact.uniq
+              }
+            rescue Psych::SyntaxError
+              nil
+            end.compact.sort_by { |entry| entry[:executed].to_s }.last(2)
           end
 
           # Safely read a report file, returning nil if missing

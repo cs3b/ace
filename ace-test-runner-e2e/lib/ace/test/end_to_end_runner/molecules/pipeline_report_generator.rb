@@ -122,7 +122,9 @@ module Ace
                     id: test_case.tc_id,
                     description: test_case.title,
                     status: "pass",
-                    notes: "Verifier returned aggregate pass result"
+                    notes: "Verifier returned aggregate pass result",
+                    behavior_status: "pass",
+                    evidence_status: "complete"
                   }
                 end,
                 summary: "#{passed}/#{total} passed"
@@ -138,7 +140,10 @@ module Ace
                     description: test_case.title,
                     status: "fail",
                     notes: "Verifier returned aggregate fail result",
-                    category: "runner-error"
+                    category: "runner-error",
+                    behavior_status: "fail",
+                    evidence_status: "complete",
+                    failure_class: "behavior-fail"
                   }
                 end,
                 summary: "#{passed}/#{total} passed"
@@ -180,7 +185,10 @@ module Ace
                 description: title,
                 status: (verdict == "PASS") ? "pass" : "fail",
                 notes: evidence,
-                category: ((verdict == "FAIL") ? category : nil)
+                category: ((verdict == "FAIL") ? category : nil),
+                behavior_status: ((verdict == "PASS") ? "pass" : "fail"),
+                evidence_status: "complete",
+                failure_class: ((verdict == "FAIL") ? ((category == "test-spec-error") ? "invalid-contract" : "behavior-fail") : nil)
               }
             end.compact
           end

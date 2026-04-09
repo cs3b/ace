@@ -139,6 +139,9 @@ class PipelineReportGeneratorTest < Minitest::Test
       failed = metadata.fetch("failed").first
       assert_equal "TC-002", failed["tc"]
       assert_equal "test-spec-error", failed["category"]
+      assert_equal "fail", failed["behavior-status"]
+      assert_equal "complete", failed["evidence-status"]
+      assert_equal "invalid-contract", failed["failure-class"]
       refute_empty failed["evidence"]
       assert_includes failed["evidence"], "no safe candidates"
       assert_includes failed["evidence"], "removed both task.001 and task.002"
