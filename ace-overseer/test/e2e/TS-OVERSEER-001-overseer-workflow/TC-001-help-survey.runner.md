@@ -2,14 +2,16 @@
 
 ## Goal
 
-Explore `ace-overseer --help` and any subcommand help. Summarize what the tool does, list its subcommands (work-on, status, prune), flags (--task, --preset, --dry-run, --yes), and orchestration features.
+Capture the real `ace-overseer --help` surface.
 
-## Workspace
+## Capture
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+- `results/tc/01/help.stdout`
+- `results/tc/01/help.stderr`
+- `results/tc/01/help.exit`
 
 ## Constraints
 
-- Use only `ace-overseer` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-overseer` to gather information.
 - Start with `--help` to discover the tool's interface. Do not assume subcommand names or flags.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals.
