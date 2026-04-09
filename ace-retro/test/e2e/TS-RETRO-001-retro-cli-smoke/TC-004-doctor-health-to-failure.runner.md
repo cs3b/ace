@@ -18,6 +18,8 @@ Capture:
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`).
+- Do not rely on retro files created by earlier goals. Before the first `ace-retro doctor` run in this TC, create a fresh valid retro corpus for this goal inside the sandbox-local `.ace-retros/` tree so the initial doctor check starts from a known-good state.
+- The initial `doctor-healthy.*` artifacts must come from that freshly prepared valid state, not inherited scenario state.
 - Corruption must remain inside sandbox-local retro files only.
 - Corruption must produce invalid frontmatter (error-level), not only a scope warning:
   - Pick one `*.retro.md` file under scenario-local `.ace-retros/`.
