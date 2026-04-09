@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.11] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Stabilized the multi-task worktree E2E by requiring explicit post-create cwd evidence and blocking create-time auto-navigation drift before listing both tasks.
 - Updated remaining worktree E2E runners to use the current positional create syntax and explicit forced cleanup captures for task-aware remove flows.
