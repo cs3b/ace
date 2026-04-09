@@ -1,5 +1,0 @@
-{
-  "name": "test-app",
-  "scripts": { "test": "jest", "lint": "eslint src/" },
-  "devDependencies": { "jest": "^29.0.0", "eslint": "^8.0.0" }
-}
