@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.4] - 2026-04-09
+
+### Technical
+- Moved deterministic E2E coverage into sandboxed `test-e2e/integration` Minitest and reserved `test-e2e/scenarios` for LLM-driven flows by removing the package's markdown scenario suite.
+
 ### Fixed
 - Pass sandbox subprocess environment through Codex and Gemini CLI adapters so E2E runner env like `PROJECT_ROOT_PATH` and `ACE_E2E_SOURCE_ROOT` reaches provider subprocesses.
 - Anchor Gemini prompt-cache and subprocess execution to the resolved `working_dir` instead of rediscovering an outer project root.
