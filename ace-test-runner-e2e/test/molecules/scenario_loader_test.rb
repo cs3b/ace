@@ -269,6 +269,39 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_extracts_expected_artifacts_from_capture_bullets_only
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-ART-001",
+        standalone_tcs: {
+          "TC-001-artifacts" => {
+            runner: <<~MD,
+              # Goal 1
+
+              Save all output to `results/tc/01/`. Capture:
+              - `results/tc/01/run.stdout`, `.stderr`, `.exit`
+              - `results/tc/01/report.txt`
+              - Optional bootstrap at `results/tc/01/setup.*`
+
+              ```bash
+              env -i BUNDLE_APP_CONFIG="$PWD/results/tc/01/.bundle/config" bundle env
+              ```
+            MD
+            verify: "# Verify"
+          }
+        })
+
+      scenario = @loader.load(scenario_dir)
+      artifacts = scenario.test_cases.first.expected_artifacts
+
+      assert_equal [
+        "results/tc/01/run.stdout",
+        "results/tc/01/run.stderr",
+        "results/tc/01/run.exit",
+        "results/tc/01/report.txt"
+      ], artifacts
+    end
+  end
+
   def test_load_with_timeout_override
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-TIMEOUT-001",

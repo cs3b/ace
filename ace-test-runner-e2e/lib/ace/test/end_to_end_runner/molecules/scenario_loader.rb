@@ -241,11 +241,41 @@ module Ace
           end
 
           def extract_expected_artifacts(runner_content)
-            runner_content.to_s
-              .scan(%r{results/tc/\d{1,3}/[A-Za-z0-9._\-/]+})
-              .map { |path| path.sub(/[),.;:]+\z/, "") }
-              .reject { |path| path.end_with?("/") }
-              .uniq
+            artifacts = []
+            in_code_block = false
+            current_base = nil
+
+            runner_content.to_s.each_line do |line|
+              stripped = line.rstrip
+              if stripped.lstrip.start_with?("```")
+                in_code_block = !in_code_block
+                next
+              end
+              next if in_code_block
+
+              unless stripped.lstrip.start_with?("-") || stripped.lstrip.match?(/^\d+\./)
+                current_base = nil
+              end
+
+              tokens = stripped.scan(/`([^`]+)`/).flatten
+              next if tokens.empty?
+
+              tokens.each do |token|
+                if token.start_with?("results/tc/")
+                  next if token.include?("*") || token.end_with?("/")
+
+                  artifacts << token
+                  current_base = token
+                elsif token.start_with?(".") && current_base
+                  next if token.include?("*")
+
+                  base = current_base.sub(/\.[^.\/]+\z/, "")
+                  artifacts << "#{base}#{token}"
+                end
+              end
+            end
+
+            artifacts.uniq
           end
 
           # Detect fixtures directory if it exists

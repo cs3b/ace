@@ -42,6 +42,9 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
     1. sandbox/project state impact
     2. explicit TC artifacts
     3. debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
+  - verify the output contract that the tool actually promises:
+    - use semantic/structural checks for transformed or normalized output
+    - use literal string checks only when verbatim preservation is part of the product contract
 - Setup ownership:
   - sandbox preparation belongs to `scenario.yml` `setup:` + `fixtures/`
   - TC runner files must not define independent environment setup procedures
@@ -104,10 +107,17 @@ This prevents duplicate assertions across test layers.
 
 - Keep runner goals outcome-oriented and deterministic.
 - Keep verifier expectations impact-first, then artifacts, then debug fallback.
+- Do not anchor verifier expectations to raw source strings when the tool emits transformed output.
+- Prefer path inclusion, semantic content, and structural markers over exact source headings or incidental wording.
+- If the product intentionally preserves verbatim output, say that explicitly in the verifier contract.
 - Declare concrete runner artifacts; if a runner-owned artifact is optional in practice, remove it from the contract instead of leaving it implicit.
 - Preserve strict TC pairing (`runner` + `verify`).
 - Keep outputs inside `results/tc/{NN}/`.
 - Avoid hidden dependencies between TCs unless explicitly intended.
+
+Example:
+- Bad: require `README.md ("Test Application")` when the formatter normalizes markdown into structured tokens.
+- Good: require `README.md` inclusion plus semantic README content or formatter-emitted structural markers actually produced by the tool.
 
 ## Execution Artifacts
 

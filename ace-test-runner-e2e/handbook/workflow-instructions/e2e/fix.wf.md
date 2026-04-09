@@ -89,6 +89,11 @@ Apply fixes in this order:
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
 - State which implementation evidence justifies leaving product code unchanged
 - Keep implementation unchanged unless analysis is revised
+- Do not respond to flaky semantic failures by upgrading the verifier model first.
+- First repair brittle verifier oracles:
+  - raw source strings asserted against transformed output
+  - incidental wording asserted where only semantic behavior matters
+- Only consider a stronger verifier model after the contract is structurally grounded and provider-pinned reruns still show ambiguity
 
 4. Rerun the selected failing scope after each fix
 

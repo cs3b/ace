@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added execution-tier aware suite scheduling (`serial`, `low-parallel`, `safe-parallel`) so stateful or provider-sensitive E2E scenarios can be isolated during suite runs.
+
+### Changed
+- Tightened expected-artifact extraction so only declared runner capture artifacts are gated; wildcard examples, code-block snippets, and incidental env-var paths no longer become false required outputs.
+- Documented and enforced a stronger verifier contract for transformed output: semantic or structural evidence first, literal source strings only when verbatim output is part of the product contract.
+
+### Fixed
+- Failed pipeline scenarios early with `missing-artifact` classification when required runner evidence is absent, instead of letting verifiers reinterpret incomplete evidence as product/test regressions.
+
 ## [0.31.2] - 2026-04-08
 
 ### Changed

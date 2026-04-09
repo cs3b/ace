@@ -116,6 +116,7 @@ Before labeling a failure `test-issue`, confirm all of the following:
 - the relevant implementation path was inspected
 - the desired behavior source is explicit
 - the mismatch is truly in artifact capture, naming, timing, selector choice, command shape, or stale expectation
+- if output is transformed, normalized, or structured, the verifier is not incorrectly asserting a pre-transform literal string unless verbatim output is the product contract
 
 Before labeling a failure `code-issue`, confirm all of the following:
 - the failure is not already explained by stale runner/verifier/setup capture
@@ -134,6 +135,10 @@ Examples:
   - runner captures the wrong shifted step file
   - implementation also writes renumber metadata
   - inspect implementation before deciding whether the fix is runner-only or code+runner
+- transformed output with brittle verifier:
+  - verifier requires a raw README heading string
+  - product emits normalized markdown-xml tokens and semantic content instead
+  - classify `test-issue`
 
 ## Required Output Contract
 
