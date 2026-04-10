@@ -1,0 +1,40 @@
+test-id: TS-B36TS-001
+title: "ace-b36ts Real Work Scenario Pilot"
+area: timestamp
+package: ace-b36ts
+priority: high
+tags: [smoke, happy-path, "use-case:b36ts", pilot]
+cost-tier: smoke
+tool-under-test: ace-b36ts
+
+e2e-justification: >
+  This scenario validates real tool usage by asking the agent to organize a set
+  of notes using b36ts IDs, produce concrete filesystem changes, and summarize
+  the work in a final reflection artifact.
+
+sandbox-layout:
+  notes/inbox/: "Input notes provided to the agent"
+  notes/archive/: "Reorganized notes with b36ts-prefixed names"
+  results/tc/01/: "Scenario artifacts including final reflection"
+
+requires:
+  tools: [ace-b36ts]
+
+setup:
+  - git-init
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
+  - write-file:
+      path: notes/inbox/2026-03-17-release-notes.md
+      content: "Release notes draft\n"
+  - write-file:
+      path: notes/inbox/2026-03-18-regression-log.md
+      content: "Regression notes\n"
+  - write-file:
+      path: notes/inbox/2026-03-19-doc-plan.md
+      content: "Doc update plan\n"
+  - write-file:
+      path: notes/inbox/2026-03-20-support-handoff.md
+      content: "Support handoff context\n"
+  - write-file:
+      path: notes/inbox/2026-03-21-retro-points.md
+      content: "Retro points\n"
