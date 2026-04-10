@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-04-10
+
+### Technical
+- Moved deterministic restarted-E2E coverage to `test/integration`, relocated the pilot agent scenario to `test/e2e`, and refreshed the layout demo tape to match the restarted contract.
+
 ## [0.14.1] - 2026-04-10
 
 ### Technical
@@ -15,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.14.0] - 2026-04-10
 
 ### Changed
-- Replaced the pilot deterministic runner suite with `test/e2e` Minitest coverage for the restarted E2E architecture.
-- Added a real note-reorganization agent scenario under `test-e2e/scenarios` to validate the scenario-only runtime contract against `ace-b36ts`.
+- Replaced the pilot deterministic runner suite with `test/integration` Minitest coverage for the restarted two-phase E2E architecture.
+- Added a real note-reorganization agent scenario under `test/e2e` to validate the agent-runtime phase of the two-phase contract against `ace-b36ts`.
 
 ## [0.13.3] - 2026-03-29
 

@@ -12,9 +12,9 @@ settings:
 scenes:
 - name: Restarted E2E split
   commands:
-  - type: find ace-b36ts/test/e2e -maxdepth 2 -type f
+  - type: find ace-b36ts/test/integration -maxdepth 2 -type f
     sleep: 3s
-  - type: find ace-b36ts/test-e2e/scenarios -maxdepth 2 -type f
+  - type: find ace-b36ts/test/e2e -maxdepth 2 -type f
     sleep: 3s
   - type: ace-test ace-b36ts e2e
     sleep: 5s
