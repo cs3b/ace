@@ -1,7 +1,7 @@
 # Setup Cookbook: Starting a Multi Ruby Gem Monorepo with ACE
 
 **Created**: 2026-04-01
-**Last Updated**: 2026-04-01
+**Last Updated**: 2026-04-10
 **Category**: setup
 **Audience**: intermediate
 **Estimated Time**: 2-4 hours
@@ -21,8 +21,8 @@ This cookbook distills monorepo setup patterns from ACE package conventions and 
   - `ace-monorepo-e2e/README.md`
   - `.ace-retros/8quwjc-monorepo-e2e-quickstart-verification/8quwjc-monorepo-e2e-quickstart-verification.retro.md`
 - Validation evidence (commands, reports, or artifacts):
-  - `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001`
-  - `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-002`
+  - `ace-test-e2e ace-monorepo-e2e TS-MONO-001`
+  - `ace-test-e2e ace-monorepo-e2e TS-MONO-002`
   - `ace-nav resolve cookbook://setup-starting-a-multi-ruby-gem-monorepo-with-ace`
 - Last source verification date: 2026-04-01
 
@@ -98,8 +98,8 @@ ace-test-e2e ace-monorepo-e2e
 **Commands/Actions:**
 
 ```bash
-ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001
-ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-002
+ace-test-e2e ace-monorepo-e2e TS-MONO-001
+ace-test-e2e ace-monorepo-e2e TS-MONO-002
 ```
 
 If runs are network-heavy, raise timeout budgets deliberately and record the reason in scenario docs.

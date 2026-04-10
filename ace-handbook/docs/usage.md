@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Handbook Usage Reference
 purpose: Practical command reference for ace-handbook workflows
 ace-docs:
-  last-updated: 2026-03-29
-  last-checked: 2026-03-29
+  last-updated: '2026-04-10'
+  last-checked: '2026-04-10'
 ---
 
 # ace-handbook Usage Reference
@@ -113,5 +113,5 @@ ace-handbook sync
 - Keep command invocations direct (`ace-*`) without shell post-processing.
 - Treat loaded workflow bundles as canonical instructions.
 - Keep README concise and move detailed reference content into `ace-handbook/docs/`.
-- For multi-package releases, use `wfi://release/rubygems-publish` to publish, then run `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` to record the propagation proof result (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) with mitigation guidance when lag is detected.
+- For multi-package releases, use `wfi://release/rubygems-publish` to publish, then run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to record the propagation proof result (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) with mitigation guidance when lag is detected.
 - See `ace-handbook/docs/release-rubygems-proof.md` for the proof contract consumed by onboarding docs.
