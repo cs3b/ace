@@ -31,6 +31,18 @@ class AffectedDetectorTest < Minitest::Test
     assert_empty stderr
   end
 
+  def test_detect_warns_when_git_diff_fails
+    Open3.stub(:capture3, ["", "fatal: bad revision 'INVALID'\n", stub(exitstatus: 128, success?: false)]) do
+      _stdout, stderr = capture_io do
+        results = @detector.detect(base_dir: @base_dir, ref: "INVALID")
+
+        assert_equal [], results
+      end
+
+      assert_includes stderr, "fatal: bad revision 'INVALID'"
+    end
+  end
+
   def test_extract_package_from_ace_package_path
     package = @detector.send(:extract_package,
       "ace-lint/lib/ace/lint/cli.rb",
@@ -51,7 +63,7 @@ class AffectedDetectorTest < Minitest::Test
 
   def test_extract_package_from_nested_path
     package = @detector.send(:extract_package,
-      "ace-review/test/e2e/TS-REVIEW-001/scenario.yml",
+      "ace-review/test-e2e/scenarios/TS-REVIEW-001/scenario.yml",
       @base_dir)
 
     assert_nil_or_equal "ace-review", package

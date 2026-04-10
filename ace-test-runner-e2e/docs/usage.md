@@ -122,6 +122,7 @@ ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports ls results/
 
 ## Notes
 
-- `ace-test-e2e` targets package-local TS scenarios and reads scenario metadata from `scenario.yml`.
+- `ace-test-e2e` is scenario-only and discovers package-local TS scenarios from `test-e2e/scenarios/`.
+- Scenario metadata is read from each scenario directory's `scenario.yml`.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.

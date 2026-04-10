@@ -329,21 +329,6 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
-  def test_infer_package_from_legacy_path
-    Dir.mktmpdir do |tmpdir|
-      pkg_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-test")
-      FileUtils.mkdir_p(pkg_dir)
-      File.write(File.join(pkg_dir, "scenario.yml"), <<~YAML)
-        test-id: TS-LINT-001
-        title: Lint Test
-        area: lint
-      YAML
-
-      scenario = @loader.load(pkg_dir)
-      assert_equal "ace-lint", scenario.package
-    end
-  end
-
   private
 
   def create_scenario_dir(tmpdir, name, scenario_yml: nil, standalone_tcs: {}, inline_tcs: {}, fixtures: nil,

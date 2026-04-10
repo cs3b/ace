@@ -31,6 +31,7 @@ class PipelineSandboxBuilderTest < Minitest::Test
       assert Dir.exist?(File.join(sandbox_path, "results", "tc", "01")), "result dir 01 should exist"
       assert Dir.exist?(File.join(sandbox_path, "results", "tc", "02")), "result dir 02 should exist"
       assert_equal File.expand_path(sandbox_path), env["PROJECT_ROOT_PATH"]
+      assert_equal File.expand_path(project_root), env["ACE_E2E_SOURCE_ROOT"]
       assert_equal "copied by sandbox builder", File.read(File.join(sandbox_path, package_name, "copied.txt"))
     ensure
       ENV["PATH"] = original_path

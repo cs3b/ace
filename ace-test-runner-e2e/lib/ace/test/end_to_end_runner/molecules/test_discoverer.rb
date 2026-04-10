@@ -9,15 +9,13 @@ module Ace
         # Discovers E2E test scenario directories (TS-*/scenario.yml) in packages
         #
         # Finds test scenarios in the TS-format directory structure:
-        #   {package}/test-e2e/scenarios/TS-*/scenario.yml
-        # Falls back to legacy:
-        #   {package}/test/e2e/TS-*/scenario.yml
+        #   {package}/test-e2e/scenarios/TS-*/scenario.yml (primary)
+        #   {package}/test/e2e/TS-*/scenario.yml (legacy fallback)
         #
         # Note: This is a Molecule (not an Atom) because it performs filesystem
         # I/O via Dir.glob.
         class TestDiscoverer
-          TEST_DIR = "test-e2e/scenarios"
-          LEGACY_TEST_DIR = "test/e2e"
+          TEST_DIRS = ["test-e2e/scenarios", "test/e2e"].freeze
           SCENARIO_FILE = "scenario.yml"
           SCENARIO_DIR_PATTERN = "TS-*"
 
@@ -31,9 +29,8 @@ module Ace
           # @return [Array<String>] Sorted list of matching scenario.yml file paths
           def find_tests(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
             test_ids = test_id ? test_id.split(",").map(&:strip) : [nil]
-            test_roots = test_dirs(package, base_dir)
             scenario_files = test_ids
-              .flat_map { |id| test_roots.flat_map { |root| Dir.glob(build_scenario_pattern(root, id)) } }
+              .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
               .uniq
               .sort
 
@@ -60,10 +57,11 @@ module Ace
           # @param base_dir [String] Base directory to search from
           # @return [Array<Models::TestScenario>] Loaded scenario models with test_cases
           def find_scenarios(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
-            scenario_files = test_dirs(package, base_dir)
-              .flat_map { |test_dir| Dir.glob(File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)) }
-              .uniq
-              .sort
+            patterns = TEST_DIRS.map do |test_dir_name|
+              test_dir = File.join(base_dir, package, test_dir_name)
+              File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
+            end
+            scenario_files = Dir.glob(patterns).sort
 
             loader = ScenarioLoader.new
             scenarios = scenario_files.map do |yml_path|
@@ -87,12 +85,13 @@ module Ace
           # @param base_dir [String] Base directory to search from
           # @return [Array<String>] Sorted list of package names
           def list_packages(base_dir: Dir.pwd)
-            base = Pathname.new(base_dir)
-            patterns = [TEST_DIR, LEGACY_TEST_DIR].map do |dir|
-              File.join(base_dir, "*/#{dir}/#{SCENARIO_DIR_PATTERN}/#{SCENARIO_FILE}")
+            patterns = TEST_DIRS.map do |test_dir_name|
+              File.join(base_dir, "*/#{test_dir_name}/#{SCENARIO_DIR_PATTERN}/#{SCENARIO_FILE}")
             end
 
-            patterns.flat_map { |pattern| Dir.glob(pattern) }
+            base = Pathname.new(base_dir)
+
+            Dir.glob(patterns)
               .map { |f| Pathname.new(f).relative_path_from(base).each_filename.first }
               .uniq
               .sort
@@ -101,16 +100,16 @@ module Ace
           private
 
           # Build glob pattern for finding TS-format scenario.yml files
-          def build_scenario_pattern(test_dir, test_id)
-            if test_id
-              File.join(test_dir, "*#{test_id}*", SCENARIO_FILE)
-            else
-              File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
-            end
-          end
+          def build_scenario_pattern(package, test_id, base_dir)
+            TEST_DIRS.map do |test_dir_name|
+              test_dir = File.join(base_dir, package, test_dir_name)
 
-          def test_dirs(package, base_dir)
-            [TEST_DIR, LEGACY_TEST_DIR].map { |dir| File.join(base_dir, package, dir) }
+              if test_id
+                File.join(test_dir, "*#{test_id}*", SCENARIO_FILE)
+              else
+                File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
+              end
+            end
           end
 
           def no_filters?(tags, exclude_tags)

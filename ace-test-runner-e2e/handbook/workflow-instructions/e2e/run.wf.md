@@ -1,4 +1,12 @@
 ---
+name: e2e-run
+description: Execute an E2E test scenario with full agent guidance
+allowed-tools:
+- Bash(ace-bundle:*)
+- Read
+- Write
+- Glob
+- Grep
 doc-type: workflow
 title: Run E2E Test Workflow
 purpose: Execute an E2E test scenario with full agent guidance
@@ -13,7 +21,7 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 ## Arguments
 
-- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
+- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, looks for `test-e2e/scenarios/` in project root.
 - `TEST_ID` (optional) - Test identifier (e.g., `TS-LINT-001`). If omitted, runs all tests.
 - `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths.
 - `--report-dir PATH` (optional) - Explicit report directory path (skips computed `${TEST_DIR}-reports`).
@@ -41,9 +49,11 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 - Runner instructions are execution-only: perform actions and write evidence.
 - Verifier instructions are verification-only: assign verdicts using impact-first checks:
+
   1. sandbox/project state impact
   2. explicit artifacts
   3. debug captures as fallback
+
 - Do not place ad-hoc setup logic in TC runner files; sandbox setup belongs to `scenario.yml` and fixtures.
 
 ## Execution Environment Guardrail
@@ -55,12 +65,12 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 For CLI providers (`ace-test-e2e`), the deterministic 6-phase pipeline handles execution automatically:
 
-1. **Setup** — `SetupExecutor` creates sandbox (git init, mise.toml, .ace symlinks, `results/tc/{NN}/` dirs)
-2. **Runner prompt** — `SkillPromptBuilder` assembles context from `runner.yml.md` + `TC-*.runner.md`
-3. **Runner LLM** — Agent executes TC steps in sandbox, produces artifacts
-4. **Verifier prompt** — `SkillPromptBuilder` assembles context from `verifier.yml.md` + `TC-*.verify.md`
-5. **Verifier LLM** — Independent agent evaluates artifacts against expectations
-6. **Report** — `PipelineReportGenerator` produces deterministic summary
+1. **Setup** -- `SetupExecutor` creates sandbox (git init, mise.toml, .ace symlinks, `results/tc/{NN}/` dirs)
+2. **Runner prompt** -- `SkillPromptBuilder` assembles context from `runner.yml.md` + `TC-*.runner.md`
+3. **Runner LLM** -- Agent executes TC steps in sandbox, produces artifacts
+4. **Verifier prompt** -- `SkillPromptBuilder` assembles context from `verifier.yml.md` + `TC-*.verify.md`
+5. **Verifier LLM** -- Independent agent evaluates artifacts against expectations
+6. **Report** -- `PipelineReportGenerator` produces deterministic summary
 
 When this workflow is invoked directly (not via CLI pipeline), the agent performs steps 1-6 manually using the workflow steps below.
 
@@ -95,6 +105,7 @@ Do NOT return full report contents, detailed TC output, or setup logs.
 When invoked with `--tc-mode`, the sandbox is pre-populated by `SetupExecutor` and only a single TC is executed. Steps 1-5 of standard mode are skipped.
 
 **TC-Level Arguments:**
+
 - `PACKAGE` (required), `TEST_ID` (required), `TC_ID` (required)
 - `--tc-mode` (required), `--sandbox SANDBOX_PATH` (required)
 - `--run-id RUN_ID` (optional), `--env KEY=VALUE,...` (optional)
@@ -108,7 +119,8 @@ When invoked with `--tc-mode`, the sandbox is pre-populated by `SetupExecutor` a
 6. Return TC-level contract
 
 **TC-Level Rules:**
-- Do NOT create or modify sandbox — `SetupExecutor` already prepared it
+
+- Do NOT create or modify sandbox -- `SetupExecutor` already prepared it
 - Always export `--env` variables before executing test steps
 - Report actual results even if they differ from expected
 
@@ -122,13 +134,13 @@ Discover scenarios based on arguments:
 
 ```bash
 # No arguments — project root
-find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
+find test-e2e/scenarios -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 
 # PACKAGE only — all tests in package
-find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
+find {PACKAGE}/test-e2e/scenarios -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 
 # PACKAGE + TEST_ID — specific test
-find {PACKAGE}/test/e2e -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
+find {PACKAGE}/test-e2e/scenarios -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
 ```
 
 If `--tags` or `--exclude-tags` provided, filter discovered scenarios by reading each `scenario.yml` and checking the `tags` array. Tags use OR semantics: a scenario matches `--tags` if it has **any** listed tag, and is excluded by `--exclude-tags` if it has **any** listed tag.
@@ -138,6 +150,7 @@ If no tests found after filtering, report error and exit.
 ### 2. Read Test Scenario
 
 For each scenario file, read and parse:
+
 - `test-id`, `title`, `priority`, `duration`, `requires`, `tags`
 
 **Multiple tests:** Execute steps 2-7 for each scenario sequentially, then generate a combined summary.
@@ -172,9 +185,10 @@ Report missing prerequisites before proceeding.
 **Pre-generated Run ID:** If `--run-id` was provided, set `TIMESTAMP_ID=$RUN_ID` instead of generating a new one.
 
 **Directory naming convention:**
-- `{timestamp}` — 6-char base36 timestamp
-- `{short-pkg}` — package without `ace-` prefix (e.g., `lint`)
-- `{short-id}` — lowercase prefix + number (e.g., `ts001`)
+
+- `{timestamp}` -- 6-char base36 timestamp
+- `{short-pkg}` -- package without `ace-` prefix (e.g., `lint`)
+- `{short-id}` -- lowercase prefix + number (e.g., `ts001`)
 
 ```
 .ace-local/test-e2e/
@@ -184,10 +198,11 @@ Report missing prerequisites before proceeding.
 ```
 
 **Expected variables after setup:**
-- `PROJECT_ROOT` — Original project directory
-- `TEST_DIR` — Sandbox directory (cwd after setup)
-- `REPORTS_DIR` — Reports directory
-- `TIMESTAMP_ID` — Unique run identifier
+
+- `PROJECT_ROOT` -- Original project directory
+- `TEST_DIR` -- Sandbox directory (cwd after setup)
+- `REPORTS_DIR` -- Reports directory
+- `TIMESTAMP_ID` -- Unique run identifier
 
 ### 4.1 Sandbox Isolation Checkpoint (MANDATORY)
 
@@ -208,7 +223,7 @@ echo "=== END CHECK ==="
 ### 5. Create Test Data
 
 > **Use `ace-test-e2e-sh "$TEST_DIR"` for ALL commands after setup.**
-> Each bash block runs in a fresh shell — the wrapper ensures sandbox isolation.
+> Each bash block runs in a fresh shell -- the wrapper ensures sandbox isolation.
 
 Execute test data creation commands from the scenario, writing files inside `$TEST_DIR/`.
 
@@ -219,7 +234,7 @@ Execute test data creation commands from the scenario, writing files inside `$TE
 If `FILTERED_CASES` is set, execute only matching TCs. Otherwise execute all.
 
 For each TC (TC-NNN):
-1. **Check filter** — skip if not in `FILTERED_CASES`
+1. **Check filter** -- skip if not in `FILTERED_CASES`
 2. **Read** the runner file (`TC-NNN-*.runner.md`)
 3. **Execute** runner steps, save artifacts to `results/tc/{NN}/`
 4. **Verify** against paired `.verify.md` expectations
@@ -232,6 +247,7 @@ Track friction points during execution for the experience report.
 Write three report files to the reports directory.
 
 **Report path setup:**
+
 ```bash
 REPORT_DIR="${PROVIDED_REPORT_DIR:-${TEST_DIR}-reports}"
 mkdir -p "$REPORT_DIR"
@@ -302,6 +318,7 @@ Sandbox directories in `.ace-local/test-e2e/` are gitignored.
 Summarize execution in the response. Reports are persisted to disk.
 
 **Single test:**
+
 ```markdown
 ## E2E Test Execution Report
 **Test ID:** {test-id} | **Package:** {package} | **Status:** {PASS/FAIL}
@@ -316,6 +333,7 @@ Reports: `.ace-local/test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
 ### 10. Update Test Scenario
 
 If all tests pass, update `scenario.yml`:
+
 ```yaml
 last-verified: {today's date}
 verified-by: claude-{model}

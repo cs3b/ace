@@ -39,10 +39,15 @@ module Ace
           # @return [Array<String>] Changed file paths
           def get_changed_files(base_dir, ref)
             # Run git diff to get changed files using array-based command for security
-            output, _stderr, status = Open3.capture3("git", "diff", "--name-only", ref, "--",
+            output, stderr, status = Open3.capture3("git", "diff", "--name-only", ref, "--",
               chdir: base_dir)
 
-            return [] unless status.success?
+            unless status.success?
+              message = stderr.to_s.strip
+              message = "git diff exited with status #{status.exitstatus}" if message.empty?
+              warn "Warning: git detection failed: #{message}"
+              return []
+            end
 
             output.lines.map(&:strip).reject(&:empty?)
           rescue => e

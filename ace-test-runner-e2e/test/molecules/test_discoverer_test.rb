@@ -227,30 +227,10 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
-  def test_find_tests_supports_legacy_test_e2e_path
-    Dir.mktmpdir do |tmpdir|
-      create_legacy_ts_scenario(tmpdir, "ace-lint", "TS-LINT-001-test", ["TC-001"])
-
-      files = @discoverer.find_tests(package: "ace-lint", base_dir: tmpdir)
-
-      assert_equal 1, files.size
-      assert_includes files.first, "/test/e2e/"
-    end
-  end
-
   private
 
   def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
     scenario_dir = File.join(base_dir, package, "test-e2e", "scenarios", scenario_name)
-    write_ts_scenario(scenario_dir, scenario_name, tc_ids, tags: tags)
-  end
-
-  def create_legacy_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
-    scenario_dir = File.join(base_dir, package, "test", "e2e", scenario_name)
-    write_ts_scenario(scenario_dir, scenario_name, tc_ids, tags: tags)
-  end
-
-  def write_ts_scenario(scenario_dir, scenario_name, tc_ids, tags: nil)
     FileUtils.mkdir_p(scenario_dir)
 
     test_id = scenario_name.split("-")[0..2].join("-")

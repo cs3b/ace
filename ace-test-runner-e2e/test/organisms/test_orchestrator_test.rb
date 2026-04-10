@@ -809,9 +809,9 @@ class TestOrchestratorTest < Minitest::Test
       assert received[:sandbox_path].include?(".ace-local/test-e2e/"),
         "sandbox_path should be under .ace-local/test-e2e/"
       assert_instance_of Hash, received[:env_vars]
-      # PROJECT_ROOT_PATH should be expanded to absolute sandbox path
-      assert received[:env_vars]["PROJECT_ROOT_PATH"].end_with?(".ace-local/test-e2e/test00-my-pkg-ts001"),
-        "PROJECT_ROOT_PATH should be expanded to absolute sandbox path"
+      assert_equal received[:sandbox_path], received[:env_vars]["PROJECT_ROOT_PATH"],
+        "PROJECT_ROOT_PATH should match the sandbox root path"
+      assert_equal File.expand_path(tmpdir), received[:env_vars]["ACE_E2E_SOURCE_ROOT"]
     end
   end
 
@@ -1074,7 +1074,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package(tmpdir, package, scenario_id, tc_ids, timeout: nil)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-test")
     FileUtils.mkdir_p(ts_dir)
 
     scenario_yaml = <<~YAML
@@ -1124,7 +1124,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package_with_setup(tmpdir, package, scenario_id, tc_ids)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-test")
     fixtures_dir = File.join(ts_dir, "fixtures")
     FileUtils.mkdir_p(fixtures_dir)
     File.write(File.join(fixtures_dir, "sample.txt"), "fixture content")
@@ -1178,7 +1178,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_ts_test_package_with_run_id_tmux_setup(tmpdir, package, scenario_id, tc_ids)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-tmux-runid")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-tmux-runid")
     FileUtils.mkdir_p(ts_dir)
 
     File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
@@ -1231,7 +1231,7 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def create_goal_ts_test_package(tmpdir, package, scenario_id)
-    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-goal")
+    ts_dir = File.join(tmpdir, package, "test-e2e", "scenarios", "#{scenario_id}-goal")
     FileUtils.mkdir_p(ts_dir)
 
     File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)

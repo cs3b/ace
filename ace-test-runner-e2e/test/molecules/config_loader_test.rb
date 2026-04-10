@@ -59,7 +59,7 @@ class ConfigLoaderTest < Minitest::Test
 
   def test_cli_providers_accessor
     providers = ConfigLoader.cli_providers
-    assert_equal ConfigLoader.load.dig("providers", "cli"), providers
+    assert_equal %w[claude gemini codex codexoss opencode pi].sort, providers.sort
   end
 
   def test_cli_args_for_claude
