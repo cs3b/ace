@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.44.5)
+    ace-assign (0.44.3)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -14,7 +14,7 @@ PATH
 PATH
   remote: ace-b36ts
   specs:
-    ace-b36ts (0.13.3)
+    ace-b36ts (0.14.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -51,7 +51,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.32.1)
+    ace-docs (0.32.0)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.23.7)
+    ace-git-commit (0.23.6)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.5)
+    ace-git-worktree (0.19.4)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -136,7 +136,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.25.3)
+    ace-handbook (0.25.4)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -178,7 +178,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.27.3)
+    ace-llm-providers-cli (0.27.2)
       ace-llm (~> 0.30)
 
 PATH
@@ -328,7 +328,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.13.1)
+    ace-support-test-helpers (0.14.0)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
@@ -347,17 +347,18 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.29.11)
+    ace-test-runner-e2e (0.31.0)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
+      ace-support-test-helpers (~> 0.14)
 
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.19.6)
+    ace-test-runner (0.21.0)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
