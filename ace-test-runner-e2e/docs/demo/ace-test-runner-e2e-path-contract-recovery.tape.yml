@@ -1,0 +1,42 @@
+---
+description: Showcase recovered legacy path support and pipeline provider/env threading for ace-test-runner-e2e
+tags:
+- ace-test-runner-e2e
+- feature-demo
+- migration-recovery
+settings:
+  font_size: 16
+  width: 1100
+  height: 720
+  format: gif
+  env:
+    PROJECT_ROOT_PATH: /home/mc/ace-t.j82/ace-test-runner-e2e
+setup:
+- sandbox
+scenes:
+- name: Demo context
+  commands:
+  - type: echo Path contract recovery for PR 288 && echo Checks legacy scenario discovery plus explicit runner/verifier provider threading.
+    sleep: 5s
+- name: Legacy path inference still works
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/scenario_loader_test.rb
+    sleep: 5s
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/test_discoverer_test.rb
+    sleep: 5s
+- name: Pipeline provider/env contract stays explicit
+  commands:
+  - type: clear
+    sleep: 1s
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/test_executor_test.rb
+    sleep: 5s
+verify:
+  forbid_output:
+  - "0 failures, 1 errors"
+  - "1 failures, 0 errors"
+  - "No test files found matching pattern"
+  - "No such file or directory"
+teardown:
+- cleanup
