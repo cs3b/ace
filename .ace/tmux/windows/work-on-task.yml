@@ -1,0 +1,12 @@
+direction: horizontal
+panes:
+  - preset: work-on-task-codex
+    size: "34%"
+  - direction: vertical
+    size: "32%"
+    panes:
+      - preset: nvim
+      - commands:
+          - ace-git status
+  - preset: work-on-task-status
+    size: "34%"

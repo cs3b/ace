@@ -1,0 +1,4 @@
+# Task driving pane preset (Codex)
+commands:
+  - codex /as-assign-drive
+focus: true
