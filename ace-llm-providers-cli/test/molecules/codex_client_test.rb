@@ -248,6 +248,28 @@ describe "CodexClient" do
 
       assert_equal "/tmp/e2e-sandbox", captured_kwargs[:chdir]
     end
+
+    it "passes subprocess_env to SafeCapture env" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          @client.stub(:resolve_skills_dir, nil) do
+            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+              captured_kwargs = kwargs
+              ["codex\nok\n", "", mock_status]
+            }) do
+              @client.generate("Hi", subprocess_env: {"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"})
+            end
+          end
+        end
+      end
+
+      assert_equal({"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"}, captured_kwargs[:env])
+    end
   end
 
   describe "skill command rewriting" do
