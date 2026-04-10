@@ -1,0 +1,12 @@
+diff --git a/ace-tmux/lib/ace/tmux/version.rb b/ace-tmux/lib/ace/tmux/version.rb
+index 6164e162a3..e6240d3454 100644
+--- a/ace-tmux/lib/ace/tmux/version.rb
++++ b/ace-tmux/lib/ace/tmux/version.rb
+@@ -2,6 +2,6 @@
+ 
+ module Ace
+   module Tmux
+-    VERSION = '0.11.3'
++    VERSION = '0.11.5'
+   end
+ end

@@ -1,0 +1,13 @@
+diff --git a/ace-support-models/lib/ace/support/models/version.rb b/ace-support-models/lib/ace/support/models/version.rb
+index ac5b9e9167..75c3618765 100644
+--- a/ace-support-models/lib/ace/support/models/version.rb
++++ b/ace-support-models/lib/ace/support/models/version.rb
+@@ -3,7 +3,7 @@
+ module Ace
+   module Support
+     module Models
+-      VERSION = '0.9.3'
++      VERSION = '0.9.6'
+     end
+   end
+ end

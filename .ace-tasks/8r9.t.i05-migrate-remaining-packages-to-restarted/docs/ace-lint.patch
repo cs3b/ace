@@ -1,0 +1,12 @@
+diff --git a/ace-lint/lib/ace/lint/version.rb b/ace-lint/lib/ace/lint/version.rb
+index 0f3907a802..1de4af8990 100644
+--- a/ace-lint/lib/ace/lint/version.rb
++++ b/ace-lint/lib/ace/lint/version.rb
+@@ -2,6 +2,6 @@
+ 
+ module Ace
+   module Lint
+-    VERSION = '0.28.1'
++    VERSION = '0.28.5'
+   end
+ end
