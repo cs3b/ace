@@ -123,7 +123,7 @@ module Ace
             integration_results = run_integration_gate(packages)
             integration_summary = summarize_integration_results(integration_results)
             if integration_summary[:total] > 0
-              @output.puts "Integration Phase: #{integration_summary[:passed]}/#{integration_summary[:total]} package(s) passed"
+              print_integration_summary(integration_results, integration_summary)
             end
 
             if integration_summary[:failed] > 0
@@ -172,21 +172,43 @@ module Ace
             {
               total: results.size,
               passed: results.count(&:success?),
-              failed: results.count(&:failed?)
+              failed: results.count(&:failed?),
+              files_total: results.sum { |result| result.metadata.fetch("files_total", 0) },
+              files_passed: results.sum { |result| result.metadata.fetch("files_passed", 0) },
+              total_cases: results.sum(&:total_count),
+              passed_cases: results.sum(&:passed_count)
             }
           end
 
           def integration_only_results(results)
             summary = summarize_integration_results(results)
             {
-              total: summary[:total],
-              passed: summary[:passed],
-              failed: summary[:failed],
+              total: summary[:files_total],
+              passed: summary[:files_passed],
+              failed: summary[:files_total] - summary[:files_passed],
               errors: 0,
-              total_cases: summary[:total],
-              passed_cases: summary[:passed],
+              total_cases: summary[:total_cases],
+              passed_cases: summary[:passed_cases],
               packages: {}
             }
+          end
+
+          def print_integration_summary(results, summary)
+            @output.puts(
+              "Integration Phase: #{summary[:passed]}/#{summary[:total]} package(s), " \
+              "#{summary[:files_passed]}/#{summary[:files_total]} file(s), " \
+              "#{summary[:passed_cases]}/#{summary[:total_cases]} case(s) passed"
+            )
+
+            results.each do |result|
+              package = result.metadata["package"] || "unknown"
+              files_total = result.metadata.fetch("files_total", 0)
+              files_passed = result.metadata.fetch("files_passed", 0)
+              @output.puts(
+                "  #{package}: #{files_passed}/#{files_total} file(s), " \
+                "#{result.passed_count}/#{result.total_count} case(s) #{result.status.upcase}"
+              )
+            end
           end
 
           # Build the appropriate display manager based on progress flag

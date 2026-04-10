@@ -9,8 +9,8 @@ class TestDiscovererTest < Minitest::Test
   end
 
   def test_find_tests_for_existing_package
-    files = @discoverer.find_tests(package: "ace-lint", base_dir: @base_dir)
-    refute_empty files, "Should find E2E tests in ace-lint"
+    files = @discoverer.find_tests(package: "ace-review", base_dir: @base_dir)
+    refute_empty files, "Should find scenario E2E tests in ace-review"
     assert files.all? { |f| f.end_with?("scenario.yml") },
       "All files should be scenario.yml"
   end
@@ -22,25 +22,25 @@ class TestDiscovererTest < Minitest::Test
 
   def test_find_specific_test_by_id
     files = @discoverer.find_tests(
-      package: "ace-lint",
-      test_id: "TS-LINT-001",
+      package: "ace-review",
+      test_id: "TS-REVIEW-001",
       base_dir: @base_dir
     )
-    assert_equal 1, files.size, "Should find exactly one test for TS-LINT-001"
-    assert files.first.include?("TS-LINT-001"), "File should contain test ID"
+    assert_equal 1, files.size, "Should find exactly one test for TS-REVIEW-001"
+    assert files.first.include?("TS-REVIEW-001"), "File should contain test ID"
   end
 
   def test_find_specific_test_nonexistent_id
     files = @discoverer.find_tests(
-      package: "ace-lint",
-      test_id: "TS-LINT-999",
+      package: "ace-review",
+      test_id: "TS-REVIEW-999",
       base_dir: @base_dir
     )
     assert_empty files, "Should find no tests for nonexistent ID"
   end
 
   def test_find_tests_returns_sorted
-    files = @discoverer.find_tests(package: "ace-lint", base_dir: @base_dir)
+    files = @discoverer.find_tests(package: "ace-review", base_dir: @base_dir)
     assert_equal files.sort, files, "Results should be sorted"
   end
 
