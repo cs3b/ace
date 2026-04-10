@@ -4,6 +4,7 @@ require "fileutils"
 require "date"
 require "yaml"
 require "ace/b36ts"
+require "ace/test_support/sandbox_package_copy"
 
 module Ace
   module Test
@@ -107,13 +108,29 @@ module Ace
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
+            package_copy = Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir)
+            package_source = File.join(@base_dir, scenario.package.to_s)
+            package_copy_result = if File.directory?(package_source)
+              package_copy.prepare(
+                package_name: scenario.package,
+                sandbox_root: sandbox_dir
+              )
+            else
+              {
+                env: {
+                  "PROJECT_ROOT_PATH" => File.expand_path(sandbox_dir),
+                  "ACE_E2E_SOURCE_ROOT" => File.expand_path(@base_dir)
+                }
+              }
+            end
             setup_executor = Molecules::SetupExecutor.new
             result = setup_executor.execute(
               setup_steps: scenario.setup_steps,
               sandbox_dir: sandbox_dir,
               fixture_source: scenario.fixture_path,
               scenario_name: scenario.test_id,
-              run_id: timestamp
+              run_id: timestamp,
+              initial_env: package_copy_result[:env]
             )
 
             unless result[:success]

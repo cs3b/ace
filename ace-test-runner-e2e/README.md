@@ -22,7 +22,7 @@
 
 ## How It Works
 
-1. Discover E2E scenario definitions from package-local `test/e2e/` suites with metadata, tags, and command flows.
+1. Discover E2E scenario definitions from package-local `test-e2e/scenarios/` suites with metadata, tags, and command flows.
 2. Execute scenarios inside reproducible sandboxes that isolate agent runs from the working tree.
 3. Produce structured reports that are easy to inspect, compare across runs, and feed back into triage workflows.
 

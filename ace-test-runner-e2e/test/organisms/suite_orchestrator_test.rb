@@ -191,7 +191,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {provider: "claude:sonnet", timeout: 120, cli_args: "test-arg"})
 
     assert_kind_of Array, cmd
@@ -217,7 +217,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_prefers_scenario_timeout
     Dir.mktmpdir do |tmpdir|
-      scenario_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-timeout")
+      scenario_dir = File.join(tmpdir, "ace-lint", "test-e2e", "scenarios", "TS-LINT-001-timeout")
       FileUtils.mkdir_p(scenario_dir)
       File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
         test-id: TS-LINT-001
@@ -255,7 +255,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     assert_kind_of Array, cmd
@@ -282,7 +282,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
       cmd = orchestrator.send(:build_test_command,
         "ace-lint",
-        "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+        "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
         {})
 
       assert_equal local_exe, cmd.first
@@ -298,7 +298,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {verify: true})
 
     assert_includes cmd, "--verify"
@@ -312,11 +312,11 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     test_id = orchestrator.send(:extract_test_id,
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml")
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml")
     assert_equal "TS-LINT-001", test_id
 
     test_id = orchestrator.send(:extract_test_id,
-      "/path/to/ace-lint/test/e2e/cli-api-parity/scenario.yml")
+      "/path/to/ace-lint/test-e2e/scenarios/cli-api-parity/scenario.yml")
     assert_equal "cli-api-parity", test_id
   end
 
@@ -840,7 +840,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {},
       run_id: "batch01")
 
@@ -859,7 +859,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     refute_includes cmd, "--run-id", "Command should not include --run-id when nil"
@@ -874,7 +874,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {},
       run_id: "batch01")
 
@@ -895,7 +895,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     refute_includes cmd, "--report-dir", "Command should not include --report-dir when no run_id"
@@ -1054,7 +1054,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     refute_includes cmd, "--test-cases"
@@ -1070,7 +1070,7 @@ class SuiteOrchestratorTest < Minitest::Test
     # Without scenario failures, no --test-cases should appear
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     refute_includes cmd, "--test-cases",
@@ -1208,7 +1208,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
-      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      "/path/to/ace-lint/test-e2e/scenarios/TS-LINT-001-test/scenario.yml",
       {})
 
     refute_includes cmd, "--test-cases",
@@ -1484,7 +1484,7 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]}
       )
 
       ts_counter = 0
@@ -1512,7 +1512,7 @@ class SuiteOrchestratorTest < Minitest::Test
         }
       }
       package_tests = {
-        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]
+        "ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]
       }
 
       orchestrator.send(:write_failure_stubs, results, package_tests)
@@ -1533,7 +1533,7 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]}
       )
 
       ts_counter = 0
@@ -1562,7 +1562,7 @@ class SuiteOrchestratorTest < Minitest::Test
         }
       }
       package_tests = {
-        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]
+        "ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]
       }
 
       orchestrator.send(:write_failure_stubs, results, package_tests)
@@ -1578,7 +1578,7 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]}
       )
 
       orchestrator = SuiteOrchestrator.new(
@@ -1599,7 +1599,7 @@ class SuiteOrchestratorTest < Minitest::Test
         }
       }
       package_tests = {
-        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]
+        "ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]
       }
 
       orchestrator.send(:write_failure_stubs, results, package_tests)
@@ -1624,7 +1624,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
       discoverer = StubDiscoverer.new(
         packages: ["ace-lint"],
-        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
+        tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]}
       )
 
       orchestrator = SuiteOrchestrator.new(
@@ -1646,7 +1646,7 @@ class SuiteOrchestratorTest < Minitest::Test
         }
       }
       package_tests = {
-        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]
+        "ace-lint" => ["#{tmpdir}/ace-lint/test-e2e/scenarios/TS-LINT-001/scenario.yml"]
       }
 
       orchestrator.send(:write_failure_stubs, results, package_tests)

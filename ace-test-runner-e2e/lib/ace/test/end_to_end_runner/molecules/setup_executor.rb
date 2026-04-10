@@ -25,9 +25,9 @@ module Ace
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
-          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil)
+          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {})
             FileUtils.mkdir_p(sandbox_dir)
-            env = {}
+            env = initial_env.dup
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name

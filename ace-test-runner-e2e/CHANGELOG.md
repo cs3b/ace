@@ -7,21 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.29.11] - 2026-04-10
+## [0.30.2] - 2026-04-10
 
 ### Fixed
-- Captured `git diff` stderr during affected-package detection so invalid refs no longer leak fatal git output into otherwise passing test runs.
+- Surface `git diff` stderr when affected-package detection fails so invalid refs and shallow-clone failures no longer look like empty affected sets.
 
-## [0.29.10] - 2026-04-10
+## [0.30.1] - 2026-04-10
+
+### Fixed
+- Raised the `ace-support-test-helpers` runtime dependency floor to `~> 0.14` so released installs accept the shared sandbox package-copy helper line used by the restarted runner.
+- Restored the `TS-RUNNER-001` smoke scenario fixture source path so the CLI smoke scenario resolves its canonical demo fixture again.
+
+## [0.30.0] - 2026-04-10
 
 ### Changed
-- Documented dual-path migration contract in `.ace/e2e-runner/config.yml` by keeping explicit legacy fallback keys (`paths.scenarios_legacy`, `patterns.discovery_legacy`) alongside `test-e2e/scenarios`.
-
-## [0.29.9] - 2026-04-10
+- Simplified `ace-test-runner-e2e` to the restarted scenario-only contract, with discovery and loading focused on agent scenarios instead of deterministic phase execution.
+- Switched sandbox orchestration to the shared package-copy helper and refreshed CLI/docs/workflows for the restarted E2E structure.
 
 ### Fixed
-- Enforced separate runner/verifier provider threading in the deterministic pipeline so verifier isolation configured in `.ace/e2e-runner/config.yml` is applied at runtime and preserved in report metadata.
-- Aligned scenario discovery with the `test-e2e/scenarios` contract while retaining legacy `test/e2e` fallback support for compatibility during migration.
+- Hardened affected-file detection by capturing git diff stderr so provider-side affected checks fail with clearer diagnostics.
 
 ## [0.29.8] - 2026-04-01
 

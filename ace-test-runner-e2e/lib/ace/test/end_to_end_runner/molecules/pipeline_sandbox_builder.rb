@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "open3"
+require "ace/test_support/sandbox_package_copy"
 
 module Ace
   module Test
@@ -10,8 +11,9 @@ module Ace
         # Builds deterministic sandbox state for standalone execution.
         class PipelineSandboxBuilder
           # @param config_root [String] Project root used for provider symlink/bin path
-          def initialize(config_root: Dir.pwd)
+          def initialize(config_root: Dir.pwd, package_copy: nil)
             @config_root = File.expand_path(config_root)
+            @package_copy = package_copy || Ace::TestSupport::SandboxPackageCopy.new(source_root: @config_root)
           end
 
           # @param scenario [Models::TestScenario]
@@ -25,32 +27,28 @@ module Ace
             FileUtils.mkdir_p(File.join(sandbox_path, "reports"))
 
             initialize_git_repo(sandbox_path)
-            ensure_package_available(scenario.package, sandbox_path)
+            package_copy_result = ensure_package_available(scenario.package, sandbox_path)
             link_provider_configs(sandbox_path)
             create_result_directories(scenario, sandbox_path, test_cases: test_cases)
             verify_tool_access(scenario, sandbox_path)
 
-            {
-              "PROJECT_ROOT_PATH" => sandbox_path
-            }
+            package_copy_result[:env]
           end
 
           private
 
           def ensure_package_available(package_name, sandbox_path)
             package_name = package_name.to_s.strip
-            return if package_name.empty?
-
-            package_source = File.join(@config_root, package_name)
-            package_target = File.join(sandbox_path, package_name)
-
-            return if File.exist?(package_target)
-
-            unless File.directory?(package_source)
-              raise "Scenario package not found: #{package_name} (expected #{package_source})"
+            if package_name.empty?
+              return {
+                env: {
+                  "PROJECT_ROOT_PATH" => sandbox_path,
+                  "ACE_E2E_SOURCE_ROOT" => @config_root
+                }
+              }
             end
 
-            FileUtils.cp_r(package_source, package_target)
+            @package_copy.prepare(package_name: package_name, sandbox_root: sandbox_path)
           end
 
           def initialize_git_repo(sandbox_path)
