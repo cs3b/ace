@@ -34,7 +34,6 @@ patterns:
   support: "test/support/**/*_test.rb"
   edge: "test/edge/**/*_test.rb"
   integration: "test/integration/**/*_test.rb"
-  system: "test/system/**/*_test.rb"
 
 # Test groups
 groups:
@@ -53,7 +52,6 @@ groups:
     - unit
     - edge
     - integration
-    - system
   quick:
     - atoms
     - molecules
