@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.3] - 2026-04-10
+
+### Fixed
+- Forwarded `subprocess_env` into Codex and Gemini `SafeCapture` execution.
+- Updated Gemini prompt-cache and subprocess working-dir resolution to use execution context directly.
+
+### Technical
+- Added Codex and Gemini regression coverage to assert `SafeCapture` receives forwarded `env`.
+
 ## [0.27.2] - 2026-03-29
 
 ### Technical
