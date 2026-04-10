@@ -25,6 +25,7 @@ patterns:
   edge: "test/{unit/,}edge/**/*_test.rb"
   integration: "test/integration/**/*_test.rb"
   system: "test/system/**/*_test.rb"
+  e2e: "test/e2e/**/*_test.rb"
 
 # Test groups that combine multiple patterns
 groups:
@@ -44,6 +45,9 @@ groups:
     - unit
     - integration
     - system
+  all-with-e2e:
+    - all
+    - e2e
   quick:
     - atoms
     - molecules

@@ -33,7 +33,9 @@ module Ace
               unit        Run all unit tests (atoms + molecules + organisms + models)
               integration Run integration tests
               system      Run system tests
+              e2e         Run deterministic E2E tests under test/e2e
               all         Run all tests (default)
+              all-with-e2e Run all tests including deterministic e2e
               quick       Run quick tests (atoms + molecules)
 
             CONFIGURATION:

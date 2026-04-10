@@ -12,7 +12,7 @@ module Ace
       # - Package names (ace-bundle)
       # - Test targets (atoms, molecules, unit, etc.)
       class CliArgumentParser
-        KNOWN_TARGETS = %w[atoms molecules organisms models unit integration system all quick].freeze
+        KNOWN_TARGETS = %w[atoms molecules organisms models unit integration system e2e all all-with-e2e quick].freeze
 
         attr_reader :package_dir, :target, :test_files
 

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-04-10
+
+### Fixed
+- Honored an explicitly configured `all` target without widening default package runs into `test/e2e`, restoring the intended non-E2E default selection.
+
+## [0.20.0] - 2026-04-10
+
+### Changed
+- Added a first-class `e2e` target for `ace-test` and `ace-test-suite --target e2e`, while keeping default `all` runs non-E2E.
+- Documented suite-level E2E targeting and updated runner defaults around the restarted deterministic E2E flow.
+
 ## [0.19.6] - 2026-04-10
 
 ### Fixed

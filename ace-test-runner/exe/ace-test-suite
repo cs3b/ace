@@ -38,6 +38,10 @@ parser = OptionParser.new do |opts|
     options[:group] = group
   end
 
+  opts.on("--target TARGET", "Pass target through to package-level ace-test (e.g. e2e)") do |target|
+    options[:target] = target
+  end
+
   opts.on("-t", "--timeout SEC", Integer, "Per-package timeout in seconds") do |timeout|
     options[:timeout] = timeout
   end
@@ -63,6 +67,7 @@ parser = OptionParser.new do |opts|
     puts "  $ ace-test-suite --parallel 16      Run with 16 parallel processes"
     puts "  $ ace-test-suite --timeout 10       Fail packages that run over 10s"
     puts "  $ ace-test-suite --group foundation Run only foundation group"
+    puts "  $ ace-test-suite --target e2e       Run deterministic e2e target in each package"
     puts "  $ ace-test-suite --verbose          Show detailed test output"
     exit 0
   end
@@ -135,6 +140,11 @@ end
 if options[:verbose]
   config["test_suite"]["test_options"] ||= {}
   config["test_suite"]["test_options"]["verbose"] = true
+end
+
+if options[:target]
+  config["test_suite"]["test_options"] ||= {}
+  config["test_suite"]["test_options"]["target"] = options[:target]
 end
 
 if options[:progress]
