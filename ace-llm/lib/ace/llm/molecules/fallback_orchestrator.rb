@@ -2,6 +2,7 @@
 
 require_relative "../atoms/error_classifier"
 require_relative "../models/fallback_config"
+require_relative "provider_model_parser"
 
 module Ace
   module LLM
@@ -35,10 +36,12 @@ module Ace
           @visited_providers.clear
 
           # If fallback disabled, just execute with primary
-          return yield get_client(primary_provider, registry) if @config.disabled?
+          return yield(get_client(primary_provider, registry), primary_provider) if @config.disabled?
 
           # Try primary provider with retries
-          result = try_provider_with_retry(primary_provider, registry) { |client| yield client }
+          result = try_provider_with_retry(primary_provider, registry) do |client, provider_name|
+            yield client, provider_name
+          end
           return result if result
 
           # Try fallback providers in order (per-provider chain or default)
@@ -54,7 +57,9 @@ module Ace
 
             report_status("ℹ Trying fallback provider #{fallback_provider}...")
 
-            result = try_provider_with_retry(fallback_provider, registry) { |client| yield client }
+            result = try_provider_with_retry(fallback_provider, registry) do |client, provider_name|
+              yield client, provider_name
+            end
             return result if result
           end
 
@@ -77,7 +82,7 @@ module Ace
 
           loop do
             client = get_client(provider_name, registry)
-            return yield client
+            return yield client, provider_name
           rescue => error
             last_error = error
 
@@ -145,10 +150,11 @@ module Ace
           opts = {}
           opts[:timeout] = @timeout if @timeout
 
-          # Parse provider:model format if present
-          if provider_name.include?(":")
-            provider, model = provider_name.split(":", 2)
-            registry.get_client(provider, model: model, **opts)
+          parser = ProviderModelParser.new(registry: registry)
+          parsed = parser.parse(provider_name.to_s)
+
+          if parsed.valid?
+            registry.get_client(parsed.provider, model: parsed.model, **opts)
           else
             registry.get_client(provider_name, **opts)
           end

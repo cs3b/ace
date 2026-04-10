@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Preserved full fallback target selectors (including provider/model + suffix context) across fallback attempts and rebuilt generation options per target instead of reusing stale primary-provider options.
+
 ## [0.32.1] - 2026-04-01
 
 ### Fixed
