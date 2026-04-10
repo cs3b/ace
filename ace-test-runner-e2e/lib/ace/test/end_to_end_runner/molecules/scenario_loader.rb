@@ -154,6 +154,7 @@ module Ace
           def parse_standalone_test_case(tc_id, runner_file, verify_file)
             runner_content = File.read(runner_file)
             verify_content = File.read(verify_file)
+            scenario_dir = File.dirname(runner_file)
 
             Models::TestCase.new(
               tc_id: tc_id,
@@ -161,7 +162,8 @@ module Ace
               content: build_standalone_content(runner_content, verify_content),
               file_path: File.expand_path(runner_file),
               pending: nil,
-              goal_format: "standalone"
+              goal_format: "standalone",
+              declared_artifacts: declared_artifacts_for(scenario_dir, runner_content, verify_content)
             )
           end
 
@@ -232,22 +234,36 @@ module Ace
             Dir.exist?(path) ? File.expand_path(path) : nil
           end
 
+          def declared_artifacts_for(scenario_dir, runner_content, verify_content)
+            scenario_frontmatter = parse_scenario_yml(File.join(scenario_dir, "scenario.yml"))
+            artifacts = []
+            artifacts.concat(Array((scenario_frontmatter["sandbox-layout"] || {}).keys))
+            artifacts.concat(extract_declared_artifacts(runner_content))
+            artifacts.concat(extract_declared_artifacts(verify_content))
+
+            artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq.sort
+          end
+
+          def extract_declared_artifacts(markdown)
+            markdown.to_s.scan(%r{results/tc/\d{2}/[^\s`)"']+|results/tc/\d{2}/})
+          end
+
+          def normalize_declared_artifact(path)
+            value = path.to_s.strip
+            return nil unless value.start_with?("results/tc/")
+
+            value.sub(%r{/+\z}, "")
+          end
+
           # Infer package name from scenario directory path
           #
           # @param scenario_dir [String] Path to scenario directory
           # @return [String] Inferred package name
           def infer_package(scenario_dir)
-            # Expected path: {package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
-            # Legacy fallback: {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+            # Expected path: {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
             parts = File.expand_path(scenario_dir).split("/")
             parts.each_with_index do |part, idx|
-              if part == "test-e2e" && idx > 0 && parts[idx + 1] == "scenarios"
-                return parts[idx - 1]
-              end
-
-              if part == "test" && idx > 0 && parts[idx + 1] == "e2e"
-                return parts[idx - 1]
-              end
+              return parts[idx - 1] if part == "test" && idx > 0 && parts[idx + 1] == "e2e"
             end
 
             "unknown"

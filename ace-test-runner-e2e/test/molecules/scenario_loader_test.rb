@@ -316,7 +316,7 @@ class ScenarioLoaderTest < Minitest::Test
 
   def test_infer_package_from_path
     Dir.mktmpdir do |tmpdir|
-      pkg_dir = File.join(tmpdir, "ace-lint", "test-e2e", "scenarios", "TS-LINT-001-test")
+      pkg_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-test")
       FileUtils.mkdir_p(pkg_dir)
       File.write(File.join(pkg_dir, "scenario.yml"), <<~YAML)
         test-id: TS-LINT-001

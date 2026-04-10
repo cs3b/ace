@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-04-10
+
+### Changed
+- Restored the two-phase E2E harness to run deterministic `test/integration` coverage before agent scenarios from `test/e2e`, with integration failures short-circuiting scenario execution.
+- Added deterministic integration execution, richer per-test-case manifests and artifact snapshotting, and refreshed CLI/docs/workflows/tests around the restarted layout and role-based runner/verifier contract.
+
+### Fixed
+- Accepted minimal verifier evidence responses in the runner pipeline so successful scenario runs no longer fail when a verifier omits the full structured envelope.
+
 ## [0.30.2] - 2026-04-10
 
 ### Fixed
@@ -21,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.30.0] - 2026-04-10
 
 ### Changed
-- Simplified `ace-test-runner-e2e` to the restarted scenario-only contract, with discovery and loading focused on agent scenarios instead of deterministic phase execution.
+- Reworked `ace-test-runner-e2e` back into a two-phase contract, with deterministic integration from `test/integration` before agent scenarios from `test/e2e`.
 - Switched sandbox orchestration to the shared package-copy helper and refreshed CLI/docs/workflows for the restarted E2E structure.
 
 ### Fixed

@@ -79,7 +79,8 @@ The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For 
 ## Scenario Layout
 
 ```text
-{package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
+{package}/test/integration/**/*_test.rb
+{package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
   scenario.yml
   runner.yml.md
   verifier.yml.md

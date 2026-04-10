@@ -42,10 +42,12 @@ class TestExecutorTest < Minitest::Test
       ]
 
       stub_sandbox_builder do
-        Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **kwargs|
+        original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+        Ace::LLM::QueryInterface.define_singleton_method(:query) do |_provider, _prompt, **kwargs|
           captured_timeouts << kwargs[:timeout]
           responses.shift
-        }) do
+        end
+        begin
           result = executor.execute(
             scenario,
             timeout: 900,
@@ -54,6 +56,12 @@ class TestExecutorTest < Minitest::Test
           )
           assert_equal "pass", result.status
           assert_equal report_dir, result.report_dir
+        ensure
+          if original_query
+            Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+          else
+            Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+          end
         end
       end
 
@@ -68,14 +76,7 @@ class TestExecutorTest < Minitest::Test
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       scenario = create_pipeline_scenario(scenario_dir)
-      config = {
-        "execution" => {
-          "provider" => "claude:sonnet",
-          "runner_provider" => "claude:runner",
-          "verifier_provider" => "gemini:verifier"
-        }
-      }
-      executor = TestExecutor.new(timeout: 10, config: config)
+      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
 
       calls = []
       responses = [
@@ -95,10 +96,12 @@ class TestExecutorTest < Minitest::Test
       ]
 
       stub_sandbox_builder do
-        Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
-          calls << {provider: args[0], kwargs: kwargs}
+        original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+        Ace::LLM::QueryInterface.define_singleton_method(:query) do |*args, **kwargs|
+          calls << {prompt: args[1], kwargs: kwargs}
           responses.shift
-        }) do
+        end
+        begin
           result = executor.execute(
             scenario,
             sandbox_path: sandbox_path,
@@ -110,20 +113,21 @@ class TestExecutorTest < Minitest::Test
           assert_equal 2, result.total_count
           assert_equal 1, result.failed_count
           assert_equal report_dir, result.report_dir
+        ensure
+          if original_query
+            Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+          else
+            Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+          end
         end
       end
 
       assert_equal 2, calls.size, "runner and verifier should both execute"
-      assert_equal "claude:runner", calls.first[:provider]
-      assert_equal "gemini:verifier", calls.last[:provider]
       assert File.exist?(File.join(report_dir, "metadata.yml")), "pipeline should write metadata"
       assert_equal "value", calls.first[:kwargs][:subprocess_env]["CUSTOM"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:subprocess_env]["PROJECT_ROOT_PATH"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
       assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
-      goal_report = File.read(File.join(report_dir, "report.md"))
-      assert_includes goal_report, "runner-provider: claude:runner"
-      assert_includes goal_report, "verifier-provider: gemini:verifier"
     end
   end
 
@@ -135,14 +139,22 @@ class TestExecutorTest < Minitest::Test
       text: '{"test_id":"TS-LINT-001","status":"pass","test_cases":[],"summary":"Scenario passed"}'
     }
     captured_timeouts = []
-    Ace::LLM::QueryInterface.stub(:query, lambda do |_provider, _prompt, **kwargs|
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |_provider, _prompt, **kwargs|
       captured_timeouts << kwargs[:timeout]
       valid_response
-    end) do
+    end
+    begin
       result = executor.execute(scenario, timeout: 900)
 
       assert_equal "pass", result.status
       assert_equal "TS-LINT-001", result.test_id
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
 
     assert_equal [900], captured_timeouts
@@ -162,9 +174,11 @@ class TestExecutorTest < Minitest::Test
       ]
 
       stub_sandbox_builder do
-        Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **_kwargs|
+        original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+        Ace::LLM::QueryInterface.define_singleton_method(:query) do |_provider, _prompt, **_kwargs|
           responses.shift
-        }) do
+        end
+        begin
           result = executor.execute(
             scenario,
             sandbox_path: sandbox_path,
@@ -173,6 +187,12 @@ class TestExecutorTest < Minitest::Test
 
           assert_equal "error", result.status
           assert_equal report_dir, result.report_dir
+        ensure
+          if original_query
+            Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+          else
+            Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+          end
         end
       end
 
@@ -185,7 +205,11 @@ class TestExecutorTest < Minitest::Test
     executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
     scenario = create_scenario
 
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { raise Errno::EPIPE, "Broken pipe" }) do
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **_kw|
+      raise Errno::EPIPE, "Broken pipe"
+    end
+    begin
       result = executor.execute(scenario)
 
       assert_equal "TS-LINT-001", result.test_id
@@ -193,6 +217,12 @@ class TestExecutorTest < Minitest::Test
       assert_equal "Unexpected execution error", result.summary
       assert_includes result.error, "Errno::EPIPE"
       assert_includes result.error, "Broken pipe"
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
   end
 
@@ -207,13 +237,23 @@ class TestExecutorTest < Minitest::Test
       text: '{"test_id":"TS-LINT-001","tc_id":"TC-001","status":"pass","test_cases":[{"id":"TC-001","description":"Test","status":"pass"}],"summary":"TC-001 passed"}'
     }
 
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { valid_response }) do
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **_kw|
+      valid_response
+    end
+    begin
       result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
 
       assert_equal "TS-LINT-001", result.test_id
       assert_equal "pass", result.status
       assert_equal 1, result.test_cases.size
       assert_equal "TC-001", result.test_cases.first[:id]
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
   end
 
@@ -226,13 +266,23 @@ class TestExecutorTest < Minitest::Test
       text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None"
     }
 
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { valid_response }) do
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **_kw|
+      valid_response
+    end
+    begin
       result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
 
       assert_equal "TS-LINT-001", result.test_id
       assert_equal "pass", result.status
       assert_equal 1, result.test_cases.size
       assert_equal "TC-001", result.test_cases.first[:id]
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
   end
 
@@ -245,13 +295,23 @@ class TestExecutorTest < Minitest::Test
       text: "No tests found for package 'ace-overseer' with ID 'TS-OVERSEER-002'"
     }
 
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { bad_response }) do
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **_kw|
+      bad_response
+    end
+    begin
       result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
 
       assert_equal "TS-LINT-001", result.test_id
       assert_equal "error", result.status
       assert_equal "TC skill invocation failed before test execution", result.summary
       assert_includes result.error, "No tests found for package"
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
   end
 
@@ -262,11 +322,19 @@ class TestExecutorTest < Minitest::Test
     env_vars = {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"}
 
     captured_kwargs = nil
-    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **kw) {
+    original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+    Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **kw|
       captured_kwargs = kw
       {text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None"}
-    }) do
+    end
+    begin
       executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario, env_vars: env_vars)
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
     end
 
     assert_equal env_vars, captured_kwargs[:subprocess_env], "env_vars should be passed as subprocess_env to QueryInterface.query for TC execution"

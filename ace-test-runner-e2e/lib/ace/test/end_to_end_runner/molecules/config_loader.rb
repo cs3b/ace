@@ -23,7 +23,22 @@ module Ace
           # @return [String] Default provider from config
           def self.default_provider
             config = load
-            config.dig("execution", "provider") || "claude:sonnet"
+            config.dig("execution", "runner_provider") ||
+              config.dig("execution", "provider") || "claude:sonnet"
+          end
+
+          # @return [String] Default runner provider from config
+          def self.default_runner_provider
+            config = load
+            config.dig("execution", "runner_provider") ||
+              config.dig("execution", "provider") || "claude:sonnet"
+          end
+
+          # @return [String] Default verifier provider from config
+          def self.default_verifier_provider
+            config = load
+            config.dig("execution", "verifier_provider") ||
+              config.dig("execution", "provider") || "claude:sonnet"
           end
 
           # @return [Integer] Default timeout from config

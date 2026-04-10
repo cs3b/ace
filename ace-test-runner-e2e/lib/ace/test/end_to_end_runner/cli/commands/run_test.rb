@@ -20,9 +20,9 @@ module Ace
             desc <<~DESC.strip
               Run E2E tests via LLM execution
 
-              Discovers and executes TS-* test scenarios in a package's test-e2e/scenarios/ directory.
-              Tests are sent to an LLM provider which executes the test steps and returns
-              structured results.
+              Discovers and executes deterministic integration tests from test/integration
+              before TS-* agent scenarios from test/e2e. Tests are sent to an LLM provider
+              which executes the scenario steps and returns structured results.
 
               Output:
                 Exit codes: 0 (all pass), 1 (any fail/error)
@@ -35,7 +35,7 @@ module Ace
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
               "ace-lint --tags smoke         # Run only smoke-tagged scenarios",
-              "ace-lint TS-LINT-003 --dry-run  # Preview scenarios that would run"
+              "ace-lint TS-LINT-003 --dry-run  # Preview integration and scenario phases"
             ]
 
             argument :package, required: true, desc: "Package name (e.g., ace-lint)"
@@ -55,7 +55,7 @@ module Ace
             option :report_dir, type: :string,
               desc: "Explicit report directory path (overrides computed path)"
             option :dry_run, type: :boolean,
-              desc: "Preview which scenarios would run without executing"
+              desc: "Preview which integration tests and scenarios would run without executing"
             option :tags, type: :string,
               desc: "Comma-separated scenario tags to include"
             option :verify, type: :boolean,
@@ -110,7 +110,7 @@ module Ace
 
             private
 
-            # Handle dry-run mode: preview which scenarios would run
+            # Handle dry-run mode: preview which integration tests and scenarios would run
             #
             # @param package [String] Package name
             # @param test_id [String, nil] Test ID
@@ -125,15 +125,28 @@ module Ace
                 tags: tags,
                 base_dir: Dir.pwd
               )
-              if files.empty?
+              integration_files = discoverer.find_integration_tests(package: package, base_dir: Dir.pwd)
+              if files.empty? && integration_files.empty?
                 raise Ace::Support::Cli::Error.new(
                   "No tests found for package '#{package}'" +
                   (test_id ? " with ID '#{test_id}'" : "")
                 )
               end
 
-              output.puts "Dry run: preview of scenarios to execute"
+              output.puts "Dry run: preview of execution phases"
               output.puts ""
+              output.puts "Phase 1: integration"
+              if integration_files.empty?
+                output.puts "  (none)"
+              else
+                integration_files.each do |file|
+                  output.puts "  [integration] #{file}"
+                end
+              end
+              output.puts ""
+              output.puts "Phase 2: scenarios"
+              output.puts "  (none)" if files.empty?
+              output.puts "" unless files.empty?
 
               files.each do |file|
                 scenario = loader.load(File.dirname(file))

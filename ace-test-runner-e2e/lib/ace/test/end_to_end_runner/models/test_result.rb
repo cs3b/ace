@@ -10,7 +10,7 @@ module Ace
         # from executing a test scenario via LLM.
         class TestResult
           attr_reader :test_id, :status, :test_cases, :summary,
-            :started_at, :completed_at, :report_dir, :error
+            :started_at, :completed_at, :report_dir, :error, :metadata
 
           # @param test_id [String] Test identifier
           # @param status [String] Overall status: "pass", "fail", "partial", "error"
@@ -20,8 +20,9 @@ module Ace
           # @param completed_at [Time] When execution completed
           # @param report_dir [String, nil] Path to the reports directory
           # @param error [String, nil] Error message if execution failed
+          # @param metadata [Hash] Additional structured phase/report metadata
           def initialize(test_id:, status:, test_cases: [], summary: "",
-            started_at: nil, completed_at: nil, report_dir: nil, error: nil)
+            started_at: nil, completed_at: nil, report_dir: nil, error: nil, metadata: {})
             @test_id = test_id
             @status = status
             @test_cases = test_cases
@@ -30,6 +31,7 @@ module Ace
             @completed_at = completed_at || Time.now
             @report_dir = report_dir
             @error = error
+            @metadata = metadata
           end
 
           # Check if the test passed
@@ -94,7 +96,8 @@ module Ace
               started_at: started_at,
               completed_at: completed_at,
               report_dir: dir,
-              error: error
+              error: error,
+              metadata: metadata
             )
           end
 
