@@ -27,7 +27,7 @@ If the command resolves and prints help, your setup is ready.
 
 ## Running your first tests
 
-Run all tests in the current package:
+Run the default unit scope in the current package:
 
 ```bash
 ace-test
@@ -54,9 +54,8 @@ ace-test ace-test-runner unit
 | `organisms` | Business-logic integration points |
 | `models` | Data-structure behavior tests |
 | `unit` | `atoms` + `molecules` + `organisms` + `models` |
-| `integration` | Cross-component testing |
-| `system` | End-to-end package-level workflows |
-| `all` | Full package suite |
+| `integration` / `int` | Explicit cross-component testing |
+| `all` | `unit` + `edge` + `integration` |
 | `quick` | `atoms` + `molecules` |
 
 ## Cross-package execution
@@ -96,9 +95,10 @@ ace-test --config-path /path/to/custom/config.yml
 
 | Command | Purpose |
 | --- | --- |
-| `ace-test` | Run all tests in current package |
+| `ace-test` | Run the default `unit` scope in current package |
 | `ace-test atoms` | Run atom tests |
 | `ace-test ace-bundle unit` | Run package + target |
+| `ace-test ace-bundle int` | Run package integration tests |
 | `ace-test test/atoms/foo_test.rb` | Run a specific test file |
 | `ace-test test/atoms/foo_test.rb:42` | Run test at file line |
 | `ace-test --format json` | JSON output |

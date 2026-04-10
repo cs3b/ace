@@ -74,12 +74,8 @@ module Ace
               "patterns" => ["test/integration/**/*_test.rb"],
               "options" => {}
             },
-            "system" => {
-              "patterns" => ["test/system/**/*_test.rb"],
-              "options" => {"timeout" => 60}
-            },
             "all" => {
-              "patterns" => ["test/**/*_test.rb"],
+              "patterns" => ["test/unit/**/*_test.rb", "test/*_test.rb", "test/integration/**/*_test.rb"],
               "options" => {}
             }
           }
