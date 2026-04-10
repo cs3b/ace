@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.11] - 2026-04-10
+
+### Fixed
+- Captured `git diff` stderr during affected-package detection so invalid refs no longer leak fatal git output into otherwise passing test runs.
+
 ## [0.29.10] - 2026-04-10
 
 ### Changed

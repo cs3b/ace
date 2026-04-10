@@ -22,9 +22,13 @@ class AffectedDetectorTest < Minitest::Test
   end
 
   def test_detect_with_invalid_ref_returns_empty
-    results = @detector.detect(base_dir: @base_dir, ref: "INVALID-REF-THAT-DOESNT-EXIST")
+    _stdout, stderr = capture_io do
+      results = @detector.detect(base_dir: @base_dir, ref: "INVALID-REF-THAT-DOESNT-EXIST")
 
-    assert_kind_of Array, results
+      assert_equal [], results
+    end
+
+    assert_empty stderr
   end
 
   def test_extract_package_from_ace_package_path
