@@ -68,7 +68,14 @@ class TestExecutorTest < Minitest::Test
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       scenario = create_pipeline_scenario(scenario_dir)
-      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+      config = {
+        "execution" => {
+          "provider" => "claude:sonnet",
+          "runner_provider" => "claude:runner",
+          "verifier_provider" => "gemini:verifier"
+        }
+      }
+      executor = TestExecutor.new(timeout: 10, config: config)
 
       calls = []
       responses = [
@@ -89,7 +96,7 @@ class TestExecutorTest < Minitest::Test
 
       stub_sandbox_builder do
         Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
-          calls << {prompt: args[1], kwargs: kwargs}
+          calls << {provider: args[0], kwargs: kwargs}
           responses.shift
         }) do
           result = executor.execute(
@@ -107,11 +114,16 @@ class TestExecutorTest < Minitest::Test
       end
 
       assert_equal 2, calls.size, "runner and verifier should both execute"
+      assert_equal "claude:runner", calls.first[:provider]
+      assert_equal "gemini:verifier", calls.last[:provider]
       assert File.exist?(File.join(report_dir, "metadata.yml")), "pipeline should write metadata"
       assert_equal "value", calls.first[:kwargs][:subprocess_env]["CUSTOM"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:subprocess_env]["PROJECT_ROOT_PATH"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
       assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
+      goal_report = File.read(File.join(report_dir, "report.md"))
+      assert_includes goal_report, "runner-provider: claude:runner"
+      assert_includes goal_report, "verifier-provider: gemini:verifier"
     end
   end
 

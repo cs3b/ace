@@ -237,9 +237,13 @@ module Ace
           # @param scenario_dir [String] Path to scenario directory
           # @return [String] Inferred package name
           def infer_package(scenario_dir)
-            # Expected path: {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+            # Expected path: {package}/test-e2e/scenarios/TS-{AREA}-{NNN}-{slug}/
+            # Legacy path fallback: {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
             parts = File.expand_path(scenario_dir).split("/")
             parts.each_with_index do |part, idx|
+              if part == "test-e2e" && idx > 0 && parts[idx + 1] == "scenarios"
+                return parts[idx - 1]
+              end
               next unless part == "test" && idx > 0 && parts[idx + 1] == "e2e"
 
               return parts[idx - 1]

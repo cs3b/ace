@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.10] - 2026-04-10
+
+### Changed
+- Documented dual-path migration contract in `.ace/e2e-runner/config.yml` by keeping explicit legacy fallback keys (`paths.scenarios_legacy`, `patterns.discovery_legacy`) alongside `test-e2e/scenarios`.
+
+## [0.29.9] - 2026-04-10
+
+### Fixed
+- Enforced separate runner/verifier provider threading in the deterministic pipeline so verifier isolation configured in `.ace/e2e-runner/config.yml` is applied at runtime and preserved in report metadata.
+- Aligned scenario discovery with the `test-e2e/scenarios` contract while retaining legacy `test/e2e` fallback support for compatibility during migration.
+
 ## [0.29.8] - 2026-04-01
 
 ### Fixed

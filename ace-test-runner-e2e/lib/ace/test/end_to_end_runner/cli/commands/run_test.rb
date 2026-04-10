@@ -20,7 +20,7 @@ module Ace
             desc <<~DESC.strip
               Run E2E tests via LLM execution
 
-              Discovers and executes TS-* test scenarios in a package's test/e2e/ directory.
+              Discovers and executes TS-* test scenarios in a package's test-e2e/scenarios/ directory.
               Tests are sent to an LLM provider which executes the test steps and returns
               structured results.
 
