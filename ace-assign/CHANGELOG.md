@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.5] - 2026-04-10
+
+### Fixed
+- Updated verify-E2E guidance to support both `test-e2e/scenarios/` and legacy `test/e2e/` paths during migration in assignment presets and runtime executor output.
+- Synced the work-on-task E2E fixture contract with the dual-path migration guidance.
+
 ## [0.44.3] - 2026-04-07
 
 ### Fixed
