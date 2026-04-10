@@ -16,6 +16,23 @@ All notable changes to this project will be documented in this file.
 - **ace-llm v0.32.2**: Preserved full fallback target selectors across provider switches and rebuilt generation options per fallback target instead of reusing stale primary-provider options.
 - **ace-git-commit v0.23.7**: Restored packaged split defaults (`git.split.enabled: true`, `git.split.strategy: config-scope`), documented `--no-split` override guidance, and added regression coverage for the packaged-default contract.
 - **ace-llm-providers-cli v0.27.3**: Restored Codex and Gemini subprocess environment forwarding and switched Gemini runtime path resolution to the direct execution context working directory.
+- **ace-test-runner v0.20.1**: Honored an explicitly configured `all` target without widening default runs into `test/e2e`, restoring the intended non-E2E default selection.
+- **ace-test-runner-e2e v0.30.1**: Raised the `ace-support-test-helpers` dependency floor to `~> 0.14` and restored the `TS-RUNNER-001` smoke fixture source path for the restarted E2E runner.
+- **ace-test-runner-e2e v0.30.2**: Surfaced `git diff` stderr when affected-package detection fails so invalid refs and shallow-clone failures no longer appear as empty affected sets.
+- **ace-test-runner-e2e v0.31.0**: Restored the full two-phase E2E harness with deterministic `test/integration` execution before `test/e2e` scenarios, stricter artifact/report handling, and verifier fallback parsing that accepts minimal evidence responses.
+
+### Changed
+- **ace-test-runner v0.20.0**: Added first-class `e2e` target routing and suite-level `--target e2e` execution while keeping default `all` runs non-E2E.
+- **ace-test-runner-e2e v0.30.0**: Simplified the runner to the restarted scenario-only contract, switched sandbox setup to the shared package-copy helper, and refreshed CLI/docs/workflows around the new E2E structure.
+- **ace-b36ts v0.14.0**: Replaced the pilot deterministic runner suite with `test/e2e` Minitest coverage and added a real note-reorganization agent scenario.
+- **ace-support-test-helpers v0.14.0**: Added a reusable sandbox package-copy helper for deterministic and agent-driven restarted E2E flows.
+- **ace-test-runner v0.21.0**: Changed bare `ace-test` runs to the `unit` group, added the `int` alias for `integration`, and removed legacy `system` / `e2e` / `all-with-e2e` targets in favor of `ace-test-e2e`.
+
+### Technical
+- **ace-handbook v0.25.4**: Updated handbook docs and cookbook guidance to reflect the restarted E2E structure and current release-proof references.
+- **ace-b36ts v0.14.1**: Restored deterministic CLI contract coverage for shell command-substitution roundtrips and lexical ordering across out-of-order timestamps.
+- **ace-b36ts v0.14.2**: Moved deterministic restarted-E2E coverage to `test/integration`, relocated the pilot scenario to `test/e2e`, and refreshed the demo tape for the restarted layout.
+- **ace-llm v0.32.2**: Updated the shared role catalog to the restarted E2E contract with explicit `e2e-runner`, `e2e-verifier`, and `e2e-reporter` roles.
 - **ace-demo v0.24.0**: Added semantic YAML/asciinema demo verification with classified failure reports in `.ace-local/demo/`, and made `ace-demo record` fail closed instead of uploading broken recordings.
 - **ace-assign v0.42.5**: Hardened `wfi://assign/drive` and related handoff docs so `/as-assign-drive` treats intermediate progress as non-terminal and resumes paused assignments with runnable pending work.
 - **ace-assign v0.42.6**: Tightened the assignment-drive contract so waiting on `fork-run` stays inside the live drive loop and subtree completion immediately resumes the parent assignment queue.
