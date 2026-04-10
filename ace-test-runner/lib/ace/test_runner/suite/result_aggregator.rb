@@ -47,6 +47,9 @@ module Ace
 
         def collect_results
           @packages.map do |package|
+            runtime = runtime_result(package)
+            next runtime if runtime_result_overrides_summary?(package, runtime)
+
             reports_dir = Atoms::ReportPathResolver.report_directory(
               package["path"],
               report_root: @report_root,
@@ -91,7 +94,7 @@ module Ace
                 }
               end
             else
-              runtime_result(package) || {
+              runtime || {
                 package: package["name"],
                 path: package["path"],
                 report_root: @report_root,
@@ -104,6 +107,13 @@ module Ace
               }
             end
           end
+        end
+
+        def runtime_result_overrides_summary?(package, runtime)
+          return false unless runtime
+
+          status = @runtime_results[package["name"]] || {}
+          status[:timed_out] || status[:interrupted] || runtime[:success] == false
         end
 
         def collect_failed_packages(results)

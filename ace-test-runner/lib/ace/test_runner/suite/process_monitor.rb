@@ -182,10 +182,6 @@ module Ace
         def build_command(package, options)
           cmd_parts = ["ace-test"]
 
-          # Always run in single batch for suite execution
-          # This avoids nested group headers and improves performance
-          cmd_parts << "--run-in-single-batch"
-
           # Add format (use progress if compact is specified since ace-test doesn't have compact format)
           format = options["format"] || "progress"
           format = "progress" if format == "compact"  # Handle legacy compact format

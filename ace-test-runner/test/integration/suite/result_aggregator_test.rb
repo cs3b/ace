@@ -83,6 +83,46 @@ module Ace
             assert_equal "Timed out after 10 seconds", summary[:failed_packages].first[:error_message]
           end
         end
+
+        def test_aggregate_prefers_runtime_timeout_over_stale_summary
+          Dir.mktmpdir do |tmpdir|
+            package_path = File.join(tmpdir, "ace-timeout")
+            report_root = File.join(tmpdir, ".ace-local", "test", "reports")
+            latest_dir = File.join(report_root, "timeout", "latest")
+
+            FileUtils.mkdir_p(package_path)
+            FileUtils.mkdir_p(latest_dir)
+            File.write(File.join(latest_dir, "summary.json"), JSON.generate({
+              total: 5, passed: 5, failed: 0, errors: 0, skipped: 0, duration: 0.5, success: true
+            }))
+
+            summary = ResultAggregator.new(
+              [{"name" => "ace-timeout", "path" => package_path}],
+              report_root: report_root,
+              runtime_results: {
+                "ace-timeout" => {
+                  completed: true,
+                  success: false,
+                  elapsed: 15.0,
+                  timed_out: true,
+                  results: {
+                    tests: 0,
+                    failures: 0,
+                    errors: 1,
+                    duration: 15.0,
+                    success: false,
+                    error: "Timed out after 15 seconds"
+                  }
+                }
+              }
+            ).aggregate
+
+            assert_equal 0, summary[:packages_passed]
+            assert_equal 1, summary[:packages_failed]
+            assert_equal 0, summary[:total_tests]
+            assert_equal "Timed out after 15 seconds", summary[:failed_packages].first[:error_message]
+          end
+        end
       end
     end
   end
