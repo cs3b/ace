@@ -853,7 +853,7 @@ module Ace
           when "verify-e2e"
             "- Check change scope: run `git diff origin/main --name-only` to list modified files.\n" \
             "- **Skip criteria**: If ALL modified files match `*.md`, `*.yml` (non-CI config), `.ace-tasks/**`, or `.ace-retros/**`, skip E2E verification — mark step done with \"skipped: docs/task-spec only changes, no runnable code affected\".\n" \
-            "- Otherwise: detect modified packages, run E2E scenarios for each package with `test/e2e/` scenarios#{task_hint}.\n" \
+            "- Otherwise: detect modified packages, run E2E scenarios for each package with `test-e2e/scenarios/` scenarios (or legacy `test/e2e/` scenarios during migration)#{task_hint}.\n" \
             "- If no modified package has E2E scenarios, mark step done with \"skipped: no E2E scenarios for modified packages\"."
           else
             "- Execute the #{sub_name} step."
