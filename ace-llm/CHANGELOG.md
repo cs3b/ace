@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Preserved full fallback target selectors (including provider/model + suffix context) across fallback attempts and rebuilt generation options per target instead of reusing stale primary-provider options.
 
+## [0.32.2] - 2026-04-10
+
+### Changed
+- Updated the shared role catalog for restarted E2E execution with explicit `e2e-runner`, `e2e-verifier`, and `e2e-reporter` roles in the project-owned LLM configuration surface.
+
 ## [0.32.1] - 2026-04-01
 
 ### Fixed
