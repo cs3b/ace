@@ -463,6 +463,17 @@ module Ace
             @clients = {}
           end
 
+          def available_providers
+            @clients.keys.map { |key| key.split(":", 2).first }.uniq.sort
+          end
+
+          def models_for_provider(provider)
+            @clients.keys
+              .select { |key| key.split(":", 2).first == provider }
+              .map { |key| key.split(":", 2)[1] }
+              .compact
+          end
+
           def add_client(provider, client, model: nil)
             key = model ? "#{provider}:#{model}" : provider
             @clients[key] = client
