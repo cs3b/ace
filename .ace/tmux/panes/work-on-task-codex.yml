@@ -1,4 +1,4 @@
 # Task driving pane preset (Codex)
 commands:
-  - codex /as-assign-drive
+  - codex --dangerously-bypass-approvals-and-sandbox /as-assign-drive
 focus: true
