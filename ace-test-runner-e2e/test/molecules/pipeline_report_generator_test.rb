@@ -45,6 +45,7 @@ class PipelineReportGeneratorTest < Minitest::Test
 
       goal_report = File.read(File.join(report_dir, "report.md"))
       assert_includes goal_report, "runner-provider: claude:haiku"
+      assert_includes goal_report, "verifier-provider: claude:haiku"
       assert_includes goal_report, "| TC-002 | FAIL |"
     end
   end

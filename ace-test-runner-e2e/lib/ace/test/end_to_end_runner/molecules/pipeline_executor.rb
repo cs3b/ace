@@ -10,12 +10,16 @@ module Ace
         # Executes standalone scenarios using the deterministic pipeline.
         class PipelineExecutor
           # @param provider [String]
+          # @param runner_provider [String]
+          # @param verifier_provider [String]
           # @param timeout [Integer]
           # @param sandbox_builder [Molecules::PipelineSandboxBuilder]
           # @param prompt_bundler [Molecules::PipelinePromptBundler]
           # @param report_generator [Molecules::PipelineReportGenerator]
-          def initialize(provider:, timeout:, sandbox_builder: nil, prompt_bundler: nil, report_generator: nil)
-            @provider = provider
+          def initialize(provider: nil, runner_provider: nil, verifier_provider: nil, timeout:,
+            sandbox_builder: nil, prompt_bundler: nil, report_generator: nil)
+            @runner_provider = runner_provider || provider
+            @verifier_provider = verifier_provider || provider || @runner_provider
             @timeout = timeout
             @sandbox_builder = sandbox_builder || PipelineSandboxBuilder.new
             @prompt_bundler = prompt_bundler || PipelinePromptBundler.new
@@ -45,6 +49,7 @@ module Ace
               test_cases: test_cases
             )
             run_llm(
+              provider: @runner_provider,
               prompt_path: runner[:prompt_path],
               system_path: runner[:system_path],
               output_path: runner[:output_path],
@@ -58,6 +63,7 @@ module Ace
               test_cases: test_cases
             )
             verifier_response = run_llm(
+              provider: @verifier_provider,
               prompt_path: verifier[:prompt_path],
               system_path: verifier[:system_path],
               output_path: verifier[:output_path],
@@ -69,7 +75,8 @@ module Ace
               scenario: scenario,
               verifier_output: verifier_response[:text],
               report_dir: report_dir,
-              provider: @provider,
+              runner_provider: @runner_provider,
+              verifier_provider: @verifier_provider,
               started_at: started_at,
               completed_at: Time.now
             )
@@ -78,7 +85,8 @@ module Ace
               @report_generator.write_failure_report(
                 scenario: scenario,
                 report_dir: report_dir,
-                provider: @provider,
+                runner_provider: @runner_provider,
+                verifier_provider: @verifier_provider,
                 started_at: started_at || Time.now,
                 completed_at: Time.now,
                 error_message: "#{e.class}: #{e.message}"
@@ -97,13 +105,13 @@ module Ace
 
           private
 
-          def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:)
+          def run_llm(provider:, prompt_path:, system_path:, output_path:, cli_args:, env_vars:)
             prompt = File.read(prompt_path)
             system = File.read(system_path)
             sandbox_dir = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
 
             Ace::LLM::QueryInterface.query(
-              @provider,
+              provider,
               prompt,
               system: system,
               cli_args: cli_args,

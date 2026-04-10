@@ -20,10 +20,15 @@ module Ace
           # @param verifier_output [String]
           # @param report_dir [String]
           # @param provider [String]
+          # @param runner_provider [String]
+          # @param verifier_provider [String]
           # @param started_at [Time]
           # @param completed_at [Time]
           # @return [Models::TestResult]
-          def generate(scenario:, verifier_output:, report_dir:, provider:, started_at:, completed_at:)
+          def generate(scenario:, verifier_output:, report_dir:, provider: nil, runner_provider: nil,
+            verifier_provider: nil, started_at:, completed_at:)
+            resolved_runner_provider = runner_provider || provider
+            resolved_verifier_provider = verifier_provider || provider || resolved_runner_provider
             parsed = parse_verifier_output(verifier_output, scenario)
 
             result = Models::TestResult.new(
@@ -41,7 +46,8 @@ module Ace
             write_goal_report(
               path: File.join(report_dir, "report.md"),
               scenario: scenario,
-              provider: provider,
+              runner_provider: resolved_runner_provider,
+              verifier_provider: resolved_verifier_provider,
               result: result
             )
             result.with_report_dir(report_dir)
@@ -53,11 +59,16 @@ module Ace
           # @param scenario [Models::TestScenario]
           # @param report_dir [String]
           # @param provider [String]
+          # @param runner_provider [String]
+          # @param verifier_provider [String]
           # @param started_at [Time]
           # @param completed_at [Time]
           # @param error_message [String]
           # @return [Models::TestResult]
-          def write_failure_report(scenario:, report_dir:, provider:, started_at:, completed_at:, error_message:)
+          def write_failure_report(scenario:, report_dir:, provider: nil, runner_provider: nil,
+            verifier_provider: nil, started_at:, completed_at:, error_message:)
+            resolved_runner_provider = runner_provider || provider
+            resolved_verifier_provider = verifier_provider || provider || resolved_runner_provider
             result = Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
@@ -73,7 +84,8 @@ module Ace
             write_goal_report(
               path: File.join(report_dir, "report.md"),
               scenario: scenario,
-              provider: provider,
+              runner_provider: resolved_runner_provider,
+              verifier_provider: resolved_verifier_provider,
               result: result
             )
             result.with_report_dir(report_dir)
@@ -247,7 +259,7 @@ module Ace
             (summary.length > 240) ? "#{summary[0, 237]}..." : summary
           end
 
-          def write_goal_report(path:, scenario:, provider:, result:)
+          def write_goal_report(path:, scenario:, runner_provider:, verifier_provider:, result:)
             passed = result.passed_count
             failed = result.failed_count
             total = result.total_count
@@ -266,8 +278,8 @@ module Ace
               "test-id" => scenario.test_id,
               "title" => scenario.title,
               "package" => scenario.package,
-              "runner-provider" => provider,
-              "verifier-provider" => provider,
+              "runner-provider" => runner_provider,
+              "verifier-provider" => verifier_provider,
               "timestamp" => result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
               "tcs-passed" => passed,
               "tcs-failed" => failed,
