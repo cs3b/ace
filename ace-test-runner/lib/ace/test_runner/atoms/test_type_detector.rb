@@ -39,20 +39,24 @@ module Ace
           # Check if explicitly marked as needing isolation
           return true if isolation_directory?(file_path)
 
-          # Check if it's clearly a unit test that doesn't need isolation
+          # Check file content for patterns that require subprocess
+          needs_isolation = check_file_content(file_path)
+          return true if needs_isolation
+
+          # Unit-directory tests default to in-process only when they do not
+          # exercise subprocess-sensitive behavior directly.
           return false if unit_test_directory?(file_path)
 
-          # Check file content for patterns that require subprocess
-          check_file_content(file_path)
+          false
         end
 
         def test_type(file_path)
           if isolation_directory?(file_path)
             :integration
-          elsif unit_test_directory?(file_path)
-            :unit
           elsif check_file_content(file_path)
             :subprocess_required
+          elsif unit_test_directory?(file_path)
+            :unit
           else
             :unit
           end

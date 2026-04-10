@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.6] - 2026-04-10
+
+### Fixed
+- Restored suite-enforced `--run-in-single-batch` execution so `ace-test-suite` preserves its package execution contract instead of falling back to grouped runs.
+- Prefer live runtime timeout/failure state over stale `latest/summary.json` data so suite aggregation no longer reports timed-out packages as passed.
+- Detect subprocess-sensitive tests by file content even inside unit directories, preventing single-batch in-process hangs for packages like `ace-test-runner-e2e`.
+
 ## [0.19.5] - 2026-04-10
 
 ### Fixed

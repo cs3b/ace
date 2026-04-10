@@ -8,7 +8,7 @@ module Ace
   module TestRunner
     module Suite
       class ProcessMonitorTest < Minitest::Test
-        def test_build_command_does_not_force_single_batch
+        def test_build_command_forces_single_batch_for_suite_execution
           monitor = ProcessMonitor.new
           package = {"name" => "ace-sample", "path" => "/tmp/ace-sample"}
 
@@ -20,8 +20,8 @@ module Ace
             "report_dir" => "/tmp/reports"
           })
 
-          refute_includes command, "--run-in-single-batch"
-          assert_equal ["ace-test", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+          assert_includes command, "--run-in-single-batch"
+          assert_equal ["ace-test", "--run-in-single-batch", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
         end
 
         class FakeProcessMonitor < ProcessMonitor

@@ -182,6 +182,10 @@ module Ace
         def build_command(package, options)
           cmd_parts = ["ace-test"]
 
+          # Suite package execution intentionally bypasses grouped mode so each
+          # package runs its full target scope as one batch under suite orchestration.
+          cmd_parts << "--run-in-single-batch"
+
           # Add format (use progress if compact is specified since ace-test doesn't have compact format)
           format = options["format"] || "progress"
           format = "progress" if format == "compact"  # Handle legacy compact format
