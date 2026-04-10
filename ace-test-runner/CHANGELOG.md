@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Added a suite-completeness regression guard in `PackageResolverTest` that fails when `.ace/test/suite.yml` omits testable packages discovered from the mono-repo.
+
 ## [0.19.3] - 2026-04-07
 
 ### Technical
