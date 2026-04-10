@@ -5,6 +5,7 @@ require "date"
 require "yaml"
 require "ace/b36ts"
 require "ace/test_support/sandbox_package_copy"
+require "ace/test/end_to_end_runner/molecules/integration_runner"
 
 module Ace
   module Test
@@ -31,13 +32,15 @@ module Ace
           # @param progress [Boolean] Enable animated progress display
           def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil, executor: nil, progress: false)
             config = Molecules::ConfigLoader.load
-            @provider = provider || config.dig("execution", "provider") || "claude:sonnet"
+            @provider = provider || config.dig("execution", "runner_provider") ||
+              config.dig("execution", "provider") || "claude:sonnet"
             @timeout = timeout || config.dig("execution", "timeout") || 300
             @parallel = parallel || config.dig("execution", "parallel") || 3
             @base_dir = base_dir || Dir.pwd
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
             @discoverer = Molecules::TestDiscoverer.new
+            @integration_runner = Molecules::IntegrationRunner.new(base_dir: @base_dir)
             @loader = Molecules::ScenarioLoader.new
             @executor = executor || Molecules::TestExecutor.new(provider: @provider, timeout: @timeout, config: config)
             @report_writer = Molecules::ReportWriter.new
@@ -55,6 +58,11 @@ module Ace
           # @return [Array<Models::TestResult>] List of test results
           def run(package:, test_id: nil, test_cases: nil, verify: false, tags: nil,
             cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
+            integration_files = @discoverer.find_integration_tests(
+              package: package,
+              base_dir: @base_dir
+            )
+
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
@@ -63,7 +71,7 @@ module Ace
               base_dir: @base_dir
             )
 
-            if files.empty?
+            if files.empty? && integration_files.empty?
               output.puts "No E2E tests found in #{package}" +
                 (test_id ? " matching #{test_id}" : "")
               return []
@@ -72,7 +80,7 @@ module Ace
             # Generate timestamp for this run (use external run_id when provided)
             timestamp = run_id || generate_timestamp
 
-            if files.size == 1
+            if files.size == 1 && integration_files.empty?
               run_single_test(
                 files.first,
                 timestamp,
@@ -83,7 +91,16 @@ module Ace
                 report_dir: report_dir
               )
             else
-              run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases, verify: verify)
+              run_package_tests(
+                files,
+                package,
+                timestamp,
+                cli_args,
+                output,
+                test_cases: test_cases,
+                verify: verify,
+                integration_files: integration_files
+              )
             end
           end
 
@@ -209,7 +226,23 @@ module Ace
           # Run all tests in a package
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Results for all tests
-          def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil, verify: false)
+          def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil, verify: false,
+            integration_files: [])
+            integration_result = @integration_runner.run(
+              package: package,
+              files: integration_files,
+              timestamp: timestamp,
+              output: output
+            )
+            if integration_result && %w[fail error].include?(integration_result.status)
+              output.puts integration_result.summary
+              return [integration_result]
+            end
+
+            if files.empty?
+              return integration_result ? [integration_result] : []
+            end
+
             # Load scenarios upfront for titles and report generation
             scenarios = files.map { |f| @loader.load(File.dirname(f)) }
 
@@ -308,15 +341,17 @@ module Ace
             done = true
             refresh_thread&.join
 
+            combined_results = integration_result ? [integration_result] + results : results
+
             # Write suite report
             report_path = @suite_report_writer.write(
-              results, scenarios,
+              combined_results, scenarios,
               package: package, timestamp: timestamp, base_dir: @base_dir
             )
 
-            display.show_summary(results, report_path)
+            display.show_summary(combined_results, report_path)
 
-            results
+            combined_results
           end
 
           # Build the appropriate display manager for this run

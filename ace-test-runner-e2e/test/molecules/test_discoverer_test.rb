@@ -230,7 +230,7 @@ class TestDiscovererTest < Minitest::Test
   private
 
   def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
-    scenario_dir = File.join(base_dir, package, "test-e2e", "scenarios", scenario_name)
+    scenario_dir = File.join(base_dir, package, "test", "e2e", scenario_name)
     FileUtils.mkdir_p(scenario_dir)
 
     test_id = scenario_name.split("-")[0..2].join("-")

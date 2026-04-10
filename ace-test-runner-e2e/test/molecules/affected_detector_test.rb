@@ -4,6 +4,7 @@ require_relative "../test_helper"
 
 class AffectedDetectorTest < Minitest::Test
   AffectedDetector = Ace::Test::EndToEndRunner::Molecules::AffectedDetector
+  StatusStub = Struct.new(:exitstatus, :success?)
 
   def setup
     @detector = AffectedDetector.new
@@ -32,7 +33,7 @@ class AffectedDetectorTest < Minitest::Test
   end
 
   def test_detect_warns_when_git_diff_fails
-    Open3.stub(:capture3, ["", "fatal: bad revision 'INVALID'\n", stub(exitstatus: 128, success?: false)]) do
+    Open3.stub(:capture3, ["", "fatal: bad revision 'INVALID'\n", StatusStub.new(128, false)]) do
       _stdout, stderr = capture_io do
         results = @detector.detect(base_dir: @base_dir, ref: "INVALID")
 
@@ -63,7 +64,7 @@ class AffectedDetectorTest < Minitest::Test
 
   def test_extract_package_from_nested_path
     package = @detector.send(:extract_package,
-      "ace-review/test-e2e/scenarios/TS-REVIEW-001/scenario.yml",
+      "ace-review/test/e2e/TS-REVIEW-001/scenario.yml",
       @base_dir)
 
     assert_nil_or_equal "ace-review", package

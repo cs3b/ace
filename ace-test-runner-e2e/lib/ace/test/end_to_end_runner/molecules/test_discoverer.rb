@@ -6,17 +6,18 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Discovers E2E test scenario directories (TS-*/scenario.yml) in packages
+        # Discovers deterministic integration tests and agent E2E scenarios in packages
         #
         # Finds test scenarios in the TS-format directory structure:
-        #   {package}/test-e2e/scenarios/TS-*/scenario.yml (primary)
-        #   {package}/test/e2e/TS-*/scenario.yml (legacy fallback)
+        #   {package}/test/integration/**/*_test.rb
+        #   {package}/test/e2e/TS-*/scenario.yml
         #
         # Note: This is a Molecule (not an Atom) because it performs filesystem
         # I/O via Dir.glob.
         class TestDiscoverer
-          TEST_DIRS = ["test-e2e/scenarios", "test/e2e"].freeze
+          TEST_DIRS = ["test/e2e"].freeze
           SCENARIO_FILE = "scenario.yml"
+          INTEGRATION_GLOB = "test/integration/**/*_test.rb"
           SCENARIO_DIR_PATTERN = "TS-*"
 
           # Find E2E test scenario files matching criteria
@@ -46,6 +47,12 @@ module Ace
               tags: normalize_tags(tags),
               exclude_tags: normalize_tags(exclude_tags)
             ).map(&:file_path).sort
+          end
+
+          # @return [Array<String>] Sorted list of matching deterministic integration test files
+          def find_integration_tests(package:, base_dir: Dir.pwd)
+            package_path = File.join(base_dir, package)
+            Dir.glob(File.join(package_path, INTEGRATION_GLOB)).sort
           end
 
           # Find TS-format scenario directories and load them as TestScenario models

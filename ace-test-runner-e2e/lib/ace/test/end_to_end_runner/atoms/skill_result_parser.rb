@@ -131,8 +131,8 @@ module Ace
             fields[:failed_tcs] = extract_field(text, "Failed TCs")
             fields[:issues] = extract_field(text, "Issues")
 
-            return parse(text) unless fields[:test_id] && fields[:status] &&
-              fields[:tcs_passed] && fields[:tcs_failed] && fields[:tcs_total]
+            return parse_minimal_verifier(text) unless fields[:test_id] && fields[:status]
+            return parse(text) unless fields[:tcs_passed] && fields[:tcs_failed] && fields[:tcs_total]
 
             passed = fields[:tcs_passed].to_i
             failed = fields[:tcs_failed].to_i
@@ -177,6 +177,31 @@ module Ace
               test_cases: test_cases,
               summary: summary,
               observations: (fields[:issues].to_s.strip.casecmp("none").zero? ? "" : fields[:issues].to_s)
+            }
+          end
+
+          def self.parse_minimal_verifier(text)
+            compact = text.to_s.strip
+            status_match = compact.match(/\b(PASS|FAIL|PARTIAL|ERROR)\b/i)
+            return parse(text) unless status_match
+
+            status = normalize_status(status_match[1])
+            evidence = compact.sub(/^.*?\b#{Regexp.escape(status_match[1])}\b[:\-\s]*/i, "").strip
+            tc_status = (status == "pass") ? "pass" : "fail"
+
+            {
+              test_id: "",
+              status: status,
+              test_cases: [{
+                id: "TC-001",
+                description: "",
+                status: tc_status,
+                actual: "",
+                notes: evidence,
+                category: ((tc_status == "fail") ? "unknown" : nil)
+              }],
+              summary: evidence.empty? ? status : evidence,
+              observations: evidence
             }
           end
 
@@ -236,7 +261,7 @@ module Ace
 
           private_class_method :parse_markdown, :to_normalized, :extract_field,
             :parse_tc_markdown, :to_tc_normalized, :normalize_status,
-            :parse_failed_tcs
+            :parse_failed_tcs, :parse_minimal_verifier
         end
       end
     end

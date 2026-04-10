@@ -406,6 +406,18 @@ class SkillResultParserTest < Minitest::Test
     assert_equal ids.uniq.size, ids.size, "Expected no duplicate TC IDs but found: #{ids.tally.select { |_, v| v > 1 }}"
   end
 
+  def test_parse_verifier_minimal_pass_evidence_line
+    text = "PASS Evidence: - `notes/inbox/` is empty: `find notes/inbox -type f` returned no files."
+
+    result = SkillResultParser.parse_verifier(text)
+
+    assert_equal "pass", result[:status]
+    assert_equal 1, result[:test_cases].size
+    assert_equal "pass", result[:test_cases].first[:status]
+    assert_includes result[:summary], "notes/inbox/"
+    assert_includes result[:observations], "notes/inbox/"
+  end
+
   def test_parse_tc_result_has_single_test_case
     text = <<~MD
       - **Test ID**: TS-LINT-001

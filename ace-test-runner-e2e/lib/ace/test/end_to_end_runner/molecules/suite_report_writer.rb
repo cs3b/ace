@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "ostruct"
 require "yaml"
 require "ace/llm"
 require "ace/llm/query_interface"
@@ -101,7 +102,7 @@ module Ace
           # Read summary and experience report content from each result's report dir
           def build_results_data(results, scenarios)
             results.each_with_index.map do |result, i|
-              scenario = scenarios[i]
+              scenario = scenario_for_result(result, scenarios, i)
               report_dir = result.report_dir
 
               summary_content = read_report_file(report_dir, "summary.r.md")
@@ -207,7 +208,7 @@ module Ace
 
           def build_summary_table(results, scenarios)
             rows = results.each_with_index.map do |result, i|
-              scenario = scenarios[i]
+              scenario = scenario_for_result(result, scenarios, i)
               status_label = result.status.capitalize
               passed = result.skipped? ? "-" : result.passed_count.to_s
               failed = result.skipped? ? "-" : result.failed_count.to_s
@@ -235,7 +236,7 @@ module Ace
             results.each_with_index do |result, i|
               next if result.success? || result.skipped?
 
-              scenario = scenarios[i]
+              scenario = scenario_for_result(result, scenarios, i)
               parts << "### #{result.test_id}: #{scenario.title} (#{result.passed_count}/#{result.total_count})\n"
 
               failed_tcs = result.test_cases.select { |tc| tc[:status] == "fail" }
@@ -269,6 +270,12 @@ module Ace
               |---------|----------------|
               #{rows.join("\n")}
             SECTION
+          end
+
+          def scenario_for_result(result, scenarios, index)
+            scenarios[index] || OpenStruct.new(
+              title: result.metadata[:phase] == "integration" || result.metadata["phase"] == "integration" ? "Integration" : result.test_id
+            )
           end
         end
       end
