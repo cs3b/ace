@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.44.3)
+    ace-assign (0.44.5)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -51,7 +51,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.32.0)
+    ace-docs (0.32.1)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.23.6)
+    ace-git-commit (0.23.7)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.19.4)
+    ace-git-worktree (0.19.5)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -178,13 +178,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.27.2)
+    ace-llm-providers-cli (0.27.3)
       ace-llm (~> 0.30)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.32.1)
+    ace-llm (0.32.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -347,7 +347,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.29.8)
+    ace-test-runner-e2e (0.29.10)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -357,7 +357,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.19.3)
+    ace-test-runner (0.19.4)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)

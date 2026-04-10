@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.29.9**: Enforced distinct runner/verifier provider threading in pipeline execution/reporting and aligned runtime scenario discovery with the `test-e2e/scenarios` contract (with legacy `test/e2e` fallback).
+- **ace-assign v0.44.5**: Updated verify-E2E guidance and fixture coverage to keep both `test-e2e/scenarios/` and legacy `test/e2e/` paths valid during migration.
+- **ace-docs v0.32.1**: Restored docs ignore coverage for legacy `test/e2e/**/*.md` scenario markdown during the E2E path migration.
+- **ace-git-worktree v0.19.5**: Hardened worktree cleanup to fail when directories remain after removal, switched prune to `git worktree prune --expire now`, and added regressions for prune args plus stuck-directory failures.
+- **ace-test-runner v0.19.4**: Added a suite-completeness regression guard that fails when `.ace/test/suite.yml` is missing testable packages discovered by `PackageResolver`.
+- **ace-llm v0.32.2**: Preserved full fallback target selectors across provider switches and rebuilt generation options per fallback target instead of reusing stale primary-provider options.
+- **ace-git-commit v0.23.7**: Restored packaged split defaults (`git.split.enabled: true`, `git.split.strategy: config-scope`), documented `--no-split` override guidance, and added regression coverage for the packaged-default contract.
+- **ace-llm-providers-cli v0.27.3**: Restored Codex and Gemini subprocess environment forwarding and switched Gemini runtime path resolution to the direct execution context working directory.
 - **ace-demo v0.24.0**: Added semantic YAML/asciinema demo verification with classified failure reports in `.ace-local/demo/`, and made `ace-demo record` fail closed instead of uploading broken recordings.
 - **ace-assign v0.42.5**: Hardened `wfi://assign/drive` and related handoff docs so `/as-assign-drive` treats intermediate progress as non-terminal and resumes paused assignments with runnable pending work.
 - **ace-assign v0.42.6**: Tightened the assignment-drive contract so waiting on `fork-run` stays inside the live drive loop and subtree completion immediately resumes the parent assignment queue.
@@ -28,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
 
 ### Changed
+- **ace-test-runner-e2e v0.29.10**: Documented the E2E migration dual-path contract in shared `.ace/e2e-runner/config.yml` by retaining explicit legacy fallback keys alongside `test-e2e/scenarios`.
 - **ace-task v0.33.2**: Updated the live GitHub sync demo tape to assert exported task/issue refs, forbid known sync/runtime errors, and verify final issue closure during recording.
 - **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
 - **ace-task v0.31.10**: Updated ACE-linked issue lifecycle guidance to prefer task metadata plus ACE-managed sync over PR footer closure requirements, while retaining PR closure keywords as optional manual guidance.
