@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-04-10
+
+### Added
+- Added `SandboxPackageCopy`, a reusable helper for copying a target package into an isolated sandbox and owning the sandbox environment contract for restarted E2E flows.
+
 ## [0.13.1] - 2026-03-29
 
 ### Technical

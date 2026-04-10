@@ -14,6 +14,7 @@ require_relative "test_support/subprocess_runner"  # Subprocess isolation utilit
 require_relative "test_support/base_test_case"  # Then base test case that uses it
 require_relative "test_support/config_helpers"
 require_relative "test_support/test_environment"
+require_relative "test_support/sandbox_package_copy"
 require_relative "test_support/performance_helpers"  # Performance testing utilities
 require_relative "test_support/fixtures/bundle_mocks"  # Shared bundle mocks
 require_relative "test_support/fixtures/git_mocks"  # Shared git mocks
