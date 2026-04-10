@@ -84,7 +84,8 @@ module Ace
 
               # Optionally remove the directory
               if remove_directory && File.exist?(expanded_path)
-                remove_worktree_directory(expanded_path)
+                directory_result = remove_worktree_directory(expanded_path)
+                return directory_result unless directory_result[:success]
               end
 
               # Optionally delete the branch
@@ -305,11 +306,14 @@ module Ace
           #
           # @param worktree_path [String] Worktree path
           def remove_worktree_directory(worktree_path)
-            if File.exist?(worktree_path)
-              FileUtils.rm_rf(worktree_path)
-            end
+            return {success: true, message: "Worktree directory already absent"} unless File.exist?(worktree_path)
+
+            FileUtils.rm_rf(worktree_path)
+            return {success: true, message: "Worktree directory removed"} unless File.exist?(worktree_path)
+
+            error_result("Worktree directory still exists after removal: #{worktree_path}")
           rescue => e
-            warn "Warning: Failed to remove worktree directory: #{e.message}"
+            error_result("Failed to remove worktree directory: #{e.message}")
           end
 
           # Check if worktree has uncommitted changes
@@ -339,7 +343,7 @@ module Ace
           # @return [Hash] Command result
           def execute_git_worktree_prune
             require_relative "../atoms/git_command"
-            Atoms::GitCommand.worktree("prune", timeout: @timeout)
+            Atoms::GitCommand.worktree("prune", "--expire", "now", timeout: @timeout)
           end
 
           # Parse prune output to count pruned worktrees

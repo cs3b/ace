@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-04-10
+
+### Fixed
+- Hardened `WorktreeRemover` cleanup semantics to fail when the worktree directory still exists after cleanup, including explicit error results on removal exceptions.
+- Updated prune execution to run `git worktree prune --expire now` for immediate stale-metadata cleanup.
+
+### Technical
+- Added regression coverage asserting `--expire now` prune args and stuck-directory failure behavior in worktree remover tests.
+
 ## [0.19.4] - 2026-03-29
 
 ### Technical
