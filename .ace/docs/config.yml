@@ -130,4 +130,5 @@ ignore:
   - "**/coverage/**"
   - "**/_legacy/**"
   - "**/.ace-tasks/done/**"
+  - "*/test-e2e/scenarios/**/*.md"
   - "*/test/e2e/**/*.md"

@@ -2,13 +2,19 @@
 
 paths:
   # Where test scenarios are stored in packages
-  scenarios: "test/e2e"
+  scenarios: "test-e2e/scenarios"
+  # Legacy fallback kept during migration window (runtime still supports this)
+  scenarios_legacy: "test/e2e"
+  integration: "test-e2e/integration"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".ace-local/test-e2e"
 
 patterns:
   # Glob pattern for finding test scenarios (TS-format directories)
-  discovery: "test/e2e/TS-*/scenario.yml"
+  discovery: "test-e2e/scenarios/TS-*/scenario.yml"
+  # Legacy fallback kept during migration window (runtime still supports this)
+  discovery_legacy: "test/e2e/TS-*/scenario.yml"
+  integration: "test-e2e/integration/**/*_test.rb"
 
 # Test scenario frontmatter requirements
 required_fields:
@@ -38,7 +44,9 @@ reporting:
 # Execution defaults
 execution:
   # Default LLM provider:model for test execution
-  provider: "role:e2e-executor"
+  provider: "role:e2e-runner"
+  runner_provider: "role:e2e-runner"
+  verifier_provider: "role:e2e-verifier"
   # Timeout per test in seconds
   timeout: 600
   # Number of tests to run in parallel (1 = sequential)

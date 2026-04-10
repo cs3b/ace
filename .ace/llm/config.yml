@@ -57,10 +57,14 @@ llm:
       - claude:opus:medium@yolo
 
     # --- E2E testing ---
-    e2e-executor:
-      - codex:mini:low@yolo
+    e2e-runner:
+      - codex:mini:medium@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
+    e2e-verifier:
+      - codex:mini:medium@ro
+      - gemini:flash-latest@ro
+      - claude:haiku:low@ro
     e2e-reporter:
       - codex:mini:low@ro
       - gemini:flash-latest@ro
