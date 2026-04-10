@@ -14,11 +14,13 @@ module Ace
         end
 
         def resolve_target(target)
-          return resolve_all_files if target.nil? || target == "all"
+          return resolve_group("unit") if target.nil?
+          return resolve_all_files if target == "all"
           return [target] if File.exist?(target)
 
           # Normalize target to string for consistent lookup
           target_key = target.to_s
+          raise_unsupported_target_error(target_key) if %w[e2e all-with-e2e system].include?(target_key)
 
           if @groups.key?(target_key)
             resolve_group(target_key)
@@ -72,6 +74,14 @@ module Ace
         end
 
         private
+
+        def raise_unsupported_target_error(target)
+          if target == "e2e"
+            raise ArgumentError, "Unsupported target: e2e. Use `ace-test-e2e <package>`."
+          end
+
+          raise ArgumentError, "Unsupported target: #{target}"
+        end
 
         def looks_like_file_path?(target)
           target.include?("/") || target.end_with?(".rb")

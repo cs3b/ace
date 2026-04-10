@@ -101,6 +101,42 @@ class PatternResolverTest < Minitest::Test
     end
   end
 
+  def test_resolve_target_defaults_to_unit_when_nil
+    glob_returns = {
+      "test/unit/atoms/**/*_test.rb" => ["test/unit/atoms/foo_test.rb"],
+      "test/unit/molecules/**/*_test.rb" => ["test/unit/molecules/bar_test.rb"],
+      "test/unit/organisms/**/*_test.rb" => [],
+      "test/unit/models/**/*_test.rb" => []
+    }
+
+    Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
+      File.stub :file?, true do
+        files = @resolver.resolve_target(nil)
+        assert_equal 2, files.size
+        assert_includes files, "test/unit/atoms/foo_test.rb"
+        assert_includes files, "test/unit/molecules/bar_test.rb"
+      end
+    end
+  end
+
+  def test_rejects_e2e_target_with_guidance
+    error = assert_raises(ArgumentError) do
+      @resolver.resolve_target("e2e")
+    end
+
+    assert_equal "Unsupported target: e2e. Use `ace-test-e2e <package>`.", error.message
+  end
+
+  def test_rejects_removed_legacy_targets
+    %w[system all-with-e2e].each do |target|
+      error = assert_raises(ArgumentError) do
+        @resolver.resolve_target(target)
+      end
+
+      assert_match(/Unsupported target: #{Regexp.escape(target)}/, error.message)
+    end
+  end
+
   def test_resolve_multiple_targets
     glob_returns = {
       "test/unit/atoms/**/*_test.rb" => ["test/unit/atoms/foo_test.rb"],

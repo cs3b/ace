@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-04-10
+
+### Changed
+- Changed bare `ace-test` package runs to default to the `unit` group, added `int` as an alias for `integration`, and narrowed `all` to `unit`, `edge`, and `integration`.
+- Removed legacy `system`, `e2e`, and `all-with-e2e` targets from the CLI/docs surface and directed scenario E2E execution to `ace-test-e2e`.
+
 ## [0.20.1] - 2026-04-10
 
 ### Fixed

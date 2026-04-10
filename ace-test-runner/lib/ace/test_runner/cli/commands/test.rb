@@ -30,12 +30,10 @@ module Ace
               molecules   Run molecule tests only
               organisms   Run organism tests only
               models      Run model tests only
-              unit        Run all unit tests (atoms + molecules + organisms + models)
+              unit        Run all unit tests (default)
               integration Run integration tests
-              system      Run system tests
-              e2e         Run deterministic E2E tests under test/e2e
-              all         Run all tests (default)
-              all-with-e2e Run all tests including deterministic e2e
+              int         Alias for integration
+              all         Run unit + edge + integration
               quick       Run quick tests (atoms + molecules)
 
             CONFIGURATION:
@@ -58,7 +56,6 @@ module Ace
               - organisms   -> Business logic (complex coordination)
               - models      -> Data structures (no behavior)
               - integration -> Cross-component testing
-              - system      -> End-to-end workflows
           DESC
 
           # Examples shown in help output
@@ -81,7 +78,7 @@ module Ace
           option :fail_fast, type: :boolean, desc: "Stop execution on first failure"
           option :fix_deprecations, type: :boolean, desc: "Auto-fix deprecated test patterns"
           option :filter, type: :string, desc: "Run only tests matching pattern"
-          option :group, type: :string, aliases: %w[-g], desc: "Run specific test group (unit, integration, system, all)"
+          option :group, type: :string, aliases: %w[-g], desc: "Run specific test group (unit, integration/int, all)"
           option :color, type: :boolean, desc: "Enable/disable colored output (default: enabled)"
           option :config_path, type: :string, aliases: %w[-c], desc: "Configuration file path (default: .ace/test-runner.yml)"
 

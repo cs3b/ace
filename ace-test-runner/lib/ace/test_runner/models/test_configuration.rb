@@ -130,7 +130,6 @@ module Ace
             organisms: "test/unit/organisms/**/*_test.rb",
             models: "test/unit/models/**/*_test.rb",
             integration: "test/integration/**/*_test.rb",
-            system: "test/system/**/*_test.rb",
             all: "test/**/*_test.rb"
           }
         end
@@ -138,7 +137,7 @@ module Ace
         def default_groups
           {
             unit: %w[atoms molecules organisms models],
-            all: %w[unit integration system],
+            all: %w[unit integration],
             quick: %w[atoms molecules]
           }
         end

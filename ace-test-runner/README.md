@@ -22,7 +22,7 @@
 
 ## How It Works
 
-1. Resolve the target package and test scope from a package name, group (`atoms`, `molecules`, `organisms`, `unit`, `integration`, `system`, `e2e`, `all`, `all-with-e2e`, `quick`), or direct `file:line` selector.
+1. Resolve the target package and test scope from a package name, group (`atoms`, `molecules`, `organisms`, `models`, `unit`, `integration`, `int`, `all`, `quick`), or direct `file:line` selector.
 2. Execute the matching tests with failure-oriented output and optional profiling of the slowest cases.
 3. Persist structured run reports for historical debugging and searchable triage across runs.
 
@@ -32,11 +32,11 @@
 
 **Target exactly the scope you need** - run by test groups (`ace-test atoms`, `ace-test molecules`) or direct file/line selectors (`ace-test test/file_test.rb:42`) to focus on the code you are changing.
 
-**Run deterministic E2E-style package coverage** - run `ace-test <package> e2e` to execute `test/e2e/**/*_test.rb` without changing default `all` behavior.
+**Keep fast-loop defaults tight** - run `ace-test <package>` for unit coverage only, then opt into `integration` or `int` when you need cross-component checks.
 
 **Speed up triage on broken builds** - use failure-oriented output and persisted reports to locate regressions and continue diagnosis without rerunning broad suites.
 
-**Validate the full monorepo before shipping** - run `ace-test-suite` for cross-package execution orchestration, or `ace-test-suite --target e2e` for deterministic package E2E coverage only.
+**Validate the full monorepo before shipping** - run `ace-test-suite` for cross-package execution orchestration, and use `ace-test-e2e <package>` when you need scenario E2E coverage.
 
 **Profile slow tests** - run `ace-test molecules --profile 10` to identify the slowest tests and prioritize optimization with [ace-test](../ace-test) performance audit workflows.
 
