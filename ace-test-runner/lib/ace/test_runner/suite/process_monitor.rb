@@ -201,6 +201,9 @@ module Ace
             cmd_parts << "--report-dir" << pkg_report_dir
           end
 
+          target = options["target"]
+          cmd_parts << target if target && !target.to_s.empty?
+
           cmd_parts
         end
 

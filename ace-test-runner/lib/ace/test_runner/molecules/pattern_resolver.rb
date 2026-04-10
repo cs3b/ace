@@ -106,19 +106,15 @@ module Ace
         end
 
         def resolve_all_files
-          # Always start by finding ALL test files that exist
+          # Catch-all default selection should not silently widen back into
+          # deterministic E2E tests when the configured "all" target excludes them.
           all_test_files = expand_pattern("test/**/*_test.rb")
+          catch_all_files = all_test_files - expand_pattern("test/e2e/**/*_test.rb")
           @using_catch_all = false
 
           # First check if "all" group is defined
           if @groups.key?("all")
-            pattern_files = resolve_group("all")
-            # If patterns miss any files, use the complete scan
-            if pattern_files.size < all_test_files.size
-              @using_catch_all = true
-              return all_test_files
-            end
-            return pattern_files
+            return resolve_group("all")
           end
 
           # If no "all" group, try all defined patterns
@@ -131,14 +127,14 @@ module Ace
             # If patterns miss any files, use the complete scan
             if pattern_files.size < all_test_files.size
               @using_catch_all = true
-              return all_test_files
+              return catch_all_files
             end
             return pattern_files
           end
 
           # No configuration - using catch-all pattern
           @using_catch_all = true
-          all_test_files
+          catch_all_files
         end
       end
     end

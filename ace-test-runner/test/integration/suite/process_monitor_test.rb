@@ -102,6 +102,27 @@ module Ace
           end
         end
 
+        def test_build_command_includes_target_when_configured
+          monitor = ProcessMonitor.new
+          package = {"name" => "ace-test-runner", "path" => "."}
+          options = {"format" => "progress", "target" => "e2e"}
+
+          command = monitor.send(:build_command, package, options)
+
+          assert_equal "ace-test", command.first
+          assert_equal "e2e", command.last
+        end
+
+        def test_build_command_omits_target_when_not_configured
+          monitor = ProcessMonitor.new
+          package = {"name" => "ace-test-runner", "path" => "."}
+          options = {"format" => "progress"}
+
+          command = monitor.send(:build_command, package, options)
+
+          refute_includes command, "e2e"
+        end
+
         private
 
         def package_config(root, name)

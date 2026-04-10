@@ -155,7 +155,9 @@ class CliArgumentParserTest < Minitest::Test
     assert parser.known_target?("atoms")
     assert parser.known_target?("molecules")
     assert parser.known_target?("unit")
+    assert parser.known_target?("e2e")
     assert parser.known_target?("all")
+    assert parser.known_target?("all-with-e2e")
     refute parser.known_target?("foo")
     refute parser.known_target?("ace-bundle")
   end
