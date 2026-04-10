@@ -20,3 +20,8 @@ git:
         - ui
         - docs
         - test
+
+  split:
+    enabled: true
+    strategy: config-scope
+    description: Automatically create multiple commits when multiple config scopes are detected; use --no-split to force a single commit.

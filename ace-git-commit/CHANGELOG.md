@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.7] - 2026-04-10
+
+### Fixed
+- Restored packaged default split configuration (`git.split.enabled: true`, `git.split.strategy: config-scope`) and documented `--no-split` as the explicit single-commit override.
+- Added packaged-default regression coverage in `test/default_config_test.rb` to enforce the split-default contract.
+
 ## [0.23.6] - 2026-03-31
 
 ### Changed
