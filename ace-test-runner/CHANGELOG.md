@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-04-10
+
 ### Fixed
-- Added a suite-completeness regression guard in `PackageResolverTest` that fails when `.ace/test/suite.yml` omits testable packages discovered from the mono-repo.
+- Stopped forcing `--run-in-single-batch` in suite package execution so `ace-test-suite` uses the stable grouped package path instead of the hanging single-batch mode.
+- Prefer live runtime timeout/failure state over stale `latest/summary.json` data so suite aggregation no longer reports timed-out packages as passed.
 
 ## [0.19.3] - 2026-04-07
 

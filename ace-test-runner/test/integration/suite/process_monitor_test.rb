@@ -8,6 +8,22 @@ module Ace
   module TestRunner
     module Suite
       class ProcessMonitorTest < Minitest::Test
+        def test_build_command_does_not_force_single_batch
+          monitor = ProcessMonitor.new
+          package = {"name" => "ace-sample", "path" => "/tmp/ace-sample"}
+
+          command = monitor.send(:build_command, package, {
+            "format" => "progress",
+            "save_reports" => false,
+            "fail_fast" => true,
+            "color" => false,
+            "report_dir" => "/tmp/reports"
+          })
+
+          refute_includes command, "--run-in-single-batch"
+          assert_equal ["ace-test", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+        end
+
         class FakeProcessMonitor < ProcessMonitor
           def initialize(command_map:, **kwargs)
             max_parallel = kwargs.delete(:max_parallel) || 10
