@@ -3,8 +3,8 @@ doc-type: user
 title: RubyGems Propagation Proof Contract
 purpose: Define deterministic post-release proof for dependency metadata propagation
 ace-docs:
-  last-updated: 2026-03-29
-  last-checked: 2026-03-29
+  last-updated: '2026-04-10'
+  last-checked: '2026-04-10'
 ---
 
 # RubyGems Propagation Proof Contract
@@ -22,7 +22,7 @@ This contract does not claim to fix RubyGems propagation behavior. It proves whe
 ## Scope
 
 - Applies to many-package ACE releases.
-- Runs after publish succeeds, via `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001`.
+- Runs after publish succeeds, via `ace-test-e2e ace-monorepo-e2e TS-MONO-001`.
 - Produces one artifact consumed by release and onboarding docs workflows.
 
 ## Proof Commands
