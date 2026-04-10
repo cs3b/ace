@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner v0.19.6**: Restored suite single-batch execution, kept runtime results authoritative over stale summaries, and made subprocess-sensitive unit-directory tests opt into isolation so `ace-test-suite` and `ace-test --run-in-single-batch` both pass again.
 - **ace-test-runner v0.19.5**: Stopped forcing single-batch suite execution and made suite aggregation prefer live runtime timeout/failure state over stale package summaries.
 - **ace-test-runner-e2e v0.29.11**: Captured invalid-ref `git diff` stderr during affected-package detection so passing runs no longer leak fatal git output.
 - **ace-test-runner-e2e v0.29.9**: Enforced distinct runner/verifier provider threading in pipeline execution/reporting and aligned runtime scenario discovery with the `test-e2e/scenarios` contract (with legacy `test/e2e` fallback).
