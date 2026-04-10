@@ -2,7 +2,7 @@
 description: Project context
 bundle:
   params:
-    # output: cache
+    output: cache
     max_size: 81920
     timeout: 30
     compressor_mode: agent

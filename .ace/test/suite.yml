@@ -35,6 +35,11 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-compressor
+      path: ace-compressor
+      group: tools
+      priority: 2
+
     - name: ace-support-nav
       path: ace-support-nav
       group: tools
@@ -48,6 +53,11 @@ test_suite:
     - name: ace-b36ts
       path: ace-b36ts
       group: foundation
+      priority: 2
+
+    - name: ace-demo
+      path: ace-demo
+      group: tools
       priority: 2
 
     - name: ace-support-items
@@ -84,6 +94,31 @@ test_suite:
       path: ace-docs
       group: tools
       priority: 1
+
+    - name: ace-handbook-integration-claude
+      path: ace-handbook-integration-claude
+      group: tools
+      priority: 2
+
+    - name: ace-handbook-integration-codex
+      path: ace-handbook-integration-codex
+      group: tools
+      priority: 2
+
+    - name: ace-handbook-integration-gemini
+      path: ace-handbook-integration-gemini
+      group: tools
+      priority: 2
+
+    - name: ace-handbook-integration-opencode
+      path: ace-handbook-integration-opencode
+      group: tools
+      priority: 2
+
+    - name: ace-handbook-integration-pi
+      path: ace-handbook-integration-pi
+      group: tools
+      priority: 2
 
     - name: ace-git-worktree
       path: ace-git-worktree
@@ -150,6 +185,16 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-hitl
+      path: ace-hitl
+      group: tools
+      priority: 2
+
+    - name: ace-test
+      path: ace-test
+      group: tools
+      priority: 2
+
     - name: ace-idea
       path: ace-idea
       group: tools
@@ -157,6 +202,16 @@ test_suite:
 
     - name: ace-retro
       path: ace-retro
+      group: tools
+      priority: 2
+
+    - name: ace-test-runner-e2e
+      path: ace-test-runner-e2e
+      group: tools
+      priority: 2
+
+    - name: ace-monorepo-e2e
+      path: ace-monorepo-e2e
       group: tools
       priority: 2
 
