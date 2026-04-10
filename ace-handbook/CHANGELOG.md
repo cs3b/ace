@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4] - 2026-04-10
+
+### Technical
+- Updated handbook docs and cookbook guidance to point at the restarted E2E testing flows and current release-proof references.
+
 ## [0.25.3] - 2026-04-05
 
 ### Fixed
