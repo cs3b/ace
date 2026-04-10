@@ -42,7 +42,7 @@ class HitlCliTest < AceHitlTestCase
   end
 
   def test_library_contract
-    assert_equal "0.8.0", Ace::Hitl::VERSION
+    assert_equal "0.8.1", Ace::Hitl::VERSION
     assert_respond_to Ace::Hitl::HitlCLI, :start
   end
 
