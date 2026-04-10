@@ -27,38 +27,70 @@ class TSMODELS001IntegrationTest < Minitest::Test
     FileUtils.mkdir_p(cache_dir)
     File.write(File.join(cache_dir, "api.json"), JSON.pretty_generate({
       "providers" => {
-        "anthropic" => {"name" => "Anthropic", "models" => ["claude-sonnet-4"]}
+        "anthropic" => {
+          "name" => "Anthropic",
+          "models" => {
+            "claude-sonnet-4" => {"name" => "Claude Sonnet 4"}
+          }
+        }
       }
     }))
     File.write(File.join(cache_dir, "metadata.json"), JSON.pretty_generate({"generated_at" => Time.now.utc.iso8601}))
     {"XDG_CACHE_HOME" => File.join(dir, "cache")}
   end
 
-  def test_help_surfaces
+  def test_tc_001_help_surface
     stdout, stderr, status = run_models("--help", chdir: @root)
     assert status.success?, stderr
     assert_match(/ace-models/, stdout + stderr)
+    assert_match(/COMMANDS/, stdout + stderr)
+    assert_match(/EXAMPLES/, stdout + stderr)
 
     stdout, stderr, status = run_providers("--help", chdir: @root)
     assert status.success?, stderr
     assert_match(/ace-llm-providers/, stdout + stderr)
+    assert_match(/COMMANDS/, stdout + stderr)
+    assert_match(/EXAMPLES/, stdout + stderr)
   end
 
-  def test_clear_and_provider_listing_against_seeded_cache
+  def test_tc_002_models_cache_clear
+    Dir.mktmpdir("ace-models-e2e-") do |dir|
+      env = seed_cache(dir)
+      cache_file = File.join(dir, "cache", "ace-models", "api.json")
+
+      assert(File.exist?(cache_file))
+
+      stdout, stderr, status = run_models("clear", chdir: dir, env: env)
+      assert status.success?, stderr
+      assert_match(/Cache cleared successfully/i, stdout + stderr)
+      refute(File.exist?(cache_file))
+    end
+  end
+
+  def test_tc_003_providers_list_show
     Dir.mktmpdir("ace-models-e2e-") do |dir|
       env = seed_cache(dir)
 
       stdout, stderr, status = run_providers("list", chdir: dir, env: env)
       assert status.success?, stderr
+      assert_match(/Providers \(/, stdout)
       assert_match(/anthropic/i, stdout)
 
       stdout, stderr, status = run_providers("show", "anthropic", chdir: dir, env: env)
       assert status.success?, stderr
       assert_match(/Provider: anthropic/i, stdout)
+      assert_match(/claude-sonnet-4/i, stdout)
+    end
+  end
 
-      stdout, stderr, status = run_models("clear", chdir: dir, env: env)
-      assert status.success?, stderr
-      refute(File.exist?(File.join(dir, "cache", "ace-models", "api.json")))
+  def test_tc_004_invalid_filter
+    Dir.mktmpdir("ace-models-e2e-") do |dir|
+      env = seed_cache(dir)
+
+      stdout, stderr, status = run_models("search", "-f", "badfilter", chdir: dir, env: env)
+      refute status.success?
+      assert_match(/Invalid filter format/i, stderr)
+      assert_match(/Invalid model search filters/i, stderr)
     end
   end
 end
