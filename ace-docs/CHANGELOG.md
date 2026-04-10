@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-04-10
+
+### Fixed
+- Restored docs-management ignore coverage for legacy `test/e2e/**/*.md` scenario markdown paths during the E2E path migration.
+
 ## [0.32.0] - 2026-04-01
 
 ### Changed
