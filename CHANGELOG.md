@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.31.0**: Restored the full two-phase E2E harness with deterministic `test/integration` execution before `test/e2e` scenarios, stricter artifact/report handling, and verifier fallback parsing that accepts minimal evidence responses.
 
 ### Changed
+- **ace-test-runner-e2e v0.32.0**: Added a deterministic preflight bridge that prefers `test/feat` and falls back to legacy `test/integration`, so package-level test taxonomy can migrate without breaking `ace-test-e2e`.
 - **ace-test-runner v0.20.0**: Added first-class `e2e` target routing and suite-level `--target e2e` execution while keeping default `all` runs non-E2E.
 - **ace-test-runner-e2e v0.30.0**: Simplified the runner to the restarted scenario-only contract, switched sandbox setup to the shared package-copy helper, and refreshed CLI/docs/workflows around the new E2E structure.
 - **ace-b36ts v0.14.0**: Replaced the pilot deterministic runner suite with `test/e2e` Minitest coverage and added a real note-reorganization agent scenario.
@@ -30,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner v0.21.0**: Changed bare `ace-test` runs to the `unit` group, added the `int` alias for `integration`, and removed legacy `system` / `e2e` / `all-with-e2e` targets in favor of `ace-test-e2e`.
 
 ### Technical
+- **ace-b36ts v0.14.3**: Piloted the `fast / feat / e2e` package layout with local `ace-test` compatibility aliases and moved its deterministic CLI contract suite into `test/feat`.
 - **ace-handbook v0.25.4**: Updated handbook docs and cookbook guidance to reflect the restarted E2E structure and current release-proof references.
 - **ace-b36ts v0.14.1**: Restored deterministic CLI contract coverage for shell command-substitution roundtrips and lexical ordering across out-of-order timestamps.
 - **ace-b36ts v0.14.2**: Moved deterministic restarted-E2E coverage to `test/integration`, relocated the pilot scenario to `test/e2e`, and refreshed the demo tape for the restarted layout.
