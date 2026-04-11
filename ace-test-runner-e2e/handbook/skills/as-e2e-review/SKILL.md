@@ -1,6 +1,6 @@
 ---
 name: as-e2e-review
-description: Deep exploration producing a coverage matrix of functionality, unit tests, and E2E tests
+description: Review E2E coverage for modified packages and run targeted package scenarios
 # bundle: wfi://e2e/review
 # agent: general-purpose
 user-invocable: true
@@ -24,7 +24,7 @@ assign:
   source: wfi://e2e/review
   steps:
     - name: verify-e2e
-      description: Review E2E coverage for modified packages and run targeted scenarios
+      description: Review E2E coverage for modified packages and run targeted package scenarios
       tags: [testing, e2e, verification]
 skill:
   kind: workflow

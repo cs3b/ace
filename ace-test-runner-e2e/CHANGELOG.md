@@ -7,11 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- Added a deterministic preflight discovery bridge that prefers `test/feat` and falls back to legacy `test/integration`, so packages can migrate to the new `fast / feat / e2e` taxonomy without breaking existing E2E runs.
+## [0.32.1] - 2026-04-11
 
-### Fixed
-- Removed accidental real LLM, subprocess, and tmux execution from unit-scoped organism/setup tests by injecting report/setup boundaries and moving live tmux session coverage into explicit integration tests.
+### Technical
+- Synced the canonical `as-e2e-review` skill description with the package-targeted assign verification contract so shipped metadata no longer implies broader scenario-sweep execution.
 
 ## [0.31.0] - 2026-04-10
 
