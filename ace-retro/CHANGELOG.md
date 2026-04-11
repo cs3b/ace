@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `as-retro-analyze-worktree` and `wfi://retro/analyze-worktree` to analyze completed assignments across one or many worktrees, classify post-completion drift, and generate ranked spec-improvement retros with `.ace-local` telemetry context.
 
+### Changed
+- Clarified `retro/analyze-worktree` output semantics so `WORKTREE_PATH` remains an analysis input, retro artifacts default to the current working branch, and wrapper steps are directed to use the canonical `wfi://retro/create` contract instead of inventing output destinations under analyzed worktrees.
+
 ## [0.16.6] - 2026-03-31
 
 ### Changed

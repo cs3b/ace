@@ -45,6 +45,13 @@ Set these environment variables before running:
 - `SINCE_DAYS` (optional recency cutoff)
 - `TOP_PATTERNS=10` (default)
 
+## Output Contract
+
+- `WORKTREE_PATH` identifies the worktree to analyze. It is an input source, not an output destination.
+- Retro artifacts created during this workflow belong in the current working branch unless an explicit output override is added by a caller.
+- Wrapper steps must not invent their own artifact destination under the analyzed worktree.
+- When this workflow reaches retro creation, use the canonical retro creation workflow contract from `wfi://retro/create`.
+
 ## Project Context Loading
 
 - Load `handbook/templates/retro/retro.template.md`
@@ -137,6 +144,8 @@ Set these environment variables before running:
    - Produce top `TOP_PATTERNS` recommendations with assignment-level evidence and concrete spec change suggestions.
 
 9. **Create retro with findings**
+   - `WORKTREE_PATH` remains the analysis source only; do not write the retro under the analyzed worktree unless explicitly requested.
+   - Use the canonical retro creation workflow contract from `wfi://retro/create`.
    - Create retro:
    ```bash
    ace-retro create "analyze-worktree-$(basename "$WORKTREE_PATH")-$(date +%Y%m%d)" --type standard --tags worktree-analysis,fleet-retro,spec-quality
