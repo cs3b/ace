@@ -27,7 +27,7 @@ If the command resolves and prints help, your setup is ready.
 
 ## Running your first tests
 
-Run the default unit scope in the current package:
+Run the default fast scope in the current package:
 
 ```bash
 ace-test
@@ -39,23 +39,23 @@ Run only atom tests:
 ace-test atoms
 ```
 
-Run unit tests in `ace-test-runner` from repo root:
+Run fast tests in `ace-test-runner` from repo root:
 
 ```bash
-ace-test ace-test-runner unit
+ace-test ace-test-runner fast
 ```
 
 ## Test Groups
 
 | Group | Meaning |
 | --- | --- |
-| `atoms` | Low-level unit tests |
-| `molecules` | Composed operation tests |
-| `organisms` | Business-logic integration points |
+| `atoms` | Low-level fast tests |
+| `molecules` | Composed fast tests |
+| `organisms` | Coordinating fast tests with stubbed boundaries |
 | `models` | Data-structure behavior tests |
-| `unit` | `atoms` + `molecules` + `organisms` + `models` |
-| `integration` / `int` | Explicit cross-component testing |
-| `all` | `unit` + `edge` + `integration` |
+| `fast` | Default isolated package coverage |
+| `feat` | Deterministic feature tests with controlled IO |
+| `all` | `fast` then `feat` |
 | `quick` | `atoms` + `molecules` |
 
 ## Cross-package execution
@@ -64,7 +64,7 @@ Target any package directly from the monorepo root:
 
 ```bash
 ace-test ace-bundle quick
-ace-test ace-search unit
+ace-test ace-search fast
 ace-test ace-nav atoms
 ```
 
@@ -95,10 +95,10 @@ ace-test --config-path /path/to/custom/config.yml
 
 | Command | Purpose |
 | --- | --- |
-| `ace-test` | Run the default `unit` scope in current package |
+| `ace-test` | Run the default `fast` scope in current package |
 | `ace-test atoms` | Run atom tests |
-| `ace-test ace-bundle unit` | Run package + target |
-| `ace-test ace-bundle int` | Run package integration tests |
+| `ace-test ace-bundle fast` | Run package + target |
+| `ace-test ace-bundle feat` | Run package feature tests |
 | `ace-test test/atoms/foo_test.rb` | Run a specific test file |
 | `ace-test test/atoms/foo_test.rb:42` | Run test at file line |
 | `ace-test --format json` | JSON output |

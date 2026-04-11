@@ -125,19 +125,30 @@ module Ace
 
         def default_patterns
           {
-            atoms: "test/unit/atoms/**/*_test.rb",
-            molecules: "test/unit/molecules/**/*_test.rb",
-            organisms: "test/unit/organisms/**/*_test.rb",
-            models: "test/unit/models/**/*_test.rb",
+            smoke: "test/{fast/,}*_test.rb",
+            atoms: "test/{fast/,unit/,}atoms/**/*_test.rb",
+            molecules: "test/{fast/,unit/,}molecules/**/*_test.rb",
+            organisms: "test/{fast/,unit/,}organisms/**/*_test.rb",
+            models: "test/{fast/,unit/,}models/**/*_test.rb",
+            commands: "test/{fast/,unit/,}commands/**/*_test.rb",
+            cli: "test/{fast/,unit/,}cli/**/*_test.rb",
+            prompts: "test/{fast/,unit/,}prompts/**/*_test.rb",
+            fixtures: "test/{fast/,unit/,}fixtures/**/*_test.rb",
+            support: "test/{fast/,unit/,}support/**/*_test.rb",
+            feat_tests: "test/{feat,integration}/**/*_test.rb",
             integration: "test/integration/**/*_test.rb",
-            all: "test/**/*_test.rb"
+            edge: "test/{fast/,unit/,}edge/**/*_test.rb"
           }
         end
 
         def default_groups
           {
-            unit: %w[atoms molecules organisms models],
-            all: %w[unit integration],
+            fast: %w[smoke atoms molecules organisms models commands cli prompts fixtures support],
+            feat: %w[feat_tests edge],
+            unit: %w[fast],
+            integration: %w[feat],
+            int: %w[feat],
+            all: %w[fast feat],
             quick: %w[atoms molecules]
           }
         end
