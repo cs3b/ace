@@ -18,7 +18,7 @@
 
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
-`ace-retro` helps teams capture learning while context is still fresh and maintain a searchable archive for follow-up improvements. Use [`ace-retro create`](docs/usage.md) to start a retro from the CLI (or `/as-retro-create` from an interactive agent session), and `/as-retro-synthesize` to distill patterns across multiple retros.
+`ace-retro` helps teams capture learning while context is still fresh and maintain a searchable archive for follow-up improvements. Use [`ace-retro create`](docs/usage.md) to start a retro from the CLI (or `/as-retro-create` from an interactive agent session), use `/as-retro-analyze-worktree` to analyze completed assignments across one or many worktrees for scope drift, post-completion work, and `.ace-local` review/test telemetry, then `/as-retro-synthesize` to distill patterns across multiple retros.
 
 ## How It Works
 
@@ -29,6 +29,8 @@
 ## Use Cases
 
 **Capture retros quickly after delivery** - use `/as-retro-create` or [`ace-retro create`](docs/usage.md) to initialize a retro from templates while the work is still fresh.
+
+**Analyze completed worktrees** - use `/as-retro-analyze-worktree` to surface initial scope vs final outcome drift, classify post-completion residual work, and include `.ace-local` review/test signals in high-value spec upgrades from real assignment outcomes.
 
 **Synthesize patterns across retros** - use `/as-retro-synthesize` to distill recurring themes and improvement opportunities from multiple retrospectives.
 
