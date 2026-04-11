@@ -30,7 +30,10 @@ module Ace
           # @param timestamp_generator [#call] Callable that returns a timestamp string
           # @param executor [#execute] Injectable test executor (for testing)
           # @param progress [Boolean] Enable animated progress display
-          def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil, executor: nil, progress: false)
+          def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil,
+            executor: nil, progress: false, discoverer: nil, integration_runner: nil,
+            scenario_loader: nil, report_writer: nil, suite_report_writer: nil,
+            setup_executor_factory: nil)
             config = Molecules::ConfigLoader.load
             @provider = provider || config.dig("execution", "runner_provider") ||
               config.dig("execution", "provider") || "claude:sonnet"
@@ -39,12 +42,13 @@ module Ace
             @base_dir = base_dir || Dir.pwd
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
-            @discoverer = Molecules::TestDiscoverer.new
-            @integration_runner = Molecules::IntegrationRunner.new(base_dir: @base_dir)
-            @loader = Molecules::ScenarioLoader.new
+            @discoverer = discoverer || Molecules::TestDiscoverer.new
+            @integration_runner = integration_runner || Molecules::IntegrationRunner.new(base_dir: @base_dir)
+            @loader = scenario_loader || Molecules::ScenarioLoader.new
             @executor = executor || Molecules::TestExecutor.new(provider: @provider, timeout: @timeout, config: config)
-            @report_writer = Molecules::ReportWriter.new
-            @suite_report_writer = Molecules::SuiteReportWriter.new(config: config)
+            @report_writer = report_writer || Molecules::ReportWriter.new
+            @suite_report_writer = suite_report_writer || Molecules::SuiteReportWriter.new(config: config)
+            @setup_executor_factory = setup_executor_factory || -> { Molecules::SetupExecutor.new }
           end
 
           # Run E2E tests for a package, optionally filtering by test ID
@@ -140,7 +144,7 @@ module Ace
                 }
               }
             end
-            setup_executor = Molecules::SetupExecutor.new
+            setup_executor = @setup_executor_factory.call
             result = setup_executor.execute(
               setup_steps: scenario.setup_steps,
               sandbox_dir: sandbox_dir,

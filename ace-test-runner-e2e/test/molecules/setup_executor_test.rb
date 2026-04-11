@@ -3,6 +3,12 @@
 require_relative "../test_helper"
 
 class SetupExecutorTest < Minitest::Test
+  FakeStatus = Struct.new(:exitstatus) do
+    def success?
+      exitstatus.zero?
+    end
+  end
+
   def setup
     @executor = Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new
   end
@@ -222,10 +228,11 @@ class SetupExecutorTest < Minitest::Test
   end
 
   def test_tmux_session_uses_scenario_name_when_provided
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+    calls = []
+    executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
-      result = @executor.execute(
+      result = executor.execute(
         setup_steps: ["tmux-session"],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001"
@@ -234,16 +241,16 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "TS-TEST-001-e2e", result[:tmux_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
-    ensure
-      @executor.teardown
+      assert_equal [%w[tmux new-session -d -s TS-TEST-001-e2e]], calls
     end
   end
 
   def test_tmux_session_uses_run_id_with_name_source_run_id
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+    calls = []
+    executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
-      result = @executor.execute(
+      result = executor.execute(
         setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001",
@@ -253,16 +260,16 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "8pny7t0", result[:tmux_session]
       assert_equal "8pny7t0", result[:env]["ACE_TMUX_SESSION"]
-    ensure
-      @executor.teardown
+      assert_equal [%w[tmux new-session -d -s 8pny7t0]], calls
     end
   end
 
   def test_tmux_session_name_source_run_id_falls_back_when_run_id_missing
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+    calls = []
+    executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
-      result = @executor.execute(
+      result = executor.execute(
         setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001"
@@ -271,49 +278,45 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "TS-TEST-001-e2e", result[:tmux_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
-    ensure
-      @executor.teardown
+      assert_equal [%w[tmux new-session -d -s TS-TEST-001-e2e]], calls
     end
   end
 
   def test_tmux_session_uses_fallback_name_without_scenario_name
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+    calls = []
+    executor = build_tmux_executor(command_calls: calls, time_source: -> { 123_456 })
 
     Dir.mktmpdir do |sandbox|
-      result = @executor.execute(
+      result = executor.execute(
         setup_steps: ["tmux-session"],
         sandbox_dir: sandbox
       )
 
       assert result[:success]
-      assert_match(/\Aace-e2e-\d+\z/, result[:tmux_session])
-    ensure
-      @executor.teardown
+      assert_equal "ace-e2e-123456", result[:tmux_session]
+      assert_equal [%w[tmux new-session -d -s ace-e2e-123456]], calls
     end
   end
 
   def test_teardown_clears_tmux_session
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+    command_calls = []
+    system_calls = []
+    executor = build_tmux_executor(command_calls: command_calls, system_calls: system_calls)
 
     Dir.mktmpdir do |sandbox|
-      result = @executor.execute(
+      result = executor.execute(
         setup_steps: ["tmux-session"],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEARDOWN-001"
       )
 
       assert result[:success]
-      session_name = result[:tmux_session]
+      assert_equal "TS-TEARDOWN-001-e2e", result[:tmux_session]
 
-      # Session should exist before teardown
-      assert system("tmux", "has-session", "-t", session_name, out: File::NULL, err: File::NULL),
-        "Session should exist before teardown"
+      executor.teardown
 
-      @executor.teardown
-
-      # Session should be gone after teardown
-      refute system("tmux", "has-session", "-t", session_name, out: File::NULL, err: File::NULL),
-        "Session should not exist after teardown"
+      assert_equal [["tmux", "kill-session", "-t", "TS-TEARDOWN-001-e2e"]], system_calls
+      assert_equal [%w[tmux new-session -d -s TS-TEARDOWN-001-e2e]], command_calls
     end
   end
 
@@ -353,5 +356,21 @@ class SetupExecutorTest < Minitest::Test
         ENV.delete("PROJECT_ROOT_PATH")
       end
     end
+  end
+
+  private
+
+  def build_tmux_executor(command_calls:, system_calls: [], time_source: -> { Time.now.to_i })
+    Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new(
+      command_runner: lambda do |*args, **kwargs|
+        command_calls << args
+        ["", "", FakeStatus.new(0)]
+      end,
+      system_runner: lambda do |*args, **kwargs|
+        system_calls << args
+        true
+      end,
+      time_source: time_source
+    )
   end
 end

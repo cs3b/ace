@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Removed accidental real LLM, subprocess, and tmux execution from unit-scoped organism/setup tests by injecting report/setup boundaries and moving live tmux session coverage into explicit integration tests.
+
 ## [0.31.0] - 2026-04-10
 
 ### Changed
