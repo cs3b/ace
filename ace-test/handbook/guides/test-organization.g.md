@@ -9,36 +9,35 @@ ace-docs:
 
 # Test Organization
 
-## Flat Directory Structure
+## Top-Level Test Structure
 
-All ACE gems use a **flat test directory structure** that mirrors the ATOM architecture:
+All ACE gems should converge on three top-level test directories:
 
 ```
 test/
 ├── test_helper.rb
-├── search_test.rb              # Main module test
-├── atoms/
-│   ├── pattern_analyzer_test.rb
-│   ├── result_parser_test.rb
-│   └── tool_checker_test.rb
-├── molecules/
-│   ├── preset_manager_test.rb
-│   └── git_scope_filter_test.rb
-├── organisms/
-│   ├── unified_searcher_test.rb
-│   └── result_formatter_test.rb
-├── models/
-│   └── search_result_test.rb
-└── integration/
-    └── cli_integration_test.rb
+├── fast/
+│   ├── atoms/
+│   ├── molecules/
+│   ├── organisms/
+│   ├── models/
+│   └── commands/
+├── feat/
+│   └── cli_contract_test.rb
+├── e2e/
+│   └── TS-PACKAGE-001-scenario/
+│       └── scenario.yml
+├── fixtures/
+└── support/
 ```
 
 ## Key Conventions
 
-- **Flat structure**: `test/atoms/`, not `test/ace/search/atoms/`
+- **Top-level categories**: `test/fast/`, `test/feat/`, `test/e2e/`
+- **Fast sublayers mirror ATOM**: atoms, molecules, organisms, models, commands
 - **Suffix naming**: `pattern_analyzer_test.rb`, not `test_pattern_analyzer.rb`
-- **Layer directories match ATOM architecture**: atoms, molecules, organisms
-- **Integration tests in separate `integration/` directory**
+- **Deterministic feature tests live in `test/feat/`**
+- **Scenario workflows live in `test/e2e/TS-*/`**
 
 ## Benefits
 
@@ -47,7 +46,7 @@ test/
 - Consistent across all ACE gems
 - Less nesting = simpler paths
 
-See `ace-taskflow/test/` for reference implementation.
+Use `ace-b36ts/test/` as the reference implementation for the new layout.
 
 ## Naming Conventions
 

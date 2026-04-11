@@ -19,44 +19,32 @@ conventions should be documented in `dev-taskflow/testing-guide.md` (if it exist
 
 ## 1. Testing Strategy
 
-1. **Test Types:** Employ a mix of test types appropriate for the project:
-    * **Unit Tests:** Test individual classes or methods in isolation. Mock dependencies. Focus on logic
-      correctness.
-    * **Integration Tests:** Test the interaction between two or more components (e.g., class and its
-      dependency, module interactions, API client and service). May involve partial mocking or real
-      dependencies in controlled environments.
-    * **End-to-End (E2E) / System Tests:** Test complete user flows or system functionalities, often
-      interacting with real external dependencies or a fully deployed environment. These are typically
-      slower and less frequent.
-    * **Performance Tests:** Measure response time, throughput, resource usage under specific conditions
-      or load.
-    * **Security Tests:** Identify vulnerabilities (e.g., penetration testing, dependency scanning).
+1. **Public test categories:** ACE standardizes on three public categories:
+    * **Fast:** isolated package tests under `test/fast/`; no real subprocess, network, or session IO.
+    * **Feat:** deterministic feature tests under `test/feat/`; controlled local IO is allowed.
+    * **E2E:** agent-driven workflows under `test/e2e/`; real sandboxed workflow validation.
 
-2. **Directory Structure:** Organize tests logically, typically mirroring the source code structure.
-    *(Example structure - adjust based on project)*
+2. **Directory Structure:** Organize tests around those three top-level folders.
 
     ```text
     project-root/
-    └── tests/  # Or 'spec/'
-        ├── unit/
-        │   └── my_module/
-        │       └── my_class_tests.ext # Use appropriate extension
-        ├── integration/
-        │   └── service_integration_tests.ext
+    └── test/
+        ├── fast/
+        │   ├── atoms/
+        │   ├── molecules/
+        │   ├── organisms/
+        │   └── models/
+        ├── feat/
+        │   └── cli_contract_test.rb
         ├── e2e/
-        │   └── user_workflow_tests.ext
-        ├── performance/
-        │   └── load_test.ext
-        ├── fixtures/ # Test data files (e.g., YAML, JSON)
-        ├── support/  # Test helpers, shared contexts, custom matchers
-        │   └── helpers.ext
-        └── test_helper.ext # Or 'spec_helper.ext' - Test configuration
+        │   └── TS-PACKAGE-001-scenario/
+        │       └── scenario.yml
+        ├── fixtures/
+        ├── support/
+        └── test_helper.rb
     ```
 
-    *(Refer to `docs/blueprint.md` for the project's actual structure)*
-
-3. **Test Pyramid:** Aim for a healthy test pyramid: many fast unit tests at the base, fewer integration
-   tests, and even fewer slow E2E tests at the top.
+3. **Test Pyramid:** Aim for many `fast` tests, fewer `feat` tests, and the smallest number of `e2e` scenarios.
 
 ## 2. Writing Good Tests
 
@@ -76,7 +64,7 @@ easier to guide the AI effectively.
 * **Stateless Components:** Where possible, favor stateless components or functions, as state
   management adds complexity to testing.
 
-Following these principles makes it easier to write focused unit tests and provide clearer instructions
+Following these principles makes it easier to write focused fast tests and provide clearer instructions
 to an AI agent when generating or modifying code.
 
 1. **Clarity:**
@@ -85,7 +73,8 @@ to an AI agent when generating or modifying code.
     * Keep tests focused on a single behavior or requirement.
 
 2. **Isolation:**
-    * Unit tests should mock dependencies to test the unit in isolation.
+    * Fast tests should mock or fake dependencies and stay in-process.
+    * Feat tests may use controlled local IO when that is the behavior under test.
     * Ensure tests clean up after themselves (reset state, delete created files/records) to avoid
       interference. Use `before`/`after` hooks carefully.
 
@@ -145,9 +134,9 @@ to an AI agent when generating or modifying code.
 ## 8. Test Performance Optimization
 
 For detailed patterns on test performance optimization including:
-- Performance targets by test layer (Unit <10ms, Integration <500ms, E2E <2s)
+- Performance targets by test layer (Fast <10ms for atoms, Feat <500ms when practical, E2E slower by design)
 - Composite test helpers (reduce deep nesting)
-- E2E to integration migration ("ONE E2E per file" rule)
+- E2E to feat migration when deterministic coverage is possible
 - Subprocess stubbing patterns (Open3, DiffOrchestrator)
 - Sleep stubbing for retry tests
 - Zombie mocks detection and prevention

@@ -18,21 +18,20 @@ ace-docs:
 
 - Total behaviors: {{count}}
 - High risk: {{high_risk_count}}
-- Unit tests planned: {{unit_count}}
-- Integration tests planned: {{integration_count}}
+- Fast tests planned: {{fast_count}}
+- Feat tests planned: {{feat_count}}
 - E2E tests planned: {{e2e_count}}
 
 ## Behaviors and Coverage
 
 | Behavior | Risk | Layer | Test File / ID | Source of Truth | Notes |
 |----------|------|-------|----------------|-----------------|-------|
-| {{behavior}} | High/Med/Low | Unit/Integration/E2E | {{test_file}} | {{source}} | {{notes}} |
+| {{behavior}} | High/Med/Low | Fast/Feat/E2E | {{test_file}} | {{source}} | {{notes}} |
 
 ### Layer Legend
 
-- **Unit (atoms)**: Pure logic, no I/O, <10ms
-- **Unit (molecules)**: Composed logic, stubbed I/O, <50ms
-- **Integration (organisms)**: Component wiring, stubbed external, <500ms
+- **Fast**: Isolated package tests in `test/fast`, no real external IO
+- **Feat**: Deterministic feature tests in `test/feat`, controlled local IO
 - **E2E**: Real I/O, sandboxed, seconds
 
 ### Risk Legend
@@ -72,8 +71,8 @@ Critical workflows requiring E2E validation:
 
 ## Action Items
 
-- [ ] Create unit tests for: {{list}}
-- [ ] Create integration tests for: {{list}}
+- [ ] Create fast tests for: {{list}}
+- [ ] Create feat tests for: {{list}}
 - [ ] Create E2E test: TS-{{AREA}}-{{NNN}}
 - [ ] Remove redundant tests: {{list}}
 - [ ] Update fixtures: {{list}}
