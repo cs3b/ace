@@ -20,9 +20,10 @@ module Ace
             desc <<~DESC.strip
               Run E2E tests via LLM execution
 
-              Discovers and executes deterministic integration tests from test/integration
-              before TS-* agent scenarios from test/e2e. Tests are sent to an LLM provider
-              which executes the scenario steps and returns structured results.
+              Discovers and executes deterministic preflight tests from test/feat
+              (or legacy test/integration when a package has not migrated yet)
+              before TS-* agent scenarios from test/e2e. Tests are sent to an LLM
+              provider which executes the scenario steps and returns structured results.
 
               Output:
                 Exit codes: 0 (all pass), 1 (any fail/error)
@@ -35,7 +36,7 @@ module Ace
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
               "ace-lint --tags smoke         # Run only smoke-tagged scenarios",
-              "ace-lint TS-LINT-003 --dry-run  # Preview integration and scenario phases"
+              "ace-lint TS-LINT-003 --dry-run  # Preview preflight and scenario phases"
             ]
 
             argument :package, required: true, desc: "Package name (e.g., ace-lint)"
@@ -55,7 +56,7 @@ module Ace
             option :report_dir, type: :string,
               desc: "Explicit report directory path (overrides computed path)"
             option :dry_run, type: :boolean,
-              desc: "Preview which integration tests and scenarios would run without executing"
+              desc: "Preview which preflight tests and scenarios would run without executing"
             option :tags, type: :string,
               desc: "Comma-separated scenario tags to include"
             option :verify, type: :boolean,
@@ -110,7 +111,7 @@ module Ace
 
             private
 
-            # Handle dry-run mode: preview which integration tests and scenarios would run
+            # Handle dry-run mode: preview which preflight tests and scenarios would run
             #
             # @param package [String] Package name
             # @param test_id [String, nil] Test ID
@@ -125,8 +126,8 @@ module Ace
                 tags: tags,
                 base_dir: Dir.pwd
               )
-              integration_files = discoverer.find_integration_tests(package: package, base_dir: Dir.pwd)
-              if files.empty? && integration_files.empty?
+              preflight_files = discoverer.find_integration_tests(package: package, base_dir: Dir.pwd)
+              if files.empty? && preflight_files.empty?
                 raise Ace::Support::Cli::Error.new(
                   "No tests found for package '#{package}'" +
                   (test_id ? " with ID '#{test_id}'" : "")
@@ -135,12 +136,12 @@ module Ace
 
               output.puts "Dry run: preview of execution phases"
               output.puts ""
-              output.puts "Phase 1: integration"
-              if integration_files.empty?
+              output.puts "Phase 1: deterministic preflight"
+              if preflight_files.empty?
                 output.puts "  (none)"
               else
-                integration_files.each do |file|
-                  output.puts "  [integration] #{file}"
+                preflight_files.each do |file|
+                  output.puts "  [preflight] #{file}"
                 end
               end
               output.puts ""
