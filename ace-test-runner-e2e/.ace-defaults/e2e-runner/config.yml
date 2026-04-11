@@ -2,16 +2,18 @@
 # This file provides defaults for the ace-test-runner-e2e gem
 
 paths:
-  # Where deterministic integration tests are stored in packages
-  integration: "test/integration"
+  # Preferred location for deterministic preflight tests in packages.
+  # Legacy packages may still use test/integration until migrated.
+  integration: "test/feat"
   # Where test scenarios are stored in packages
   scenarios: "test/e2e"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".ace-local/test-e2e"
 
 patterns:
-  # Glob pattern for deterministic integration tests
-  integration: "test/integration/**/*_test.rb"
+  # Glob pattern for deterministic preflight tests. Legacy packages may still
+  # rely on test/integration/**/*_test.rb until they migrate.
+  integration: "test/feat/**/*_test.rb"
   # Glob pattern for finding test scenarios (TS-format directories)
   discovery: "test/e2e/TS-*/scenario.yml"
 

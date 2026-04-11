@@ -17,7 +17,10 @@ module Ace
         class TestDiscoverer
           TEST_DIRS = ["test/e2e"].freeze
           SCENARIO_FILE = "scenario.yml"
-          INTEGRATION_GLOB = "test/integration/**/*_test.rb"
+          DEFAULT_PREFLIGHT_GLOBS = [
+            "test/feat/**/*_test.rb",
+            "test/integration/**/*_test.rb"
+          ].freeze
           SCENARIO_DIR_PATTERN = "TS-*"
 
           # Find E2E test scenario files matching criteria
@@ -52,7 +55,12 @@ module Ace
           # @return [Array<String>] Sorted list of matching deterministic integration test files
           def find_integration_tests(package:, base_dir: Dir.pwd)
             package_path = File.join(base_dir, package)
-            Dir.glob(File.join(package_path, INTEGRATION_GLOB)).sort
+            preflight_globs.each do |glob|
+              files = Dir.glob(File.join(package_path, glob)).sort
+              return files unless files.empty?
+            end
+
+            []
           end
 
           # Find TS-format scenario directories and load them as TestScenario models
@@ -142,6 +150,12 @@ module Ace
             end
 
             filtered
+          end
+
+          def preflight_globs
+            configured = Molecules::ConfigLoader.load.dig("patterns", "integration")
+            globs = [configured, *DEFAULT_PREFLIGHT_GLOBS].compact.uniq
+            globs.reject(&:empty?)
           end
         end
       end
