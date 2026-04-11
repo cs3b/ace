@@ -11,19 +11,17 @@ ace-docs:
 
 ## The Testing Pyramid
 
-ACE follows a strict testing pyramid with clear IO boundaries:
+ACE follows a strict three-level taxonomy with clear IO boundaries:
 
 | Layer | Location | IO Policy | Purpose |
 |-------|----------|-----------|---------|
-| **Unit (atoms)** | `test/atoms/` | **No IO** | Test pure logic in isolation |
-| **Unit (molecules)** | `test/molecules/` | **No IO** | Test component composition |
-| **Unit (organisms)** | `test/organisms/` | **Mocked IO** | Test business logic with stubbed boundaries |
-| **Integration** | `test/integration/` | **Mocked IO** | Test CLI/API surface with stubbed externals |
-| **E2E** | `test/e2e/TS-*/scenario.yml` | **Real IO** | Validate the real system works |
+| **Fast** | `test/fast/` | **No real IO** | Default fast loop for isolated package behavior |
+| **Feat** | `test/feat/` | **Controlled local IO** | Deterministic feature and CLI contract coverage |
+| **E2E** | `test/e2e/TS-*/scenario.yml` | **Real workflow IO** | Validate real user workflows in sandbox |
 
 ## IO Isolation Principle
 
-**Default: No IO in unit tests.** This means:
+**Default: No real IO in fast tests.** This means:
 
 - **No file system**: Use `MockGitRepo` or inline strings, not `File.read`
 - **No network**: Use `WebMock` stubs, not real HTTP calls
@@ -36,9 +34,16 @@ ACE follows a strict testing pyramid with clear IO boundaries:
 - Tests are deterministic (no flaky failures)
 - CI doesn't need special setup
 
-## When Real IO is Allowed
+## When Local IO is Allowed
 
-Real IO belongs in **E2E tests only** (`test/e2e/TS-*/`):
+Controlled local IO belongs in **feat** tests (`test/feat/`):
+
+- local subprocesses
+- tempdirs and filesystem setup
+- config cascade and CLI contract checks
+- deterministic package-level feature validation
+
+Real workflow IO belongs in **E2E** (`test/e2e/TS-*/`):
 
 - Executed by an agent, not the test runner
 - Verify the full system works end-to-end
@@ -59,7 +64,8 @@ Writing tests first drives design and ensures testability. Follow the Red-Green-
 
 ### 2. Isolation
 
-- Unit tests should mock dependencies to test the unit in isolation
+- Fast tests should stub boundaries and stay in-process
+- Feat tests may cross controlled local boundaries, but should not depend on live external services
 - Ensure tests clean up after themselves (reset state, delete created files/records)
 - Tests must be independent and runnable in any order
 

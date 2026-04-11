@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-04-11
+
+### Changed
+- Rewrote testing guides and responsibility-map templates to define the public ACE testing taxonomy as `fast`, `feat`, and `e2e`.
+- Added repository-level testing-pattern guidance that explains the new directory layout and command surface.
+
 ### Changed
 - Expanded `as-test-verify-suite` canonical skill metadata so public `verify-test-suite` assign-step discovery is skill-owned while keeping step-template rendering in catalog YAML.
 
