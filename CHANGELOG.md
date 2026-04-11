@@ -25,6 +25,9 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.31.0**: Restored the full two-phase E2E harness with deterministic `test/integration` execution before `test/e2e` scenarios, stricter artifact/report handling, and verifier fallback parsing that accepts minimal evidence responses.
 
 ### Changed
+- **ace-assign v0.45.1**: Standardized fork-step authoring guidance on a prompt-prep-style section layout and made report contracts require an explicit primary artifact path for forked work.
+- **ace-prompt-prep v0.23.7**: Clarified the base prompt template so deterministic execution prompts can omit `## Questions` and file-producing tasks must surface the primary artifact path in `## Report`.
+- **ace-retro v0.17.1**: Clarified `retro/analyze-worktree` so analyzed worktrees remain inputs, retro artifacts default to the current working branch, and wrappers should defer retro creation to `wfi://retro/create`.
 - **ace-test-runner v0.23.0**: Renamed package-level test-scope terminology to `target`, replaced `groups:` with `targets:` and `execution.mode: by-target`, kept suite package bucketing on `group`, and made `ace-test-suite --target feat` report real current-run feat results instead of stale summaries.
 - **ace-assign v0.45.0**: Updated assignment verification presets, step templates, and runtime child-step guidance so modified packages run `ace-test <package> all --profile 6`, batch verification keeps `ace-test-suite` on the default fast suite, and E2E checks stay package-targeted via `ace-test-e2e <package>`.
 - **ace-test-runner v0.22.0**: Renamed the public deterministic test surface to `fast` / `feat`, made bare `ace-test` default to `fast`, and made `all` run `fast` then `feat` while keeping `ace-test-e2e` as the separate scenario entrypoint.
