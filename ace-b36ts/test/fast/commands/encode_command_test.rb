@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 module Ace
   module B36ts

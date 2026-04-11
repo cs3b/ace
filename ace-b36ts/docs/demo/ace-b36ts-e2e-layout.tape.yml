@@ -1,5 +1,5 @@
 ---
-description: Showcase the restarted ace-b36ts E2E layout and deterministic target
+description: Showcase the ace-b36ts fast-feat-e2e layout and deterministic preflight
 tags:
 - ace-b36ts
 - e2e
@@ -12,11 +12,17 @@ settings:
 scenes:
 - name: Restarted E2E split
   commands:
-  - type: find ace-b36ts/test/integration -maxdepth 2 -type f
+  - type: find ace-b36ts/test/fast -maxdepth 3 -type f
+    sleep: 3s
+  - type: find ace-b36ts/test/feat -maxdepth 2 -type f
     sleep: 3s
   - type: find ace-b36ts/test/e2e -maxdepth 2 -type f
     sleep: 3s
-  - type: ace-test ace-b36ts e2e
+  - type: ace-test ace-b36ts
+    sleep: 3s
+  - type: ace-test ace-b36ts feat
+    sleep: 3s
+  - type: ace-test-e2e ace-b36ts --dry-run
     sleep: 5s
 teardown:
 - cleanup
