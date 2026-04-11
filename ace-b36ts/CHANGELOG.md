@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-04-11
+
+### Technical
+- Renamed the package-local `ace-test` config surface from `groups:` to `targets:` so `ace-b36ts` matches the shared `fast` / `feat` target contract.
+
 ### Technical
 - Piloted the new `test/fast`, `test/feat`, and `test/e2e` layout in `ace-b36ts`, added package-local `ace-test` aliases (`unit -> fast`, `integration/int -> feat`), and refreshed the layout demo tape to use the new test surface.
 
