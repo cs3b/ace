@@ -185,15 +185,15 @@ module Ace
         end
 
         def on_test_complete(file, success, duration)
-          # Detect group from file path
-          group = detect_group(file)
+          # Detect target from file path
+          target = detect_target(file)
 
-          # Print group header if it's a new group and groups are enabled
-          if @show_groups && group != @current_group
+          # Print target header if it's a new target and target headers are enabled
+          if @show_groups && target != @current_group
             puts unless @test_count == 0
             puts ""
-            puts colorize("═══ #{group.to_s.capitalize} Tests ═══", :cyan)
-            @current_group = group
+            puts colorize("═══ #{target.to_s.capitalize} Tests ═══", :cyan)
+            @current_group = target
             @test_count = 0  # Reset count for new line
           end
 
@@ -207,47 +207,44 @@ module Ace
             puts if @test_count % @line_width == 0
           end
 
-          # Track group counts
-          @group_counts[group] += 1 if @show_groups
+          # Track target counts
+          @group_counts[target] += 1 if @show_groups
         end
 
-        def detect_group(file_path)
+        def detect_target(file_path)
           case file_path
-          when /test\/unit\/atoms\//
+          when /test\/(fast|unit)\/atoms\//
             :atoms
-          when /test\/unit\/molecules\//
+          when /test\/(fast|unit)\/molecules\//
             :molecules
-          when /test\/unit\/organisms\//
+          when /test\/(fast|unit)\/organisms\//
             :organisms
-          when /test\/unit\/models\//
+          when /test\/(fast|unit)\/models\//
             :models
-          when /test\/integration\//
-            :integration
-          when /test\/system\//
-            :system
+          when /test\/feat\//
+            :feat
+          when /test\/edge\//
+            :edge
           else
             :other
           end
         end
 
-        def on_group_start(group_name, file_count)
-          # Print visual separator before group
+        def on_target_start(target_name, file_count)
           puts "" unless @test_count == 0
           puts ""
-          puts "Running #{group_name} (#{file_count} #{(file_count == 1) ? "file" : "files"})..."
+          puts "Running #{target_name} (#{file_count} #{(file_count == 1) ? "file" : "files"})..."
           @test_count = 0
         end
 
-        def on_group_complete(group_name, success, duration, summary)
-          # Ensure we're on a new line after dots
+        def on_target_complete(target_name, success, duration, summary)
           puts unless @test_count == 0 || @test_count % @line_width == 0
 
-          # Show group completion status
           status_icon = success ? "✓" : "✗"
           test_count = summary[:runs] || 0
           failure_count = summary[:failures] || 0
 
-          status_line = "#{status_icon} #{group_name} complete " +
+          status_line = "#{status_icon} #{target_name} complete " +
             "(#{format_duration(duration)}, #{test_count} tests, #{failure_count} failures)"
 
           puts colorize(status_line, success ? :green : :red)
@@ -258,12 +255,12 @@ module Ace
           # Ensure we're on a new line
           puts unless @test_count == 0 || @test_count % @line_width == 0
 
-          # Print group summary if we have groups and groups are enabled
+          # Print target summary if we have target headers enabled
           if @show_groups && @group_counts.any?
             puts ""
-            puts colorize("═══ Group Summary ═══", :cyan)
-            @group_counts.each do |group, count|
-              puts "  #{group.to_s.capitalize}: #{count} #{(count == 1) ? "file" : "files"}"
+            puts colorize("═══ Target Summary ═══", :cyan)
+            @group_counts.each do |target, count|
+              puts "  #{target.to_s.capitalize}: #{count} #{(count == 1) ? "file" : "files"}"
             end
           end
 

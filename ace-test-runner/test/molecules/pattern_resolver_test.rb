@@ -12,11 +12,12 @@ class PatternResolverTest < Minitest::Test
         molecules: "test/{fast/,}molecules/**/*_test.rb",
         organisms: "test/{fast/,}organisms/**/*_test.rb",
         models: "test/{fast/,}models/**/*_test.rb",
-        feat_tests: "test/{feat,integration}/**/*_test.rb"
+        edge: "test/edge/**/*_test.rb",
+        feat_tests: "test/feat/**/*_test.rb"
       },
-      groups: {
+      targets: {
         fast: %w[atoms molecules organisms models],
-        feat: %w[feat_tests],
+        feat: %w[feat_tests edge],
         unit: %w[fast],
         integration: %w[feat],
         int: %w[feat],
@@ -37,7 +38,7 @@ class PatternResolverTest < Minitest::Test
     end
   end
 
-  def test_resolve_target_with_known_group
+  def test_resolve_target_with_known_named_target
     # Mock Dir.glob for multiple patterns
     glob_returns = {
       "test/{fast/,}atoms/**/*_test.rb" => ["test/fast/atoms/foo_test.rb"],
@@ -174,13 +175,13 @@ class PatternResolverTest < Minitest::Test
     assert_equal "other", @resolver.classify_file("test/some_other_test.rb")
   end
 
-  def test_recursive_group_expansion
+  def test_recursive_target_expansion
     config = Ace::TestRunner::Models::TestConfiguration.new(
       patterns: {
         atoms: "test/{fast/,}atoms/**/*_test.rb",
         molecules: "test/{fast/,}molecules/**/*_test.rb"
       },
-      groups: {
+      targets: {
         quick: %w[atoms],
         fast: %w[quick molecules],
         all: %w[fast]
@@ -203,9 +204,10 @@ class PatternResolverTest < Minitest::Test
     end
   end
 
-  def test_normalizes_legacy_targets_to_new_groups
+  def test_normalizes_legacy_targets_to_new_targets
     glob_returns = {
-      "test/{feat,integration}/**/*_test.rb" => ["test/feat/cli_contract_test.rb"]
+      "test/feat/**/*_test.rb" => ["test/feat/cli_contract_test.rb"],
+      "test/edge/**/*_test.rb" => []
     }
 
     Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
@@ -214,5 +216,37 @@ class PatternResolverTest < Minitest::Test
         assert_equal ["test/feat/cli_contract_test.rb"], @resolver.resolve_target("int")
       end
     end
+  end
+
+  def test_resolve_target_feat_does_not_include_legacy_integration_files
+    glob_returns = {
+      "test/feat/**/*_test.rb" => ["test/feat/cli_contract_test.rb"],
+      "test/edge/**/*_test.rb" => []
+    }
+
+    Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
+      File.stub :file?, true do
+        assert_equal ["test/feat/cli_contract_test.rb"], @resolver.resolve_target("feat")
+      end
+    end
+  end
+
+  def test_detects_cyclic_target_definitions
+    config = Ace::TestRunner::Models::TestConfiguration.new(
+      patterns: {
+        feat_tests: "test/feat/**/*_test.rb"
+      },
+      targets: {
+        feat: %w[integration],
+        integration: %w[feat]
+      }
+    )
+    resolver = Ace::TestRunner::Molecules::PatternResolver.new(config)
+
+    error = assert_raises(ArgumentError) do
+      resolver.resolve_target_sequential("feat")
+    end
+
+    assert_match(/Cyclic test target definition detected/, error.message)
   end
 end

@@ -4,7 +4,7 @@ require_relative "../formatters/base_formatter"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/pattern_resolver"
 require_relative "../atoms/report_directory_resolver"
-require_relative "sequential_group_executor"
+require_relative "sequential_target_executor"
 
 module Ace
   module TestRunner
@@ -63,11 +63,11 @@ module Ace
             puts "Running tests in #{File.basename(@package_dir)}..."
           end
 
-          # Check if sequential group execution should be used
+          # Check if sequential target execution should be used
           if should_execute_sequentially?
-            # Use default "fast" group if no target specified in grouped mode
+            # Use default "fast" target if no target specified in by-target mode
             @configuration.target ||= "fast"
-            return run_sequential_groups(start_time)
+            return run_sequential_targets(start_time)
           end
 
           # Find test files
@@ -116,7 +116,7 @@ module Ace
             # Each file was executed separately, parse and sum them all
             aggregate_individual_results(execution_result[:stdout])
           else
-            # Single command execution (grouped)
+            # Single command execution (by-target)
             @result_parser.parse_output(execution_result[:stdout])
           end
 
@@ -199,21 +199,19 @@ module Ace
           if @configuration.failure_limits
             formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
           end
-          # Disable group headers in on_test_complete to avoid duplicates with on_group_start/complete
+          # Disable target headers in on_test_complete to avoid duplicates with on_target_start/complete
           formatter_options[:show_groups] = false
           @formatter = @configuration.formatter_class.new(formatter_options)
         end
 
-        def run_sequential_groups(start_time)
-          # Resolve groups sequentially
-          groups = @pattern_resolver.resolve_group_sequential(@configuration.target)
+        def run_sequential_targets(start_time)
+          targets = @pattern_resolver.resolve_target_sequential(@configuration.target)
 
-          if groups.empty?
+          if targets.empty?
             return handle_no_tests
           end
 
-          # Count total files
-          all_files = groups.flat_map { |g| g[:files] }
+          all_files = targets.flat_map { |t| t[:files] }
 
           resolve_and_set_report_dir_context(all_files)
 
@@ -226,15 +224,13 @@ module Ace
             @formatter.on_start(all_files.size)
           end
 
-          # Create sequential executor
-          executor = SequentialGroupExecutor.new(
+          executor = SequentialTargetExecutor.new(
             test_executor: @test_executor,
             result_parser: @result_parser,
             formatter: @formatter
           )
 
-          # Execute groups sequentially
-          execution_result = executor.execute_groups(groups, sequential_options) do |event|
+          execution_result = executor.execute_targets(targets, sequential_options) do |event|
             case event[:type]
             when :stdout
               @formatter.on_test_stdout(event[:content]) if @formatter.respond_to?(:on_test_stdout)
@@ -297,8 +293,8 @@ module Ace
           end
 
           # Show stopped message if execution was stopped
-          if execution_result[:stopped_at_group]
-            puts "\nSTOPPED: Group '#{execution_result[:stopped_at_group]}' failed (--fail-fast enabled)"
+          if execution_result[:stopped_at_target]
+            puts "\nSTOPPED: Target '#{execution_result[:stopped_at_target]}' failed (--fail-fast enabled)"
           end
 
           # Return exit code
@@ -310,10 +306,9 @@ module Ace
           # This ensures that commands like `ace-test test/atoms/foo_test.rb` run only that file
           return false if @configuration.files && !@configuration.files.empty?
 
-          # Only use sequential groups if execution_mode is "grouped"
-          return false unless @configuration.execution_mode == "grouped"
+          return false unless @configuration.execution_mode == "by-target"
 
-          # Explicit --run-in-single-batch bypasses grouped execution
+          # Explicit --run-in-single-batch bypasses by-target execution
           return false if @configuration.run_in_single_batch
 
           # When profiling without a specific target, run as single batch for accurate timing
@@ -322,14 +317,14 @@ module Ace
             return false
           end
 
-          # If no target specified, default to "fast" group for grouped mode
+          # If no target specified, default to "fast" target for by-target mode
           target = @configuration.target || "fast"
 
           target_str = target.to_s
           target_sym = target.to_sym
 
           # Check both string and symbol keys for compatibility
-          @configuration.groups&.key?(target_str) || @configuration.groups&.key?(target_sym)
+          @configuration.targets&.key?(target_str) || @configuration.targets&.key?(target_sym)
         end
 
         def sequential_options
@@ -338,8 +333,8 @@ module Ace
             verbose: @configuration.verbose,
             per_file: @configuration.per_file,
             profile: @configuration.profile,
-            group_fail_fast: @configuration.execution&.[](:group_fail_fast),
-            group_isolation: @configuration.group_isolation
+            target_fail_fast: @configuration.execution&.[](:target_fail_fast),
+            target_isolation: @configuration.target_isolation
           }
         end
 
@@ -361,7 +356,7 @@ module Ace
             filter: options[:filter],
             fix_deprecations: options[:fix_deprecations],
             patterns: config_with_options.patterns,
-            groups: config_with_options.groups,
+            targets: config_with_options.targets,
             target: options[:target],
             config_path: options[:config_path],
             timeout: options[:timeout],
@@ -413,7 +408,7 @@ module Ace
             exit 1
           end
 
-          # If using catch-all pattern, reinitialize formatter without groups
+          # If using catch-all pattern, reinitialize formatter without target headers
           if @pattern_resolver.using_catch_all
             formatter_options = @configuration.to_h.merge(show_groups: false)
             if @configuration.failure_limits
@@ -454,11 +449,11 @@ module Ace
             verbose: @configuration.verbose,
             per_file: @configuration.per_file,  # Allow per-file execution if needed for debugging
             profile: @configuration.profile,      # Add profile option for verbose timing
-            group_isolation: @configuration.group_isolation  # Pass through for execution mode selection
+            target_isolation: @configuration.target_isolation  # Pass through for execution mode selection
           }
 
           # Always use execute_with_progress for consistent interface
-          # The method internally decides whether to run per-file or grouped
+          # The method internally decides whether to run per-file or by-target
           @test_executor.execute_with_progress(test_files, options) do |event|
             case event[:type]
             when :stdout

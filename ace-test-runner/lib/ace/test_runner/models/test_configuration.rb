@@ -7,7 +7,7 @@ module Ace
       class TestConfiguration
         attr_accessor :format, :report_dir, :save_reports, :fail_fast,
           :verbose, :filter, :fix_deprecations, :patterns,
-          :timeout, :parallel, :color, :per_file, :groups,
+          :timeout, :parallel, :color, :per_file, :targets,
           :target, :config_path, :failure_limits, :profile,
           :execution, :files, :run_in_single_batch
 
@@ -20,13 +20,13 @@ module Ace
           @filter = attributes[:filter]
           @fix_deprecations = attributes[:fix_deprecations] || false
           @patterns = attributes[:patterns] || default_patterns
-          @groups = attributes[:groups] || default_groups
+          @targets = attributes[:targets] || default_targets
           @target = attributes[:target]
           @config_path = attributes[:config_path]
           @timeout = attributes[:timeout]  # In seconds, nil = no timeout
           @parallel = attributes[:parallel] || false
           @color = attributes.fetch(:color, true)
-          @per_file = attributes[:per_file] || false  # Default to grouped execution for performance
+          @per_file = attributes[:per_file] || false  # Default to by-target execution for performance
           @failure_limits = attributes[:failure_limits] || {max_display: 7}
           @profile = attributes[:profile]  # nil means no profiling, number means show N slowest tests
           @execution = attributes[:execution] || {}
@@ -48,8 +48,8 @@ module Ace
           end
 
           # Validate execution_mode if provided
-          if execution_mode && !%w[grouped all-at-once].include?(execution_mode)
-            raise ArgumentError, "Unknown execution_mode '#{execution_mode}'. Valid modes: grouped, all-at-once"
+          if execution_mode && !%w[by-target all-at-once].include?(execution_mode)
+            raise ArgumentError, "Unknown execution_mode '#{execution_mode}'. Valid modes: by-target, all-at-once"
           end
 
           true
@@ -60,11 +60,11 @@ module Ace
           @execution&.[](:mode) || @execution&.dig("mode") || "all-at-once"
         end
 
-        def group_isolation
-          # Default to true for better isolation in grouped mode
+        def target_isolation
+          # Default to true for better isolation in by-target mode
           # Use fetch to handle false values correctly (|| would treat false as falsy)
-          mode = @execution&.[](:group_isolation)
-          mode = @execution&.dig("group_isolation") if mode.nil?
+          mode = @execution&.[](:target_isolation)
+          mode = @execution&.dig("target_isolation") if mode.nil?
           mode.nil? || mode
         end
 
@@ -83,7 +83,7 @@ module Ace
             filter: filter,
             fix_deprecations: fix_deprecations,
             patterns: patterns,
-            groups: groups,
+            targets: targets,
             target: target,
             config_path: config_path,
             timeout: timeout,
@@ -141,7 +141,7 @@ module Ace
           }
         end
 
-        def default_groups
+        def default_targets
           {
             fast: %w[smoke atoms molecules organisms models commands cli prompts fixtures support],
             feat: %w[feat_tests edge],

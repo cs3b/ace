@@ -78,7 +78,7 @@ module Ace
           option :fail_fast, type: :boolean, desc: "Stop execution on first failure"
           option :fix_deprecations, type: :boolean, desc: "Auto-fix deprecated test patterns"
           option :filter, type: :string, desc: "Run only tests matching pattern"
-          option :group, type: :string, aliases: %w[-g], desc: "Run specific test group (fast, feat, all)"
+          option :target, type: :string, aliases: %w[-g], desc: "Run specific test target (fast, feat, all)"
           option :color, type: :boolean, desc: "Enable/disable colored output (default: enabled)"
           option :config_path, type: :string, aliases: %w[-c], desc: "Configuration file path (default: .ace/test-runner.yml)"
 
@@ -92,7 +92,7 @@ module Ace
           option :per_file, type: :boolean, desc: "Execute each test file separately (slower, for debugging)"
           option :direct, type: :boolean, desc: "Force in-process execution (faster, less isolation)"
           option :subprocess, type: :boolean, desc: "Force subprocess execution (slower, full isolation)"
-          option :run_in_sequence, type: :boolean, aliases: %w[--ris], desc: "Run test groups sequentially (default)"
+          option :run_in_sequence, type: :boolean, aliases: %w[--ris], desc: "Run test targets sequentially (default)"
           option :run_in_single_batch, type: :boolean, aliases: %w[--risb], desc: "Run all tests together in single batch"
 
           # Rake integration options
@@ -122,6 +122,10 @@ module Ace
             numeric_options = %i[timeout max_display profile cleanup_keep cleanup_age]
             numeric_options.each do |key|
               options[key] = options[key].to_i if options[key]
+            end
+
+            if options[:target] && args.none? { |arg| !arg.start_with?("-") && !File.exist?(arg) }
+              args = [options[:target]] + args
             end
 
             # Build test options with defaults
@@ -168,6 +172,7 @@ module Ace
             end
             # Remove the run_in_sequence key as it's only used to set run_in_single_batch
             symbolized_options.delete(:run_in_sequence)
+            symbolized_options.delete(:target)
 
             # Default options - symbolized_options will override these for any explicit values
             {

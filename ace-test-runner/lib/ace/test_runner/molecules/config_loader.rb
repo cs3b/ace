@@ -145,7 +145,7 @@ module Ace
         def normalize_config(config)
           # Ensure all sections exist as hashes (defaults already merged in load)
           config[:patterns] ||= {}
-          config[:groups] ||= {}
+          config[:targets] ||= {}
           config[:defaults] ||= {}
           config[:failure_limits] ||= {}
           config[:execution] ||= {}

@@ -13,12 +13,12 @@ module Ace
         def initialize(config)
           @config = config
           @patterns = normalize_keys(config.patterns || {})
-          @groups = normalize_keys(config.groups || {})
+          @targets = normalize_keys(config.targets || {})
           @using_catch_all = false
         end
 
         def resolve_target(target)
-          return resolve_group("fast") if target.nil?
+          return resolve_named_target("fast") if target.nil?
           return resolve_all_files if target == "all"
           return [target] if File.exist?(target)
 
@@ -26,8 +26,8 @@ module Ace
           target_key = normalize_target(target)
           raise_unsupported_target_error(target_key) if %w[e2e all-with-e2e system].include?(target_key)
 
-          if @groups.key?(target_key)
-            resolve_group(target_key)
+          if @targets.key?(target_key)
+            resolve_named_target(target_key)
           elsif @patterns.key?(target_key)
             expand_pattern(@patterns[target_key])
           elsif looks_like_file_path?(target)
@@ -42,23 +42,24 @@ module Ace
           targets.flat_map { |target| resolve_target(target) }.uniq
         end
 
-        def resolve_group_sequential(group_name)
-          group_key = group_name.to_s
-          group_members = @groups[group_key]
-          return [] unless group_members
+        def resolve_target_sequential(target_name, seen = [])
+          target_key = target_name.to_s
+          if seen.include?(target_key)
+            raise ArgumentError, "Cyclic test target definition detected: #{(seen + [target_key]).join(' -> ')}"
+          end
 
-          group_members.flat_map do |member|
+          target_members = @targets[target_key]
+          return [] unless target_members
+
+          target_members.flat_map do |member|
             member_key = member.to_s
 
-            if @groups.key?(member_key)
-              # Recursively expand nested groups
-              resolve_group_sequential(member_key)
+            if @targets.key?(member_key)
+              resolve_target_sequential(member_key, seen + [target_key])
             elsif @patterns.key?(member_key)
-              # Pattern found - return as a group
               files = expand_pattern(@patterns[member_key])
               files.empty? ? [] : [{name: display_name_for(member_key), files: files}]
             else
-              # Direct pattern - expand and wrap
               files = expand_pattern(member)
               files.empty? ? [] : [{name: "other", files: files}]
             end
@@ -66,7 +67,7 @@ module Ace
         end
 
         def available_targets
-          (@groups.keys + @patterns.keys)
+          (@targets.keys + @patterns.keys)
             .map(&:to_s)
             .reject { |name| INTERNAL_PATTERN_LABELS.key?(name) }
             .sort
@@ -114,21 +115,23 @@ module Ace
           hash.transform_keys(&:to_s)
         end
 
-        def resolve_group(group_name)
-          # Normalize to string
-          group_key = normalize_target(group_name)
-          group_members = @groups[group_key]
-          return [] unless group_members
+        def resolve_named_target(target_name, seen = [])
+          target_key = normalize_target(target_name)
+          if seen.include?(target_key)
+            raise ArgumentError, "Cyclic test target definition detected: #{(seen + [target_key]).join(' -> ')}"
+          end
 
-          group_members.flat_map do |member|
+          target_members = @targets[target_key]
+          return [] unless target_members
+
+          target_members.flat_map do |member|
             member_key = member.to_s
 
-            if @groups.key?(member_key)
-              resolve_group(member_key) # Recursive expansion
+            if @targets.key?(member_key)
+              resolve_named_target(member_key, seen + [target_key])
             elsif @patterns.key?(member_key)
               expand_pattern(@patterns[member_key])
             else
-              # Direct pattern or file
               expand_pattern(member)
             end
           end.uniq
@@ -145,9 +148,9 @@ module Ace
           catch_all_files = all_test_files - expand_pattern("test/e2e/**/*_test.rb")
           @using_catch_all = false
 
-          # First check if "all" group is defined
-          if @groups.key?("all")
-            return resolve_group("all")
+          # First check if "all" target is defined
+          if @targets.key?("all")
+            return resolve_named_target("all")
           end
 
           # If no "all" group, try all defined patterns

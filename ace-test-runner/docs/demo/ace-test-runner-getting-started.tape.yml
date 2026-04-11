@@ -22,7 +22,7 @@ scenes:
             sleep: 5s
           - type: clear
             sleep: 1s
-    - name: Run targeted group
+    - name: Run targeted target
       commands:
           - type: ace-test ace-b36ts atoms
             sleep: 3s

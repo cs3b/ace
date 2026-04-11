@@ -105,12 +105,12 @@ module Ace
         def test_build_command_includes_target_when_configured
           monitor = ProcessMonitor.new
           package = {"name" => "ace-test-runner", "path" => "."}
-          options = {"format" => "progress", "target" => "e2e"}
+          options = {"format" => "progress", "target" => "feat"}
 
           command = monitor.send(:build_command, package, options)
 
           assert_equal "ace-test", command.first
-          assert_equal "e2e", command.last
+          assert_equal "feat", command.last
         end
 
         def test_build_command_omits_target_when_not_configured
@@ -121,6 +121,45 @@ module Ace
           command = monitor.send(:build_command, package, options)
 
           refute_includes command, "e2e"
+        end
+
+        def test_nonzero_exit_does_not_reuse_stale_summary
+          Dir.mktmpdir do |tmpdir|
+            pkg = package_config(tmpdir, "ace-stale")
+            report_root = File.join(tmpdir, ".ace-local", "test", "reports")
+            reports_dir = File.join(report_root, "stale", "latest")
+            summary_path = File.join(reports_dir, "summary.json")
+            FileUtils.mkdir_p(reports_dir)
+            File.write(summary_path, JSON.generate({
+              total: 12, passed: 12, failed: 0, errors: 0, skipped: 0, duration: 0.2, success: true
+            }))
+            stale_time = Time.now - 60
+            File.utime(stale_time, stale_time, summary_path)
+
+            statuses = []
+            monitor = FakeProcessMonitor.new(
+              command_map: {
+                "ace-stale" => ["ruby", "-e", "warn 'boom'; exit 1"]
+              },
+              max_parallel: 1
+            )
+
+            monitor.start_package(pkg, {"report_dir" => report_root}) do |_package, status, _output|
+              statuses << status.dup
+            end
+
+            wait_until(timeout: 5) do
+              monitor.check_processes
+              !monitor.running?
+            end
+
+            final_status = statuses.find { |status| status[:completed] }
+            refute_nil final_status
+            refute final_status[:success]
+            assert_equal 0, final_status.dig(:results, :tests)
+            assert_equal 1, final_status.dig(:results, :errors)
+            assert_match(/boom|status 1/, final_status.dig(:results, :error))
+          end
         end
 
         private
