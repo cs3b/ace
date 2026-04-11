@@ -65,9 +65,9 @@ module Ace
           return :subprocess if options[:subprocess] || @force_mode == :subprocess
           return :direct if options[:direct] || @force_mode == :direct
 
-          # Check group_isolation config for sequential group execution
+          # Check target_isolation config for sequential target execution
           # true = subprocess for better isolation
-          if options[:group_isolation] == true
+          if options[:target_isolation] == true
             return :subprocess
           end
 

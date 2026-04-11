@@ -3,8 +3,8 @@
 module Ace
   module TestRunner
     module Models
-      # Represents a group of tests to be executed together
-      class TestGroup
+      # Represents a target of tests to be executed together
+      class TestTarget
         attr_reader :name, :patterns, :files, :options
 
         def initialize(name:, patterns: [], files: [], options: {})
@@ -14,7 +14,7 @@ module Ace
           @options = options
         end
 
-        # Find all test files matching this group's patterns
+        # Find all test files matching this target's patterns
         def find_files
           return @files unless @files.empty?
 
@@ -22,7 +22,7 @@ module Ace
           detector.find_test_files
         end
 
-        # Execute this group's tests
+        # Execute this target's tests
         def execute(executor, formatter_options = {})
           test_files = find_files
           return empty_result if test_files.empty?
@@ -31,7 +31,7 @@ module Ace
           executor.execute_tests(test_files, options)
         end
 
-        # Check if a file belongs to this group
+        # Check if a file belongs to this target
         def includes_file?(file_path)
           return true if @files.include?(file_path)
 
@@ -49,11 +49,11 @@ module Ace
           }
         end
 
-        # Load groups from configuration
+        # Load targets from configuration
         def self.from_config(config)
-          groups = config.fetch("groups", default_groups)
+          targets = config.fetch("targets", default_targets)
 
-          groups.map do |name, definition|
+          targets.map do |name, definition|
             new(
               name: name,
               patterns: definition["patterns"] || [],
@@ -63,15 +63,15 @@ module Ace
           end
         end
 
-        # Default test groups for common Ruby project structures
-        def self.default_groups
+        # Default test targets for common Ruby project structures
+        def self.default_targets
           {
             "fast" => {
               "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/unit/**/*_test.rb"],
               "options" => {}
             },
             "feat" => {
-              "patterns" => ["test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
+              "patterns" => ["test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
               "options" => {}
             },
             "unit" => {
@@ -80,12 +80,12 @@ module Ace
               "options" => {}
             },
             "integration" => {
-              "patterns" => ["test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
+              "patterns" => ["test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
               "files" => [],
               "options" => {}
             },
             "all" => {
-              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
+              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
               "options" => {}
             }
           }
@@ -96,7 +96,7 @@ module Ace
         def empty_result
           {
             stdout: "",
-            stderr: "No test files found for group '#{@name}'",
+            stderr: "No test files found for target '#{@name}'",
             status: OpenStruct.new(success?: true, exitstatus: 0),
             command: "",
             start_time: Time.now,

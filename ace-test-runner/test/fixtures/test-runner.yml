@@ -4,10 +4,9 @@ patterns:
   molecules: 'test/{fast/,}molecules/**/*_test.rb'
   organisms: 'test/{fast/,}organisms/**/*_test.rb'
   models: 'test/{fast/,}models/**/*_test.rb'
-  feat_tests: 'test/{feat,integration}/**/*_test.rb'
-  integration: 'test/integration/**/*_test.rb'
+  feat_tests: 'test/feat/**/*_test.rb'
   helpers: 'test/helpers/**/*_test.rb'
-groups:
+targets:
   fast: [atoms, molecules, organisms, models]
   feat: [feat_tests]
   unit: [fast]

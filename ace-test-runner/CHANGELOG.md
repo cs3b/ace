@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-04-11
+
+### Changed
+- Renamed package-level test-scope terminology to `target` across CLI, runtime, docs, and config, with `targets:` replacing `groups:` and `execution.mode: by-target` replacing the old grouped wording.
+- Kept suite package bucketing on `group` so `ace-test-suite --group` continues to mean package selection while `--target` stays package-local test scope.
+
+### Fixed
+- Made `ace-test-suite --target feat` fail closed on current-run subprocess errors instead of reusing stale package summaries, so suite totals now reflect real feat-only execution.
+
+### Technical
+- Renamed sequential-execution and target-model internals to match the public `target` contract and added regression coverage for config loading, resolver cycles, explicit-file execution, and suite summary freshness.
+
 ## [0.22.0] - 2026-04-11
 
 ### Changed

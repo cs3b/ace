@@ -22,7 +22,7 @@ class ConfigLoaderTest < Minitest::Test
 
     assert_equal 1, defaults[:version]
     assert defaults[:patterns].is_a?(Hash)
-    assert defaults[:groups].is_a?(Hash)
+    assert defaults[:targets].is_a?(Hash)
     assert defaults[:defaults].is_a?(Hash)
     assert defaults[:failure_limits].is_a?(Hash)
   end
@@ -33,7 +33,7 @@ class ConfigLoaderTest < Minitest::Test
     config = @loader.load
     assert_equal 1, config[:version]
     assert config[:patterns].is_a?(Hash)
-    assert config[:groups].is_a?(Hash)
+    assert config[:targets].is_a?(Hash)
     assert config[:defaults].is_a?(Hash)
   end
 
@@ -44,7 +44,7 @@ class ConfigLoaderTest < Minitest::Test
         version: 1
         patterns:
           custom: "test/custom/**/*_test.rb"
-        groups:
+        targets:
           custom_group:
             - custom
         defaults:
@@ -55,7 +55,7 @@ class ConfigLoaderTest < Minitest::Test
 
       config = @loader.load(file.path)
       assert_equal "test/custom/**/*_test.rb", config[:patterns][:custom]
-      assert_equal ["custom"], config[:groups][:custom_group]
+      assert_equal ["custom"], config[:targets][:custom_group]
       assert_equal "markdown", config[:defaults][:reporter]
     end
   end
@@ -83,7 +83,7 @@ class ConfigLoaderTest < Minitest::Test
     config = {
       version: 1,
       patterns: {},
-      groups: {},
+      targets: {},
       defaults: {
         reporter: "progress",
         color: "auto",
@@ -117,7 +117,7 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_validate_config_version
-    config = {patterns: {}, groups: {}}
+    config = {patterns: {}, targets: {}}
     validated = @loader.send(:validate_config, config)
     assert_equal 1, validated[:version]
   end
@@ -126,7 +126,7 @@ class ConfigLoaderTest < Minitest::Test
     config = {version: 1}
     normalized = @loader.send(:normalize_config, config)
     assert normalized[:patterns]
-    assert normalized[:groups]
+    assert normalized[:targets]
     assert normalized[:defaults]
     assert normalized[:failure_limits]
   end
@@ -139,14 +139,14 @@ class ConfigLoaderTest < Minitest::Test
     assert_equal "test/{fast/,unit/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
   end
 
-  def test_gem_defaults_include_expected_groups
+  def test_gem_defaults_include_expected_targets
     defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
 
-    assert_includes defaults[:groups][:fast], "atoms"
-    assert_includes defaults[:groups][:fast], "molecules"
-    assert_equal ["fast"], defaults[:groups][:unit]
-    assert_equal ["feat"], defaults[:groups][:integration]
-    assert_includes defaults[:groups][:quick], "atoms"
+    assert_includes defaults[:targets][:fast], "atoms"
+    assert_includes defaults[:targets][:fast], "molecules"
+    assert_equal ["fast"], defaults[:targets][:unit]
+    assert_equal ["feat"], defaults[:targets][:integration]
+    assert_includes defaults[:targets][:quick], "atoms"
   end
 
   def test_gem_defaults_include_expected_defaults

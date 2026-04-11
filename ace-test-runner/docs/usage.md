@@ -21,7 +21,7 @@ ace-test [PACKAGE] [TARGET] [options] [files...]
 - `TARGET` (optional): `atoms`, `molecules`, `organisms`, `models`, `fast`, `feat`, `all`, `quick`.
 - `files` (optional): one or more `.rb` files or `file.rb:line` entries.
 
-File args take precedence over target/group execution.
+File args take precedence over target execution.
 
 ### Global and execution options
 
@@ -31,7 +31,7 @@ File args take precedence over target/group execution.
 - `--fail-fast`: stop on first failure
 - `--fix-deprecations`: patch deprecated test patterns when possible
 - `--filter PATTERN`: run tests matching a name pattern
-- `-g`, `--group GROUP`: force a group (`fast`, `feat`, `all`)
+- `-g`, `--target TARGET`: force a target (`fast`, `feat`, `all`)
 - `--color` / `--no-color`
 - `-c`, `--config-path FILE`: explicit configuration file
 - `--timeout SEC`: execution timeout in seconds
@@ -41,7 +41,7 @@ File args take precedence over target/group execution.
 - `--per-file`: execute each test file separately
 - `--direct`: run in-process executor
 - `--subprocess`: run in isolated subprocess mode
-- `--ris`, `--run-in-sequence`: run groups in sequence
+- `--ris`, `--run-in-sequence`: run targets in sequence
 - `--risb`, `--run-in-single-batch`: run all tests in one batch
 - `--set-default-rake`: set `ace-test` as default rake test command
 - `--unset-default-rake`: remove rake integration
@@ -94,7 +94,7 @@ ace-test-suite [options]
 
 - `ace-test` resolves package arguments using ACE package discovery.
 - `ace-test-suite --timeout` is enforced at the suite layer and terminates the timed-out package process group before continuing with queued packages.
-- Bare `ace-test <package>` resolves to the `fast` group.
+- Bare `ace-test <package>` resolves to the `fast` target.
 - `feat` is the deterministic feature layer with controlled local IO.
 - Scenario E2E is run with `ace-test-e2e <package>`, not `ace-test <package> e2e`.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.

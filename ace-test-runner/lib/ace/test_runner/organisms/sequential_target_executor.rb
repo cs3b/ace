@@ -3,28 +3,28 @@
 module Ace
   module TestRunner
     module Organisms
-      # Executes test groups sequentially with visual separation and fail-fast support
-      class SequentialGroupExecutor
+      # Executes test targets sequentially with visual separation and fail-fast support
+      class SequentialTargetExecutor
         def initialize(test_executor:, result_parser:, formatter: nil)
           @test_executor = test_executor
           @result_parser = result_parser
           @formatter = formatter
         end
 
-        def execute_groups(groups, options = {})
-          fail_fast = options[:fail_fast] || options[:group_fail_fast]
+        def execute_targets(targets, options = {})
+          fail_fast = options[:fail_fast] || options[:target_fail_fast]
           all_results = []
           all_files = []
-          group_results = []
+          target_results = []
 
-          groups.each do |group|
-            group_name = group[:name]
-            files = group[:files]
+          targets.each do |target|
+            target_name = target[:name]
+            files = target[:files]
             next if files.empty?
 
-            # Notify formatter of group start
-            if @formatter&.respond_to?(:on_group_start)
-              @formatter.on_group_start(group_name, files.size)
+            # Notify formatter of target start
+            if @formatter&.respond_to?(:on_target_start)
+              @formatter.on_target_start(target_name, files.size)
             end
 
             start_time = Time.now
@@ -45,20 +45,20 @@ module Ace
             duration = Time.now - start_time
             success = result[:success]
 
-            # Store group result
-            group_result = {
-              name: group_name,
+            # Store target result
+            target_result = {
+              name: target_name,
               success: success,
               duration: duration,
               parsed: parsed,
               files: files
             }
-            group_results << group_result
+            target_results << target_result
 
-            # Notify formatter of group completion
-            if @formatter&.respond_to?(:on_group_complete)
-              @formatter.on_group_complete(
-                group_name,
+            # Notify formatter of target completion
+            if @formatter&.respond_to?(:on_target_complete)
+              @formatter.on_target_complete(
+                target_name,
                 success,
                 duration,
                 parsed[:summary]
@@ -69,15 +69,14 @@ module Ace
             all_results << result
             all_files.concat(files)
 
-            # Stop if group failed and fail_fast is enabled
+            # Stop if target failed and fail_fast is enabled
             if fail_fast && !success
-              # Return early with aggregated results so far
-              return build_aggregated_result(group_results, all_files, all_results, stopped: group_name)
+              return build_aggregated_result(target_results, all_files, all_results, stopped: target_name)
             end
           end
 
-          # All groups completed successfully (or fail_fast not enabled)
-          build_aggregated_result(group_results, all_files, all_results)
+          # All targets completed successfully (or fail_fast not enabled)
+          build_aggregated_result(target_results, all_files, all_results)
         end
 
         private
@@ -123,7 +122,7 @@ module Ace
           aggregated
         end
 
-        def build_aggregated_result(group_results, all_files, all_results, stopped: nil)
+        def build_aggregated_result(target_results, all_files, all_results, stopped: nil)
           # Aggregate all parsed results
           total_summary = {
             runs: 0,
@@ -138,8 +137,8 @@ module Ace
           total_duration = 0.0
           all_test_times = []
 
-          group_results.each do |gr|
-            parsed = gr[:parsed]
+          target_results.each do |tr|
+            parsed = tr[:parsed]
             total_summary[:runs] += parsed[:summary][:runs]
             total_summary[:assertions] += parsed[:summary][:assertions]
             total_summary[:failures] += parsed[:summary][:failures]
@@ -149,7 +148,7 @@ module Ace
 
             all_failures.concat(parsed[:failures] || [])
             all_deprecations.concat(parsed[:deprecations] || [])
-            total_duration += gr[:duration]
+            total_duration += tr[:duration]
             all_test_times.concat(parsed[:test_times] || [])
           end
 
@@ -176,7 +175,7 @@ module Ace
               duration: total_duration,
               test_times: all_test_times
             },
-            stopped_at_group: stopped
+            stopped_at_target: stopped
           }
         end
       end

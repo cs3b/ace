@@ -4,8 +4,8 @@ require_relative "../test_helper"
 require "ace/test_runner/organisms/test_orchestrator"
 
 class ExplicitFileExecutionTest < Minitest::Test
-  def test_orchestrator_bypasses_groups_when_explicit_files_provided
-    # Create configuration with both groups and explicit files
+  def test_orchestrator_bypasses_targets_when_explicit_files_provided
+    # Create configuration with both targets and explicit files
     options = {
       files: ["test/atoms/test_detector_test.rb"],
       config_path: nil
@@ -18,8 +18,8 @@ class ExplicitFileExecutionTest < Minitest::Test
       "Expected should_execute_sequentially? to return false when explicit files are provided"
   end
 
-  def test_orchestrator_uses_groups_when_no_files_provided
-    # Create configuration with groups but no explicit files
+  def test_orchestrator_uses_targets_when_no_files_provided
+    # Create configuration with targets but no explicit files
     options = {
       files: nil,
       target: "smoke",
@@ -29,13 +29,13 @@ class ExplicitFileExecutionTest < Minitest::Test
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
     configuration = orchestrator.configuration
 
-    # Manually set execution_mode and groups to simulate grouped execution
-    configuration.instance_variable_set(:@execution_mode, "grouped")
-    configuration.instance_variable_set(:@groups, {"smoke" => ["test/atoms/test_detector_test.rb"]})
+    # Manually set execution mode and targets to simulate by-target execution
+    configuration.instance_variable_set(:@execution, {mode: "by-target"})
+    configuration.instance_variable_set(:@targets, {"smoke" => ["test/atoms/test_detector_test.rb"]})
 
-    # Should execute sequentially when no files but groups and target are configured
+    # Should execute sequentially when no files but targets and target are configured
     assert orchestrator.send(:should_execute_sequentially?),
-      "Expected should_execute_sequentially? to return true when groups and target are configured without explicit files"
+      "Expected should_execute_sequentially? to return true when targets and target are configured without explicit files"
   end
 
   def test_orchestrator_handles_empty_files_array
@@ -47,15 +47,15 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
 
-    # Empty array should NOT bypass groups (!@configuration.files.empty? evaluates to false)
-    # When config has grouped mode with "all" group, should return true
+    # Empty array should NOT bypass target resolution (!@configuration.files.empty? evaluates to false)
+    # When config has by-target mode with "all" target, should return true
     # (empty array doesn't trigger the explicit files bypass on line 268)
     result = orchestrator.send(:should_execute_sequentially?)
 
-    # Result depends on whether config has grouped mode + groups defined
-    # In the project's config, mode is "grouped" and "all" group exists
+    # Result depends on whether config has by-target mode + targets defined
+    # In the project's config, mode is "by-target" and "all" target exists
     assert result,
-      "Expected should_execute_sequentially? to return true for empty files array when grouped mode is configured"
+      "Expected should_execute_sequentially? to return true for empty files array when by-target mode is configured"
   end
 
   def test_orchestrator_handles_multiple_explicit_files
@@ -70,7 +70,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
 
-    # Should bypass groups when multiple files are provided
+    # Should bypass targets when multiple files are provided
     refute orchestrator.send(:should_execute_sequentially?),
       "Expected should_execute_sequentially? to return false when multiple explicit files are provided"
   end
@@ -84,7 +84,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
 
-    # Should bypass groups even with line number notation
+    # Should bypass targets even with line number notation
     refute orchestrator.send(:should_execute_sequentially?),
       "Expected should_execute_sequentially? to return false when file with line number is provided"
   end
@@ -129,7 +129,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
 
-    # Should bypass groups because explicit files are provided
+    # Should bypass targets because explicit files are provided
     refute orchestrator.send(:should_execute_sequentially?),
       "Expected should_execute_sequentially? to return false when both files and target are provided"
 

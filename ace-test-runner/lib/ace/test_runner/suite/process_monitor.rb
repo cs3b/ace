@@ -97,7 +97,7 @@ module Ace
               exit_status = thread.value.exitstatus
 
               collect_remaining_output(process_info)
-              results = build_results(process_info, elapsed)
+              results = build_results(process_info, elapsed, exit_status)
               close_streams(process_info)
 
               # Final callback
@@ -278,11 +278,12 @@ module Ace
           end
         end
 
-        def build_results(process_info, elapsed)
+        def build_results(process_info, elapsed, exit_status)
           return timeout_results(process_info, elapsed) if process_info[:timeout_triggered]
           return interrupted_results(elapsed) if process_info[:terminated_by] == :interrupt
-          results = load_summary_results(process_info, elapsed)
-          return results if results
+          fresh_summary = load_summary_results(process_info, elapsed)
+          return fresh_summary if exit_status == 0 && fresh_summary
+          return failed_process_results(process_info, elapsed, exit_status, fresh_summary) if exit_status != 0
 
           parse_results(process_info[:output])
         end
@@ -311,6 +312,26 @@ module Ace
           }
         end
 
+        def failed_process_results(process_info, elapsed, exit_status, fresh_summary)
+          return fresh_summary if fresh_summary && fresh_summary[:success] == false
+
+          parsed = parse_results([process_info[:output], process_info[:stderr_output]].join("\n"))
+          parsed[:duration] ||= elapsed
+          parsed[:success] = false
+          parsed[:error] ||= failure_message_for(process_info, exit_status)
+          parsed[:errors] = 1 if parsed[:failures].to_i == 0 && parsed[:errors].to_i == 0
+          parsed
+        end
+
+        def failure_message_for(process_info, exit_status)
+          stderr = process_info[:stderr_output].to_s.strip
+          stdout = process_info[:output].to_s.strip
+          message = stderr.empty? ? stdout : stderr
+          return message unless message.empty?
+
+          "ace-test exited with status #{exit_status}"
+        end
+
         def load_summary_results(process_info, elapsed)
           package = process_info[:package]
           reports_dir = Atoms::ReportPathResolver.report_directory(
@@ -320,6 +341,7 @@ module Ace
           )
           summary_file = reports_dir ? File.join(reports_dir, "summary.json") : nil
           return nil unless summary_file && File.exist?(summary_file)
+          return nil unless summary_fresh_for_run?(summary_file, process_info[:start_time])
 
           json_data = JSON.parse(File.read(summary_file))
           results = {
@@ -327,6 +349,7 @@ module Ace
             assertions: json_data["assertions"] || 0,
             failures: json_data["failed"] || 0,
             errors: json_data["errors"] || 0,
+            skipped: json_data["skipped"] || 0,
             duration: json_data["duration"] || elapsed,
             success: json_data["success"] || false
           }
@@ -342,6 +365,12 @@ module Ace
           results
         rescue JSON::ParserError
           nil
+        end
+
+        def summary_fresh_for_run?(summary_file, start_time)
+          File.mtime(summary_file) >= (start_time - 0.001)
+        rescue StandardError
+          false
         end
 
         def parse_progress(process_info, chunk)
