@@ -1,0 +1,29 @@
+version: 1
+
+patterns:
+  smoke: "test/fast/*_test.rb"
+  atoms: "test/fast/atoms/**/*_test.rb"
+  molecules: "test/fast/molecules/**/*_test.rb"
+  commands: "test/fast/commands/**/*_test.rb"
+  feat_tests: "test/feat/**/*_test.rb"
+
+groups:
+  fast:
+    - smoke
+    - atoms
+    - molecules
+    - commands
+  unit:
+    - fast
+  feat:
+    - feat_tests
+  integration:
+    - feat_tests
+  int:
+    - feat_tests
+  all:
+    - fast
+    - feat_tests
+  quick:
+    - atoms
+    - molecules
