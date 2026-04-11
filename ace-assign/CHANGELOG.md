@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Standardized fork-step authoring guidance around a prompt-prep-style section layout (`Purpose`, `Variables`, `Codebase Structure`, `Instructions`, `Workflow`, `Report`) and updated the example forked implementation step to require an explicit primary artifact path in reports.
+
 ## [0.45.0] - 2026-04-11
 
 ### Changed
