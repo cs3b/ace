@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.31.0**: Restored the full two-phase E2E harness with deterministic `test/integration` execution before `test/e2e` scenarios, stricter artifact/report handling, and verifier fallback parsing that accepts minimal evidence responses.
 
 ### Changed
+- **ace-test-runner v0.23.0**: Renamed package-level test-scope terminology to `target`, replaced `groups:` with `targets:` and `execution.mode: by-target`, kept suite package bucketing on `group`, and made `ace-test-suite --target feat` report real current-run feat results instead of stale summaries.
 - **ace-assign v0.45.0**: Updated assignment verification presets, step templates, and runtime child-step guidance so modified packages run `ace-test <package> all --profile 6`, batch verification keeps `ace-test-suite` on the default fast suite, and E2E checks stay package-targeted via `ace-test-e2e <package>`.
 - **ace-test-runner v0.22.0**: Renamed the public deterministic test surface to `fast` / `feat`, made bare `ace-test` default to `fast`, and made `all` run `fast` then `feat` while keeping `ace-test-e2e` as the separate scenario entrypoint.
 - **ace-test-runner-e2e v0.32.0**: Added a deterministic preflight bridge that prefers `test/feat` and falls back to legacy `test/integration`, so package-level test taxonomy can migrate without breaking `ace-test-e2e`.
@@ -33,6 +34,8 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner v0.21.0**: Changed bare `ace-test` runs to the `unit` group, added the `int` alias for `integration`, and removed legacy `system` / `e2e` / `all-with-e2e` targets in favor of `ace-test-e2e`.
 
 ### Technical
+- **ace-test v0.6.6**: Updated packaged testing agents to use `target` consistently for package-level scopes and refreshed fast/feat examples.
+- **ace-b36ts v0.14.4**: Renamed the package-local test-runner config surface from `groups:` to `targets:` to match the shared target contract.
 - **ace-test v0.6.5**: Synced canonical `verify-test-suite` skill metadata to the explicit package-`all` plus suite-fast assignment verification contract.
 - **ace-test-runner-e2e v0.32.1**: Synced canonical `verify-e2e` skill metadata to the package-targeted `ace-test-e2e <package>` assignment verification contract.
 - **ace-test v0.6.4**: Rewrote the shared testing guides and templates around the `fast` / `feat` / `e2e` taxonomy and added repository-level testing-pattern documentation for the new contract.
