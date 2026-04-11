@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Technical
+- Piloted the new `test/fast`, `test/feat`, and `test/e2e` layout in `ace-b36ts`, added package-local `ace-test` aliases (`unit -> fast`, `integration/int -> feat`), and refreshed the layout demo tape to use the new test surface.
+
 ## [0.14.2] - 2026-04-10
 
 ### Technical
