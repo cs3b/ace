@@ -154,6 +154,8 @@ class CliArgumentParserTest < Minitest::Test
 
     assert parser.known_target?("atoms")
     assert parser.known_target?("molecules")
+    assert parser.known_target?("fast")
+    assert parser.known_target?("feat")
     assert parser.known_target?("unit")
     assert parser.known_target?("integration")
     assert parser.known_target?("int")
@@ -213,6 +215,19 @@ class CliArgumentParserTest < Minitest::Test
       assert_includes argv, "--verbose"
       assert_includes argv, "--profile"
       assert_includes argv, "10"
+    end
+  end
+
+  def test_normalizes_legacy_targets_to_new_public_names
+    Dir.chdir(File.join(@project_root, "ace-bundle")) do
+      parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["unit"])
+      assert_equal "fast", parser.parse[:target]
+
+      parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["integration"])
+      assert_equal "feat", parser.parse[:target]
+
+      parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["int"])
+      assert_equal "feat", parser.parse[:target]
     end
   end
 end

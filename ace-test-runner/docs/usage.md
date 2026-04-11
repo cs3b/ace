@@ -18,7 +18,7 @@ ace-test [PACKAGE] [TARGET] [options] [files...]
 ```
 
 - `PACKAGE` (optional): package name (`ace-bundle`, `ace-search`) or path (`./ace-nav`, `/abs/path`).
-- `TARGET` (optional): `atoms`, `molecules`, `organisms`, `models`, `unit`, `integration`, `int`, `all`, `quick`.
+- `TARGET` (optional): `atoms`, `molecules`, `organisms`, `models`, `fast`, `feat`, `all`, `quick`.
 - `files` (optional): one or more `.rb` files or `file.rb:line` entries.
 
 File args take precedence over target/group execution.
@@ -31,7 +31,7 @@ File args take precedence over target/group execution.
 - `--fail-fast`: stop on first failure
 - `--fix-deprecations`: patch deprecated test patterns when possible
 - `--filter PATTERN`: run tests matching a name pattern
-- `-g`, `--group GROUP`: force a group (`unit`, `integration`/`int`, `all`)
+- `-g`, `--group GROUP`: force a group (`fast`, `feat`, `all`)
 - `--color` / `--no-color`
 - `-c`, `--config-path FILE`: explicit configuration file
 - `--timeout SEC`: execution timeout in seconds
@@ -63,9 +63,8 @@ File args take precedence over target/group execution.
 ```bash
 ace-test
 ace-test atoms
-ace-test ace-bundle unit
-ace-test ace-support-core integration
-ace-test ace-support-core int
+ace-test ace-bundle fast
+ace-test ace-support-core feat
 ace-test ace-support-core test/atoms/some_test.rb
 ace-test ace-support-core test/atoms/some_test.rb:42
 ace-test --format json --filter auth
@@ -84,7 +83,7 @@ ace-test-suite [options]
 - `-p`, `--parallel N`: override max parallel worker count
 - `-t`, `--timeout SEC`: fail any package subprocess that exceeds the timeout
 - `-g`, `--group GROUP`: limit execution to a package group
-- `--target TARGET`: pass an explicit package target to `ace-test` (for example `integration`)
+- `--target TARGET`: pass an explicit package target to `ace-test` (for example `feat`)
 - `-v`, `--verbose`: verbose output and backtraces
 - `--progress`: live animated progress bars
 - `--no-color`: disable colorized output
@@ -95,8 +94,8 @@ ace-test-suite [options]
 
 - `ace-test` resolves package arguments using ACE package discovery.
 - `ace-test-suite --timeout` is enforced at the suite layer and terminates the timed-out package process group before continuing with queued packages.
-- Bare `ace-test <package>` resolves to the `unit` group.
-- `integration` is explicit and also available as `int`.
+- Bare `ace-test <package>` resolves to the `fast` group.
+- `feat` is the deterministic feature layer with controlled local IO.
 - Scenario E2E is run with `ace-test-e2e <package>`, not `ace-test <package> e2e`.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.
 - Package defaults and user config are merged with CLI options.

@@ -65,8 +65,8 @@ module Ace
 
           # Check if sequential group execution should be used
           if should_execute_sequentially?
-            # Use default "unit" group if no target specified in grouped mode
-            @configuration.target ||= "unit"
+            # Use default "fast" group if no target specified in grouped mode
+            @configuration.target ||= "fast"
             return run_sequential_groups(start_time)
           end
 
@@ -322,8 +322,8 @@ module Ace
             return false
           end
 
-          # If no target specified, default to "unit" group for grouped mode
-          target = @configuration.target || "unit"
+          # If no target specified, default to "fast" group for grouped mode
+          target = @configuration.target || "fast"
 
           target_str = target.to_s
           target_sym = target.to_sym

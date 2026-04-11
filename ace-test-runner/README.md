@@ -22,7 +22,7 @@
 
 ## How It Works
 
-1. Resolve the target package and test scope from a package name, group (`atoms`, `molecules`, `organisms`, `models`, `unit`, `integration`, `int`, `all`, `quick`), or direct `file:line` selector.
+1. Resolve the target package and test scope from a package name, group (`atoms`, `molecules`, `organisms`, `models`, `fast`, `feat`, `all`, `quick`), or direct `file:line` selector.
 2. Execute the matching tests with failure-oriented output and optional profiling of the slowest cases.
 3. Persist structured run reports for historical debugging and searchable triage across runs.
 
@@ -32,7 +32,7 @@
 
 **Target exactly the scope you need** - run by test groups (`ace-test atoms`, `ace-test molecules`) or direct file/line selectors (`ace-test test/file_test.rb:42`) to focus on the code you are changing.
 
-**Keep fast-loop defaults tight** - run `ace-test <package>` for unit coverage only, then opt into `integration` or `int` when you need cross-component checks.
+**Keep fast-loop defaults tight** - run `ace-test <package>` for `fast` coverage by default, then opt into `feat` when you need deterministic feature checks with controlled IO.
 
 **Speed up triage on broken builds** - use failure-oriented output and persisted reports to locate regressions and continue diagnosis without rerunning broad suites.
 

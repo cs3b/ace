@@ -10,9 +10,9 @@ module Ace
       # - Direct file paths (./path/file.rb, ../path/file.rb, /abs/path/file.rb)
       # - Package-prefixed file paths (ace-bundle/test/file.rb)
       # - Package names (ace-bundle)
-      # - Test targets (atoms, molecules, unit, etc.)
+      # - Test targets (atoms, molecules, fast, feat, etc.)
       class CliArgumentParser
-        KNOWN_TARGETS = %w[atoms molecules organisms models unit integration int all quick].freeze
+        KNOWN_TARGETS = %w[atoms molecules organisms models fast feat unit integration int all quick].freeze
 
         attr_reader :package_dir, :target, :test_files
 
@@ -135,7 +135,14 @@ module Ace
         end
 
         def normalize_target(arg)
-          arg == "int" ? "integration" : arg
+          case arg
+          when "unit"
+            "fast"
+          when "integration", "int"
+            "feat"
+          else
+            arg
+          end
         end
 
         def existing_file?(arg)

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-04-11
+
+### Changed
+- Renamed the public deterministic test contract to `fast` / `feat`, made bare `ace-test` default to `fast`, and made `all` execute `fast` then `feat`.
+- Updated CLI help, configuration defaults, and suite target guidance to teach `ace-test-e2e` as the only scenario E2E entrypoint.
+
+### Technical
+- Kept internal compatibility aliases for `unit` and `integration` during the migration window while updating resolver and config-loader coverage to the new public naming.
+
 ## [0.21.0] - 2026-04-10
 
 ### Changed

@@ -66,16 +66,26 @@ module Ace
         # Default test groups for common Ruby project structures
         def self.default_groups
           {
+            "fast" => {
+              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/unit/**/*_test.rb"],
+              "options" => {}
+            },
+            "feat" => {
+              "patterns" => ["test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
+              "options" => {}
+            },
             "unit" => {
-              "patterns" => ["test/unit/**/*_test.rb", "test/*_test.rb"],
+              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/unit/**/*_test.rb"],
+              "files" => [],
               "options" => {}
             },
             "integration" => {
-              "patterns" => ["test/integration/**/*_test.rb"],
+              "patterns" => ["test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
+              "files" => [],
               "options" => {}
             },
             "all" => {
-              "patterns" => ["test/unit/**/*_test.rb", "test/*_test.rb", "test/integration/**/*_test.rb"],
+              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/feat/**/*_test.rb", "test/integration/**/*_test.rb", "test/edge/**/*_test.rb"],
               "options" => {}
             }
           }

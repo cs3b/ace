@@ -4,6 +4,10 @@ module Ace
   module TestRunner
     module Molecules
       class PatternResolver
+        INTERNAL_PATTERN_LABELS = {
+          "feat_tests" => "feat"
+        }.freeze
+
         attr_reader :using_catch_all
 
         def initialize(config)
@@ -14,12 +18,12 @@ module Ace
         end
 
         def resolve_target(target)
-          return resolve_group("unit") if target.nil?
+          return resolve_group("fast") if target.nil?
           return resolve_all_files if target == "all"
           return [target] if File.exist?(target)
 
           # Normalize target to string for consistent lookup
-          target_key = target.to_s
+          target_key = normalize_target(target)
           raise_unsupported_target_error(target_key) if %w[e2e all-with-e2e system].include?(target_key)
 
           if @groups.key?(target_key)
@@ -52,7 +56,7 @@ module Ace
             elsif @patterns.key?(member_key)
               # Pattern found - return as a group
               files = expand_pattern(@patterns[member_key])
-              files.empty? ? [] : [{name: member_key, files: files}]
+              files.empty? ? [] : [{name: display_name_for(member_key), files: files}]
             else
               # Direct pattern - expand and wrap
               files = expand_pattern(member)
@@ -62,18 +66,37 @@ module Ace
         end
 
         def available_targets
-          (@groups.keys + @patterns.keys).map(&:to_s).sort
+          (@groups.keys + @patterns.keys)
+            .map(&:to_s)
+            .reject { |name| INTERNAL_PATTERN_LABELS.key?(name) }
+            .sort
         end
 
         def classify_file(file_path)
           @patterns.each do |name, pattern|
-            # Use File::FNM_PATHNAME to handle ** correctly
-            return name.to_s if File.fnmatch?(pattern, file_path, File::FNM_PATHNAME)
+            if File.fnmatch?(pattern, file_path, File::FNM_PATHNAME | File::FNM_EXTGLOB)
+              return display_name_for(name)
+            end
           end
           "other"
         end
 
         private
+
+        def normalize_target(target)
+          case target.to_s
+          when "unit"
+            "fast"
+          when "integration", "int"
+            "feat"
+          else
+            target.to_s
+          end
+        end
+
+        def display_name_for(name)
+          INTERNAL_PATTERN_LABELS.fetch(name.to_s, name.to_s)
+        end
 
         def raise_unsupported_target_error(target)
           if target == "e2e"
@@ -93,7 +116,7 @@ module Ace
 
         def resolve_group(group_name)
           # Normalize to string
-          group_key = group_name.to_s
+          group_key = normalize_target(group_name)
           group_members = @groups[group_key]
           return [] unless group_members
 

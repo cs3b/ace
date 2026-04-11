@@ -134,16 +134,18 @@ class ConfigLoaderTest < Minitest::Test
   def test_gem_defaults_include_expected_patterns
     defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
 
-    assert_equal "test/{unit/,}atoms/**/*_test.rb", defaults[:patterns][:atoms]
-    assert_equal "test/{unit/,}molecules/**/*_test.rb", defaults[:patterns][:molecules]
-    assert_equal "test/{unit/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
+    assert_equal "test/{fast/,unit/,}atoms/**/*_test.rb", defaults[:patterns][:atoms]
+    assert_equal "test/{fast/,unit/,}molecules/**/*_test.rb", defaults[:patterns][:molecules]
+    assert_equal "test/{fast/,unit/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
   end
 
   def test_gem_defaults_include_expected_groups
     defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
 
-    assert_includes defaults[:groups][:unit], "atoms"
-    assert_includes defaults[:groups][:unit], "molecules"
+    assert_includes defaults[:groups][:fast], "atoms"
+    assert_includes defaults[:groups][:fast], "molecules"
+    assert_equal ["fast"], defaults[:groups][:unit]
+    assert_equal ["feat"], defaults[:groups][:integration]
     assert_includes defaults[:groups][:quick], "atoms"
   end
 

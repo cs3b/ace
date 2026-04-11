@@ -1,14 +1,19 @@
 version: 1
 patterns:
-  atoms: 'test/unit/atoms/**/*_test.rb'
-  molecules: 'test/unit/molecules/**/*_test.rb'
-  organisms: 'test/unit/organisms/**/*_test.rb'
-  models: 'test/unit/models/**/*_test.rb'
+  atoms: 'test/{fast/,}atoms/**/*_test.rb'
+  molecules: 'test/{fast/,}molecules/**/*_test.rb'
+  organisms: 'test/{fast/,}organisms/**/*_test.rb'
+  models: 'test/{fast/,}models/**/*_test.rb'
+  feat_tests: 'test/{feat,integration}/**/*_test.rb'
   integration: 'test/integration/**/*_test.rb'
   helpers: 'test/helpers/**/*_test.rb'
 groups:
-  unit: [atoms, molecules, organisms, models]
-  all: [unit, integration]
+  fast: [atoms, molecules, organisms, models]
+  feat: [feat_tests]
+  unit: [fast]
+  integration: [feat]
+  int: [feat]
+  all: [fast, feat]
   quick: [atoms, molecules]
   core: [atoms, molecules, models]
 defaults:
