@@ -665,15 +665,14 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_parallel_default_from_config
+  def test_parallel_with_explicit_setting
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
-      # Don't pass parallel: — let it pick up from config (default 3)
-      orchestrator = TestOrchestrator.new(
-        provider: "test:stub",
-        timeout: 10,
+      orchestrator = create_orchestrator(
         base_dir: tmpdir,
+        parallel: 3,
+        provider: "test:stub",
         timestamp_generator: -> { "test00" },
         executor: StubExecutor.new
       )

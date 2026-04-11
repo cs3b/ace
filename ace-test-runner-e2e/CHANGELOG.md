@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Technical
+
+- Refactored `ConfigLoader` molecule tests to use config mock mode, removing dependency on monorepo `.ace` overrides and making the test contract stable across environments.
+
 ## [0.32.2] - 2026-04-11
 
 ### Fixed

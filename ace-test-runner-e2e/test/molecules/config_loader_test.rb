@@ -5,6 +5,46 @@ require_relative "../test_helper"
 class ConfigLoaderTest < Minitest::Test
   ConfigLoader = Ace::Test::EndToEndRunner::Molecules::ConfigLoader
 
+  def setup
+    @original_test_mode = Ace::Support::Config.test_mode
+    @original_default_mock = Ace::Support::Config.default_mock
+
+    Ace::Support::Config.reset_config!
+    Ace::Support::Config.test_mode = true
+    Ace::Support::Config.default_mock = mock_config
+  end
+
+  def teardown
+    Ace::Support::Config.reset_config!
+    Ace::Support::Config.test_mode = @original_test_mode
+    Ace::Support::Config.default_mock = @original_default_mock
+  end
+
+  def mock_config
+    {
+      "execution" => {
+        "provider" => "role:e2e-runner",
+        "runner_provider" => "role:e2e-runner",
+        "verifier_provider" => "role:e2e-verifier",
+        "timeout" => 600,
+        "parallel" => 3
+      },
+      "providers" => {
+        "cli" => %w[claude gemini codex codexoss opencode pi]
+      },
+      "paths" => {
+        "integration" => "test/feat",
+        "scenarios" => "test/e2e",
+        "cache_dir" => ".ace-local/test-e2e"
+      },
+      "patterns" => {
+        "integration" => "test/feat/**/*_test.rb",
+        "discovery" => "test/e2e/TS-*/scenario.yml"
+      },
+      "required_fields" => %w[test-id title area]
+    }
+  end
+
   def test_load_returns_hash
     config = ConfigLoader.load
     assert_kind_of Hash, config
@@ -55,6 +95,11 @@ class ConfigLoaderTest < Minitest::Test
     parallel = ConfigLoader.default_parallel
     assert_kind_of Integer, parallel
     assert parallel > 0, "Parallel count should be positive"
+  end
+
+  def test_default_parallel_matches_execution_config
+    config = ConfigLoader.load
+    assert_equal config.dig("execution", "parallel"), ConfigLoader.default_parallel
   end
 
   def test_cli_providers_accessor
