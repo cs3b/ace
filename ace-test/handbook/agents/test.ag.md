@@ -4,7 +4,7 @@ description: Run tests with smart defaults and helpful diagnostics
 expected_params:
   required: []
   optional:
-  - target: 'Test target - file path, directory (atoms, molecules), or group name'
+  - target: 'Test target - file path, directory (atoms, molecules), or target name'
   - profile: 'Profile N slowest tests to identify performance issues'
   - verbose: 'Show detailed test output'
 last_modified: '2026-01-22'
@@ -42,11 +42,11 @@ ace-test-suite
 # Run single test file
 ace-test test/atoms/pattern_analyzer_test.rb
 
-# Run test directory/group
+# Run test directory/target
 ace-test atoms
 ace-test molecules
 ace-test organisms
-ace-test integration
+ace-test feat
 ```
 
 ### Profile Tests
@@ -54,7 +54,7 @@ ace-test integration
 # Profile 10 slowest tests
 ace-test --profile 10
 
-# Profile slowest tests in a group
+# Profile slowest tests in a target
 ace-test atoms --profile 10
 ```
 
