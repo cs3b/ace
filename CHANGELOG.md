@@ -66,6 +66,7 @@ All notable changes to this project will be documented in this file.
 - **ace-lint v0.28.1**: Allowed canonical `assign.steps` metadata in skill validation and added regression coverage for the updated schema contract.
 
 ### Added
+- **ace-retro v0.17.0**: Added `as-retro-analyze-worktree` plus the `wfi://retro/analyze-worktree` workflow to analyze completed assignments across single or fleet worktrees and produce ranked spec-improvement retros from scope, residual-work, and `.ace-local` telemetry evidence.
 - **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
 
 ### Changed
