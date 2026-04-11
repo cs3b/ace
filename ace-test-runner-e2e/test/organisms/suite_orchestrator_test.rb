@@ -53,12 +53,18 @@ class SuiteOrchestratorTest < Minitest::Test
     @output = StringIO.new
   end
 
+  def build_orchestrator(**kwargs)
+    defaults = {
+      output: @output,
+      suite_report_writer: StubSuiteReportWriter.new,
+      scenario_loader: StubScenarioLoader.new
+    }
+    SuiteOrchestrator.new(**defaults.merge(kwargs))
+  end
+
   def test_run_returns_empty_when_no_packages_found
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
-      discoverer: discoverer,
-      output: @output
-    )
+    orchestrator = build_orchestrator(discoverer: discoverer)
 
     results = orchestrator.run
 
@@ -71,7 +77,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_run_returns_empty_when_no_tests_in_packages
     discoverer = StubDiscoverer.new(packages: ["ace-lint"], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -88,15 +94,14 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     affected_detector = StubAffectedDetector.new(affected: ["ace-lint"])
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
-      affected_detector: affected_detector,
-      output: @output
+      affected_detector: affected_detector
     )
 
-    # Mock the subprocess spawn for testing
-    def orchestrator.build_test_command(package, test_file, options, run_id: nil)
-      "echo 'PASS' && exit 0"
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     orchestrator.run(parallel: false)
@@ -114,15 +119,14 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     affected_detector = StubAffectedDetector.new(affected: ["ace-lint"])
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
-      affected_detector: affected_detector,
-      output: @output
+      affected_detector: affected_detector
     )
 
-    # Mock the subprocess spawn for testing
-    def orchestrator.build_test_command(package, test_file, options, run_id: nil)
-      "echo 'PASS' && exit 0"
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     orchestrator.run(affected: true, parallel: false)
@@ -143,9 +147,10 @@ class SuiteOrchestratorTest < Minitest::Test
       @tests.fetch(package, [])
     end
 
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
-    def orchestrator.build_test_command(package, test_file, options, run_id: nil)
-      "echo 'PASS' && exit 0"
+    orchestrator = build_orchestrator(discoverer: discoverer)
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
     end
 
     orchestrator.run(
@@ -170,7 +175,7 @@ class SuiteOrchestratorTest < Minitest::Test
     # When no affected packages are detected with --affected flag, we skip all tests
     affected_detector = StubAffectedDetector.new(affected: [])
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       affected_detector: affected_detector,
       output: @output
@@ -184,7 +189,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_includes_options
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -217,7 +222,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_prefers_scenario_timeout
     Dir.mktmpdir do |tmpdir|
-      scenario_dir = File.join(tmpdir, "ace-lint", "test-e2e", "scenarios", "TS-LINT-001-timeout")
+      scenario_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-timeout")
       FileUtils.mkdir_p(scenario_dir)
       File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
         test-id: TS-LINT-001
@@ -228,10 +233,11 @@ class SuiteOrchestratorTest < Minitest::Test
       YAML
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         discoverer: discoverer,
         output: @output,
-        base_dir: tmpdir
+        base_dir: tmpdir,
+        scenario_loader: Ace::Test::EndToEndRunner::Molecules::ScenarioLoader.new
       )
 
       cmd = orchestrator.send(:build_test_command,
@@ -248,7 +254,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_sets_parallel_to_one
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -274,7 +280,7 @@ class SuiteOrchestratorTest < Minitest::Test
       FileUtils.chmod(0o755, local_exe)
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         base_dir: tmpdir,
         discoverer: discoverer,
         output: @output
@@ -291,7 +297,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_includes_verify_flag_when_enabled
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -306,7 +312,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_extract_test_id_from_filename
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -321,12 +327,12 @@ class SuiteOrchestratorTest < Minitest::Test
   end
 
   def test_max_parallel_accessor
-    orchestrator = SuiteOrchestrator.new(max_parallel: 8)
+    orchestrator = build_orchestrator(max_parallel: 8)
     assert_equal 8, orchestrator.max_parallel
   end
 
   def test_base_dir_accessor
-    orchestrator = SuiteOrchestrator.new(base_dir: "/custom/path")
+    orchestrator = build_orchestrator(base_dir: "/custom/path")
     assert_equal "/custom/path", orchestrator.base_dir
   end
 
@@ -335,7 +341,7 @@ class SuiteOrchestratorTest < Minitest::Test
       packages: ["ace-lint"],
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       progress: true
@@ -359,7 +365,7 @@ class SuiteOrchestratorTest < Minitest::Test
       packages: ["ace-lint"],
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -379,7 +385,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_extract_test_name
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     name = orchestrator.send(:extract_test_name, "/path/to/TS-BUNDLE-001-section-workflow/scenario.yml")
     assert_equal "TS-BUNDLE-001-section-workflow", name
@@ -390,7 +396,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_parse_subprocess_result_extracts_case_counts
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     # Simulate a process hash with output where all cases pass
     thread = Minitest::Mock.new
@@ -414,7 +420,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_parse_subprocess_result_includes_raw_output
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     thread = Minitest::Mock.new
     exit_status = Minitest::Mock.new
@@ -435,7 +441,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_parse_subprocess_result_detects_partial_as_fail_on_exit_zero
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     thread = Minitest::Mock.new
     exit_status = Minitest::Mock.new
@@ -458,7 +464,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_parse_subprocess_result_handles_no_case_counts
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     thread = Minitest::Mock.new
     exit_status = Minitest::Mock.new
@@ -484,7 +490,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: StubSuiteReportWriter.new,
@@ -515,7 +521,7 @@ class SuiteOrchestratorTest < Minitest::Test
       ]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: StubSuiteReportWriter.new,
@@ -585,7 +591,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: report_writer,
@@ -620,7 +626,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: {"ace-lint" => ["/path/to/TS-LINT-001/scenario.yml"]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: report_writer,
@@ -657,7 +663,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: failing_writer,
@@ -697,7 +703,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_generate_suite_report_converts_data_correctly
     report_writer = StubSuiteReportWriter.new
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer, output: @output,
       suite_report_writer: report_writer,
       scenario_loader: StubScenarioLoader.new,
@@ -734,7 +740,7 @@ class SuiteOrchestratorTest < Minitest::Test
     report_writer = StubSuiteReportWriter.new
     discoverer = StubDiscoverer.new(packages: ["ace-lint"], tests: {})
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output,
       suite_report_writer: report_writer,
@@ -762,7 +768,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -791,7 +797,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -818,7 +824,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -833,7 +839,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_includes_run_id_when_provided
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -852,7 +858,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_omits_run_id_when_nil
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -867,7 +873,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_includes_report_dir_when_run_id_provided
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -882,13 +888,13 @@ class SuiteOrchestratorTest < Minitest::Test
     report_dir_idx = cmd.index("--report-dir")
     refute_nil report_dir_idx, "Command should include --report-dir flag when run_id is provided"
     report_dir_value = cmd[report_dir_idx + 1]
-    assert_includes report_dir_value, "batch01-lint-ts001-reports",
+    assert_includes report_dir_value, "batch01-test-ts001-reports",
       "Report dir should use scenario dir_name with -reports suffix"
   end
 
   def test_build_test_command_omits_report_dir_when_no_run_id
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -903,7 +909,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_generate_run_ids_returns_unique_ids
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -921,7 +927,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml", "/path/to/TS-LINT-002-test/scenario.yml"]}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -956,7 +962,7 @@ class SuiteOrchestratorTest < Minitest::Test
     # Only ace-lint and ace-bundle are affected
     affected_detector = StubAffectedDetector.new(affected: ["ace-lint", "ace-bundle"])
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       affected_detector: affected_detector,
       output: @output
@@ -991,7 +997,7 @@ class SuiteOrchestratorTest < Minitest::Test
       failures_by_scenario: {"ace-lint" => {"TS-LINT-001" => ["TC-001", "TC-003"]}}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1021,7 +1027,7 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     failure_finder = StubFailureFinder.new(failures_by_scenario: {})
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1042,7 +1048,7 @@ class SuiteOrchestratorTest < Minitest::Test
       failures_by_scenario: {"ace-lint" => {"TS-LINT-001" => ["TC-001", "TC-003"]}}
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1062,7 +1068,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_run_with_only_failures_no_test_cases_without_failures
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -1096,7 +1102,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       affected_detector: affected_detector,
       failure_finder: failure_finder,
@@ -1136,7 +1142,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1174,7 +1180,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1197,7 +1203,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_omits_test_cases_for_scenario_failures
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       output: @output
     )
@@ -1233,7 +1239,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1275,7 +1281,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1304,7 +1310,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_file_matches_test_id_with_descriptive_suffix
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     # Exact match
     assert orchestrator.send(:file_matches_test_id?,
@@ -1340,7 +1346,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
 
-    orchestrator = SuiteOrchestrator.new(
+    orchestrator = build_orchestrator(
       discoverer: discoverer,
       failure_finder: failure_finder,
       output: @output
@@ -1363,7 +1369,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_build_test_command_matches_suffix_filenames_to_scenario_failures
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     orchestrator.instance_variable_set(:@scenario_failures, {
       "ace-git-commit" => {"TS-COMMIT-002" => ["TC-001", "TC-003"]}
@@ -1386,7 +1392,7 @@ class SuiteOrchestratorTest < Minitest::Test
       FileUtils.mkdir_p(report_dir)
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+      orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
       result = {report_dir: report_dir, raw_output: "test output here"}
       orchestrator.send(:save_subprocess_output, result)
@@ -1404,7 +1410,7 @@ class SuiteOrchestratorTest < Minitest::Test
       file_path = File.join(report_dir, "final-report.md")
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+      orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
       result = {report_dir: file_path, raw_output: "output data"}
       orchestrator.send(:save_subprocess_output, result)
@@ -1417,7 +1423,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_save_subprocess_output_skips_when_no_report_dir
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
     # Should not raise
     orchestrator.send(:save_subprocess_output, {report_dir: nil, raw_output: "data"})
@@ -1426,7 +1432,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_save_subprocess_output_skips_when_empty_output
     Dir.mktmpdir do |tmpdir|
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+      orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
       orchestrator.send(:save_subprocess_output, {report_dir: tmpdir, raw_output: ""})
 
@@ -1448,7 +1454,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }))
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+      orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
       result = {status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0}
       overridden = orchestrator.send(:override_from_metadata, result)
@@ -1469,7 +1475,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }))
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
-      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+      orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
 
       result = {status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0}
       overridden = orchestrator.send(:override_from_metadata, result)
@@ -1493,7 +1499,7 @@ class SuiteOrchestratorTest < Minitest::Test
         "stub#{format("%03d", ts_counter)}"
       }
 
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
@@ -1542,7 +1548,7 @@ class SuiteOrchestratorTest < Minitest::Test
         "stub#{format("%03d", ts_counter)}"
       }
 
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
@@ -1581,7 +1587,7 @@ class SuiteOrchestratorTest < Minitest::Test
         tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
@@ -1627,7 +1633,7 @@ class SuiteOrchestratorTest < Minitest::Test
         tests: {"ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]}
       )
 
-      orchestrator = SuiteOrchestrator.new(
+      orchestrator = build_orchestrator(
         discoverer: discoverer,
         output: @output,
         base_dir: tmpdir,
@@ -1661,7 +1667,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_warn_on_lingering_claude_processes_emits_warning_in_debug_mode
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
     status = Struct.new(:success?).new(true)
 
     old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
@@ -1679,7 +1685,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
   def test_warn_on_lingering_claude_processes_is_noop_when_debug_disabled
     discoverer = StubDiscoverer.new(packages: [], tests: {})
-    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
     status = Struct.new(:success?).new(true)
 
     old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]

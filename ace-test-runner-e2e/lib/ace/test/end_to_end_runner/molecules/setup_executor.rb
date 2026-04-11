@@ -17,6 +17,12 @@ module Ace
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
         class SetupExecutor
+          def initialize(command_runner: nil, system_runner: nil, time_source: nil)
+            @command_runner = command_runner || method(:capture3)
+            @system_runner = system_runner || method(:system)
+            @time_source = time_source || -> { Time.now.to_i }
+          end
+
           # Execute all setup steps in a sandbox directory
           #
           # @param setup_steps [Array] Setup steps from scenario.yml
@@ -47,7 +53,7 @@ module Ace
           def teardown
             return unless @tmux_session
 
-            system("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
+            @system_runner.call("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
             @tmux_session = nil
           end
 
@@ -99,9 +105,9 @@ module Ace
             session_name = if name_source == "run-id" && @run_id && !@run_id.to_s.empty?
               @run_id
             else
-              @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
+              @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{@time_source.call}"
             end
-            _stdout, stderr, status = Open3.capture3("tmux", "new-session", "-d", "-s", session_name)
+            _stdout, stderr, status = @command_runner.call("tmux", "new-session", "-d", "-s", session_name)
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 
             @tmux_session = session_name
@@ -168,11 +174,15 @@ module Ace
 
           # Run a command and raise on failure
           def run_command(*args, chdir:, env: {})
-            _stdout, stderr, status = Open3.capture3(merged_environment(env), *args, chdir: chdir)
+            _stdout, stderr, status = @command_runner.call(merged_environment(env), *args, chdir: chdir)
 
             unless status.success?
               raise "Command failed (exit #{status.exitstatus}): #{args.join(" ")}\n#{stderr}"
             end
+          end
+
+          def capture3(*args, **kwargs)
+            Open3.capture3(*args, **kwargs)
           end
         end
       end

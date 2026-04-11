@@ -28,6 +28,30 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  class StubReportWriter
+    def write(result, scenario, report_dir:)
+      FileUtils.mkdir_p(report_dir)
+      File.write(File.join(report_dir, "summary.r.md"), result.summary.to_s)
+      File.write(File.join(report_dir, "experience.r.md"), "#{scenario.test_id}\n")
+    end
+  end
+
+  class StubSuiteReportWriter
+    def write(_results, _scenarios, package:, timestamp:, base_dir:)
+      cache_dir = File.join(base_dir, ".ace-local", "test-e2e")
+      FileUtils.mkdir_p(cache_dir)
+      report_path = File.join(cache_dir, "#{timestamp}-final-report.md")
+      File.write(report_path, "# #{package}\n")
+      report_path
+    end
+  end
+
+  class NullIntegrationRunner
+    def run(package:, files:, timestamp:, output:)
+      nil
+    end
+  end
+
   def setup
     @output = StringIO.new
   end
@@ -816,12 +840,29 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   def test_cli_provider_passes_run_id_to_setup_tmux_session
-    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
-
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_run_id_tmux_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       received = {}
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}|
+        received[:setup_steps] = setup_steps
+        received[:run_id] = run_id
+        received[:scenario_name] = scenario_name
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: initial_env.merge(
+            "PROJECT_ROOT_PATH" => ".",
+            "ACE_TMUX_SESSION" => run_id
+          ),
+          tmux_session: run_id
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) do
+        received[:teardown_called] = true
+      end
       executor = Object.new
       executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received[:env_vars] = env_vars
@@ -838,7 +879,8 @@ class TestOrchestratorTest < Minitest::Test
         base_dir: tmpdir,
         provider: "claude:sonnet",
         executor: executor,
-        timestamp_generator: -> { "8pny7t0" }
+        timestamp_generator: -> { "8pny7t0" },
+        setup_executor_factory: -> { setup_executor }
       )
 
       orchestrator.run(
@@ -848,8 +890,9 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       assert_equal "8pny7t0", received.dig(:env_vars, "ACE_TMUX_SESSION")
-    ensure
-      system("tmux", "kill-session", "-t", "8pny7t0", out: File::NULL, err: File::NULL)
+      assert_equal "8pny7t0", received[:run_id]
+      assert_equal "TS-TEST-001", received[:scenario_name]
+      assert received[:teardown_called]
     end
   end
 
@@ -1061,7 +1104,9 @@ class TestOrchestratorTest < Minitest::Test
 
   private
 
-  def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil)
+  def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil,
+    suite_report_writer: nil, report_writer: nil, integration_runner: nil, discoverer: nil,
+    scenario_loader: nil, setup_executor_factory: nil)
     base = base_dir || File.expand_path("../../..", __dir__)
     TestOrchestrator.new(
       provider: provider || "test:stub",
@@ -1069,7 +1114,13 @@ class TestOrchestratorTest < Minitest::Test
       parallel: parallel || 1,
       base_dir: base,
       timestamp_generator: timestamp_generator || -> { "test00" },
-      executor: executor || StubExecutor.new
+      executor: executor || StubExecutor.new,
+      discoverer: discoverer,
+      integration_runner: integration_runner || NullIntegrationRunner.new,
+      scenario_loader: scenario_loader,
+      report_writer: report_writer || StubReportWriter.new,
+      suite_report_writer: suite_report_writer || StubSuiteReportWriter.new,
+      setup_executor_factory: setup_executor_factory
     )
   end
 
