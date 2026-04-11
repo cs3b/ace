@@ -1117,7 +1117,8 @@ class AssignmentExecutorTest < AceAssignTestCase
             refute_includes work_step.instructions, "Assignment-specific context:\n- Task context:"
             assert_includes verify_step.instructions, "Action:"
             assert_includes verify_step.instructions, "Identify modified packages"
-            assert_includes verify_step.instructions, "ace-test --profile 6"
+            assert_includes verify_step.instructions, "ace-test all --profile 6"
+            assert_includes verify_step.instructions, "do not run the monorepo suite here"
             assert_includes review_step.instructions, "review uncommitted changes and find issues"
             assert_includes review_step.instructions, "Allowed native review clients: claude, codex."
             assert_includes review_step.instructions, "pre_commit_review_block"
@@ -1189,10 +1190,10 @@ class AssignmentExecutorTest < AceAssignTestCase
         "name" => "verify-test-suite",
         "workflow" => "wfi://test/verify-suite",
         "render" => "step_template",
-        "description" => "Run package test suites with profiling to verify correctness and performance",
+        "description" => "Run modified-package deterministic verification plus the default fast monorepo suite",
         "steps" => [
-          {"description" => "Run ace-test --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep."},
-          {"description" => "Run ace-test-suite to verify no cross-package regressions"}
+          {"description" => "Run ace-test <package> all --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep."},
+          {"description" => "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"}
         ],
         "when_to_skip" => [
           "No code changes that could affect tests (documentation-only)"
@@ -1201,7 +1202,8 @@ class AssignmentExecutorTest < AceAssignTestCase
     )
 
     assert_includes instructions, "Step focus:"
-    assert_includes instructions, "Run ace-test --profile 6 for each modified package"
+    assert_includes instructions, "Run ace-test <package> all --profile 6 for each modified package"
+    assert_includes instructions, "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"
     assert_includes instructions, "Skip when:"
     assert_includes instructions, "Assignment-specific context:"
     refute_includes instructions, "Monthly full audit"
@@ -1223,11 +1225,11 @@ class AssignmentExecutorTest < AceAssignTestCase
         "name" => "verify-e2e",
         "workflow" => "wfi://e2e/review",
         "render" => "step_template",
-        "description" => "Review E2E coverage for modified packages and run targeted scenarios",
+        "description" => "Review E2E coverage for modified packages and run targeted package scenarios",
         "steps" => [
           {"description" => "Review coverage for heavily modified packages"},
           {"description" => "If coverage matrix shows gaps or stale TCs, update or create E2E tests", "conditional" => "coverage gaps were found"},
-          {"description" => "Run targeted E2E scenarios for heavily modified packages"}
+          {"description" => "Run ace-test-e2e for each selected heavily modified package"}
         ],
         "when_to_skip" => [
           "No public CLI API changes (internal-only refactoring)"
@@ -1237,7 +1239,7 @@ class AssignmentExecutorTest < AceAssignTestCase
 
     assert_includes instructions, "Review coverage for heavily modified packages"
     assert_includes instructions, "If coverage gaps were found."
-    assert_includes instructions, "Run targeted E2E scenarios for heavily modified packages"
+    assert_includes instructions, "Run ace-test-e2e for each selected heavily modified package"
     refute_includes instructions, "Stage 1 of 3 (Explore)"
     refute_includes instructions, "wfi://e2e/plan-changes"
     refute_includes instructions, "wfi://e2e/rewrite"

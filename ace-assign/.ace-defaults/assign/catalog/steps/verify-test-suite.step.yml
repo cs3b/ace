@@ -4,18 +4,18 @@ render: step_template
 
 steps:
   - name: run-package-tests
-    description: "Run ace-test --profile 6 for each modified package"
-    tool: "ace-test --profile 6"
-    note: "Profile reveals slow tests; run per-package, not full monorepo"
+    description: "Run ace-test <package> all --profile 6 for each modified package"
+    tool: "ace-test <package> all --profile 6"
+    note: "Profile reveals slow tests; verify modified packages with their explicit full deterministic target first"
 
   - name: check-performance-budgets
     description: "Verify no test exceeds documented thresholds"
-    note: "Atoms <50ms, molecules <100ms, integration <1s, full package <30s. Tests must not make real network calls or unnecessary filesystem I/O."
+    note: "Fast atoms <50ms, fast molecules <100ms, feat tests <1s, full package <30s. Tests must not make real network calls or unnecessary filesystem I/O."
 
   - name: fix-violations
     description: "Stub I/O and mock external calls for tests exceeding budgets"
     conditional: "performance violations detected"
 
   - name: run-suite
-    description: "Run ace-test-suite to verify no cross-package regressions"
+    description: "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"
     tool: "ace-test-suite"

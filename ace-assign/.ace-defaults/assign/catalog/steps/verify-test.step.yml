@@ -26,13 +26,13 @@ tags: [testing, verification, performance]
 
 steps:
   - name: run-package-tests
-    description: "Run ace-test --profile 6 for each modified package in this subtree"
-    tool: "ace-test --profile 6"
-    note: "Execute per-package; do not run full-stack suite here"
+    description: "Run ace-test <package> all --profile 6 for each modified package in this subtree"
+    tool: "ace-test <package> all --profile 6"
+    note: "Execute per-package only; do not run the monorepo suite in this subtree step"
 
   - name: check-performance-budgets
     description: "Verify no test exceeds documented thresholds"
-    note: "Atoms <50ms, molecules <100ms, integration <1s, full package suite <30s. Tests must not make real network calls or unnecessary filesystem I/O."
+    note: "Fast atoms <50ms, fast molecules <100ms, feat tests <1s, full package suite <30s. Tests must not make real network calls or unnecessary filesystem I/O."
 
   - name: fix-violations
     description: "Fix slow or environment-coupled tests when violations are detected"

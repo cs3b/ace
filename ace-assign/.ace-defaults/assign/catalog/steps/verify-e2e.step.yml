@@ -37,6 +37,6 @@ steps:
     conditional: "coverage-matrix shows gaps or outdated TCs"
 
   - name: run-targeted
-    description: "Run ace-test-e2e-suite for each heavily modified package (not full suite)"
-    tool: "ace-test-e2e-suite <package>"
-    note: "Pass package name(s) of heavily modified packages only"
+    description: "Run ace-test-e2e for each selected heavily modified package"
+    tool: "ace-test-e2e <package>"
+    note: "Run package-targeted E2E only; do not escalate to ace-test-e2e-suite here"

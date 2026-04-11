@@ -36,8 +36,9 @@ steps:
   - name: verify-test-suite
     skill: as-test-verify-suite
     instructions:
-      - Run the test suite to verify the fix doesn't break anything.
-      - Ensure all tests pass.
+      - Run `ace-test <package> all --profile 6` for each modified package first.
+      - Then run plain `ace-test-suite` to verify the fix does not break the wider fast suite.
+      - Ensure all required checks pass before continuing.
 
   - name: create-pr
     skill: as-github-pr-create
