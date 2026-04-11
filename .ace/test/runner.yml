@@ -34,10 +34,9 @@ patterns:
   support: "test/{fast/,}support/**/*_test.rb"
   edge: "test/edge/**/*_test.rb"
   feat_tests: "test/feat/**/*_test.rb"
-  integration: "test/integration/**/*_test.rb"
 
-# Test groups
-groups:
+# Test targets
+targets:
   fast:
     - smoke
     - atoms
@@ -52,7 +51,6 @@ groups:
   feat:
     - feat_tests
     - edge
-    - integration
   unit:
     - fast
   integration:
@@ -76,15 +74,15 @@ failure_limits:
 
 # Execution settings
 execution:
-  # Execution mode: "grouped" or "all-at-once"
-  # grouped: Run test groups sequentially with headers (better organization)
-  # all-at-once: Run all tests together without group headers (faster, simpler output)
-  mode: grouped 
+  # Execution mode: "by-target" or "all-at-once"
+  # by-target: Run test targets sequentially with headers (better organization)
+  # all-at-once: Run all tests together in one batch (faster, simpler output)
+  mode: by-target
 
-  # Stop at first failing group (only for mode: grouped)
-  group_fail_fast: true
+  # Stop at first failing target (only for mode: by-target)
+  target_fail_fast: true
 
-  # Process isolation for groups (only for mode: grouped)
-  # true: Run each group in separate subprocess (slower, better isolation)
-  # false: Run groups in same process (faster)
-  group_isolation: false
+  # Process isolation for targets (only for mode: by-target)
+  # true: Run each target in separate subprocess (slower, better isolation)
+  # false: Run targets in same process (faster)
+  target_isolation: false

@@ -7,7 +7,7 @@ patterns:
   commands: "test/fast/commands/**/*_test.rb"
   feat_tests: "test/feat/**/*_test.rb"
 
-groups:
+targets:
   fast:
     - smoke
     - atoms
