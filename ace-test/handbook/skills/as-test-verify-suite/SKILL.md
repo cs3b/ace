@@ -1,6 +1,6 @@
 ---
 name: as-test-verify-suite
-description: Verify test suite health and enforce performance budgets
+description: Run modified-package deterministic verification plus the default fast monorepo suite
 # bundle: wfi://test/verify-suite
 # agent: general-purpose
 user-invocable: true
@@ -26,7 +26,7 @@ integration:
 assign:
   steps:
     - name: verify-test-suite
-      description: Run package test suites with profiling to verify correctness and performance
+      description: Run modified-package deterministic verification plus the default fast monorepo suite
       intent:
         phrases:
           - "run tests"

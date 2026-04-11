@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-04-11
+
+### Technical
+- Synced the canonical `as-test-verify-suite` skill description with the new assignment verification contract so packaged step metadata matches `ace-test <package> all` plus plain `ace-test-suite`.
+
 ## [0.6.4] - 2026-04-11
 
 ### Changed
