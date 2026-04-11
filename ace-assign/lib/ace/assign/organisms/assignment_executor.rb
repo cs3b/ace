@@ -847,13 +847,14 @@ module Ace
           when "pre-commit-review"
             pre_commit_review_action_instructions(task_hint: task_hint)
           when "verify-test"
-            "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this step skipped with a clear reason."
+            "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test all --profile 6\n- This subtree step verifies modified packages only; do not run the monorepo suite here.\n- If no package-level code changes are present, mark this step skipped with a clear reason."
           when /\Arelease(?:-.+)?\z/
             "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this step.\n- When auto-detecting packages, include `git diff origin/main...HEAD --name-only` in addition to working-tree state — prior steps may have already committed changes."
           when "verify-e2e"
             "- Check change scope: run `git diff origin/main --name-only` to list modified files.\n" \
             "- **Skip criteria**: If ALL modified files match `*.md`, `*.yml` (non-CI config), `.ace-tasks/**`, or `.ace-retros/**`, skip E2E verification — mark step done with \"skipped: docs/task-spec only changes, no runnable code affected\".\n" \
-            "- Otherwise: detect modified packages, run E2E scenarios for each package with `test-e2e/scenarios/` scenarios (or legacy `test/e2e/` scenarios during migration)#{task_hint}.\n" \
+            "- Otherwise: detect modified packages, run `ace-test-e2e <package>` for each package with `test/e2e/` scenarios#{task_hint}.\n" \
+            "- Do not escalate to `ace-test-e2e-suite`; this verification step is package-targeted.\n" \
             "- If no modified package has E2E scenarios, mark step done with \"skipped: no E2E scenarios for modified packages\"."
           else
             "- Execute the #{sub_name} step."

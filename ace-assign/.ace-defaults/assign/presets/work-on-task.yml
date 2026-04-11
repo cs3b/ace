@@ -25,7 +25,8 @@ steps:
     workflow: wfi://test/verify-suite
     instructions:
       - "Verify test coverage and performance across batch tasks: {{taskrefs}}."
-      - "Focus on packages modified by this batch before any broader regression checks required by the workflow."
+      - "First run `ace-test <package> all --profile 6` for each package modified by this batch."
+      - "Then run plain `ace-test-suite` with its default package target selection."
       - "If the batch is documentation-only or otherwise does not affect runnable code, mark this step skipped with a clear reason."
 
   - name: verify-e2e
@@ -34,13 +35,13 @@ steps:
     instructions:
       - "Run E2E tests for packages modified across batch tasks: {{taskrefs}}."
       - "Detect modified packages from the current diff: `git diff origin/main --name-only | grep '^ace-' | cut -d/ -f1 | sort -u`."
-      - "Run `ace-test-e2e <package>` for each modified package that has `test-e2e/scenarios/` scenarios (or legacy `test/e2e/` scenarios during migration)."
-      - "If more than 5 packages were modified with cross-dependencies, run the full suite: `ace-test-e2e-suite`."
+      - "Run `ace-test-e2e <package>` for each modified package that has package-local E2E scenarios."
+      - "Do not escalate to `ace-test-e2e-suite`; this step is package-targeted only."
       - "If any scenarios fail, use /as-e2e-fix to diagnose and fix each failing scenario."
       - "After fixing, rerun the failing scenarios to confirm they pass."
       - "Repeat fix→rerun cycle up to 3 times if new failures appear."
       - "Final gate: all previously-failing scenarios must pass before completing this step."
-      - "Skip only when no modified package has either `test-e2e/scenarios/` or legacy `test/e2e/` scenarios."
+      - "Skip only when no modified package has `test/e2e/` scenarios."
 
   - name: release-minor
     number: "020"

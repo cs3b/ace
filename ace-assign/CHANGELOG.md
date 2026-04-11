@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-04-11
+
+### Changed
+- Updated assignment verification presets, step templates, and runtime child-step instructions so modified packages run `ace-test <package> all --profile 6`, batch suite checks stay on plain `ace-test-suite`, and E2E verification stays package-targeted via `ace-test-e2e <package>`.
+
+### Technical
+- Synced the shipped work-on-task prepare fixture and executor rendering coverage to the new verification contract.
+
 ## [0.44.5] - 2026-04-10
 
 ### Fixed
