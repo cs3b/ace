@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.32.2**: Generated batch CLI `run_id`s from explicit 50ms buckets so parallel E2E package runs no longer occasionally reuse report-path IDs and fail the unique-run-id orchestrator contract.
 - **ace-test-runner-e2e v0.31.1**: Removed accidental real suite-report synthesis and tmux subprocess work from unit-scoped organism/setup tests, moving live tmux lifecycle coverage into explicit integration tests so `ace-test-suite` no longer times out intermittently in `ace-test-runner-e2e`.
 - **ace-test-runner v0.19.6**: Restored suite single-batch execution, kept runtime results authoritative over stale summaries, and made subprocess-sensitive unit-directory tests opt into isolation so `ace-test-suite` and `ace-test --run-in-single-batch` both pass again.
 - **ace-test-runner v0.19.5**: Stopped forcing single-batch suite execution and made suite aggregation prefer live runtime timeout/failure state over stale package summaries.
