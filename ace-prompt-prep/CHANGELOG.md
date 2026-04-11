@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Clarified the base prompt template so `## Questions` is optional for deterministic execution prompts and `## Report` explicitly promotes the primary artifact path to a first-class deliverable when a task creates files.
+
 ## [0.23.6] - 2026-03-31
 
 ### Changed

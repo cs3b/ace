@@ -29,8 +29,8 @@ ace-docs:
 
 ## Report
 
-[Describe expected output format and deliverables]
+[Describe expected output format and deliverables. When the task creates a file, make the primary artifact path explicit and first-class.]
 
 ## Questions
 
-[List any clarifying questions or decision points]
+[List any clarifying questions or decision points. Omit this section entirely for deterministic execution prompts.]
