@@ -5,7 +5,7 @@ expected_params:
   required: []
   optional:
   - count: 'Number of slowest tests to show (default: 10)'
-  - target: 'Test target - file, directory, or group'
+  - target: 'Test target - file, directory, or target'
   - threshold: 'Only show tests exceeding this time (e.g., 100ms)'
 last_modified: '2026-01-22'
 type: agent
@@ -28,7 +28,7 @@ Your primary role is to analyze test performance and suggest optimizations:
 # Profile 10 slowest tests
 ace-test --profile 10
 
-# Profile slowest tests in a specific group
+# Profile slowest tests in a specific target
 ace-test atoms --profile 20
 
 # Profile a specific test file
