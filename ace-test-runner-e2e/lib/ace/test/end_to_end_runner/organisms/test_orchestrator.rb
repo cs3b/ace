@@ -391,9 +391,11 @@ module Ace
           # @param count [Integer] Number of unique timestamps needed
           # @return [Array<String>] Array of unique timestamp strings
           def generate_timestamps(count)
+            base_tick = (Time.now.utc.to_r * 20).floor
+
             count.times.map do |i|
-              time = Time.now.utc + (i * 0.05) # 50ms offset per ID
-              Ace::B36ts.encode(time, format: :"50ms")
+              tick_time = Time.at((base_tick + i).fdiv(20)).utc
+              Ace::B36ts.encode(tick_time, format: :"50ms")
             end
           end
 
