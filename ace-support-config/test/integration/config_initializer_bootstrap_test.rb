@@ -20,7 +20,7 @@ module Ace
             project_preset = File.read(".ace/bundle/presets/project.md")
             readme = File.read(".ace/README.md")
 
-            refute_includes project_preset, "ace-taskflow"
+            refute_includes project_preset, "ace-task"
             refute_includes project_preset, "Coding Agent Workflow Toolkit (Meta)"
             assert_includes readme, "ace-task"
           end

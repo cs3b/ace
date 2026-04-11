@@ -159,7 +159,7 @@ task :check_docs do
 end
 ```
 
-### ace-taskflow (Extended)
+### ace-task (Extended)
 ```ruby
 # Rakefile
 require "bundler/gem_tasks"

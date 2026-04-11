@@ -877,7 +877,7 @@ class ReviewManagerTest < AceReviewTest
     context_config = "project"
     metadata = {"headRefName" => "281.05-review-spec-context"}
 
-    resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+    resolved_spec = ".ace-task/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
     Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
       result = @manager.send(
         :build_pr_context_with_task_spec,
@@ -893,7 +893,7 @@ class ReviewManagerTest < AceReviewTest
   def test_build_pr_context_with_task_spec_adds_spec_when_context_none
     context_config = "none"
     metadata = {"headRefName" => "281.05-review-spec-context"}
-    resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+    resolved_spec = ".ace-task/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
 
     Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
       result = @manager.send(
@@ -941,7 +941,7 @@ class ReviewManagerTest < AceReviewTest
         "url" => "https://example.com/pr/123"
       }
     }
-    spec_path = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+    spec_path = ".ace-task/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
     captured_context_config = nil
 
     Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetch_result) do

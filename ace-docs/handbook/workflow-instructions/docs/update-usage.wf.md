@@ -42,7 +42,7 @@ Systematically update usage documentation files based on user feedback, task req
      find . -name "usage.md" -path "*/ux/*" -o -name "usage.md" -path "*/docs/*"
 
      # Or check specific task folder
-     ls -la .ace-taskflow/v.*/t/*/ux/usage.md
+     ls -la .ace-task/v.*/t/*/ux/usage.md
      ```
    * Extract key requirements:
      - What needs to be documented
@@ -102,7 +102,7 @@ Systematically update usage documentation files based on user feedback, task req
    **Commands/Steps**:
    ```bash
    # Command with comments
-   ace-taskflow command --flag value
+   ace-task command --flag value
    ```
 
    **Expected Output**:
@@ -159,7 +159,7 @@ Systematically update usage documentation files based on user feedback, task req
    ### Bash CLI Commands
    Commands without `/` are terminal/bash commands:
    ```bash
-   ace-taskflow command
+   ace-task command
    ```
 
    ### Claude Code Commands (Slash Commands)
@@ -469,7 +469,7 @@ feature:
 **Available Commands:**
 - `/ace:[command1]` - [Description]
 - `/ace:[command2]` - [Description]
-- `ace-taskflow [command]` - [CLI equivalent if exists]
+- `ace-task [command]` - [CLI equivalent if exists]
 
 ## Command Types
 
@@ -482,7 +482,7 @@ Commands starting with `/` are executed **within Claude Code**:
 ### Bash CLI Commands
 Commands without `/` are **terminal/bash commands**:
 ```bash
-ace-taskflow [command]
+ace-task [command]
 ```
 
 ## Usage Scenarios
@@ -493,7 +493,7 @@ ace-taskflow [command]
 
 ```bash
 # Step 1: Preparation (bash command)
-ace-taskflow list
+ace-task list
 
 # Step 2: Execution (Claude command)
 /ace:[command]
@@ -538,13 +538,13 @@ Summary: 2 items completed
 [Sample output]
 ```
 
-### `ace-taskflow [command]`
+### `ace-task [command]`
 
 **Purpose**: [CLI tool purpose]
 
 **Usage**:
 ```bash
-ace-taskflow [command] [options]
+ace-task [command] [options]
 ```
 
 **Options**:
@@ -590,7 +590,7 @@ Friday: [Review]
 **Solution**:
 ```bash
 # Verify installation
-which ace-taskflow
+which ace-task
 
 # Check workflow exists
 ace-bundle wfi://[workflow] --verify

@@ -76,8 +76,8 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-prompt-prep**: Prompt workspace with archiving, LLM enhancement, and task integration
 * **ace-review**: Preset-based code review with LLM-powered analysis
 * **ace-search**: Unified file and content search with auto-detected pattern matching
-* **ace-taskflow**: Task and release management with presets
-* **ace-idea**: Standalone idea management with B36TS-based IDs (extracted from ace-taskflow)
+* **ace-task**: Task and release management with presets
+* **ace-idea**: Standalone idea management with B36TS-based IDs (extracted from ace-task)
 * **ace-test**: Test execution and reporting
 * **ace-test-support**: Shared testing infrastructure
 

@@ -12,7 +12,7 @@ class Ace::Handbook::CLI::Commands::SyncTest < Minitest::Test
         projected_skills: 4,
         updated_files: 1,
         removed_entries: 0,
-        source_breakdown: {"ace-handbook" => 4, "ace-taskflow" => 2}
+        source_breakdown: {"ace-handbook" => 4, "ace-task" => 2}
       },
       {
         provider: "codex",
@@ -20,7 +20,7 @@ class Ace::Handbook::CLI::Commands::SyncTest < Minitest::Test
         projected_skills: 4,
         updated_files: 1,
         removed_entries: 0,
-        source_breakdown: {"ace-handbook" => 4, "ace-taskflow" => 2}
+        source_breakdown: {"ace-handbook" => 4, "ace-task" => 2}
       }
     )
     command = Ace::Handbook::CLI::Commands::Sync.new(syncer: syncer)
@@ -29,7 +29,7 @@ class Ace::Handbook::CLI::Commands::SyncTest < Minitest::Test
 
     assert_includes stdout, "synced pi -> .pi/skills (4 skills, 1 updated, 0 removed)"
     assert_includes stdout, "synced codex -> .codex/skills (4 skills, 1 updated, 0 removed)"
-    assert_includes stdout, "inventory sources: ace-handbook:4, ace-taskflow:2"
+    assert_includes stdout, "inventory sources: ace-handbook:4, ace-task:2"
     refute_includes stdout, "only 'ace-handbook' skills were discovered"
   end
 

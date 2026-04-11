@@ -54,7 +54,7 @@ The mono-repo migration is complete with **15+ production gems** (99% task compl
 - **ace-llm-providers-cli** (v0.1.x): CLI-based provider implementations
 
 **Task Management:**
-- **ace-taskflow** (v0.11.x): Task, release, and idea management with presets
+- **ace-task** (v0.11.x): Task, release, and idea management with presets
 
 **Platform Support:**
 - **ace-support-mac-clipboard** (v0.1.x): macOS clipboard integration

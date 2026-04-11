@@ -29,7 +29,7 @@ class CommitGrouperTest < TestCase
     )
     group_b = Ace::Support::Config::Models::ConfigGroup.new(
       name: "project default",  # no path rule match, from distributed config
-      source: "#{@project_root}/ace-taskflow/.ace/git/commit.yml",
+      source: "#{@project_root}/ace-task/.ace/git/commit.yml",
       config: config_b,
       files: []
     )
@@ -47,7 +47,7 @@ class CommitGrouperTest < TestCase
     # Root config with path rule → keeps path rule name "docs"
     assert_equal ["a.md", "b.md"], groups.find { |g| g.scope_name == "docs" }.files
     # Distributed config → derives package name from path
-    assert_equal ["c.md"], groups.find { |g| g.scope_name == "ace-taskflow" }.files
+    assert_equal ["c.md"], groups.find { |g| g.scope_name == "ace-task" }.files
   end
 
   # ===== derive_scope_name tests =====

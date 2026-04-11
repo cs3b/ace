@@ -185,7 +185,7 @@ end
 ...
 ```
 
-### ace-taskflow (Comprehensive)
+### ace-task (Comprehensive)
 
 ```markdown
 # Changelog
@@ -279,7 +279,7 @@ end
 - **Semantic Versioning**: https://semver.org/
 - **Keep a Changelog**: https://keepachangelog.com/
 - **ace-lint CHANGELOG**: Example of well-maintained changelog
-- **ace-taskflow CHANGELOG**: Example of detailed changelog
+- **ace-task CHANGELOG**: Example of detailed changelog
 
 ---
 

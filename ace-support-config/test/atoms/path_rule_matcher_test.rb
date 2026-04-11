@@ -21,10 +21,10 @@ module Ace
 
           def test_matches_dot_paths_with_dotmatch
             matcher = PathRuleMatcher.new({
-              "taskflow" => {"glob" => ".ace-taskflow/**", "format" => "simple"}
+              "taskflow" => {"glob" => ".ace-task/**", "format" => "simple"}
             })
 
-            result = matcher.match(".ace-taskflow/v1/task.md")
+            result = matcher.match(".ace-task/v1/task.md")
 
             assert result
             assert_equal "taskflow", result.name

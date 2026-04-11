@@ -11,13 +11,13 @@ ace-docs:
 
 ## Goal
 
-Synchronize the project roadmap (`.ace-taskflow/roadmap.md`) with the current state of releases and tasks in the `.ace-taskflow/` directory structure. This workflow analyzes release folders, updates the Planned Major Releases table, synchronizes cross-release dependencies, and maintains roadmap format compliance per the Roadmap Definition Guide.
+Synchronize the project roadmap (`.ace-task/roadmap.md`) with the current state of releases and tasks in the `.ace-task/` directory structure. This workflow analyzes release folders, updates the Planned Major Releases table, synchronizes cross-release dependencies, and maintains roadmap format compliance per the Roadmap Definition Guide.
 
 ## Prerequisites
 
-* `.ace-taskflow/roadmap.md` exists and follows roadmap-definition.g.md structure
-* `.ace-taskflow/` directory contains release folders with release.md files
-* `ace-taskflow` CLI tool available for release queries
+* `.ace-task/roadmap.md` exists and follows roadmap-definition.g.md structure
+* `.ace-task/` directory contains release folders with release.md files
+* `ace-task` CLI tool available for release queries
 * `ace-nav` available for workflow protocol support
 * Git repository in clean state for committing changes
 
@@ -33,7 +33,7 @@ Synchronize the project roadmap (`.ace-taskflow/roadmap.md`) with the current st
 
 ```bash
 # Get roadmap path
-cat .ace-taskflow/roadmap.md
+cat .ace-task/roadmap.md
 ```
 
 **Capture current state:**
@@ -73,14 +73,14 @@ cat .ace-taskflow/roadmap.md
 
 ### 3. Analyze Release State
 
-**Discover all releases in .ace-taskflow structure:**
+**Discover all releases in .ace-task structure:**
 
 ```bash
 # Get current release
 ace-release
 
 # List all release directories
-ls -d .ace-taskflow/v.*/ 2>/dev/null || echo "No releases found"
+ls -d .ace-task/v.*/ 2>/dev/null || echo "No releases found"
 ```
 
 **For each release found, extract:**
@@ -101,17 +101,17 @@ ls -d .ace-taskflow/v.*/ 2>/dev/null || echo "No releases found"
 **Synchronization Rules:**
 
 1. **Add New Releases:**
-   - If release exists in `.ace-taskflow/` but NOT in roadmap table
+   - If release exists in `.ace-task/` but NOT in roadmap table
    - Extract release information from release.md
    - Add row to Planned Major Releases table with proper format
 
 2. **Update Existing Releases:**
-   - If release exists in both roadmap and `.ace-taskflow/`
+   - If release exists in both roadmap and `.ace-task/`
    - Compare current information with release.md
    - Update any changed fields (goals, target window, epics)
 
 3. **Remove Completed Releases:**
-   - If release is marked done/completed in `.ace-taskflow/`
+   - If release is marked done/completed in `.ace-task/`
    - Remove entire row from Planned Major Releases table
    - Ensure release information captured in changelog
    - Document removal in Update History
@@ -140,7 +140,7 @@ ls -d .ace-taskflow/v.*/ 2>/dev/null || echo "No releases found"
    - Remove or update obsolete statements
 
 2. **Add new dependencies:**
-   - Analyze task dependencies from `.ace-taskflow/` structure
+   - Analyze task dependencies from `.ace-task/` structure
    - Identify cross-release blocking dependencies
    - Add clear dependency statements to Section 5
 
@@ -199,7 +199,7 @@ Add new row to Update History table (Section 6) at the TOP:
    - Version numbers use semantic versioning
 
 3. **Consistency Check:**
-   - Releases in table match `.ace-taskflow/` structure
+   - Releases in table match `.ace-task/` structure
    - Dependencies reference valid releases/epics
    - Update history reflects changes made
 
@@ -214,10 +214,10 @@ Add new row to Update History table (Section 6) at the TOP:
 
 ```bash
 # Review changes before committing
-git diff .ace-taskflow/roadmap.md
+git diff .ace-task/roadmap.md
 
 # Stage roadmap file
-git add .ace-taskflow/roadmap.md
+git add .ace-task/roadmap.md
 
 # Commit with descriptive message
 git commit -m "docs(roadmap): update planned releases and synchronize with current state"
@@ -229,7 +229,7 @@ git commit -m "docs(roadmap): update planned releases and synchronize with curre
 - Examples:
   - `docs(roadmap): add v.0.9.0 Mono-Repo to planned releases`
   - `docs(roadmap): remove completed v.0.8.0 from planned releases`
-  - `docs(roadmap): synchronize release status with .ace-taskflow structure`
+  - `docs(roadmap): synchronize release status with .ace-task structure`
 
 ## Error Handling
 
@@ -254,8 +254,8 @@ git commit -m "docs(roadmap): update planned releases and synchronize with curre
 - Inconsistent release naming
 
 **Recovery Steps:**
-1. Report discrepancies between `.ace-taskflow/` and roadmap
-2. Determine authoritative source (usually `.ace-taskflow/` structure)
+1. Report discrepancies between `.ace-task/` and roadmap
+2. Determine authoritative source (usually `.ace-task/` structure)
 3. Update roadmap to match actual release state
 4. Document assumptions in Update History
 
@@ -328,7 +328,7 @@ git commit -m "docs(roadmap): update planned releases and synchronize with curre
 ## Success Criteria
 
 - [ ] Roadmap format validated against roadmap-definition.g.md
-- [ ] Planned Major Releases table synchronized with `.ace-taskflow/` structure
+- [ ] Planned Major Releases table synchronized with `.ace-task/` structure
 - [ ] Completed releases removed from roadmap table
 - [ ] Cross-release dependencies updated and accurate
 - [ ] Front matter `last_reviewed` date updated to today
@@ -411,10 +411,10 @@ status: [draft|active|archived]
 ## References
 
 - **Roadmap Definition Guide**: `dev-handbook/guides/roadmap-definition.g.md`
-- **Current Roadmap**: `.ace-taskflow/roadmap.md`
+- **Current Roadmap**: `.ace-task/roadmap.md`
 - **Draft Release Workflow**: `wfi://release/draft`
 - **Publish Release Workflow**: `wfi://release/publish`
-- **ace-taskflow CLI**: For release queries and task analysis
+- **ace-task CLI**: For release queries and task analysis
 
 ---
 

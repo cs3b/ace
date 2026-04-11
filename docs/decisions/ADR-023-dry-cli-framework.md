@@ -69,7 +69,7 @@ ACE gems use two patterns depending on complexity:
 
 #### Multi-Command Pattern (subcommand tools)
 
-For CLIs with multiple commands (ace-bundle, ace-taskflow, ace-git-worktree):
+For CLIs with multiple commands (ace-bundle, ace-task, ace-git-worktree):
 
 ```ruby
 # lib/ace/gem/cli.rb

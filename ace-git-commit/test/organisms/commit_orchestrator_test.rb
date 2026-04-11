@@ -271,7 +271,7 @@ class CommitOrchestratorTest < TestCase
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
-        source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
+        source: "#{PROJECT_ROOT}/ace-task/.ace/git/commit.yml",
         config: {"model" => "gflash"},
         files: ["b.md"]
       )
@@ -311,7 +311,7 @@ class CommitOrchestratorTest < TestCase
       ),
       Ace::GitCommit::Models::CommitGroup.new(
         scope_name: "taskflow",
-        source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
+        source: "#{PROJECT_ROOT}/ace-task/.ace/git/commit.yml",
         config: {"model" => "gflash"},
         files: ["b.md"]
       )

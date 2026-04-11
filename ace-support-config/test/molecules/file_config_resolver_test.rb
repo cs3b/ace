@@ -18,7 +18,7 @@ module Ace
                   YAML
                 }
               },
-              ".ace-taskflow" => {
+              ".ace-task" => {
                 ".ace" => {
                   "git" => {
                     "commit.yml" => <<~YAML
@@ -31,11 +31,11 @@ module Ace
               }
             ) do |tmpdir|
               resolver = FileConfigResolver.new
-              result = resolver.resolve(".ace-taskflow/spec.md")
+              result = resolver.resolve(".ace-task/spec.md")
 
-              assert_equal ".ace-taskflow", result.name
+              assert_equal ".ace-task", result.name
               assert_equal({"model" => "gflash"}, result.config)
-              assert result.source.include?(".ace-taskflow/.ace/git/commit.yml")
+              assert result.source.include?(".ace-task/.ace/git/commit.yml")
             end
           end
 

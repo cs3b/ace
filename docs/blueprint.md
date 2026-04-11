@@ -22,7 +22,7 @@ ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
                 # Key gems: ace-handbook, ace-assign, ace-overseer, ace-hitl, ace-idea, ace-bundle, ace-nav,
                 # ace-git, ace-git-commit, ace-review, ace-docs, ace-lint,
                 # ace-search, ace-llm, ace-test (documentation), ace-test-runner (CLI)
-.ace-taskflow/  # Task and release management
+.ace-task/  # Task and release management
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
 .ace-bin/       # Shared scripts for non-package CLI helpers
@@ -41,14 +41,14 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `ace-*/test/**/*` # Gem test files (modify only for test updates)
 - `ace-*/handbook/**/*` # Gem workflows, guides, templates
 - `.github/workflows/**/*` # CI/CD configuration
-- `.ace-taskflow/v.*/retro/**/*` # Development retrospectives
+- `.ace-task/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
 
 ## Ignored Paths
 
 AI agents should ignore these during normal operations:
 
-- `.ace-taskflow/done/**/*` # Completed tasks and releases
+- `.ace-task/done/**/*` # Completed tasks and releases
 - `.ace-local/**/*` # Cached output from ace tools (e.g., .ace-local/review/, .ace-local/lint/)
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files

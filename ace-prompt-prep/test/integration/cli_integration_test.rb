@@ -472,7 +472,7 @@ class CLIIntegrationTest < Minitest::Test
 
   def test_process_with_task_flag_uses_task_prompts_directory
     # Create task directory structure
-    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/117-feature-name")
+    task_dir = File.join(@tmpdir, ".ace-task/v.0.9.0/tasks/117-feature-name")
     task_prompts_dir = File.join(task_dir, "prompts")
     task_archive_dir = File.join(task_prompts_dir, "archive")
     FileUtils.mkdir_p(task_prompts_dir)
@@ -529,7 +529,7 @@ class CLIIntegrationTest < Minitest::Test
 
   def test_setup_with_task_flag_creates_prompt_in_task_directory
     # Create task directory structure
-    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/118-new-task")
+    task_dir = File.join(@tmpdir, ".ace-task/v.0.9.0/tasks/118-new-task")
     task_prompts_dir = File.join(task_dir, "prompts")
     FileUtils.mkdir_p(task_dir)
 
@@ -565,7 +565,7 @@ class CLIIntegrationTest < Minitest::Test
 
   def test_process_with_auto_detection_from_branch
     # Create task directory structure
-    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/121-feature")
+    task_dir = File.join(@tmpdir, ".ace-task/v.0.9.0/tasks/121-feature")
     task_prompts_dir = File.join(task_dir, "prompts")
     FileUtils.mkdir_p(task_prompts_dir)
 

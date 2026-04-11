@@ -75,11 +75,11 @@ Limit search to specific paths:
 ```bash
 # Search specific directory (change directory first)
 cd lib/ && ace-search "pattern"
-cd ace-taskflow/ && ace-search "TODO"
+cd ace-task/ && ace-search "TODO"
 
 # Or use --include to filter paths
 ace-search "pattern" --include "lib/**/*"
-ace-search "TODO" --include "ace-taskflow/**/*"
+ace-search "TODO" --include "ace-task/**/*"
 ```
 
 ### File Pattern Filtering (Glob)

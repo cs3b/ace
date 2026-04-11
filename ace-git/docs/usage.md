@@ -236,7 +236,7 @@ diff:
 | `grouped_stats.layers` | Array | `["lib","test","handbook"]` | Preferred layer grouping order |
 | `grouped_stats.collapse_above` | Integer | `5` | Collapse markdown groups above this file count |
 | `grouped_stats.show_full_tree` | String | `collapsible` | Tree rendering strategy hint |
-| `grouped_stats.dotfile_groups` | Array | `[".ace-taskflow",".ace"]` | Dot-directories to prioritize in grouping |
+| `grouped_stats.dotfile_groups` | Array | `[".ace-task",".ace"]` | Dot-directories to prioritize in grouping |
 
 **Default exclude_patterns** (from `.ace-defaults/git/config.yml`):
 - Lock files: `**/*.lock`, `package-lock.json`, `yarn.lock`, `Gemfile.lock`

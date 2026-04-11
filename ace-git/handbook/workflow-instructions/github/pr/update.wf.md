@@ -31,7 +31,7 @@ If no PR exists for current branch, ask the user for the target PR number.
 
 ```bash
 gh pr view $pr_number --json baseRefName,headRefName,title
-ace-taskflow status
+ace-task status
 ```
 
 If taskflow context indicates a subtask and the PR targets `main`, retarget to the parent task branch before continuing.

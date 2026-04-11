@@ -89,7 +89,7 @@ The CLI entry point (exe/ace-*) should handle status codes and exit only at the 
 
 ```ruby
 #!/usr/bin/env ruby
-# exe/ace-taskflow
+# exe/ace-task
 
 require_relative "../lib/ace/taskflow"
 

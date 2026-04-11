@@ -12,11 +12,11 @@ class FileGrouperTest < AceGitTestCase
     entries = [
       {path: "ace-git/lib/ace/git/cli.rb", display_path: "ace-git/lib/ace/git/cli.rb", additions: 5, deletions: 1, binary: false},
       {path: "ace-git/test/commands/diff_test.rb", display_path: "ace-git/test/commands/diff_test.rb", additions: 3, deletions: 2, binary: false},
-      {path: ".ace-taskflow/v.0.9.0/tasks/281.md", display_path: ".ace-taskflow/v.0.9.0/tasks/281.md", additions: 1, deletions: 0, binary: false},
+      {path: ".ace-task/v.0.9.0/tasks/281.md", display_path: ".ace-task/v.0.9.0/tasks/281.md", additions: 1, deletions: 0, binary: false},
       {path: "README.md", display_path: "README.md", additions: 2, deletions: 0, binary: false}
     ]
 
-    result = @grouper.group(entries, layers: %w[lib test handbook], dotfile_groups: [".ace-taskflow"])
+    result = @grouper.group(entries, layers: %w[lib test handbook], dotfile_groups: [".ace-task"])
 
     assert_equal 4, result[:total][:files]
     assert_equal 11, result[:total][:additions]
@@ -24,7 +24,7 @@ class FileGrouperTest < AceGitTestCase
 
     names = result[:groups].map { |g| g[:name] }
     assert_includes names, "ace-git/"
-    assert_includes names, ".ace-taskflow/"
+    assert_includes names, ".ace-task/"
     assert_includes names, "./"
   end
 

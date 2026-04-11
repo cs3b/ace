@@ -135,19 +135,19 @@ class TaskReportSaverTest < Minitest::Test
   # ============================================================================
 
   def test_feedback_path_returns_correct_path
-    task_path = "/project/.ace-taskflow/v.0.9.0/tasks/227-feature"
+    task_path = "/project/.ace-task/v.0.9.0/tasks/227-feature"
 
     feedback_path = Ace::Review::Molecules::TaskReportSaver.feedback_path(task_path)
 
-    assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/227-feature/feedback", feedback_path
+    assert_equal "/project/.ace-task/v.0.9.0/tasks/227-feature/feedback", feedback_path
   end
 
   def test_feedback_archive_path_returns_correct_path
-    task_path = "/project/.ace-taskflow/v.0.9.0/tasks/227-feature"
+    task_path = "/project/.ace-task/v.0.9.0/tasks/227-feature"
 
     archive_path = Ace::Review::Molecules::TaskReportSaver.feedback_archive_path(task_path)
 
-    assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/227-feature/feedback/_archived", archive_path
+    assert_equal "/project/.ace-task/v.0.9.0/tasks/227-feature/feedback/_archived", archive_path
   end
 
   def test_save_feedback_creates_feedback_directory

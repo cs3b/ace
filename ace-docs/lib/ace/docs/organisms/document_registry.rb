@@ -230,7 +230,7 @@ module Ace
             %r{^#{Regexp.escape(tmp_dir)}/},  # Only ignore <project_root>/tmp/
             %r{/coverage/},
             %r{/_legacy/},
-            %r{/\.ace-taskflow/done/}
+            %r{/\.ace-task/done/}
           ]
 
           # Add patterns from config if available

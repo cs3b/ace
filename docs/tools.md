@@ -17,7 +17,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 
 | Tool | Purpose |
 |------|---------|
-| `ace-taskflow status` | Show current task/release status |
+| `ace-task status` | Show current task/release status |
 | `ace-task create "Title"` | Create a new task |
 | `ace-task show 047` | View task details |
 | `ace-task list` | List tasks in current release |
@@ -26,7 +26,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 | `ace-task plan 047` | Resolve or generate implementation plan |
 | `ace-task doctor` | Run health checks and auto-fix |
 | `ace-task done 047` | Mark task complete |
-| `ace-taskflow doctor` | Run health checks and auto-fix (legacy) |
+| `ace-task doctor` | Run health checks and auto-fix (legacy) |
 
 ## Assignment Management
 

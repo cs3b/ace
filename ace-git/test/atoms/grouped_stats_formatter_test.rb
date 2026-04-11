@@ -113,7 +113,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
   def test_compacts_single_rename_with_shared_prefix
     data = {
       groups: [{
-        name: ".ace-taskflow/", additions: 1, deletions: 1, file_count: 1,
+        name: ".ace-task/", additions: 1, deletions: 1, file_count: 1,
         layers: [{
           name: "other/", additions: 1, deletions: 1, file_count: 1,
           files: [{

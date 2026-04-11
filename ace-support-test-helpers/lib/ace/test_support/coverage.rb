@@ -33,7 +33,7 @@ module Ace
       #   Ace::TestSupport::Coverage.start('ace-search', minimum_coverage: 85)
       #
       # @example Additional groups
-      #   Ace::TestSupport::Coverage.start('ace-taskflow', groups: {
+      #   Ace::TestSupport::Coverage.start('ace-task', groups: {
       #     'CLI' => 'lib/ace/taskflow/cli'
       #   })
       def self.start(gem_name, options = {})

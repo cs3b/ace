@@ -14,7 +14,7 @@ steps:
 
       Load context before starting:
       - ace-bundle project
-      - ace-taskflow task 123
+      - ace-task 123
 
       ## Work
 

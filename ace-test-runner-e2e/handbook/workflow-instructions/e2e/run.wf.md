@@ -213,7 +213,7 @@ echo "=== SANDBOX ISOLATION CHECK ==="
 CURRENT_DIR="$(pwd)"
 [[ "$CURRENT_DIR" == *".ace-local/test-e2e/"* ]] && echo "PASS: In sandbox" || echo "FAIL: NOT in sandbox"
 git rev-parse --git-dir >/dev/null 2>&1 && { [ -z "$(git remote -v 2>/dev/null)" ] && echo "PASS: No remotes" || echo "FAIL: Remotes found"; } || echo "PASS: No git"
-[ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ] && echo "FAIL: Project markers found" || echo "PASS: No markers"
+[ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-task" ] && echo "FAIL: Project markers found" || echo "PASS: No markers"
 echo "=== END CHECK ==="
 ```
 

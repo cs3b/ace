@@ -11,8 +11,8 @@ module Ace
         # Returns the parent directory of the test folder + "/test-reports"
         #
         # Example:
-        #   files = ["ace-taskflow/test/commands/tasks_command_test.rb"]
-        #   detect_report_dir(files) # => "ace-taskflow/test-reports"
+        #   files = ["ace-task/test/commands/tasks_command_test.rb"]
+        #   detect_report_dir(files) # => "ace-task/test-reports"
         def detect_report_dir(test_files)
           return nil if test_files.nil? || test_files.empty?
 
@@ -31,8 +31,8 @@ module Ace
         # Looks for "/test/" in the path and returns the path up to and including "test"
         #
         # Example:
-        #   find_test_folder("ace-taskflow/test/commands/tasks_command_test.rb")
-        #   # => "ace-taskflow/test"
+        #   find_test_folder("ace-task/test/commands/tasks_command_test.rb")
+        #   # => "ace-task/test"
         def find_test_folder(file_path)
           # Remove line number suffix if present (file:line format)
           file_path = file_path.sub(/:\d+$/, "")

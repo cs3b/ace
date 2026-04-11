@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# Clipboard reader adapted from ace-taskflow's ClipboardReader.
-# Kept independent (no ace-taskflow dependency) as per task spec:
-# "Shared utilities from ace-taskflow are duplicated rather than centralized."
+# Clipboard reader adapted from ace-task's ClipboardReader.
+# Kept independent (no ace-task dependency) as per task spec:
+# "Shared utilities from ace-task are duplicated rather than centralized."
 
 begin
   require "clipboard"

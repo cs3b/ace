@@ -242,7 +242,7 @@ end
 | ace-git | `with_mock_repo_load` | Combines 6 stubs for RepoStatusLoader |
 | ace-git | `with_mock_diff_orchestrator` | ConfigLoader + DiffGenerator + DiffFilter |
 | ace-git-secrets | `with_rewrite_test_mocks` | gitleaks + rewriter + working directory |
-| ace-taskflow | `with_real_test_project` | ConfigResolver + project setup |
+| ace-task | `with_real_test_project` | ConfigResolver + project setup |
 | ace-docs | `with_empty_git_diff` | Simple DiffOrchestrator stub |
 | ace-review | `stub_synthesizer_prompt_path` | ace-nav subprocess stub |
 

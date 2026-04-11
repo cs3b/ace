@@ -21,7 +21,7 @@ module Ace
         class ProjectConfigScanner
           # Directories to skip during traversal
           SKIP_DIRS = %w[.git .cache vendor node_modules tmp coverage
-            .bundle _legacy .ace-local .ace-tasks .ace-taskflow].freeze
+            .bundle _legacy .ace-local .ace-tasks .ace-task].freeze
 
           # @param project_root [String, nil] Root directory to scan (default: Dir.pwd)
           # @param config_dir [String] Config folder name (default: ".ace")

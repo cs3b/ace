@@ -31,7 +31,7 @@ class TaskProtocolIntegrationTest < Minitest::Test
       "protocol" => "task",
       "type" => "cmd",
       "name" => "Task Navigation",
-      "description" => "Navigate to tasks via ace-taskflow delegation",
+      "description" => "Navigate to tasks via ace-task delegation",
       "enabled" => true,
       "command_template" => "echo task %{ref}",  # Use echo for testing
       "pass_through_options" => ["--path", "--content", "--tree"]
@@ -124,7 +124,7 @@ class TaskProtocolIntegrationTest < Minitest::Test
         "protocol" => "task",
         "type" => "cmd",
         "name" => "Task Navigation",
-        "description" => "Navigate to tasks via ace-taskflow delegation",
+        "description" => "Navigate to tasks via ace-task delegation",
         "enabled" => true,
         "command_template" => "echo #{f.path}",
         "pass_through_options" => ["--path", "--content", "--tree"]

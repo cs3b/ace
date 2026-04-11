@@ -7,7 +7,7 @@ class DefaultBootstrapPresetsTest < AceTestCase
     content = File.read(default_preset_path("project"))
 
     assert_includes content, "sections:"
-    refute_includes content, "ace-taskflow"
+    refute_includes content, "ace-task"
     refute_includes content, "Coding Agent Workflow Toolkit (Meta)"
   end
 

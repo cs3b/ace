@@ -59,18 +59,18 @@ class CommandDelegatorTest < Minitest::Test
   end
 
   def test_build_command_substitutes_reference
-    template = "ace-taskflow task %{ref}"
+    template = "ace-task %{ref}"
     reference = "083"
     options = {}
     config = {"pass_through_options" => []}
 
     command_parts = @delegator.send(:build_command, template, reference, options, config)
 
-    assert_equal ["ace-taskflow", "task", "083"], command_parts
+    assert_equal ["ace-task", "083"], command_parts
   end
 
   def test_build_command_adds_pass_through_options
-    template = "ace-taskflow task %{ref}"
+    template = "ace-task %{ref}"
     reference = "083"
     options = {path: true, content: true}
     config = {"pass_through_options" => ["--path", "--content"]}
@@ -82,7 +82,7 @@ class CommandDelegatorTest < Minitest::Test
   end
 
   def test_build_command_filters_non_pass_through_options
-    template = "ace-taskflow task %{ref}"
+    template = "ace-task %{ref}"
     reference = "083"
     options = {path: true, verbose: true}
     config = {"pass_through_options" => ["--path"]}
@@ -94,7 +94,7 @@ class CommandDelegatorTest < Minitest::Test
   end
 
   def test_build_command_handles_options_with_values
-    template = "ace-taskflow task %{ref}"
+    template = "ace-task %{ref}"
     reference = "083"
     options = {format: "json"}
     config = {"pass_through_options" => ["--format"]}

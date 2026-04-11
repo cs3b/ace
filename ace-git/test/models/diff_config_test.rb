@@ -86,7 +86,7 @@ class DiffConfigTest < AceGitTestCase
     assert_equal %w[lib test handbook], config.grouped_stats_layers
     assert_equal 5, config.grouped_stats_collapse_above
     assert_equal "collapsible", config.grouped_stats_show_full_tree
-    assert_equal %w[.ace-taskflow .ace], config.grouped_stats_dotfile_groups
+    assert_equal %w[.ace-task .ace], config.grouped_stats_dotfile_groups
   end
 
   # --- from_hash tests ---
@@ -122,7 +122,7 @@ class DiffConfigTest < AceGitTestCase
         "layers" => %w[lib handbook],
         "collapse_above" => 7,
         "show_full_tree" => "always",
-        "dotfile_groups" => [".ace-taskflow"]
+        "dotfile_groups" => [".ace-task"]
       }
     )
 
@@ -130,7 +130,7 @@ class DiffConfigTest < AceGitTestCase
     assert_equal %w[lib handbook], config.grouped_stats_layers
     assert_equal 7, config.grouped_stats_collapse_above
     assert_equal "always", config.grouped_stats_show_full_tree
-    assert_equal [".ace-taskflow"], config.grouped_stats_dotfile_groups
+    assert_equal [".ace-task"], config.grouped_stats_dotfile_groups
   end
 
   # --- merge tests ---

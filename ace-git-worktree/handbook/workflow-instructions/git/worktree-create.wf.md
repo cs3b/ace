@@ -16,7 +16,7 @@ Create git worktrees with task-aware automation or traditional branch-based crea
 ## Prerequisites
 
 - Git repository initialized and accessible
-- ace-taskflow available (for task-aware creation)
+- ace-task available (for task-aware creation)
 - Configuration available in `.ace/git/worktree.yml`
 - Write permissions for worktree root directory
 

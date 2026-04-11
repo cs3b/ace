@@ -18,7 +18,7 @@ With the completion of the mono-repo migration (ADR-015) and 15+ production ace-
 
 ### Observed Pattern
 
-Analysis of production gems (ace-search, ace-docs, ace-taskflow, ace-git-commit) revealed consistent handbook/ usage:
+Analysis of production gems (ace-search, ace-docs, ace-task, ace-git-commit) revealed consistent handbook/ usage:
 - All include `handbook/` directory
 - Split between `agents/` and `workflow-instructions/`
 - Agents are `.ag.md` files (single-purpose)
@@ -149,9 +149,9 @@ ace-docs/handbook/
     └── update-docs.wf.md     # Complete documentation update process
 ```
 
-### ace-taskflow
+### ace-task
 ```
-ace-taskflow/handbook/
+ace-task/handbook/
 └── workflow-instructions/
     ├── work-on-task.wf.md
     ├── plan-task.wf.md
@@ -201,7 +201,7 @@ ace-simple/handbook/
 
 ## References
 
-- **Production Examples**: ace-search, ace-docs, ace-taskflow, ace-git-commit
+- **Production Examples**: ace-search, ace-docs, ace-task, ace-git-commit
 - **ace-nav Protocol**: wfi:// for workflow discovery
 - **Claude Code Integration**: .claude/agents/ symlink pattern
 - **ADR-001**: Self-containment principles

@@ -10,13 +10,13 @@ module Ace
           def test_initializes_with_files
             group = ConfigGroup.new(
               name: "taskflow",
-              source: ".ace-taskflow/.ace/git/commit.yml",
+              source: ".ace-task/.ace/git/commit.yml",
               config: {"model" => "gflash"},
               files: ["a.txt", "b.txt"]
             )
 
             assert_equal "taskflow", group.name
-            assert_equal ".ace-taskflow/.ace/git/commit.yml", group.source
+            assert_equal ".ace-task/.ace/git/commit.yml", group.source
             assert_equal({"model" => "gflash"}, group.config)
             assert_equal ["a.txt", "b.txt"], group.files
           end

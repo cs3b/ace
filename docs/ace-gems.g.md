@@ -276,7 +276,7 @@ spec.add_dependency "ace-support-cli", "~> 1.0"
 |-----|-----------------|
 | ace-lint | Multi-tool config (flat+nested) |
 | ace-docs | Handbook integration |
-| ace-taskflow | Complete agents+workflows |
+| ace-task | Complete agents+workflows |
 | ace-handbook-integration-claude | Integration package reference |
 
 *See existing ace-* gems for implementations.*

@@ -11,12 +11,12 @@ ace-docs:
 
 ## Purpose
 
-Parse a lint report file and create structured tasks for issues requiring manual intervention. Groups issues by severity and type, generates fix proposals, and drafts tasks via ace-taskflow.
+Parse a lint report file and create structured tasks for issues requiring manual intervention. Groups issues by severity and type, generates fix proposals, and drafts tasks via ace-task.
 
 ## Prerequisites
 
 - Lint report file exists (from `wfi://lint/run --report`)
-- **ace-taskflow is installed and available** - required for task creation commands
+- **ace-task is installed and available** - required for task creation commands
 - Understanding of project lint rules
 
 ## Variables
@@ -57,7 +57,7 @@ Parse a lint report file and create structured tasks for issues requiring manual
    - **P2 (medium)**: Style/formatting issues
    - **P3 (low)**: Suggestions and improvements
 
-5. **Create tasks via ace-taskflow**:
+5. **Create tasks via ace-task**:
 
    **For grouped issues (multiple similar errors):**
    ```bash
@@ -154,7 +154,7 @@ doc-type: [suggested-type]
 - Report successfully parsed
 - Issues grouped logically
 - Fix proposals generated for each issue
-- Tasks created in ace-taskflow
+- Tasks created in ace-task
 - Summary report generated
 - No issues lost or duplicated
 
@@ -172,4 +172,4 @@ doc-type: [suggested-type]
 
 - **Empty report**: Report success, no tasks needed
 - **Invalid JSON**: Report parse error, suggest re-running lint
-- **ace-taskflow unavailable**: Output task drafts as markdown
+- **ace-task unavailable**: Output task drafts as markdown

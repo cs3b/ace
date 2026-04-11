@@ -19,9 +19,9 @@ This guide provides comprehensive documentation for Git-specific version control
 
 This project uses a **mono-repo architecture** with all packages at the repository root:
 
-- **ace-*/**: Ruby gems for specific functionality (ace-git, ace-taskflow, ace-docs, etc.)
+- **ace-*/**: Ruby gems for specific functionality (ace-git, ace-task, ace-docs, etc.)
 - **docs/**: Project documentation and architecture decisions
-- **.ace-taskflow/**: Task management and release coordination
+- **.ace-task/**: Task management and release coordination
 - **_legacy/**: Archived content from previous multi-repo structure
 
 #### Common Git Commands

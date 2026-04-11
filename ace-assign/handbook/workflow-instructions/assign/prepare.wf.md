@@ -344,7 +344,7 @@ steps:
 
 ### 8. Output Result
 
-Default output: `<task>/jobs/<timestamp>-job.yml` (e.g., `.ace-taskflow/v.0.9.0/tasks/229-xxx/jobs/k5abc123-job.yml`)
+Default output: `<task>/jobs/<timestamp>-job.yml` (e.g., `.ace-task/v.0.9.0/tasks/229-xxx/jobs/k5abc123-job.yml`)
 
 Custom output: Use `--output path/to/custom.yaml`
 

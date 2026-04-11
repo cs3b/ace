@@ -12,8 +12,8 @@ Supersedes: ADR-019-configuration-architecture
 
 Task 143 (Unified Configuration Loading and Merging Defaults Across ACE Packages) has been completed, migrating the following packages to the ADR-022 pattern:
 
-- 143.01: ace-taskflow - Full ConfigLoader rewrite with `load_gem_defaults` + DeepMerger
-- 143.02: ace-git-worktree - Uses ace-taskflow's ConfigLoader (no separate config)
+- 143.01: ace-task - Full ConfigLoader rewrite with `load_gem_defaults` + DeepMerger
+- 143.02: ace-git-worktree - Uses ace-task's ConfigLoader (no separate config)
 - 143.03: ace-nav - Migrated to load defaults from `.ace-defaults/nav/config.yml`
 - 143.04: ace-test-runner - Full ConfigLoader with gem defaults pattern
 - 143.05: ace-git-commit, ace-docs, ace-lint, ace-prompt, ace-review, ace-search - All migrated
@@ -43,7 +43,7 @@ ADR-019 established ace-support-core's configuration cascade for ACE gems but le
 3. **Backward compatibility** - How to handle renamed config keys without breaking existing configs
 
 Current problems in practice:
-- ace-taskflow has defaults hardcoded in `ConfigLoader::DEFAULT_CONFIG` hash
+- ace-task has defaults hardcoded in `ConfigLoader::DEFAULT_CONFIG` hash
 - Defaults in code become stale and diverge from `.ace-defaults/` examples
 - Users can't see complete default configuration without reading source code
 - Config key renames (like `done` → `completed`) require code changes for backward compatibility
@@ -63,9 +63,9 @@ This file contains:
 - Is the single source of truth for defaults
 
 ```yaml
-# ace-taskflow/.ace-defaults/taskflow/config.yml
+# ace-task/.ace-defaults/taskflow/config.yml
 taskflow:
-  root: ".ace-taskflow"
+  root: ".ace-task"
   directories:
     completed: "_archive"    # Use semantic names
     backlog: "_backlog"
@@ -205,13 +205,13 @@ Gems currently following ADR-019 should:
 
 ## Examples from Production
 
-### ace-taskflow (Target State)
+### ace-task (Target State)
 
 Default config:
 ```yaml
-# ace-taskflow/.ace-defaults/taskflow/config.yml
+# ace-task/.ace-defaults/taskflow/config.yml
 taskflow:
-  root: ".ace-taskflow"
+  root: ".ace-task"
   task_dir: "t"
   directories:
     completed: "_archive"     # Renamed from 'done' for clarity
@@ -273,8 +273,8 @@ The following packages have been migrated to the ADR-022 pattern:
 
 | Package | Subtask | Implementation |
 |---------|---------|----------------|
-| ace-taskflow | 143.01 | Full ConfigLoader with `load_gem_defaults` + DeepMerger |
-| ace-git-worktree | 143.02 | Uses ace-taskflow's ConfigLoader |
+| ace-task | 143.01 | Full ConfigLoader with `load_gem_defaults` + DeepMerger |
+| ace-git-worktree | 143.02 | Uses ace-task's ConfigLoader |
 | ace-nav | 143.03 | ConfigLoader with gem defaults pattern |
 | ace-test-runner | 143.04 | ConfigLoader with gem defaults pattern |
 | ace-git-commit | 143.05 | `load_gem_defaults` + DeepMerger in orchestrator |

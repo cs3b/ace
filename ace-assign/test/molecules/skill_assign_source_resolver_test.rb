@@ -7,9 +7,9 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
-      FileUtils.mkdir_p(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources"))
       FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "skills", "as-task-work"))
-      FileUtils.mkdir_p(File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task"))
 
       File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources", "ace-task.yml"), <<~YAML)
         name: ace-task
@@ -17,8 +17,8 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
           relative_path: handbook/skills
       YAML
 
-      File.write(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-taskflow.yml"), <<~YAML)
-        name: ace-taskflow
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
         config:
           relative_path: handbook/workflow-instructions
       YAML
@@ -31,7 +31,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
         ---
       MD
 
-      File.write(File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
+      File.write(File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task", "work.wf.md"), <<~MD)
         ---
         assign:
           sub-steps:
@@ -367,11 +367,11 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       project_root = File.join(cache_dir, "project")
       gem_skills = File.join(project_root, "ace-task", "handbook", "skills", "as-task-work")
       project_skills = File.join(project_root, ".ace", "skills", "as-task-work")
-      workflow_dir = File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task")
+      workflow_dir = File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task")
 
       FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
       FileUtils.mkdir_p(File.join(project_root, ".ace", "nav", "protocols", "skill-sources"))
-      FileUtils.mkdir_p(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources"))
       FileUtils.mkdir_p(gem_skills)
       FileUtils.mkdir_p(project_skills)
       FileUtils.mkdir_p(workflow_dir)
@@ -391,8 +391,8 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
         priority: 5
       YAML
 
-      File.write(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-taskflow.yml"), <<~YAML)
-        name: ace-taskflow
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
         config:
           relative_path: handbook/workflow-instructions
       YAML
@@ -441,7 +441,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
   def test_configured_skill_paths_remain_fallback_after_registry_sources
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
-      workflow_dir = File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task")
+      workflow_dir = File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task")
       fallback_dir = File.join(project_root, "custom-skills", "as-task-work")
 
       FileUtils.mkdir_p(workflow_dir)
@@ -466,7 +466,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
       resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(
         project_root: project_root,
         skill_paths: [File.join(project_root, "custom-skills")],
-        workflow_paths: [File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions")]
+        workflow_paths: [File.join(project_root, "ace-task", "handbook", "workflow-instructions")]
       )
       config = resolver.resolve_assign_config("as-task-work")
 
@@ -478,11 +478,11 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       gem_skills = File.join(project_root, "ace-task", "handbook", "skills", "as-task-work")
-      gem_workflows = File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task")
+      gem_workflows = File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task")
       project_workflows = File.join(project_root, ".ace", "workflows", "task")
 
       FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
-      FileUtils.mkdir_p(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources"))
+      FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources"))
       FileUtils.mkdir_p(File.join(project_root, ".ace", "nav", "protocols", "wfi-sources"))
       FileUtils.mkdir_p(gem_skills)
       FileUtils.mkdir_p(gem_workflows)
@@ -494,8 +494,8 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
           relative_path: handbook/skills
       YAML
 
-      File.write(File.join(project_root, "ace-taskflow", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-taskflow.yml"), <<~YAML)
-        name: ace-taskflow
+      File.write(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "wfi-sources", "ace-task.yml"), <<~YAML)
+        name: ace-task
         type: gem
         priority: 50
         config:
@@ -546,7 +546,7 @@ class SkillAssignSourceResolverTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")
       skill_dir = File.join(project_root, "ace-task", "handbook", "skills", "as-task-work")
-      unregistered_workflows = File.join(project_root, "ace-taskflow", "handbook", "workflow-instructions", "task")
+      unregistered_workflows = File.join(project_root, "ace-task", "handbook", "workflow-instructions", "task")
 
       FileUtils.mkdir_p(File.join(project_root, "ace-task", ".ace-defaults", "nav", "protocols", "skill-sources"))
       FileUtils.mkdir_p(skill_dir)

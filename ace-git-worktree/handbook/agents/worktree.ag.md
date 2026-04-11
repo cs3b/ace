@@ -15,7 +15,7 @@ A specialized agent for managing git worktrees with task-aware automation. Handl
 
 ### Task-Aware Operations
 - Create worktrees for specific tasks with automatic metadata integration
-- Fetch task information from ace-taskflow
+- Fetch task information from ace-task
 - Update task status and add worktree metadata
 - Commit task changes before worktree creation
 
@@ -88,7 +88,7 @@ git:
 
 ## Integration Points
 
-- **ace-taskflow**: Task metadata fetching and status updates
+- **ace-task**: Task metadata fetching and status updates
 - **ace-git-commit**: Consistent commit message generation
 - **ace-git**: Safe git command execution
 - **ace-core**: Configuration cascade management

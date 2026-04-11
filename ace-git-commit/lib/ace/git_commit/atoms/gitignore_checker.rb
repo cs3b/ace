@@ -103,7 +103,7 @@ module Ace
         def extract_pattern(output)
           return nil if output.nil? || output.strip.empty?
 
-          # Format: ".gitignore:3:.ace-taskflow/**/reviews/    .ace-taskflow/v.0.9.0/reviews/review-report-gpro.md"
+          # Format: ".gitignore:3:.ace-task/**/reviews/    .ace-task/v.0.9.0/reviews/review-report-gpro.md"
           # We want the third field (the pattern)
           parts = output.strip.split("\t")
           if parts.length >= 2

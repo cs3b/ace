@@ -42,7 +42,7 @@ ace-review --preset $1 --auto-execute
 ace-review --subject "$2" --auto-execute
 
 # File pattern review (NOTE: files: prefix is REQUIRED)
-ace-review --preset spec --subject "files:.ace-taskflow/**/*.md" --auto-execute
+ace-review --preset spec --subject "files:.ace-task/**/*.md" --auto-execute
 
 # Multiple subjects merge automatically
 ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute

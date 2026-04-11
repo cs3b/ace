@@ -38,7 +38,7 @@ As ACE gems grew from 4 to 15+, different CLI implementation patterns emerged. S
 
 ### Observed Best Practice
 
-Production gems (ace-lint, ace-docs, ace-taskflow) converged on Thor with commands/ directory:
+Production gems (ace-lint, ace-docs, ace-task) converged on Thor with commands/ directory:
 - Thor provides consistent CLI framework
 - commands/ directory separates command logic
 - Each command is independently testable
@@ -257,7 +257,7 @@ lib/ace/docs/
 └── version.rb
 ```
 
-### ace-taskflow (Complex CLI)
+### ace-task (Complex CLI)
 ```
 lib/ace/taskflow/
 ├── commands/
@@ -315,7 +315,7 @@ end
 - **Thor Documentation**: http://whatisthor.com/
 - **ace-core**: Configuration cascade
 - **ace-test-support**: Command testing helpers
-- **Production gems**: ace-lint, ace-docs, ace-taskflow
+- **Production gems**: ace-lint, ace-docs, ace-task
 
 ---
 

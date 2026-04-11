@@ -1327,7 +1327,7 @@ class AssignmentExecutorTest < AceAssignTestCase
           "sub_steps" => %w[onboard plan-task work-on-task],
           "instructions" => "First: onboard yourself using /as-onboard skill to load project context.\n" \
                             "Implement the selected task.\n" \
-                            "When complete, mark the task as done: run `ace-taskflow task done 235.01`"
+                            "When complete, mark the task as done: run `ace-task done 235.01`"
         }
       ]
       config_path = create_test_config(project_root, steps: steps)

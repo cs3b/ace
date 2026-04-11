@@ -24,7 +24,7 @@
 
 1. Select a simulation preset (`validate-idea` or `validate-task`) and provide a source file, with context assembled by [ace-bundle](../ace-bundle).
 2. The simulation engine runs each step (draft, plan, work) sequentially — each step's output feeds as input into the next, building on prior reasoning through [ace-llm](../ace-llm).
-3. After all steps complete, a final synthesis stage gathers feedback from every stage to propose improvements, surface questions, and produce a revised source artifact — feeding better specs back into [ace-task](../ace-taskflow) or sharper ideas into [ace-idea](../ace-idea).
+3. After all steps complete, a final synthesis stage gathers feedback from every stage to propose improvements, surface questions, and produce a revised source artifact — feeding better specs back into [ace-task](../ace-task) or sharper ideas into [ace-idea](../ace-idea).
 
 ## Use Cases
 

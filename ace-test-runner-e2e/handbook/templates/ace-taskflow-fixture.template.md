@@ -1,7 +1,7 @@
 ---
 doc-type: template
 title: ACE Taskflow Test Fixture Template
-purpose: Documentation for ace-test-runner-e2e/handbook/templates/ace-taskflow-fixture.template.md
+purpose: Documentation for ace-test-runner-e2e/handbook/templates/ace-task-fixture.template.md
 ace-docs:
   last-updated: 2026-02-25
   last-checked: 2026-03-21
@@ -9,7 +9,7 @@ ace-docs:
 
 # ACE Taskflow Test Fixture Template
 
-This template provides scaffolding for E2E tests that need valid ace-taskflow structures.
+This template provides scaffolding for E2E tests that need valid ace-task structures.
 
 ## Basic Task Fixture
 
@@ -17,10 +17,10 @@ Create a minimal valid taskflow structure:
 
 ```bash
 # Create release directory structure
-mkdir -p "$REPO_DIR/.ace-taskflow/v.test/tasks/001-feature"
+mkdir -p "$REPO_DIR/.ace-task/v.test/tasks/001-feature"
 
 # Create a valid task file
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/001-feature/001-test-task.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/tasks/001-feature/001-test-task.s.md" << 'EOF'
 ---
 id: v.test+task.001
 status: pending
@@ -54,7 +54,7 @@ EOF
 For tests involving ace-git-worktree:
 
 ```bash
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/001-feature/001-test-task.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/tasks/001-feature/001-test-task.s.md" << 'EOF'
 ---
 id: v.test+task.001
 status: in-progress
@@ -93,10 +93,10 @@ For tests involving task hierarchies:
 
 ```bash
 # Create parent task directory
-mkdir -p "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature"
+mkdir -p "$REPO_DIR/.ace-task/v.test/tasks/100-parent-feature"
 
 # Create orchestrator task
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature/100-orchestrator.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/tasks/100-parent-feature/100-orchestrator.s.md" << 'EOF'
 ---
 id: v.test+task.100
 status: pending
@@ -125,7 +125,7 @@ Orchestrator task that coordinates subtasks.
 EOF
 
 # Create first subtask
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature/100.01-first-subtask.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/tasks/100-parent-feature/100.01-first-subtask.s.md" << 'EOF'
 ---
 id: v.test+task.100.01
 status: pending
@@ -151,7 +151,7 @@ First part of the parent feature.
 EOF
 
 # Create second subtask
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature/100.02-second-subtask.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/tasks/100-parent-feature/100.02-second-subtask.s.md" << 'EOF'
 ---
 id: v.test+task.100.02
 status: pending
@@ -184,7 +184,7 @@ For tests that need a complete release setup:
 
 ```bash
 # Create release.yml
-cat > "$REPO_DIR/.ace-taskflow/v.test/release.yml" << 'EOF'
+cat > "$REPO_DIR/.ace-task/v.test/release.yml" << 'EOF'
 id: v.test
 title: Test Release
 status: active
@@ -206,10 +206,10 @@ git config user.email "test@example.com"
 git config user.name "Test User"
 
 # Create taskflow structure
-mkdir -p .ace-taskflow/v.test/tasks/001-feature
+mkdir -p .ace-task/v.test/tasks/001-feature
 
 # Create release configuration
-cat > .ace-taskflow/v.test/release.yml << 'EOF'
+cat > .ace-task/v.test/release.yml << 'EOF'
 id: v.test
 title: Test Release
 status: active
@@ -217,7 +217,7 @@ started: 2026-01-01
 EOF
 
 # Create task
-cat > .ace-taskflow/v.test/tasks/001-feature/001-test-task.s.md << 'EOF'
+cat > .ace-task/v.test/tasks/001-feature/001-test-task.s.md << 'EOF'
 ---
 id: v.test+task.001
 status: pending
@@ -242,13 +242,13 @@ Test task for E2E testing.
 EOF
 
 # Commit the structure
-git add .ace-taskflow/
+git add .ace-task/
 git commit -m "Add taskflow structure" --quiet
 
 # Set PROJECT_ROOT_PATH for isolated testing
 export PROJECT_ROOT_PATH="$REPO_DIR"
 
-# Now ace-taskflow commands will use this isolated structure
+# Now ace-task commands will use this isolated structure
 # ace-task show 001  # Should find the test task
 ```
 
@@ -284,13 +284,13 @@ export PROJECT_ROOT_PATH="$REPO_DIR"
 ### Testing Task Selection
 
 ```bash
-# Verify ace-taskflow can find the task
+# Verify ace-task can find the task
 ace-task show 001
 # Should output task details
 
 # Verify task file path
 ace-task show 001 --path
-# Should output: .ace-taskflow/v.test/tasks/001-feature/001-test-task.s.md
+# Should output: .ace-task/v.test/tasks/001-feature/001-test-task.s.md
 ```
 
 ### Testing Status Updates

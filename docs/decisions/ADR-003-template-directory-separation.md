@@ -218,7 +218,7 @@ ace-gem/
 
 - **ace-docs**: `handbook/workflow-instructions/update-docs.wf.md`
 - **ace-search**: `handbook/agents/{search,research}.ag.md`
-- **ace-taskflow**: Multiple workflows for task management
+- **ace-task**: Multiple workflows for task management
 - **ace-git-commit**: `handbook/workflow-instructions/commit.wf.md`
 
 ### Relationship to Original Decision

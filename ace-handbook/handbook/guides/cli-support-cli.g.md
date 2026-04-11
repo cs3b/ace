@@ -17,7 +17,7 @@ All ACE CLI gems use ace-support-cli. See [ADR-023](../../../docs/decisions/ADR-
 
 **Two patterns:**
 
-- **Multi-command**: Subcommand tools (ace-bundle, ace-taskflow)
+- **Multi-command**: Subcommand tools (ace-bundle, ace-task)
 - **Single-command**: One-action tools (ace-git-commit, ace-search)
 
 ## Multi-Command Pattern
@@ -162,7 +162,7 @@ end
 
 ## Nested Commands
 
-For hierarchical commands (ace-taskflow, ace-git-worktree):
+For hierarchical commands (ace-task, ace-git-worktree):
 
 ```ruby
 # lib/ace/taskflow/cli.rb

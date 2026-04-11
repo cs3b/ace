@@ -76,7 +76,7 @@ Analyze the loaded context and prepare a concise summary covering:
 > "Load base preset"
 
 **Files** - Task-specific context, custom one-off requirements:
-> `ace-bundle .ace-taskflow/v.0.9.0/context/task-084.md`
+> `ace-bundle .ace-task/v.0.9.0/context/task-084.md`
 > "Load task-specific context file"
 
 > `ace-bundle /path/to/your/project/context.yml`

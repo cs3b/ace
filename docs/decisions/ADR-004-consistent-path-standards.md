@@ -197,10 +197,10 @@ ace-docs/handbook/workflow-instructions/update-docs.wf.md
 .claude/agents/update-docs.ag.md → ace-docs/handbook/agents/update-docs.ag.md
 ```
 
-**ace-taskflow paths:**
+**ace-task paths:**
 ```
-ace-taskflow/handbook/workflow-instructions/draft-task.wf.md
-ace-taskflow/handbook/agents/task-finder.ag.md
+ace-task/handbook/workflow-instructions/draft-task.wf.md
+ace-task/handbook/agents/task-finder.ag.md
 ```
 
 See **ADR-016: Handbook Directory Architecture** for complete details of current pattern.

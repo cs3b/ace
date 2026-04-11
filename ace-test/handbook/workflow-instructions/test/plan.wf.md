@@ -287,7 +287,7 @@ Output the Test Responsibility Map document:
 ## Output
 
 The test plan should be saved to:
-- Task folder: `.ace-taskflow/.../task-XXX/test-plan.md`
+- Task folder: `.ace-task/.../task-XXX/test-plan.md`
 - Or reviewed in conversation before implementation
 
 ## Checklist Before Implementation

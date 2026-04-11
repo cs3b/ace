@@ -62,7 +62,7 @@ module Ace
           This mock content provides enough substance to satisfy
           integration test requirements while avoiding the 30-second
           delay caused by executing expensive shell commands like
-          ace-taskflow queries and recursive directory scans.
+          ace-task queries and recursive directory scans.
 
           By mocking ace-bundle, we achieve 10x faster test execution
           without sacrificing test coverage or reliability.

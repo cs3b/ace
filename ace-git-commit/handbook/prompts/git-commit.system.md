@@ -140,7 +140,7 @@ When multiple files are changed:
 Describe the action, not the content:
 - The subject must describe what this commit DOES to the codebase
 - Do NOT summarize the content of changed files as if that content is the change itself
-- Example: deleting a task spec about "rename X to Y" → `spec(task-272): remove specflow-rename task` NOT `spec(taskflow-rename): rename ace-taskflow to ace-specflow`
+- Example: deleting a task spec about "rename X to Y" → `spec(task-272): remove specflow-rename task` NOT `spec(taskflow-rename): rename ace-task to ace-specflow`
 - Example: deleting a deprecated module → `refactor(auth): remove legacy OAuth handler` NOT `refactor(auth): OAuth 1.0 authentication flow`
 
 When all changes are deletions:

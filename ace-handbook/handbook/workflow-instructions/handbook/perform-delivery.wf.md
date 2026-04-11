@@ -113,7 +113,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Follow versioning conventions
 
 6. **Complete Task:**
-   * Mark task as done: `ace-taskflow done <ref>`
+   * Mark task as done: `ace-task done <ref>`
    * Push to remote: `git push`
 
 ### Phase 2: PR & Initial Review

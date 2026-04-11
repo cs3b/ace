@@ -132,7 +132,7 @@ else
 fi
 
 # Check 3: Project root markers should NOT exist
-if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-task" ]; then
   echo "FAIL: Main project markers found - NOT an isolated repo!"
   echo "  ACTION: STOP - You are in the main repository."
 else
@@ -405,7 +405,7 @@ else
 fi
 
 # Check 3: Project markers
-if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-task" ]; then
   echo "FAIL: Main project markers found!"
   exit 1
 else

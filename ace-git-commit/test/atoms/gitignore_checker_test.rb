@@ -178,10 +178,10 @@ class GitignoreCheckerTest < TestCase
 
   # Tests for extract_pattern
   def test_extract_pattern_parses_verbose_output
-    output = ".gitignore:3:.ace-taskflow/**/reviews/\t.ace-taskflow/v.0.9.0/reviews/review-report-gpro.md"
+    output = ".gitignore:3:.ace-task/**/reviews/\t.ace-task/v.0.9.0/reviews/review-report-gpro.md"
     pattern = @checker.send(:extract_pattern, output)
 
-    assert_equal ".ace-taskflow/**/reviews/", pattern
+    assert_equal ".ace-task/**/reviews/", pattern
   end
 
   def test_extract_pattern_returns_nil_for_empty_output

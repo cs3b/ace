@@ -39,7 +39,7 @@ module Ace
           grouped_stats_layers: %w[lib test handbook],
           grouped_stats_collapse_above: 5,
           grouped_stats_show_full_tree: "collapsible",
-          grouped_stats_dotfile_groups: %w[.ace-taskflow .ace]
+          grouped_stats_dotfile_groups: %w[.ace-task .ace]
         )
           @exclude_patterns = Array(exclude_patterns)
           @exclude_whitespace = exclude_whitespace
@@ -152,7 +152,7 @@ module Ace
             grouped_stats_layers: grouped_stats["layers"] || grouped_stats[:layers] || %w[lib test handbook],
             grouped_stats_collapse_above: grouped_stats.fetch("collapse_above", grouped_stats.fetch(:collapse_above, 5)),
             grouped_stats_show_full_tree: grouped_stats["show_full_tree"] || grouped_stats[:show_full_tree] || "collapsible",
-            grouped_stats_dotfile_groups: grouped_stats["dotfile_groups"] || grouped_stats[:dotfile_groups] || %w[.ace-taskflow .ace]
+            grouped_stats_dotfile_groups: grouped_stats["dotfile_groups"] || grouped_stats[:dotfile_groups] || %w[.ace-task .ace]
           )
         end
 

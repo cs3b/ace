@@ -136,7 +136,7 @@ module Ace
           Ace::Core.define_singleton_method(:get, original) if original
         end
 
-        # Stub ace-taskflow CLI output
+        # Stub ace-task CLI output
         # @param task_id [String] The task ID
         # @param output [String] The taskflow output
         # @yield Block where the stub is active

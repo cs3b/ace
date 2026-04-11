@@ -397,7 +397,7 @@ Concrete example:
 
 After a fork subtree completes (work-on-task finishes successfully):
 
-1. **Verify ace-taskflow status matches assignment status.** If the assignment shows `work-on-task` as done but ace-taskflow still shows `in-progress`, status drift has occurred.
+1. **Verify ace-task status matches assignment status.** If the assignment shows `work-on-task` as done but ace-task still shows `in-progress`, status drift has occurred.
 
 2. **If mark-task-done step was NOT included in the assignment** (common for ad-hoc assignments):
 
@@ -407,7 +407,7 @@ After a fork subtree completes (work-on-task finishes successfully):
    ace-task {taskref}  # Verify it shows status: done
    ```
 
-3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.
+3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-task shows it as in-progress.
 
 #### Subtree Guard: Review Fork Reports Before Continuing
 
