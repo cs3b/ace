@@ -1,6 +1,7 @@
 ---
 name: as-test-verify-suite
-description: Verify test suite health and enforce performance budgets
+description: Run modified-package deterministic verification plus the default fast
+  monorepo suite
 user-invocable: true
 allowed-tools:
 - Bash(ace-bundle:*)
@@ -18,8 +19,8 @@ source: ace-test
 assign:
   steps:
   - name: verify-test-suite
-    description: Run package test suites with profiling to verify correctness and
-      performance
+    description: Run modified-package deterministic verification plus the default
+      fast monorepo suite
     intent:
       phrases:
       - run tests

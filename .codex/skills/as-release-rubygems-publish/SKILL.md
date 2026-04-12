@@ -8,7 +8,7 @@ allowed-tools:
 - Bash(ace-bundle:*)
 - Read
 argument-hint: "[gem-name...] [--dry-run]"
-last_modified: 2026-03-29
+last_modified: 2026-04-10
 source: ace-handbook
 skill:
   kind: workflow
@@ -33,4 +33,4 @@ None
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.
 
-- After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001` for installation verification.
+- After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e TS-MONO-001` for installation verification.

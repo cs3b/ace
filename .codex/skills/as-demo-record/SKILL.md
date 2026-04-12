@@ -16,7 +16,3 @@ skill:
 ---
 
 Load and run `ace-bundle wfi://demo/record` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
-
-Treat demo verification as fail-closed:
-- if recording verification reports `instruction_defect`, fix the tape/instructions and retry once
-- if recording verification reports `product_bug` or `verification_error`, stop and return the generated report from `.ace-local/demo/`
