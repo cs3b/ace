@@ -136,6 +136,15 @@ Pass computed values explicitly; don't re-derive:
 - Subagent uses the provided value, never re-derives
 ```
 
+**For CLI-backed workflow fixes:**
+```markdown
+## After
+Validate concrete command examples against the live CLI before finalizing the fix:
+- Run `ace-<tool> --help` (or read current package usage docs) to confirm the command still exists
+- Update workflow examples to match the live command surface exactly
+- Do not assume older workflow examples remain valid after CLI refactors
+```
+
 ### Step 5: Present to User
 
 Before making any changes, present:
@@ -184,7 +193,7 @@ Populate the retro with the root cause analysis, the fix applied, and the expect
 If the input source was an existing retro, archive it after the improvement has been applied — the retro has been "consumed":
 
 ```bash
-ace-retro move REF --to archive
+ace-retro update REF --move-to archive
 ```
 
 ## Success Criteria

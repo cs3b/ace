@@ -80,7 +80,7 @@ When populating, reference source retros to provide traceability (e.g., "Identif
 After the synthesis retro is populated and complete, archive each source retro — they have been "consumed" by the synthesis:
 
 ```bash
-ace-retro move REF --to archive
+ace-retro update REF --move-to archive
 ```
 
 Repeat for each source retro.

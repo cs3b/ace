@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Clarified `retro/analyze-worktree` output semantics so `WORKTREE_PATH` remains an analysis input, retro artifacts default to the current working branch, and wrapper steps are directed to use the canonical `wfi://retro/create` contract instead of inventing output destinations under analyzed worktrees.
 
+### Fixed
+- Updated `retro/synthesize` and `retro/selfimprove` workflow instructions to use the live `ace-retro update REF --move-to archive` archival command instead of the removed `move` subcommand, and added a CLI-validation guard for future workflow command examples.
+
 ## [0.16.6] - 2026-03-31
 
 ### Changed
