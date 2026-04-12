@@ -18,7 +18,7 @@
 
 ![ace-retro demo](docs/demo/ace-retro-getting-started.gif)
 
-`ace-retro` helps teams capture learning while context is still fresh and maintain a searchable archive for follow-up improvements. Use [`ace-retro create`](docs/usage.md) to start a retro from the CLI (or `/as-retro-create` from an interactive agent session), use `/as-retro-analyze-worktree` to analyze completed assignments across one or many worktrees for scope drift, post-completion work, and `.ace-local` review/test telemetry, then `/as-retro-synthesize` to distill patterns across multiple retros.
+`ace-retro` helps teams capture learning while context is still fresh and maintain a searchable archive for follow-up improvements. Use [`ace-retro create`](docs/usage.md) to start a retro from the CLI (or `/as-retro-create` from an interactive agent session), use `/as-retro-analyze-worktree` to analyze completed assignments across one or many worktrees for scope drift, post-completion work, and `.ace-local` review/test telemetry, then `/as-retro-synthesize` to recursively distill multiple retros into a new synthesis retro with repo-validated rankings and unresolved improvement themes.
 
 ## How It Works
 
@@ -32,7 +32,7 @@
 
 **Analyze completed worktrees** - use `/as-retro-analyze-worktree` to surface initial scope vs final outcome drift, classify post-completion residual work, and include `.ace-local` review/test signals in high-value spec upgrades from real assignment outcomes.
 
-**Synthesize patterns across retros** - use `/as-retro-synthesize` to distill recurring themes and improvement opportunities from multiple retrospectives.
+**Synthesize patterns across retros** - use `/as-retro-synthesize` to merge retros or older synthesis retros into a new synthesis artifact, dedupe original source evidence, validate findings against the current repo, and surface only unresolved themes as action items.
 
 **Review and maintain retro metadata** - list, show, and update retros with tags and status, then archive completed entries without losing searchability.
 
