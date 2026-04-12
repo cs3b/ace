@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-retro v0.18.0**: Strengthened recursive retro synthesis with oldest-active selection, source-ID dedupe across nested syntheses, current-repo validation of themes, ranked unresolved improvements, and recursive synthesis trace metadata.
+
 ### Fixed
 - **ace-retro v0.17.2**: Corrected `retro/synthesize` and `retro/selfimprove` to archive source retros via `ace-retro update ... --move-to archive` and added a self-improve guard that validates CLI-backed workflow examples against the live command surface.
 - **ace-test-runner-e2e v0.32.2**: Generated batch CLI `run_id`s from explicit 50ms buckets so parallel E2E package runs no longer occasionally reuse report-path IDs and fail the unique-run-id orchestrator contract.
