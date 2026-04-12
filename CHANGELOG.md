@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-retro v0.17.2**: Corrected `retro/synthesize` and `retro/selfimprove` to archive source retros via `ace-retro update ... --move-to archive` and added a self-improve guard that validates CLI-backed workflow examples against the live command surface.
 - **ace-test-runner-e2e v0.32.2**: Generated batch CLI `run_id`s from explicit 50ms buckets so parallel E2E package runs no longer occasionally reuse report-path IDs and fail the unique-run-id orchestrator contract.
 - **ace-test-runner-e2e v0.31.1**: Removed accidental real suite-report synthesis and tmux subprocess work from unit-scoped organism/setup tests, moving live tmux lifecycle coverage into explicit integration tests so `ace-test-suite` no longer times out intermittently in `ace-test-runner-e2e`.
 - **ace-test-runner-e2e v0.32.3**: Made `ConfigLoader` molecule tests use mocked config mode to remove repo-local `.ace` override coupling and keep release verification deterministic across environments.
