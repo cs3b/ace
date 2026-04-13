@@ -40,5 +40,12 @@
 
 **Extend handbook content in normal projects** - put project-specific workflows, guides, cookbooks, templates, and skills under `.ace-handbook/` and discover them with protocol URLs (`wfi://`, `guide://`, `cookbook://`, `tmpl://`, `skill://`). See [Usage Guide](docs/usage.md) for path conventions.
 
+## Testing
+
+- `ace-test ace-handbook` runs the deterministic fast suite (`test/fast`).
+- `ace-test ace-handbook feat` runs deterministic feature tests (`test/feat`) when present.
+- `ace-test ace-handbook all` runs all deterministic layers for the package.
+- `ace-test-e2e ace-handbook` runs retained workflow scenarios under `test/e2e`.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

@@ -19,10 +19,10 @@ e2e-justification: >
   an end-to-end shell context.
 
 unit-coverage-reviewed:
-  - test/cli/commands/status_test.rb
-  - test/organisms/status_collector_test.rb
-  - test/organisms/provider_syncer_test.rb
-  - test/organisms/skill_inventory_test.rb
+  - test/fast/cli/commands/status_test.rb
+  - test/fast/organisms/status_collector_test.rb
+  - test/fast/organisms/provider_syncer_test.rb
+  - test/fast/organisms/skill_inventory_test.rb
 
 requires:
   tools: [ace-handbook]

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "date"
 
 module Ace
@@ -8,7 +8,7 @@ module Ace
     module Skills
       class AsReleaseRubygemsPublishSkillTest < TestCase
         def test_allows_gem_and_bundle_commands_required_by_publish_workflow
-          skill_path = File.expand_path("../../handbook/skills/as-release-rubygems-publish/SKILL.md", __dir__)
+          skill_path = File.expand_path("../../../handbook/skills/as-release-rubygems-publish/SKILL.md", __dir__)
           frontmatter = YAML.safe_load(
             File.read(skill_path).split(/^---\s*$/.freeze)[1],
             permitted_classes: [Date]

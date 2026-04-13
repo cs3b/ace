@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.26.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.26.0] - 2026-04-12
+
+### Changed
+- Migrated `ace-handbook` package tests to the `fast` / `feat` / `e2e` contract by moving deterministic suites under `test/fast`, retaining workflow-value CLI smoke E2E coverage, and aligning scenario metadata with the new deterministic paths.
+- Updated package docs (`README`, getting-started, usage) to teach the `ace-test ace-handbook`, optional `ace-test ace-handbook feat`, `ace-test ace-handbook all`, and `ace-test-e2e ace-handbook` verification contract.
 
 ## [0.25.4] - 2026-04-10
 

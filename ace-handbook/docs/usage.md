@@ -71,6 +71,23 @@ ace-bundle wfi://handbook/update-docs
 
 Use bundle output as source-of-truth instructions.
 
+## Test Commands
+
+Use the package test contract:
+
+```bash
+ace-test ace-handbook
+ace-test ace-handbook feat
+ace-test ace-handbook all
+ace-test-e2e ace-handbook
+
+```
+
+Notes:
+- `ace-test ace-handbook` targets deterministic tests in `test/fast`.
+- `ace-test ace-handbook feat` is only needed when feature-layer deterministic tests exist in `test/feat`.
+- `ace-test-e2e ace-handbook` is reserved for scenario workflows in `test/e2e`.
+
 ## Workflow command matrix
 
 | Protocol | Typical use |
