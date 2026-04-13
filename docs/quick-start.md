@@ -33,6 +33,8 @@ bundle install
 ace-config init
 ```
 
+This seeds your local `.ace/` config, adds starter agent guidance files when missing, and ensures `.ace-local/` is ignored for project-local ACE artifacts.
+
 4. Sync handbook assets to your agent platforms:
 
 ```bash
