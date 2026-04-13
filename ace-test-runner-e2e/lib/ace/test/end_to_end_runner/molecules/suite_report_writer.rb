@@ -308,7 +308,7 @@ module Ace
 
           def scenario_for_result(result, scenarios, index)
             scenarios[index] || OpenStruct.new(
-              title: result.metadata[:phase] == "integration" || result.metadata["phase"] == "integration" ? "Integration" : result.test_id
+              title: result.metadata[:phase] == "preflight" || result.metadata["phase"] == "preflight" ? "Preflight" : result.test_id
             )
           end
         end

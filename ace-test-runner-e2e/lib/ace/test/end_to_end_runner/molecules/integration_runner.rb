@@ -9,7 +9,7 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Runs deterministic integration tests inside a sandboxed package copy.
+        # Runs deterministic preflight tests inside a sandboxed package copy.
         class IntegrationRunner
           def initialize(base_dir: Dir.pwd, package_copy: nil)
             @base_dir = File.expand_path(base_dir)
@@ -20,7 +20,7 @@ module Ace
             return nil if files.nil? || files.empty?
 
             started_at = Time.now
-            sandbox_root = File.join(@base_dir, ".ace-local", "test-e2e", "#{timestamp}-#{package}-integration")
+            sandbox_root = File.join(@base_dir, ".ace-local", "test-e2e", "#{timestamp}-#{package}-preflight")
             FileUtils.mkdir_p(sandbox_root)
 
             package_copy_result = @package_copy.prepare(package_name: package, sandbox_root: sandbox_root)
@@ -40,14 +40,14 @@ module Ace
             end
 
             Models::TestResult.new(
-              test_id: "INTEGRATION",
+              test_id: "PREFLIGHT",
               status: status,
               test_cases: test_cases,
-              summary: integration_summary(status, test_cases),
+              summary: preflight_summary(status, test_cases),
               started_at: started_at,
               completed_at: Time.now,
               metadata: {
-                phase: "integration",
+                phase: "preflight",
                 package: package,
                 sandbox_root: sandbox_root
               }
@@ -67,7 +67,7 @@ module Ace
               chdir: package_root
             )
 
-            output.puts "Integration: #{package_relative} (#{status.success? ? "pass" : "fail"})"
+            output.puts "Preflight: #{package_relative} (#{status.success? ? "pass" : "fail"})"
 
             {
               id: package_relative,
@@ -76,13 +76,13 @@ module Ace
               actual: stdout,
               notes: stderr,
               metadata: {
-                phase: "integration",
+                phase: "preflight",
                 exit_status: status.exitstatus,
                 command: Shellwords.join(["ace-test", package_relative])
               }
             }
           rescue StandardError => e
-            output.puts "Integration: #{package_relative} (error)"
+            output.puts "Preflight: #{package_relative} (error)"
 
             {
               id: package_relative,
@@ -91,7 +91,7 @@ module Ace
               actual: "",
               notes: e.message,
               metadata: {
-                phase: "integration",
+                phase: "preflight",
                 command: Shellwords.join(["ace-test", package_relative])
               }
             }
@@ -104,14 +104,14 @@ module Ace
             sandbox_root
           end
 
-          def integration_summary(status, test_cases)
+          def preflight_summary(status, test_cases)
             passed = test_cases.count { |tc| tc[:status] == "pass" }
             total = test_cases.size
             prefix =
               case status
-              when "pass" then "Integration passed"
-              when "fail" then "Integration failed"
-              else "Integration errored"
+              when "pass" then "Preflight passed"
+              when "fail" then "Preflight failed"
+              else "Preflight errored"
               end
             "#{prefix}: #{passed}/#{total} files passed"
           end

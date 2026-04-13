@@ -52,7 +52,7 @@ Before adding a TC, confirm the behavior needs:
 - real external tools/processes
 - real filesystem I/O and environment state
 
-If not, keep coverage in unit/integration tests.
+If not, keep coverage in `fast`/`feat` tests.
 
 ## Cost and Scope
 
@@ -79,7 +79,7 @@ The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For 
 ## Scenario Layout
 
 ```text
-{package}/test/integration/**/*_test.rb
+{package}/test/feat/**/*_test.rb
 {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
   scenario.yml
   runner.yml.md

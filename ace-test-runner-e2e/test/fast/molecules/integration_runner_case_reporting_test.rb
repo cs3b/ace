@@ -6,9 +6,9 @@ require_relative "../../test_helper"
 class IntegrationRunnerCaseReportingTest < Minitest::Test
   Status = Struct.new(:success?, :exitstatus)
 
-  def test_returns_synthetic_integration_result_for_passing_file
+  def test_returns_synthetic_preflight_result_for_passing_file
     Dir.mktmpdir do |tmpdir|
-      file = File.join(tmpdir, "ace-demo", "test", "integration", "sample_test.rb")
+      file = File.join(tmpdir, "ace-demo", "test", "feat", "sample_test.rb")
       FileUtils.mkdir_p(File.dirname(file))
       File.write(file, "# test")
 
@@ -26,10 +26,10 @@ class IntegrationRunnerCaseReportingTest < Minitest::Test
       Open3.stub(:capture3, ["ok", "", Status.new(true, 0)]) do
         result = runner.run(package: "ace-demo", files: [file], timestamp: "abc123", output: StringIO.new)
 
-        assert_equal "INTEGRATION", result.test_id
+        assert_equal "PREFLIGHT", result.test_id
         assert_equal "pass", result.status
-        assert_equal "integration", result.metadata[:phase]
-        assert_equal "test/integration/sample_test.rb", result.test_cases.first[:id]
+        assert_equal "preflight", result.metadata[:phase]
+        assert_equal "test/feat/sample_test.rb", result.test_cases.first[:id]
         assert_equal "pass", result.test_cases.first[:status]
       end
     end
@@ -37,7 +37,7 @@ class IntegrationRunnerCaseReportingTest < Minitest::Test
 
   def test_marks_failed_files_when_ace_test_fails
     Dir.mktmpdir do |tmpdir|
-      file = File.join(tmpdir, "ace-demo", "test", "integration", "broken_test.rb")
+      file = File.join(tmpdir, "ace-demo", "test", "feat", "broken_test.rb")
       FileUtils.mkdir_p(File.dirname(file))
       File.write(file, "# test")
 

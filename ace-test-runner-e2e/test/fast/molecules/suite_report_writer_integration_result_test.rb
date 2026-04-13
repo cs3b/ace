@@ -5,20 +5,20 @@ require "tmpdir"
 require_relative "../../test_helper"
 
 class SuiteReportWriterIntegrationResultTest < Minitest::Test
-  def test_writes_suite_report_when_results_include_integration_phase
+  def test_writes_suite_report_when_results_include_preflight_phase
     Dir.mktmpdir do |tmpdir|
-      integration_report_dir = File.join(tmpdir, "integration-reports")
+      integration_report_dir = File.join(tmpdir, "preflight-reports")
       scenario_report_dir = File.join(tmpdir, "scenario-reports")
       FileUtils.mkdir_p(integration_report_dir)
       FileUtils.mkdir_p(scenario_report_dir)
 
       integration_result = Ace::Test::EndToEndRunner::Models::TestResult.new(
-        test_id: "INTEGRATION",
+        test_id: "PREFLIGHT",
         status: "pass",
-        test_cases: [{id: "test/integration/sample_test.rb", status: "pass"}],
-        summary: "Integration passed",
+        test_cases: [{id: "test/feat/sample_test.rb", status: "pass"}],
+        summary: "Preflight passed",
         report_dir: integration_report_dir,
-        metadata: {phase: "integration"}
+        metadata: {phase: "preflight"}
       )
 
       scenario_result = Ace::Test::EndToEndRunner::Models::TestResult.new(
