@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-04-13
+
 ### Changed
 - **ace-hitl v0.8.7**: Published handbook and HITL migration release changes for HitL package.
 
 
+
+### Technical
+- Replaced the CLI library-contract version assertion with a semantic-version schema check so the fast test validates version shape instead of a pinned release line.
 ## [0.8.6] - 2026-04-11
 
 ### Technical

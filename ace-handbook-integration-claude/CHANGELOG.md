@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-04-13
+
 ### Changed
 - **ace-handbook-integration-claude v0.3.7**: Published handbook and HITL migration release changes for Claude handbook integration.
 

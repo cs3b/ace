@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-04-13
+
 ### Changed
 - **ace-handbook-integration-pi v0.3.7**: Published handbook and HITL migration release changes for PI handbook integration.
 
