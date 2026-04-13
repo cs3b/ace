@@ -109,6 +109,16 @@ class PackageArgumentTest < Minitest::Test
     end
   end
 
+  def test_removed_legacy_target_unit_fails_with_canonical_targets
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-bundle", "unit")
+
+      refute status.success?, "Should fail for removed legacy target"
+      assert_match(/Unknown target: unit/, output)
+      assert_match(/Available targets: .*fast.*feat.*all.*quick/, output)
+    end
+  end
+
   def test_error_for_invalid_path
     Dir.chdir(@project_root) do
       output, status = run_ace_test_with_mock(

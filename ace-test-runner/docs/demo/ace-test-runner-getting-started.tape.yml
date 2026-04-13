@@ -1,5 +1,5 @@
 ---
-description: Run real unit tests with ace-test from project root
+description: Run real fast/feat tests with ace-test from project root
 tags:
     - ace-test-runner
     - docs

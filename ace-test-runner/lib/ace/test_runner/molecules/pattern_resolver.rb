@@ -23,7 +23,7 @@ module Ace
           return [target] if File.exist?(target)
 
           # Normalize target to string for consistent lookup
-          target_key = normalize_target(target)
+          target_key = target.to_s
           raise_unsupported_target_error(target_key) if %w[e2e all-with-e2e system].include?(target_key)
 
           if @targets.key?(target_key)
@@ -84,17 +84,6 @@ module Ace
 
         private
 
-        def normalize_target(target)
-          case target.to_s
-          when "unit"
-            "fast"
-          when "integration", "int"
-            "feat"
-          else
-            target.to_s
-          end
-        end
-
         def display_name_for(name)
           INTERNAL_PATTERN_LABELS.fetch(name.to_s, name.to_s)
         end
@@ -116,7 +105,7 @@ module Ace
         end
 
         def resolve_named_target(target_name, seen = [])
-          target_key = normalize_target(target_name)
+          target_key = target_name.to_s
           if seen.include?(target_key)
             raise ArgumentError, "Cyclic test target definition detected: #{(seen + [target_key]).join(' -> ')}"
           end
