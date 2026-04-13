@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.6] - 2026-04-13
+
+### Fixed
+- Cleared `CLAUDECODE` during Claude help capability probes so nested Claude Code sessions no longer cache false negatives for `--max-tokens` support.
+
+### Technical
+- Added regression coverage for the help-probe environment handling.
+
 ## [0.28.5] - 2026-04-13
 
 ### Fixed

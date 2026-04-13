@@ -189,7 +189,7 @@ module Ace
 
           def command_help_supports_flag?(flag)
             [["claude", "-p", "--help"], ["claude", "--help"]].any? do |help_cmd|
-              stdout, stderr, status = Open3.capture3(*help_cmd)
+              stdout, stderr, status = Open3.capture3({"CLAUDECODE" => nil}, *help_cmd)
               status.success? && [stdout, stderr].join("\n").include?(flag)
             rescue
               false
