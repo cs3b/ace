@@ -26,7 +26,8 @@ module Ace
             content = Atoms::FileReader.read(api_cache_path)
             return nil unless content
 
-            Atoms::JsonParser.parse(content)
+            data = Atoms::JsonParser.parse(content)
+            normalize_cache_data(data)
           end
 
           # Read previous API cache (for diff)
@@ -35,7 +36,8 @@ module Ace
             content = Atoms::FileReader.read(previous_cache_path)
             return nil unless content
 
-            Atoms::JsonParser.parse(content)
+            data = Atoms::JsonParser.parse(content)
+            normalize_cache_data(data)
           end
 
           # Write API data to cache
@@ -197,6 +199,17 @@ module Ace
             data
           end
 
+          def normalize_cache_data(data)
+            normalized = normalize_providers(data)
+            normalized.each_value do |provider_data|
+              next unless provider_data.is_a?(Hash)
+
+              provider_data["models"] = normalize_models(provider_data)
+            end
+
+            normalized
+          end
+
           def normalize_provider_collection(providers)
             case providers
             when Hash
@@ -205,7 +218,7 @@ module Ace
               providers.each_with_object({}) do |provider, acc|
                 next unless provider.is_a?(Hash)
 
-                provider_id = provider["id"]
+                provider_id = provider["id"] || provider[:id] || provider["provider_id"]
                 acc[provider_id] = provider if provider_id
               end
             else
@@ -221,10 +234,18 @@ module Ace
               models
             when Array
               models.each_with_object({}) do |model, acc|
-                next unless model.is_a?(Hash)
+                next unless model
 
-                model_id = model["id"]
-                acc[model_id] = model if model_id
+                case model
+                when Hash
+                  model_id = model["id"] || model[:id]
+                  acc[model_id] = model if model_id
+                when String
+                  acc[model] = {"id" => model, "name" => model}
+                when Symbol
+                  model_id = model.to_s
+                  acc[model_id] = {"id" => model_id, "name" => model_id}
+                end
               end
             else
               {}

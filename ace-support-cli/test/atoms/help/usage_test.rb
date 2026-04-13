@@ -39,6 +39,7 @@ class HelpUsageTest < AceSupportCliTestCase
   def test_renders_grouped_usage_with_examples
     output = Ace::Support::Cli::Usage.new(GroupedRegistry).render
 
+    assert_includes output, "Usage: ace-tool"
     assert_includes output, "COMMANDS"
     assert_includes output, "  Core"
     assert_includes output, "lint"
@@ -59,6 +60,7 @@ class HelpUsageTest < AceSupportCliTestCase
   def test_renders_registered_commands_and_string_examples
     output = Ace::Support::Cli::Usage.new(RegisteredCommandRegistry).render
 
+    assert_includes output, "Usage: ace-review-feedback"
     assert_includes output, "list"
     assert_includes output, "show"
     assert_includes output, "EXAMPLES"

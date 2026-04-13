@@ -20,10 +20,10 @@ e2e-justification: >
   invocation contract with real file artifacts.
 
 unit-coverage-reviewed:
-  - test/integration/cli_integration_test.rb
-  - test/commands/models_commands_test.rb
-  - test/commands/providers_commands_test.rb
-  - test/commands/cache_commands_test.rb
+  - test/feat/cli_integration_test.rb
+  - test/fast/commands/models_commands_test.rb
+  - test/fast/commands/providers_commands_test.rb
+  - test/fast/commands/cache_commands_test.rb
 
 requires:
   tools: [ace-models, ace-llm-providers]
