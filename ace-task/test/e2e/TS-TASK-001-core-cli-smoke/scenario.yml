@@ -20,10 +20,10 @@ e2e-justification: >
   on-disk task state and shell-level command boundaries.
 
 unit-coverage-reviewed:
-  - test/commands/create_test.rb
-  - test/commands/update_test.rb
-  - test/commands/doctor_test.rb
-  - test/commands/plan_test.rb
+  - test/fast/commands/create_test.rb
+  - test/fast/commands/update_test.rb
+  - test/fast/commands/doctor_test.rb
+  - test/fast/commands/plan_test.rb
 
 requires:
   tools: [ace-task, git]
@@ -31,5 +31,5 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: git add -A && git commit -m "initial" --quiet

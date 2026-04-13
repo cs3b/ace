@@ -6,9 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.34.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
 
 ### Changed
 - Expanded canonical `as-task-plan` and `as-task-work` skill metadata so public `plan-task` and `work-on-task` assign-step discovery is skill-owned rather than catalog-owned.
+
+## [0.34.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` model by moving deterministic coverage to `test/fast`, retaining `TS-TASK-001` as workflow-value E2E coverage, and updating package testing guidance.
+
+### Fixed
+- Hardened `TS-TASK-001` sandbox bootstrap and doctor error-path runner setup so repeated E2E runs start from a clean healthy baseline before malformed-task injection.
 
 ## [0.33.3] - 2026-04-07
 

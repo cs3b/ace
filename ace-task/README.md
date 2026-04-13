@@ -26,6 +26,13 @@ Tasks are markdown specs living in git - attached to branches and worktrees, not
 2. Review and planning workflows refine scope before implementation.
 3. Oversee execution through worktrees and assignments until ship-ready.
 
+## Testing Model
+
+- `ace-test ace-task` runs deterministic package tests (`test/fast`) for the default feedback loop.
+- `ace-test ace-task feat` runs deterministic feature coverage when `test/feat` exists.
+- `ace-test ace-task all` runs all deterministic lanes.
+- `ace-test-e2e ace-task` runs retained real workflow scenarios from `test/e2e`.
+
 ## Use Cases
 
 **Draft and structure work** - create a task, split it into subtasks, add new subtasks as work reveals scope. Use `/as-task-draft` to draft from an earlier captured [idea](../ace-idea) or short note, or [`ace-task create`](docs/usage.md#ace-task-create-title) from the CLI.
