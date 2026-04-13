@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-04-13
+
+### Fixed
+- Made bootstrap `.gitignore` detection line-aware so commented or negated `.ace-local/` mentions no longer suppress appending the real ignore rule.
+
+### Technical
+- Added regression coverage for commented and negated `.gitignore` mentions during bootstrap merges.
+
 ## [0.11.1] - 2026-04-13
 
 ### Fixed
