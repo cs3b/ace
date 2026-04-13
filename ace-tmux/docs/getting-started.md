@@ -83,4 +83,5 @@ Use it in a session or add it directly with `ace-tmux window cc`.
 
 - Define project-level presets in `.ace/tmux/`.
 - Override personal defaults in `~/.ace/tmux/`.
+- Validate package tests with `ace-test ace-tmux` and `ace-test-e2e ace-tmux`.
 - See [Usage Guide](usage.md) for full command and config reference.

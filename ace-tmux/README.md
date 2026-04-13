@@ -36,5 +36,12 @@
 
 **Orchestrate task-focused workspaces** - pair with [ace-overseer](../ace-overseer) and [ace-assign](../ace-assign) for assignment-driven worktree and tmux orchestration that spins up isolated workspaces per task.
 
+## Testing
+
+- `ace-test ace-tmux` runs deterministic fast-layer tests under `test/fast/`.
+- `ace-test ace-tmux feat` runs deterministic feature tests when `test/feat/` coverage exists.
+- `ace-test ace-tmux all` runs full package deterministic coverage.
+- `ace-test-e2e ace-tmux` runs retained workflow scenarios under `test/e2e/`.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

@@ -195,3 +195,10 @@ Chained preset references are supported (depth-limited).
 
 - [Getting Started](getting-started.md)
 - [Handbook Reference](handbook.md)
+
+## Testing Contract
+
+- `ace-test ace-tmux` validates deterministic fast coverage in `test/fast/`.
+- `ace-test ace-tmux feat` validates deterministic feature coverage in `test/feat/` when present.
+- `ace-test ace-tmux all` validates full deterministic package coverage.
+- `ace-test-e2e ace-tmux` runs workflow scenarios in `test/e2e/`.

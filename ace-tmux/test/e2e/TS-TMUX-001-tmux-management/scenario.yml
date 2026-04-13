@@ -17,9 +17,9 @@ e2e-justification: >
   that cannot be fully validated with isolated unit tests.
 
 unit-coverage-reviewed:
-  - test/commands/cli_test.rb
-  - test/molecules/tmux_executor_test.rb
-  - test/organisms/session_manager_test.rb
+  - test/fast/commands/cli_test.rb
+  - test/fast/molecules/tmux_executor_test.rb
+  - test/fast/organisms/session_manager_test.rb
 
 requires:
   tools: [ace-tmux, tmux]
@@ -27,4 +27,4 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"

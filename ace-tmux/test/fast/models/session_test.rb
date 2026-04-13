@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class SessionModelTest < Minitest::Test
   def test_minimal_initialization
