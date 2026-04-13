@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.4] - 2026-04-13
+
+### Fixed
+- Filter forwarded Claude `--max-tokens` CLI args when the installed Claude CLI does not advertise support, preventing explicit passthrough flags from reintroducing unsupported-option failures.
+
 ## [0.28.3] - 2026-04-13
 
 ### Fixed
