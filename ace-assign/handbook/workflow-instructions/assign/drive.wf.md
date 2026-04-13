@@ -12,7 +12,7 @@ doc-type: workflow
 title: Drive Assignment Workflow
 purpose: workflow instruction for driving ace-assign assignment execution
 ace-docs:
-  last-updated: 2026-04-07
+  last-updated: 2026-04-12
   last-checked: 2026-03-21
 ---
 
@@ -150,6 +150,12 @@ After completing or failing each step, evaluate whether the assignment needs ada
   ```bash
   ace-assign add "fix-tests" --instructions "Fix failing tests identified in step NNN" --assignment "$ASSIGNMENT_TARGET"
    ```
+
+- **E2E failures detected** (`ace-test-e2e` command, `.ace-local/test-e2e/` evidence, or explicit failing scenario IDs) → add an E2E-specific fix step instead of generic `fix-tests` / `fix-issue`:
+
+  ```bash
+  ace-assign add "fix-e2e" --instructions "Use /as-e2e-fix for the failing package and scenario IDs from the recorded evidence. If analysis is missing, let /as-e2e-fix generate it via wfi://e2e/analyze-failures before applying fixes. Re-run the targeted failing scenarios before completing this step." --assignment "$ASSIGNMENT_TARGET"
+  ```
 
 - **Review found critical issues** → Consider adding an apply-critical-fixes step:
 
@@ -343,12 +349,20 @@ After launching `ace-assign fork-run`, the driver remains inside the same drive 
 
 - Treat "fork subtree is still running" as an internal progress state, not as a stop condition.
 - Do not end the turn, emit a final user-facing completion summary, or hand control back to the user merely because the driver is waiting on fork completion.
+- Poll the forked subtree every 6 minutes by default. Use two signals on each poll:
+
+  1. poll the live fork session/process handle
+  2. poll scoped assignment status with `ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"`
+
+- Treat scoped assignment status as the source of truth for subtree completion. Terminal PTY output is helpful telemetry, but it is not the canonical completion signal.
 - Continue polling until one of these is true:
 
   - the `fork-run` process exits
   - scoped status for the subtree proves every step inside that subtree is terminal (`done` or `failed`)
   - the workflow reaches a documented blocker or failure path
 
+- If scoped subtree status is terminal, immediately treat the fork as complete even if the PTY stayed quiet or the original terminal handle has already disappeared.
+- A quiet terminal is not a stall by itself. Only treat the fork as stalled when there is no scoped status movement, no new subtree reports, and no process exit for about 30 minutes.
 - When the wait ends, immediately re-enter the parent drive loop. Do not stop between "fork finished" and "next runnable step started."
 
 #### Post-Fork Resume Checklist
@@ -368,10 +382,17 @@ Immediately after the fork wait ends, run this checklist in order:
 6. If pending or `in_progress` work remains and no blocker was recorded, continue the main loop immediately.
 7. Only stop if the assignment now satisfies a real stop condition from [Run-Until-Blocked Contract](#run-until-blocked-contract).
 
+Detached-resume rule:
+
+- If a prior drive session or terminal ended, a new `/as-assign-drive` invocation MUST recover from assignment state, not from the old terminal handle.
+- On re-entry, first inspect parent `ace-assign status --assignment "$ASSIGNMENT_TARGET"` and, when applicable, scoped subtree status for the last in-flight fork root.
+- If the child subtree is already terminal, run the same post-fork checklist immediately and continue the parent queue without waiting for any historical `fork-run` session to be observed again.
+
 Concrete example:
 
 - Incorrect: launch `fork-run` for `040`, post "waiting on subtree", stop responding, and never resume `070`.
 - Correct: launch `fork-run` for `040`, poll until it finishes, review reports, re-check `ace-assign status --assignment "$ASSIGNMENT_TARGET"`, then advance and launch `070` if it is the next runnable step.
+- Correct after interruption: re-run `/as-assign-drive <assignment-id>`, detect that `040` is already terminal from scoped status/reports, then immediately advance and launch `070`.
 
 > **Long-running execution:** `fork-run` typically takes 10-30 minutes depending on subtree complexity. If your environment has bash timeout limits (e.g., Claude Code's 10-minute Bash tool limit), run `fork-run` in background and poll for completion:
 >
@@ -379,7 +400,7 @@ Concrete example:
 > # Run fork-run in background (use run_in_background: true in Claude Code)
 > ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
 >
-> # Poll scoped status every 5 minutes until subtree completes
+> # Poll scoped status every 6 minutes until subtree completes
 > while true; do
 >   STATUS_JSON=$(ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" --format json)
 >   COMPLETE=$(echo "$STATUS_JSON" | ruby -rjson -e '
@@ -388,7 +409,7 @@ Concrete example:
 >     puts steps.all? { |step| step["status"] == "done" || step["status"] == "failed" }
 >   ')
 >   [ "$COMPLETE" = "true" ] && break
->   sleep 300
+>   sleep 360
 > done
 > ace-assign status --assignment "$ASSIGNMENT_TARGET"
 > ```
@@ -653,6 +674,12 @@ ace-assign add "fix-issue" --instructions "Fix the failing tests and verify" --a
 ```
 
 New step is inserted after the current in-progress step.
+
+When the failure evidence is E2E-specific (`ace-test-e2e`, scenario IDs, or `.ace-local/test-e2e/` artifacts), prefer:
+
+```bash
+ace-assign add "fix-e2e" --instructions "Use /as-e2e-fix for the failing package and scenario IDs from the recorded evidence. If analysis is missing, let /as-e2e-fix generate it via wfi://e2e/analyze-failures before applying fixes. Re-run the targeted failing scenarios before completing this step." --assignment "$ASSIGNMENT_TARGET"
+```
 
 #### Option C: Ask the User
 

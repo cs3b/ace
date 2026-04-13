@@ -23,6 +23,17 @@ Recommended:
 ace-assign finish --message report.md
 ```
 
+## Testing Contract
+
+Use package-scoped test commands with explicit layers:
+
+```bash
+ace-test ace-assign
+ace-test ace-assign feat
+ace-test ace-assign all
+ace-test-e2e ace-assign
+```
+
 ## Core Lifecycle
 
 

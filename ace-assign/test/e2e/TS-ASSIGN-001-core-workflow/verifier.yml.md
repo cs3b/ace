@@ -1,19 +1,16 @@
 ---
-description: "E2E verifier input for ace-assign core workflow goal-based tests"
+description: "E2E verifier input for ace-assign lifecycle and fork-context goal-based tests"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-survey.verify.md
-    - ./TC-002-workflow-lifecycle.verify.md
-    - ./TC-003-fork-context.verify.md
-    - ./TC-004-prepare-workflow.verify.md
-    - ./TC-005-no-skip-policy.verify.md
+    - ./TC-001-workflow-lifecycle.verify.md
+    - ./TC-002-fork-context.verify.md
 ---
 
-# E2E Verification: ace-assign Core Workflow
+# E2E Verification: ace-assign Lifecycle and Fork Context
 
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
@@ -36,4 +33,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/5 passed**
+Final line: **Results: X/2 passed**

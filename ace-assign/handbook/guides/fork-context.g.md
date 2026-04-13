@@ -51,7 +51,7 @@ Do **not** use fork context for:
 
 ## Step File Structure
 
-Fork context steps should use one explicit structure by default:
+Fork context steps can use a rich structure with distinct sections:
 
 ```markdown
 ---
@@ -59,50 +59,36 @@ status: pending
 context: fork
 ---
 
-# Purpose
+## Onboard
 
-[What this step must accomplish]
+Load context before starting work:
+- `ace-bundle project`
+- `ace-task show {{taskref}}`
 
-## Variables
+## Work
 
-- `NAME=value`
+[Main instructions for the forked agent]
 
-## Codebase Structure
-
-- Relevant paths, evidence sources, and artifact destinations
-
-## Instructions
-
-1. Load the required workflow or context
-2. Execute the task with explicit constraints
-3. Do not infer unspecified output behavior
-
-## Workflow
-
-- `ace-bundle wfi://namespace/action`
-- Follow the loaded workflow as the source of truth
+Implement the feature following project conventions.
+Run tests after each significant change.
 
 ## Report
 
-Return a structured report with:
-- `status`: `completed` | `failed`
-- `primary_artifact_path`: exact path to the main created artifact
-- `summary`: concise outcome
-- `blocker`: explicit reason when no artifact was created
+Return structured summary:
+- **Task**: task ID and title
+- **Status**: completed | partial | blocked
+- **Changes**: files modified and what changed
+- **Commits**: commit hashes and messages created
+- **Issues**: problems encountered or deferred decisions
 ```
-
-`## Questions` is optional and should be omitted for deterministic runnable steps.
 
 ### Section Purposes
 
 | Section | Purpose |
 |---------|---------|
-| **Purpose** | Define the intended outcome in one sentence |
-| **Variables** | Declare fixed inputs and execution parameters |
-| **Codebase Structure** | Identify relevant paths, sources, and artifact destinations |
-| **Instructions** | State concrete execution rules and constraints |
-| **Workflow** | Name the exact workflow(s) to load and follow |
-| **Report** | Define the required output schema, including the primary artifact path |
+| **Onboard** | Context loading commands to run before work |
+| **Work** | Main implementation instructions |
+| **Report** | Expected output format from the forked agent |
 
 ## Execution Flow
 
@@ -227,37 +213,15 @@ steps:
   - name: implement
     context: fork
     instructions: |
-      # Purpose
+      ## Onboard
+      - ace-bundle project
+      - ace-task show {{taskref}}
 
-      Implement the task and produce the requested code changes.
-
-      ## Variables
-
-      - `TASKREF={{taskref}}`
-
-      ## Codebase Structure
-
-      - Task context: `ace-task show {{taskref}}`
-      - Project context: current repository
-
-      ## Instructions
-
-      1. Load `ace-bundle project`.
-      2. Load task context with `ace-task show {{taskref}}`.
-      3. Implement the task following the specification.
-
-      ## Workflow
-
-      - `ace-bundle project`
-      - `ace-task show {{taskref}}`
+      ## Work
+      Implement the task following the specification.
 
       ## Report
-
-      Return:
-      - `status`
-      - `primary_artifact_path`
-      - `summary`
-      - `blocker`
+      Return: status, changes, commits, issues
 
   - name: verify
     instructions:
