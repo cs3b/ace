@@ -156,7 +156,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.19.3)
+    ace-idea (0.20.0)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
@@ -336,7 +336,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.34.3)
+    ace-task (0.35.0)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
