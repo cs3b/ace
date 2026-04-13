@@ -106,7 +106,7 @@ describe "ClaudeCodeClient" do
     it "detects support from claude help output" do
       capture = proc do |*cmd|
         case cmd
-        when ["claude", "-p", "--help"]
+        when [{"CLAUDECODE" => nil}, "claude", "-p", "--help"]
           ["usage: claude -p [options]\n  --max-tokens <n>", "", status(true)]
         else
           flunk "unexpected command: #{cmd.inspect}"
@@ -121,9 +121,9 @@ describe "ClaudeCodeClient" do
     it "falls back to top-level help when prompt help lacks the flag" do
       capture = proc do |*cmd|
         case cmd
-        when ["claude", "-p", "--help"]
+        when [{"CLAUDECODE" => nil}, "claude", "-p", "--help"]
           ["usage: claude -p [options]", "", status(true)]
-        when ["claude", "--help"]
+        when [{"CLAUDECODE" => nil}, "claude", "--help"]
           ["global options include --max-tokens", "", status(true)]
         else
           flunk "unexpected command: #{cmd.inspect}"
@@ -138,7 +138,7 @@ describe "ClaudeCodeClient" do
     it "returns false when help output does not advertise the flag" do
       capture = proc do |*cmd|
         case cmd
-        when ["claude", "-p", "--help"], ["claude", "--help"]
+        when [{"CLAUDECODE" => nil}, "claude", "-p", "--help"], [{"CLAUDECODE" => nil}, "claude", "--help"]
           ["usage: claude", "", status(true)]
         else
           flunk "unexpected command: #{cmd.inspect}"
@@ -148,6 +148,20 @@ describe "ClaudeCodeClient" do
       Open3.stub(:capture3, capture) do
         refute @client.send(:supports_max_tokens_flag?)
       end
+    end
+
+    it "clears CLAUDECODE during help probes" do
+      captured_env = nil
+      capture = proc do |env, *cmd|
+        captured_env = env
+        ["usage: claude", "", status(true)]
+      end
+
+      Open3.stub(:capture3, capture) do
+        @client.send(:command_help_supports_flag?, "--max-tokens")
+      end
+
+      assert_equal({"CLAUDECODE" => nil}, captured_env)
     end
   end
 
