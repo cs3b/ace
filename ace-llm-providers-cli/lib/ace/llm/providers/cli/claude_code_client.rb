@@ -187,7 +187,7 @@ module Ace
             [["claude", "-p", "--help"], ["claude", "--help"]].any? do |help_cmd|
               stdout, stderr, status = Open3.capture3(*help_cmd)
               status.success? && [stdout, stderr].join("\n").include?(flag)
-            rescue StandardError
+            rescue
               false
             end
           end
