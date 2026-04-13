@@ -16,6 +16,9 @@ module Ace
       # Orchestrates all task CRUD operations.
       # Entry point for task management with config-driven root directory.
       class TaskManager
+        CREATE_RETRY_LIMIT = 3
+        class CreateRetriesExhaustedError < StandardError; end
+
         attr_reader :last_list_total, :last_folder_counts
 
         # @param root_dir [String, nil] Override root directory for tasks
@@ -49,18 +52,28 @@ module Ace
           ensure_root_dir
           ensure_github_issue_linkable!(github_issue)
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
-          created_task = creator.create(
-            title,
-            status: status,
-            priority: priority,
-            tags: tags,
-            dependencies: dependencies,
-            use_llm_slug: use_llm_slug,
-            estimate: estimate,
-            github_issue: github_issue
-          )
-          sync_linked_issues_for(created_task, reason: "create")
-          created_task
+          attempts = 0
+
+          begin
+            attempts += 1
+            created_task = creator.create(
+              title,
+              status: status,
+              priority: priority,
+              tags: tags,
+              dependencies: dependencies,
+              use_llm_slug: use_llm_slug,
+              time: Time.now.utc + ((attempts - 1) * 2),
+              estimate: estimate,
+              github_issue: github_issue
+            )
+            sync_linked_issues_for(created_task, reason: "create")
+            created_task
+          rescue Molecules::TaskCreator::IdCollisionError
+            retry if attempts < CREATE_RETRY_LIMIT
+            raise CreateRetriesExhaustedError,
+              "Failed to create task: unable to generate a unique ID after #{CREATE_RETRY_LIMIT} attempts"
+          end
         end
 
         # Show (load) a single task by reference, including subtasks.
