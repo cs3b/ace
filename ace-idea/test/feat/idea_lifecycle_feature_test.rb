@@ -192,51 +192,61 @@ class IdeaLifecycleFeatureTest < AceIdeaTestCase
   # 4. Concurrent creation: two ideas within the same 2-second b36ts window
   # ---------------------------------------------------------------------------
 
-  def test_concurrent_ideas_same_b36ts_id_same_slug_creates_unique_folders
+  def test_concurrent_ideas_same_b36ts_id_same_slug_retries_to_unique_id
     with_ideas_dir do |root|
-      # Fix time so both ideas get the same b36ts ID
-      fixed_time = Time.at(1706443200).utc
+      manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
+      ids = %w[80ri00 80ri00 80ri01]
+      idx = 0
+      generator = lambda do |_time = nil|
+        value = ids[[idx, ids.length - 1].min]
+        idx += 1
+        value
+      end
 
-      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
+      idea1 = nil
+      idea2 = nil
+      Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, generator) do
+        idea1 = manager.create("Duplicate idea content")
+        idea2 = manager.create("Duplicate idea content")
+      end
 
-      # Both ideas have same content → same slug → same potential folder name
-      idea1 = creator.create("Duplicate idea content", time: fixed_time)
-      idea2 = creator.create("Duplicate idea content", time: fixed_time)
-
-      # Both should be created without raising
       refute_nil idea1
       refute_nil idea2
-
-      # Both should have the same ID (same b36ts timestamp)
-      assert_equal idea1.id, idea2.id
-
-      # But they should be in DIFFERENT directories
-      refute_equal idea1.path, idea2.path, "Duplicate ideas must have unique folders"
-
-      # Both folders should exist on disk
+      refute_equal idea1.id, idea2.id, "Second create should retry to a unique ID"
+      assert_equal "80ri00", idea1.id
+      assert_equal "80ri01", idea2.id
       assert Dir.exist?(idea1.path), "First idea folder should exist"
       assert Dir.exist?(idea2.path), "Second idea folder should exist"
-
-      # Both spec files should exist
       assert File.exist?(idea1.file_path)
       assert File.exist?(idea2.file_path)
     end
   end
 
-  def test_concurrent_ideas_same_b36ts_id_different_slugs_are_both_accessible
+  def test_concurrent_ideas_same_b36ts_id_different_slugs_retry_to_unique_ids
     with_ideas_dir do |root|
-      fixed_time = Time.at(1706443200).utc
+      manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
+      ids = %w[80ri00 80ri00 80ri02]
+      idx = 0
+      generator = lambda do |_time = nil|
+        value = ids[[idx, ids.length - 1].min]
+        idx += 1
+        value
+      end
 
-      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
-
-      idea1 = creator.create("First concurrent idea", time: fixed_time)
-      idea2 = creator.create("Second concurrent idea", time: fixed_time)
+      idea1 = nil
+      idea2 = nil
+      Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, generator) do
+        idea1 = manager.create("First concurrent idea")
+        idea2 = manager.create("Second concurrent idea")
+      end
 
       refute_nil idea1
       refute_nil idea2
 
-      # Both created successfully with same ID but different slugs
-      assert_equal idea1.id, idea2.id
+      # Collision is retried; final persisted IDs are unique.
+      refute_equal idea1.id, idea2.id
+      assert_equal "80ri00", idea1.id
+      assert_equal "80ri02", idea2.id
 
       # Both accessible through the file system
       assert Dir.exist?(idea1.path)
