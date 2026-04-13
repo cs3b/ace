@@ -6,24 +6,18 @@ Test child injection and cascade renumbering: create an assignment, inject child
 
 ## Workspace
 
-Save all output to `results/tc/01/`. Capture:
-- `results/tc/01/create.stdout`, `.exit` — assignment creation
-- `results/tc/01/child-inject-1.stdout`, `.exit` — first child injection
-- `results/tc/01/child-inject-2.stdout`, `.exit` — second child injection
-- `results/tc/01/child-inject-3.stdout`, `.exit` — third child injection
-- `results/tc/01/sibling-inject.stdout`, `.exit` — sibling injection (triggers renumbering)
-- `results/tc/01/cascade.stdout`, `.exit` — grandchild + cascade renumbering
-- `results/tc/01/step-listing-pre.stdout` — step files before renumbering
-- `results/tc/01/step-listing-post.stdout` — step files after renumbering
-- `results/tc/01/step-metadata.stdout` — renumbered_from/renumbered_at metadata
+Save all output to `results/tc/01/`. Required artifact:
+- `results/tc/01/` — injection and renumbering execution evidence
 
 ## Constraints
 
 - Create assignment from the fixture job file.
+- Extract assignment id from create output, then run `ace-assign select <id>` before mutation commands.
+- For all `add` commands in this goal, do NOT pass `--assignment`; use the selected active assignment context.
 - Add child steps under 010 (`add --after 010 --child`): three children should become 010.01, 010.02, 010.03.
 - Verify child metadata: parent: "010", added_by: child_of:010.
 - Inject sibling after 010.01 (`add --after 010.01`): new step becomes 010.02, old 010.02 renumbers to 010.03.
-- Verify renumbered step has renumbered_from and renumbered_at metadata.
+- Verify renumbering via status snapshots before/after sibling injection (step numbers shift as expected).
 - Add grandchild under renumbered child, then inject sibling to trigger cascade renumbering.
-- Verify cascade: parent renumbered -> grandchild also renumbered (e.g., 010.03.01 -> 010.04.01).
+- Verify cascade: when parent numbering shifts, descendant numbering also shifts in later status output.
 - All artifacts must come from real tool execution.

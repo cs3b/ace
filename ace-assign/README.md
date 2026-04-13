@@ -68,6 +68,13 @@ NUMBER       STATUS       NAME                           FORK   CHILDREN
 
 The easiest way to start is through [ace-overseer](../ace-overseer) -- define a task and run `ace-overseer work-on --task <ref> --preset work-on-task` , which creates the assignment, worktree, and tmux window in one shot.
 
+## Testing Contract
+
+- `ace-test ace-assign` runs the default deterministic package loop (`test/fast`).
+- `ace-test ace-assign feat` runs deterministic feature/contract coverage (`test/feat`).
+- `ace-test ace-assign all` runs full package deterministic coverage (`fast` + `feat`).
+- `ace-test-e2e ace-assign` runs scenario workflows under `test/e2e`.
+
 ## How It Works
 
 1. Define steps from a [preset](.ace-defaults/assign/presets/work-on-task.yml) or compose from the [step catalog](.ace-defaults/assign/catalog/steps/) -- steps can nest into substeps and reference workflow instructions for execution details.

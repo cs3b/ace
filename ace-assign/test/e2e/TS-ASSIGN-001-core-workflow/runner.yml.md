@@ -1,31 +1,27 @@
 ---
-description: "E2E runner input for ace-assign core workflow goal-based tests"
+description: "E2E runner input for ace-assign lifecycle and fork-context goal-based tests"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-survey.runner.md
-    - ./TC-002-workflow-lifecycle.runner.md
-    - ./TC-003-fork-context.runner.md
-    - ./TC-004-prepare-workflow.runner.md
-    - ./TC-005-no-skip-policy.runner.md
+    - ./TC-001-workflow-lifecycle.runner.md
+    - ./TC-002-fork-context.runner.md
 ---
 
-# E2E Test Runner: ace-assign Core Workflow
+# E2E Test Runner: ace-assign Lifecycle and Fork Context
 
 Tool under test: ace-assign
-Required tools: ace-assign, ace-bundle, ace-search
+Required tools: ace-assign
 Workspace root: (current directory)
 
-Execute each goal sequentially. Goal 1 is discovery — all later goals
-build on what you learn there. Do not re-run --help after Goal 1.
+Execute each goal sequentially.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 5)
+- Execute each goal in order (1 through 2)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

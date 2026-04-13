@@ -1,5 +1,5 @@
 test-id: TS-ASSIGN-001
-title: "ace-assign Core Workflow Goal-Based E2E"
+title: "ace-assign Lifecycle and Fork Context Goal-Based E2E"
 area: assign
 package: ace-assign
 priority: high
@@ -8,55 +8,37 @@ cost-tier: smoke
 tool-under-test: ace-assign
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Workflow lifecycle evidence (create, complete steps, finish)"
-  results/tc/03/:  "Fork context evidence (regular vs fork steps)"
-  results/tc/04/:  "Prepare workflow evidence (preset expansion, multi-task)"
-  results/tc/05/:  "No-skip policy evidence (drive guidance enforcement)"
+  results/tc/01/:  "Workflow lifecycle evidence (create, complete steps, finish)"
+  results/tc/02/:  "Fork context evidence (regular vs fork steps)"
 
 e2e-justification: >
-  All goals require the real ace-assign binary managing real assignment
+  These goals require the real ace-assign binary managing real assignment
   state on the filesystem. Workflow lifecycle creates directories, writes
-  YAML state, and transitions steps. Fork context generates Task tool
-  prompts. Prepare workflow expands preset templates. None testable with mocks.
+  markdown step state, transitions queues through failure and retry, and
+  validates end-to-end completion behavior. Fork context renders structured
+  assignment guidance from real step files and verifies regular/fork display
+  transitions. These are not reliable with mocks alone.
 
-unit-coverage-reviewed:
-  - test/commands/create_command_test.rb
-  - test/commands/status_command_test.rb
-  - test/commands/finish_command_test.rb
-  - test/commands/fail_command_test.rb
-  - test/commands/retry_cmd_test.rb
-  - test/commands/add_command_test.rb
-  - test/commands/fork_run_command_test.rb
-  - test/commands/assignment_target_test.rb
-  - test/molecules/assignment_manager_test.rb
-  - test/molecules/fork_session_launcher_test.rb
-  - test/organisms/assignment_executor_test.rb
+fast-coverage-reviewed:
+  - test/fast/commands/create_command_test.rb
+  - test/fast/commands/status_command_test.rb
+  - test/fast/commands/finish_command_test.rb
+  - test/fast/commands/fail_command_test.rb
+  - test/fast/commands/retry_cmd_test.rb
+  - test/fast/commands/add_command_test.rb
+  - test/fast/commands/fork_run_command_test.rb
+  - test/fast/commands/assignment_target_test.rb
+  - test/fast/molecules/assignment_manager_test.rb
+  - test/fast/molecules/fork_session_launcher_test.rb
+  - test/fast/organisms/assignment_executor_test.rb
 
 requires:
-  tools: [ace-assign, ace-bundle, ace-search]
+  tools: [ace-assign]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
-  - run: |
-      ROOT_PATH="${PROJECT_ROOT_PATH:-$(pwd)}"
-      mkdir -p ace-assign/handbook/workflow-instructions/assign .claude/skills/as-assign-drive
-      if [ ! -f "$ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" ]; then
-        echo "Source workflow file not found: $ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" >&2
-        exit 1
-      fi
-      cp "$ROOT_PATH/ace-assign/handbook/workflow-instructions/assign/drive.wf.md" ace-assign/handbook/workflow-instructions/assign/drive.wf.md
-
-      if [ -f "$ROOT_PATH/.claude/skills/as-assign-drive/SKILL.md" ]; then
-        cp "$ROOT_PATH/.claude/skills/as-assign-drive/SKILL.md" .claude/skills/as-assign-drive/SKILL.md
-      elif [ -f "$ROOT_PATH/ace-assign/handbook/skills/as-assign-drive/SKILL.md" ]; then
-        cp "$ROOT_PATH/ace-assign/handbook/skills/as-assign-drive/SKILL.md" .claude/skills/as-assign-drive/SKILL.md
-      else
-        echo "Required source skill not found" >&2
-        exit 1
-      fi
   - agent-env:
       PROJECT_ROOT_PATH: .

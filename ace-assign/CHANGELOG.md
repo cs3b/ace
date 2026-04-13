@@ -6,9 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.47.3] - 2026-04-13
 
 ### Changed
-- Standardized fork-step authoring guidance around a prompt-prep-style section layout (`Purpose`, `Variables`, `Codebase Structure`, `Instructions`, `Workflow`, `Report`) and updated the example forked implementation step to require an explicit primary artifact path in reports.
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.47.2] - 2026-04-12
+
+### Fixed
+- Hardened `wfi://assign/drive` so forked subtree completion is driven by scoped `ace-assign status`, with explicit 6-minute polling, detached resume guidance, and immediate parent-queue re-entry after terminal child status.
+
+### Technical
+- Updated the canonical and projected `as-assign-drive` skill contracts plus workflow contract coverage to lock in status-driven fork completion pickup after terminal or session interruption.
+
+## [0.47.1] - 2026-04-12
+
+### Fixed
+- Simplified `TS-ASSIGN-001` to keep only lifecycle and fork-context E2E coverage, moving help, prepare, and no-skip policy assertions down to deterministic fast and feat contracts.
+- Tightened `TS-ASSIGN-002` into a 4-goal hierarchy scenario by moving hierarchy error-path checks to command tests and requiring explicit multi-level auto-completion and audit-trail evidence.
+
+### Technical
+- Added regression coverage for invalid `add --after` references, pending-parent `finish` rejection after child injection, the canonical `work-on-task` preset contract, and the `assign/drive` no-skip workflow contract.
+
+## [0.47.0] - 2026-04-11
+
+### Changed
+- Taught `wfi://assign/drive` to prefer an E2E-specific `fix-e2e` recovery step after `ace-test-e2e` failures so assignment retries route into `/as-e2e-fix` instead of generic test-fix instructions.
+- Updated the shipped work-on-task verification fixture to require `/as-e2e-fix` to bootstrap `wfi://e2e/analyze-failures` automatically when scenario-failure analysis is missing or incomplete.
+
+## [0.46.0] - 2026-04-11
+
+### Changed
+- Migrated package test layout to the `fast` / `feat` / `e2e` model by moving deterministic ATOM and command tests under `test/fast/`, adding deterministic feature-level coverage under `test/feat/`, and keeping scenario assets under `test/e2e/`.
+- Updated package documentation and E2E scenario metadata to reference the new testing contract (`ace-test ace-assign`, `ace-test ace-assign feat`, `ace-test ace-assign all`, `ace-test-e2e ace-assign`) and `test/fast/*` deterministic coverage paths.
+- Tightened E2E goal runner/verifier contracts to reduce brittle artifact-name coupling and keep policy/lifecycle evidence checks aligned with current command outputs.
 
 ## [0.45.0] - 2026-04-11
 

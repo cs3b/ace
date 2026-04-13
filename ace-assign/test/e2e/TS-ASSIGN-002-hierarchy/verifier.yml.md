@@ -8,9 +8,8 @@ bundle:
   files:
     - ./TC-001-injection-renumbering.verify.md
     - ./TC-002-auto-completion.verify.md
-    - ./TC-003-hierarchy-errors.verify.md
-    - ./TC-004-display-audit.verify.md
-    - ./TC-005-fork-subtree.verify.md
+    - ./TC-003-display-audit.verify.md
+    - ./TC-004-fork-subtree.verify.md
 ---
 
 # E2E Verification: ace-assign Hierarchy and Injection
@@ -36,4 +35,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/5 passed**
+Final line: **Results: X/4 passed**

@@ -11,9 +11,8 @@ tool-under-test: ace-assign
 sandbox-layout:
   results/tc/01/:  "Child injection and renumbering evidence"
   results/tc/02/:  "Auto-completion cascade evidence"
-  results/tc/03/:  "Hierarchy error handling evidence"
-  results/tc/04/:  "Display and audit trail evidence"
-  results/tc/05/:  "Fork subtree scope evidence"
+  results/tc/03/:  "Display and audit trail evidence"
+  results/tc/04/:  "Fork subtree scope evidence"
 
 e2e-justification: >
   Hierarchy operations require real assignment state with parent-child
@@ -22,15 +21,15 @@ e2e-justification: >
   scoping resolves step addresses against real assignment structure.
   None testable with mocks.
 
-unit-coverage-reviewed:
-  - test/atoms/step_numbering_test.rb
-  - test/atoms/tree_formatter_test.rb
-  - test/commands/add_command_test.rb
-  - test/commands/finish_command_test.rb
-  - test/commands/status_command_test.rb
-  - test/molecules/assignment_manager_test.rb
-  - test/molecules/queue_scanner_test.rb
-  - test/organisms/assignment_executor_step_catalog_test.rb
+fast-coverage-reviewed:
+  - test/fast/atoms/step_numbering_test.rb
+  - test/fast/atoms/tree_formatter_test.rb
+  - test/fast/commands/add_command_test.rb
+  - test/fast/commands/finish_command_test.rb
+  - test/fast/commands/status_command_test.rb
+  - test/fast/molecules/assignment_manager_test.rb
+  - test/fast/molecules/queue_scanner_test.rb
+  - test/fast/organisms/assignment_executor_step_catalog_test.rb
 
 requires:
   tools: [ace-assign]
@@ -38,7 +37,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: .
