@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.19.3] - 2026-04-13
+
+### Fixed
+- Added bounded retry handling for `ace-idea create` ID collisions so success is emitted only after a unique persisted idea ID exists.
+- Enforced create-time collision semantics where "same ID, different folder slug" is no longer treated as successful creation.
+- Added clear retry-exhaustion failure messaging for create-time ID collisions.
+
+### Technical
+- Updated molecule, command, and feature regression coverage to validate ID-retry semantics and no-orphan cleanup behavior.
+
 ## [0.19.2] - 2026-04-13
 
 ### Fixed
