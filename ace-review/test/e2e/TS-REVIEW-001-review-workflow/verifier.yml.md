@@ -1,21 +1,16 @@
 ---
-description: "E2E verifier input for ace-review goal-based tests"
+description: "E2E verifier input for ace-review execution workflows"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-survey.verify.md
-    - ./TC-002-preset-discovery.verify.md
-    - ./TC-003-preset-composition.verify.md
-    - ./TC-004-subject-processing.verify.md
-    - ./TC-005-error-handling.verify.md
-    - ./TC-006-single-model.verify.md
-    - ./TC-007-multi-model.verify.md
+    - ./TC-001-single-model.verify.md
+    - ./TC-002-multi-model.verify.md
 ---
 
-# E2E Verification: ace-review
+# E2E Verification: ace-review Execution Workflows
 
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
@@ -38,4 +33,11 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/7 passed**
+Required headings for this suite:
+- `### Goal 1 — Single Model Execution`
+- `### Goal 2 — Multi-Model and Reviewers Format`
+
+Always include both goal sections, even when verdict is FAIL.
+Do not output only a summary line.
+
+Final line: **Results: X/2 passed**

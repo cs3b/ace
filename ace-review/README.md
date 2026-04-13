@@ -38,5 +38,21 @@
 
 **Audit review history through session artifacts** - keep saved review sessions under `.ace-local/` for traceability, comparison, and handoff across contributors.
 
+## Testing
+
+Run package deterministic checks with:
+
+```bash
+ace-test ace-review
+ace-test ace-review feat
+ace-test ace-review all
+```
+
+Run retained workflow scenarios with:
+
+```bash
+ace-test-e2e ace-review
+```
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
