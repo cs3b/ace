@@ -144,6 +144,24 @@ class TaskCreatorTest < AceTaskTestCase
     end
   end
 
+  def test_raises_id_collision_when_id_reservation_is_already_held
+    creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
+    colliding_id = "8pp.t.q7z"
+    reservation = File.join(@tmpdir, ".ace-task-id-lock-#{colliding_id}")
+    Dir.mkdir(reservation)
+
+    item_id = Struct.new(:formatted_id).new(colliding_id)
+    Ace::Task::Atoms::TaskIdFormatter.stub(:generate, item_id) do
+      assert_raises(Ace::Task::Molecules::TaskCreator::IdCollisionError) do
+        creator.create("New task while lock is held")
+      end
+    end
+
+    assert Dir.exist?(reservation), "Expected existing reservation lock to remain untouched"
+  ensure
+    FileUtils.rm_rf(reservation) if reservation && Dir.exist?(reservation)
+  end
+
   def test_cleans_up_partial_artifacts_when_create_fails_after_write
     creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
     item_id = Struct.new(:formatted_id).new("8pp.t.q7x")

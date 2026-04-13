@@ -47,58 +47,72 @@ module Ace
           # Generate task ID
           item_id = Atoms::TaskIdFormatter.generate(time)
           formatted_id = item_id.formatted_id
-          raise IdCollisionError, "Task ID collision detected for #{formatted_id}" if task_id_exists?(formatted_id)
 
-          # Generate slugs
-          slugs = if use_llm_slug
-            generate_llm_slugs(title) || generate_slugs(title)
-          else
-            generate_slugs(title)
-          end
-          folder_slug = slugs[:folder]
-          file_slug = slugs[:file]
+          with_id_reservation(formatted_id) do
+            raise IdCollisionError, "Task ID collision detected for #{formatted_id}" if task_id_exists?(formatted_id)
 
-          # Create folder with folder_slug
-          folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, folder_slug)
-          task_dir = File.join(@root_dir, folder_name)
-          FileUtils.mkdir_p(task_dir)
+            # Generate slugs
+            slugs = if use_llm_slug
+              generate_llm_slugs(title) || generate_slugs(title)
+            else
+              generate_slugs(title)
+            end
+            folder_slug = slugs[:folder]
+            file_slug = slugs[:file]
 
-          begin
-            # Build frontmatter with all fields
-            effective_status = status || @config.dig("task", "default_status") || "pending"
-            frontmatter = Atoms::TaskFrontmatterDefaults.build(
-              id: formatted_id,
-              status: effective_status,
-              priority: priority,
-              tags: tags,
-              dependencies: dependencies,
-              created_at: time,
-              estimate: estimate,
-              github_issue: github_issue
-            )
+            # Create folder with folder_slug
+            folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, folder_slug)
+            task_dir = File.join(@root_dir, folder_name)
+            FileUtils.mkdir_p(task_dir)
 
-            # Write spec file with file_slug
-            spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
-            spec_file = File.join(task_dir, spec_filename)
-            content = build_spec_content(frontmatter: frontmatter, title: title)
-            File.write(spec_file, content)
+            begin
+              # Build frontmatter with all fields
+              effective_status = status || @config.dig("task", "default_status") || "pending"
+              frontmatter = Atoms::TaskFrontmatterDefaults.build(
+                id: formatted_id,
+                status: effective_status,
+                priority: priority,
+                tags: tags,
+                dependencies: dependencies,
+                created_at: time,
+                estimate: estimate,
+                github_issue: github_issue
+              )
 
-            # Load and return the created task
-            loader = TaskLoader.new
-            loader.load(task_dir, id: formatted_id)
-          rescue StandardError
-            FileUtils.rm_rf(task_dir) if Dir.exist?(task_dir)
-            raise
+              # Write spec file with file_slug
+              spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
+              spec_file = File.join(task_dir, spec_filename)
+              content = build_spec_content(frontmatter: frontmatter, title: title)
+              File.write(spec_file, content)
+
+              # Load and return the created task
+              loader = TaskLoader.new
+              loader.load(task_dir, id: formatted_id)
+            rescue StandardError
+              FileUtils.rm_rf(task_dir) if Dir.exist?(task_dir)
+              raise
+            end
           end
         end
 
         private
 
         def task_id_exists?(formatted_id)
-          escaped = Regexp.escape(formatted_id)
-          Dir.glob(File.join(@root_dir, "**", "*")).any? do |path|
-            File.directory?(path) && File.basename(path).match?(/\A#{escaped}-/)
+          Dir.glob(File.join(@root_dir, "**", "#{formatted_id}-*")).any? do |path|
+            File.directory?(path)
           end
+        end
+
+        def with_id_reservation(formatted_id)
+          reservation_path = File.join(@root_dir, ".ace-task-id-lock-#{formatted_id}")
+          acquired = false
+          Dir.mkdir(reservation_path)
+          acquired = true
+          yield
+        rescue Errno::EEXIST
+          raise IdCollisionError, "Task ID collision detected for #{formatted_id}"
+        ensure
+          FileUtils.rm_rf(reservation_path) if acquired && reservation_path && Dir.exist?(reservation_path)
         end
 
         def generate_folder_slug(title)

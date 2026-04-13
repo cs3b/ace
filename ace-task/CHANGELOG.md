@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.35.1] - 2026-04-13
+
+### Fixed
+- Accepted subtask IDs in task frontmatter ID validation so doctor frontmatter checks no longer report false invalid-ID errors for valid subtasks.
+- Added atomic task-ID reservation during create so concurrent creates treat lock contention as retryable collisions instead of racing through non-atomic prechecks.
+
+### Technical
+- Narrowed task ID-existence scans to ID-prefixed glob matches and added regression coverage for subtask ID validation plus reservation-lock collision behavior.
+
 ## [0.35.0] - 2026-04-13
 
 ### Fixed

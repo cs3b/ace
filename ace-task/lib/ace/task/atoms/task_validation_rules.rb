@@ -19,7 +19,7 @@ module Ace
         end
 
         def self.valid_id?(id)
-          id.to_s.match?(/^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}$/)
+          id.to_s.match?(/\A[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}(?:\.[0-9a-z])?\z/)
         end
 
         def self.scope_consistent?(status, special_folder)
