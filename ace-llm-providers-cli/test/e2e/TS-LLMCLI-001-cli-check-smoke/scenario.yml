@@ -20,11 +20,11 @@ e2e-justification: >
   internals and formatting logic, but not end-to-end binary behavior.
 
 unit-coverage-reviewed:
-  - test/edge/cli_execution_edge_test.rb
-  - test/atoms/session_finders/codex_session_finder_test.rb
-  - test/atoms/session_finders/claude_session_finder_test.rb
-  - test/molecules/codex_client_test.rb
-  - test/molecules/claude_code_client_test.rb
+  - test/fast/edge/cli_execution_edge_test.rb
+  - test/fast/atoms/session_finders/codex_session_finder_test.rb
+  - test/fast/atoms/session_finders/claude_session_finder_test.rb
+  - test/fast/molecules/codex_client_test.rb
+  - test/fast/molecules/claude_code_client_test.rb
 
 requires:
   tools: [ruby]

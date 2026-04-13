@@ -31,6 +31,16 @@
 
 **Diagnose local provider readiness** - run `ace-llm-providers-cli-check` to verify that CLI tools are installed, authenticated, and reachable before starting work.
 
+## Testing
+
+- `ace-test ace-llm-providers-cli` runs deterministic fast coverage from `test/fast/`.
+- `ace-test ace-llm-providers-cli feat` runs deterministic feature coverage from `test/feat/`.
+- `ace-test ace-llm-providers-cli all` runs fast + feat deterministic coverage.
+- `ace-test-e2e ace-llm-providers-cli` runs retained workflow scenarios from `test/e2e/`.
+
+The package no longer uses legacy `test/integration` naming and does not use
+`ace-test ace-llm-providers-cli e2e` as a deterministic test path.
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

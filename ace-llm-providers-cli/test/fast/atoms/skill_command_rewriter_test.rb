@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require_relative "../../lib/ace/llm/providers/cli/atoms/skill_command_rewriter"
+require_relative "../../test_helper"
+require_relative "../../../lib/ace/llm/providers/cli/atoms/skill_command_rewriter"
 
 module Ace
   module LLM

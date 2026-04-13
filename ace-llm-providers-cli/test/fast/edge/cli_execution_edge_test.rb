@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 # Helper module for CLI execution edge tests
 module CLIExecutionTestHelpers
