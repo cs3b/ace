@@ -9,7 +9,7 @@ module Ace
     end
 
     def test_version_format
-      assert_match(/\A\d+\.\d+\.\d+/, ::Ace::LLM::VERSION)
+      assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::LLM::VERSION)
     end
 
     def test_module_exists
