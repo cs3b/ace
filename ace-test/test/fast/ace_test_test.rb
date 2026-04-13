@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative "../test_helper"
 
 module Ace
   module Test
@@ -11,7 +11,7 @@ module Ace
       end
 
       def test_handbook_directories_exist
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
 
         %w[agents guides workflow-instructions].each do |dir|
           path = File.join(gem_root, "handbook", dir)
@@ -20,7 +20,7 @@ module Ace
       end
 
       def test_key_guides_exist
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         guides_dir = File.join(gem_root, "handbook", "guides")
 
         %w[testing.g.md testing-philosophy.g.md mocking-patterns.g.md].each do |guide|
@@ -30,7 +30,7 @@ module Ace
       end
 
       def test_agents_have_valid_frontmatter
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         agents_dir = File.join(gem_root, "handbook", "agents")
 
         Dir.glob(File.join(agents_dir, "*.ag.md")).each do |agent_file|
@@ -41,7 +41,7 @@ module Ace
       end
 
       def test_protocol_config_files_exist
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         protocols_dir = File.join(gem_root, ".ace-defaults", "nav", "protocols")
 
         # Check that each protocol type has its config file
@@ -52,7 +52,7 @@ module Ace
       end
 
       def test_guide_protocol_paths_resolvable
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         protocols_dir = File.join(gem_root, ".ace-defaults", "nav", "protocols")
 
         # Read guide protocol config
@@ -77,7 +77,7 @@ module Ace
       end
 
       def test_agent_protocol_paths_resolvable
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         protocols_dir = File.join(gem_root, ".ace-defaults", "nav", "protocols")
 
         # Read agent protocol config
@@ -102,7 +102,7 @@ module Ace
       end
 
       def test_template_protocol_paths_resolvable
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         protocols_dir = File.join(gem_root, ".ace-defaults", "nav", "protocols")
 
         # Read template protocol config
@@ -127,7 +127,7 @@ module Ace
       end
 
       def test_wfi_protocol_paths_resolvable
-        gem_root = File.expand_path("..", __dir__)
+        gem_root = File.expand_path("../..", __dir__)
         protocols_dir = File.join(gem_root, ".ace-defaults", "nav", "protocols")
 
         # Read workflow protocol config
