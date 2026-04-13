@@ -3,6 +3,7 @@
 require_relative "../molecules/task_scanner"
 require_relative "../molecules/task_frontmatter_validator"
 require_relative "../molecules/task_structure_validator"
+require_relative "../molecules/task_doctor_fixer"
 require_relative "../atoms/task_validation_rules"
 
 module Ace
@@ -108,12 +109,19 @@ module Ace
           scanner = Molecules::TaskScanner.new(@root_path)
           return unless scanner.root_exists?
 
-          scan_results = scanner.scan
+          scan_results = frontmatter_scan_results(scanner)
           @stats[:tasks_scanned] = scan_results.size
+          id_locations = Hash.new { |hash, key| hash[key] = [] }
 
           scan_results.each do |scan_result|
             spec_file = scan_result.file_path
             next unless spec_file && File.exist?(spec_file)
+
+            content = File.read(spec_file)
+            frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            if frontmatter.is_a?(Hash) && frontmatter["id"] && !frontmatter["id"].to_s.strip.empty?
+              id_locations[frontmatter["id"]] << spec_file
+            end
 
             issues = Molecules::TaskFrontmatterValidator.validate(
               spec_file,
@@ -127,6 +135,8 @@ module Ace
               add_issue(issue[:type], issue[:message], issue[:location])
             end
           end
+
+          add_duplicate_id_issues(id_locations)
         end
 
         def run_scope_check
@@ -173,6 +183,26 @@ module Ace
             end
           end
           count
+        end
+
+        def frontmatter_scan_results(scanner)
+          top_level_results = scanner.scan
+          subtask_results = top_level_results.flat_map { |scan_result|
+            scanner.scan_subtasks(scan_result.dir_path, parent_id: scan_result.id)
+          }
+          top_level_results + subtask_results
+        end
+
+        def add_duplicate_id_issues(id_locations)
+          id_locations.each do |id, locations|
+            next unless locations.size > 1
+
+            add_issue(
+              :error,
+              "Duplicate task ID '#{id}' found in: #{locations.sort.join(', ')}",
+              locations.first
+            )
+          end
         end
 
         def add_issue(type, message, location = nil)
