@@ -115,6 +115,15 @@ Final directory:
 - Synthesis is optional; enable via preset or explicit `--synthesis-workflow`.
 - `--dry-run` does not perform provider calls.
 
+## Test Commands
+
+`ace-sim` uses the `fast` / `feat` / `e2e` testing model:
+
+- `ace-test ace-sim` - default deterministic fast suite
+- `ace-test ace-sim feat` - deterministic feature-contract suite (when present)
+- `ace-test ace-sim all` - aggregate deterministic suites
+- `ace-test-e2e ace-sim` - scenario workflow suite under `test/e2e`
+
 ## Troubleshooting
 
 - `Unknown preset`:

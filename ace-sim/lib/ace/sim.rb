@@ -106,12 +106,16 @@ module Ace
     end
 
     def next_run_id
-      Ace::B36ts.now
-    rescue
       timestamp = Time.now.utc.to_i.to_s(36)
-      entropy = rand(36**2).to_s(36).rjust(2, "0")
-      "#{timestamp}#{entropy}"
+      "#{Ace::B36ts.now}-#{timestamp}-#{random_run_suffix}"
+    rescue
+      "#{Time.now.utc.to_i.to_s(36)}-#{random_run_suffix}"
     end
+
+    def random_run_suffix
+      rand(36**5).to_s(36).rjust(5, "0")
+    end
+    private_class_method :random_run_suffix
 
     def config_resolver
       @config_resolver ||= Ace::Support::Config.create(gem_path: gem_root)

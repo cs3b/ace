@@ -18,7 +18,7 @@ sandbox-layout:
 
 e2e-justification: >
   This scenario validates end-to-end CLI execution and file-chained artifact
-  contracts for preset-driven simulation. Unit tests cover internals; this
+  contracts for preset-driven simulation. Fast deterministic tests cover internals; this
   verifies real binary behavior.
 
 requires:
@@ -27,6 +27,6 @@ requires:
 setup:
   - copy-fixtures
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - agent-env:
       PROJECT_ROOT_PATH: .

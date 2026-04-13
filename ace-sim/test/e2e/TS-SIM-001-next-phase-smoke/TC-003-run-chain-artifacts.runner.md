@@ -7,7 +7,10 @@ Verify explicit CLI custom values override preset defaults and run one-step fina
 1. Create source file `results/tc/03/source.md` with sample markdown content.
 2. Run:
    `ace-sim run --preset validate-idea --source results/tc/03/source.md --provider glite --steps draft --repeat 1 --synthesis-workflow wfi://idea/review --synthesis-provider claude:haiku`
-   Save stdout/stderr/exit to `results/tc/03/run.*`.
+   Save stdout/stderr/exit to:
+   - `results/tc/03/run.stdout`
+   - `results/tc/03/run.stderr`
+   - `results/tc/03/run.exit`
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/03/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/03/run-tree.txt`.
 5. If present, capture:
@@ -18,3 +21,4 @@ Verify explicit CLI custom values override preset defaults and run one-step fina
    - `final/output.sequence.md` -> `results/tc/03/output.sequence.md`
    - `final/suggestions.report.md` -> `results/tc/03/suggestions.report.md`
    - `final/source.revised.md` -> `results/tc/03/source.revised.md`
+6. If any final synthesis artifact in step 5 is missing, create a placeholder file at the target path with a short note that synthesis output was unavailable for this run.

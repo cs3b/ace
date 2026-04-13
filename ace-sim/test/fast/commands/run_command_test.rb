@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "fileutils"
 
 class RunCommandTest < AceSimTestCase
@@ -95,10 +95,10 @@ class RunCommandTest < AceSimTestCase
 
   def test_default_presets_define_provider_and_synthesis_defaults
     idea_preset = YAML.safe_load_file(
-      File.expand_path("../../.ace-defaults/sim/presets/validate-idea.yml", __dir__)
+      File.expand_path("../../../.ace-defaults/sim/presets/validate-idea.yml", __dir__)
     )
     task_preset = YAML.safe_load_file(
-      File.expand_path("../../.ace-defaults/sim/presets/validate-task.yml", __dir__)
+      File.expand_path("../../../.ace-defaults/sim/presets/validate-task.yml", __dir__)
     )
 
     assert_equal ["role:sim-primary"], idea_preset["provider"]

@@ -153,7 +153,7 @@ module Ace
             run_dir = session_store.prepare_run(session.run_id)
             [session.run_id, run_dir]
           rescue Molecules::SessionStore::RunDirectoryExistsError
-            raise Ace::Sim::ValidationError, "Could not allocate unique run id" if attempts >= 5
+            raise Ace::Sim::ValidationError, "Could not allocate unique run id" if attempts >= 20
 
             session.regenerate_run_id!
             retry

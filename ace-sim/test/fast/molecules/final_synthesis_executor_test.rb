@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "tmpdir"
 require "fileutils"
 
@@ -72,8 +72,8 @@ class FinalSynthesisExecutorTest < AceSimTestCase
       synthesis_workflow: "wfi://task/review",
       synthesis_provider: "glite",
       step_bundles: {
-        "draft" => File.expand_path("../../.ace-defaults/sim/steps/draft.md", __dir__),
-        "plan" => File.expand_path("../../.ace-defaults/sim/steps/plan.md", __dir__)
+        "draft" => File.expand_path("../../../.ace-defaults/sim/steps/draft.md", __dir__),
+        "plan" => File.expand_path("../../../.ace-defaults/sim/steps/plan.md", __dir__)
       }
     )
   end
