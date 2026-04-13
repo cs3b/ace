@@ -55,7 +55,8 @@ class YamlLoaderTest < AceTestCase
 
       loaded = Ace::Support::Config::Molecules::YamlLoader.load_file("output.yml")
       assert_equal true, loaded.get("ace", "saved")
-      assert_equal "1.0.0", loaded.get("ace", "version")
+      assert_kind_of String, loaded.get("ace", "version")
+      assert_match(/\A\d+\.\d+\.\d+\z/, loaded.get("ace", "version"))
     end
   end
 

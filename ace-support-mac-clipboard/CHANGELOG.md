@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-04-13
+
 ### Changed
 - **ace-support-mac-clipboard v0.3.3**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 

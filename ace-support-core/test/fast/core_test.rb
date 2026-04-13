@@ -8,7 +8,7 @@ class Ace::CoreTest < Minitest::Test
   end
 
   def test_version_format
-    assert_match(/\A\d+\.\d+\.\d+/, ::Ace::Core::VERSION)
+    assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::Core::VERSION)
   end
 
   def test_config_method_exists

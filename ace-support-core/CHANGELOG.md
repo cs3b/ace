@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.7] - 2026-04-13
+
 ### Changed
 - **ace-support-core v0.29.7**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 
 
+
+### Technical
+- Relaxed fast-test version assertions to validate semantic-version shape instead of pinned placeholder values in package/config fixtures.
 ## [0.29.6] - 2026-04-11
 
 ### Technical
