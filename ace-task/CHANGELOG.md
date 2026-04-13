@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.35.0] - 2026-04-13
+
+### Fixed
+- Added duplicate persisted task-ID detection to doctor health checks, including subtask collisions and frontmatter-only doctor validation failures.
+- Added bounded retry handling for standalone `ace-task create` ID collisions with clear retry-exhaustion failures and no partial-artifact leakage.
+
+### Technical
+- Added regression coverage for duplicate-ID doctor failures, create-time retry semantics, and cleanup guarantees.
+
 ## [0.34.3] - 2026-04-13
 
 ### Fixed
