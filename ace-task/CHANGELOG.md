@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.34.3] - 2026-04-13
+
+### Fixed
+- Added bounded retry handling for standalone `ace-task create` ID collisions so success is emitted only after a unique persisted task ID exists.
+- Added clear retry-exhaustion failure messaging for create-time ID collisions.
+
+### Technical
+- Added command and molecule regression coverage for task ID collision retries and partial-artifact cleanup guarantees.
+
 ## [0.34.2] - 2026-04-13
 
 ### Fixed
