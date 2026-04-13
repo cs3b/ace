@@ -65,5 +65,26 @@ Legacy `.tape` files use raw VHS syntax directly. See the [Usage Guide](docs/usa
 
 *Future: web interaction recording is planned alongside terminal capture.*
 
+## Testing Contract
+
+Run deterministic package coverage with:
+
+```bash
+ace-test ace-demo
+ace-test ace-demo all
+```
+
+Run deterministic feature coverage only when `test/feat/` exists:
+
+```bash
+ace-test ace-demo feat
+```
+
+Run retained workflow scenarios in E2E:
+
+```bash
+ace-test-e2e ace-demo
+```
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
