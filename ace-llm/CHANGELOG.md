@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.3] - 2026-04-13
+
 ### Fixed
 - Added `codex:mini` as a fallback model for the `commit` role after `glite`, so role-based commit-message generation tries a secondary model instead of failing when `glite` is unavailable.
 
+
+### Technical
+- Tightened the package version contract test to require a full semantic-version match instead of accepting partial matches.
 ## [0.33.2] - 2026-04-13
 
 ### Fixed
