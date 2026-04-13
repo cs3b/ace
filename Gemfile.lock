@@ -188,6 +188,7 @@ PATH
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
+      ace-support-models (~> 0.10)
       addressable (~> 2.8)
       faraday (~> 2.0)
       kramdown (~> 2.0)
