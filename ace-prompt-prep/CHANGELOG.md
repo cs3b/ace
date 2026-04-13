@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.24.2] - 2026-04-13
+
+### Technical
+- Replaced the package version assertion with a semantic-version schema check so the fast test validates version shape instead of a loose substring match.
 ## [0.24.1] - 2026-04-13
 
 ### Changed
