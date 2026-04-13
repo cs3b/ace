@@ -6,25 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-### Added
-- Added `as-retro-analyze-worktree` and `wfi://retro/analyze-worktree` to analyze completed assignments across one or many worktrees, classify post-completion drift, and generate ranked spec-improvement retros with `.ace-local` telemetry context.
+## [0.17.1] - 2026-04-13
 
 ### Changed
-- Strengthened `retro/synthesize` and `as-retro-synthesize` so synthesis now supports explicit refs or oldest-active selection, dedupes evidence by original source retro IDs across nested syntheses, validates major themes against current repo reality, ranks unresolved improvements, and emits recursive synthesis metadata for future synthesis passes.
-- Clarified `retro/analyze-worktree` output semantics so `WORKTREE_PATH` remains an analysis input, retro artifacts default to the current working branch, and wrapper steps are directed to use the canonical `wfi://retro/create` contract instead of inventing output destinations under analyzed worktrees.
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
 
-### Fixed
-- Updated `retro/synthesize` and `retro/selfimprove` workflow instructions to use the live `ace-retro update REF --move-to archive` archival command instead of the removed `move` subcommand, and added a CLI-validation guard for future workflow command examples.
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
 
-## [0.18.0] - 2026-04-12
+
+## [0.17.0] - 2026-04-12
 
 ### Changed
-- Strengthened `retro/synthesize` and `as-retro-synthesize` so synthesis now supports explicit refs or oldest-active selection, dedupes evidence by original source retro IDs across nested syntheses, validates major themes against current repo reality, ranks unresolved improvements, and emits recursive synthesis metadata for future synthesis passes.
-- Clarified `retro/analyze-worktree` output semantics so analyzed worktrees remain inputs, retro artifacts default to the current working branch, and wrappers should defer retro creation to `wfi://retro/create`.
+- Migrated package tests to the `fast` / `feat` / `e2e` model by moving deterministic suites into `test/fast` and keeping `test/e2e` focused on workflow-value scenarios.
+- Updated E2E migration decision metadata for `TS-RETRO-001` to track retained (`KEEP`) scenario coverage and deterministic coverage references in `test/fast`.
 
-### Fixed
-- Updated `retro/synthesize` and `retro/selfimprove` workflow instructions to use the live `ace-retro update REF --move-to archive` archival command instead of the removed `move` subcommand, and added a CLI-validation guard for future workflow command examples.
+### Technical
+- Added explicit restarted test-contract guidance to package docs (`README.md`, `docs/usage.md`) covering `ace-test`, `ace-test all`, optional `ace-test feat`, and `ace-test-e2e`.
 
 ## [0.16.6] - 2026-03-31
 

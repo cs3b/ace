@@ -15,6 +15,15 @@ Complete command reference for `ace-retro`.
 gem install ace-retro
 ```
 
+## Testing Model
+
+Use the restarted package test contract:
+
+- `ace-test ace-retro` for default deterministic fast coverage.
+- `ace-test ace-retro all` for full deterministic coverage.
+- `ace-test-e2e ace-retro` for workflow-value scenario coverage in `test/e2e/`.
+- `ace-test ace-retro feat` only when the package has explicit `test/feat/` contracts.
+
 ## Global Options
 
 All commands support:
