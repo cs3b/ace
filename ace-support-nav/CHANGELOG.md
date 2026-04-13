@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.3] - 2026-04-13
+
 ### Fixed
-- Deduplicated `cookbook://` listing output by canonical resource path so overlapping source registrations no longer emit duplicate entries for the same file.
+- Deduplicated `cookbook://` listing output by canonicalized resource path while preserving source priority when overlaps occur.
+- Canonicalized dedupe keys with `File.realpath` (with fallback to `File.expand_path`) so symlinked and real source roots collapse to one cookbook entry.
+- Added regression coverage for mixed source types and real-path vs symlink-path overlaps to lock dedupe behavior.
 
 ## [0.27.1] - 2026-04-13
 

@@ -383,7 +383,12 @@ module Ace
 
           def dedupe_resource_key(resource)
             protocol = resource[:protocol]
-            canonical_path = File.expand_path(resource[:path].to_s)
+            path = resource[:path].to_s
+            canonical_path = begin
+              File.realpath(path)
+            rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+              File.expand_path(path)
+            end
             [protocol, canonical_path]
           end
 
