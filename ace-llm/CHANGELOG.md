@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.4] - 2026-04-13
+
+### Fixed
+- Added the missing `ace-support-models` runtime dependency so `ace-llm --list-providers` no longer fails on fresh setups with `cannot load such file -- ace/support/models`.
+
+### Changed
+- Updated quick-start onboarding guidance to include `ace-llm` in the base install command used before provider verification.
+
 ## [0.33.3] - 2026-04-13
 
 ### Fixed
