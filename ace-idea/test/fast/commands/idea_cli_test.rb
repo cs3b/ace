@@ -108,6 +108,62 @@ class IdeaCliTest < AceIdeaTestCase
     end
   end
 
+  def test_create_retries_when_generated_id_collides
+    with_ideas_dir do |root|
+      existing_id = "8ppq7w"
+      existing_dir = File.join(root, "#{existing_id}-existing-idea")
+      FileUtils.mkdir_p(existing_dir)
+      File.write(
+        File.join(existing_dir, "#{existing_id}-existing-idea.idea.s.md"),
+        "---\nid: #{existing_id}\nstatus: pending\n---\n\n# Existing idea\n"
+      )
+
+      ids = [existing_id, "8ppq7x"]
+      idx = 0
+      generator = lambda do |_time = nil|
+        value = ids[[idx, ids.length - 1].min]
+        idx += 1
+        value
+      end
+
+      with_cli_root(root) do
+        result = nil
+        Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, generator) do
+          result = run_cli(["create", "Retry create idea"])
+        end
+
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/Idea created: 8ppq7x/, result[:stdout])
+        created_dirs = Dir.glob(File.join(root, "8ppq7x-*"))
+        assert_equal 1, created_dirs.length
+      end
+    end
+  end
+
+  def test_create_fails_clearly_when_collision_retries_exhausted
+    with_ideas_dir do |root|
+      existing_id = "8ppq7w"
+      existing_dir = File.join(root, "#{existing_id}-existing-idea")
+      FileUtils.mkdir_p(existing_dir)
+      File.write(
+        File.join(existing_dir, "#{existing_id}-existing-idea.idea.s.md"),
+        "---\nid: #{existing_id}\nstatus: pending\n---\n\n# Existing idea\n"
+      )
+
+      with_cli_root(root) do
+        result = nil
+        Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, existing_id) do
+          result = run_cli(["create", "Will fail after retries"])
+        end
+
+        assert_equal 1, result[:exit_code]
+        assert_match(/unable to generate a unique ID after 3 attempts/i, result[:stderr])
+        colliding_dirs = Dir.glob(File.join(root, "#{existing_id}-*"))
+        assert_equal 1, colliding_dirs.length, "Expected no extra artifacts for exhausted retries"
+      end
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # show command
   # ---------------------------------------------------------------------------

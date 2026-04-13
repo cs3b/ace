@@ -149,4 +149,42 @@ class IdeaCreatorTest < AceIdeaTestCase
       assert Dir.exist?(idea.path)
     end
   end
+
+  def test_raises_id_collision_when_generated_idea_id_already_exists
+    with_ideas_dir do |root|
+      existing_id = "8ppq7w"
+      existing_dir = File.join(root, "#{existing_id}-existing-idea")
+      FileUtils.mkdir_p(existing_dir)
+      File.write(
+        File.join(existing_dir, "#{existing_id}-existing-idea.idea.s.md"),
+        "---\nid: #{existing_id}\nstatus: pending\n---\n\n# Existing idea\n"
+      )
+
+      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
+      Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, existing_id) do
+        assert_raises(Ace::Idea::Molecules::IdeaCreator::IdCollisionError) do
+          creator.create("New idea with colliding id")
+        end
+      end
+    end
+  end
+
+  def test_cleans_up_partial_artifacts_when_create_fails_after_write
+    with_ideas_dir do |root|
+      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
+      failing_loader = Object.new
+      failing_loader.define_singleton_method(:load) do |_path, id:, special_folder:|
+        raise "simulated load failure for #{id} in #{special_folder}"
+      end
+
+      Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, "8ppq7x") do
+        Ace::Idea::Molecules::IdeaLoader.stub(:new, failing_loader) do
+          assert_raises(RuntimeError) { creator.create("Idea with failing load") }
+        end
+      end
+
+      created_paths = Dir.glob(File.join(root, "8ppq7x-*"))
+      assert_empty created_paths, "Expected partial idea artifacts to be cleaned up"
+    end
+  end
 end
