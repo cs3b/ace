@@ -129,6 +129,31 @@ Do **not** stop merely because you have useful progress to report.
 - A batch child subtree finishing is not a completion boundary for the parent assignment.
 - A paused assignment with remaining runnable work is not "done"; treat it as a recoverable scheduler state and resume the loop.
 
+### Final Response Gate
+
+Before sending any final user-facing completion response, re-run:
+
+```bash
+ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json
+```
+
+You may only stop and send a final response when one of these is true:
+
+- the pinned assignment has no remaining runnable `pending` or `in_progress` work
+- the workflow recorded an explicit blocker or unrecoverable failure stop condition
+- the user explicitly interrupted or canceled execution
+
+Do **not** send a final response merely because:
+
+- one child subtree completed
+- useful progress was made
+- a prior terminal session ended
+- the parent assignment auto-advanced to the next active step
+
+Concrete example:
+
+- `010.01 done` and `010.02.01 in_progress` means continue driving the assignment. It is not a completion boundary.
+
 ### Step Execution Policy
 
 - Planned steps are mandatory work items. Do not skip them by judgment.
@@ -226,6 +251,20 @@ fi
 ```
 
 This prevents fork agents from stalling on pre-existing unrelated changes. Assignment metadata files (`.ace-local/`, `.ace-tasks/`, `.ace-retros/`) are expected to be dirty during drive execution and are excluded.
+
+Dirty-tree classification rule:
+
+- Do not auto-commit every unrelated dirty path.
+- First classify the dirty state:
+  - **intentional work**: user edits, task implementation, or other meaningful repo changes that must be preserved
+  - **generated side effects**: bootstrap/config scaffolding, handbook projection output, caches, or other machine-generated files outside the current task scope
+- If the dirty paths are intentional work, preserve them and either continue with scope awareness or commit them deliberately.
+- If the dirty paths are generated side effects outside the current task scope, clean/reset them before `fork-run` instead of committing them.
+- Only stop for user input when classification remains ambiguous after inspection.
+
+Example:
+
+- A bulk untracked `.ace/...` tree created by `ace-config init` is generated side-effect output. Clean it; do not create a "pre-fork" commit for it.
 
 #### Delegation Rule
 
