@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require_relative "../../lib/ace/bundle"
-require_relative "../../lib/ace/bundle/atoms/section_validator"
-require_relative "../../lib/ace/bundle/molecules/section_processor"
-require_relative "../../lib/ace/bundle/molecules/preset_manager"
-require_relative "../../lib/ace/bundle/organisms/bundle_loader"
+require_relative "../../../lib/ace/bundle"
+require_relative "../../../lib/ace/bundle/atoms/section_validator"
+require_relative "../../../lib/ace/bundle/molecules/section_processor"
+require_relative "../../../lib/ace/bundle/molecules/preset_manager"
+require_relative "../../../lib/ace/bundle/organisms/bundle_loader"
 
 module Ace
   module Bundle

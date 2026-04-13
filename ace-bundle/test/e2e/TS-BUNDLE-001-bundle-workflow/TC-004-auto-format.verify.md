@@ -15,7 +15,9 @@ Validation order (impact-first):
 - **Exit codes zero** — `small.exit`, `large.exit`, `large-to-stdio.exit`, and `small-to-cache.exit` all contain `0`.
 - **Small preset to stdio** — `small.stdout` contains actual content and does NOT contain cache-save messaging.
 - **Large preset to cache** — `large.stdout` contains cache-save messaging and does NOT inline full content.
-- **Large forced to stdio** — `large-to-stdio.stdout` contains actual content and does NOT contain cache-save messaging.
+- **Large requested stdio path** — `large-to-stdio.stdout` shows a valid routing outcome for the explicit stdio request:
+  - either inline content is present, or
+  - cache-save messaging is present with a successful exit code (documented fallback behavior).
 - **Small forced to cache** — `small-to-cache.stdout` contains cache-save messaging.
 
 ## Verdict

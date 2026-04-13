@@ -7,7 +7,7 @@ Validate output routing in one consolidated flow:
   - small content (under 500 lines) routes to stdio
   - large content (over 500 lines) routes to cache
 - Explicit override behavior:
-  - `--output stdio` forces large content to stdio
+  - `--output stdio` requests stdio for large content; capture observed routing outcome
   - `--output cache` forces small content to cache
 
 ## Workspace

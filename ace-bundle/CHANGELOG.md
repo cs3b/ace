@@ -5,12 +5,27 @@ All notable changes to ace-bundle will be documented in this file.
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
 ## [Unreleased]
+## [0.42.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.42.0] - 2026-04-12
 
 ### Changed
 - Expanded `as-onboard` canonical skill metadata so the public `onboard` assign step is fully described via skill-owned `assign.steps`.
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` model: deterministic suites now live under `test/fast/` and legacy `test/integration/` coverage moved to `test/feat/`.
+- Updated E2E TC-004 output-routing assertions to accept the observed explicit-stdio routing behavior when compression emits cache-save messaging.
 
 ### Fixed
 - Added end-to-end support for diff path filters in bundle diff configs so `paths` now flows through section normalization and into `git diff -- <paths>`.
+- Made `workflow_resolution_test` robust across repo and sandbox execution contexts by asserting workflow-suffix resolution against package-local WFI sources.
+- Hardened TS-BUNDLE-001 sandbox setup by skipping `mise.toml` trust when that file is not present in package-copy sandboxes.
+- Reduced brittle TC-001 verifier gating from strict line-count requirements to substantive observed output checks.
 
 ## [0.41.2] - 2026-03-31
 

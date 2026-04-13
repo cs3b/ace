@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require_relative "../../lib/ace/bundle"
-require_relative "../../lib/ace/bundle/molecules/section_processor"
+require_relative "../../../lib/ace/bundle"
+require_relative "../../../lib/ace/bundle/molecules/section_processor"
 
 module Ace
   module Bundle
