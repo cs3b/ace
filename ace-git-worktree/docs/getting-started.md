@@ -106,6 +106,17 @@ Add hooks, auto-push, tmux launch, or PR automation only after the basic create/
 | Remove a task worktree | `ace-git-worktree remove --task 081` |
 | Preview stale cleanup | `ace-git-worktree prune --dry-run` |
 
+## Validate Package Tests
+
+After making changes, run the package test split explicitly:
+
+```bash
+ace-test ace-git-worktree
+ace-test ace-git-worktree feat
+ace-test ace-git-worktree all
+ace-test-e2e ace-git-worktree
+```
+
 ## Next Steps
 
 * Run `ace-git-worktree config --files` to see which config files are active

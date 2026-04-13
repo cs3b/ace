@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative "../test_helper"
 
 class CliOverrideTest < Minitest::Test
   def test_traditional_worktree_mise_trust_logic

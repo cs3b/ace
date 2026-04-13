@@ -36,5 +36,20 @@
 
 **Orchestrate parallel task work with ace-overseer** - pair with [ace-overseer](../ace-overseer) to spin up worktrees per task, drive agents in parallel, and prune finished worktrees automatically.
 
+## Testing Contract
+
+Run package tests with the restarted deterministic + scenario split:
+
+```bash
+ace-test ace-git-worktree
+ace-test ace-git-worktree feat
+ace-test ace-git-worktree all
+ace-test-e2e ace-git-worktree
+```
+
+- `ace-test ace-git-worktree` runs deterministic package tests (default `fast` group).
+- `ace-test ace-git-worktree feat` runs deterministic feature-level tests migrated from legacy integration-style coverage.
+- `ace-test-e2e ace-git-worktree` runs retained workflow scenarios only.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require_relative "../../lib/ace/git/worktree/models/worktree_metadata"
+require_relative "../../test_helper"
+require_relative "../../../lib/ace/git/worktree/models/worktree_metadata"
 
 module Ace
   module Git

@@ -23,14 +23,15 @@ e2e-justification: >
   the real filesystem and git state.
 
 unit-coverage-reviewed:
-  - test/commands/create_command_test.rb
-  - test/commands/list_command_test.rb
-  - test/commands/switch_command_test.rb
-  - test/commands/remove_command_test.rb
-  - test/molecules/current_task_linker_test.rb
-  - test/molecules/parent_task_resolver_test.rb
-  - test/molecules/task_fetcher_test.rb
-  - test/organisms/task_worktree_orchestrator_test.rb
+  - test/fast/commands/create_command_test.rb
+  - test/fast/commands/list_command_test.rb
+  - test/fast/commands/switch_command_test.rb
+  - test/fast/commands/remove_command_test.rb
+  - test/fast/molecules/current_task_linker_test.rb
+  - test/fast/molecules/parent_task_resolver_test.rb
+  - test/fast/molecules/task_fetcher_test.rb
+  - test/fast/organisms/task_worktree_orchestrator_test.rb
+  - test/feat/subtask_workflow_test.rb
 
 requires:
   tools: [git, ace-git-worktree]
@@ -38,6 +39,6 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet

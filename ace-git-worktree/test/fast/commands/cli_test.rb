@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/support/cli"
 require "open3"
 
 class CliTest < Minitest::Test
   def setup
     setup_temp_dir
-    @exe_path = File.expand_path("../../exe/ace-git-worktree", __dir__)
+    @exe_path = File.expand_path("../../../exe/ace-git-worktree", __dir__)
   end
 
   def teardown
