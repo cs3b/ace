@@ -74,16 +74,6 @@ module Ace
               "patterns" => ["test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
               "options" => {}
             },
-            "unit" => {
-              "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/unit/**/*_test.rb"],
-              "files" => [],
-              "options" => {}
-            },
-            "integration" => {
-              "patterns" => ["test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
-              "files" => [],
-              "options" => {}
-            },
             "all" => {
               "patterns" => ["test/fast/**/*_test.rb", "test/*_test.rb", "test/feat/**/*_test.rb", "test/edge/**/*_test.rb"],
               "options" => {}

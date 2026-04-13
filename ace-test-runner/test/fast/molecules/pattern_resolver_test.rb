@@ -18,9 +18,6 @@ class PatternResolverTest < Minitest::Test
       targets: {
         fast: %w[atoms molecules organisms models],
         feat: %w[feat_tests edge],
-        unit: %w[fast],
-        integration: %w[feat],
-        int: %w[feat],
         quick: %w[atoms molecules]
       }
     )
@@ -204,20 +201,6 @@ class PatternResolverTest < Minitest::Test
     end
   end
 
-  def test_normalizes_legacy_targets_to_new_targets
-    glob_returns = {
-      "test/feat/**/*_test.rb" => ["test/feat/cli_contract_test.rb"],
-      "test/edge/**/*_test.rb" => []
-    }
-
-    Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
-      File.stub :file?, true do
-        assert_equal ["test/feat/cli_contract_test.rb"], @resolver.resolve_target("integration")
-        assert_equal ["test/feat/cli_contract_test.rb"], @resolver.resolve_target("int")
-      end
-    end
-  end
-
   def test_resolve_target_feat_does_not_include_legacy_integration_files
     glob_returns = {
       "test/feat/**/*_test.rb" => ["test/feat/cli_contract_test.rb"],
@@ -248,5 +231,15 @@ class PatternResolverTest < Minitest::Test
     end
 
     assert_match(/Cyclic test target definition detected/, error.message)
+  end
+
+  def test_rejects_removed_legacy_target_names
+    %w[unit integration int].each do |target|
+      error = assert_raises(ArgumentError) do
+        @resolver.resolve_target(target)
+      end
+
+      assert_equal "Unknown target: #{target}. Available targets: atoms, edge, fast, feat, models, molecules, organisms, quick", error.message
+    end
   end
 end

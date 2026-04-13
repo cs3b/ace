@@ -12,7 +12,7 @@ module Ace
       # - Package names (ace-bundle)
       # - Test targets (atoms, molecules, fast, feat, etc.)
       class CliArgumentParser
-        KNOWN_TARGETS = %w[atoms molecules organisms models fast feat unit integration int all quick].freeze
+        KNOWN_TARGETS = %w[atoms molecules organisms models fast feat all quick].freeze
 
         attr_reader :package_dir, :target, :test_files
 
@@ -126,22 +126,11 @@ module Ace
             elsif package_relative_ruby_file?(arg)
               @test_files << arg
             elsif known_target?(arg)
-              @target = normalize_target(arg)
+              @target = arg
             elsif @target.nil? && !File.exist?(arg)
               # Unrecognized target - will be handled by PatternResolver
               @target = arg
             end
-          end
-        end
-
-        def normalize_target(arg)
-          case arg
-          when "unit"
-            "fast"
-          when "integration", "int"
-            "feat"
-          else
-            arg
           end
         end
 

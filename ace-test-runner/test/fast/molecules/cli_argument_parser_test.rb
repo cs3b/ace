@@ -157,11 +157,11 @@ class CliArgumentParserTest < Minitest::Test
     assert parser.known_target?("molecules")
     assert parser.known_target?("fast")
     assert parser.known_target?("feat")
-    assert parser.known_target?("unit")
-    assert parser.known_target?("integration")
-    assert parser.known_target?("int")
     assert parser.known_target?("all")
     refute parser.known_target?("foo")
+    refute parser.known_target?("unit")
+    refute parser.known_target?("integration")
+    refute parser.known_target?("int")
     refute parser.known_target?("e2e")
     refute parser.known_target?("all-with-e2e")
     refute parser.known_target?("ace-bundle")
@@ -219,16 +219,16 @@ class CliArgumentParserTest < Minitest::Test
     end
   end
 
-  def test_normalizes_legacy_targets_to_new_public_names
+  def test_treats_removed_legacy_targets_as_unknown
     Dir.chdir(File.join(@project_root, "ace-bundle")) do
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["unit"])
-      assert_equal "fast", parser.parse[:target]
+      assert_equal "unit", parser.parse[:target]
 
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["integration"])
-      assert_equal "feat", parser.parse[:target]
+      assert_equal "integration", parser.parse[:target]
 
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["int"])
-      assert_equal "feat", parser.parse[:target]
+      assert_equal "int", parser.parse[:target]
     end
   end
 
