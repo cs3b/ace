@@ -33,10 +33,12 @@ All notable changes to this project will be documented in this file.
 - **ace-support-models v0.10.2**: Fixed API cache parsing to normalize mixed provider/model payloads (including array-form models), restoring `ace-llm-providers list/show` model counts from cached responses.
 
 ### Changed
+- **ace-assign v0.48.0**: Removed the shipped `verify-e2e` assignment step from standard assignment flows and narrowed assignment verification to deterministic package checks plus `ace-test-suite --target all`.
 - **ace-sim v0.14.2**: Improved simulation run-id generation and collision recovery to regenerate IDs more reliably when temporary directories collide.
 - **ace-test-runner-e2e v0.35.0**: Added optional artifact tracking (`(optional)`) to scenario parsing so optional outputs are recorded in manifests and snapshots without failing runs when they are missing.
 - Coordinated patch release for the batch i05 migration line across ace-assign, ace-bundle, ace-compressor, ace-demo, ace-docs, ace-git, ace-git-commit, ace-git-secrets, ace-git-worktree, ace-handbook, ace-idea, ace-lint, ace-llm, ace-llm-providers-cli, ace-overseer, ace-prompt-prep, ace-retro, ace-review, ace-search, ace-sim, ace-support-models, ace-support-nav, ace-task, ace-test-runner, ace-test-runner-e2e, ace-tmux.
 
+- Assignment-runtime technical follow-through for `ace-assign v0.48.0`: added an `ace-assign`-local verify-suite workflow and preserved local step runtime bindings during canonical catalog metadata merges so assignment-specific verification contracts are not overwritten by shared skill defaults.
 - **ace-llm v0.33.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage into `test/fast` and `test/feat`, reduced `TS-LLM-001` to retained workflow-value scenarios, and updated package docs to teach the split test commands.
 - **ace-review v0.52.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage to `test/fast` and `test/feat`, rewrote `TS-REVIEW-001` to retained execution workflows, and updated package docs for split test commands.
 - **ace-test-runner-e2e v0.34.0**: Migrated deterministic package tests to `test/fast` and `test/feat`, updated CLI/docs/demo/scenario references for the restarted testing model, and kept `ace-test-e2e` focused on scenario-only workflow validation.
