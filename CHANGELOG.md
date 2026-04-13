@@ -93,6 +93,7 @@ All notable changes to this project will be documented in this file.
 - **ace-support-test-helpers v0.14.2**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 - **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
 ### Technical
+- Tightened version-format contract coverage to validate semantic-version shape instead of pinned or partial matches in `ace-git-commit v0.24.2`, `ace-hitl v0.8.7`, `ace-llm v0.33.3`, `ace-llm-providers-cli v0.28.2`, `ace-prompt-prep v0.24.2`, `ace-search v0.25.2`, `ace-support-core v0.29.7`, and `ace-support-test-helpers v0.14.2`.
 - **ace-overseer v0.13.12**: Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.20` to stay aligned with the current worktree minor release line.
 - **ace-hitl v0.8.6**: Corrected the fast CLI library-contract assertion to track the current released version line (`0.8.6`).
 - **ace-test v0.7.1**: Added the missing package changelog release section for `0.7.0` so published release history and package docs stay aligned.

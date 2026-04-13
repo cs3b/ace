@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-gemini will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-04-13
+
 ### Changed
 - **ace-handbook-integration-gemini v0.3.6**: Published handbook and HITL migration release changes for Gemini handbook integration.
 

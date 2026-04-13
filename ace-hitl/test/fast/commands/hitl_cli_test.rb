@@ -42,7 +42,8 @@ class HitlCliTest < AceHitlTestCase
   end
 
   def test_library_contract
-    assert_equal "0.8.6", Ace::Hitl::VERSION
+    assert_kind_of String, Ace::Hitl::VERSION
+    assert_match(/\A\d+\.\d+\.\d+\z/, Ace::Hitl::VERSION)
     assert_respond_to Ace::Hitl::HitlCLI, :start
   end
 

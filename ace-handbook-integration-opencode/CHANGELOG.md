@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-opencode will be documented in t
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-04-13
+
 ### Changed
 - **ace-handbook-integration-opencode v0.3.6**: Published handbook and HITL migration release changes for OpenCode handbook integration.
 
