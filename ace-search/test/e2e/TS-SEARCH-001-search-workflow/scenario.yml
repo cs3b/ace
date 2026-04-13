@@ -20,9 +20,9 @@ e2e-justification: >
   behavior.
 
 unit-coverage-reviewed:
-  - test/integration/cli_integration_test.rb
-  - test/molecules/search_option_builder_test.rb
-  - test/organisms/result_formatter_test.rb
+  - test/feat/cli_integration_test.rb
+  - test/fast/molecules/search_option_builder_test.rb
+  - test/fast/organisms/result_formatter_test.rb
 
 requires:
   tools: [ace-search, rg]

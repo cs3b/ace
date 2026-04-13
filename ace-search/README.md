@@ -18,7 +18,7 @@
 
 ![ace-search demo](docs/demo/ace-search-getting-started.gif)
 
-`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM — Do What I Mean), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
+`ace-search` gives developers and coding agents a single search entry point that chooses file or content mode automatically (DWIM -- Do What I Mean), keeps search scope predictable from any directory, and exposes fast output modes for workflow automation. Use `/as-search-run` for quick searches, `/as-search-research` for multi-search analysis, or `/as-search-feature-research` for implementation gap analysis.
 
 ## How It Works
 
@@ -37,6 +37,15 @@
 **Standardize repeat searches across teams** - apply named presets with `--preset` via [ace-support-config](../ace-support-config) for consistent daily scans and focused research queries.
 
 **Run multi-search research from an agent** - use `/as-search-research` to execute multiple related searches and synthesize findings, or `/as-search-feature-research` to analyze implementation gaps.
+
+## Testing Model
+
+`ace-search` uses the restarted testing contract:
+
+- `ace-test ace-search` for default deterministic fast tests
+- `ace-test ace-search feat` for deterministic feature contracts
+- `ace-test ace-search all` for combined deterministic lanes
+- `ace-test-e2e ace-search` for retained workflow-value scenarios only
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
