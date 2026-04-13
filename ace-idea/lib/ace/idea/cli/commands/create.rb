@@ -71,14 +71,18 @@ module Ace
             end
 
             manager = Ace::Idea::Organisms::IdeaManager.new
-            idea = manager.create(
-              content,
-              title: title,
-              tags: tags,
-              move_to: move_to,
-              clipboard: clipboard || false,
-              llm_enhance: llm_enhance || false
-            )
+            idea = begin
+              manager.create(
+                content,
+                title: title,
+                tags: tags,
+                move_to: move_to,
+                clipboard: clipboard || false,
+                llm_enhance: llm_enhance || false
+              )
+            rescue Ace::Idea::Organisms::IdeaManager::CreateRetriesExhaustedError => e
+              raise Ace::Support::Cli::Error, e.message
+            end
 
             folder_info = idea.special_folder ? " (#{idea.special_folder})" : ""
             puts "Idea created: #{idea.id} #{idea.title}#{folder_info}"

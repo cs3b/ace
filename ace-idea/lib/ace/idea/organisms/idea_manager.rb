@@ -15,6 +15,9 @@ module Ace
       # Orchestrates all idea CRUD operations.
       # Entry point for idea management with config-driven root directory.
       class IdeaManager
+        CREATE_RETRY_LIMIT = 3
+        class CreateRetriesExhaustedError < StandardError; end
+
         attr_reader :last_list_total, :last_folder_counts
 
         # @param root_dir [String, nil] Override root directory for ideas
@@ -36,8 +39,17 @@ module Ace
           clipboard: false, llm_enhance: false)
           ensure_root_dir
           creator = Molecules::IdeaCreator.new(root_dir: @root_dir, config: @config)
-          creator.create(content, title: title, tags: tags, move_to: move_to,
-            clipboard: clipboard, llm_enhance: llm_enhance)
+          attempts = 0
+
+          begin
+            attempts += 1
+            creator.create(content, title: title, tags: tags, move_to: move_to,
+              clipboard: clipboard, llm_enhance: llm_enhance, time: Time.now.utc + ((attempts - 1) * 2))
+          rescue Molecules::IdeaCreator::IdCollisionError
+            retry if attempts < CREATE_RETRY_LIMIT
+            raise CreateRetriesExhaustedError,
+              "Failed to create idea: unable to generate a unique ID after #{CREATE_RETRY_LIMIT} attempts"
+          end
         end
 
         # Create an idea from clipboard
