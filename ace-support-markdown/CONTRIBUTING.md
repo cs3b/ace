@@ -38,7 +38,7 @@ When adding new functionality:
 2. **Write tests first**: Add test cases before implementation
 3. **Implement the feature**: Follow existing patterns and conventions
 4. **Update documentation**: Add examples to README.md
-5. **Add README tests**: Create tests in `test/integration/readme_examples_test.rb`
+5. **Add README tests**: Create tests in `test/feat/readme_examples_test.rb`
 6. **Run full test suite**: `bundle exec rake test`
 7. **Update CHANGELOG.md**: Document the new feature
 
@@ -61,7 +61,7 @@ When modifying the public API:
 1. **Update implementation** in `lib/`
 2. **Update corresponding tests** in `test/`
 3. **Update README examples** - this is critical!
-4. **Update README example tests** in `test/integration/readme_examples_test.rb`
+4. **Update README example tests** in `test/feat/readme_examples_test.rb`
 5. **Run test suite** - README tests will catch doc/code mismatches
 6. **Update CHANGELOG.md**
 7. **Consider semver implications**:
@@ -75,7 +75,7 @@ When modifying the public API:
 
 **Our Solution**: Automated validation of README examples.
 
-The test file `test/integration/readme_examples_test.rb` validates that:
+The test file `test/feat/readme_examples_test.rb` validates that:
 - Code examples in README.md are syntactically correct
 - Examples work against the current API
 - API behavior matches what's documented
@@ -98,10 +98,10 @@ The test file `test/integration/readme_examples_test.rb` validates that:
 ```
 test/
 ├── atoms/           # Unit tests for pure functions
-├── molecules/       # Integration tests for operations
+├── molecules/       # Operation-focused tests
 ├── organisms/       # End-to-end tests for orchestration
 ├── models/          # Tests for data structures
-└── integration/     # Full workflow tests + README validation
+└── feat/            # Full workflow tests + README validation
 ```
 
 ### Writing Tests
