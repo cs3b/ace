@@ -59,6 +59,26 @@ describe "ClaudeCodeClient" do
       refute_nil tools_idx
       assert_equal "Bash,Read", cmd[tools_idx + 1]
     end
+
+    it "filters forwarded max tokens cli args when the installed claude CLI does not support the flag" do
+      @client.stub(:supports_max_tokens_flag?, false) do
+        cmd = @client.send(:build_claude_command, cli_args: "--max-tokens 123 --tools Bash")
+
+        refute_includes cmd, "--max-tokens"
+        assert_includes cmd, "--tools"
+        assert_includes cmd, "Bash"
+      end
+    end
+
+    it "preserves forwarded max tokens cli args when the installed claude CLI supports the flag" do
+      @client.stub(:supports_max_tokens_flag?, true) do
+        cmd = @client.send(:build_claude_command, cli_args: "--max-tokens 123")
+        max_tokens_idx = cmd.rindex("--max-tokens")
+
+        refute_nil max_tokens_idx
+        assert_equal "123", cmd[max_tokens_idx + 1]
+      end
+    end
   end
 
   describe "supports_max_tokens_flag?" do

@@ -153,7 +153,7 @@ module Ace
             end
 
             # User CLI args last so they take precedence (last-wins in most CLIs)
-            cmd.concat(normalized_cli_args(options))
+            cmd.concat(filter_unsupported_cli_args(normalized_cli_args(options)))
 
             cmd
           end
@@ -190,6 +190,31 @@ module Ace
             rescue
               false
             end
+          end
+
+          def filter_unsupported_cli_args(cli_args)
+            return cli_args if supports_max_tokens_flag?
+
+            filtered = []
+            skip_next = false
+
+            cli_args.each do |arg|
+              if skip_next
+                skip_next = false
+                next
+              end
+
+              if arg == "--max-tokens"
+                skip_next = true
+                next
+              end
+
+              next if arg.start_with?("--max-tokens=")
+
+              filtered << arg
+            end
+
+            filtered
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)
