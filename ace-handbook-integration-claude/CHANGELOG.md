@@ -4,6 +4,15 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+### Changed
+- **ace-handbook-integration-claude v0.3.7**: Published handbook and HITL migration release changes for Claude handbook integration.
+
+
+## [0.3.6] - 2026-04-11
+
+### Technical
+- Migrated deterministic package tests to `test/fast/` and documented the fast-only test contract in the package README.
+
 ## [0.3.5] - 2026-03-29
 
 ### Technical

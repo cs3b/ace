@@ -4,6 +4,15 @@ All notable changes to ace-handbook-integration-codex will be documented in this
 
 ## [Unreleased]
 
+### Changed
+- **ace-handbook-integration-codex v0.3.6**: Published handbook and HITL migration release changes for Codex handbook integration.
+
+
+## [0.3.5] - 2026-04-11
+
+### Technical
+- Migrated deterministic test coverage to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+
 ## [0.3.4] - 2026-03-29
 
 ### Technical

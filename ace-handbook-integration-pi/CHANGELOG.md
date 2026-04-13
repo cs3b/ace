@@ -4,6 +4,15 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+### Changed
+- **ace-handbook-integration-pi v0.3.7**: Published handbook and HITL migration release changes for PI handbook integration.
+
+
+## [0.3.6] - 2026-04-11
+
+### Technical
+- Migrated deterministic coverage to `test/fast/` and documented `ace-handbook-integration-pi` as a fast-only package (no `test/feat/` or `test/e2e/` layer).
+
 ## [0.3.5] - 2026-03-29
 
 ### Technical

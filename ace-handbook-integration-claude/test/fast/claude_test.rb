@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative "../test_helper"
 
 class Ace::Handbook::Integration::ClaudeTest < Minitest::Test
   def test_loads_with_ace_handbook_runtime

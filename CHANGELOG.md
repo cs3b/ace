@@ -75,9 +75,46 @@ All notable changes to this project will be documented in this file.
 - **ace-support-test-helpers v0.14.0**: Added a reusable sandbox package-copy helper for deterministic and agent-driven restarted E2E flows.
 - **ace-test-runner v0.21.0**: Changed bare `ace-test` runs to the `unit` group, added the `int` alias for `integration`, and removed legacy `system` / `e2e` / `all-with-e2e` targets in favor of `ace-test-e2e`.
 
+- **ace-git v0.20.3**: Release workflow now normalizes target branch context and supports automatic PR/task source detection.
+- **ace-git-commit v0.23.8**: Release workflow now loads git context for commit guidance and JSON status data from bundled workflow sections.
+- **ace-handbook-integration-claude v0.3.7**: Published handbook and HITL migration release changes for Claude handbook integration.
+- **ace-handbook-integration-codex v0.3.6**: Published handbook and HITL migration release changes for Codex handbook integration.
+- **ace-handbook-integration-gemini v0.3.6**: Published handbook and HITL migration release changes for Gemini handbook integration.
+- **ace-handbook-integration-opencode v0.3.6**: Published handbook and HITL migration release changes for OpenCode handbook integration.
+- **ace-handbook-integration-pi v0.3.7**: Published handbook and HITL migration release changes for PI handbook integration.
+- **ace-hitl v0.8.7**: Published handbook and HITL migration release changes for HitL package.
+- **ace-support-cli v0.6.5**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-config v0.10.4**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-core v0.29.7**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-fs v0.3.3**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-items v0.15.10**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-mac-clipboard v0.3.3**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-markdown v0.3.4**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-support-test-helpers v0.14.2**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+- **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
 ### Technical
 - **ace-overseer v0.13.12**: Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.20` to stay aligned with the current worktree minor release line.
+- **ace-hitl v0.8.6**: Corrected the fast CLI library-contract assertion to track the current released version line (`0.8.6`).
+- **ace-test v0.7.1**: Added the missing package changelog release section for `0.7.0` so published release history and package docs stay aligned.
+- **ace-hitl v0.8.5**: Updated the CLI contract version assertion after fit-cycle review fixes so the fast command test tracks the current release line.
+- **ace-support-items v0.15.9**: Fixed the spawned field-updater lock test load path so child Ruby processes resolve the package `lib/` directory from `test/fast/molecules`.
+- **ace-hitl v0.8.4**: Updated the CLI version contract test to assert the current released `Ace::Hitl::VERSION` after the review-cycle patch follow-up.
+- **ace-support-core v0.29.6**: Migrated deterministic tests to `test/fast/` + `test/feat/`, removed legacy `test/integration/`, and updated package docs to publish the `fast` / `feat` / `all` contract.
+- **ace-support-config v0.10.3**: Migrated deterministic tests to `test/fast/` + `test/feat/` layout and updated package docs to publish the `fast` / `feat` / `all` contract.
+- **ace-handbook-integration-claude v0.3.6**: Migrated deterministic tests to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+- **ace-handbook-integration-codex v0.3.5**: Migrated deterministic tests to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+- **ace-handbook-integration-gemini v0.3.5**: Migrated deterministic tests to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+- **ace-handbook-integration-opencode v0.3.5**: Migrated deterministic tests to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+- **ace-handbook-integration-pi v0.3.6**: Migrated deterministic tests to `test/fast/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
+- **ace-support-cli v0.6.4**: Migrated deterministic ATOM tests to `test/fast/` and documented the package as fast-only with `ace-test ace-support-cli` / `ace-test ace-support-cli all` verification commands.
+- **ace-support-fs v0.3.2**: Migrated deterministic ATOM/molecule tests to `test/fast/` and documented the package as fast-only with `ace-test ace-support-fs` / `ace-test ace-support-fs all` verification commands.
+- **ace-support-items v0.15.8**: Migrated deterministic ATOM/model/molecule tests to `test/fast/` and documented the package as fast-only with `ace-test ace-support-items` / `ace-test ace-support-items all` verification commands.
+- **ace-support-mac-clipboard v0.3.2**: Migrated deterministic package tests to `test/fast/` and documented the package as fast-only with `ace-test ace-support-mac-clipboard` / `ace-test ace-support-mac-clipboard all` verification commands.
+- **ace-support-test-helpers v0.14.1**: Migrated deterministic atom/molecule/fixture tests to `test/fast/` and documented the package as fast-only with `ace-test ace-support-test-helpers` / `ace-test ace-support-test-helpers all` verification commands.
+- **ace-support-markdown v0.3.3**: Migrated deterministic smoke/atom/integration tests to `test/fast/` + `test/feat/` and documented the `ace-test ace-support-markdown`, `ace-test ace-support-markdown feat`, and `ace-test ace-support-markdown all` contract.
+- **ace-hitl v0.8.2**: Migrated deterministic CLI tests to `test/fast/commands/` and documented the package as fast-only (no `test/feat/` or `test/e2e/` layer).
 - **ace-test v0.6.6**: Updated packaged testing agents to use `target` consistently for package-level scopes and refreshed fast/feat examples.
+- **ace-test v0.7.0**: Migrated deterministic package tests to `test/fast/` and documented the package as fast-only with `ace-test ace-test` / `ace-test ace-test all` verification commands.
 - **ace-b36ts v0.14.4**: Renamed the package-local test-runner config surface from `groups:` to `targets:` to match the shared target contract.
 - **ace-test v0.6.5**: Synced canonical `verify-test-suite` skill metadata to the explicit package-`all` plus suite-fast assignment verification contract.
 - **ace-test-runner-e2e v0.32.1**: Synced canonical `verify-e2e` skill metadata to the package-targeted `ace-test-e2e <package>` assignment verification contract.
@@ -138,6 +175,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 ### Technical
+- **ace-hitl v0.8.3**: Updated the CLI version contract test to match the current released version after the batch migration patch fix.
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
 - **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.

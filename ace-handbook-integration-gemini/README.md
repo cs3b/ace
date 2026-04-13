@@ -25,6 +25,18 @@
 
 **Ship lean provider packs** - support only the provider shims and manifests needed for Gemini compatibility, keeping integration scope minimal.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-handbook-integration-gemini`
+- `ace-test ace-handbook-integration-gemini all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

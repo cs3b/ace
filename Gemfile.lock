@@ -106,31 +106,31 @@ PATH
 PATH
   remote: ace-handbook-integration-claude
   specs:
-    ace-handbook-integration-claude (0.3.5)
+    ace-handbook-integration-claude (0.3.7)
       ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-codex
   specs:
-    ace-handbook-integration-codex (0.3.4)
+    ace-handbook-integration-codex (0.3.6)
       ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-gemini
   specs:
-    ace-handbook-integration-gemini (0.3.4)
+    ace-handbook-integration-gemini (0.3.6)
       ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-opencode
   specs:
-    ace-handbook-integration-opencode (0.3.4)
+    ace-handbook-integration-opencode (0.3.6)
       ace-handbook (~> 0.22)
 
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.3.5)
+    ace-handbook-integration-pi (0.3.7)
       ace-handbook (~> 0.22)
 
 PATH
@@ -145,7 +145,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.8.1)
+    ace-hitl (0.8.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -266,18 +266,18 @@ PATH
 PATH
   remote: ace-support-cli
   specs:
-    ace-support-cli (0.6.4)
+    ace-support-cli (0.6.5)
 
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.10.2)
+    ace-support-config (0.10.4)
       ace-support-fs (~> 0.3)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.29.5)
+    ace-support-core (0.29.7)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-fs (~> 0.3)
@@ -285,25 +285,25 @@ PATH
 PATH
   remote: ace-support-fs
   specs:
-    ace-support-fs (0.3.1)
+    ace-support-fs (0.3.3)
 
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.7)
+    ace-support-items (0.15.10)
       ace-b36ts (~> 0.13)
       ace-support-core (~> 0.29)
 
 PATH
   remote: ace-support-mac-clipboard
   specs:
-    ace-support-mac-clipboard (0.3.1)
+    ace-support-mac-clipboard (0.3.3)
       ffi (~> 1.15)
 
 PATH
   remote: ace-support-markdown
   specs:
-    ace-support-markdown (0.3.2)
+    ace-support-markdown (0.3.4)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
 
@@ -328,7 +328,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.14.0)
+    ace-support-test-helpers (0.14.2)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
@@ -371,7 +371,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.6.6)
+    ace-test (0.7.2)
 
 PATH
   remote: ace-tmux

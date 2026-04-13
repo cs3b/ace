@@ -4,6 +4,15 @@ All notable changes to ace-handbook-integration-gemini will be documented in thi
 
 ## [Unreleased]
 
+### Changed
+- **ace-handbook-integration-gemini v0.3.6**: Published handbook and HITL migration release changes for Gemini handbook integration.
+
+
+## [0.3.5] - 2026-04-11
+
+### Technical
+- Migrated deterministic coverage to `test/fast/` and documented the package as fast-only with explicit `ace-test` verification commands.
+
 ## [0.3.4] - 2026-03-29
 
 ### Technical
