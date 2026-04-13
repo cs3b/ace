@@ -38,5 +38,14 @@
 
 **Process and act on lint reports** - use `/as-lint-process-report` to analyze lint output and coordinate fixes, pairing with [ace-docs](../ace-docs) for documentation maintenance workflows that complement lint validation.
 
+## Testing Model
+
+`ace-lint` follows the restarted testing contract:
+
+- `ace-test ace-lint` runs deterministic fast tests (`test/fast`).
+- `ace-test ace-lint feat` is reserved for explicit deterministic feature tests (`test/feat`) when present.
+- `ace-test ace-lint all` runs all deterministic package tests.
+- `ace-test-e2e ace-lint` runs retained workflow-value scenarios from `test/e2e`.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

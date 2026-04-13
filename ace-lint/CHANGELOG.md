@@ -5,8 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
 ## [Unreleased]
+## [0.29.1] - 2026-04-13
 
 ### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+### Changed
+- Migrated `ace-lint` package tests to the restarted `fast` / `feat` / `e2e` contract by moving deterministic coverage into `test/fast`, refreshing TS-LINT-001 scenario metadata/setup for sandbox portability, and updating package docs to teach the new test command surface.
 - Allowed canonical `capability` skills without `skill.execution.workflow` while requiring workflow bindings for `workflow` and `orchestration` skills.
 - Updated skill validator/schema coverage to enforce the kind-specific workflow-binding matrix and preserve `assign:` restrictions for capability skills.
 

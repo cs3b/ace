@@ -144,3 +144,12 @@ Summary: Configuration looks healthy
 ```bash
 ace-lint --help
 ```
+
+## Test Commands
+
+Use ACE test runners by layer:
+
+- `ace-test ace-lint` for deterministic fast coverage (`test/fast`).
+- `ace-test ace-lint feat` for deterministic feature coverage (`test/feat`) when that layer exists.
+- `ace-test ace-lint all` for full deterministic package coverage.
+- `ace-test-e2e ace-lint` for workflow-value E2E scenarios (`test/e2e`).

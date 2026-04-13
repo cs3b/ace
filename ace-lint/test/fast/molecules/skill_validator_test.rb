@@ -5,7 +5,7 @@ require "test_helper"
 class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def setup
     Ace::Lint::Atoms::SkillSchemaLoader.reset_cache!
-    @fixtures_dir = File.expand_path("../fixtures", __dir__)
+    @fixtures_dir = File.expand_path("../../fixtures", __dir__)
   end
 
   # Skill validation tests
