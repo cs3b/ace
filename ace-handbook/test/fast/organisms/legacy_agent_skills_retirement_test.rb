@@ -20,6 +20,6 @@ class Ace::Handbook::Organisms::LegacyAgentSkillsRetirementTest < Minitest::Test
   end
 
   def repo_root
-    File.expand_path("../../..", __dir__)
+    File.expand_path("../../../..", __dir__)
   end
 end

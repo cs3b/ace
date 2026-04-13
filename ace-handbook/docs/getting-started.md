@@ -124,6 +124,10 @@ ace-bundle wfi://handbook/review-guides
 
 | Command | Purpose |
 | --- | --- |
+| `ace-test ace-handbook` | Run deterministic fast tests (`test/fast`) |
+| `ace-test ace-handbook feat` | Run deterministic feature tests (`test/feat`) when present |
+| `ace-test ace-handbook all` | Run all deterministic package tests |
+| `ace-test-e2e ace-handbook` | Run retained E2E workflow scenarios |
 | `ace-nav list 'wfi://handbook/*'` | Discover handbook workflows |
 | `ace-nav resolve wfi://handbook/manage-guides` | Resolve workflow path |
 | `ace-bundle wfi://handbook/manage-guides` | Create/update guides |
