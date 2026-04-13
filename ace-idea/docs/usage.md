@@ -3,8 +3,8 @@ doc-type: user
 title: ace-idea CLI Usage Reference
 purpose: Command reference for ace-idea
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: '2026-04-13'
+  last-checked: '2026-04-13'
 ---
 
 # ace-idea CLI Usage Reference
@@ -91,6 +91,11 @@ ace-idea status --up-next-limit 5
 ### `ace-idea create [CONTENT]`
 
 Create a new idea from direct text or clipboard input.
+
+If the generated idea ID collides with an existing persisted idea, `ace-idea create`
+automatically retries with a new ID. If retries are exhausted, the command fails
+without leaving behind a partial idea artifact. A same-ID create under a different
+folder slug is treated as a collision, not a successful create.
 
 **Syntax:**
 
@@ -209,6 +214,9 @@ ace-idea update q7w --move-to archive
 ### `ace-idea doctor`
 
 Run health checks across the idea store.
+
+Duplicate persisted idea IDs are reported as errors. `ace-idea doctor --check frontmatter`
+also fails when duplicate IDs are present in idea frontmatter.
 
 **Syntax:**
 
