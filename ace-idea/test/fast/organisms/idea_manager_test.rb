@@ -165,4 +165,44 @@ class IdeaManagerTest < AceIdeaTestCase
       assert_kind_of Array, result
     end
   end
+
+  def test_create_retries_reuse_prepared_payload_without_reprocessing_input
+    with_ideas_dir do |root|
+      manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
+      creator = Object.new
+      prepared_calls = 0
+      prepared_args = nil
+      create_calls = []
+      payload = {enhanced_body: "captured-body", attachments_to_save: []}
+      created_idea = Struct.new(:id).new("8ppq7z")
+
+      creator.define_singleton_method(:prepare_create_payload) do |content, clipboard:, llm_enhance:|
+        prepared_calls += 1
+        prepared_args = {content: content, clipboard: clipboard, llm_enhance: llm_enhance}
+        payload
+      end
+
+      creator.define_singleton_method(:create) do |content, **kwargs|
+        create_calls << {content: content, kwargs: kwargs}
+        raise Ace::Idea::Molecules::IdeaCreator::IdCollisionError if create_calls.length == 1
+
+        created_idea
+      end
+
+      Ace::Idea::Molecules::IdeaCreator.stub(:new, creator) do
+        result = manager.create("Initial content", clipboard: true, llm_enhance: true)
+        assert_equal created_idea, result
+      end
+
+      assert_equal 1, prepared_calls
+      assert_equal({content: "Initial content", clipboard: true, llm_enhance: true}, prepared_args)
+      assert_equal 2, create_calls.length
+      create_calls.each do |call|
+        assert_nil call[:content]
+        assert_equal false, call[:kwargs][:clipboard]
+        assert_equal false, call[:kwargs][:llm_enhance]
+        assert_equal payload, call[:kwargs][:prepared_payload]
+      end
+    end
+  end
 end

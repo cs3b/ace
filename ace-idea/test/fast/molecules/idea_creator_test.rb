@@ -169,6 +169,25 @@ class IdeaCreatorTest < AceIdeaTestCase
     end
   end
 
+  def test_raises_id_collision_when_id_reservation_is_already_held
+    with_ideas_dir do |root|
+      colliding_id = "8ppq7z"
+      reservation = File.join(root, ".ace-idea-id-lock-#{colliding_id}")
+      Dir.mkdir(reservation)
+      creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
+
+      Ace::Idea::Atoms::IdeaIdFormatter.stub(:generate, colliding_id) do
+        assert_raises(Ace::Idea::Molecules::IdeaCreator::IdCollisionError) do
+          creator.create("New idea while lock is held")
+        end
+      end
+
+      assert Dir.exist?(reservation), "Expected existing reservation lock to remain untouched"
+    ensure
+      FileUtils.rm_rf(reservation) if reservation && Dir.exist?(reservation)
+    end
+  end
+
   def test_cleans_up_partial_artifacts_when_create_fails_after_write
     with_ideas_dir do |root|
       creator = Ace::Idea::Molecules::IdeaCreator.new(root_dir: root)
