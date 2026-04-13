@@ -9,9 +9,6 @@ patterns:
 targets:
   fast: [atoms, molecules, organisms, models]
   feat: [feat_tests]
-  unit: [fast]
-  integration: [feat]
-  int: [feat]
   all: [fast, feat]
   quick: [atoms, molecules]
   core: [atoms, molecules, models]

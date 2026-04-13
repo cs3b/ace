@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require_relative "../../lib/ace/test_runner/atoms/report_path_resolver"
+require_relative "../../test_helper"
+require_relative "../../../lib/ace/test_runner/atoms/report_path_resolver"
 require "tmpdir"
 
 module Ace

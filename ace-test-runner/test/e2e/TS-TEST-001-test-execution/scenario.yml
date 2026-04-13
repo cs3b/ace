@@ -17,9 +17,9 @@ e2e-justification: >
   file, and test-group scopes using the actual CLI in sandboxed repositories.
 
 unit-coverage-reviewed:
-  - test/integration/package_argument_test.rb
-  - test/integration/explicit_file_execution_test.rb
-  - test/commands/cli_routing_test.rb
+  - test/feat/package_argument_test.rb
+  - test/feat/explicit_file_execution_test.rb
+  - test/fast/commands/cli_routing_test.rb
 
 requires:
   tools: [ace-test]
@@ -27,5 +27,5 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
   - copy-fixtures

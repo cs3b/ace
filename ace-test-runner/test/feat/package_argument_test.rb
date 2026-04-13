@@ -9,6 +9,9 @@ class PackageArgumentTest < Minitest::Test
   def setup
     @original_dir = Dir.pwd
     @project_root = find_mono_repo_root
+    return if monorepo_fixture_available?
+
+    skip "requires monorepo sibling packages (ace-bundle, ace-search)"
   end
 
   def teardown
@@ -156,7 +159,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_specific_file_still_works
     Dir.chdir(File.join(@project_root, "ace-bundle")) do
-      _, status = run_ace_test_with_mock("test/atoms/content_checker_test.rb")
+      _, status = run_ace_test_with_mock(local_ace_bundle_atom_test_path)
 
       assert status.success?, "Should run specific file"
     end
@@ -166,7 +169,7 @@ class PackageArgumentTest < Minitest::Test
     # Verify that ace-test ace-bundle test/foo_test.rb:42 works correctly
     Dir.chdir(@project_root) do
       # Find a test file in ace-bundle with at least one test
-      test_file = "test/atoms/content_checker_test.rb"
+      test_file = local_ace_bundle_atom_test_path
       # Line 10 should be within the test class
       output, status = run_ace_test_with_mock("ace-bundle", "#{test_file}:10")
 
@@ -185,7 +188,7 @@ class PackageArgumentTest < Minitest::Test
   def test_package_prefixed_file_path
     # When file exists from current directory, run it directly (no package context)
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("ace-bundle/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock(ace_bundle_atom_test_path)
 
       assert status.success?, "Should run package-prefixed file path, got: #{output}"
       # File exists at this path, so runs directly without package context
@@ -196,7 +199,7 @@ class PackageArgumentTest < Minitest::Test
   def test_package_prefixed_file_path_with_line_number
     # When file exists from current directory, run it directly with line number
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("ace-bundle/test/atoms/content_checker_test.rb:10")
+      output, status = run_ace_test_with_mock("#{ace_bundle_atom_test_path}:10")
 
       assert status.success?, "Should run package-prefixed file:line, got: #{output}"
       refute_match(/Package not found/, output)
@@ -209,7 +212,7 @@ class PackageArgumentTest < Minitest::Test
     # From a different directory, package resolution is needed
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      output, status = run_ace_test_with_mock("ace-bundle/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock(ace_bundle_atom_test_path)
 
       assert status.success?, "Should run package-prefixed file from different dir, got: #{output}"
       # Package context is used because file doesn't exist relative to current dir
@@ -222,7 +225,7 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_file_path_with_dot_slash
     # Verify ./ace-bundle/test/file.rb works without "Package not found" error
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("./ace-bundle/test/atoms/content_checker_test.rb",
+      output, status = run_ace_test_with_mock("./#{ace_bundle_atom_test_path}",
         output: "Finished tests in 0.001s\n2 tests, 4 assertions, 0 failures")
 
       assert status.success?, "Should run ./path/file.rb directly, got: #{output}"
@@ -234,7 +237,7 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_file_path_with_dot_slash_and_line_number
     # Verify ./ace-bundle/test/file.rb:10 works
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("./ace-bundle/test/atoms/content_checker_test.rb:10",
+      output, status = run_ace_test_with_mock("./#{ace_bundle_atom_test_path}:10",
         output: "Finished tests in 0.001s\n1 tests, 2 assertions, 0 failures")
 
       assert status.success?, "Should run ./path/file.rb:line directly, got: #{output}"
@@ -246,7 +249,7 @@ class PackageArgumentTest < Minitest::Test
     # Verify ../ace-bundle/test/file.rb works from within another package
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      output, status = run_ace_test_with_mock("../ace-bundle/test/atoms/content_checker_test.rb",
+      output, status = run_ace_test_with_mock("../#{ace_bundle_atom_test_path}",
         output: "Finished tests in 0.001s\n2 tests, 4 assertions, 0 failures")
 
       assert status.success?, "Should run ../path/file.rb directly, got: #{output}"
@@ -313,5 +316,23 @@ class PackageArgumentTest < Minitest::Test
     cmd = ["bundle", "exec", "ruby", File.join(@project_root, "ace-test-runner/exe/ace-test")] + args
     stdout, stderr, status = Open3.capture3(*cmd)
     [stdout + stderr, status]
+  end
+
+  def ace_bundle_atom_test_path
+    fast = "ace-bundle/test/fast/atoms/content_checker_test.rb"
+    legacy = "ace-bundle/test/atoms/content_checker_test.rb"
+    return fast if File.exist?(File.join(@project_root, fast))
+    return legacy if File.exist?(File.join(@project_root, legacy))
+
+    fast
+  end
+
+  def local_ace_bundle_atom_test_path
+    ace_bundle_atom_test_path.sub("ace-bundle/", "")
+  end
+
+  def monorepo_fixture_available?
+    Dir.exist?(File.join(@project_root, "ace-bundle")) &&
+      Dir.exist?(File.join(@project_root, "ace-search"))
   end
 end

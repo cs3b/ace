@@ -16,9 +16,9 @@ e2e-justification: >
   ace-test-suite, which requires real subprocess management across package sets.
 
 unit-coverage-reviewed:
-  - test/integration/suite/orchestrator_test.rb
-  - test/integration/suite/display_helpers_test.rb
-  - test/molecules/failed_package_reporter_test.rb
+  - test/feat/suite/orchestrator_test.rb
+  - test/feat/suite/display_helpers_test.rb
+  - test/fast/molecules/failed_package_reporter_test.rb
 
 requires:
   tools: [ace-test-suite, ace-test]
@@ -27,5 +27,6 @@ requires:
 setup:
   - git-init
   - run: "echo $PROJECT_ROOT_PATH > .monorepo-root"
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
-  - run: "mkdir -p .ace/test && cp $PROJECT_ROOT_PATH/.ace/test/suite.yml .ace/test/suite.yml"
+  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
+  - run: "mkdir -p .ace/test && if [ -f \"$PROJECT_ROOT_PATH/.ace/test/suite.yml\" ]; then cp \"$PROJECT_ROOT_PATH/.ace/test/suite.yml\" .ace/test/suite.yml; elif [ -f \".ace-defaults/test/suite.yml\" ]; then cp .ace-defaults/test/suite.yml .ace/test/suite.yml; elif [ -f \"ace-test-runner/.ace-defaults/test/suite.yml\" ]; then cp ace-test-runner/.ace-defaults/test/suite.yml .ace/test/suite.yml; fi"
+  - run: "if [ -d \"ace-test-runner\" ]; then mkdir -p ace-test-runner/.ace/test && if [ -f \"ace-test-runner/.ace-defaults/test/suite.yml\" ]; then cp ace-test-runner/.ace-defaults/test/suite.yml ace-test-runner/.ace/test/suite.yml; fi; fi"

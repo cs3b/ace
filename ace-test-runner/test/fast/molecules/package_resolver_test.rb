@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/test_runner/molecules/package_resolver"
 require "tmpdir"
 require "fileutils"

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/test_runner/molecules/cli_argument_parser"
 require "tmpdir"
 require "fileutils"
@@ -43,7 +43,7 @@ class CliArgumentParserTest < Minitest::Test
 
   def test_parses_direct_file_path
     Dir.chdir(@project_root) do
-      test_file = "ace-bundle/test/atoms/content_checker_test.rb"
+      test_file = ace_bundle_atom_test_path
       argv = [test_file]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
@@ -55,7 +55,7 @@ class CliArgumentParserTest < Minitest::Test
 
   def test_parses_relative_file_path_with_dot_slash
     Dir.chdir(@project_root) do
-      test_file = "./ace-bundle/test/atoms/content_checker_test.rb"
+      test_file = "./#{ace_bundle_atom_test_path}"
       argv = [test_file]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
@@ -66,7 +66,7 @@ class CliArgumentParserTest < Minitest::Test
 
   def test_parses_file_with_line_number
     Dir.chdir(@project_root) do
-      test_file = "ace-bundle/test/atoms/content_checker_test.rb:10"
+      test_file = "#{ace_bundle_atom_test_path}:10"
       argv = [test_file]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
@@ -80,12 +80,12 @@ class CliArgumentParserTest < Minitest::Test
   def test_parses_package_prefixed_path_from_different_dir
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      argv = ["ace-bundle/test/atoms/content_checker_test.rb"]
+      argv = [ace_bundle_atom_test_path]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
 
       assert result[:package_dir]&.end_with?("ace-bundle")
-      assert result[:files]&.include?("test/atoms/content_checker_test.rb")
+      assert result[:files]&.include?(local_ace_bundle_atom_test_path)
     end
   end
 
@@ -95,12 +95,12 @@ class CliArgumentParserTest < Minitest::Test
 
   def test_parses_package_with_prefixed_file_path
     Dir.chdir(@project_root) do
-      argv = ["ace-bundle", "ace-bundle/test/atoms/content_checker_test.rb"]
+      argv = ["ace-bundle", ace_bundle_atom_test_path]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
 
       assert result[:package_dir]&.end_with?("ace-bundle"), "Should resolve package from first arg"
-      assert_equal ["test/atoms/content_checker_test.rb"], result[:files],
+      assert_equal [local_ace_bundle_atom_test_path], result[:files],
         "Should strip package prefix and add as relative file path"
       assert_nil result[:target], "Should not treat prefixed file as target"
     end
@@ -108,31 +108,32 @@ class CliArgumentParserTest < Minitest::Test
 
   def test_parses_package_with_prefixed_file_path_and_line_number
     Dir.chdir(@project_root) do
-      argv = ["ace-bundle", "ace-bundle/test/atoms/content_checker_test.rb:42"]
+      argv = ["ace-bundle", "#{ace_bundle_atom_test_path}:42"]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
 
       assert result[:package_dir]&.end_with?("ace-bundle")
-      assert_equal ["test/atoms/content_checker_test.rb:42"], result[:files],
+      assert_equal ["#{local_ace_bundle_atom_test_path}:42"], result[:files],
         "Should handle file:line syntax with package prefix"
     end
   end
 
   def test_parses_package_with_multiple_prefixed_files
     Dir.chdir(@project_root) do
-      # Find two existing test files in ace-bundle
+      first_file = ace_bundle_atom_test_path
+      second_file = ace_bundle_secondary_atom_test_path
       argv = [
         "ace-bundle",
-        "ace-bundle/test/atoms/content_checker_test.rb",
-        "ace-bundle/test/atoms/preset_validator_test.rb"
+        first_file,
+        second_file
       ]
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
       result = parser.parse
 
       assert result[:package_dir]&.end_with?("ace-bundle")
       assert_equal 2, result[:files]&.size, "Should handle multiple prefixed files"
-      assert_includes result[:files], "test/atoms/content_checker_test.rb"
-      assert_includes result[:files], "test/atoms/preset_validator_test.rb"
+      assert_includes result[:files], local_ace_bundle_atom_test_path
+      assert_includes result[:files], local_ace_bundle_secondary_atom_test_path
     end
   end
 
@@ -229,5 +230,31 @@ class CliArgumentParserTest < Minitest::Test
       parser = Ace::TestRunner::Molecules::CliArgumentParser.new(["int"])
       assert_equal "feat", parser.parse[:target]
     end
+  end
+
+  def ace_bundle_atom_test_path
+    fast = "ace-bundle/test/fast/atoms/content_checker_test.rb"
+    legacy = "ace-bundle/test/atoms/content_checker_test.rb"
+    return fast if File.exist?(fast)
+    return legacy if File.exist?(legacy)
+
+    fast
+  end
+
+  def ace_bundle_secondary_atom_test_path
+    fast = "ace-bundle/test/fast/atoms/preset_validator_test.rb"
+    legacy = "ace-bundle/test/atoms/preset_validator_test.rb"
+    return fast if File.exist?(fast)
+    return legacy if File.exist?(legacy)
+
+    fast
+  end
+
+  def local_ace_bundle_atom_test_path
+    ace_bundle_atom_test_path.sub("ace-bundle/", "")
+  end
+
+  def local_ace_bundle_secondary_atom_test_path
+    ace_bundle_secondary_atom_test_path.sub("ace-bundle/", "")
   end
 end

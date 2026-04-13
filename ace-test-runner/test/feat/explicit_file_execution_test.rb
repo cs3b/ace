@@ -7,7 +7,7 @@ class ExplicitFileExecutionTest < Minitest::Test
   def test_orchestrator_bypasses_targets_when_explicit_files_provided
     # Create configuration with both targets and explicit files
     options = {
-      files: ["test/atoms/test_detector_test.rb"],
+      files: ["test/fast/atoms/test_detector_test.rb"],
       config_path: nil
     }
 
@@ -31,7 +31,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     # Manually set execution mode and targets to simulate by-target execution
     configuration.instance_variable_set(:@execution, {mode: "by-target"})
-    configuration.instance_variable_set(:@targets, {"smoke" => ["test/atoms/test_detector_test.rb"]})
+    configuration.instance_variable_set(:@targets, {"smoke" => ["test/fast/atoms/test_detector_test.rb"]})
 
     # Should execute sequentially when no files but targets and target are configured
     assert orchestrator.send(:should_execute_sequentially?),
@@ -62,7 +62,7 @@ class ExplicitFileExecutionTest < Minitest::Test
     # Create configuration with multiple explicit files
     options = {
       files: [
-        "test/atoms/test_detector_test.rb",
+        "test/fast/atoms/test_detector_test.rb",
         "test/models/test_configuration_test.rb"
       ],
       config_path: nil
@@ -78,7 +78,7 @@ class ExplicitFileExecutionTest < Minitest::Test
   def test_orchestrator_handles_file_with_line_number
     # Create configuration with file:line format
     options = {
-      files: ["test/atoms/test_detector_test.rb:42"],
+      files: ["test/fast/atoms/test_detector_test.rb:42"],
       config_path: nil
     }
 
@@ -92,21 +92,21 @@ class ExplicitFileExecutionTest < Minitest::Test
   def test_configuration_preserves_explicit_files
     # Verify that explicit files are preserved in configuration
     options = {
-      files: ["test/atoms/test_detector_test.rb"],
+      files: ["test/fast/atoms/test_detector_test.rb"],
       config_path: nil
     }
 
     orchestrator = Ace::TestRunner::Organisms::TestOrchestrator.new(options)
     configuration = orchestrator.configuration
 
-    assert_equal ["test/atoms/test_detector_test.rb"], configuration.files,
+    assert_equal ["test/fast/atoms/test_detector_test.rb"], configuration.files,
       "Expected configuration to preserve explicit files"
   end
 
   def test_find_test_files_returns_explicit_files
     # Verify that find_test_files returns only the explicit files
     options = {
-      files: ["test/atoms/test_detector_test.rb"],
+      files: ["test/fast/atoms/test_detector_test.rb"],
       config_path: nil
     }
 
@@ -115,14 +115,14 @@ class ExplicitFileExecutionTest < Minitest::Test
     # Call find_test_files (private method)
     files = orchestrator.send(:find_test_files)
 
-    assert_equal ["test/atoms/test_detector_test.rb"], files,
+    assert_equal ["test/fast/atoms/test_detector_test.rb"], files,
       "Expected find_test_files to return only the explicit files"
   end
 
   def test_precedence_files_over_target
     # When both files and target are provided, files should take precedence
     options = {
-      files: ["test/atoms/test_detector_test.rb"],
+      files: ["test/fast/atoms/test_detector_test.rb"],
       target: "smoke",
       config_path: nil
     }
@@ -135,7 +135,7 @@ class ExplicitFileExecutionTest < Minitest::Test
 
     # And find_test_files should return only the explicit files
     files = orchestrator.send(:find_test_files)
-    assert_equal ["test/atoms/test_detector_test.rb"], files,
+    assert_equal ["test/fast/atoms/test_detector_test.rb"], files,
       "Expected find_test_files to return only explicit files, ignoring target"
   end
 end
