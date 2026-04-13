@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
+- **ace-support-config v0.11.1**: Preserved existing `.gitignore` rules under `ace-config init --force` and anchored project-root bootstrap files to the detected repository root so subdirectory runs do not write them into the wrong location.
+- **ace-llm-providers-cli v0.28.4**: Filtered forwarded Claude `--max-tokens` CLI args when the local Claude CLI does not advertise support, closing the passthrough path that could still trigger unsupported-option failures.
 - **ace-llm-providers-cli v0.28.3**: Guarded Claude CLI `--max-tokens` usage so commit-generation flows skip the flag on unsupported Claude versions while preserving token limiting on supported variants.
 - **ace-llm v0.33.4**: Added the missing `ace-support-models` runtime dependency and aligned quick-start install guidance so fresh onboarding can run `ace-llm --list-providers` without manual dependency patching.
 - **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
