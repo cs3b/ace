@@ -152,7 +152,8 @@ module Ace
               manifest = {
                 tc_id: test_case.tc_id,
                 title: test_case.title,
-                declared_artifacts: test_case.declared_artifacts,
+                declared_artifacts: Array(test_case.declared_artifacts),
+                optional_artifacts: Array(test_case.optional_artifacts),
                 goal_format: test_case.goal_format
               }
               File.write(
@@ -178,14 +179,15 @@ module Ace
 
           def snapshot_artifacts(report_dir, sandbox_path, scenario)
             snapshot = select_test_cases(scenario, nil).to_h do |test_case|
-              [test_case.tc_id, test_case.declared_artifacts.select { |path| File.exist?(File.join(sandbox_path, path)) }]
+              all_artifacts = Array(test_case.declared_artifacts) + Array(test_case.optional_artifacts)
+              [test_case.tc_id, all_artifacts.select { |path| File.exist?(File.join(sandbox_path, path)) }]
             end
             File.write(File.join(report_dir, "artifact-snapshot.json"), JSON.pretty_generate(snapshot))
           end
 
           def missing_declared_artifacts(sandbox_path, scenario, test_cases:)
             select_test_cases(scenario, test_cases).flat_map do |test_case|
-              test_case.declared_artifacts.reject do |path|
+              Array(test_case.declared_artifacts).reject do |path|
                 File.exist?(File.join(sandbox_path, path))
               end
             end.uniq.sort

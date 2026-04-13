@@ -10,7 +10,7 @@ settings:
   height: 720
   format: gif
   env:
-    PROJECT_ROOT_PATH: /home/mc/ace-t.j82/ace-test-runner-e2e
+    PROJECT_ROOT_PATH: /home/mc/ace-t.i05/ace-test-runner-e2e
 setup:
 - sandbox
 scenes:
@@ -22,15 +22,15 @@ scenes:
   commands:
   - type: clear
     sleep: 1s
-  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/scenario_loader_test.rb
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/fast/molecules/scenario_loader_test.rb
     sleep: 5s
-  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/test_discoverer_test.rb
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/fast/molecules/test_discoverer_test.rb
     sleep: 5s
 - name: Pipeline provider/env contract stays explicit
   commands:
   - type: clear
     sleep: 1s
-  - type: cd $PROJECT_ROOT_PATH && ace-test test/molecules/test_executor_test.rb
+  - type: cd $PROJECT_ROOT_PATH && ace-test test/fast/molecules/test_executor_test.rb
     sleep: 5s
 verify:
   forbid_output:

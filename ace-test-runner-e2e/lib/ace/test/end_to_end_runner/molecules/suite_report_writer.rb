@@ -39,13 +39,21 @@ module Ace
 
             overall_status = compute_status(results)
             executed_at = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-            content = synthesize_report(
-              results, scenarios,
+            results_data = build_results_data(results, scenarios)
+            narrative_sections = synthesize_narrative_sections(
+              results_data,
               package: package,
               timestamp: timestamp,
               overall_status: overall_status,
               executed_at: executed_at
+            )
+            content = build_report(
+              results_data,
+              package: package,
+              timestamp: timestamp,
+              overall_status: overall_status,
+              executed_at: executed_at,
+              narrative_sections: narrative_sections
             )
 
             File.write(report_path, content)
@@ -54,10 +62,9 @@ module Ace
 
           private
 
-          # Attempt LLM synthesis, falling back to static template
-          def synthesize_report(results, scenarios, package:, timestamp:, overall_status:, executed_at:)
-            results_data = build_results_data(results, scenarios)
-
+          # Attempt LLM synthesis for narrative sections only, falling back to
+          # deterministic defaults when the model is unavailable or malformed.
+          def synthesize_narrative_sections(results_data, package:, timestamp:, overall_status:, executed_at:)
             prompt_builder = Atoms::SuiteReportPromptBuilder.new
             user_prompt = prompt_builder.build(
               results_data,
@@ -74,29 +81,10 @@ module Ace
               timeout: @timeout,
               temperature: 0.3
             )
-
-            total_passed = results.sum(&:passed_count)
-            total_tc = results.sum(&:total_count)
-            validate_overall_line(response[:text], total_passed, total_tc)
+            extract_narrative_sections(response[:text])
           rescue => e
-            # LLM failed — fall back to static report
-            warn "Warning: LLM synthesis failed (#{e.class}: #{e.message}), using static report" if ENV["DEBUG"]
-            executed_date = Time.now.utc.strftime("%Y-%m-%d")
-            total_passed = results.sum(&:passed_count)
-            total_failed = results.sum(&:failed_count)
-            total_tc = results.sum(&:total_count)
-
-            build_static_report(
-              results, scenarios,
-              package: package,
-              timestamp: timestamp,
-              overall_status: overall_status,
-              executed_at: executed_at,
-              executed_date: executed_date,
-              total_passed: total_passed,
-              total_failed: total_failed,
-              total_tc: total_tc
-            )
+            warn "Warning: LLM synthesis failed (#{e.class}: #{e.message}), using deterministic narrative" if ENV["DEBUG"]
+            fallback_narrative_sections(results_data)
           end
 
           # Read summary and experience report content from each result's report dir
@@ -133,23 +121,6 @@ module Ace
             File.read(path)
           end
 
-          # Validate the LLM-generated Overall line against deterministic totals.
-          # If the LLM hallucinated wrong numbers, replace the line with correct values.
-          def validate_overall_line(report_text, expected_passed, expected_total)
-            expected_pct = (expected_total > 0) ? (expected_passed * 100.0 / expected_total).round(0) : 0
-            correct_line = "**Overall:** #{expected_passed}/#{expected_total} test cases passed (#{expected_pct}%)"
-
-            # Match patterns like "**Overall:** X/Y test cases passed (Z%)"
-            overall_pattern = /\*\*Overall:\*\*\s*\d+\/\d+\s+test cases passed\s*\(\d+%\)/
-
-            if report_text.match?(overall_pattern)
-              report_text.gsub(overall_pattern, correct_line)
-            else
-              # No Overall line found — append the correct one after the summary table
-              "#{report_text.rstrip}\n\n#{correct_line}\n"
-            end
-          end
-
           def compute_status(results)
             # Filter out skipped tests for status computation
             executed = results.reject(&:skipped?)
@@ -164,21 +135,24 @@ module Ace
             end
           end
 
-          # Static fallback report (original template-based approach)
-          def build_static_report(results, scenarios, package:, timestamp:, overall_status:,
-            executed_at:, executed_date:, total_passed:, total_failed:, total_tc:)
-            total_skipped = results.count(&:skipped?)
+          def build_report(results_data, package:, timestamp:, overall_status:, executed_at:, narrative_sections:)
+            total_skipped = results_data.count { |r| r[:status] == "skip" }
+            total_passed = results_data.sum { |r| r[:passed] }
+            total_tc = results_data.sum { |r| r[:total] }
 
             parts = []
             parts << build_frontmatter(
               timestamp: timestamp, package: package, overall_status: overall_status,
-              tests_run: results.size, executed_at: executed_at, skipped: total_skipped
+              tests_run: results_data.size, executed_at: executed_at, skipped: total_skipped
             )
-            parts << build_header(package: package, tests_run: results.size, executed_date: executed_date, skipped: total_skipped)
-            parts << build_summary_table(results, scenarios)
+            parts << build_header(package: package)
+            parts << build_summary_table(results_data)
             parts << build_overall_line(total_passed: total_passed, total_tc: total_tc)
-            parts << build_failed_section(results, scenarios) if results.any?(&:failed?)
-            parts << build_reports_section(results, scenarios)
+            parts << build_failed_section(results_data) if results_data.any? { |r| r[:failed].positive? }
+            parts << build_narrative_section("Friction Analysis", narrative_sections[:friction])
+            parts << build_narrative_section("Improvement Suggestions", narrative_sections[:improvements])
+            parts << build_narrative_section("Positive Observations", narrative_sections[:positive])
+            parts << build_reports_section(results_data)
             parts.join("\n")
           end
 
@@ -195,81 +169,141 @@ module Ace
             FRONTMATTER
           end
 
-          def build_header(package:, tests_run:, executed_date:, skipped: 0)
-            skipped_info = (skipped > 0) ? " (#{skipped} skipped)" : ""
+          def build_header(package:)
             <<~HEADER
-              # E2E Test Suite Report
-
-              **Package:** #{package}
-              **Tests:** #{tests_run}#{skipped_info}
-              **Executed:** #{executed_date}
+              # E2E Suite Report: `#{package}`
             HEADER
           end
 
-          def build_summary_table(results, scenarios)
-            rows = results.each_with_index.map do |result, i|
-              scenario = scenario_for_result(result, scenarios, i)
-              status_label = result.status.capitalize
-              passed = result.skipped? ? "-" : result.passed_count.to_s
-              failed = result.skipped? ? "-" : result.failed_count.to_s
-              total = result.skipped? ? "-" : result.total_count.to_s
-              "| #{result.test_id} | #{scenario.title} | #{status_label} | #{passed} | #{failed} | #{total} |"
+          def build_summary_table(results_data)
+            rows = results_data.map do |result|
+              status_label = result[:status].capitalize
+              passed = (result[:status] == "skip") ? "-" : result[:passed].to_s
+              failed = (result[:status] == "skip") ? "-" : result[:failed].to_s
+              total = (result[:status] == "skip") ? "-" : result[:total].to_s
+              "| #{result[:test_id]} | #{result[:title]} | #{status_label} | #{passed} | #{failed} | #{total} |"
             end
 
             <<~TABLE
-              ## Summary
+              ## Summary Table
 
               | Test ID | Title | Status | Passed | Failed | Total |
-              |---------|-------|--------|--------|--------|-------|
+              |---|---|---:|---:|---:|---:|
               #{rows.join("\n")}
             TABLE
           end
 
           def build_overall_line(total_passed:, total_tc:)
-            pct = (total_tc > 0) ? (total_passed * 100.0 / total_tc).round(0) : 0
-            "**Overall:** #{total_passed}/#{total_tc} test cases passed (#{pct}%)\n"
+            pct = (total_tc > 0) ? (total_passed * 100.0 / total_tc).round(1) : 0.0
+            formatted_pct = (pct % 1).zero? ? pct.to_i.to_s : format("%.1f", pct)
+            <<~OVERALL
+              ## Overall Line
+
+              **Overall:** #{total_passed}/#{total_tc} test cases passed (#{formatted_pct}%)
+            OVERALL
           end
 
-          def build_failed_section(results, scenarios)
+          def build_failed_section(results_data)
             parts = ["\n## Failed Tests\n"]
 
-            results.each_with_index do |result, i|
-              next if result.success? || result.skipped?
+            results_data.each do |result|
+              next unless result[:failed].positive?
 
-              scenario = scenario_for_result(result, scenarios, i)
-              parts << "### #{result.test_id}: #{scenario.title} (#{result.passed_count}/#{result.total_count})\n"
+              parts << "### #{result[:test_id]}"
+              parts << ""
+              parts << "**Failed test case details**"
 
-              failed_tcs = result.test_cases.select { |tc| tc[:status] == "fail" }
+              failed_tcs = result[:test_cases].select { |tc| tc[:status] == "fail" }
               if failed_tcs.any?
-                parts << "**Failed Test Cases:**"
                 failed_tcs.each do |tc|
-                  parts << "- #{tc[:id]}: #{tc[:description]}"
+                  category = tc[:category] || "runner-error"
+                  details = tc[:notes].to_s.strip
+                  details = tc[:description].to_s if details.empty?
+                  parts << "- `#{tc[:id]}` (#{category}) — #{details}"
                 end
-                parts << ""
               end
 
-              if result.report_dir
-                parts << "**Report:** #{result.report_dir}\n"
+              if result[:report_dir_name]
+                parts << ""
+                parts << "**Report directory:** `#{result[:report_dir_name]}`"
               end
+              parts << ""
             end
 
             parts.join("\n")
           end
 
-          def build_reports_section(results, scenarios)
-            rows = results.each_with_index.map do |result, i|
-              dir = result.report_dir ? File.basename(result.report_dir) : "N/A"
-              "| #{result.test_id} | #{dir} |"
+          def build_narrative_section(title, content)
+            return nil if content.to_s.strip.empty?
+
+            <<~SECTION
+              ## #{title}
+
+              #{content.to_s.strip}
+            SECTION
+          end
+
+          def build_reports_section(results_data)
+            rows = results_data.map do |result|
+              dir = result[:report_dir_name] || "N/A"
+              "| #{result[:test_id]} | `#{dir}` |"
             end
 
             <<~SECTION
 
-              ## Reports
+              ## Reports Table
 
-              | Test ID | Reports Folder |
-              |---------|----------------|
+              | Test ID | Report Directory |
+              |---|---|
               #{rows.join("\n")}
             SECTION
+          end
+
+          def extract_narrative_sections(report_text)
+            text = report_text.to_s
+            sections = {
+              friction: extract_markdown_section(text, "Friction Analysis"),
+              improvements: extract_markdown_section(text, "Improvement Suggestions"),
+              positive: extract_markdown_section(text, "Positive Observations")
+            }
+
+            fallback = strip_canonical_sections(text)
+            has_markdown_sections = text.match?(/^\#{2,3}\s+/)
+            sections[:positive] = fallback if sections.values.all? { |value| value.to_s.strip.empty? } &&
+              !fallback.empty? && !has_markdown_sections
+            sections
+          end
+
+          def extract_markdown_section(text, heading)
+            match = text.match(/^\#{2,3}\s+#{Regexp.escape(heading)}\s*$\n?(.*?)(?=^\#{1,3}\s|\z)/mi)
+            return "" unless match
+
+            match[1].to_s.strip
+          end
+
+          def strip_canonical_sections(text)
+            body = text.to_s.dup
+            body.sub!(/\A---.*?^---\s*/m, "")
+            body.gsub!(/^\#{1,3}\s+.*$/, "")
+            body.gsub!(/^\|.*\|\s*$/, "")
+            body.gsub!(/^\*\*Overall:\*\*.*$/, "")
+            body.lines.map(&:rstrip).reject(&:empty?).join("\n").strip
+          end
+
+          def fallback_narrative_sections(results_data)
+            failed_results = results_data.select { |result| result[:failed].positive? }
+
+            {
+              friction: failed_results.empty? ? "" : failed_results.map { |result|
+                "- #{result[:test_id]} had #{result[:failed]} failing test case(s); inspect `#{result[:report_dir_name]}` for scenario details."
+              }.join("\n"),
+              improvements: failed_results.empty? ? "" : failed_results.map { |result|
+                "- Re-run #{result[:test_id]} after the targeted fix and confirm the failing test case set is empty."
+              }.join("\n"),
+              positive: results_data.select { |result| result[:failed].zero? }.map { |result|
+                "- #{result[:test_id]} passed #{result[:passed]}/#{result[:total]} test cases."
+              }.join("\n")
+            }
           end
 
           def scenario_for_result(result, scenarios, index)

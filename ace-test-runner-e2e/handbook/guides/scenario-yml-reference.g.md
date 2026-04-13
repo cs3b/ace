@@ -53,7 +53,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 | `tags` | array | `[]` | Scenario tags for filtering with `--tags`/`--exclude-tags` (OR semantics) |
 | `cost-tier` | string | `smoke` | Run profile: `smoke`, `happy-path`, `deep` |
 | `e2e-justification` | string | — | Why E2E is needed |
-| `unit-coverage-reviewed` | array | `[]` | Unit/integration files reviewed |
+| `unit-coverage-reviewed` | array | `[]` | Deterministic test files reviewed (`test/fast` and/or `test/feat`) |
 | `requires` | object | — | Test prerequisites |
 | `setup` | array | `[]` | Setup directives before execution |
 | `last-verified` | string | — | Last successful verification date |
@@ -137,8 +137,8 @@ cost-tier: smoke
 tags: [smoke, "use-case:lint"]
 e2e-justification: "Validates real subprocess behavior and report file generation"
 unit-coverage-reviewed:
-  - test/molecules/lint_runner_test.rb
-  - test/organisms/lint_orchestrator_test.rb
+  - test/fast/molecules/lint_runner_test.rb
+  - test/fast/organisms/lint_orchestrator_test.rb
 tool-under-test: ace-lint
 sandbox-layout:
   results/tc/01/: "help artifacts"

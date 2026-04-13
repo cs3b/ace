@@ -122,7 +122,7 @@ ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports ls results/
 
 ## Notes
 
-- `ace-test-e2e` runs a two-phase harness: deterministic sandboxed Minitest from `test/integration/`, then TS scenarios from `test/e2e/`.
+- `ace-test-e2e` runs scenario workflows from `test/e2e/`; deterministic package coverage should run via `ace-test <package>` (default `fast`) and `ace-test <package> feat`.
 - Scenario metadata is read from each scenario directory's `scenario.yml`.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.

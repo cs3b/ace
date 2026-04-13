@@ -36,7 +36,7 @@ ace-test-e2e ace-lint TS-LINT-001
 
 What happens:
 
-- Deterministic integration is discovered from `ace-lint/test/integration/**/*_test.rb` before scenario metadata from `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`.
+- Deterministic preflight tests are discovered from `ace-lint/test/feat/**/*_test.rb` before scenario metadata from `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`.
 - Setup runs in an isolated sandbox.
 - Integration and scenario runs write sandbox and report outputs to `.ace-local/test-e2e/...`.
 

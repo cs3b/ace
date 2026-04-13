@@ -7,7 +7,7 @@ Validation order (impact-first):
 2. Use debug evidence only as fallback.
 
 1. `discovery.exit` is `0`.
-2. `discovery.stdout` includes `Dry run: preview of scenarios to execute`.
+2. `discovery.stdout` includes `Dry run: preview of execution phases`.
 3. `discovery.stdout` includes `TS-DEMO-001`.
 4. `discovery.stderr` is empty or contains no failure text.
 
