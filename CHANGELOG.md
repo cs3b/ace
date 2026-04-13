@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.28.4**: Filtered forwarded Claude `--max-tokens` CLI args when the local Claude CLI does not advertise support, closing the passthrough path that could still trigger unsupported-option failures.
 - **ace-llm-providers-cli v0.28.3**: Guarded Claude CLI `--max-tokens` usage so commit-generation flows skip the flag on unsupported Claude versions while preserving token limiting on supported variants.
 - **ace-llm v0.33.4**: Added the missing `ace-support-models` runtime dependency and aligned quick-start install guidance so fresh onboarding can run `ace-llm --list-providers` without manual dependency patching.
+- **ace-task v0.34.2**: Added duplicate persisted task-ID detection to doctor health checks (including subtask collisions) and made `ace-task doctor --check frontmatter` fail when duplicates are present.
+- **ace-idea v0.19.2**: Added duplicate persisted idea-ID detection to doctor health checks and made `ace-idea doctor --check frontmatter` fail when duplicates are present.
 - **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
 - **ace-llm v0.33.3**: Added `codex:mini` as a `commit` role fallback after `glite` so release/commit tooling can continue role-based generation when the primary model is unavailable.
 - **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based selector resolution no longer crashes when only fallback environment keys are configured.
