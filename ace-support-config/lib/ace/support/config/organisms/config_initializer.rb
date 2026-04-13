@@ -9,6 +9,9 @@ module Ace
     module Config
       module Organisms
         class ConfigInitializer
+          PROJECT_ROOT_DIR = "project-root"
+          GITIGNORE_ACE_LOCAL_ENTRY = ".ace-local/"
+
           def initialize(force: false, dry_run: false, global: false, verbose: false)
             @force = force
             @dry_run = dry_run
@@ -71,17 +74,27 @@ module Ace
           end
 
           def copy_config_files(source_dir, target_dir)
-            Dir.glob("#{source_dir}/**/*").each do |source_file|
+            glob_pattern = File.join(source_dir, "**", "*")
+
+            Dir.glob(glob_pattern, File::FNM_DOTMATCH).each do |source_file|
+              basename = File.basename(source_file)
+              next if basename == "." || basename == ".."
               next if File.directory?(source_file)
 
               relative_path = Pathname.new(source_file).relative_path_from(Pathname.new(source_dir))
-              target_file = File.join(target_dir, relative_path.to_s)
+              target_file = target_file_for(relative_path, target_dir)
+              next unless target_file
 
               copy_file(source_file, target_file)
             end
           end
 
           def copy_file(source, target)
+            if File.basename(target) == ".gitignore"
+              merge_gitignore(source, target)
+              return
+            end
+
             if File.exist?(target) && !@force
               @skipped_files << target
               puts "  Skipped: #{target} (already exists)" if @verbose
@@ -96,6 +109,59 @@ module Ace
               @copied_files << target
               puts "  Copied: #{target}" if @verbose
             end
+          end
+
+          def target_file_for(relative_path, target_dir)
+            relative_str = relative_path.to_s
+
+            if relative_str.start_with?("#{PROJECT_ROOT_DIR}/")
+              return nil if @global
+
+              return relative_str.delete_prefix("#{PROJECT_ROOT_DIR}/")
+            end
+
+            File.join(target_dir, relative_str)
+          end
+
+          def merge_gitignore(source, target)
+            target_exists = File.exist?(target)
+
+            if target_exists && !@force
+              merge_gitignore_entry_if_missing(source, target)
+              return
+            end
+
+            if @dry_run
+              puts "  Would copy: #{source} -> #{target}"
+            else
+              FileUtils.mkdir_p(File.dirname(target))
+              FileUtils.cp(source, target)
+              @copied_files << target
+              puts "  Copied: #{target}" if @verbose
+            end
+          end
+
+          def merge_gitignore_entry_if_missing(source, target)
+            existing_content = File.read(target)
+            return if existing_content.include?(GITIGNORE_ACE_LOCAL_ENTRY)
+
+            line = File.readlines(source, chomp: true).find do |entry|
+              entry == GITIGNORE_ACE_LOCAL_ENTRY
+            end
+            return unless line
+
+            if @dry_run
+              puts "  Would append: #{line} -> #{target}"
+              return
+            end
+
+            File.open(target, "a") do |file|
+              file.write("\n") unless existing_content.end_with?("\n") || existing_content.empty?
+              file.puts line
+            end
+
+            @copied_files << target
+            puts "  Appended: #{line} -> #{target}" if @verbose
           end
 
           def print_summary

@@ -16,13 +16,53 @@ module Ace
             assert File.exist?(".ace/bundle/presets/project.md")
             assert File.exist?(".ace/bundle/presets/project-base.md")
             assert File.exist?(".ace/README.md")
+            assert File.exist?(".gitignore")
+            assert File.exist?("AGENTS.md")
+            assert File.exist?("CLAUDE.md")
 
             project_preset = File.read(".ace/bundle/presets/project.md")
             readme = File.read(".ace/README.md")
+            gitignore = File.read(".gitignore")
+            agents = File.read("AGENTS.md")
+            claude = File.read("CLAUDE.md")
 
             refute_includes project_preset, "ace-task"
             refute_includes project_preset, "Coding Agent Workflow Toolkit (Meta)"
             assert_includes readme, "ace-task"
+            assert_includes gitignore, ".ace-local/"
+            assert_includes agents, "Run `ace-*` commands directly."
+            assert_includes claude, "Do not use pipes, redirects, or shell post-processors"
+          end
+        end
+
+        def test_init_appends_gitignore_but_preserves_existing_agent_guidance_without_force
+          with_temp_config(
+            ".gitignore" => "node_modules/\n",
+            "AGENTS.md" => "# Custom AGENTS\n",
+            "CLAUDE.md" => "# Custom CLAUDE\n"
+          ) do
+            initializer = Organisms::ConfigInitializer.new
+            initializer.send(:init_gem, "ace-support-core")
+
+            gitignore = File.read(".gitignore")
+
+            assert_includes gitignore, "node_modules/"
+            assert_equal 1, gitignore.scan(".ace-local/").length
+            assert_equal "# Custom AGENTS\n", File.read("AGENTS.md")
+            assert_equal "# Custom CLAUDE\n", File.read("CLAUDE.md")
+          end
+        end
+
+        def test_init_force_refreshes_generated_agent_guidance
+          with_temp_config(
+            "AGENTS.md" => "# Old AGENTS\n",
+            "CLAUDE.md" => "# Old CLAUDE\n"
+          ) do
+            initializer = Organisms::ConfigInitializer.new(force: true)
+            initializer.send(:init_gem, "ace-support-core")
+
+            assert_includes File.read("AGENTS.md"), "Run `ace-*` commands directly."
+            assert_includes File.read("CLAUDE.md"), "Do not use pipes, redirects, or shell post-processors"
           end
         end
       end
