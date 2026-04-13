@@ -108,11 +108,6 @@ ordering:
     after: create-retro
     note: "Retro should follow all feedback application in review cycles"
 
-  - rule: e2e-before-release
-    before: verify-e2e
-    after: release
-    note: "E2E must pass before bumping version — catch failures early"
-
   - rule: update-docs-after-release
     before: release
     after: update-docs
@@ -122,11 +117,6 @@ ordering:
     before: update-docs
     after: create-pr
     note: "Updated docs should be visible to PR reviewers"
-
-  - rule: e2e-after-verify
-    before: verify-test-suite
-    after: verify-e2e
-    note: "Unit tests should pass before E2E runs"
 
 pairs:
   - name: review-apply-cycle
@@ -167,11 +157,6 @@ pairs:
     cap: 1
     note: "Re-plan produces 1-2 sub-tasks, then reflect runs once more (no further re-plan)"
 
-  - name: e2e-review-run-pair
-    steps: [verify-e2e]
-    pattern: sequential
-    note: "E2E review (coverage matrix) and targeted run are a single step with two steps"
-
   - name: docs-update-validate-pair
     steps: [update-docs]
     pattern: sequential
@@ -191,9 +176,9 @@ conditional:
     note: "Test suite verification with profiling catches slow tests and regressions before release. In explicit-step mode this remains advisory unless policy elevates it."
 
   - when: "assignment includes work-on-task and touches CLI commands or public API"
-    suggest: [verify-e2e, update-docs, record-demo]
+    suggest: [update-docs, record-demo]
     strength: recommended
-    note: "Public contract changes require E2E verification, doc updates, and demo recording"
+    note: "Public contract changes require doc updates and demo recording"
 
   - when: "task involves auth, security, or data handling"
     suggest: [security-audit]

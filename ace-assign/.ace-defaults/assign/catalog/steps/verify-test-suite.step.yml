@@ -1,5 +1,5 @@
 name: verify-test-suite
-skill: as-test-verify-suite
+workflow: wfi://assign/verify-test-suite
 render: step_template
 
 steps:
@@ -17,5 +17,5 @@ steps:
     conditional: "performance violations detected"
 
   - name: run-suite
-    description: "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"
-    tool: "ace-test-suite"
+    description: "Run ace-test-suite --target all to verify no cross-package regressions in the full deterministic suite"
+    tool: "ace-test-suite --target all"

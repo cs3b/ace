@@ -151,6 +151,36 @@ class CatalogLoaderTest < AceAssignTestCase
     assert_nil create_pr["produces"]
   end
 
+  def test_load_all_preserves_local_runtime_binding_when_canonical_metadata_exists
+    Dir.mktmpdir("catalog-runtime-binding") do |dir|
+      File.write(File.join(dir, "verify-test-suite.step.yml"), <<~YAML)
+        name: verify-test-suite
+        workflow: wfi://assign/verify-test-suite
+        description: Local contract
+      YAML
+
+      canonical_steps = [
+        {
+          "name" => "verify-test-suite",
+          "source" => "skill://as-test-verify-suite",
+          "skill" => "as-test-verify-suite",
+          "source_skill" => "as-test-verify-suite",
+          "workflow" => "wfi://test/verify-suite",
+          "description" => "Canonical suite"
+        }
+      ]
+
+      merged = Ace::Assign::Atoms::CatalogLoader.load_all(dir, canonical_steps: canonical_steps)
+      verify_suite = Ace::Assign::Atoms::CatalogLoader.find_by_name(merged, "verify-test-suite")
+
+      assert_equal "Canonical suite", verify_suite["description"]
+      assert_equal "wfi://assign/verify-test-suite", verify_suite["workflow"]
+      assert_nil verify_suite["source"]
+      assert_nil verify_suite["skill"]
+      assert_nil verify_suite["source_skill"]
+    end
+  end
+
   def test_validate_prerequisites_empty_selection
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites([], @steps)
 

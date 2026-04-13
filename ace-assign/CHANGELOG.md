@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.48.0] - 2026-04-13
+
+### Changed
+- Removed the shipped `verify-e2e` assignment step from the public catalog, presets, and composition defaults so standard `ace-assign` workflows no longer schedule package E2E verification.
+- Narrowed assignment-level `verify-test-suite` to deterministic verification only: modified packages run `ace-test <package> all --profile 6`, then the monorepo gate runs `ace-test-suite --target all`.
+
+### Technical
+- Added an `ace-assign`-local `wfi://assign/verify-test-suite` workflow and preserved local step runtime bindings during canonical catalog metadata merges so assignment-specific verification contracts are not overwritten by shared skill defaults.
+
 ## [0.47.3] - 2026-04-13
 
 ### Changed

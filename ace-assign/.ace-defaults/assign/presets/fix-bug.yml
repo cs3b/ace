@@ -34,10 +34,10 @@ steps:
       - "Commit the archive file moves: `ace-git-commit .ace-tasks/ -i 'archive completed task'`"
 
   - name: verify-test-suite
-    skill: as-test-verify-suite
+    workflow: wfi://assign/verify-test-suite
     instructions:
       - Run `ace-test <package> all --profile 6` for each modified package first.
-      - Then run plain `ace-test-suite` to verify the fix does not break the wider fast suite.
+      - Then run `ace-test-suite --target all` to verify the fix does not break the wider deterministic suite.
       - Ensure all required checks pass before continuing.
 
   - name: create-pr

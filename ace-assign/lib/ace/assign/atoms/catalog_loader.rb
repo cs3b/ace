@@ -150,6 +150,11 @@ module Ace
 
           merged = base.dup
           override.each do |key, value|
+            if runtime_binding_override_key?(key, base, override)
+              merged[key] = base[key]
+              next
+            end
+
             merged[key] =
               if merged[key].is_a?(Hash) && value.is_a?(Hash)
                 deep_merge_step_definition(merged[key], value)
@@ -160,6 +165,37 @@ module Ace
           merged
         end
         private_class_method :deep_merge_step_definition
+
+        def self.runtime_binding_override_key?(key, base, override)
+          return false unless %w[source workflow skill source_skill].include?(key)
+          return false unless local_runtime_binding_present?(base)
+          canonical_binding_present?(override)
+        end
+        private_class_method :runtime_binding_override_key?
+
+        def self.local_runtime_binding_present?(entry)
+          entry.is_a?(Hash) && (
+            present_string?(entry["source"]) ||
+            present_string?(entry["workflow"]) ||
+            present_string?(entry["skill"])
+          )
+        end
+        private_class_method :local_runtime_binding_present?
+
+        def self.canonical_binding_present?(entry)
+          entry.is_a?(Hash) && (
+            present_string?(entry["source"]) ||
+            present_string?(entry["workflow"]) ||
+            present_string?(entry["skill"]) ||
+            present_string?(entry["source_skill"])
+          )
+        end
+        private_class_method :canonical_binding_present?
+
+        def self.present_string?(value)
+          value.is_a?(String) && !value.strip.empty?
+        end
+        private_class_method :present_string?
 
         private_class_method :parse_step_file
       end

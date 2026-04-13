@@ -38,7 +38,6 @@ NUMBER       STATUS       NAME                           FORK   CHILDREN
 |-- 010.02   ✓ Done       work-on-8qm.t.5nx.1            yes    (8/8 done)
 # ... multiple tasks hidden
 012          ✓ Done       verify-test-suite
-015          ✓ Done       verify-e2e                     yes
 020          ✓ Done       release-minor
 025          ✓ Done       update-docs
 030          ✓ Done       create-pr
@@ -74,6 +73,10 @@ The easiest way to start is through [ace-overseer](../ace-overseer) -- define a 
 - `ace-test ace-assign feat` runs deterministic feature/contract coverage (`test/feat`).
 - `ace-test ace-assign all` runs full package deterministic coverage (`fast` + `feat`).
 - `ace-test-e2e ace-assign` runs scenario workflows under `test/e2e`.
+
+Assignment verification uses deterministic commands only:
+- modified packages: `ace-test <package> all --profile 6`
+- monorepo gate: `ace-test-suite --target all`
 
 ## How It Works
 
