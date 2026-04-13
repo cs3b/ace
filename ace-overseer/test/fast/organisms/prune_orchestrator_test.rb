@@ -2,7 +2,7 @@
 
 require "stringio"
 require "tmpdir"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class PruneOrchestratorTest < AceOverseerTestCase
   FakeWorktree = Struct.new(:path, :task_id, :bare) do

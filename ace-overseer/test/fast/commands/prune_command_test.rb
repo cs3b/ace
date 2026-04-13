@@ -2,7 +2,7 @@
 
 require "stringio"
 require "tmpdir"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class PruneCommandTest < AceOverseerTestCase
   class FakePruneOrchestrator

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class AssignmentPruneCandidateTest < AceOverseerTestCase
   def test_safe_to_prune_when_completed

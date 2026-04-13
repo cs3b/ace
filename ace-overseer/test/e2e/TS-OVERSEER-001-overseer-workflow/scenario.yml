@@ -22,6 +22,15 @@ e2e-justification: >
   assignment state. Prune inspects task status to determine safe removal.
   None testable with mocks.
 
+unit-coverage-reviewed:
+  - test/fast/commands/cli_test.rb
+  - test/fast/commands/work_on_command_test.rb
+  - test/fast/organisms/work_on_orchestrator_test.rb
+  - test/fast/organisms/prune_orchestrator_test.rb
+  - test/fast/molecules/assignment_launcher_test.rb
+  - test/fast/molecules/prune_safety_checker_test.rb
+  - test/fast/atoms/preset_resolver_test.rb
+
 requires:
   tools: [ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-task, git, tmux]
   ruby: ">= 3.0"
@@ -30,7 +39,7 @@ setup:
   - git-init
   - tmux-session:
       name-source: run-id
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - agent-env:

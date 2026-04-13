@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.14.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.14.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the `fast` / `feat` / `e2e` model by moving deterministic coverage from `test/{atoms,commands,models,molecules,organisms}` into `test/fast/*`.
+- Added E2E migration decision tracking for `TS-OVERSEER-001` via `test/e2e/TS-OVERSEER-001-overseer-workflow/e2e-decision-record.md`.
+- Updated package README testing guidance to teach only `ace-test ace-overseer`, `ace-test ace-overseer feat`, `ace-test ace-overseer all`, and `ace-test-e2e ace-overseer`.
+
+### Fixed
+- Hardened `TS-OVERSEER-001` sandbox setup by loading `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}`.
+- Updated TC-002/TC-003 verifier expectations to use the JSON status oracle and task-window-scoped tmux duplicate checks, eliminating false negatives in rerun validation.
+
+## [0.13.12] - 2026-04-12
+
+### Fixed
+- Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.20` so overseer remains compatible with the new worktree minor release line.
+
+## [0.13.11] - 2026-04-11
+
+### Fixed
+- Updated the `ace-assign` runtime dependency constraint to `~> 0.47` so overseer remains compatible with the latest assign minor release line.
 
 ## [0.13.10] - 2026-04-07
 
