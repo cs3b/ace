@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.35.0] - 2026-04-13
 ### Changed
 - **ace-test-runner-e2e v0.35.0**: Added optional scenario artifact declarations via `(optional)`, separated required and optional artifact tracking, and included optional outputs in manifests and snapshots without failing scenarios when they are absent.
 
