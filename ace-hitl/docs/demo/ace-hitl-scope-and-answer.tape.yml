@@ -29,9 +29,9 @@ scenes:
   commands:
   - type: clear
     sleep: 1s
-  - type: ace-test test/commands/hitl_cli_test.rb --filter test_show_scope_all_errors_on_ambiguous_ref_with_candidates
+  - type: ace-test test/fast/commands/hitl_cli_test.rb --filter test_show_scope_all_errors_on_ambiguous_ref_with_candidates
     sleep: 5s
-  - type: ace-test test/commands/hitl_cli_test.rb --filter test_update_answer_preserves_markdown_headings_in_answer_body
+  - type: ace-test test/fast/commands/hitl_cli_test.rb --filter test_update_answer_preserves_markdown_headings_in_answer_body
     sleep: 5s
 teardown:
 - cleanup

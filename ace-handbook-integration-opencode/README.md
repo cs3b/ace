@@ -25,6 +25,18 @@
 
 **Keep provider layers small** - isolate integration glue from core handbook behavior with a focused set of manifests and projection assets.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-handbook-integration-opencode`
+- `ace-test ace-handbook-integration-opencode all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

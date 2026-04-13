@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-hitl v0.8.7**: Published handbook and HITL migration release changes for HitL package.
+
+
+## [0.8.6] - 2026-04-11
+
+### Technical
+
+- Updated the CLI contract test assertion to `0.8.6` so it matches the current released line.
+
+## [0.8.5] - 2026-04-11
+
+### Technical
+
+- Updated the CLI contract test version assertion to match the `Ace::Hitl::VERSION` release line (`0.8.5`) after fit-cycle feedback fixes.
+
+## [0.8.4] - 2026-04-11
+
+### Technical
+
+- Updated the CLI contract test to assert `Ace::Hitl::VERSION` (`0.8.4`) after the follow-up review-cycle patch release.
+
+## [0.8.3] - 2026-04-11
+
+### Technical
+
+- Updated the CLI contract test to assert the current released package version after the 0.8.2 batch migration release.
+
+## [0.8.2] - 2026-04-11
+
+### Technical
+
+- Migrated deterministic CLI test coverage to `test/fast/commands/` for fast-only package alignment.
+- Updated package docs and demo test references to document and use the fast-only test contract.
+
 ## [0.8.1] - 2026-04-05
 
 ### Changed

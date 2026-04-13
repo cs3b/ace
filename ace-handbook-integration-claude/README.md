@@ -25,6 +25,18 @@
 
 **Standardize cross-provider behavior** - preserve shared conventions while adapting to Claude Code's command surface, ensuring the same skill intent works across all supported providers.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-handbook-integration-claude`
+- `ace-test ace-handbook-integration-claude all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

@@ -25,6 +25,18 @@
 
 **Enable incremental provider onboarding** - add or update PI support independently of core ACE changes, maintaining a focused provider shim layer.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-handbook-integration-pi`
+- `ace-test ace-handbook-integration-pi all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
