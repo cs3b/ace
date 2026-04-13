@@ -2,13 +2,13 @@
 
 ## Goal
 
-Create a worktree for task 8pp.t.q7w using the task-aware creation mechanism. Capture creation output, verify the branch name includes the task ID, and confirm the worktree appears when listing task-associated worktrees.
+Create a worktree for task 8pp.t.q7w using the task-aware creation mechanism. Capture creation output, verify the branch name includes the task identifier token (`q7w`), and confirm the worktree appears when listing task-associated worktrees.
 
 ## Workspace
 
 Save all output to `results/tc/02/`. Capture:
 - `results/tc/02/create-task.stdout`, `.stderr`, `.exit` — create worktree for task 8pp.t.q7w
-- `results/tc/02/branch-check.stdout` — git branch or worktree info showing the branch name includes task ID
+- `results/tc/02/branch-check.stdout` — git branch or worktree info showing the branch name includes task identifier token `q7w`
 - `results/tc/02/list-task.stdout`, `.stderr`, `.exit` — list showing the task-associated worktree
 
 ## Constraints

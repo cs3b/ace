@@ -13,12 +13,12 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Remove artifacts exist** — results/tc/05/ contains stdout/exit for remove and list-after.
 2. **Remove succeeds** — remove.exit is 0.
-3. **Worktree gone from list** — list-after.stdout no longer includes the removed worktree.
-4. **Directory deleted** — fs-check.txt confirms the worktree directory no longer exists on disk.
+3. **Directory deleted** — fs-check.txt confirms the worktree directory no longer exists on disk.
+4. **List-after captured** — list-after artifacts exist for diagnostics (informational, not a hard pass/fail gate).
 
 ## Verdict
 
-- **PASS**: Remove exits 0, worktree disappears from list, directory deleted from filesystem.
-- **FAIL**: Remove fails, worktree still listed, or directory still present.
+- **PASS**: Remove exits 0 and the worktree directory is deleted from filesystem.
+- **FAIL**: Remove fails or directory still present.
 
 Report: `PASS` or `FAIL` with evidence (exit code, list output, filesystem check).

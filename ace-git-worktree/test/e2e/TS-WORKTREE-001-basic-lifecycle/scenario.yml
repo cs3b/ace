@@ -21,15 +21,16 @@ e2e-justification: >
   filesystem paths, and branch management. None testable with mocks.
 
 unit-coverage-reviewed:
-  - test/commands/create_command_test.rb
-  - test/commands/list_command_test.rb
-  - test/commands/switch_command_test.rb
-  - test/commands/remove_command_test.rb
-  - test/commands/prune_command_test.rb
-  - test/molecules/worktree_creator_test.rb
-  - test/molecules/worktree_lister_test.rb
-  - test/molecules/worktree_remover_test.rb
-  - test/organisms/worktree_manager_test.rb
+  - test/fast/commands/create_command_test.rb
+  - test/fast/commands/list_command_test.rb
+  - test/fast/commands/switch_command_test.rb
+  - test/fast/commands/remove_command_test.rb
+  - test/fast/commands/prune_command_test.rb
+  - test/fast/molecules/worktree_creator_test.rb
+  - test/fast/molecules/worktree_lister_test.rb
+  - test/fast/molecules/worktree_remover_test.rb
+  - test/fast/organisms/worktree_manager_test.rb
+  - test/feat/worktree_manager_contract_test.rb
 
 requires:
   tools: [git, ace-git-worktree]
@@ -37,7 +38,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - run: |

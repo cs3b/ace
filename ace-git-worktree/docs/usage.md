@@ -286,6 +286,21 @@ git:
 The defaults file also documents timeout controls, hook execution, current-task symlink creation, push remotes, and PR
 title formatting.
 
+## Testing
+
+Use the package testing contract below when validating changes:
+
+```bash
+ace-test ace-git-worktree
+ace-test ace-git-worktree feat
+ace-test ace-git-worktree all
+ace-test-e2e ace-git-worktree
+```
+
+- `ace-test ace-git-worktree` targets deterministic package tests (`fast`).
+- `ace-test ace-git-worktree feat` targets deterministic feature-level coverage.
+- `ace-test-e2e ace-git-worktree` targets real workflow scenarios only.
+
 ## Troubleshooting
 
 ### Problem: `create --task` cannot find the task
