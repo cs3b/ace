@@ -3,8 +3,8 @@ doc-type: user
 title: ace-test Documentation Reference
 purpose: Documentation for ace-test/docs/usage.md
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-11
+  last-checked: 2026-04-11
 ---
 
 # ace-test Usage Reference
@@ -40,6 +40,20 @@ ace-docs:
 - `ace-nav resolve wfi://test/review`
 - `ace-nav list 'guide://*'`
 - `ace-nav list 'wfi://test/*'`
+
+## Testing
+
+`ace-test` is currently a **fast-only** package in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This package does not introduce `test/feat/` or `test/e2e/` in this migration.
+
+Verification commands:
+
+```bash
+ace-test ace-test
+ace-test ace-test all
+```
 
 ## Note on execution
 

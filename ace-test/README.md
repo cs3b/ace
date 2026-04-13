@@ -36,5 +36,17 @@
 
 **Verify full-suite health** - use `/as-test-verify-suite` to confirm that the complete test suite passes after changes, coordinating with [`ace-test-runner`](../ace-test-runner) for execution.
 
+## Testing Contract
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-test`
+- `ace-test ace-test all`
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

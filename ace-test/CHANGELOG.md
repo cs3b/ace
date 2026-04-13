@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
+
+
+## [0.7.1] - 2026-04-11
+
+### Technical
+- Added the missing `0.7.0` changelog release section so package release history aligns with the shipped version line.
+
+## [0.7.0] - 2026-04-11
+
+### Changed
+- Migrated deterministic package coverage to `test/fast/` and refreshed package docs to publish the fast-only testing contract (`ace-test ace-test` / `ace-test ace-test all`) without introducing `test/feat/` or `test/e2e`.
+
 ## [0.6.6] - 2026-04-11
 
 ### Technical
