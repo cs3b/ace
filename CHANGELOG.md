@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
 - **ace-llm v0.33.3**: Added `codex:mini` as a `commit` role fallback after `glite` so release/commit tooling can continue role-based generation when the primary model is unavailable.
 - **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based selector resolution no longer crashes when only fallback environment keys are configured.
 - **ace-assign v0.47.2**: Hardened assignment drive fork completion pickup so terminal child subtrees are resumed from scoped assignment status, including 6-minute polling guidance and detached session recovery.
