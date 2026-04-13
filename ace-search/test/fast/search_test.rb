@@ -17,7 +17,7 @@ class Ace::TestSearch < AceSearchTestCase
 
   def test_that_it_has_a_version_number
     refute_nil ::Ace::Search::VERSION
-    assert_match(/\d+\.\d+\.\d+/, ::Ace::Search::VERSION)
+    assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::Search::VERSION)
   end
 
   def test_module_defined
