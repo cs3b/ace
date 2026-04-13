@@ -60,7 +60,9 @@ module Ace
           end
 
           def target_directory
-            @global ? File.expand_path("~/.ace") : ".ace"
+            return File.expand_path("~/.ace") if @global
+
+            File.join(project_root, ".ace")
           end
 
           def show_config_docs_if_needed(gem_name, target_dir)
@@ -117,7 +119,7 @@ module Ace
             if relative_str.start_with?("#{PROJECT_ROOT_DIR}/")
               return nil if @global
 
-              return relative_str.delete_prefix("#{PROJECT_ROOT_DIR}/")
+              return File.join(project_root, relative_str.delete_prefix("#{PROJECT_ROOT_DIR}/"))
             end
 
             File.join(target_dir, relative_str)
@@ -126,7 +128,7 @@ module Ace
           def merge_gitignore(source, target)
             target_exists = File.exist?(target)
 
-            if target_exists && !@force
+            if target_exists
               merge_gitignore_entry_if_missing(source, target)
               return
             end
@@ -162,6 +164,10 @@ module Ace
 
             @copied_files << target
             puts "  Appended: #{line} -> #{target}" if @verbose
+          end
+
+          def project_root
+            @project_root ||= Ace::Support::Config.find_project_root(start_path: Dir.pwd) || Dir.pwd
           end
 
           def print_summary

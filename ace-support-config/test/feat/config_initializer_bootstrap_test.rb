@@ -65,6 +65,41 @@ module Ace
             assert_includes File.read("CLAUDE.md"), "Do not use pipes, redirects, or shell post-processors"
           end
         end
+
+        def test_init_force_preserves_existing_gitignore_rules
+          with_temp_config(
+            ".gitignore" => "node_modules/\n",
+            ".git" => {}
+          ) do
+            initializer = Organisms::ConfigInitializer.new(force: true)
+            initializer.send(:init_gem, "ace-support-core")
+
+            gitignore = File.read(".gitignore")
+
+            assert_includes gitignore, "node_modules/"
+            assert_equal 1, gitignore.scan(".ace-local/").length
+          end
+        end
+
+        def test_init_from_subdirectory_targets_repo_root_for_project_root_files
+          with_temp_config(
+            ".git" => {},
+            "subdir" => {}
+          ) do |tmpdir|
+            Dir.chdir(File.join(tmpdir, "subdir")) do
+              initializer = Organisms::ConfigInitializer.new(force: true)
+              initializer.send(:init_gem, "ace-support-core")
+            end
+
+            assert File.exist?(File.join(tmpdir, "AGENTS.md"))
+            assert File.exist?(File.join(tmpdir, "CLAUDE.md"))
+            assert File.exist?(File.join(tmpdir, ".gitignore"))
+
+            refute File.exist?(File.join(tmpdir, "subdir", "AGENTS.md"))
+            refute File.exist?(File.join(tmpdir, "subdir", "CLAUDE.md"))
+            refute File.exist?(File.join(tmpdir, "subdir", ".gitignore"))
+          end
+        end
       end
     end
   end
