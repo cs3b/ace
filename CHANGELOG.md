@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
+- **ace-llm v0.33.4**: Added the missing `ace-support-models` runtime dependency and aligned quick-start install guidance so fresh onboarding can run `ace-llm --list-providers` without manual dependency patching.
 - **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
 - **ace-llm v0.33.3**: Added `codex:mini` as a `commit` role fallback after `glite` so release/commit tooling can continue role-based generation when the primary model is unavailable.
 - **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based selector resolution no longer crashes when only fallback environment keys are configured.
@@ -100,11 +101,8 @@ All notable changes to this project will be documented in this file.
 - **ace-support-test-helpers v0.14.2**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 - **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
 ### Technical
-<<<<<<< HEAD
 - Dependency-following patch release after the `ace-assign v0.49.0` line update: `ace-overseer v0.14.2`.
-=======
 - **ace-support-core v0.29.8**: Shipped generic project-root bootstrap templates for `.gitignore`, `AGENTS.md`, and `CLAUDE.md` to support safer fresh-project initialization.
->>>>>>> 1265ba6c9 (docs(project default): update main CHANGELOG and Gemfile.lock for package releases)
 - Tightened version-format contract coverage to validate semantic-version shape instead of pinned or partial matches in `ace-git-commit v0.24.2`, `ace-hitl v0.8.7`, `ace-llm v0.33.3`, `ace-llm-providers-cli v0.28.2`, `ace-prompt-prep v0.24.2`, `ace-search v0.25.2`, `ace-support-core v0.29.7`, and `ace-support-test-helpers v0.14.2`.
 - **ace-overseer v0.13.12**: Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.20` to stay aligned with the current worktree minor release line.
 - **ace-hitl v0.8.6**: Corrected the fast CLI library-contract assertion to track the current released version line (`0.8.6`).
