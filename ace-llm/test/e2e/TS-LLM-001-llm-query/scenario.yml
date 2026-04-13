@@ -10,16 +10,16 @@ tool-under-test: ace-llm
 sandbox-layout:
   results/tc/01/: "Basic query artifacts"
   results/tc/02/: "Model-selection query artifacts"
-  results/tc/03/: "Unknown-provider routing artifacts"
 
 e2e-justification: >
   Requires live provider integration and response handling through the real
-  ace-llm CLI, including provider/model routing and output formatting behavior.
+  ace-llm CLI, including provider/model routing and output formatting behavior
+  that deterministic `test/fast` and `test/feat` layers cannot fully replace.
 
 unit-coverage-reviewed:
-  - test/commands/query_command_test.rb
-  - test/integration/query_interface_fallback_test.rb
-  - test/molecules/client_registry_test.rb
+  - test/fast/commands/query_command_test.rb
+  - test/feat/cli_contract_test.rb
+  - test/fast/molecules/client_registry_test.rb
 
 requires:
   tools: [ace-llm]
@@ -27,6 +27,6 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - agent-env:
       PROJECT_ROOT_PATH: .

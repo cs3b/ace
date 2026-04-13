@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require_relative "../../lib/ace/llm/atoms/provider_config_validator"
+require_relative "../../../lib/ace/llm/atoms/provider_config_validator"
 
 module Ace
   module LLM

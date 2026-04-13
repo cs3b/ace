@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/llm/cli"
 require "ace/llm/cli/commands/query"
 require "ace/test_support/config_helpers"

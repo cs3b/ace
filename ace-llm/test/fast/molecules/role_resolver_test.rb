@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/llm/molecules/role_resolver"
 
 module Ace
@@ -86,7 +86,7 @@ module Ace
           assert_match(/claude:sonnet, codex:gpt/, error.message)
         end
 
-        def test_skips_inactive_and_required_key_missing_candidates
+        def test_skips_inactive_candidates_and_keeps_required_key_candidates
           resolver = build_resolver(
             roles: {"reviewer" => ["claude:sonnet", "codex:gpt", "gemini:pro"]},
             inactive: ["claude"],
@@ -95,7 +95,7 @@ module Ace
             present: ["gemini"]
           )
 
-          assert_equal "gemini:pro", resolver.resolve("reviewer")
+          assert_equal "codex:gpt", resolver.resolve("reviewer")
         end
 
         def test_allows_provider_when_api_key_not_required
@@ -114,6 +114,18 @@ module Ace
             roles: {"fast" => ["glite"]},
             available: ["google"],
             present: ["google"],
+            aliases: {"glite" => "google:gemini-flash-lite-latest"}
+          )
+
+          assert_equal "glite", resolver.resolve("fast")
+        end
+
+        def test_does_not_skip_provider_with_missing_required_key
+          resolver = build_resolver(
+            roles: {"fast" => ["glite"]},
+            available: ["google"],
+            required: ["google"],
+            present: [],
             aliases: {"glite" => "google:gemini-flash-lite-latest"}
           )
 

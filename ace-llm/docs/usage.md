@@ -192,3 +192,19 @@ Run `ace-llm --list-providers` for available providers and configuration guidanc
 ```bash
 ace-llm --help
 ```
+
+## Package Verification
+
+Run deterministic and scenario layers with the package contract:
+
+```bash
+ace-test ace-llm
+ace-test ace-llm feat
+ace-test ace-llm all
+ace-test-e2e ace-llm
+```
+
+Coverage layout:
+- `test/fast/` for deterministic package tests
+- `test/feat/` for deterministic feature/CLI contract tests
+- `test/e2e/` for retained scenario workflows only

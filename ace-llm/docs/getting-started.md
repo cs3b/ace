@@ -103,6 +103,19 @@ Then run queries normally; `ace-llm` retries transient failures and falls back t
 | `ace-llm gflash --output /tmp/out.md --format markdown` | Save formatted output to file |
 | `ace-llm gflash@ro "Review this diff"` | Run with preset suffix |
 
+## Testing Contract
+
+Use the package test tiers directly:
+
+```bash
+ace-test ace-llm
+ace-test ace-llm feat
+ace-test ace-llm all
+ace-test-e2e ace-llm
+```
+
+`test/fast/` and `test/feat/` hold deterministic checks; `test/e2e/` remains for scenario workflows.
+
 ## Next steps
 
 - [Usage Guide](usage.md) for full option and error reference
