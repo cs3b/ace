@@ -239,6 +239,70 @@ module Ace
             end
           end
 
+          def test_cookbook_protocol_deduplicates_overlapping_source_paths
+            create_test_protocol(@test_dir, "cookbook", {
+              "extensions" => [".cookbook.md"],
+              "inferred_extensions" => [".cookbook", ".cookbook.md"]
+            })
+
+            shared_dir = File.join(@test_dir, "cookbook-resources", "cookbook")
+            FileUtils.mkdir_p(shared_dir)
+            File.write(File.join(shared_dir, "setup.cookbook.md"), "# Cookbook")
+
+            create_test_source(@test_dir, "cookbook", "high_priority_source", {
+              "path" => shared_dir,
+              "priority" => 10
+            })
+            create_test_source(@test_dir, "cookbook", "low_priority_source", {
+              "path" => shared_dir,
+              "priority" => 20
+            })
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              resources = @scanner.find_resources("cookbook", "*")
+              setup_resources = resources.select { |resource| File.basename(resource[:path]) == "setup.cookbook.md" }
+
+              assert_equal 1, setup_resources.length
+              assert_equal "high_priority_source", setup_resources.first[:source].name
+            end
+          end
+
+          def test_cookbook_protocol_keeps_distinct_files_with_same_basename
+            create_test_protocol(@test_dir, "cookbook", {
+              "extensions" => [".cookbook.md"],
+              "inferred_extensions" => [".cookbook", ".cookbook.md"]
+            })
+
+            primary_dir = File.join(@test_dir, "cookbook-resources", "primary")
+            secondary_dir = File.join(@test_dir, "cookbook-resources", "secondary")
+            FileUtils.mkdir_p(primary_dir)
+            FileUtils.mkdir_p(secondary_dir)
+            File.write(File.join(primary_dir, "setup.cookbook.md"), "# Primary Cookbook")
+            File.write(File.join(secondary_dir, "setup.cookbook.md"), "# Secondary Cookbook")
+
+            create_test_source(@test_dir, "cookbook", "primary_source", {
+              "path" => primary_dir,
+              "priority" => 10
+            })
+            create_test_source(@test_dir, "cookbook", "secondary_source", {
+              "path" => secondary_dir,
+              "priority" => 20
+            })
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              resources = @scanner.find_resources("cookbook", "*")
+              setup_resources = resources.select { |resource| File.basename(resource[:path]) == "setup.cookbook.md" }
+
+              assert_equal 2, setup_resources.length
+            end
+          end
+
           def test_find_resources_in_multiple_sources
             # Create secondary source
             secondary_dir = File.join(@test_dir, "secondary-resources", "test")
