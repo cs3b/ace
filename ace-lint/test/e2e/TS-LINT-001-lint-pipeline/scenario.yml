@@ -23,13 +23,26 @@ e2e-justification: >
   Doctor mode inspects real tool availability and config files. None of
   this is testable with mocks.
 
+unit-coverage-reviewed:
+  - test/fast/lint_test.rb
+  - test/fast/atoms/comment_validator_test.rb
+  - test/fast/atoms/pattern_matcher_test.rb
+  - test/fast/atoms/rubocop_runner_test.rb
+  - test/fast/atoms/standardrb_runner_test.rb
+  - test/fast/molecules/group_resolver_test.rb
+  - test/fast/molecules/markdown_linter_test.rb
+  - test/fast/molecules/ruby_linter_test.rb
+  - test/fast/molecules/markdown_surgical_fixer_test.rb
+  - test/fast/organisms/lint_orchestrator_test.rb
+  - test/fast/organisms/lint_doctor_test.rb
+  - test/fast/organisms/report_generator_test.rb
+  - test/fast/commands/lint_command_test.rb
+
 requires:
   tools: [ace-lint, standardrb, rubocop, jq]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; fi"
   - copy-fixtures
-  - agent-env:
-      PROJECT_ROOT_PATH: "."
