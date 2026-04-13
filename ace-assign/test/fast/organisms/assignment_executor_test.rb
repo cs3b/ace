@@ -1188,12 +1188,12 @@ class AssignmentExecutorTest < AceAssignTestCase
       },
       rendering: {
         "name" => "verify-test-suite",
-        "workflow" => "wfi://test/verify-suite",
+        "workflow" => "wfi://assign/verify-test-suite",
         "render" => "step_template",
-        "description" => "Run modified-package deterministic verification plus the default fast monorepo suite",
+        "description" => "Run modified-package deterministic verification plus the full deterministic monorepo suite",
         "steps" => [
           {"description" => "Run ace-test <package> all --profile 6 for each modified package", "note" => "Run per-package, not as a full monorepo sweep."},
-          {"description" => "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"}
+          {"description" => "Run ace-test-suite --target all to verify no cross-package regressions in the full deterministic suite"}
         ],
         "when_to_skip" => [
           "No code changes that could affect tests (documentation-only)"
@@ -1203,46 +1203,12 @@ class AssignmentExecutorTest < AceAssignTestCase
 
     assert_includes instructions, "Step focus:"
     assert_includes instructions, "Run ace-test <package> all --profile 6 for each modified package"
-    assert_includes instructions, "Run plain ace-test-suite to verify no cross-package regressions in the default fast suite"
+    assert_includes instructions, "Run ace-test-suite --target all to verify no cross-package regressions in the full deterministic suite"
     assert_includes instructions, "Skip when:"
     assert_includes instructions, "Assignment-specific context:"
     refute_includes instructions, "Monthly full audit"
     refute_includes instructions, "flakiness"
     refute_includes instructions, "create follow-up tasks"
-  end
-
-  def test_render_skill_backed_step_instructions_uses_step_template_for_verify_e2e
-    executor = Ace::Assign::Organisms::AssignmentExecutor.new
-
-    instructions = executor.send(
-      :render_skill_backed_step_instructions,
-      step: {
-        "name" => "verify-e2e",
-        "taskref" => "8q5.1",
-        "instructions" => "Run only for heavily modified packages with public CLI changes."
-      },
-      rendering: {
-        "name" => "verify-e2e",
-        "workflow" => "wfi://e2e/review",
-        "render" => "step_template",
-        "description" => "Review E2E coverage for modified packages and run targeted package scenarios",
-        "steps" => [
-          {"description" => "Review coverage for heavily modified packages"},
-          {"description" => "If coverage matrix shows gaps or stale TCs, update or create E2E tests", "conditional" => "coverage gaps were found"},
-          {"description" => "Run ace-test-e2e for each selected heavily modified package"}
-        ],
-        "when_to_skip" => [
-          "No public CLI API changes (internal-only refactoring)"
-        ]
-      }
-    )
-
-    assert_includes instructions, "Review coverage for heavily modified packages"
-    assert_includes instructions, "If coverage gaps were found."
-    assert_includes instructions, "Run ace-test-e2e for each selected heavily modified package"
-    refute_includes instructions, "Stage 1 of 3 (Explore)"
-    refute_includes instructions, "wfi://e2e/plan-changes"
-    refute_includes instructions, "wfi://e2e/rewrite"
   end
 
   def test_start_with_sub_steps_compacts_child_context_and_avoids_parent_boilerplate
@@ -1784,11 +1750,13 @@ class AssignmentExecutorTest < AceAssignTestCase
             onboard = state.steps.find { |step| step.name == "onboard" }
             work_steps = state.steps.select { |step| step.name == "work-on-task" }
             verify_suite = state.steps.find { |step| step.name == "verify-test-suite" }
+            verify_e2e = state.steps.find { |step| step.name == "verify-e2e" }
             create_pr = state.steps.find { |step| step.name == "create-pr" }
 
             refute_nil onboard
             assert_equal 1, work_steps.length
             refute_nil verify_suite
+            assert_nil verify_e2e
             refute_nil create_pr
 
             assert_nil onboard.skill
@@ -1798,7 +1766,8 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes File.read(onboard.file_path), "source_skill: as-onboard"
             assert_includes File.read(work_steps.first.file_path), "source_skill: as-task-work"
             assert_includes work_steps.first.instructions, "# Work on Task"
-            assert_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(verify_suite.file_path), "source_workflow: wfi://assign/verify-test-suite"
+            refute_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
             assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
           end
         ensure
@@ -1832,12 +1801,14 @@ class AssignmentExecutorTest < AceAssignTestCase
             onboard = state.steps.find { |step| step.name == "onboard" }
             work_steps = state.steps.select { |step| step.name == "work-on-task" }
             verify_suite = state.steps.find { |step| step.name == "verify-test-suite" }
+            verify_e2e = state.steps.find { |step| step.name == "verify-e2e" }
             create_pr = state.steps.find { |step| step.name == "create-pr" }
             mark_tasks_done = state.steps.find { |step| step.name == "mark-tasks-done" }
 
             refute_nil onboard
             assert_equal 2, work_steps.length
             refute_nil verify_suite
+            assert_nil verify_e2e
             refute_nil create_pr
             refute_nil mark_tasks_done
 
@@ -1850,7 +1821,8 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes File.read(work_steps[0].file_path), "source_skill: as-task-work"
             assert_includes File.read(work_steps[1].file_path), "source_skill: as-task-work"
             assert_includes work_steps[0].instructions, "# Work on Task"
-            assert_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
+            assert_includes File.read(verify_suite.file_path), "source_workflow: wfi://assign/verify-test-suite"
+            refute_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
             assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
 
             assert_equal "mark-tasks-done", mark_tasks_done.name

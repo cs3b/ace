@@ -36,6 +36,6 @@ steps:
       - Use a descriptive commit message following project conventions.
 
 customization_hints:
-  - "Add verify-test-suite before commit for complex changes; that step should run `ace-test <package> all` for modified packages and then plain `ace-test-suite`."
+  - "Add verify-test-suite before commit for complex changes; that step should run `ace-test <package> all --profile 6` for modified packages and then `ace-test-suite --target all`."
   - "Add lint after work-on-task for style enforcement"
   - "Skip onboard if already onboarded"

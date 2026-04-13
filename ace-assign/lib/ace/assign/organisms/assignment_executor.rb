@@ -850,12 +850,6 @@ module Ace
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test all --profile 6\n- This subtree step verifies modified packages only; do not run the monorepo suite here.\n- If no package-level code changes are present, mark this step skipped with a clear reason."
           when /\Arelease(?:-.+)?\z/
             "- Release all modified packages and update both package and root changelogs.\n- Follow semantic versioning expectations for this step.\n- When auto-detecting packages, include `git diff origin/main...HEAD --name-only` in addition to working-tree state — prior steps may have already committed changes."
-          when "verify-e2e"
-            "- Check change scope: run `git diff origin/main --name-only` to list modified files.\n" \
-            "- **Skip criteria**: If ALL modified files match `*.md`, `*.yml` (non-CI config), `.ace-tasks/**`, or `.ace-retros/**`, skip E2E verification — mark step done with \"skipped: docs/task-spec only changes, no runnable code affected\".\n" \
-            "- Otherwise: detect modified packages, run `ace-test-e2e <package>` for each package with `test/e2e/` scenarios#{task_hint}.\n" \
-            "- Do not escalate to `ace-test-e2e-suite`; this verification step is package-targeted.\n" \
-            "- If no modified package has E2E scenarios, mark step done with \"skipped: no E2E scenarios for modified packages\"."
           else
             "- Execute the #{sub_name} step."
           end
@@ -1334,6 +1328,11 @@ module Ace
 
           merged = base.dup
           override.each do |key, value|
+            if runtime_binding_override_key?(key, base, override)
+              merged[key] = base[key]
+              next
+            end
+
             merged[key] =
               if merged[key].is_a?(Hash) && value.is_a?(Hash)
                 deep_merge_step_definition(merged[key], value)
@@ -1342,6 +1341,33 @@ module Ace
               end
           end
           merged
+        end
+
+        def runtime_binding_override_key?(key, base, override)
+          return false unless %w[source workflow skill source_skill].include?(key)
+          return false unless local_runtime_binding_present?(base)
+          canonical_binding_present?(override)
+        end
+
+        def local_runtime_binding_present?(entry)
+          entry.is_a?(Hash) && (
+            present_string?(entry["source"]) ||
+            present_string?(entry["workflow"]) ||
+            present_string?(entry["skill"])
+          )
+        end
+
+        def canonical_binding_present?(entry)
+          entry.is_a?(Hash) && (
+            present_string?(entry["source"]) ||
+            present_string?(entry["workflow"]) ||
+            present_string?(entry["skill"]) ||
+            present_string?(entry["source_skill"])
+          )
+        end
+
+        def present_string?(value)
+          value.is_a?(String) && !value.strip.empty?
         end
 
         # Archive source config into the task's jobs/ directory.

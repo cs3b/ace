@@ -69,6 +69,37 @@ class AssignmentExecutorStepCatalogTest < AceAssignTestCase
     assert_equal "Internal helper", merged.find { |step| step["name"] == "task-load" }["description"]
   end
 
+  def test_merge_step_catalog_preserves_local_runtime_binding_for_verify_test_suite
+    executor = Ace::Assign::Organisms::AssignmentExecutor.new
+
+    base_catalog = [
+      {
+        "name" => "verify-test-suite",
+        "workflow" => "wfi://assign/verify-test-suite",
+        "description" => "Local contract"
+      }
+    ]
+    canonical_catalog = [
+      {
+        "name" => "verify-test-suite",
+        "source" => "skill://as-test-verify-suite",
+        "skill" => "as-test-verify-suite",
+        "source_skill" => "as-test-verify-suite",
+        "workflow" => "wfi://test/verify-suite",
+        "description" => "Canonical suite"
+      }
+    ]
+
+    merged = executor.send(:merge_step_catalog, base_catalog, canonical_catalog)
+    verify_suite = merged.first
+
+    assert_equal "Canonical suite", verify_suite["description"]
+    assert_equal "wfi://assign/verify-test-suite", verify_suite["workflow"]
+    assert_nil verify_suite["source"]
+    assert_nil verify_suite["skill"]
+    assert_nil verify_suite["source_skill"]
+  end
+
   def test_step_catalog_keeps_project_overrides_after_canonical_merge
     executor = Ace::Assign::Organisms::AssignmentExecutor.new
     executor.instance_variable_set(:@step_catalog, nil)

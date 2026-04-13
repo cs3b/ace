@@ -30,7 +30,7 @@ steps:
   - name: demo-validate
     optional: true
     description: "Run functional demo proving the feature works end-to-end"
-    skip_when: "verify-test-suite already covers functional validation (E2E tests exist and passed)"
+    skip_when: "verify-test-suite already covers the required deterministic validation for this change"
     on_failure: "Trigger re-plan mechanism instead of proceeding to analysis"
 
   - name: analyze

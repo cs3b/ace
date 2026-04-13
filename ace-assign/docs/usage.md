@@ -34,6 +34,13 @@ ace-test ace-assign all
 ace-test-e2e ace-assign
 ```
 
+For assignment verification, `verify-test-suite` is the standard gate:
+
+```bash
+ace-test <package> all --profile 6
+ace-test-suite --target all
+```
+
 ## Core Lifecycle
 
 
