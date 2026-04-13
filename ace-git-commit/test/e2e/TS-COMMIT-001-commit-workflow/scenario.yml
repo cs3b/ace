@@ -22,13 +22,21 @@ e2e-justification: >
   depend on real git state. Unit tests verify message formatting; these
   tests verify the full commit pipeline end-to-end.
 
+unit-coverage-reviewed:
+  - test/fast/git_commit_test.rb
+  - test/fast/default_config_test.rb
+  - test/fast/commands/cli_routing_test.rb
+  - test/fast/molecules/message_generator_test.rb
+  - test/fast/molecules/commit_summarizer_test.rb
+  - test/fast/molecules/split_commit_executor_test.rb
+
 requires:
   tools: [git, ace-git-commit]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - agent-env:
