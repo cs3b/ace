@@ -17,6 +17,20 @@ Canonical handbook resources:
 
 Runtime store default: `.ace-local/hitl/` (legacy `.ace-hitl/` is no longer used as default).
 
+## Testing
+
+`ace-hitl` is currently a **fast-only** package in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This package does not introduce `test/feat/` or `test/e2e/` in this migration.
+
+Verification commands:
+
+```bash
+ace-test ace-hitl
+ace-test ace-hitl all
+```
+
 ## Create
 
 ```bash

@@ -35,6 +35,18 @@ ace-hitl wait abc123
 ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens." --resume
 ```
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-hitl`
+- `ace-test ace-hitl all`
+
 ## Ownership Boundary
 
 `ace-hitl` owns HITL-specific event semantics and markdown contract.

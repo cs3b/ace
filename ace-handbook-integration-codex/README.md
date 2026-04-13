@@ -25,6 +25,18 @@
 
 **Keep integration delivery minimal** - maintain a focused provider shim layer with only the manifests and projection assets needed for Codex compatibility.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-handbook-integration-codex`
+- `ace-test ace-handbook-integration-codex all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
