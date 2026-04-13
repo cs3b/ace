@@ -15,8 +15,15 @@ Save artifacts to `results/tc/03/`.
 - Keep all artifacts under `results/tc/03/`.
 - Do not write outside the sandbox.
 - Reuse the docs corpus from Goals 1-2 so status output has real managed documents to summarize.
-- If the docs corpus is missing, create it before status and capture the bootstrap in `results/tc/03/setup.*`.
 - Capture status command artifacts as:
   - `results/tc/03/status.stdout`
   - `results/tc/03/status.stderr`
   - `results/tc/03/status.exit`
+
+## Required command sequence
+
+Run and capture:
+
+```bash
+ace-docs status
+```

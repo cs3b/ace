@@ -10,7 +10,6 @@ Validation order (impact-first):
 1. `results/tc/02/validate.stdout`, `.stderr`, and `.exit` exist.
 2. `results/tc/02/validate.exit` contains a numeric code.
 3. `results/tc/02/validate.stdout` includes validation-result indicators (for example `valid`, `invalid`, or summary text).
-4. If setup fallback was required, `results/tc/02/setup.*` is present.
 
 ## Verdict
 

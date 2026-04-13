@@ -36,5 +36,26 @@
 
 **Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
+## Testing Contract
+
+Run deterministic package coverage with:
+
+```bash
+ace-test ace-docs
+ace-test ace-docs all
+```
+
+Run deterministic feature coverage:
+
+```bash
+ace-test ace-docs feat
+```
+
+Run retained workflow scenarios in E2E:
+
+```bash
+ace-test-e2e ace-docs
+```
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

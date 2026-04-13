@@ -99,3 +99,12 @@ ace-docs analyze-consistency --duplicates --threshold 80
 - Use `ace-docs analyze-consistency --strict` for release checks
 - Add package-scoped status checks in docs maintenance workflows
 - Build multi-subject analysis patterns for large docs sets
+
+## Package Test Commands
+
+```bash
+ace-test ace-docs
+ace-test ace-docs feat
+ace-test ace-docs all
+ace-test-e2e ace-docs
+```

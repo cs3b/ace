@@ -215,3 +215,12 @@ frontmatter_free:
 
 - `analyze` requires a `FILE` argument.
 - For large repos, use `--package` and `--glob` to limit analysis scope.
+
+## Package Test Commands
+
+```bash
+ace-test ace-docs
+ace-test ace-docs feat
+ace-test ace-docs all
+ace-test-e2e ace-docs
+```

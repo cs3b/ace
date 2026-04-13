@@ -20,15 +20,43 @@ e2e-justification: >
   across a shared docs corpus and real file updates.
 
 unit-coverage-reviewed:
-  - test/cli/commands/discover_test.rb
-  - test/cli/commands/validate_test.rb
-  - test/cli/commands/status_test.rb
-  - test/cli/commands/update_test.rb
+  - test/fast/cli/commands/discover_test.rb
+  - test/fast/cli/commands/validate_test.rb
+  - test/fast/cli/commands/status_test.rb
+  - test/fast/cli/commands/update_test.rb
+  - test/feat/status_command_integration_test.rb
 
 requires:
-  tools: [ace-docs]
+  tools: [ace-docs, bash]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      mkdir -p docs results/tc/01 results/tc/02 results/tc/03 results/tc/04
+      cat > docs/guide.md <<'MD'
+      ---
+      doc-type: guide
+      title: Guide
+      purpose: Seed docs corpus
+      ace-docs:
+        last-updated: 2025-01-01
+      ---
+      # Guide
+      MD
+      cat > docs/reference.md <<'MD'
+      ---
+      doc-type: reference
+      title: Reference
+      purpose: Seed docs corpus
+      ace-docs:
+        last-updated: 2025-01-01
+      ---
+      # Reference
+      MD
+      for n in 01 02 03 04; do
+        printf "seeded docs corpus\n" > "results/tc/${n}/setup.stdout"
+        : > "results/tc/${n}/setup.stderr"
+        printf "0\n" > "results/tc/${n}/setup.exit"
+      done
