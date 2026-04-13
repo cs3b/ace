@@ -58,6 +58,22 @@ class TaskDoctorTest < AceTaskTestCase
     end
   end
 
+  def test_specific_check_frontmatter_detects_duplicate_task_ids
+    with_tasks_dir do |root|
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-one")
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-two")
+
+      doctor = Doctor.new(root, check: "frontmatter")
+      results = doctor.run_diagnosis
+
+      refute results[:valid]
+      duplicate_issue = results[:issues].find { |issue| issue[:message].include?("Duplicate task ID '8pp.t.q7w'") }
+      refute_nil duplicate_issue
+      assert_includes duplicate_issue[:message], "task-one"
+      assert_includes duplicate_issue[:message], "task-two"
+    end
+  end
+
   def test_specific_check_scope
     with_tasks_dir do |root|
       create_task_fixture(root, id: "8pp.t.q7w", slug: "test-task")
@@ -155,6 +171,57 @@ class TaskDoctorTest < AceTaskTestCase
       doctor = Doctor.new(root)
       results = doctor.run_diagnosis
       assert results[:issues].any? { |i| i[:message].include?("not in _archive") }
+    end
+  end
+
+  def test_detects_duplicate_top_level_task_ids
+    with_tasks_dir do |root|
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-one")
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-two")
+
+      doctor = Doctor.new(root)
+      results = doctor.run_diagnosis
+
+      refute results[:valid]
+      duplicate_issue = results[:issues].find { |issue| issue[:message].include?("Duplicate task ID '8pp.t.q7w'") }
+      refute_nil duplicate_issue
+      assert_includes duplicate_issue[:message], "task-one"
+      assert_includes duplicate_issue[:message], "task-two"
+    end
+  end
+
+  def test_detects_duplicate_subtask_ids
+    with_tasks_dir do |root|
+      parent_dir = create_task_fixture(root, id: "8pp.t.q7w", slug: "parent-task")
+      subtask_a_dir = File.join(parent_dir, "0-first-subtask")
+      subtask_b_dir = File.join(parent_dir, "1-second-subtask")
+      FileUtils.mkdir_p(subtask_a_dir)
+      FileUtils.mkdir_p(subtask_b_dir)
+
+      File.write(File.join(subtask_a_dir, "8pp.t.q7w.0-first-subtask.s.md"), <<~CONTENT)
+        ---
+        id: 8pp.t.q7w.0
+        status: pending
+        parent: 8pp.t.q7w
+        ---
+      CONTENT
+
+      File.write(File.join(subtask_b_dir, "8pp.t.q7w.1-second-subtask.s.md"), <<~CONTENT)
+        ---
+        id: 8pp.t.q7w.0
+        status: pending
+        parent: 8pp.t.q7w
+        ---
+      CONTENT
+
+      doctor = Doctor.new(root)
+      results = doctor.run_diagnosis
+
+      refute results[:valid]
+      duplicate_issue = results[:issues].find { |issue| issue[:message].include?("Duplicate task ID '8pp.t.q7w.0'") }
+      refute_nil duplicate_issue
+      assert_includes duplicate_issue[:message], "0-first-subtask"
+      assert_includes duplicate_issue[:message], "1-second-subtask"
     end
   end
 end

@@ -156,6 +156,21 @@ class TaskDoctorCliTest < AceTaskTestCase
     end
   end
 
+  def test_doctor_check_frontmatter_fails_on_duplicate_ids
+    with_tasks_dir do |root|
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-one", status: "pending", tags: ["test"])
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-two", status: "pending", tags: ["test"])
+
+      with_cli_root(root) do
+        result = run_cli(["doctor", "--check", "frontmatter"])
+        assert_equal 1, result[:exit_code]
+        assert_includes result[:stdout], "Duplicate task ID '8pp.t.q7w'"
+        assert_includes result[:stdout], "task-one"
+        assert_includes result[:stdout], "task-two"
+      end
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # --errors-only
   # ---------------------------------------------------------------------------
@@ -221,6 +236,19 @@ class TaskDoctorCliTest < AceTaskTestCase
       result = run_cli(["doctor"])
       assert_equal 1, result[:exit_code]
       assert_includes result[:stderr], "not found"
+    end
+  end
+
+  def test_doctor_fails_on_duplicate_ids
+    with_tasks_dir do |root|
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-one", status: "pending", tags: ["test"])
+      create_task_fixture(root, id: "8pp.t.q7w", slug: "task-two", status: "pending", tags: ["test"])
+
+      with_cli_root(root) do
+        result = run_cli(["doctor"])
+        assert_equal 1, result[:exit_code]
+        assert_includes result[:stdout], "Duplicate task ID '8pp.t.q7w'"
+      end
     end
   end
 end
