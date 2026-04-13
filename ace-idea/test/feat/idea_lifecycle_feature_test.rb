@@ -2,9 +2,8 @@
 
 require "test_helper"
 
-# Integration tests for ace-idea: end-to-end scenarios and edge cases.
-# Covers the full lifecycle and validates graceful degradation paths.
-class IdeaIntegrationTest < AceIdeaTestCase
+# Feature-level deterministic tests for ace-idea lifecycle and edge cases.
+class IdeaLifecycleFeatureTest < AceIdeaTestCase
   # ---------------------------------------------------------------------------
   # 1. Full roundtrip: create → show → update → move → list → verify
   # ---------------------------------------------------------------------------

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.19.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+### Changed
+- Migrated deterministic package coverage to `test/fast` and `test/feat`, retained lifecycle workflow coverage in `test/e2e`, and updated E2E scenario metadata to the restarted `fast`/`feat`/`e2e` contract.
 
 ## [0.18.5] - 2026-03-31
 

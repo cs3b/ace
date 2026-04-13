@@ -2,6 +2,6 @@
 
 module Ace
   module Idea
-    VERSION = '0.18.5'
+    VERSION = '0.19.1'
   end
 end
