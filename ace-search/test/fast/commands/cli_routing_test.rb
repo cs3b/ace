@@ -22,7 +22,9 @@ class CliRoutingTest < AceSearchTestCase
   def test_cli_routes_help_with_long_flag
     stdout, stderr, status = Open3.capture3(@exe_path, "--help")
     assert status.success?
-    assert_match(/Usage:/i, stdout + stderr)
+    assert_match(%r{
+USAGE
+}i, stdout + stderr)
   end
 
   # --- Search Command Tests ---
@@ -42,6 +44,8 @@ class CliRoutingTest < AceSearchTestCase
   def test_cli_shows_help_when_no_args
     stdout, stderr, status = Open3.capture3(@exe_path)
     assert status.success?
-    assert_match(/Usage:/i, stdout + stderr)
+    assert_match(%r{
+USAGE
+}i, stdout + stderr)
   end
 end

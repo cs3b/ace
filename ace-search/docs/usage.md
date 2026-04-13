@@ -112,6 +112,15 @@ ace-search "TODO" --preset daily-scan
 ace-search "TODO" --json
 ```
 
+## Testing Commands
+
+Use the package test lanes as:
+
+- `ace-test ace-search`
+- `ace-test ace-search feat`
+- `ace-test ace-search all`
+- `ace-test-e2e ace-search`
+
 ## Runtime Help
 
 ```bash
