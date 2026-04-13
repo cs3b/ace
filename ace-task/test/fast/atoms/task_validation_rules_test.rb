@@ -74,6 +74,11 @@ class TaskValidationRulesTest < AceTaskTestCase
     assert Rules.valid_id?("8pp.t.q7w")
   end
 
+  def test_valid_id_accepts_formatted_subtask_id
+    assert Rules.valid_id?("8pp.t.q7w.0")
+    assert Rules.valid_id?("8pp.t.q7w.a")
+  end
+
   def test_valid_id_rejects_raw_b36ts
     refute Rules.valid_id?("8ppq7w")
   end
