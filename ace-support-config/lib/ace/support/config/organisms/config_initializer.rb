@@ -145,7 +145,7 @@ module Ace
 
           def merge_gitignore_entry_if_missing(source, target)
             existing_content = File.read(target)
-            return if existing_content.include?(GITIGNORE_ACE_LOCAL_ENTRY)
+            return if gitignore_entry_present?(existing_content, GITIGNORE_ACE_LOCAL_ENTRY)
 
             line = File.readlines(source, chomp: true).find do |entry|
               entry == GITIGNORE_ACE_LOCAL_ENTRY
@@ -164,6 +164,15 @@ module Ace
 
             @copied_files << target
             puts "  Appended: #{line} -> #{target}" if @verbose
+          end
+
+          def gitignore_entry_present?(content, entry)
+            content.each_line.any? do |line|
+              normalized = line.strip
+              next false if normalized.empty? || normalized.start_with?("#")
+
+              normalized == entry
+            end
           end
 
           def project_root

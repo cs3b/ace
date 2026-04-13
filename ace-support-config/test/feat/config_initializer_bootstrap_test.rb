@@ -81,6 +81,22 @@ module Ace
           end
         end
 
+        def test_init_appends_gitignore_entry_when_existing_mentions_are_only_comments_or_negations
+          with_temp_config(
+            ".gitignore" => "# TODO ignore .ace-local/\n!.ace-local/\nnode_modules/\n",
+            ".git" => {}
+          ) do
+            initializer = Organisms::ConfigInitializer.new(force: true)
+            initializer.send(:init_gem, "ace-support-core")
+
+            gitignore_lines = File.readlines(".gitignore", chomp: true)
+
+            assert_includes gitignore_lines, "# TODO ignore .ace-local/"
+            assert_includes gitignore_lines, "!.ace-local/"
+            assert_equal 1, gitignore_lines.count(".ace-local/")
+          end
+        end
+
         def test_init_from_subdirectory_targets_repo_root_for_project_root_files
           with_temp_config(
             ".git" => {},
