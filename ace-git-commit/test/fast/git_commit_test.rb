@@ -9,7 +9,7 @@ module Ace
     end
 
     def test_version_format
-      assert_match(/\A\d+\.\d+\.\d+/, ::Ace::GitCommit::VERSION)
+      assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::GitCommit::VERSION)
     end
 
     def test_module_exists
