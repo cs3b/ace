@@ -9,7 +9,7 @@ module Ace
         # Discovers deterministic preflight tests and agent E2E scenarios in packages
         #
         # Finds test scenarios in the TS-format directory structure:
-        #   {package}/test/feat/**/*_test.rb (with legacy integration fallback)
+        #   {package}/test/feat/**/*_test.rb
         #   {package}/test/e2e/TS-*/scenario.yml
         #
         # Note: This is a Molecule (not an Atom) because it performs filesystem
@@ -17,10 +17,7 @@ module Ace
         class TestDiscoverer
           TEST_DIRS = ["test/e2e"].freeze
           SCENARIO_FILE = "scenario.yml"
-          DEFAULT_PREFLIGHT_GLOBS = [
-            "test/feat/**/*_test.rb",
-            "test/integration/**/*_test.rb"
-          ].freeze
+          DEFAULT_PREFLIGHT_GLOBS = ["test/feat/**/*_test.rb"].freeze
           SCENARIO_DIR_PATTERN = "TS-*"
 
           # Find E2E test scenario files matching criteria
@@ -153,7 +150,7 @@ module Ace
           end
 
           def preflight_globs
-            configured = Molecules::ConfigLoader.load.dig("patterns", "integration")
+            configured = Molecules::ConfigLoader.load.dig("patterns", "preflight")
             globs = [configured, *DEFAULT_PREFLIGHT_GLOBS].compact.uniq
             globs.reject(&:empty?)
           end

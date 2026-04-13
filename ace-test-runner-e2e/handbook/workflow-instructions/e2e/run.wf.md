@@ -21,7 +21,7 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 ## Arguments
 
-- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, discovery uses `test/integration/` and `test/e2e/` in the project root.
+- `PACKAGE` (optional) - Package containing the test (e.g., `ace-lint`). If omitted, discovery uses `test/feat/` and `test/e2e/` in the project root.
 - `TEST_ID` (optional) - Test identifier (e.g., `TS-LINT-001`). If omitted, runs all tests.
 - `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths.
 - `--report-dir PATH` (optional) - Explicit report directory path (skips computed `${TEST_DIR}-reports`).

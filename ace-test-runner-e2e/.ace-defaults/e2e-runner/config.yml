@@ -3,17 +3,15 @@
 
 paths:
   # Preferred location for deterministic preflight tests in packages.
-  # Legacy packages may still use test/integration until migrated.
-  integration: "test/feat"
+  preflight: "test/feat"
   # Where test scenarios are stored in packages
   scenarios: "test/e2e"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".ace-local/test-e2e"
 
 patterns:
-  # Glob pattern for deterministic preflight tests. Legacy packages may still
-  # rely on test/integration/**/*_test.rb until they migrate.
-  integration: "test/feat/**/*_test.rb"
+  # Glob pattern for deterministic preflight tests.
+  preflight: "test/feat/**/*_test.rb"
   # Glob pattern for finding test scenarios (TS-format directories)
   discovery: "test/e2e/TS-*/scenario.yml"
 

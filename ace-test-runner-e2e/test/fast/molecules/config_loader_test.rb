@@ -33,12 +33,12 @@ class ConfigLoaderTest < Minitest::Test
         "cli" => %w[claude gemini codex codexoss opencode pi]
       },
       "paths" => {
-        "integration" => "test/feat",
+        "preflight" => "test/feat",
         "scenarios" => "test/e2e",
         "cache_dir" => ".ace-local/test-e2e"
       },
       "patterns" => {
-        "integration" => "test/feat/**/*_test.rb",
+        "preflight" => "test/feat/**/*_test.rb",
         "discovery" => "test/e2e/TS-*/scenario.yml"
       },
       "required_fields" => %w[test-id title area]
@@ -77,6 +77,8 @@ class ConfigLoaderTest < Minitest::Test
     assert config.key?("paths"), "Config should have paths section"
     assert config.key?("patterns"), "Config should have patterns section"
     assert config.key?("required_fields"), "Config should have required_fields section"
+    assert_equal "test/feat", config.dig("paths", "preflight")
+    assert_equal "test/feat/**/*_test.rb", config.dig("patterns", "preflight")
   end
 
   def test_default_provider_accessor

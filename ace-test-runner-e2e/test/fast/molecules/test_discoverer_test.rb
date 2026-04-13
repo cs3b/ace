@@ -227,6 +227,37 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
+  def test_find_integration_tests_reads_preflight_pattern
+    Dir.mktmpdir do |tmpdir|
+      feat_file = File.join(tmpdir, "ace-demo", "test", "feat", "sample_test.rb")
+      FileUtils.mkdir_p(File.dirname(feat_file))
+      File.write(feat_file, "# test")
+
+      Ace::Test::EndToEndRunner::Molecules::ConfigLoader.stub(
+        :load,
+        {"patterns" => {"preflight" => "test/feat/**/*_test.rb"}}
+      ) do
+        files = @discoverer.find_integration_tests(package: "ace-demo", base_dir: tmpdir)
+        assert_equal [feat_file], files
+      end
+    end
+  end
+
+  def test_find_integration_tests_does_not_fallback_to_test_integration
+    Dir.mktmpdir do |tmpdir|
+      legacy_file = File.join(tmpdir, "ace-demo", "test", "integration", "legacy_test.rb")
+      FileUtils.mkdir_p(File.dirname(legacy_file))
+      File.write(legacy_file, "# test")
+
+      Ace::Test::EndToEndRunner::Molecules::ConfigLoader.stub(
+        :load,
+        {"patterns" => {"preflight" => "test/feat/**/*_test.rb"}}
+      ) do
+        assert_empty @discoverer.find_integration_tests(package: "ace-demo", base_dir: tmpdir)
+      end
+    end
+  end
+
   private
 
   def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
