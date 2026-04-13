@@ -157,6 +157,21 @@ class IdeaDoctorCliTest < AceIdeaTestCase
     end
   end
 
+  def test_doctor_check_frontmatter_fails_on_duplicate_ids
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "abc123", slug: "idea-one", status: "pending", tags: ["test"])
+      create_idea_fixture(root, id: "abc123", slug: "idea-two", status: "pending", tags: ["test"])
+
+      with_cli_root(root) do
+        result = run_cli(["doctor", "--check", "frontmatter"])
+        assert_equal 1, result[:exit_code]
+        assert_includes result[:stdout], "Duplicate idea ID 'abc123'"
+        assert_includes result[:stdout], "idea-one"
+        assert_includes result[:stdout], "idea-two"
+      end
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # --errors-only
   # ---------------------------------------------------------------------------
@@ -225,6 +240,19 @@ class IdeaDoctorCliTest < AceIdeaTestCase
       result = run_cli(["doctor"])
       assert_equal 1, result[:exit_code]
       assert_includes result[:stderr], "not found"
+    end
+  end
+
+  def test_doctor_fails_on_duplicate_ids
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "abc123", slug: "idea-one", status: "pending", tags: ["test"])
+      create_idea_fixture(root, id: "abc123", slug: "idea-two", status: "pending", tags: ["test"])
+
+      with_cli_root(root) do
+        result = run_cli(["doctor"])
+        assert_equal 1, result[:exit_code]
+        assert_includes result[:stdout], "Duplicate idea ID 'abc123'"
+      end
     end
   end
 end
