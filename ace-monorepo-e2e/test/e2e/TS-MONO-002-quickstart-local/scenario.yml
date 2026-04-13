@@ -24,9 +24,9 @@ e2e-evidence-strength: command-output
 e2e-false-positive-risk: low
 
 unit-coverage-reviewed:
-  - ace-idea/test/commands/create_command_test.rb
-  - ace-task/test/commands/create_command_test.rb
-  - ace-bundle/test/commands/bundle_command_test.rb
+  - ace-idea/test/fast/commands/idea_cli_test.rb
+  - ace-task/test/fast/commands/create_test.rb
+  - ace-bundle/test/feat/cli_preset_composition_test.rb
 
 requires:
   tools: [ace-idea, ace-task, ace-bundle, ace-nav, ace-search, ace-config, ace-handbook, ace-git-commit]
@@ -34,10 +34,10 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: |
       # Copy the quick-start doc into sandbox for reference
-      cp "$PROJECT_ROOT_PATH/docs/quick-start.md" quick-start.md
+      cp "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/docs/quick-start.md" quick-start.md
   - run: |
       # Follow quick-start steps 3-4: initialize config and sync handbook
       ace-config init

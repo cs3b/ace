@@ -16,7 +16,7 @@ update:
 ## Goal
 
 Release every modified ACE package in one pass, update each package version and changelog, update the root
-`CHANGELOG.md` once, and create one coordinated release commit.
+`CHANGELOG.md` once, and create one coordinated release commit or one coordinated release commit set when repo commit-splitting is active.
 
 ## Prerequisites
 
@@ -228,7 +228,7 @@ Example mixed release shape:
 
 ### 8. Commit the Coordinated Release
 
-Commit all released package directories plus root release files in one commit:
+Commit all released package directories plus root release files with one coordinated release commit intent:
 
 ```bash
 ace-git-commit \
@@ -238,6 +238,19 @@ ace-git-commit \
   Gemfile.lock \
   -i "release v[VERSION_A] for ace-[package-a] and v[VERSION_B] for ace-[package-b]"
 ```
+
+Primary rule:
+
+* Prefer one release commit when the repository commit policy allows it.
+
+If repository commit-splitting is active and `ace-git-commit` produces a coordinated release commit set instead of one
+commit:
+
+* treat the split result as acceptable only when every emitted commit is release-scoped and together they cover the
+  exact intended release paths;
+* do not leave partially committed release state behind;
+* if the workflow or operator explicitly requires a single commit artifact, collapse the split result immediately
+  before continuing.
 
 Also include any additional follower-package directories whose gemspecs changed due to dependency constraint
 updates. Those packages must have matching version/changelog updates; do not commit gemspec-only follower changes

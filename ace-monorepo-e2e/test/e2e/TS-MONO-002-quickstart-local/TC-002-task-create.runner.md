@@ -27,13 +27,12 @@ Save all output to `results/tc/02/`.
 3. Derive task ID from the spec filename and save it:
    ```bash
    spec_path="$(cat results/tc/02/spec-path.txt)"
-   task_id="$(basename "$spec_path")"
-   task_id="${task_id%%.*}"
+   task_id="$(awk '/^id:/{print $2; exit}' "$spec_path")"
    printf '%s\n' "$task_id" > results/tc/02/task-id.txt
    ```
 4. Show the created task with full output capture:
    ```bash
-   ace-task show "$task_id" --format full \
+   ace-task show "$task_id" \
      > results/tc/02/show.stdout 2> results/tc/02/show.stderr
    echo $? > results/tc/02/show.exit
    ```

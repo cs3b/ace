@@ -27,12 +27,12 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: |
       # Generate a verification Gemfile from the project root Gemfile
       # Strip path: directives so gems resolve from RubyGems.org
       echo "source 'https://rubygems.org'" > Gemfile
       echo "" >> Gemfile
-      grep "^gem 'ace-" "$PROJECT_ROOT_PATH/Gemfile" | sed "s/, path:.*//" >> Gemfile
+      grep "^gem 'ace-" "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/Gemfile" | sed "s/, path:.*//" >> Gemfile
   - agent-env:
       PROJECT_ROOT_PATH: .
