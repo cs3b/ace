@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../../test_helper"
 require "ace/llm/molecules/fallback_orchestrator"
 require "ace/llm/models/fallback_config"
 require "ace/llm/atoms/error_classifier"

@@ -142,7 +142,8 @@ module Ace
           provider = get_provider(provider_name)
           return false unless provider
 
-          api_key_present?(provider["api_key"])
+          normalized_name = normalize_provider_name(provider["name"] || provider_name)
+          credential_status(provider, normalized_name)[:present]
         end
 
         # Reload all configurations

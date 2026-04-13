@@ -20,6 +20,19 @@
 
 `ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt-5:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths. Fallback routing and retry behavior keep prompt workflows resilient.
 
+## Testing
+
+Package-local verification contract:
+
+```bash
+ace-test ace-llm
+ace-test ace-llm feat
+ace-test ace-llm all
+ace-test-e2e ace-llm
+```
+
+Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets stay in `test/e2e/`.
+
 ## How It Works
 
 1. Select a model — by alias, `provider:model`, with a thinking level suffix (`:low`/`:medium`/`:high`), or an `@preset` — and submit a prompt.

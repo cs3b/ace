@@ -8,6 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Added `codex:mini` as a fallback model for the `commit` role after `glite`, so role-based commit-message generation tries a secondary model instead of failing when `glite` is unavailable.
+
+## [0.33.2] - 2026-04-13
+
+### Fixed
+- Fixed provider credential availability checks so role-based model selection no longer crashes when a provider relies on fallback environment keys.
+
+### Technical
+- Added regression coverage for `ClientRegistry#provider_api_key_present?` using Google fallback API key resolution.
+
+## [0.33.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.33.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` contract:
+  - moved deterministic test suites from legacy top-level folders into `test/fast/`
+  - moved legacy `test/integration/` coverage into `test/feat/`
+  - reduced `TS-LLM-001` E2E scenario from 3 to 2 TCs and added an E2E decision record
+- Updated README and package docs to teach only `ace-test ace-llm`, `ace-test ace-llm feat`, `ace-test ace-llm all`, and `ace-test-e2e ace-llm`.
+
+### Fixed
 - Preserved full fallback target selectors (including provider/model + suffix context) across fallback attempts and rebuilt generation options per target instead of reusing stale primary-provider options.
 
 ## [0.32.2] - 2026-04-10

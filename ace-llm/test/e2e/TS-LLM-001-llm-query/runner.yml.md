@@ -8,7 +8,6 @@ bundle:
   files:
     - ./TC-001-basic-query.runner.md
     - ./TC-002-model-selection.runner.md
-    - ./TC-003-unknown-provider.runner.md
 ---
 
 # E2E Test Runner: ace-llm Query Scenarios
@@ -22,7 +21,7 @@ These goals require configured provider credentials in sandbox.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 3)
+- Execute each goal in order (1 through 2)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

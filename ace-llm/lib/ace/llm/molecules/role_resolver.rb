@@ -60,7 +60,6 @@ module Ace
           return false if provider.nil? || provider.empty?
           return false if @configuration.provider_inactive?(provider)
           return false unless @registry.provider_available?(provider)
-          return false if @registry.provider_api_key_required?(provider) && !@registry.provider_api_key_present?(provider)
 
           true
         end

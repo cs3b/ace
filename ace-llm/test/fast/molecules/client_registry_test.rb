@@ -3,10 +3,10 @@
 require "minitest/autorun"
 require "tempfile"
 require "tmpdir"
-require_relative "../../lib/ace/llm/molecules/client_registry"
-require_relative "../../lib/ace/llm/molecules/provider_loader"
-require_relative "../../lib/ace/llm/atoms/provider_config_validator"
-require_relative "../../lib/ace/llm/configuration"
+require_relative "../../../lib/ace/llm/molecules/client_registry"
+require_relative "../../../lib/ace/llm/molecules/provider_loader"
+require_relative "../../../lib/ace/llm/atoms/provider_config_validator"
+require_relative "../../../lib/ace/llm/configuration"
 
 module Ace
   module LLM
@@ -181,6 +181,29 @@ module Ace
           assert_equal true, status[:api_key_required]
           assert_equal true, status[:api_key_present]
           assert_equal %w[GEMINI_API_KEY GOOGLE_API_KEY], status[:credential_env_keys]
+        ensure
+          previous_gemini.nil? ? ENV.delete("GEMINI_API_KEY") : ENV["GEMINI_API_KEY"] = previous_gemini
+          previous_google.nil? ? ENV.delete("GOOGLE_API_KEY") : ENV["GOOGLE_API_KEY"] = previous_google
+        end
+      end
+
+      def test_provider_api_key_present_uses_fallback_env_keys
+        providers = {
+          "google" => {
+            "name" => "google",
+            "class" => "TestProviders::GoogleClient",
+            "gem" => "test-gem"
+          }
+        }
+
+        registry = create_registry_with(providers)
+
+        previous_gemini = ENV["GEMINI_API_KEY"]
+        previous_google = ENV["GOOGLE_API_KEY"]
+        ENV.delete("GEMINI_API_KEY")
+        ENV["GOOGLE_API_KEY"] = "google-fallback-key"
+        begin
+          assert_equal true, registry.provider_api_key_present?("google")
         ensure
           previous_gemini.nil? ? ENV.delete("GEMINI_API_KEY") : ENV["GEMINI_API_KEY"] = previous_gemini
           previous_google.nil? ? ENV.delete("GOOGLE_API_KEY") : ENV["GOOGLE_API_KEY"] = previous_google
