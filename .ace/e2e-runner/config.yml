@@ -1,20 +1,16 @@
 # Project override configuration for e2e test runner
 
 paths:
+  preflight: "test/feat"
   # Where test scenarios are stored in packages
-  scenarios: "test-e2e/scenarios"
-  # Legacy fallback kept during migration window (runtime still supports this)
-  scenarios_legacy: "test/e2e"
-  integration: "test-e2e/integration"
+  scenarios: "test/e2e"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".ace-local/test-e2e"
 
 patterns:
   # Glob pattern for finding test scenarios (TS-format directories)
-  discovery: "test-e2e/scenarios/TS-*/scenario.yml"
-  # Legacy fallback kept during migration window (runtime still supports this)
-  discovery_legacy: "test/e2e/TS-*/scenario.yml"
-  integration: "test-e2e/integration/**/*_test.rb"
+  discovery: "test/e2e/TS-*/scenario.yml"
+  preflight: "test/feat/**/*_test.rb"
 
 # Test scenario frontmatter requirements
 required_fields:

@@ -51,12 +51,6 @@ targets:
   feat:
     - feat_tests
     - edge
-  unit:
-    - fast
-  integration:
-    - feat
-  int:
-    - feat
   all:
     - fast
     - feat
