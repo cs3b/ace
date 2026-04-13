@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-04-13
+
+### Changed
+- **ace-support-config v0.11.0**: Taught `ace-config init` to bootstrap project-root guidance files, include dotfile defaults, and append `.ace-local/` to existing `.gitignore` files without overwriting user-owned `AGENTS.md` or `CLAUDE.md`.
+
 ## [0.10.4] - 2026-04-13
 
 ### Changed

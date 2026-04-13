@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.8] - 2026-04-13
+
+### Technical
+- **ace-support-core v0.29.8**: Added shipped project-root bootstrap templates for `.gitignore`, `AGENTS.md`, and `CLAUDE.md` so freshly initialized ACE projects get local-artifact hygiene and starter agent guidance.
+
 ## [0.29.7] - 2026-04-13
 
 ### Changed
