@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [0.14.2] - 2026-04-13
 ### Fixed
 - **ace-sim v0.14.2**: Improved run-id uniqueness by extending run-id generation and collision handling so `SimulationRunner` retries more times before failing when run directories already exist.
 
