@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-04-13
+
 ### Changed
 - **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
 
