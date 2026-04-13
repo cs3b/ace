@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Fixed
+- **ace-sim v0.14.2**: Improved run-id uniqueness by extending run-id generation and collision handling so `SimulationRunner` retries more times before failing when run directories already exist.
+
+## [0.14.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+### Changed
+- Migrated deterministic package tests to `test/fast`, retained workflow-value E2E scenario coverage under `test/e2e`, added an E2E decision record, and aligned package docs and scenario artifact contracts with the restarted `fast` / `feat` / `e2e` model.
 
 ## [0.13.5] - 2026-03-31
 

@@ -36,5 +36,14 @@
 
 **Synthesize recommendations from simulation runs** - enable `--synthesis-workflow` and `--synthesis-provider` to produce actionable suggestions, then feed results into [ace-review](../ace-review) for follow-up review.
 
+## Testing Model
+
+`ace-sim` follows the restarted `fast` / `feat` / `e2e` contract:
+
+- `ace-test ace-sim` - default deterministic fast loop (`test/fast`).
+- `ace-test ace-sim feat` - deterministic feature-contract lane (only when `test/feat` exists).
+- `ace-test ace-sim all` - run all deterministic lanes.
+- `ace-test-e2e ace-sim` - scenario workflow validation under `test/e2e`.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

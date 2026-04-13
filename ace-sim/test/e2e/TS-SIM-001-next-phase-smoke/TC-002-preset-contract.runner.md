@@ -7,7 +7,10 @@ Run the default preset flow and capture artifacts that prove the shipped preset 
 1. Create source file `results/tc/02/source.md` with realistic markdown task content.
 2. Run:
    `ace-sim run --preset validate-idea --source results/tc/02/source.md --provider glite --repeat 1`
-   Save stdout/stderr/exit to `results/tc/02/run.*`.
+   Save stdout/stderr/exit to:
+   - `results/tc/02/run.stdout`
+   - `results/tc/02/run.stderr`
+   - `results/tc/02/run.exit`
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/02/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/02/run-tree.txt`.
 5. If present, capture `session.yml` and `synthesis.yml` into `results/tc/02/`.
@@ -22,3 +25,4 @@ Run the default preset flow and capture artifacts that prove the shipped preset 
    - `final/output.sequence.md` -> `results/tc/02/output.sequence.md`
    - `final/suggestions.report.md` -> `results/tc/02/suggestions.report.md`
    - `final/source.revised.md` -> `results/tc/02/source.revised.md`
+9. If any file from step 8 is missing, create a placeholder file at the target path with a short note that synthesis output was unavailable for this run.

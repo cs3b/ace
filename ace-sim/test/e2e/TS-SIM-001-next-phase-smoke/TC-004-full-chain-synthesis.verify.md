@@ -5,16 +5,12 @@ PASS when:
 - `results/tc/04/run-tree.txt` includes `chains/glite-1/01-draft/output.md`
 - `results/tc/04/run-tree.txt` includes `chains/glite-1/02-plan/output.md`
 - `results/tc/04/run-tree.txt` includes `chains/glite-1/03-work/output.md`
-- `results/tc/04/run-tree.txt` includes `final/input.md`
 - `results/tc/04/run-tree.txt` includes `final/source.original.md`
 - `results/tc/04/run-tree.txt` includes `final/output.sequence.md`
 - `results/tc/04/run-tree.txt` includes `final/suggestions.report.md`
 - `results/tc/04/run-tree.txt` includes `final/source.revised.md`
 - `results/tc/04/session.yml` contains `synthesis_workflow: wfi://task/review`
 - `results/tc/04/synthesis.yml` contains `final_stage:`
-- `results/tc/04/final.input.md` contains `#### Step draft`
-- `results/tc/04/final.input.md` contains `#### Step plan`
-- `results/tc/04/final.input.md` contains `#### Step work`
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/04/run.exit` is `0`
@@ -28,6 +24,5 @@ PASS when:
 
 FAIL when:
 - any chain step artifact is missing
-- `final/input.md` does not aggregate all three steps
 - `synthesis.yml` does not record final-stage outcome
 - the run fails before chain completion

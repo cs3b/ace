@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "fileutils"
 require "tmpdir"
 
@@ -57,9 +57,9 @@ class SimulationRunnerTest < AceSimTestCase
     synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true,
     steps: %w[draft plan], step_bundles: nil)
     default_step_bundles = {
-      "draft" => File.expand_path("../../.ace-defaults/sim/steps/draft.md", __dir__),
-      "plan" => File.expand_path("../../.ace-defaults/sim/steps/plan.md", __dir__),
-      "work" => File.expand_path("../../.ace-defaults/sim/steps/work.md", __dir__)
+      "draft" => File.expand_path("../../../.ace-defaults/sim/steps/draft.md", __dir__),
+      "plan" => File.expand_path("../../../.ace-defaults/sim/steps/plan.md", __dir__),
+      "work" => File.expand_path("../../../.ace-defaults/sim/steps/work.md", __dir__)
     }
     step_bundles = default_step_bundles.merge(step_bundles || {})
 
@@ -234,6 +234,53 @@ class SimulationRunnerTest < AceSimTestCase
 
       assert_equal "failed", result[:status]
       assert_match(/writeback requires a single source file/, result[:error])
+    end
+  end
+
+  def test_prepare_unique_run_recovers_from_directory_collision
+    Dir.mktmpdir do |dir|
+      source = File.join(dir, "source.md")
+      File.write(source, "initial")
+      store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
+
+      FileUtils.mkdir_p(File.join(dir, "simulations", "runtest"))
+      original_next_run_id = Ace::Sim.method(:next_run_id)
+      sequence = ["runtest", "runtest-recovered"]
+      Ace::Sim.define_singleton_method(:next_run_id) do
+        sequence.shift || "runtest-final"
+      end
+
+      result = runner.run(build_session(source: source))
+
+      assert_equal "ok", result[:status]
+      assert_equal "runtest-recovered", result[:run_id]
+      assert_equal "runtest-recovered", File.basename(result[:run_dir])
+      assert Dir.exist?(File.join(dir, "simulations", "runtest-recovered"))
+    ensure
+      Ace::Sim.define_singleton_method(:next_run_id, original_next_run_id)
+    end
+  end
+
+  def test_prepare_unique_run_fails_after_repeated_collisions
+    Dir.mktmpdir do |dir|
+      source = File.join(dir, "source.md")
+      File.write(source, "initial")
+      store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
+
+      FileUtils.mkdir_p(File.join(dir, "simulations", "runtest"))
+      original_next_run_id = Ace::Sim.method(:next_run_id)
+      Ace::Sim.define_singleton_method(:next_run_id) do
+        "runtest"
+      end
+
+      result = runner.run(build_session(source: source))
+
+      assert_equal "failed", result[:status]
+      assert_equal "Could not allocate unique run id", result[:error]
+    ensure
+      Ace::Sim.define_singleton_method(:next_run_id, original_next_run_id)
     end
   end
 end

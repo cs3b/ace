@@ -7,7 +7,10 @@ Exercise the shipped `validate-task` preset and capture run artifacts that prove
 1. Create source file `results/tc/05/source.md` with realistic markdown task content.
 2. Run:
    `ace-sim run --preset validate-task --source results/tc/05/source.md --provider glite --repeat 1`
-   Save stdout/stderr/exit to `results/tc/05/run.*`.
+   Save stdout/stderr/exit to:
+   - `results/tc/05/run.stdout`
+   - `results/tc/05/run.stderr`
+   - `results/tc/05/run.exit`
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/05/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/05/run-tree.txt`.
 5. If present, capture:
