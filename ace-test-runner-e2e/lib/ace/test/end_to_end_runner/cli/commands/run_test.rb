@@ -21,7 +21,6 @@ module Ace
               Run E2E tests via LLM execution
 
               Discovers and executes deterministic preflight tests from test/feat
-              (or legacy test/integration when a package has not migrated yet)
               before TS-* agent scenarios from test/e2e. Tests are sent to an LLM
               provider which executes the scenario steps and returns structured results.
 

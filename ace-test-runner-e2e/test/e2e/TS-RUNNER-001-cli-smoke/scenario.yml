@@ -22,11 +22,11 @@ e2e-justification: >
   installed CLI binaries in a sandboxed flow.
 
 unit-coverage-reviewed:
-  - test/commands/cli_test.rb
-  - test/commands/run_test_test.rb
-  - test/commands/run_suite_test.rb
-  - test/commands/suite_executable_test.rb
-  - test/molecules/test_discoverer_test.rb
+  - test/fast/commands/cli_test.rb
+  - test/fast/commands/run_test_test.rb
+  - test/fast/commands/run_suite_test.rb
+  - test/fast/commands/suite_executable_test.rb
+  - test/fast/molecules/test_discoverer_test.rb
 
 requires:
   tools: [ace-test-e2e, ace-test-e2e-suite, git]

@@ -1,6 +1,6 @@
 ---
 name: as-e2e-fix
-description: Diagnose, fix, and rerun failing E2E tests systematically
+description: Diagnose, fix, and rerun failing E2E tests systematically, generating failure analysis when needed
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
@@ -32,4 +32,4 @@ skill:
     workflow: wfi://e2e/fix
 ---
 
-Load and run `ace-bundle wfi://e2e/fix` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+Load and run `ace-bundle wfi://e2e/fix` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it. If E2E failure analysis is missing or incomplete, generate it via `wfi://e2e/analyze-failures` as part of the fix workflow before applying changes.

@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- **ace-test-runner-e2e v0.35.0**: Added optional scenario artifact declarations via `(optional)`, separated required and optional artifact tracking, and included optional outputs in manifests and snapshots without failing scenarios when they are absent.
+
+## [0.34.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.34.0] - 2026-04-12
+
+### Changed
+- Migrated package deterministic tests to the restarted `fast`/`feat` layout by moving `test/atoms`, `test/commands`, `test/handbook`, `test/models`, `test/molecules`, and `test/organisms` under `test/fast/`, and moving legacy `test/integration` coverage into `test/feat/`.
+- Updated package docs and CLI wording to teach `fast`/`feat` deterministic coverage plus scenario-only `test/e2e` execution via `ace-test-e2e`.
+- Refreshed `TS-RUNNER-001` scenario metadata and decision-record unit coverage references to point at migrated `test/fast` paths.
+
+## [0.33.1] - 2026-04-12
+
+### Fixed
+- Made suite final reports deterministic for canonical sections by deriving summary rows, failed-test details, reports tables, and the overall line from runtime results instead of model-authored prose.
+- Added regression coverage so hallucinated scenario titles, failed TC IDs, and duplicate overall lines are ignored or replaced before report files are written.
+
+## [0.33.0] - 2026-04-11
+
+### Changed
+- Made `wfi://e2e/fix` a self-bootstrapping workflow that reuses existing failure analysis when present and generates it via `wfi://e2e/analyze-failures` when missing or incomplete.
+- Updated the canonical `as-e2e-fix` skill contract to state that missing analysis is generated automatically before fixes are applied.
 
 ### Technical
 

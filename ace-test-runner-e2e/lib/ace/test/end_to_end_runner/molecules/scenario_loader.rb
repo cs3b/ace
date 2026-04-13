@@ -155,6 +155,7 @@ module Ace
             runner_content = File.read(runner_file)
             verify_content = File.read(verify_file)
             scenario_dir = File.dirname(runner_file)
+            declared_artifacts, optional_artifacts = declared_artifacts_for(scenario_dir, runner_content, verify_content)
 
             Models::TestCase.new(
               tc_id: tc_id,
@@ -163,7 +164,8 @@ module Ace
               file_path: File.expand_path(runner_file),
               pending: nil,
               goal_format: "standalone",
-              declared_artifacts: declared_artifacts_for(scenario_dir, runner_content, verify_content)
+              declared_artifacts: declared_artifacts,
+              optional_artifacts: optional_artifacts
             )
           end
 
@@ -236,16 +238,33 @@ module Ace
 
           def declared_artifacts_for(scenario_dir, runner_content, verify_content)
             scenario_frontmatter = parse_scenario_yml(File.join(scenario_dir, "scenario.yml"))
-            artifacts = []
-            artifacts.concat(Array((scenario_frontmatter["sandbox-layout"] || {}).keys))
-            artifacts.concat(extract_declared_artifacts(runner_content))
-            artifacts.concat(extract_declared_artifacts(verify_content))
+            required_artifacts = []
+            optional_artifacts = []
 
-            artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq.sort
+            required_artifacts.concat(Array((scenario_frontmatter["sandbox-layout"] || {}).keys))
+
+            [runner_content, verify_content].each do |content|
+              extract_declared_artifacts(content).each do |entry|
+                if entry[:optional]
+                  optional_artifacts << entry[:path]
+                else
+                  required_artifacts << entry[:path]
+                end
+              end
+            end
+
+            required = required_artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq
+            optional = optional_artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq
+            optional = optional.reject { |path| required.include?(path) }
+
+            [required.sort, optional.sort]
           end
 
           def extract_declared_artifacts(markdown)
-            markdown.to_s.scan(%r{results/tc/\d{2}/[^\s`)"']+|results/tc/\d{2}/})
+            markdown.to_s.scan(%r{(?:`|"|')?(results/tc/\d{2}/[^\s`)"']+|results/tc/\d{2}/)(?:`|"|')?(\s*\(optional\))?}i).map do |match|
+              path, optional = match
+              {path: path, optional: !optional.to_s.empty?}
+            end
           end
 
           def normalize_declared_artifact(path)

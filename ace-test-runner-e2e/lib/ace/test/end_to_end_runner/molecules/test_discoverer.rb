@@ -6,10 +6,10 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Discovers deterministic integration tests and agent E2E scenarios in packages
+        # Discovers deterministic preflight tests and agent E2E scenarios in packages
         #
         # Finds test scenarios in the TS-format directory structure:
-        #   {package}/test/integration/**/*_test.rb
+        #   {package}/test/feat/**/*_test.rb (with legacy integration fallback)
         #   {package}/test/e2e/TS-*/scenario.yml
         #
         # Note: This is a Molecule (not an Atom) because it performs filesystem
@@ -52,7 +52,7 @@ module Ace
             ).map(&:file_path).sort
           end
 
-          # @return [Array<String>] Sorted list of matching deterministic integration test files
+          # @return [Array<String>] Sorted list of matching deterministic preflight test files
           def find_integration_tests(package:, base_dir: Dir.pwd)
             package_path = File.join(base_dir, package)
             preflight_globs.each do |glob|

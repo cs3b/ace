@@ -10,7 +10,7 @@ module Ace
         # from an independent test case file within a scenario directory.
         class TestCase
           attr_reader :tc_id, :title, :content, :file_path, :pending, :goal_format,
-            :declared_artifacts
+            :declared_artifacts, :optional_artifacts
 
           # @param tc_id [String] Test case identifier (e.g., "TC-001")
           # @param title [String] Test case title from frontmatter
@@ -18,9 +18,10 @@ module Ace
           # @param file_path [String] Absolute path to the source test file
           # @param pending [String, nil] Pending reason (presence = pending, value = reason)
           # @param goal_format [String, nil] Test case source format ("standalone")
-          # @param declared_artifacts [Array<String>] Expected artifact paths under results/tc/*
+          # @param declared_artifacts [Array<String>] Required artifact paths under results/tc/*
+          # @param optional_artifacts [Array<String>] Optional artifact paths under results/tc/*
           def initialize(tc_id:, title:, content:, file_path:, pending: nil, goal_format: nil,
-            declared_artifacts: [])
+            declared_artifacts: [], optional_artifacts: [])
             @tc_id = tc_id
             @title = title
             @content = content
@@ -28,6 +29,7 @@ module Ace
             @pending = pending
             @goal_format = goal_format
             @declared_artifacts = declared_artifacts
+            @optional_artifacts = optional_artifacts
           end
 
           # Whether this test case is pending (should be skipped)

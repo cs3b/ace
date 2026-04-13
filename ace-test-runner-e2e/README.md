@@ -18,11 +18,11 @@
 
 ![ace-test-runner-e2e demo](docs/demo/ace-test-runner-e2e-getting-started.gif)
 
-`ace-test-runner-e2e` runs realistic workflow scenarios through coding agents so teams can validate behavior beyond unit and integration coverage while keeping execution reproducible and isolated from the working tree.
+`ace-test-runner-e2e` runs realistic workflow scenarios through coding agents so teams can validate behavior beyond deterministic package tests while keeping execution reproducible and isolated from the working tree.
 
 ## How It Works
 
-1. Discover deterministic integration tests from package-local `test/integration/` and agent scenarios from `test/e2e/`, preserving metadata, tags, and command flows.
+1. Discover deterministic preflight tests from package-local `test/feat/` and agent scenarios from `test/e2e/`, preserving metadata, tags, and command flows.
 2. Execute scenarios inside reproducible sandboxes that isolate agent runs from the working tree.
 3. Produce structured reports that are easy to inspect, compare across runs, and feed back into triage workflows.
 
