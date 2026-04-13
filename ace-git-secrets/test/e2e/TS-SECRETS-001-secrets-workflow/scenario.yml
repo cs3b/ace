@@ -22,7 +22,23 @@ e2e-justification: >
   against a real git repository. Secret scanning inspects actual git history.
   Whitelist filtering depends on real config discovery. Rewrite-history
   needs git-filter-repo against actual commits. Config cascade requires
-  real filesystem config resolution. None testable with mocks.
+  real filesystem config resolution. Deterministic tests cover parser and
+  component behavior; this scenario verifies end-to-end CLI workflow behavior.
+
+unit-coverage-reviewed:
+  - test/fast/atoms/gitleaks_runner_test.rb
+  - test/fast/atoms/service_api_client_test.rb
+  - test/fast/commands/cli_test.rb
+  - test/fast/commands/revoke_command_test.rb
+  - test/fast/commands/rewrite_command_test.rb
+  - test/fast/models/detected_token_test.rb
+  - test/fast/models/scan_report_test.rb
+  - test/fast/molecules/git_rewriter_test.rb
+  - test/fast/molecules/history_scanner_test.rb
+  - test/fast/molecules/token_revoker_test.rb
+  - test/fast/organisms/history_cleaner_test.rb
+  - test/fast/organisms/release_gate_test.rb
+  - test/fast/organisms/security_auditor_test.rb
 
 requires:
   tools: [ace-git-secrets, git, gitleaks]
@@ -30,7 +46,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - agent-env:

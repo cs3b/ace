@@ -251,6 +251,15 @@ Limit the scan scope for triage work:
 ace-git-secrets scan --since "6 months ago"
 ```
 
+## Package Test Commands
+
+Use the package-level test contract when validating this gem:
+
+- `ace-test ace-git-secrets` for deterministic `test/fast` coverage
+- `ace-test ace-git-secrets feat` for deterministic `test/feat` coverage when present
+- `ace-test ace-git-secrets all` for full package deterministic coverage
+- `ace-test-e2e ace-git-secrets` for retained workflow scenarios in `test/e2e`
+
 ## Exit Codes
 
 | Code | Meaning |

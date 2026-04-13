@@ -101,6 +101,14 @@ This is the simplest command to drop into release workflows or pre-publish check
 | Preview cleanup | `ace-git-secrets rewrite-history --dry-run --scan-file .ace-local/git-secrets/sessions/abc123-report.json` |
 | Block a release on findings | `ace-git-secrets check-release --strict` |
 
+## Package Testing
+
+When validating package changes:
+
+- `ace-test ace-git-secrets` runs deterministic `test/fast` coverage.
+- `ace-test ace-git-secrets feat` runs deterministic `test/feat` coverage when present.
+- `ace-test-e2e ace-git-secrets` runs retained workflow scenarios in `test/e2e`.
+
 ## What to try next
 
 - Add whitelist rules in `.ace/git-secrets/config.yml` for known documentation examples or test fixtures

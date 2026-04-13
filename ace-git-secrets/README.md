@@ -36,5 +36,13 @@
 
 **Coordinate with git workflow tools** - pair with [ace-bundle](../ace-bundle) for loading remediation workflows, [ace-git](../ace-git) for repository context before cleanup, and [ace-git-commit](../ace-git-commit) for follow-up commits after remediation work.
 
+## Testing Contract
+
+`ace-git-secrets` uses the restarted package testing model:
+
+- `ace-test ace-git-secrets` runs deterministic package tests (`test/fast`).
+- `ace-test ace-git-secrets feat` is reserved for deterministic feature-layer tests (`test/feat`) when present.
+- `ace-test-e2e ace-git-secrets` runs retained workflow scenarios (`test/e2e`).
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
