@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 - **ace-idea v0.19.2**: Added duplicate persisted idea-ID detection to doctor health checks and made `ace-idea doctor --check frontmatter` fail when duplicates are present.
 - **ace-task v0.34.3**: Added bounded create-time ID-collision retries with clear exhaustion failures and no-orphan cleanup guarantees for standalone task creation.
 - **ace-idea v0.19.3**: Added bounded create-time ID-collision retries, enforced unique persisted idea IDs (no same-ID slug variants), and added clear exhaustion failures.
+- **ace-idea v0.20.2**: Made create-time collision retries deterministic by reusing precomputed create payloads so clipboard capture and LLM enhancement are not rerun across retry attempts.
+- **ace-task v0.35.1**: Accepted subtask IDs during frontmatter ID validation, added atomic create-time ID reservation for collision-safe retries, and narrowed ID-existence scans to ID-prefixed glob matches.
+- **ace-idea v0.20.1**: Added atomic create-time ID reservation for collision-safe retries and narrowed ID-existence scans to ID-prefixed glob matches.
 - **ace-task v0.35.0**: Added duplicate persisted task-ID detection to doctor health checks (including subtask collisions), made `ace-task doctor --check frontmatter` fail on duplicates, and added bounded standalone create-time ID-collision retries with clear exhaustion failures and no-orphan cleanup guarantees.
 - **ace-idea v0.20.0**: Added duplicate persisted idea-ID detection to doctor health checks, made frontmatter-only doctor validation fail on duplicates, and added bounded create-time ID-collision retries that enforce unique persisted IDs instead of accepting same-ID slug variants.
 - **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
