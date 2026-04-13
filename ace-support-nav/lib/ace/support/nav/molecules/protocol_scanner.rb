@@ -280,7 +280,7 @@ module Ace
             seen = Set.new
 
             resources.each_with_object([]) do |resource, unique_resources|
-              key = [resource[:source].type, resource[:path]]
+              key = dedupe_resource_key(resource)
               next if seen.include?(key)
 
               seen.add(key)
@@ -380,6 +380,12 @@ module Ace
           end
 
           private
+
+          def dedupe_resource_key(resource)
+            protocol = resource[:protocol]
+            canonical_path = File.expand_path(resource[:path].to_s)
+            [protocol, canonical_path]
+          end
 
           def create_resource_info(file_path, search_path, source, protocol)
             # Ensure search_path ends with a separator for proper substitution

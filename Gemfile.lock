@@ -319,7 +319,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.27.1)
+    ace-support-nav (0.27.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
