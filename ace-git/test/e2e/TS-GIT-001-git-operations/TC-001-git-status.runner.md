@@ -15,4 +15,7 @@ Save artifacts to `results/tc/01/`.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
 - Bootstrap a real branch context first: create one tracked file, run `git add -A`, and commit once so later `branch` and `diff` goals run against an initialized repository.
-- Capture bootstrap command output in `results/tc/01/bootstrap.stdout|stderr|exit`.
+- Capture bootstrap command artifacts as:
+  - `results/tc/01/bootstrap.stdout`
+  - `results/tc/01/bootstrap.stderr`
+  - `results/tc/01/bootstrap.exit`

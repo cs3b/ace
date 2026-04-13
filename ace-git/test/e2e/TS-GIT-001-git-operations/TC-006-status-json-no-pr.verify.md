@@ -6,7 +6,10 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. `results/tc/06/` contains `status-json-no-pr.stdout|stderr|exit`.
+1. `results/tc/06/` contains:
+   - `status-json-no-pr.stdout`
+   - `status-json-no-pr.stderr`
+   - `status-json-no-pr.exit`
 2. Exit code is `0`.
 3. `status-json-no-pr.stdout` is valid JSON and includes baseline repo keys such
    as `branch` and `repository_type`.

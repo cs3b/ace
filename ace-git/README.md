@@ -36,5 +36,14 @@
 
 **Coordinate with commit and worktree tools** - pair with [ace-git-commit](../ace-git-commit) for scoped commit authoring, [ace-git-worktree](../ace-git-worktree) for task-oriented worktree management, and [ace-bundle](../ace-bundle) for loading workflow instructions.
 
+## Testing Contract
+
+`ace-git` follows the restarted package test model:
+
+- `ace-test ace-git` for deterministic fast-loop coverage (`test/fast/`)
+- `ace-test ace-git feat` for deterministic feature/contract coverage (`test/feat/`)
+- `ace-test-e2e ace-git` for retained workflow scenarios (`test/e2e/`)
+- `ace-test ace-git all` for full package verification
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

@@ -13,7 +13,10 @@ Save artifacts to `results/tc/02/`.
 1. Create a tracked file and commit it: `echo "initial content" > tracked.txt && git add tracked.txt && git commit -m "add tracked file"`.
 2. Append a new line without committing: `echo "added line" >> tracked.txt`.
 3. Capture the mutation evidence: save the output of `cat tracked.txt` to `results/tc/02/setup.stdout`.
-4. Now run `ace-git diff` and capture stdout/stderr/exit to `results/tc/02/diff.*`.
+4. Now run `ace-git diff` and capture:
+   - `results/tc/02/diff.stdout`
+   - `results/tc/02/diff.stderr`
+   - `results/tc/02/diff.exit`
 
 ## Constraints
 

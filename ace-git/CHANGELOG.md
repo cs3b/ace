@@ -6,9 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.21.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
 
 ### Changed
 - Expanded `as-github-pr-create` canonical skill metadata so public `create-pr` assign-step discovery is skill-owned rather than catalog-owned.
+
+## [0.21.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, and aligned TS-GIT-001 scenario artifacts with the current E2E runner/verifier contract.
 
 ## [0.20.2] - 2026-04-07
 
