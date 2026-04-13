@@ -14,6 +14,17 @@ Save all output to `results/tc/02/`.
    - `rm -f Gemfile.lock`
    - `rm -rf .bundle .gem results/tc/02/.bundle results/tc/02/.gem`
    - `mkdir -p results/tc/02/.bundle results/tc/02/.gem`
+   - Pre-create declared artifacts so verifier inputs exist even when install fails:
+   ```bash
+   : > results/tc/02/.bundle/config
+   : > results/tc/02/bundle-list.stdout
+   : > results/tc/02/bundle-list.stderr
+   : > results/tc/02/bundle-env-install.stdout
+   : > results/tc/02/bundle-env-install.stderr
+   : > results/tc/02/version-check.stdout
+   : > results/tc/02/version-check.stderr
+   printf '1\n' > results/tc/02/version-check.exit
+   ```
 2. Save installation environment capture evidence:
 ```bash
 env -i \
@@ -127,7 +138,16 @@ else
   exit 1
 end
 RUBY
-echo $? > results/tc/02/version-check.exit
+   echo $? > results/tc/02/version-check.exit
+```
+5. If install fails, keep placeholder artifacts and note skip reason:
+```bash
+if [ "$(cat results/tc/02/install.exit)" != "0" ]; then
+  printf 'SKIPPED: bundle install failed\n' > results/tc/02/bundle-list.stderr
+  printf 'SKIPPED: bundle install failed\n' > results/tc/02/bundle-env-install.stderr
+  printf 'SKIPPED: version check not run because install failed\n' > results/tc/02/version-check.stdout
+  printf 'SKIPPED: bundle install failed\n' > results/tc/02/version-check.stderr
+fi
 ```
 
 ## Constraints

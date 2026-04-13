@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
-- **ace-retro v0.18.0**: Strengthened recursive retro synthesis with oldest-active selection, source-ID dedupe across nested syntheses, current-repo validation of themes, ranked unresolved improvements, and recursive synthesis trace metadata.
-
 ### Fixed
-- **ace-retro v0.17.2**: Corrected `retro/synthesize` and `retro/selfimprove` to archive source retros via `ace-retro update ... --move-to archive` and added a self-improve guard that validates CLI-backed workflow examples against the live command surface.
+- **ace-llm v0.33.3**: Added `codex:mini` as a `commit` role fallback after `glite` so release/commit tooling can continue role-based generation when the primary model is unavailable.
+- **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based selector resolution no longer crashes when only fallback environment keys are configured.
+- **ace-assign v0.47.2**: Hardened assignment drive fork completion pickup so terminal child subtrees are resumed from scoped assignment status, including 6-minute polling guidance and detached session recovery.
+- **ace-assign v0.47.1**: Simplified the brittle assign E2E surface by keeping lifecycle, fork-context, hierarchy, and audit flows in scenario coverage while moving command-only checks into deterministic fast and feat contracts.
+- **ace-test-runner-e2e v0.33.1**: Made suite final reports deterministic from runtime scenario results so hallucinated titles, failed TC IDs, and duplicate overall lines no longer leak into canonical report sections.
+- **ace-overseer v0.13.11**: Updated the `ace-assign` runtime dependency constraint to `~> 0.47` so overseer stays aligned with the latest assign minor release line.
 - **ace-test-runner-e2e v0.32.2**: Generated batch CLI `run_id`s from explicit 50ms buckets so parallel E2E package runs no longer occasionally reuse report-path IDs and fail the unique-run-id orchestrator contract.
 - **ace-test-runner-e2e v0.31.1**: Removed accidental real suite-report synthesis and tmux subprocess work from unit-scoped organism/setup tests, moving live tmux lifecycle coverage into explicit integration tests so `ace-test-suite` no longer times out intermittently in `ace-test-runner-e2e`.
 - **ace-test-runner-e2e v0.32.3**: Made `ConfigLoader` molecule tests use mocked config mode to remove repo-local `.ace` override coupling and keep release verification deterministic across environments.
@@ -27,11 +29,42 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.30.1**: Raised the `ace-support-test-helpers` dependency floor to `~> 0.14` and restored the `TS-RUNNER-001` smoke fixture source path for the restarted E2E runner.
 - **ace-test-runner-e2e v0.30.2**: Surfaced `git diff` stderr when affected-package detection fails so invalid refs and shallow-clone failures no longer appear as empty affected sets.
 - **ace-test-runner-e2e v0.31.0**: Restored the full two-phase E2E harness with deterministic `test/integration` execution before `test/e2e` scenarios, stricter artifact/report handling, and verifier fallback parsing that accepts minimal evidence responses.
+- **ace-support-cli v0.6.4**: Fixed top-level help rendering so CLI usage consistently appears as `Usage: <program> [COMMAND]`.
+- **ace-support-models v0.10.2**: Fixed API cache parsing to normalize mixed provider/model payloads (including array-form models), restoring `ace-llm-providers list/show` model counts from cached responses.
 
 ### Changed
-- **ace-assign v0.45.1**: Standardized fork-step authoring guidance on a prompt-prep-style section layout and made report contracts require an explicit primary artifact path for forked work.
-- **ace-prompt-prep v0.23.7**: Clarified the base prompt template so deterministic execution prompts can omit `## Questions` and file-producing tasks must surface the primary artifact path in `## Report`.
-- **ace-retro v0.17.1**: Clarified `retro/analyze-worktree` so analyzed worktrees remain inputs, retro artifacts default to the current working branch, and wrappers should defer retro creation to `wfi://retro/create`.
+- **ace-sim v0.14.2**: Improved simulation run-id generation and collision recovery to regenerate IDs more reliably when temporary directories collide.
+- **ace-test-runner-e2e v0.35.0**: Added optional artifact tracking (`(optional)`) to scenario parsing so optional outputs are recorded in manifests and snapshots without failing runs when they are missing.
+- Coordinated patch release for the batch i05 migration line across ace-assign, ace-bundle, ace-compressor, ace-demo, ace-docs, ace-git, ace-git-commit, ace-git-secrets, ace-git-worktree, ace-handbook, ace-idea, ace-lint, ace-llm, ace-llm-providers-cli, ace-overseer, ace-prompt-prep, ace-retro, ace-review, ace-search, ace-sim, ace-support-models, ace-support-nav, ace-task, ace-test-runner, ace-test-runner-e2e, ace-tmux.
+
+- **ace-llm v0.33.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage into `test/fast` and `test/feat`, reduced `TS-LLM-001` to retained workflow-value scenarios, and updated package docs to teach the split test commands.
+- **ace-review v0.52.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage to `test/fast` and `test/feat`, rewrote `TS-REVIEW-001` to retained execution workflows, and updated package docs for split test commands.
+- **ace-test-runner-e2e v0.34.0**: Migrated deterministic package tests to `test/fast` and `test/feat`, updated CLI/docs/demo/scenario references for the restarted testing model, and kept `ace-test-e2e` focused on scenario-only workflow validation.
+- **ace-tmux v0.12.0**: Migrated deterministic package tests to `test/fast`, tightened TS-TMUX-001 window preset selection/setup contracts for sandbox reliability, and updated package docs to teach the restarted `fast` / `feat` / `e2e` test commands.
+- **ace-task v0.34.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast`, kept `TS-TASK-001` focused on workflow-value E2E checks, and updated package testing guidance.
+- **ace-support-nav v0.27.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage into `test/fast` and `test/feat`, refreshed `TS-NAV-001` decision/setup metadata, and updated package testing guidance.
+- **ace-support-models v0.10.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` contract, moved deterministic coverage into `test/fast` and `test/feat`, and refreshed README plus E2E scenario metadata for the new lane model.
+- **ace-sim v0.14.0**: Migrated deterministic package tests to `test/fast`, retained workflow-value E2E scenario coverage, added an E2E decision record, and aligned package docs and scenario artifact contracts with the restarted `fast` / `feat` / `e2e` model.
+- **ace-search v0.25.0**: Migrated package tests to the restarted `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, retained `TS-SEARCH-001` as workflow-value E2E coverage, and updated package docs to the new testing contract.
+- **ace-retro v0.17.0**: Migrated package tests to the `fast` / `feat` / `e2e` model by moving deterministic suites into `test/fast`, keeping `TS-RETRO-001` focused on workflow-value scenarios, and updating package docs to the restarted testing contract.
+- **ace-overseer v0.14.0**: Migrated package tests to the `fast` / `feat` / `e2e` model by moving deterministic suites into `test/fast`, adding `TS-OVERSEER-001` decision metadata, and aligning E2E setup/verifier contracts with current sandbox and status-oracle behavior.
+- **ace-prompt-prep v0.24.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic suites to `test/fast` and `test/feat`, trimmed `TS-PREP-001` to workflow-value scenario checks, and updated package docs to the restarted testing contract.
+- **ace-llm-providers-cli v0.28.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, and refreshed TS-LLMCLI-001 metadata plus README testing guidance for the restarted contract.
+- **ace-lint v0.29.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast`, refreshed TS-LINT-001 metadata/setup for sandbox compatibility, and updated package docs for the restarted test contract.
+- **ace-idea v0.19.0**: Migrated deterministic package tests to `test/fast` and `test/feat`, retained lifecycle workflow coverage in `test/e2e`, and aligned scenario metadata with the restarted test contract.
+- **ace-handbook v0.26.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic suites into `test/fast`, retained CLI smoke E2E coverage, and updated handbook docs to teach the restarted test contract.
+- **ace-git-worktree v0.20.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, refreshed retained E2E contracts, and updated package docs for the split test workflow.
+- **ace-git-secrets v0.14.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast`, and aligned scenario/docs testing contract guidance.
+- **ace-git-commit v0.24.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast`, aligned `TS-COMMIT-001` metadata/setup for sandbox compatibility, and updated package docs to teach the restarted test contract.
+- **ace-docs v0.33.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, and aligned TS-DOCS-001 scenario artifacts with the current E2E runner/verifier contract.
+- **ace-git v0.21.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, and aligned TS-GIT-001 scenario artifacts with the current E2E runner/verifier contract.
+- **ace-bundle v0.42.0**: Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage from `test/integration` into `test/feat` and `test/fast`, and hardened TS-BUNDLE-001 runner/verifier contracts for current routing and sandbox setup behavior.
+- **ace-compressor v0.24.8**: Migrated deterministic tests into `test/fast`, refreshed TS-COMP-001 smoke E2E metadata/verifier contracts, and hardened scenario setup for sandbox runs without `mise.toml`.
+- **ace-demo v0.24.2**: Migrated deterministic tests into `test/fast`, updated TS-DEMO-001 metadata to reference fast-layer coverage, and documented the package testing contract (`ace-test`, `ace-test all`, `ace-test-e2e`).
+- **ace-assign v0.47.0**: Added an E2E-specific assignment recovery path so `ace-test-e2e` failures route into `/as-e2e-fix`, and aligned the shipped work-on-task verification fixture with the new self-bootstrapping E2E fix flow.
+- **ace-test-runner-e2e v0.33.0**: Made `wfi://e2e/fix` and `as-e2e-fix` self-bootstrap failure analysis via `wfi://e2e/analyze-failures` before applying targeted E2E fixes.
+- **ace-assign v0.46.0**: Completed the package migration to `fast` / `feat` / `e2e` test topology and aligned E2E workflow evidence contracts with current lifecycle/policy output patterns.
+- **ace-test-runner v0.24.0**: Migrated deterministic tests into `test/fast` and `test/feat`, removed legacy `test/integration`, and hardened package E2E scenario setup/verification contracts for sandbox reliability.
 - **ace-test-runner v0.23.0**: Renamed package-level test-scope terminology to `target`, replaced `groups:` with `targets:` and `execution.mode: by-target`, kept suite package bucketing on `group`, and made `ace-test-suite --target feat` report real current-run feat results instead of stale summaries.
 - **ace-assign v0.45.0**: Updated assignment verification presets, step templates, and runtime child-step guidance so modified packages run `ace-test <package> all --profile 6`, batch verification keeps `ace-test-suite` on the default fast suite, and E2E checks stay package-targeted via `ace-test-e2e <package>`.
 - **ace-test-runner v0.22.0**: Renamed the public deterministic test surface to `fast` / `feat`, made bare `ace-test` default to `fast`, and made `all` run `fast` then `feat` while keeping `ace-test-e2e` as the separate scenario entrypoint.
@@ -43,6 +76,7 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner v0.21.0**: Changed bare `ace-test` runs to the `unit` group, added the `int` alias for `integration`, and removed legacy `system` / `e2e` / `all-with-e2e` targets in favor of `ace-test-e2e`.
 
 ### Technical
+- **ace-overseer v0.13.12**: Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.20` to stay aligned with the current worktree minor release line.
 - **ace-test v0.6.6**: Updated packaged testing agents to use `target` consistently for package-level scopes and refreshed fast/feat examples.
 - **ace-b36ts v0.14.4**: Renamed the package-local test-runner config surface from `groups:` to `targets:` to match the shared target contract.
 - **ace-test v0.6.5**: Synced canonical `verify-test-suite` skill metadata to the explicit package-`all` plus suite-fast assignment verification contract.
@@ -73,7 +107,6 @@ All notable changes to this project will be documented in this file.
 - **ace-lint v0.28.1**: Allowed canonical `assign.steps` metadata in skill validation and added regression coverage for the updated schema contract.
 
 ### Added
-- **ace-retro v0.17.0**: Added `as-retro-analyze-worktree` plus the `wfi://retro/analyze-worktree` workflow to analyze completed assignments across single or fleet worktrees and produce ranked spec-improvement retros from scope, residual-work, and `.ace-local` telemetry evidence.
 - **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
 
 ### Changed

@@ -4,7 +4,9 @@ Cross-cutting E2E test scenarios for monorepo-level concerns.
 
 This is **not** a Ruby gem. It is a container for E2E scenarios that span multiple packages or verify monorepo-wide behavior (install verification, quick-start doc validation, etc.).
 
-Scenarios here are auto-discovered by `ace-test-e2e-suite`. During migration, keep both path contracts in mind: legacy `test/e2e/TS-*/scenario.yml` and the newer `test-e2e/scenarios/TS-*/scenario.yml`.
+Scenarios here are auto-discovered by `ace-test-e2e-suite` from `test/e2e/TS-*/scenario.yml`.
+
+This package remains E2E-focused unless an approved review/rewrite explicitly promotes deterministic coverage to `test/fast/` or `test/feat/`.
 
 ## Running
 

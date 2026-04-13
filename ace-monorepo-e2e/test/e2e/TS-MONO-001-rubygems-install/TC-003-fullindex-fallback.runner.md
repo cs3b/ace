@@ -14,6 +14,17 @@ Save all output to `results/tc/03/`.
    - `rm -f Gemfile.lock`
    - `rm -rf .bundle .gem results/tc/03/.bundle results/tc/03/.gem`
    - `mkdir -p results/tc/03/.bundle results/tc/03/.gem`
+   - Pre-create declared artifacts so verifier inputs exist even when install fails:
+   ```bash
+   : > results/tc/03/.bundle/config
+   : > results/tc/03/bundle-list.stdout
+   : > results/tc/03/bundle-list.stderr
+   : > results/tc/03/bundle-env-install.stdout
+   : > results/tc/03/bundle-env-install.stderr
+   : > results/tc/03/version-check.stdout
+   : > results/tc/03/version-check.stderr
+   printf '1\n' > results/tc/03/version-check.exit
+   ```
 2. Capture active bundler context with `bundle env` into `results/tc/03/bundle-env.stdout` using an isolated env.
 ```bash
 env -i \
@@ -127,7 +138,16 @@ else
   exit 1
 end
 RUBY
-echo $? > results/tc/03/version-check.exit
+   echo $? > results/tc/03/version-check.exit
+```
+5. If full-index install fails, keep placeholder artifacts and note skip reason:
+```bash
+if [ "$(cat results/tc/03/fullindex.exit)" != "0" ]; then
+  printf 'SKIPPED: bundle install --full-index failed\n' > results/tc/03/bundle-list.stderr
+  printf 'SKIPPED: bundle install --full-index failed\n' > results/tc/03/bundle-env-install.stderr
+  printf 'SKIPPED: version check not run because full-index install failed\n' > results/tc/03/version-check.stdout
+  printf 'SKIPPED: bundle install --full-index failed\n' > results/tc/03/version-check.stderr
+fi
 ```
 
 ## Constraints
