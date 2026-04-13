@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
-- **ace-support-nav v0.27.2**: Deduplicated `cookbook://` listing results by canonical resource path so overlapping source registrations no longer emit duplicate entries for the same file.
+- **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
 - **ace-test-runner v0.24.2**: Relaxed the removed `unit` target regression assertion so the canonical-target error contract is validated without pinning output order.
 - **ace-llm v0.33.3**: Added `codex:mini` as a `commit` role fallback after `glite` so release/commit tooling can continue role-based generation when the primary model is unavailable.
 - **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based selector resolution no longer crashes when only fallback environment keys are configured.
@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.48.0**: Removed the shipped `verify-e2e` assignment step from standard assignment flows and narrowed assignment verification to deterministic package checks plus `ace-test-suite --target all`.
 - **ace-sim v0.14.2**: Improved simulation run-id generation and collision recovery to regenerate IDs more reliably when temporary directories collide.
 - **ace-test-runner-e2e v0.35.0**: Added optional artifact tracking (`(optional)`) to scenario parsing so optional outputs are recorded in manifests and snapshots without failing runs when they are missing.
+- **ace-handbook v0.26.2**: Updated usage guidance to document canonical-path deduplication behavior for overlapping `cookbook://` wildcard source registrations.
 - Coordinated patch release for the batch i05 migration line across ace-assign, ace-bundle, ace-compressor, ace-demo, ace-docs, ace-git, ace-git-commit, ace-git-secrets, ace-git-worktree, ace-handbook, ace-idea, ace-lint, ace-llm, ace-llm-providers-cli, ace-overseer, ace-prompt-prep, ace-retro, ace-review, ace-search, ace-sim, ace-support-models, ace-support-nav, ace-task, ace-test-runner, ace-test-runner-e2e, ace-tmux.
 
 - Assignment-runtime technical follow-through for `ace-assign v0.48.0`: added an `ace-assign`-local verify-suite workflow and preserved local step runtime bindings during canonical catalog metadata merges so assignment-specific verification contracts are not overwritten by shared skill defaults.
