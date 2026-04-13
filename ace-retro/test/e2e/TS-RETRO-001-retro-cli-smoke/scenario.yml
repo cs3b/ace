@@ -21,10 +21,10 @@ e2e-justification: >
   transitions in one operator workflow.
 
 unit-coverage-reviewed:
-  - test/commands/retro_cli_test.rb
-  - test/organisms/retro_doctor_test.rb
-  - test/molecules/retro_creator_test.rb
-  - test/molecules/retro_scanner_test.rb
+  - test/fast/commands/retro_cli_test.rb
+  - test/fast/organisms/retro_doctor_test.rb
+  - test/fast/molecules/retro_creator_test.rb
+  - test/fast/molecules/retro_scanner_test.rb
 
 requires:
   tools: [ace-retro, git]
