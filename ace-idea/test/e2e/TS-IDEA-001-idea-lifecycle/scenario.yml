@@ -18,16 +18,16 @@ e2e-justification: >
   (directory creation, file placement, frontmatter written to disk), and real
   path transitions across create, list (with filter flags), and move operations
   including archive transitions.
-  Unit and integration tests mock filesystem state; E2E confirms the full
+  Fast and feat deterministic tests mock filesystem state; E2E confirms the full
   CLI-to-disk pipeline.
 
 unit-coverage-reviewed:
-  - test/molecules/idea_creator_test.rb
-  - test/molecules/idea_mover_test.rb
-  - test/molecules/idea_scanner_test.rb
-  - test/organisms/idea_manager_test.rb
-  - test/commands/idea_cli_test.rb
-  - test/integration/idea_integration_test.rb
+  - test/fast/molecules/idea_creator_test.rb
+  - test/fast/molecules/idea_mover_test.rb
+  - test/fast/molecules/idea_scanner_test.rb
+  - test/fast/organisms/idea_manager_test.rb
+  - test/fast/commands/idea_cli_test.rb
+  - test/feat/idea_lifecycle_feature_test.rb
 
 requires:
   tools: [ace-idea]
