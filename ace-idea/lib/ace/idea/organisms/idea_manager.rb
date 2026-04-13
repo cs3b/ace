@@ -39,12 +39,25 @@ module Ace
           clipboard: false, llm_enhance: false)
           ensure_root_dir
           creator = Molecules::IdeaCreator.new(root_dir: @root_dir, config: @config)
+          prepared_payload = creator.prepare_create_payload(
+            content,
+            clipboard: clipboard,
+            llm_enhance: llm_enhance
+          )
           attempts = 0
 
           begin
             attempts += 1
-            creator.create(content, title: title, tags: tags, move_to: move_to,
-              clipboard: clipboard, llm_enhance: llm_enhance, time: Time.now.utc + ((attempts - 1) * 2))
+            creator.create(
+              nil,
+              title: title,
+              tags: tags,
+              move_to: move_to,
+              clipboard: false,
+              llm_enhance: false,
+              time: Time.now.utc + ((attempts - 1) * 2),
+              prepared_payload: prepared_payload
+            )
           rescue Molecules::IdeaCreator::IdCollisionError
             retry if attempts < CREATE_RETRY_LIMIT
             raise CreateRetriesExhaustedError,

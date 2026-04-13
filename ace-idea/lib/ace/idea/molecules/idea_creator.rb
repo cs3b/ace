@@ -35,77 +35,100 @@ module Ace
         # @param time [Time] Creation time (default: now)
         # @return [Idea] Created idea object
         def create(content = nil, title: nil, tags: [], move_to: nil,
-          clipboard: false, llm_enhance: false, time: Time.now.utc)
-          # Step 1: Gather content
+          clipboard: false, llm_enhance: false, time: Time.now.utc, prepared_payload: nil)
+          payload = prepared_payload || prepare_create_payload(content, clipboard: clipboard, llm_enhance: llm_enhance)
+          enhanced_body = payload.fetch(:enhanced_body)
+          attachments_to_save = payload.fetch(:attachments_to_save)
+
+          # Step 3: Generate ID and slugs
+          id = Atoms::IdeaIdFormatter.generate(time)
+          with_id_reservation(id) do
+            raise IdCollisionError, "Idea ID collision detected for #{id}" if idea_id_exists?(id)
+
+            slug_title = title || extract_title(enhanced_body)
+            folder_slug = generate_folder_slug(slug_title)
+            file_slug = generate_file_slug(slug_title)
+
+            # Step 4: Determine target directory
+            target_dir = determine_target_dir(move_to)
+            FileUtils.mkdir_p(target_dir)
+
+            # Step 5: Create idea folder
+            folder_name, _ = unique_folder_name(id, folder_slug, target_dir)
+            idea_dir = File.join(target_dir, folder_name)
+            FileUtils.mkdir_p(idea_dir)
+
+            begin
+              # Step 6: Handle attachments
+              if attachments_to_save.any?
+                enhanced_body = save_attachments_and_inject_refs(attachments_to_save, idea_dir, enhanced_body)
+              end
+
+              # Step 7: Write spec file
+              effective_title = title || extract_title(enhanced_body) || "Untitled Idea"
+              frontmatter = Atoms::IdeaFrontmatterDefaults.build(
+                id: id,
+                title: effective_title,
+                tags: tags,
+                status: "pending",
+                created_at: time
+              )
+
+              file_content = build_file_content(frontmatter, enhanced_body, effective_title)
+              spec_filename = Atoms::IdeaFilePattern.spec_filename(id, file_slug)
+              spec_file = File.join(idea_dir, spec_filename)
+              File.write(spec_file, file_content)
+
+              # Step 8: Load and return the created idea
+              loader = IdeaLoader.new
+              special_folder = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+                idea_dir, root: @root_dir
+              )
+              loader.load(idea_dir, id: id, special_folder: special_folder)
+            rescue StandardError
+              FileUtils.rm_rf(idea_dir) if Dir.exist?(idea_dir)
+              raise
+            end
+          end
+        end
+
+        def prepare_create_payload(content, clipboard: false, llm_enhance: false)
           body, attachments_to_save = gather_content(content, clipboard: clipboard)
 
           if body.nil? || body.strip.empty?
             raise ArgumentError, "No content provided. Provide text or use --clipboard."
           end
 
-          # Step 2: Optionally enhance with LLM
           enhanced_body = if llm_enhance
             enhance_with_llm(body, config: @config)
           else
             body
           end
 
-          # Step 3: Generate ID and slugs
-          id = Atoms::IdeaIdFormatter.generate(time)
-          raise IdCollisionError, "Idea ID collision detected for #{id}" if idea_id_exists?(id)
-          slug_title = title || extract_title(enhanced_body)
-          folder_slug = generate_folder_slug(slug_title)
-          file_slug = generate_file_slug(slug_title)
-
-          # Step 4: Determine target directory
-          target_dir = determine_target_dir(move_to)
-          FileUtils.mkdir_p(target_dir)
-
-          # Step 5: Create idea folder
-          folder_name, _ = unique_folder_name(id, folder_slug, target_dir)
-          idea_dir = File.join(target_dir, folder_name)
-          FileUtils.mkdir_p(idea_dir)
-
-          begin
-            # Step 6: Handle attachments
-            if attachments_to_save.any?
-              enhanced_body = save_attachments_and_inject_refs(attachments_to_save, idea_dir, enhanced_body)
-            end
-
-            # Step 7: Write spec file
-            effective_title = title || extract_title(enhanced_body) || "Untitled Idea"
-            frontmatter = Atoms::IdeaFrontmatterDefaults.build(
-              id: id,
-              title: effective_title,
-              tags: tags,
-              status: "pending",
-              created_at: time
-            )
-
-            file_content = build_file_content(frontmatter, enhanced_body, effective_title)
-            spec_filename = Atoms::IdeaFilePattern.spec_filename(id, file_slug)
-            spec_file = File.join(idea_dir, spec_filename)
-            File.write(spec_file, file_content)
-
-            # Step 8: Load and return the created idea
-            loader = IdeaLoader.new
-            special_folder = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-              idea_dir, root: @root_dir
-            )
-            loader.load(idea_dir, id: id, special_folder: special_folder)
-          rescue StandardError
-            FileUtils.rm_rf(idea_dir) if Dir.exist?(idea_dir)
-            raise
-          end
+          {
+            enhanced_body: enhanced_body,
+            attachments_to_save: attachments_to_save
+          }
         end
 
         private
 
         def idea_id_exists?(id)
-          escaped = Regexp.escape(id)
-          Dir.glob(File.join(@root_dir, "**", "*")).any? do |path|
-            File.directory?(path) && File.basename(path).match?(/\A#{escaped}-/)
+          Dir.glob(File.join(@root_dir, "**", "#{id}-*")).any? do |path|
+            File.directory?(path)
           end
+        end
+
+        def with_id_reservation(id)
+          reservation_path = File.join(@root_dir, ".ace-idea-id-lock-#{id}")
+          acquired = false
+          Dir.mkdir(reservation_path)
+          acquired = true
+          yield
+        rescue Errno::EEXIST
+          raise IdCollisionError, "Idea ID collision detected for #{id}"
+        ensure
+          FileUtils.rm_rf(reservation_path) if acquired && reservation_path && Dir.exist?(reservation_path)
         end
 
         def gather_content(content, clipboard: false)
