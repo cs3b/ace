@@ -1,6 +1,7 @@
 ---
 name: as-e2e-review
-description: Review E2E coverage for modified packages and run targeted package scenarios
+description: Deep exploration producing a coverage matrix of functionality, unit tests,
+  and E2E tests
 user-invocable: true
 allowed-tools:
 - Bash(ace-bundle:*)
@@ -14,8 +15,7 @@ assign:
   source: wfi://e2e/review
   steps:
   - name: verify-e2e
-    description: Review E2E coverage for modified packages and run targeted package
-      scenarios
+    description: Review E2E coverage for modified packages and run targeted scenarios
     tags:
     - testing
     - e2e
