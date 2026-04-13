@@ -1,0 +1,27 @@
+---
+description: Demonstrate frontmatter doctor check accepting valid subtask IDs
+tags:
+- ace-task
+- docs
+- doctor
+- subtask
+settings:
+  font_size: 16
+  width: 960
+  height: 540
+  format: gif
+scenes:
+- name: Show parent task and subtask tree
+  commands:
+  - type: ace-task show q7w --tree
+    sleep: 4s
+- name: Run frontmatter health check
+  commands:
+  - type: ace-task doctor --check frontmatter
+    sleep: 4s
+teardown:
+- cleanup
+setup:
+- sandbox
+- copy-fixtures
+- git-init
