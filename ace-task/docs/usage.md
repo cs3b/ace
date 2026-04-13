@@ -2,7 +2,8 @@
 doc-type: user
 purpose: CLI reference for ace-task commands and options
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-13'
+  last-checked: '2026-04-13'
 ---
 
 # ace-task CLI Reference
@@ -45,6 +46,10 @@ github_issue: 276
 ### ace-task create TITLE
 
 Create a new task with a B36TS-based ID.
+
+If the generated task ID collides with an existing persisted task, `ace-task create`
+automatically retries with a new ID. If it cannot obtain a unique ID within the retry
+budget, the command fails cleanly without leaving behind a partial task artifact.
 
 | Option | Alias | Description |
 |--------|-------|-------------|
@@ -188,6 +193,10 @@ ace-task github-sync --all
 ### ace-task doctor
 
 Run health checks on tasks. Validates frontmatter, file structure, and scope/status consistency.
+
+Duplicate persisted task IDs are reported as errors, including subtask collisions.
+`ace-task doctor --check frontmatter` also fails when duplicate IDs are present in
+task frontmatter.
 
 | Option | Alias | Description |
 |--------|-------|-------------|
