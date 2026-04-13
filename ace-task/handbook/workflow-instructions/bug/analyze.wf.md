@@ -185,8 +185,8 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
 - Purpose: Verify [specific behavior] handles [edge case]
 - Scenario: When [condition], expect [result]
 
-**Integration Test: [test name]**
-- Location: test/integration/[flow]_test.rb
+**Feature Test: [test name]**
+- Location: test/feat/[flow]_test.rb
 - Purpose: Verify [workflow] completes correctly
 - Scenario: Given [setup], when [action], then [verification]
 ```
@@ -357,7 +357,7 @@ Present the analysis to the user in this format:
    - Purpose: [What it validates]
 
 2. **[Test Name]** (integration)
-   - File: `test/integration/flow_test.rb`
+   - File: `test/feat/flow_test.rb`
    - Purpose: [What it validates]
 
 ### Fix Plan
@@ -420,7 +420,7 @@ This workflow provides systematic bug analysis that ensures proper investigation
    - Purpose: [What it validates]
 
 2. **[Test Name]** (integration)
-   - File: `test/integration/flow_test.rb`
+   - File: `test/feat/flow_test.rb`
    - Purpose: [What it validates]
 
 ### Fix Plan
