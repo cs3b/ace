@@ -112,15 +112,6 @@ ace-test-e2e <package>
 
 It does not run `e2e`.
 
-## Migration Note
-
-During migration, some packages still expose compatibility aliases like `unit` or `integration`.
-Those names are transitional. Public docs and new work should use only:
-
-- `fast`
-- `feat`
-- `e2e`
-
 ## Related Guides
 
 - `ace-nav guide://testing-philosophy`
