@@ -34,6 +34,17 @@ ace-models sync                       # Update cache from models.dev
 ace-llm-providers list                # List known providers
 ```
 
+## Testing
+
+Use the package test lanes directly:
+
+```bash
+ace-test ace-support-models           # fast lane default
+ace-test ace-support-models feat      # feature-contract lane
+ace-test ace-support-models all       # all deterministic lanes
+ace-test-e2e ace-support-models       # retained workflow scenarios
+```
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

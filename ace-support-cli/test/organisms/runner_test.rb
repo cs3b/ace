@@ -51,6 +51,7 @@ class RunnerTest < AceSupportCliTestCase
       assert_equal 0, Ace::Support::Cli::Runner.new(registry).call(args: ["--help"])
     end.first
 
+    assert_includes output, "Usage:"
     assert_includes output, "COMMANDS"
     assert_includes output, "show"
   end

@@ -43,6 +43,17 @@ ace-nav list 'wfi://*test*'           # Wildcard search across sources
 ace-nav --sources                     # List all registered handbook sources
 ```
 
+## Testing
+
+Use the restarted lane model for this package:
+
+```bash
+ace-test ace-support-nav       # fast deterministic lane (default)
+ace-test ace-support-nav feat  # deterministic feature/integration lane
+ace-test ace-support-nav all   # fast + feat
+ace-test-e2e ace-support-nav   # retained workflow-value scenarios only
+```
+
 ---
 
 [Handbook](handbook/) | Part of [ACE](https://github.com/cs3b/ace)

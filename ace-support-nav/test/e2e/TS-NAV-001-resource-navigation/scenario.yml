@@ -1,5 +1,5 @@
 test-id: TS-NAV-001
-title: "ace-nav Goal-Based E2E"
+title: "ace-nav resource navigation smoke"
 area: nav
 package: ace-support-nav
 priority: high
@@ -15,11 +15,20 @@ sandbox-layout:
   results/tc/05/:  "Cross-protocol inference evidence (wfi:// vs guide://)"
 
 e2e-justification: >
-  All goals require the real ace-nav binary resolving resources through the
-  filesystem with protocol configuration. Extension inference, priority
-  ordering, and cross-protocol resolution depend on the real file discovery
-  engine, configured sources, and actual filesystem layout. Unit tests verify
-  individual resolver logic; these tests verify the full navigation pipeline.
+  These checks validate real CLI navigation behavior across protocol inference,
+  precedence resolution, and cross-protocol discovery using filesystem-backed
+  handbook sources. Deterministic parser/scanner/registry logic is covered in
+  fast and feat tests; this scenario retains only full pipeline behavior that
+  requires real command execution with fixtures.
+
+unit-coverage-reviewed:
+  - test/fast/commands/cli_test.rb
+  - test/fast/atoms/extension_inferrer_test.rb
+  - test/fast/atoms/uri_parser_test.rb
+  - test/fast/molecules/protocol_scanner_test.rb
+  - test/fast/molecules/source_registry_test.rb
+  - test/fast/organisms/navigation_engine_test.rb
+  - test/feat/task_protocol_test.rb
 
 requires:
   tools: [ace-nav]
@@ -27,5 +36,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; fi"
+  - agent-env:
+      PROJECT_ROOT_PATH: .
   - copy-fixtures

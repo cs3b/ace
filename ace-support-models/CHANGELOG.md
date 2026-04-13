@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **ace-support-models v0.10.2**: Normalized API cache provider and model payloads at read time (including string-array model lists), fixing `ace-llm-providers list`/`show` output from cached responses.
+
+## [0.10.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+### Changed
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` model by moving deterministic coverage to `test/fast`, relocating legacy integration coverage to `test/feat`, and retaining workflow-value E2E scenario coverage.
+- Updated package README testing guidance and E2E scenario decision metadata to reflect the `fast` / `feat` / `e2e` contract.
+
 ## [0.9.3] - 2026-03-29
 
 ### Technical

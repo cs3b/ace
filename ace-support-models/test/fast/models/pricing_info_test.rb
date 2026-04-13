@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class PricingInfoTest < AceModelsTestCase
   def test_from_hash_with_all_fields

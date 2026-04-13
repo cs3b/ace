@@ -13,13 +13,14 @@ module Ace
           end
 
           def render
+            usage = "Usage: #{resolved_program_name} [COMMAND]"
             commands = visible_commands
             groups = command_groups
-            output = if groups && !groups.empty?
+            output = [usage, if groups && !groups.empty?
               format_grouped(commands, groups)
             else
               format_flat(commands, header: "COMMANDS")
-            end
+            end].join("\n\n")
 
             examples = help_examples
             output += "\n\n#{format_examples(examples)}" if examples && !examples.empty?

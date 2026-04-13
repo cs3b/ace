@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class ModelSearcherTest < AceModelsTestCase
   def setup
@@ -119,6 +119,32 @@ class ModelSearcherTest < AceModelsTestCase
     model = result[:models].first
     assert_kind_of Ace::Support::Models::Models::ModelInfo, model
     assert model.id
+  end
+
+  def test_search_normalizes_string_model_payloads
+    with_temp_cache do |dir|
+      cache_path = File.join(dir, "api.json")
+      File.write(
+        cache_path,
+        JSON.generate(
+          "providers" => {
+            "anthropic" => {
+              "id" => "anthropic",
+              "name" => "Anthropic",
+              "models" => ["claude-3-haiku"]
+            }
+          }
+        )
+      )
+
+      searcher = Ace::Support::Models::Molecules::ModelSearcher.new(
+        cache_manager: Ace::Support::Models::Molecules::CacheManager.new(cache_dir: dir)
+      )
+
+      assert_equal 1, searcher.count
+      assert_equal 1, searcher.all.size
+      assert_equal "claude-3-haiku", searcher.all.first.id
+    end
   end
 
   # Test that filters still work with the new implementation
