@@ -24,6 +24,18 @@
 
 **Normalize metadata safely** - sanitize slugs and arguments before persistence, preventing malformed entries in item stores.
 
+## Testing Contract
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Run:
+
+- `ace-test ace-support-items`
+- `ace-test ace-support-items all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

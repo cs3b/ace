@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **ace-support-test-helpers v0.14.2**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+## [0.14.1] - 2026-04-11
+
+### Changed
+- Migrated deterministic tests from `test/{atoms,molecules,fixtures}` to `test/fast/{atoms,molecules,fixtures}` to align with the fast/feat/e2e model as a fast-only package.
+- Updated README testing guidance to document the fast-only contract and canonical `ace-test` commands for this package.
+
 ## [0.14.0] - 2026-04-10
 
 ### Added

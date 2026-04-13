@@ -24,6 +24,18 @@
 
 **Build config scans** - discover and rank candidate configuration directories during resolution, supporting the cascade logic in [ace-support-config](../ace-support-config).
 
+## Testing Contract
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Run:
+
+- `ace-test ace-support-fs`
+- `ace-test ace-support-fs all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

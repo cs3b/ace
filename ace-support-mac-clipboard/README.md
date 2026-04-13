@@ -24,6 +24,18 @@
 
 **Keep platform details isolated** - encapsulate macOS-specific clipboard behavior in one package so the rest of ACE stays platform-neutral.
 
+## Testing Contract
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Run:
+
+- `ace-test ace-support-mac-clipboard`
+- `ace-test ace-support-mac-clipboard all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
