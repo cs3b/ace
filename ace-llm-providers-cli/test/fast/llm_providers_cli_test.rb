@@ -11,7 +11,7 @@ module Ace
         end
 
         def test_version_format
-          assert_match(/\A\d+\.\d+\.\d+/, ::Ace::LLM::Providers::CLI::VERSION)
+          assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::LLM::Providers::CLI::VERSION)
         end
 
         def test_module_exists
