@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
+- **ace-support-config v0.11.2**: Made bootstrap `.gitignore` detection line-aware so commented or negated `.ace-local/` mentions no longer suppress appending the actual ignore rule.
+- **ace-llm-providers-cli v0.28.6**: Cleared `CLAUDECODE` during Claude help capability probes so nested Claude Code sessions do not cache false negatives for `--max-tokens` support.
 - **ace-llm-providers-cli v0.28.5**: Avoided eager Claude CLI capability probes during normal command construction so non-`max-tokens` requests no longer shell out to `claude --help`, and restored deterministic command-builder tests around that path.
 - **ace-support-config v0.11.1**: Preserved existing `.gitignore` rules under `ace-config init --force` and anchored project-root bootstrap files to the detected repository root so subdirectory runs do not write them into the wrong location.
 - **ace-llm-providers-cli v0.28.4**: Filtered forwarded Claude `--max-tokens` CLI args when the local Claude CLI does not advertise support, closing the passthrough path that could still trigger unsupported-option failures.
