@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "tmpdir"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class WorkOnOrchestratorTest < AceOverseerTestCase
   class FakeTaskManager

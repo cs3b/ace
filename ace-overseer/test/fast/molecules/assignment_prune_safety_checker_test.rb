@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
   FakeAssignment = Struct.new(:id, :name, :cache_dir)

@@ -46,5 +46,15 @@ ace-overseer status --watch
 
 **Customize the workflow** - the full pipeline is defined in two layers: the [assignment preset](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml) controls which steps run and in what order (onboard, implement, test, release, review, PR), while each step references a [workflow instruction](../ace-task/handbook/workflow-instructions/task/work.wf.md) that defines how it executes. Browse [available presets](../ace-assign/.ace-defaults/assign/presets/) or create your own to tailor the pipeline to your project.
 
+## Testing
+
+- `ace-test ace-overseer` runs deterministic fast coverage from `test/fast/`.
+- `ace-test ace-overseer feat` runs deterministic feature coverage from `test/feat/` when present.
+- `ace-test ace-overseer all` runs fast + feat deterministic coverage.
+- `ace-test-e2e ace-overseer` runs retained workflow scenarios from `test/e2e/`.
+
+The package no longer uses deterministic `*_test.rb` files under `test/e2e/` and
+does not use `ace-test ace-overseer e2e` as a deterministic test path.
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
