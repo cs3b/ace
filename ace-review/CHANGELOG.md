@@ -6,16 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.52.1] - 2026-04-13
 
 ### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.52.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` contract:
+  - moved deterministic package tests from legacy top-level folders into `test/fast/`
+  - moved former `test/integration/` deterministic coverage into `test/feat/`
+  - rewrote `TS-REVIEW-001` to retain only high-value execution workflows and added an E2E decision record
+- Updated package docs to teach `ace-test ace-review`, `ace-test ace-review feat`, `ace-test ace-review all`, and `ace-test-e2e ace-review`.
 - Expanded `as-review-pr` canonical skill metadata so public `review-pr` assign-step discovery is skill-owned rather than catalog-owned.
+- Switched review GitHub CLI operations to use `Ace::Git::Molecules::GhCliExecutor` and removed the package-local `GhCliExecutor` implementation.
 
 ### Fixed
 - Added `diff:RANGE -- path` subject parsing so reviews can scope git diffs to specific files or directories with git-style path filters.
 - Updated review GitHub workflows to correctly re-raise `Ace::Git` authentication/install errors after migrating to shared `GhCliExecutor`.
-
-### Changed
-- Switched review GitHub CLI operations to use `Ace::Git::Molecules::GhCliExecutor` and removed the package-local `GhCliExecutor` implementation.
 
 ## [0.51.10] - 2026-04-07
 

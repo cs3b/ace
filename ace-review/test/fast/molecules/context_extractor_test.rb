@@ -261,8 +261,8 @@ class ContextExtractorTest < AceReviewTest
   # Tests for default_project_docs and config loading (ADR-022 compliance)
   def test_default_project_docs_matches_config_file
     # Load the actual config file to verify fallback matches
-    # __dir__ is test/molecules, so ../.. gets to ace-review gem root
-    gem_root = File.expand_path("../..", __dir__)
+    # __dir__ is test/fast/molecules, so ../../.. gets to ace-review gem root
+    gem_root = File.expand_path("../../..", __dir__)
     config_path = File.join(gem_root, ".ace-defaults/review/config.yml")
     config = YAML.safe_load_file(config_path)
     config_docs = config["project_docs"]

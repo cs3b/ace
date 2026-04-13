@@ -3,8 +3,8 @@ doc-type: user
 title: Getting Started with ace-review
 purpose: Documentation for ace-review/docs/getting-started.md
 ace-docs:
-  last-updated: 2026-03-21
-  last-checked: 2026-03-21
+  last-updated: 2026-04-12
+  last-checked: 2026-04-12
 ---
 
 # Getting Started with ace-review
@@ -86,6 +86,9 @@ ace-review --preset team-review --subject diff:origin/main..HEAD --auto-execute
 | `ace-review --preset code --subject diff:origin/main..HEAD --auto-execute` | Review branch diff |
 | `ace-review-feedback list --status pending` | List verified findings |
 | `ace-review-feedback resolve <id>` | Mark finding as fixed |
+| `ace-test ace-review` | Run deterministic fast checks |
+| `ace-test ace-review feat` | Run deterministic feature checks |
+| `ace-test-e2e ace-review` | Run retained workflow scenarios |
 
 ## What to try next
 

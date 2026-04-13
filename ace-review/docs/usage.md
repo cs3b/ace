@@ -3,8 +3,8 @@ doc-type: user
 title: ace-review CLI Reference
 purpose: Documentation for ace-review/docs/usage.md
 ace-docs:
-  last-updated: 2026-03-21
-  last-checked: 2026-03-21
+  last-updated: 2026-04-12
+  last-checked: 2026-04-12
 ---
 
 # ace-review CLI Reference
@@ -160,6 +160,10 @@ ace-review-feedback skip abc123 --reason "Design: intentional choice"
 | `ace-review --preset code --subject diff:origin/main..HEAD --auto-execute` | Review branch diff |
 | `ace-review-feedback list --status pending` | List verified findings |
 | `ace-review-feedback resolve <id>` | Mark finding as fixed |
+| `ace-test ace-review` | Run deterministic fast checks |
+| `ace-test ace-review feat` | Run deterministic feature checks |
+| `ace-test ace-review all` | Run full deterministic package coverage |
+| `ace-test-e2e ace-review` | Run retained workflow scenarios |
 
 ## Runtime Help
 

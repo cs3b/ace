@@ -1,26 +1,37 @@
 test-id: TS-REVIEW-001
-title: "ace-review Goal-Based E2E"
+title: "ace-review execution workflows"
 area: review
 package: ace-review
 priority: high
-tags: [smoke, happy-path, deep, "use-case:review"]
-cost-tier: happy-path
+tags: [deep, "use-case:review"]
+cost-tier: deep
 tool-under-test: ace-review
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Preset discovery and listing evidence"
-  results/tc/03/:  "Multi-level composition and inheritance evidence"
-  results/tc/04/:  "Subject processing evidence (diff, files, mixed)"
-  results/tc/05/:  "Error handling evidence (circular, missing, invalid)"
-  results/tc/06/:  "Single model execution evidence (real API)"
-  results/tc/07/:  "Multi-model and reviewers format evidence"
+  results/tc/01/: "Single-model execution artifacts"
+  results/tc/02/: "Multi-model and reviewer-format execution artifacts"
 
 e2e-justification: >
-  All goals require the real ace-review binary. Preset discovery depends on
-  filesystem preset files. Composition resolves multi-level inheritance chains.
-  Subject processing requires real git diffs and file patterns. Execution goals
-  make real API calls to verify the full review pipeline. None testable with mocks.
+  These remaining goals require real ace-review CLI execution with live provider
+  calls, session persistence, and multi-model/reviewer orchestration behavior that
+  deterministic fast/feat tests cannot fully substitute.
+
+unit-coverage-reviewed:
+  - test/fast/commands/feedback/list_test.rb
+  - test/fast/commands/feedback/show_test.rb
+  - test/fast/commands/feedback/create_test.rb
+  - test/fast/commands/feedback/verify_test.rb
+  - test/fast/commands/feedback/resolve_test.rb
+  - test/fast/commands/feedback/skip_test.rb
+  - test/fast/molecules/preset_manager_test.rb
+  - test/fast/molecules/context_extractor_test.rb
+  - test/fast/molecules/context_composer_test.rb
+  - test/fast/molecules/subject_extractor_test.rb
+  - test/fast/molecules/subject_strategy_test.rb
+  - test/fast/molecules/pr_task_spec_resolver_test.rb
+  - test/fast/organisms/review_manager_test.rb
+  - test/feat/adaptive_strategy_integration_test.rb
+  - test/feat/performance_regression_test.rb
 
 requires:
   tools: [ace-review, git]
@@ -28,7 +39,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - run: |
