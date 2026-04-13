@@ -40,6 +40,7 @@ bundle:
         - date
         - ace-git status
         - ace-task status
+
 ---
 
 # Project Context

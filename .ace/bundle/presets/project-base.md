@@ -10,7 +10,7 @@ bundle:
 
   embed_document_source: true
 
-  sections: 
+  sections:
 
     vision:
       title: Project Vision
@@ -35,6 +35,7 @@ bundle:
         - pwd
         - date
         - ace-git status
+
 ---
 
 # Project Context
