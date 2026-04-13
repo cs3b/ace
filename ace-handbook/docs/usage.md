@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Handbook Usage Reference
 purpose: Practical command reference for ace-handbook workflows
 ace-docs:
-  last-updated: '2026-04-10'
-  last-checked: '2026-04-10'
+  last-updated: '2026-04-13'
+  last-checked: '2026-04-13'
 ---
 
 # ace-handbook Usage Reference
@@ -26,6 +26,10 @@ ace-nav list 'skill://*'
 ```
 
 Use discovery when you need available paths or exact protocol references.
+
+For `cookbook://` discovery, wildcard listings now deduplicate overlapping source registrations by canonical file
+path. If the same cookbook is exposed through multiple sources, `ace-nav list 'cookbook://*'` returns one entry for
+that file and keeps the highest-priority source ordering.
 
 ## Project handbook extensions (`.ace-handbook/`)
 
