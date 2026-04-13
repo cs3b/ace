@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../test_helper"
+require "test_helper"
 require "ace/docs/cli/commands/status"
 require "ace/docs/models/document"
 

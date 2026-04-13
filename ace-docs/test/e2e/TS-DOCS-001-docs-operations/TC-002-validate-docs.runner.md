@@ -15,8 +15,15 @@ Save artifacts to `results/tc/02/`.
 - Keep all artifacts under `results/tc/02/`.
 - Do not write outside the sandbox.
 - Reuse the docs seeded in Goal 1; do not run validation against an empty workspace.
-- If Goal 1 docs are missing, create the same minimal docs set first and capture that bootstrap as `results/tc/02/setup.*`.
 - Capture validate command artifacts as:
   - `results/tc/02/validate.stdout`
   - `results/tc/02/validate.stderr`
   - `results/tc/02/validate.exit`
+
+## Required command sequence
+
+Run and capture:
+
+```bash
+ace-docs validate
+```
