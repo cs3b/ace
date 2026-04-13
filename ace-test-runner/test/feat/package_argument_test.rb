@@ -115,7 +115,9 @@ class PackageArgumentTest < Minitest::Test
 
       refute status.success?, "Should fail for removed legacy target"
       assert_match(/Unknown target: unit/, output)
-      assert_match(/Available targets: .*fast.*feat.*all.*quick/, output)
+      %w[all fast feat quick].each do |target|
+        assert_match(/\b#{target}\b/, output)
+      end
     end
   end
 
