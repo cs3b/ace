@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-04-13
+
+### Fixed
+- Guarded Claude CLI `--max-tokens` usage so commit-generation flows skip the flag on unsupported Claude versions while preserving it when available.
+
+### Technical
+- Added command-construction coverage for supported and unsupported Claude `--max-tokens` capability paths.
+
 ## [0.28.2] - 2026-04-13
 
 ### Technical
