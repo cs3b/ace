@@ -2,6 +2,6 @@
 
 module Ace
   module Test
-    VERSION = "0.6.6"
+    VERSION = "0.7.2"
   end
 end
