@@ -140,7 +140,7 @@ git checkout -b fix/[bug-description]
 
 2. **Create integration test if needed:**
    ```ruby
-   # Example: test/integration/workflow_test.rb
+   # Example: test/feat/workflow_test.rb
    def test_complete_flow_with_missing_data
      # Test the full workflow that exhibited the bug
    end
