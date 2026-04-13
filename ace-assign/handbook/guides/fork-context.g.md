@@ -95,7 +95,7 @@ Return structured summary:
 When `ace:assign-drive` (or manual orchestration) encounters a fork-enabled subtree:
 
 1. Runs `ace-assign status`
-2. Detects `Fork subtree detected (root: ...)` in output (outside fork scope)
+2. Uses compact/full status only to identify the active fork-capable step or subtree root
 3. Delegates with `ace-assign fork-run --assignment <id>@<root>`
 4. Fork launcher executes `/as-assign-drive <id>@<root>` in a scoped process
 5. Scoped process advances only inside subtree
@@ -105,7 +105,7 @@ When `ace:assign-drive` (or manual orchestration) encounters a fork-enabled subt
 ace:assign-drive loop
   |
   +-- ace-assign status
-  +-- Detects "Fork subtree detected (root: ...)"
+  +-- Resolve fork subtree root from assignment state
   +-- ace-assign fork-run --assignment <id>@<root>
   +-- Forked /as-assign-drive <id>@<root>
   +-- Subtree completes

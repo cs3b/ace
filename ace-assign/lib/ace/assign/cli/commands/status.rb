@@ -6,27 +6,11 @@ module Ace
   module Assign
     module CLI
       module Commands
-        # Display current queue status
-        #
-        # Shows the work queue with hierarchical step structure.
-        # Nested steps are indented to show parent-child relationships.
-        #
-        # @example Basic usage
-        #   ace-assign status
-        #
-        # @example Flat output (no hierarchy)
-        #   ace-assign status --flat
-        #
-        # @example Status for specific assignment
-        #   ace-assign status --assignment abc123
-        #
-        # @example Show all assignments including completed
-        #   ace-assign status --all
+        # Display current queue status.
         class Status < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
           include AssignmentTarget
 
-          # Status icons for consistent display
           STATUS_ICONS = {
             done: "✓ Done",
             in_progress: "▶ Active",
@@ -34,24 +18,26 @@ module Ace
             failed: "✗ Failed"
           }.freeze
 
-          # State labels for other assignments section
           STATE_LABELS = {
             running: "running",
             paused: "paused",
             completed: "completed",
             failed: "failed",
-            empty: "empty"
+            empty: "empty",
+            stalled: "stalled"
           }.freeze
+          PROGRESS_BAR_WIDTH = 10
 
-          # Column widths for hierarchical display
           COL_NUMBER = 12
           COL_STATUS = 12
           COL_NAME = 30
           COL_FORK = 6
+          PREVIEW_LIMIT = 5
 
           desc "Display current workflow queue status"
 
-          option :flat, aliases: ["-f"], type: :boolean, default: false, desc: "Show flat list (no hierarchy)"
+          option :flat, aliases: ["-f"], type: :boolean, default: false, desc: "Show flat list (full mode only)"
+          option :mode, desc: "Text output mode (compact, progress, full)", default: "compact"
           option :format, desc: "Output format (table, json)", default: "table"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -60,80 +46,42 @@ module Ace
 
           def call(**options)
             target = resolve_assignment_target(options)
+            view = resolve_assignment_view(target)
 
-            executor = build_executor_for_target(target)
-            result = executor.status
-            state = result[:state]
-            assignment = result[:assignment]
-            scoped = scoped_status_view(state, target.scope)
-            scoped_state = scoped[:state]
-            current_for_display = scoped[:current]
-            scope_root = scoped[:root]
+            return if options[:quiet]
 
-            unless options[:quiet]
-              if options[:format] == "json"
-                scoped_fork_step = scoped_fork_metadata_step(state, current_for_display, target.scope, scope_root)
-                puts JSON.pretty_generate(status_to_h(assignment, scoped_state, current_for_display, scoped_fork_step: scoped_fork_step))
-                return
-              end
+            if options[:format] == "json"
+              scoped_fork_step = scoped_fork_metadata_step(view.state, view.current_step, target.scope, view.scope_root)
+              puts JSON.pretty_generate(
+                status_to_h(view.assignment, view.scoped_state, view.current_step, scoped_fork_step: scoped_fork_step)
+              )
+              return
+            end
 
-              print_queue_status(assignment, scoped_state, flat: options[:flat], root_number: scope_root)
+            mode = normalize_mode(options[:mode])
+            raise Ace::Support::Cli::Error, "--flat is supported only with --mode full" if options[:flat] && mode != "full"
+            raise Ace::Support::Cli::Error, "--all is supported only with --mode full or compact" if options[:all] && mode == "progress"
 
-              if current_for_display
-                fork_root = fork_scope_root(state, current_for_display)
-                scoped_fork_step = scoped_fork_metadata_step(state, current_for_display, target.scope, scope_root)
-
-                puts
-                puts "Current Step: #{current_for_display.number} - #{current_for_display.name}"
-                puts "Current Status: #{current_for_display.status}"
-                if current_for_display.stall_reason
-                  lines = current_for_display.stall_reason.to_s.strip.lines
-                  puts "Stall Reason: #{lines.first&.chomp}"
-                  lines[1..].each { |l| puts "             #{l.chomp}" } if lines.length > 1
-                  print_hitl_stall_guidance(lines.first.to_s)
-                end
-                if current_for_display.workflow
-                  puts "Workflow: #{current_for_display.workflow}"
-                elsif current_for_display.skill
-                  puts "Skill: #{current_for_display.skill}"
-                end
-                if current_for_display.context
-                  puts "Context: #{current_for_display.context}"
-                end
-                effective_fork_provider = effective_fork_provider_for(current_for_display, scoped_fork_step)
-                if effective_fork_provider
-                  puts "Fork Provider: #{effective_fork_provider}"
-                end
-                puts
-                print_scoped_fork_pid_info(scoped_fork_step)
-
-                if current_for_display.fork? && %i[pending in_progress].include?(current_for_display.status)
-                  # Fork context: output Task tool instructions
-                  print_fork_instructions(current_for_display, assignment)
-                else
-                  puts "Instructions:"
-                  puts current_for_display.instructions
-
-                  if fork_root && (target.scope.nil? || target.scope.strip.empty?)
-                    puts
-                    puts "Fork subtree detected (root: #{fork_root.number} - #{fork_root.name})."
-                    puts "Run in forked process:"
-                    puts "  ace-assign fork-run --root #{fork_root.number} --assignment #{assignment.id}"
-                  end
-                end
-              elsif scoped_state.complete?
-                puts
-                puts "Assignment completed!"
-              end
-
-              # Show other assignments section (unless targeting a specific assignment)
-              unless target.assignment_id
-                print_other_assignments(result[:assignment].id, include_completed: options[:all])
-              end
+            case mode
+            when "progress"
+              puts progress_summary_line(view.assignment, view.scoped_state, view.current_step)
+            when "full"
+              print_full_status(view, target, flat: options[:flat], include_completed: options[:all])
+            else
+              print_compact_status(view, target, include_completed: options[:all])
             end
           end
 
           private
+
+          def normalize_mode(value)
+            mode = value.to_s.strip
+            mode = "compact" if mode.empty?
+            allowed = %w[compact progress full]
+            raise Ace::Support::Cli::Error, "Unsupported status mode '#{mode}'. Use one of: #{allowed.join(', ')}." unless allowed.include?(mode)
+
+            mode
+          end
 
           def status_to_h(assignment, state, current_step, scoped_fork_step: nil)
             {
@@ -143,7 +91,10 @@ module Ace
                 state: state.assignment_state.to_s
               },
               steps: state.steps.map { |step| step_to_h(step) },
-              current_step: step_to_h(current_step, effective_fork_provider: effective_fork_provider_for(current_step, scoped_fork_step)),
+              current_step: step_to_h(
+                current_step,
+                effective_fork_provider: effective_fork_provider_for(current_step, scoped_fork_step)
+              ),
               progress: "#{state.done.size}/#{state.size} done"
             }
           end
@@ -167,17 +118,143 @@ module Ace
             }.compact
           end
 
-          def scoped_status_view(state, scope)
-            return {state: state, current: state.current, root: nil} if scope.nil? || scope.strip.empty?
+          def print_compact_status(view, target, include_completed:)
+            lines = []
+            lines.concat(compact_summary_lines(view.assignment, view.scoped_state, view.current_step))
 
-            root = state.find_by_number(scope.strip)
-            raise StepErrors::NotFound, "Step #{scope} not found in queue" unless root
+            unless target.assignment_id
+              other_line = compact_other_assignments_line(view.assignment.id, include_completed: include_completed)
+              lines << other_line if other_line
+            end
 
-            scoped_steps = state.subtree_steps(root.number)
-            scoped_state = Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
-            current = scoped_state.current || scoped_state.next_workable
+            puts lines.take(10).join("\n")
+          end
 
-            {state: scoped_state, current: current, root: root.number}
+          def compact_summary_lines(assignment, state, current_step)
+            lines = [
+              compact_assignment_line(assignment, state, current_step),
+              compact_last_done_line(state)
+            ]
+
+            pending = pending_preview_steps(state)
+            unless pending.empty?
+              lines << "Pending steps:"
+              pending.each do |step|
+                lines << preview_step_line(step)
+              end
+            end
+
+            lines << compact_steps_summary_line(state)
+            lines
+          end
+
+          def progress_summary_line(assignment, state, current_step)
+            state_label = STATE_LABELS[state.assignment_state] || state.assignment_state.to_s
+            details = ["State: #{state_label}", "Progress: #{state.done.size}/#{state.size} done"]
+
+            if current_step
+              details << "Current: #{current_step.number} #{current_step.name}"
+            elsif state.complete?
+              details << "Current: complete"
+            end
+
+            if state.last_done
+              details << "Last: #{state.last_done.number} #{state.last_done.name}"
+            end
+
+            details.join(" | ")
+          end
+
+          def compact_assignment_line(assignment, state, current_step)
+            state_label = STATE_LABELS[state.assignment_state] || state.assignment_state.to_s
+            details = ["Assignment: #{assignment.id}  #{compact_assignment_name(assignment.name)}", "Status: #{state_label}"]
+
+            if current_step
+              details << "Current: #{current_step.number} #{current_step.name}"
+            end
+            details.join(" | ")
+          end
+
+          def compact_last_done_line(state)
+            return "Last done: none" unless state.last_done
+
+            "Last done: #{state.last_done.number} #{state.last_done.name}"
+          end
+
+          def compact_steps_summary_line(state)
+            summary = state.summary
+            "Steps: #{progress_bar(state.done.size, state.size)} #{state.done.size}/#{state.size} done | Pending: #{summary[:pending]} | Failed: #{summary[:failed]}"
+          end
+
+          def compact_assignment_name(name)
+            File.basename(name.to_s, File.extname(name.to_s))
+          end
+
+          def pending_preview_steps(state)
+            state.steps.select { |step| %i[in_progress pending failed].include?(step.status) }.first(PREVIEW_LIMIT)
+          end
+
+          def preview_step_line(step)
+            status = case step.status
+            when :in_progress then "active"
+            when :pending then "next"
+            when :failed then "failed"
+            else step.status.to_s
+            end
+            "#{step.number} #{status} #{step.name}"
+          end
+
+          def progress_bar(done, total)
+            return "░" * PROGRESS_BAR_WIDTH if total <= 0
+
+            filled = ((done.to_f / total) * PROGRESS_BAR_WIDTH).round
+            filled = [[filled, 0].max, PROGRESS_BAR_WIDTH].min
+            ("█" * filled) + ("░" * (PROGRESS_BAR_WIDTH - filled))
+          end
+
+          def compact_other_assignments_line(current_assignment_id, include_completed:)
+            discoverer = Molecules::AssignmentDiscoverer.new
+            others = discoverer.find_all(include_completed: include_completed).reject { |info| info.id == current_assignment_id }
+            return nil if others.empty?
+
+            active = others.count { |info| %i[running stalled].include?(info.state) }
+            pending = others.count { |info| info.state == :paused }
+            failed = others.count { |info| info.state == :failed }
+            "other assignments: #{others.size} total | active: #{active} paused: #{pending} failed: #{failed}"
+          end
+
+          def print_full_status(view, target, flat:, include_completed:)
+            print_queue_status(view.assignment, view.scoped_state, flat: flat, root_number: view.scope_root)
+
+            if view.current_step
+              scoped_fork_step = scoped_fork_metadata_step(view.state, view.current_step, target.scope, view.scope_root)
+
+              puts
+              puts "Current Step: #{view.current_step.number} - #{view.current_step.name}"
+              puts "Current Status: #{view.current_step.status}"
+              print_stall_details(view.current_step)
+              puts "Workflow: #{view.current_step.workflow}" if view.current_step.workflow
+              puts "Skill: #{view.current_step.skill}" if !view.current_step.workflow && view.current_step.skill
+              puts "Context: #{view.current_step.context}" if view.current_step.context
+
+              effective_fork_provider = effective_fork_provider_for(view.current_step, scoped_fork_step)
+              puts "Fork Provider: #{effective_fork_provider}" if effective_fork_provider
+              print_scoped_fork_pid_info(scoped_fork_step)
+            elsif view.scoped_state.complete?
+              puts
+              puts "Assignment completed!"
+            end
+
+            print_other_assignments_table(view.assignment.id, include_completed: include_completed) unless target.assignment_id
+          end
+
+          def print_stall_details(step)
+            return unless step.stall_reason
+
+            lines = step.stall_reason.to_s.strip.lines
+            puts "Stall Reason: #{lines.first&.chomp}"
+            lines[1..].each { |line| puts "             #{line.chomp}" } if lines.length > 1
+            print_hitl_stall_guidance(lines.first.to_s)
           end
 
           def print_queue_status(assignment, state, flat: false, root_number: nil)
@@ -192,43 +269,31 @@ module Ace
           end
 
           def has_nested_steps?(state)
-            state.steps.any? { |s| !Atoms::StepNumbering.top_level?(s.number) }
+            state.steps.any? { |step| !Atoms::StepNumbering.top_level?(step.number) }
           end
 
           def print_flat_status(state)
-            # Calculate column widths
-            file_width = [30, state.steps.map { |s| File.basename(s.file_path || "").length }.max || 20].max
+            file_width = [30, state.steps.map { |step| File.basename(step.file_path || "").length }.max || 20].max
             status_width = 12
             name_width = 20
 
-            # Header
             puts format("%-#{file_width}s %-#{status_width}s %-#{name_width}s", "FILE", "STATUS", "NAME")
 
-            # Rows
             state.steps.each do |step|
               file = File.basename(step.file_path || "#{step.number}-#{step.name}.st.md")
               status = format_status(step.status)
-              name = step.name
-
-              row = format("%-#{file_width}s %-#{status_width}s %-#{name_width}s", file, status, name)
-
-              # Add error message for failed steps
-              if step.status == :failed && step.error
-                row += "  (#{step.error})"
-              end
-
+              row = format("%-#{file_width}s %-#{status_width}s %-#{name_width}s", file, status, step.name)
+              row += "  (#{step.error})" if step.status == :failed && step.error
               puts row
             end
           end
 
           def print_hierarchical_status(state, root_number: nil)
-            # Header
             puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s", "NUMBER", "STATUS", "NAME", "FORK", "CHILDREN")
             puts "-" * 78
 
-            # Print hierarchy with tree structure
             nodes = root_hierarchy_nodes(state, root_number)
-            print_hierarchy_level(nodes, state, depth: 0)
+            print_hierarchy_level(nodes, depth: 0)
           end
 
           def root_hierarchy_nodes(state, root_number)
@@ -241,119 +306,39 @@ module Ace
           end
 
           def build_hierarchy_node(state, step)
-            children = state.children_of(step.number).map do |child|
-              build_hierarchy_node(state, child)
-            end
-
-            {step: step, children: children}
+            {
+              step: step,
+              children: state.children_of(step.number).map { |child| build_hierarchy_node(state, child) }
+            }
           end
 
-          def print_hierarchy_level(nodes, state, depth:)
+          def print_hierarchy_level(nodes, depth:)
             nodes.each_with_index do |node, index|
               step = node[:step]
               children = node[:children]
-              is_last = index == nodes.size - 1
-
-              # Build tree prefix
-              prefix = if depth == 0
+              prefix = if depth.zero?
                 ""
               else
-                indent = "  " * (depth - 1)
-                connector = is_last ? "\\-- " : "|-- "
-                indent + connector
+                ("  " * (depth - 1)) + (index == nodes.size - 1 ? "\\-- " : "|-- ")
               end
 
-              # Format number with hierarchy indicator
-              number_display = prefix + step.number
-
-              # Status with icon
               status_icon = STATUS_ICONS[step.status] || step.status.to_s.capitalize
-
-              # Fork indicator reflects execution context, not child presence.
               fork_info = step.fork? ? "yes" : ""
-
-              # Children count (progress visibility)
-              child_info = if children.any?
-                incomplete = children.count { |c| c[:step].status != :done }
-                if incomplete > 0
-                  "(#{children.size - incomplete}/#{children.size} done)"
-                else
-                  "(#{children.size}/#{children.size} done)"
-                end
-              else
-                ""
-              end
-
-              # Error info for failed steps
+              child_info = children.any? ? "(#{children.count { |c| c[:step].status == :done }}/#{children.size} done)" : ""
               error_suffix = (step.status == :failed && step.error) ? " - #{step.error}" : ""
+              display_name = step.name.length > COL_NAME ? "#{step.name[0..COL_NAME - 4]}..." : step.name
 
-              # Truncate name with ellipsis if too long
-              display_name = if step.name.length > COL_NAME
-                step.name[0..COL_NAME - 4] + "..."
-              else
-                step.name
-              end
-              puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s%s",
-                number_display, status_icon, display_name, fork_info, child_info, error_suffix)
+              puts format(
+                "%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s%s",
+                prefix + step.number, status_icon, display_name, fork_info, child_info, error_suffix
+              )
 
-              # Recurse for children
-              print_hierarchy_level(children, state, depth: depth + 1) if children.any?
+              print_hierarchy_level(children, depth: depth + 1) if children.any?
             end
           end
 
           def format_status(status)
             STATUS_ICONS[status]&.split(" ")&.last || status.to_s.capitalize
-          end
-
-          # Print Task tool instructions for a fork context step
-          def print_fork_instructions(step, assignment)
-            escaped_name = step.name.gsub('"', '\\"')
-            # Derive project root from cache_dir: /project/.ace-local/assign/assignment-id -> /project
-            project_root = assignment.cache_dir ? File.expand_path("../../..", assignment.cache_dir) : Dir.pwd
-
-            puts "Execute this step in a forked context:"
-            puts
-            puts "  Task tool parameters:"
-            puts "    description: \"#{escaped_name}\""
-            puts "    prompt: (see below)"
-            puts
-            puts "  Prompt for forked agent:"
-            puts "  ========================"
-            puts step.instructions
-            puts "  ========================"
-            puts
-            puts "  Working directory: #{project_root}"
-            puts "  Assignment: #{assignment.id}"
-            puts
-            puts "After completing, run:"
-            puts "  ace-assign finish --message <report-file.md>"
-            puts
-            puts "To execute entire subtree in one forked process:"
-            puts "  ace-assign fork-run --root #{step.number} --assignment #{assignment.id}"
-          end
-
-          def fork_scope_root(state, current_step)
-            return nil unless current_step
-            return current_step if current_step.fork?
-
-            state.nearest_fork_ancestor(current_step.number)
-          end
-
-          def scoped_fork_metadata_step(state, current_step, scope, scope_root)
-            return nil unless current_step
-
-            if scope && !scope.strip.empty?
-              return state.find_by_number(scope_root || scope.strip)
-            end
-
-            fork_scope_root(state, current_step)
-          end
-
-          def effective_fork_provider_for(current_step, scoped_fork_step)
-            return nil unless current_step
-
-            provider = current_step.fork_provider || scoped_fork_step&.fork_provider
-            provider.to_s.strip.empty? ? nil : provider
           end
 
           def print_scoped_fork_pid_info(step)
@@ -365,9 +350,8 @@ module Ace
             return unless has_pid || has_tree || has_file
 
             puts "Scoped Fork PID: #{step.fork_launch_pid}" if has_pid
-            puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(", ")}" if has_tree
+            puts "Scoped Fork PID Tree: #{step.fork_tracked_pids.join(', ')}" if has_tree
             puts "Scoped Fork PID File: #{step.fork_pid_file}" if has_file
-            puts
           end
 
           def print_hitl_stall_guidance(first_line)
@@ -393,13 +377,9 @@ module Ace
             {id: id, path: path.empty? ? nil : path}
           end
 
-          # Print other assignments section
-          def print_other_assignments(current_assignment_id, include_completed:)
+          def print_other_assignments_table(current_assignment_id, include_completed:)
             discoverer = Molecules::AssignmentDiscoverer.new
-            all_assignments = discoverer.find_all(include_completed: include_completed)
-
-            # Exclude the current assignment
-            others = all_assignments.reject { |ai| ai.id == current_assignment_id }
+            others = discoverer.find_all(include_completed: include_completed).reject { |info| info.id == current_assignment_id }
             return if others.empty?
 
             puts
@@ -416,8 +396,7 @@ module Ace
             others.each do |info|
               state_label = STATE_LABELS[info.state] || info.state.to_s
               updated = format_relative_time(info.updated_at)
-              step = (info.current_step.length > col_step) ? info.current_step[0..col_step - 4] + "..." : info.current_step
-
+              step = info.current_step.length > col_step ? "#{info.current_step[0..col_step - 4]}..." : info.current_step
               puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
                 info.id, state_label, info.progress, step, updated)
             end
@@ -427,15 +406,11 @@ module Ace
             return "-" unless time
 
             diff = Time.now - time
-            if diff < 60
-              "#{diff.to_i}s ago"
-            elsif diff < 3600
-              "#{(diff / 60).to_i}m ago"
-            elsif diff < 86_400
-              "#{(diff / 3600).to_i}h ago"
-            else
-              "#{(diff / 86_400).to_i}d ago"
-            end
+            return "#{diff.to_i}s ago" if diff < 60
+            return "#{(diff / 60).to_i}m ago" if diff < 3600
+            return "#{(diff / 3600).to_i}h ago" if diff < 86_400
+
+            "#{(diff / 86_400).to_i}d ago"
           end
         end
       end

@@ -192,11 +192,16 @@ Read the output to identify:
 
 - Assignment ID (must remain equal to pinned `ASSIGNMENT_ID`)
 - Current step number, name, and status
-- Current step's instructions
-- Current step's skill reference (if any)
-- Remaining steps in the queue
+- Remaining visible steps in the queue preview
+- Hidden-step counts for large queues
 
 **Note:** `ace-assign status` is the source of truth for assignment state. The step files in the `steps/` directory are the backing store, but always query status via the command for accurate information.
+
+Load instructions separately when needed:
+
+```bash
+ace-assign step --assignment "$ASSIGNMENT_TARGET"
+```
 
 ### 2. Auto-Delegate Fork Subtrees (When Applicable)
 
@@ -249,7 +254,7 @@ ace-assign fork-run --assignment <id>@020
 **Delegation boundary rule**
 
 - Outside a delegated fork scope, do NOT execute fork steps inline.
-- If status output is already scoped to `Current Step: <root>.*` via `--assignment <id>@<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
+- If scoped status for `--assignment <id>@<root>` already resolves work inside `<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
 - If the current step is a top-level step with `FORK: yes` and no matching scope is active, delegate immediately.
 
 #### Nested Batch Containers (Container → Fork Children)

@@ -18,6 +18,7 @@ class AssignDriveContractTest < AceAssignTestCase
 
     assert_includes content, "Poll the forked subtree every 6 minutes by default."
     assert_includes content, "Treat scoped assignment status as the source of truth for subtree completion."
+    assert_includes content, "ace-assign step --assignment \"$ASSIGNMENT_TARGET\""
     assert_includes content, "If scoped subtree status is terminal, immediately treat the fork as complete"
     assert_includes content, "If a prior drive session or terminal ended, a new `/as-assign-drive` invocation MUST recover from assignment state"
     assert_includes content, "Correct after interruption: re-run `/as-assign-drive <assignment-id>`"

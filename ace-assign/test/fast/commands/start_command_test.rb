@@ -19,6 +19,8 @@ class StartCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "Step 030 (test) started"
+      assert_includes output.first, "Next: ace-assign step 030"
+      refute_includes output.first, "Instructions:"
     ensure
       Ace::Assign.reset_config!
     end
@@ -58,6 +60,7 @@ class StartCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "Step 030 (test) started"
+      assert_includes output.first, "Next: ace-assign step 030"
     ensure
       Ace::Assign.reset_config!
     end

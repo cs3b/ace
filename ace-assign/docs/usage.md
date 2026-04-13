@@ -47,6 +47,7 @@ ace-test-suite --target all
 ```bash
 ace-assign create --yaml job.yaml
 ace-assign status
+ace-assign step
 ace-assign finish --message step-010.md
 ace-assign status
 ```
@@ -105,11 +106,18 @@ Show queue status for active or explicitly targeted assignment.
 Options:
 
 - `--flat, -f`
+- `--mode compact|progress|full`
 - `--format table|json`
 - `--assignment <id>`
 - `--all, -a`
 - `--quiet, -q`
 - `--debug, -d`
+
+Text modes:
+
+- `compact` (default) prints a short summary, hidden-step stats, and up to 5 upcoming step lines
+- `progress` prints a single summary line
+- `full` prints the full tree/table without step instructions
 
 HITL stall behavior:
 
@@ -122,6 +130,16 @@ HITL stall behavior:
   - `ace-assign retry <failed-step> --assignment <assignment-id>`
 - Completion-attention flow:
   - When assignment work is complete but explicit user action is needed, create an approval HITL event (`kind=approval`) and include the resume instruction for `/as-assign-drive <assignment-id>`.
+
+### `ace-assign step [STEP]`
+
+Show instructions for the current in-progress step, the next workable step, or an explicit step number.
+
+Options:
+
+- `--assignment <id>`
+- `--quiet, -q`
+- `--debug, -d`
 
 ### `ace-assign start [STEP]`
 

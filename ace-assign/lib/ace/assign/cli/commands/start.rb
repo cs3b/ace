@@ -29,9 +29,15 @@ module Ace
 
             started = result[:started]
             puts "Step #{started.number} (#{started.name}) started"
-            puts
-            puts "Instructions:"
-            puts started.instructions
+            puts "Next: ace-assign step#{step_target_suffix(started.number, options[:assignment])}"
+          end
+
+          private
+
+          def step_target_suffix(step_number, assignment_target)
+            return " #{step_number}" if assignment_target.nil? || assignment_target.to_s.strip.empty?
+
+            %( #{step_number} --assignment "#{assignment_target}")
           end
         end
       end

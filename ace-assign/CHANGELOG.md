@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.49.0] - 2026-04-13
+
+### Changed
+- Split assignment status from instruction loading: `ace-assign status` now defaults to compact status-only output with `compact`, `progress`, and `full` text modes, while the new `ace-assign step` command prints current/next/exact step instructions.
+- Made `ace-assign start` and `ace-assign finish` concise by pointing operators to `ace-assign step` instead of printing raw instruction blocks inline.
+
+### Technical
+- Updated drive/fork guidance, deterministic command coverage, and fork-context E2E specs to treat `status` as state-only and `step` as the instruction-loading surface.
+
 ## [0.48.0] - 2026-04-13
 
 ### Changed

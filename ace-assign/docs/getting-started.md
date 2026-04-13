@@ -67,6 +67,7 @@ ace-assign create --task t.100,t.101 --preset work-on-task
 
 ```bash
 ace-assign status
+ace-assign step
 ace-assign finish --message onboard.md
 ace-assign status
 ```
@@ -97,7 +98,8 @@ Use status views:
 
 ```bash
 ace-assign status
-ace-assign status --flat
+ace-assign status --mode full
+ace-assign status --mode progress
 ```
 
 ## 5) Use scoped assignment targeting
@@ -116,7 +118,8 @@ ace-assign finish --message report.md --assignment abc123@010.01
 |---------|---------|
 | `ace-assign create --yaml job.yaml` | Create assignment from YAML |
 | `ace-assign create --task t.xyz` | Create assignment from task refs |
-| `ace-assign status` | Show current queue |
+| `ace-assign status` | Show current queue summary |
+| `ace-assign step` | Show current or next step instructions |
 | `ace-assign start` | Start next workable step |
 | `ace-assign finish --message done.md` | Complete in-progress step |
 | `ace-assign fail --message "error"` | Mark current step failed |

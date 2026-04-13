@@ -20,49 +20,16 @@
 ```
 
 ❯ ace-assign status
-QUEUE - Assignment: work-on-task-8qm.t.5nx-job.yml (8qm5rt)
-
-NUMBER       STATUS       NAME                           FORK   CHILDREN
-------------------------------------------------------------------------------
-000          ✓ Done       onboard
-010          ✓ Done       batch-tasks                           (28/28 done)
-|-- 010.01   ✓ Done       work-on-8qm.t.5nx.0            yes    (8/8 done)
-  |-- 010.01.01 ✓ Done       onboard-base
-  |-- 010.01.02 ✓ Done       task-load
-  |-- 010.01.03 ✓ Done       plan-task
-  |-- 010.01.04 ✓ Done       work-on-task
-  |-- 010.01.05 ✓ Done       pre-commit-review
-  |-- 010.01.06 ✓ Done       verify-test
-  |-- 010.01.07 ✓ Done       release-minor
-  \-- 010.01.08 ✓ Done       create-retro
-|-- 010.02   ✓ Done       work-on-8qm.t.5nx.1            yes    (8/8 done)
-# ... multiple tasks hidden
-012          ✓ Done       verify-test-suite
-020          ✓ Done       release-minor
-025          ✓ Done       update-docs
-030          ✓ Done       create-pr
-040          ✓ Done       review-valid-1                 yes    (3/3 done)
-|-- 040.01   ✓ Done       review-pr
-|-- 040.02   ✓ Done       apply-feedback
-\-- 040.03   ✓ Done       release
-070          ✓ Done       review-fit-1                   yes    (3/3 done)
-|-- 070.01   ✓ Done       review-pr
-|-- 070.02   ✓ Done       apply-feedback
-\-- 070.03   ✓ Done       release
-100          ○ Pending    review-shine-1                 yes    (2/3 done)
-|-- 100.01   ✗ Failed     review-pr                              - Fork agent blocked by pre-existing unrelated changes (now stashed). Retrying.
-|-- 100.02   ✓ Done       apply-feedback
-\-- 100.03   ✓ Done       release
-101          ✓ Done       review-pr
-130          ✓ Done       reorganize-commits
-140          ✓ Done       push-to-remote
-150          ✓ Done       update-pr-desc                 yes
-155          ✓ Done       mark-tasks-done
-160          ✓ Done       create-retro
-161          ✓ Done       review-pr                      yes
-162          ✓ Done       apply-feedback                 yes
-163          ✓ Done       release                        yes
+8qm5rt work-on-task-8qm.t.5nx-job.yml | running | 64/71 done | current: 100.01 review-pr | last: 070.03 release
+hidden: 66 | done: 64 active: 1 pending: 5 failed: 1
+100.01 active review-pr
+100.02 next apply-feedback
+100.03 next release
+130 next reorganize-commits
+140 next push-to-remote
 ```
+
+Use `ace-assign status --mode full` when you need the whole tree, and `ace-assign step` when you need the raw instructions for the current or next step.
 
 
 The easiest way to start is through [ace-overseer](../ace-overseer) -- define a task and run `ace-overseer work-on --task <ref> --preset work-on-task` , which creates the assignment, worktree, and tmux window in one shot.

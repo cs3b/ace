@@ -43,11 +43,8 @@ module Ace
 
             if result[:current]
               puts "Advancing to step #{result[:current].number}: #{result[:current].name}"
-              puts
-              puts "Instructions:"
-              puts result[:current].instructions
+              puts "Next: ace-assign step#{step_target_suffix(result[:current].number, options[:assignment])}"
             else
-              puts
               fork_root = target.scope&.strip
               if fork_root && result[:state].subtree_complete?(fork_root)
                 puts "Fork subtree #{fork_root} completed."
@@ -80,6 +77,12 @@ module Ace
             stdin.read
           rescue IOError, Errno::EBADF
             nil
+          end
+
+          def step_target_suffix(step_number, assignment_target)
+            return " #{step_number}" if assignment_target.nil? || assignment_target.to_s.strip.empty?
+
+            %( #{step_number} --assignment "#{assignment_target}")
           end
         end
       end

@@ -24,6 +24,8 @@ class FinishCommandTest < AceAssignTestCase
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Step 010 (init) completed"
       assert_includes output.first, "Advancing to step 020"
+      assert_includes output.first, "Next: ace-assign step 020"
+      refute_includes output.first, "Instructions:"
 
       Ace::Assign.reset_config!
     end
@@ -48,6 +50,7 @@ class FinishCommandTest < AceAssignTestCase
 
       assert_includes output.first, "Step 010 (init) completed"
       assert_includes output.first, "Advancing to step 020"
+      assert_includes output.first, "Next: ace-assign step 020"
 
       Ace::Assign.reset_config!
     end
@@ -125,6 +128,7 @@ class FinishCommandTest < AceAssignTestCase
 
       assert_includes output.first, "Step 010 (init) completed"
       assert_includes output.first, "Advancing to step 020"
+      assert_includes output.first, "Next: ace-assign step 020 --assignment"
 
       # Verify the targeted assignment advanced
       scanner = Ace::Assign::Molecules::QueueScanner.new
@@ -291,6 +295,7 @@ class FinishCommandTest < AceAssignTestCase
       end
       assert_includes finish_output.first, "Step 010 (init) completed"
       assert_includes finish_output.first, "Advancing to step 020"
+      assert_includes finish_output.first, "Next: ace-assign step 020"
 
       # start fails — 020 is already in_progress after auto-advance
       error = assert_raises(Ace::Support::Cli::Error) do
@@ -307,6 +312,7 @@ class FinishCommandTest < AceAssignTestCase
       end
       assert_includes finish_output2.first, "Step 020 (build) completed"
       assert_includes finish_output2.first, "Advancing to step 030"
+      assert_includes finish_output2.first, "Next: ace-assign step 030"
     ensure
       Ace::Assign.reset_config!
     end

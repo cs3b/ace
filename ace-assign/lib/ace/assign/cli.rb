@@ -40,6 +40,7 @@ require_relative "organisms/assignment_executor"
 require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/status"
+require_relative "cli/commands/step"
 require_relative "cli/commands/start"
 require_relative "cli/commands/finish"
 require_relative "cli/commands/fail"
@@ -61,6 +62,7 @@ module Ace
       REGISTERED_COMMANDS = [
         ["create", "Create assignment from preset or YAML"],
         ["status", "Show assignment status"],
+        ["step", "Show step instructions"],
         ["start", "Start next workable step"],
         ["finish", "Complete current step with report"],
         ["fail", "Mark step as failed"],
@@ -73,7 +75,8 @@ module Ace
 
       HELP_EXAMPLES = [
         "ace-assign create --preset review     # Start review assignment",
-        "ace-assign status                     # Current step progress",
+        "ace-assign status                     # Compact queue progress",
+        "ace-assign step                       # Current or next step instructions",
         "ace-assign start                      # Start next workable step",
         "ace-assign finish --message done.md    # Complete active step",
         "cat report.md | ace-assign finish     # Complete step via stdin",
@@ -115,6 +118,7 @@ module Ace
       # Register commands (wrapped to capture exit codes)
       register "create", wrap_command(Commands::Create)
       register "status", wrap_command(Commands::Status)
+      register "step", wrap_command(Commands::Step)
       register "start", wrap_command(Commands::Start)
       register "finish", wrap_command(Commands::Finish)
       register "fail", wrap_command(Commands::Fail)
