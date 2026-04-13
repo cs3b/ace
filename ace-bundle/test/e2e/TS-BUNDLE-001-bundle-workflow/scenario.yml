@@ -27,7 +27,11 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      if [ -f "$PROJECT_ROOT_PATH/mise.toml" ]; then
+        cp "$PROJECT_ROOT_PATH/mise.toml" mise.toml
+        mise trust mise.toml
+      fi
   - copy-fixtures
   - run: |
       # Generate large preset (over 500 lines)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/bundle/cli"
 require "ace/test_support/cli_helpers"
 

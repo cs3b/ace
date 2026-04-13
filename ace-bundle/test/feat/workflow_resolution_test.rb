@@ -4,10 +4,8 @@ require_relative "../test_helper"
 
 class WorkflowResolutionTest < AceTestCase
   WORKFLOW_URIS = {
-    "wfi://demo/create" => "ace-demo/handbook/workflow-instructions/demo/create.wf.md",
-    "wfi://demo/record" => "ace-demo/handbook/workflow-instructions/demo/record.wf.md",
-    "wfi://overseer" => "ace-overseer/handbook/workflow-instructions/overseer.wf.md",
-    "wfi://prompt-prep" => "ace-prompt-prep/handbook/workflow-instructions/prompt-prep.wf.md"
+    "wfi://bundle" => "ace-bundle/handbook/workflow-instructions/bundle.wf.md",
+    "wfi://onboard" => "ace-bundle/handbook/workflow-instructions/onboard.wf.md"
   }.freeze
 
   def test_workflow_backed_skills_resolve_and_load_via_wfi
@@ -16,10 +14,12 @@ class WorkflowResolutionTest < AceTestCase
     engine = Ace::Support::Nav::Organisms::NavigationEngine.new
 
     WORKFLOW_URIS.each do |uri, relative_path|
-      expected_path = File.expand_path("../../../#{relative_path}", __dir__)
       resolved_path = engine.resolve(uri)
 
-      assert_equal expected_path, resolved_path, "Expected #{uri} to resolve to #{relative_path}"
+      refute_nil resolved_path, "Expected #{uri} to resolve to a real path"
+      assert File.exist?(resolved_path), "Expected resolved path to exist: #{resolved_path}"
+      assert resolved_path.end_with?(relative_path),
+             "Expected #{uri} to resolve to a path ending with #{relative_path}, got #{resolved_path}"
 
       result = Ace::Bundle.load_auto(uri, compressor_source_scope: "per-source", compressor_mode: "exact")
 

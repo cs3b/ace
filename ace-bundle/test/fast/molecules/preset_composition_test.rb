@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/bundle/molecules/preset_manager"
 require "fileutils"
 require "tmpdir"
