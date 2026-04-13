@@ -36,5 +36,14 @@
 
 **Scope prompts to tasks** - use `--task` to route prompt workspaces into [ace-task](../ace-task) directories, keeping prompts connected to delivery work alongside [ace-git](../ace-git) branch workflows.
 
+## Testing
+
+Use the restarted package testing contract:
+
+- `ace-test ace-prompt-prep` for deterministic fast tests
+- `ace-test ace-prompt-prep feat` for deterministic feature-level tests
+- `ace-test ace-prompt-prep all` for complete deterministic coverage
+- `ace-test-e2e ace-prompt-prep` for retained workflow-value scenarios
+
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)

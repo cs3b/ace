@@ -1,4 +1,4 @@
-# Goal 4 — Bundle Context Processing Verification
+# Goal 2 — Bundle Context Processing Verification
 
 ## Injected Context
 
@@ -10,7 +10,7 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-4. **Primary captures exist** — `bundle.stdout`, `bundle.stderr`, and `bundle.exit` exist in `results/tc/04/`.
+4. **Primary captures exist** — `bundle.stdout`, `bundle.stderr`, and `bundle.exit` exist in `results/tc/02/`.
 5. **Zero exit code** — `bundle.exit` is `0` (bundle mode processing succeeded).
 6. **Context-expanded output captured** — `bundle-output.md` exists, is non-empty, and contains evidence
    of processed prompt output (for example, original prompt section and/or injected context section).

@@ -6,10 +6,8 @@ bundle:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-survey.verify.md
-    - ./TC-002-setup-workspace.verify.md
-    - ./TC-003-process-and-archive.verify.md
-    - ./TC-004-bundle-context.verify.md
+    - ./TC-001-process-and-archive.verify.md
+    - ./TC-002-bundle-context.verify.md
 ---
 
 # E2E Verification: ace-prompt-prep
@@ -35,4 +33,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/2 passed**
