@@ -2,7 +2,7 @@
 
 require "tmpdir"
 require "fileutils"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class InputResolverTest < AceCompressorTestCase
   Status = Struct.new(:ok) do

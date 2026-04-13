@@ -3,7 +3,7 @@
 require "json"
 require "tmpdir"
 require "fileutils"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class AgentCompressorTest < AceCompressorTestCase
   def setup

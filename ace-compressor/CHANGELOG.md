@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+## [0.24.9] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.24.8] - 2026-04-12
+
+### Technical
+- Migrated deterministic package tests from `test/{atoms,commands,molecules,organisms}` to `test/fast/...` and updated relative test helper loading for the new layout.
+- Refreshed `TS-COMP-001` E2E scenario metadata and verifier checks to align smoke contracts with the fast/feat/e2e model, including guarded sandbox setup when `mise.toml` is absent.
 
 ## [0.24.7] - 2026-04-01
 

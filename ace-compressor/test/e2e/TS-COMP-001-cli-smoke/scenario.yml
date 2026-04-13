@@ -20,10 +20,10 @@ e2e-justification: >
   wiring and operator-visible output contracts.
 
 unit-coverage-reviewed:
-  - test/commands/compress_test.rb
-  - test/organisms/compression_runner_test.rb
-  - test/organisms/exact_compressor_test.rb
-  - test/organisms/compact_compressor_test.rb
+  - test/fast/commands/compress_test.rb
+  - test/fast/organisms/compression_runner_test.rb
+  - test/fast/organisms/exact_compressor_test.rb
+  - test/fast/organisms/compact_compressor_test.rb
 
 requires:
   tools: [ace-compressor, git]
@@ -31,5 +31,5 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; fi"
   - run: git add -A && git commit -m "initial" --quiet

@@ -2,7 +2,7 @@
 
 require "tmpdir"
 require "fileutils"
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class CacheStoreTest < AceCompressorTestCase
   def setup
