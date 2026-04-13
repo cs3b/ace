@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.19.2] - 2026-04-13
+
+### Fixed
+- Report duplicate persisted idea IDs as explicit doctor health-check errors with file-path context.
+- Include duplicate ID detection in `ace-idea doctor --check frontmatter` and fail health status when duplicates are present.
+
+### Technical
+- Added organism and CLI regression coverage for duplicate ID failures and frontmatter-only doctor checks.
+
 ## [0.19.1] - 2026-04-13
 
 ### Changed
