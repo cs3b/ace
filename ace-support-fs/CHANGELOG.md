@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-support-fs v0.3.3**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+
+
+## [0.3.2] - 2026-04-11
+
+### Technical
+- Moved deterministic tests from `test/atoms` and `test/molecules` into `test/fast/` to align with the fast-only package migration contract.
+- Updated README testing guidance to document `ace-test ace-support-fs` / `ace-test ace-support-fs all` and explicitly avoid `test/feat` and `test/e2e` layers.
+
 ## [0.3.1] - 2026-03-29
 
 ### Technical

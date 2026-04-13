@@ -25,6 +25,21 @@ ace-config version
 ace-config help
 ```
 
+## Testing Contract
+
+`ace-support-config` follows the ACE deterministic package targets:
+
+```bash
+ace-test ace-support-config
+ace-test ace-support-config feat
+ace-test ace-support-config all
+```
+
+- `fast` (default) runs isolated deterministic package tests under `test/fast/`.
+- `feat` runs deterministic feature tests under `test/feat/`.
+- `all` runs `fast` then `feat`.
+- This package does not publish a package-owned `e2e` target in this migration.
+
 ### Cascade Priority (highest to lowest)
 
 1. **Project level** - `<project_root>/.ace/`

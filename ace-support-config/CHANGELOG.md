@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-support-config v0.10.4**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+
+
+## [0.10.3] - 2026-04-11
+
+### Technical
+- Migrated package tests to the `fast`/`feat` layout by moving deterministic ATOM coverage to `test/fast/` and former `test/integration/` suites to `test/feat/`.
+- Updated package docs to publish the `ace-test ace-support-config` (`fast`), `feat`, and `all` contract and keep package scope deterministic-only.
+
 ## [0.10.2] - 2026-03-31
 
 ### Technical

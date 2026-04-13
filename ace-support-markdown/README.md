@@ -24,6 +24,16 @@
 
 **Preserve history during edits** - maintain backup and rollback safety for write-heavy operations so that tools like [`ace-task`](../ace-task) can update specs confidently in batch workflows.
 
+## Testing Contract
+
+This package now follows the batch-2 deterministic `fast` + `feat` model.
+
+- `ace-test ace-support-markdown` runs the default deterministic fast loop (`test/fast/`).
+- `ace-test ace-support-markdown feat` runs deterministic feature coverage (`test/feat/`).
+- `ace-test ace-support-markdown all` runs the package contract end-to-end for deterministic layers.
+
+The package does not own a `test/e2e/` surface in this migration slice.
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

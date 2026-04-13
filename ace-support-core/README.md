@@ -22,6 +22,16 @@
 2. Delegate cascaded configuration resolution through [ace-support-config](../ace-support-config) so packages inherit project, user, and gem-level defaults automatically.
 3. Provide shared runtime/config primitives consumed by `ace-support-config`, which owns the `ace-config` CLI.
 
+## Testing
+
+This package uses the batch-2 deterministic testing contract:
+
+- `ace-test ace-support-core` runs the default `fast` loop from `test/fast/`.
+- `ace-test ace-support-core feat` runs deterministic feature coverage from `test/feat/`.
+- `ace-test ace-support-core all` runs both deterministic layers.
+
+`ace-support-core` does not define package-owned `test/e2e/` scenarios in this migration.
+
 ## Use Cases
 
 **Create consistent package startup behavior** - initialize config, env, and shared context once with core primitives, so gems like [ace-support-cli](../ace-support-cli) and [ace-support-fs](../ace-support-fs) share a single bootstrap path.

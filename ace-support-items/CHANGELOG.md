@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-support-items v0.15.10**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+
+
+## [0.15.9] - 2026-04-11
+
+### Technical
+- Fixed the spawned field-updater lock test to load package code from the repository `lib/` path after the `test/fast/` migration.
+
+## [0.15.8] - 2026-04-11
+
+### Technical
+- Migrated deterministic tests from `test/{atoms,models,molecules}` into `test/fast/{atoms,models,molecules}` for the fast/feat/e2e model.
+- Documented `ace-support-items` as a fast-only package and kept deterministic verification on:
+  - `ace-test ace-support-items`
+  - `ace-test ace-support-items all`
+- Confirmed this migration does not introduce `test/feat/` or `test/e2e/` layers.
+
 ## [0.15.7] - 2026-03-29
 
 ### Technical

@@ -30,6 +30,18 @@
 
 **Keep agent invocations safe** - preserve a stable CLI contract so coding agents can call `ace-*` tools reliably in mixed human/agent workflows.
 
+## Testing
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic test coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Verification commands:
+
+- `ace-test ace-support-cli`
+- `ace-test ace-support-cli all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
