@@ -76,25 +76,29 @@ module Ace
 
             manager = Ace::Task::Organisms::TaskManager.new
 
-            task = if child_of
-              manager.create_subtask(
-                child_of,
-                title,
-                status: status,
-                priority: priority,
-                tags: tags,
-                estimate: estimate,
-                github_issue: github_issue
-              )
-            else
-              manager.create(
-                title,
-                status: status,
-                priority: priority,
-                tags: tags,
-                estimate: estimate,
-                github_issue: github_issue
-              )
+            task = begin
+              if child_of
+                manager.create_subtask(
+                  child_of,
+                  title,
+                  status: status,
+                  priority: priority,
+                  tags: tags,
+                  estimate: estimate,
+                  github_issue: github_issue
+                )
+              else
+                manager.create(
+                  title,
+                  status: status,
+                  priority: priority,
+                  tags: tags,
+                  estimate: estimate,
+                  github_issue: github_issue
+                )
+              end
+            rescue Ace::Task::Organisms::TaskManager::CreateRetriesExhaustedError => e
+              raise Ace::Support::Cli::Error, e.message
             end
 
             unless task

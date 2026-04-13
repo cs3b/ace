@@ -224,4 +224,62 @@ class CreateCommandTest < AceTaskTestCase
       assert_match(/Info: GitHub sync warning for task 8pp\.t\.abc: gh unavailable/, output)
     end
   end
+
+  def test_create_retries_when_generated_id_collides
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    colliding_id = "8pp.t.q7w"
+    existing_dir = File.join(tasks_dir, "#{colliding_id}-existing-task")
+    FileUtils.mkdir_p(existing_dir)
+    File.write(
+      File.join(existing_dir, "#{colliding_id}-existing-task.s.md"),
+      "---\nid: #{colliding_id}\nstatus: pending\n---\n\n# Existing task\n"
+    )
+
+    ids = [
+      Struct.new(:formatted_id).new(colliding_id),
+      Struct.new(:formatted_id).new("8pp.t.q7x")
+    ]
+    idx = 0
+    generator = lambda do |_time = nil|
+      value = ids[[idx, ids.length - 1].min]
+      idx += 1
+      value
+    end
+
+    output = nil
+    Ace::Task::Atoms::TaskIdFormatter.stub(:generate, generator) do
+      output = capture_io do
+        Ace::Task::TaskCLI.start(["create", "Retry create task"])
+      end.first
+    end
+
+    assert_match(/Created task 8pp\.t\.q7x/, output)
+    created_dirs = Dir.glob(File.join(tasks_dir, "8pp.t.q7x-*"))
+    assert_equal 1, created_dirs.length
+  end
+
+  def test_create_fails_clearly_when_collision_retries_exhausted
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    colliding_id = "8pp.t.q7w"
+    existing_dir = File.join(tasks_dir, "#{colliding_id}-existing-task")
+    FileUtils.mkdir_p(existing_dir)
+    File.write(
+      File.join(existing_dir, "#{colliding_id}-existing-task.s.md"),
+      "---\nid: #{colliding_id}\nstatus: pending\n---\n\n# Existing task\n"
+    )
+
+    item_id = Struct.new(:formatted_id).new(colliding_id)
+    err = nil
+    Ace::Task::Atoms::TaskIdFormatter.stub(:generate, item_id) do
+      err = assert_raises(Ace::Support::Cli::Error) do
+        capture_io do
+          Ace::Task::TaskCLI.start(["create", "Will fail after retries"])
+        end
+      end
+    end
+
+    assert_match(/unable to generate a unique ID after 3 attempts/i, err.message)
+    colliding_dirs = Dir.glob(File.join(tasks_dir, "#{colliding_id}-*"))
+    assert_equal 1, colliding_dirs.length, "Expected no extra artifacts for exhausted retries"
+  end
 end

@@ -125,4 +125,40 @@ class TaskCreatorTest < AceTaskTestCase
     assert_includes content, "tags: [api]"
     assert_includes content, "created_at:"
   end
+
+  def test_raises_id_collision_when_generated_task_id_already_exists
+    creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
+    colliding_id = "8pp.t.q7w"
+    existing_dir = File.join(@tmpdir, "#{colliding_id}-existing-task")
+    FileUtils.mkdir_p(existing_dir)
+    File.write(
+      File.join(existing_dir, "#{colliding_id}-existing-task.s.md"),
+      "---\nid: #{colliding_id}\nstatus: pending\n---\n\n# Existing\n"
+    )
+
+    item_id = Struct.new(:formatted_id).new(colliding_id)
+    Ace::Task::Atoms::TaskIdFormatter.stub(:generate, item_id) do
+      assert_raises(Ace::Task::Molecules::TaskCreator::IdCollisionError) do
+        creator.create("New task with colliding ID")
+      end
+    end
+  end
+
+  def test_cleans_up_partial_artifacts_when_create_fails_after_write
+    creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
+    item_id = Struct.new(:formatted_id).new("8pp.t.q7x")
+    failing_loader = Object.new
+    failing_loader.define_singleton_method(:load) do |_path, id:|
+      raise "simulated loader failure for #{id}"
+    end
+
+    Ace::Task::Atoms::TaskIdFormatter.stub(:generate, item_id) do
+      Ace::Task::Molecules::TaskLoader.stub(:new, failing_loader) do
+        assert_raises(RuntimeError) { creator.create("Task with failing load") }
+      end
+    end
+
+    created_paths = Dir.glob(File.join(@tmpdir, "8pp.t.q7x-*"))
+    assert_empty created_paths, "Expected partial task artifacts to be cleaned up"
+  end
 end

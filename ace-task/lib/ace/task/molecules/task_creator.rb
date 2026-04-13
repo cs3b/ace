@@ -13,6 +13,8 @@ module Ace
       # Generates folder structure and spec file with full frontmatter.
       # Optionally uses LLM for slug generation with deterministic fallback.
       class TaskCreator
+        class IdCollisionError < StandardError; end
+
         # @param root_dir [String] Root directory for tasks
         # @param config [Hash] Configuration hash
         def initialize(root_dir:, config: {})
@@ -45,6 +47,7 @@ module Ace
           # Generate task ID
           item_id = Atoms::TaskIdFormatter.generate(time)
           formatted_id = item_id.formatted_id
+          raise IdCollisionError, "Task ID collision detected for #{formatted_id}" if task_id_exists?(formatted_id)
 
           # Generate slugs
           slugs = if use_llm_slug
@@ -60,31 +63,43 @@ module Ace
           task_dir = File.join(@root_dir, folder_name)
           FileUtils.mkdir_p(task_dir)
 
-          # Build frontmatter with all fields
-          effective_status = status || @config.dig("task", "default_status") || "pending"
-          frontmatter = Atoms::TaskFrontmatterDefaults.build(
-            id: formatted_id,
-            status: effective_status,
-            priority: priority,
-            tags: tags,
-            dependencies: dependencies,
-            created_at: time,
-            estimate: estimate,
-            github_issue: github_issue
-          )
+          begin
+            # Build frontmatter with all fields
+            effective_status = status || @config.dig("task", "default_status") || "pending"
+            frontmatter = Atoms::TaskFrontmatterDefaults.build(
+              id: formatted_id,
+              status: effective_status,
+              priority: priority,
+              tags: tags,
+              dependencies: dependencies,
+              created_at: time,
+              estimate: estimate,
+              github_issue: github_issue
+            )
 
-          # Write spec file with file_slug
-          spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
-          spec_file = File.join(task_dir, spec_filename)
-          content = build_spec_content(frontmatter: frontmatter, title: title)
-          File.write(spec_file, content)
+            # Write spec file with file_slug
+            spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
+            spec_file = File.join(task_dir, spec_filename)
+            content = build_spec_content(frontmatter: frontmatter, title: title)
+            File.write(spec_file, content)
 
-          # Load and return the created task
-          loader = TaskLoader.new
-          loader.load(task_dir, id: formatted_id)
+            # Load and return the created task
+            loader = TaskLoader.new
+            loader.load(task_dir, id: formatted_id)
+          rescue StandardError
+            FileUtils.rm_rf(task_dir) if Dir.exist?(task_dir)
+            raise
+          end
         end
 
         private
+
+        def task_id_exists?(formatted_id)
+          escaped = Regexp.escape(formatted_id)
+          Dir.glob(File.join(@root_dir, "**", "*")).any? do |path|
+            File.directory?(path) && File.basename(path).match?(/\A#{escaped}-/)
+          end
+        end
 
         def generate_folder_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
