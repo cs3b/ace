@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 require "ace/test_runner/molecules/config_loader"
 require "tempfile"
 require "yaml"
@@ -134,9 +134,9 @@ class ConfigLoaderTest < Minitest::Test
   def test_gem_defaults_include_expected_patterns
     defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
 
-    assert_equal "test/{fast/,unit/,}atoms/**/*_test.rb", defaults[:patterns][:atoms]
-    assert_equal "test/{fast/,unit/,}molecules/**/*_test.rb", defaults[:patterns][:molecules]
-    assert_equal "test/{fast/,unit/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
+    assert_equal "test/{fast/,}atoms/**/*_test.rb", defaults[:patterns][:atoms]
+    assert_equal "test/{fast/,}molecules/**/*_test.rb", defaults[:patterns][:molecules]
+    assert_equal "test/{fast/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
   end
 
   def test_gem_defaults_include_expected_targets
@@ -144,8 +144,8 @@ class ConfigLoaderTest < Minitest::Test
 
     assert_includes defaults[:targets][:fast], "atoms"
     assert_includes defaults[:targets][:fast], "molecules"
-    assert_equal ["fast"], defaults[:targets][:unit]
-    assert_equal ["feat"], defaults[:targets][:integration]
+    refute_includes defaults[:targets].keys.map(&:to_s), "unit"
+    refute_includes defaults[:targets].keys.map(&:to_s), "integration"
     assert_includes defaults[:targets][:quick], "atoms"
   end
 

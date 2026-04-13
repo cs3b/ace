@@ -65,8 +65,8 @@ ace-test
 ace-test atoms
 ace-test ace-bundle fast
 ace-test ace-support-core feat
-ace-test ace-support-core test/atoms/some_test.rb
-ace-test ace-support-core test/atoms/some_test.rb:42
+ace-test ace-support-core test/fast/atoms/some_test.rb
+ace-test ace-support-core test/fast/atoms/some_test.rb:42
 ace-test --format json --filter auth
 ace-test --cleanup-reports
 ace-test --set-default-rake

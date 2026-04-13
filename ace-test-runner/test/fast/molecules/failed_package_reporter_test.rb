@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require_relative "../../lib/ace/test_runner/molecules/failed_package_reporter"
+require_relative "../../test_helper"
+require_relative "../../../lib/ace/test_runner/molecules/failed_package_reporter"
 require "tmpdir"
 
 module Ace

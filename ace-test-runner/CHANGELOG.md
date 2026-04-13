@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.24.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.24.0] - 2026-04-12
+
+### Changed
+- Migrated deterministic package tests to the `test/fast/` and `test/feat/` layout for `ace-test-runner`, including moving former `test/integration/` coverage into `feat`.
+- Updated package defaults, fixture config, E2E scenario coverage references, and usage examples to align with the `fast` / `feat` / `e2e` contract.
+
+### Removed
+- Removed legacy `test/integration/` deterministic test directory from `ace-test-runner`.
 
 ## [0.23.0] - 2026-04-11
 

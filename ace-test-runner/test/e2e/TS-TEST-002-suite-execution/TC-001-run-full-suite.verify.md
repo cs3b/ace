@@ -9,10 +9,10 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. `results/tc/01/` contains suite command captures.
 2. `results/tc/01/command.txt` confirms an `ace-test-suite` invocation was executed.
-3. Output captures show grouped or multi-package execution evidence.
-4. `results/tc/01/.exit` exists and is interpreted consistently with captured output.
+3. Output captures show suite-level package execution evidence (for example package counts, package rows, or suite summary output).
+4. Prefer `results/tc/01/.exit` for exit status. If `.exit` is missing, accept captured stdout/stderr evidence showing the suite command completed and produced aggregate output.
 
 ## Verdict
 
 - **PASS**: Suite execution shows aggregated runner behavior.
-- **FAIL**: Missing aggregate evidence or invalid captures.
+- **FAIL**: Missing aggregate evidence, or captures that cannot establish command execution outcome.

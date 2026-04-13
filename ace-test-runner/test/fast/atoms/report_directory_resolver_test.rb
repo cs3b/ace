@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require_relative "../../lib/ace/test_runner/atoms/report_directory_resolver"
+require_relative "../../test_helper"
+require_relative "../../../lib/ace/test_runner/atoms/report_directory_resolver"
 
 module Ace
   module TestRunner
@@ -34,7 +34,7 @@ module Ace
         def test_infer_package_name_uses_test_file_prefix_when_package_dir_missing
           name = ReportDirectoryResolver.infer_package_name(
             package_dir: nil,
-            test_files: ["ace-review/test/atoms/foo_test.rb"],
+            test_files: ["ace-review/test/fast/atoms/foo_test.rb"],
             cwd: "/repo"
           )
 
