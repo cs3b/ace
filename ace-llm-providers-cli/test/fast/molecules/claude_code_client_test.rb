@@ -26,6 +26,24 @@ describe "ClaudeCodeClient" do
       refute_includes cmd, "--temperature"
     end
 
+    it "includes max tokens when the installed claude CLI supports the flag" do
+      @client.stub(:supports_max_tokens_flag?, true) do
+        cmd = @client.send(:build_claude_command, max_tokens: 123)
+        max_tokens_idx = cmd.index("--max-tokens")
+
+        refute_nil max_tokens_idx
+        assert_equal "123", cmd[max_tokens_idx + 1]
+      end
+    end
+
+    it "omits max tokens when the installed claude CLI does not support the flag" do
+      @client.stub(:supports_max_tokens_flag?, false) do
+        cmd = @client.send(:build_claude_command, max_tokens: 123)
+
+        refute_includes cmd, "--max-tokens"
+      end
+    end
+
     it "preserves explicit empty tool list values from cli_args arrays" do
       cmd = @client.send(:build_claude_command, cli_args: ["--tools", ""])
       tools_idx = cmd.index("--tools")
@@ -40,6 +58,61 @@ describe "ClaudeCodeClient" do
 
       refute_nil tools_idx
       assert_equal "Bash,Read", cmd[tools_idx + 1]
+    end
+  end
+
+  describe "supports_max_tokens_flag?" do
+    def status(success)
+      Object.new.tap do |obj|
+        obj.define_singleton_method(:success?) { success }
+      end
+    end
+
+    it "detects support from claude help output" do
+      capture = proc do |*cmd|
+        case cmd
+        when ["claude", "-p", "--help"]
+          ["usage: claude -p [options]\n  --max-tokens <n>", "", status(true)]
+        else
+          flunk "unexpected command: #{cmd.inspect}"
+        end
+      end
+
+      Open3.stub(:capture3, capture) do
+        assert @client.send(:supports_max_tokens_flag?)
+      end
+    end
+
+    it "falls back to top-level help when prompt help lacks the flag" do
+      capture = proc do |*cmd|
+        case cmd
+        when ["claude", "-p", "--help"]
+          ["usage: claude -p [options]", "", status(true)]
+        when ["claude", "--help"]
+          ["global options include --max-tokens", "", status(true)]
+        else
+          flunk "unexpected command: #{cmd.inspect}"
+        end
+      end
+
+      Open3.stub(:capture3, capture) do
+        assert @client.send(:supports_max_tokens_flag?)
+      end
+    end
+
+    it "returns false when help output does not advertise the flag" do
+      capture = proc do |*cmd|
+        case cmd
+        when ["claude", "-p", "--help"], ["claude", "--help"]
+          ["usage: claude", "", status(true)]
+        else
+          flunk "unexpected command: #{cmd.inspect}"
+        end
+      end
+
+      Open3.stub(:capture3, capture) do
+        refute @client.send(:supports_max_tokens_flag?)
+      end
     end
   end
 

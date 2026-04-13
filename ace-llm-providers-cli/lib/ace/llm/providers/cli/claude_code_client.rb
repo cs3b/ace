@@ -148,7 +148,7 @@ module Ace
 
             # Add max tokens if provided
             max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
-            if max_tokens
+            if max_tokens && supports_max_tokens_flag?
               cmd << "--max-tokens" << max_tokens.to_s
             end
 
@@ -175,6 +175,21 @@ module Ace
               env: env,
               provider_name: "Claude"
             )
+          end
+
+          def supports_max_tokens_flag?
+            return @supports_max_tokens_flag unless @supports_max_tokens_flag.nil?
+
+            @supports_max_tokens_flag = command_help_supports_flag?("--max-tokens")
+          end
+
+          def command_help_supports_flag?(flag)
+            [["claude", "-p", "--help"], ["claude", "--help"]].any? do |help_cmd|
+              stdout, stderr, status = Open3.capture3(*help_cmd)
+              status.success? && [stdout, stderr].join("\n").include?(flag)
+            rescue StandardError
+              false
+            end
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)
