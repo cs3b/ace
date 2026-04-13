@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `unit-coverage-reviewed` metadata for `TS-COMMIT-001` and aligned scenario sandbox setup to support `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}`.
 - Updated package docs (`README`, `docs/usage.md`, `docs/getting-started.md`) to teach the restarted testing contract (`ace-test`, `ace-test ... feat`, `ace-test-e2e`, `ace-test ... all`).
 
+### Changed
+- **ace-git-commit v0.23.8**: Release workflow now loads git context for commit guidance and JSON status data from bundled workflow sections.
+
+
 ## [0.23.7] - 2026-04-10
 
 ### Fixed

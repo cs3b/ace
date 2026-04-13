@@ -5,6 +5,19 @@ purpose: commit workflow instruction
 ace-docs:
   last-updated: 2026-03-15
   last-checked: 2026-03-21
+bundle:
+  embed_document_source: true
+  params:
+    output: cache
+    max_size: 81920
+    timeout: 30
+  sections:
+    current_repository_status:
+      title: Current Repository Status
+      commands:
+        - git status -sb
+        - git diff --stat
+        - ace-git status --format json
 ---
 
 # Commit Workflow
