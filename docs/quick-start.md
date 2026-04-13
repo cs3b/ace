@@ -111,7 +111,7 @@ The spec file includes front matter (id, status, priority, dependencies) and str
 
 - **Behavioral Specification** — what the feature does, expected behavior, success criteria
 - **Scope of Work** — deliverables, affected packages
-- **Verification Plan** — unit tests, integration tests, failure scenarios
+- **Verification Plan** — `fast` tests, `feat` tests, failure scenarios
 
 Break large tasks into subtasks:
 
