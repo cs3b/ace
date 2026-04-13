@@ -117,10 +117,17 @@ module Ace
 
           scan_results = scanner.scan
           @stats[:ideas_scanned] = scan_results.size
+          id_locations = Hash.new { |hash, key| hash[key] = [] }
 
           scan_results.each do |scan_result|
             spec_file = scan_result.file_path
             next unless spec_file && File.exist?(spec_file)
+
+            content = File.read(spec_file)
+            frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            if frontmatter.is_a?(Hash) && frontmatter["id"] && !frontmatter["id"].to_s.strip.empty?
+              id_locations[frontmatter["id"]] << spec_file
+            end
 
             issues = Molecules::IdeaFrontmatterValidator.validate(
               spec_file,
@@ -134,6 +141,8 @@ module Ace
               add_issue(issue[:type], issue[:message], issue[:location])
             end
           end
+
+          add_duplicate_id_issues(id_locations)
         end
 
         def run_scope_check
@@ -181,6 +190,18 @@ module Ace
             end
           end
           count
+        end
+
+        def add_duplicate_id_issues(id_locations)
+          id_locations.each do |id, locations|
+            next unless locations.size > 1
+
+            add_issue(
+              :error,
+              "Duplicate idea ID '#{id}' found in: #{locations.sort.join(', ')}",
+              locations.first
+            )
+          end
         end
 
         def add_issue(type, message, location = nil)

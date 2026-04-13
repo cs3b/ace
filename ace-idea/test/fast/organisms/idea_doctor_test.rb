@@ -177,6 +177,22 @@ class IdeaDoctorTest < AceIdeaTestCase
     end
   end
 
+  def test_specific_check_frontmatter_detects_duplicate_idea_ids
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "abc123", slug: "idea-one")
+      create_idea_fixture(root, id: "abc123", slug: "idea-two")
+
+      doctor = Doctor.new(root, check: "frontmatter")
+      results = doctor.run_diagnosis
+
+      refute results[:valid]
+      duplicate_issue = results[:issues].find { |issue| issue[:message].include?("Duplicate idea ID 'abc123'") }
+      refute_nil duplicate_issue
+      assert_includes duplicate_issue[:message], "idea-one"
+      assert_includes duplicate_issue[:message], "idea-two"
+    end
+  end
+
   def test_specific_check_structure
     with_ideas_dir do |root|
       create_idea_fixture(root, id: "abc123", slug: "test-idea")
@@ -265,6 +281,22 @@ class IdeaDoctorTest < AceIdeaTestCase
       doctor = Doctor.new(root)
       results = doctor.run_diagnosis
       assert_equal root, results[:root_path]
+    end
+  end
+
+  def test_detects_duplicate_idea_ids
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "abc123", slug: "idea-one")
+      create_idea_fixture(root, id: "abc123", slug: "idea-two")
+
+      doctor = Doctor.new(root)
+      results = doctor.run_diagnosis
+
+      refute results[:valid]
+      duplicate_issue = results[:issues].find { |issue| issue[:message].include?("Duplicate idea ID 'abc123'") }
+      refute_nil duplicate_issue
+      assert_includes duplicate_issue[:message], "idea-one"
+      assert_includes duplicate_issue[:message], "idea-two"
     end
   end
 end
