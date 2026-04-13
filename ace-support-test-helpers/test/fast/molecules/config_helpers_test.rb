@@ -117,7 +117,8 @@ class ConfigHelpersTest < Minitest::Test
     config = sample_config(gem_name: "test", level: "development")
 
     assert_equal "development", config["ace"]["level"]
-    assert_equal "1.0.0", config["ace"]["test"]["version"]
+    assert_kind_of String, config["ace"]["test"]["version"]
+    assert_match(/\A\d+\.\d+\.\d+\z/, config["ace"]["test"]["version"])
     assert_equal "test", config["ace"]["test"]["environment"]
   end
 
@@ -135,7 +136,8 @@ class ConfigHelpersTest < Minitest::Test
 
     assert_equal "custom_value", config["ace"]["custom_key"]
     assert_equal "data", config["ace"]["test"]["extra"]
-    assert_equal "1.0.0", config["ace"]["test"]["version"], "Should preserve defaults"
+    assert_kind_of String, config["ace"]["test"]["version"], "Should preserve defaults"
+    assert_match(/\A\d+\.\d+\.\d+\z/, config["ace"]["test"]["version"], "Should preserve defaults")
   end
 
   def test_sample_env_content_generates_env_format

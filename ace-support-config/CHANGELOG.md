@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.4] - 2026-04-13
+
 ### Changed
 - **ace-support-config v0.10.4**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 

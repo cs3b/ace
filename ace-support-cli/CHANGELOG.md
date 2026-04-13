@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
-- **ace-support-cli v0.6.4**: Corrected top-level `--help` usage output formatting so usage is rendered consistently as `Usage: <program> [COMMAND]`, and aligned help tests to validate this contract.
+## [0.6.5] - 2026-04-13
 
 ### Changed
 - **ace-support-cli v0.6.5**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 
 ## [0.6.4] - 2026-04-11
+
+### Fixed
+- **ace-support-cli v0.6.4**: Corrected top-level `--help` usage output formatting so usage is rendered consistently as `Usage: <program> [COMMAND]`, and aligned help tests to validate this contract.
 
 ### Changed
 - Migrated deterministic test layout to `test/fast/` for fast-only package coverage.

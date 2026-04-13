@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-04-13
+
 ### Fixed
 - **ace-support-models v0.10.2**: Normalized API cache provider and model payloads at read time (including string-array model lists), fixing `ace-llm-providers list`/`show` output from cached responses.
 
