@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.24.3] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.24.2] - 2026-04-12
+
+### Changed
+- Migrated deterministic `ace-demo` coverage to `test/fast`, kept scenario assets in `test/e2e`, and aligned E2E metadata references to the new fast test paths.
+- Added package-level testing contract guidance for `ace-test ace-demo`, `ace-test ace-demo all`, and `ace-test-e2e ace-demo`.
 
 ## [0.24.1] - 2026-04-07
 

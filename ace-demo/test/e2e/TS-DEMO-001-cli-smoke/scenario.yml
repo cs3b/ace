@@ -20,13 +20,13 @@ e2e-justification: >
   not validate full operator workflows through packaged CLI boundaries.
 
 unit-coverage-reviewed:
-  - test/commands/cli_test.rb
-  - test/commands/create_test.rb
-  - test/commands/retime_test.rb
-  - test/organisms/tape_creator_test.rb
-  - test/organisms/demo_recorder_test.rb
-  - test/molecules/inline_recorder_test.rb
-  - test/molecules/tape_scanner_test.rb
+  - test/fast/commands/cli_test.rb
+  - test/fast/commands/create_test.rb
+  - test/fast/commands/retime_test.rb
+  - test/fast/organisms/tape_creator_test.rb
+  - test/fast/organisms/demo_recorder_test.rb
+  - test/fast/molecules/inline_recorder_test.rb
+  - test/fast/molecules/tape_scanner_test.rb
 
 requires:
   tools: [ace-demo, git]
