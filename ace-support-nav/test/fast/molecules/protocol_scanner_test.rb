@@ -254,7 +254,48 @@ module Ace
               "priority" => 10
             })
             create_test_source(@test_dir, "cookbook", "low_priority_source", {
+              "type" => "path",
               "path" => shared_dir,
+              "priority" => 20
+            })
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              resources = @scanner.find_resources("cookbook", "*")
+              setup_resources = resources.select { |resource| File.basename(resource[:path]) == "setup.cookbook.md" }
+
+              assert_equal 1, setup_resources.length
+              assert_equal "high_priority_source", setup_resources.first[:source].name
+            end
+          end
+
+          def test_cookbook_protocol_deduplicates_real_and_symlinked_source_paths
+            create_test_protocol(@test_dir, "cookbook", {
+              "extensions" => [".cookbook.md"],
+              "inferred_extensions" => [".cookbook", ".cookbook.md"]
+            })
+
+            real_dir = File.join(@test_dir, "cookbook-resources", "real")
+            symlink_dir = File.join(@test_dir, "cookbook-resources", "real-link")
+            FileUtils.mkdir_p(real_dir)
+            File.write(File.join(real_dir, "setup.cookbook.md"), "# Cookbook")
+
+            begin
+              File.symlink(real_dir, symlink_dir)
+            rescue NotImplementedError
+              skip "Symlinks are not supported on this platform"
+            rescue Errno::EPERM, Errno::EACCES
+              skip "Symlink creation is not permitted in this environment"
+            end
+
+            create_test_source(@test_dir, "cookbook", "high_priority_source", {
+              "path" => real_dir,
+              "priority" => 10
+            })
+            create_test_source(@test_dir, "cookbook", "low_priority_source", {
+              "path" => symlink_dir,
               "priority" => 20
             })
 
