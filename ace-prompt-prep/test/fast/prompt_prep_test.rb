@@ -13,7 +13,7 @@ class Ace::PromptPrep::Test < Minitest::Test
 
   def test_that_it_has_a_version_number
     refute_nil ::Ace::PromptPrep::VERSION
-    assert_match(/\d+\.\d+\.\d+/, ::Ace::PromptPrep::VERSION)
+    assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::PromptPrep::VERSION)
   end
 
   def test_module_defined
