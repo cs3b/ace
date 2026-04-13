@@ -1,0 +1,29 @@
+---
+description: Showcase ace-config init bootstrapping project-root guidance files from a subdirectory
+tags:
+- ace-config
+- ace-support-config
+- bootstrap
+settings:
+  font_size: 16
+  width: 1200
+  height: 700
+  format: gif
+scenes:
+- name: Initialize config from a nested working directory
+  commands:
+  - type: mkdir -p repo/subdir && cd repo && git init
+    sleep: 3s
+  - type: cd subdir && ace-config init support-core
+    sleep: 5s
+- name: Verify bootstrap files landed at the repository root
+  commands:
+  - type: cd ../ && find . -maxdepth 2 \\( -name '.gitignore' -o -name 'AGENTS.md' -o -name 'CLAUDE.md' \\) | sort
+    sleep: 4s
+  - type: printf '\n.gitignore contents:\n' && cat .gitignore
+    sleep: 4s
+setup:
+- sandbox
+- copy-fixtures
+teardown:
+- cleanup
