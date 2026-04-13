@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.24.1)
+    ace-git-commit (0.24.2)
       ace-git (~> 0.19)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -178,7 +178,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.28.1)
+    ace-llm-providers-cli (0.28.2)
       ace-llm (~> 0.30)
 
 PATH
@@ -210,7 +210,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.24.1)
+    ace-prompt-prep (0.24.2)
       ace-b36ts (~> 0.13)
       ace-bundle (~> 0.41)
       ace-git (~> 0.19)
@@ -248,7 +248,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.25.1)
+    ace-search (0.25.2)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)

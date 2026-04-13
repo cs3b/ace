@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-codex will be documented in this
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-04-13
+
 ### Changed
 - **ace-handbook-integration-codex v0.3.6**: Published handbook and HITL migration release changes for Codex handbook integration.
 
