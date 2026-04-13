@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class TmuxCommandBuilderTest < Minitest::Test
   Builder = Ace::Tmux::Atoms::TmuxCommandBuilder

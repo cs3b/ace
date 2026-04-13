@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.12.1] - 2026-04-13
+
+### Changed
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.12.0] - 2026-04-12
+
+### Changed
+- Migrated deterministic tests to the restarted layout under `test/fast/` and updated E2E scenario metadata to reference the new deterministic paths.
+- Added explicit package testing contract guidance for `ace-test ace-tmux`, `ace-test ace-tmux feat`, `ace-test ace-tmux all`, and `ace-test-e2e ace-tmux` in README and docs.
 
 ## [0.11.3] - 2026-03-29
 
