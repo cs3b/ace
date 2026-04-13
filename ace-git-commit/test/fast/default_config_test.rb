@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative "../test_helper"
 require "yaml"
 
 class GitCommitDefaultConfigTest < TestCase
   def test_packaged_defaults_make_auto_split_explicit
-    defaults_path = File.expand_path("../.ace-defaults/git/commit.yml", __dir__)
+    defaults_path = File.expand_path("../../.ace-defaults/git/commit.yml", __dir__)
     config = YAML.safe_load_file(defaults_path)
 
     assert_equal true, config.dig("git", "split", "enabled")

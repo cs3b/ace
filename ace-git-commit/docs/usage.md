@@ -100,6 +100,15 @@ git:
 | `ace-git-commit --only-staged` | Commit only staged files |
 | `ace-git-commit path/ path/` | Commit specific files/dirs |
 
+## Testing Contract
+
+`ace-git-commit` uses the `fast` / `feat` / `e2e` model:
+
+- `ace-test ace-git-commit` - default deterministic suite (`test/fast/`)
+- `ace-test ace-git-commit feat` - deterministic feature/contract suite when present (`test/feat/`)
+- `ace-test-e2e ace-git-commit` - scenario workflow suite (`test/e2e/`)
+- `ace-test ace-git-commit all` - full package suite
+
 ## Runtime Help
 
 ```bash

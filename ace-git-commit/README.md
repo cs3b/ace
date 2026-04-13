@@ -36,6 +36,15 @@
 
 **Preview and control commit behavior safely** - use `--dry-run` to preview, `--only-staged` for strict staging, or `-m` for explicit messages, with configuration cascade from [ace-support-config](../ace-support-config) for project and user overrides.
 
+## Testing Contract
+
+`ace-git-commit` follows the restarted package test model:
+
+- `ace-test ace-git-commit` for deterministic fast-loop coverage (`test/fast/`)
+- `ace-test ace-git-commit feat` when deterministic feature/contract coverage is present (`test/feat/`)
+- `ace-test-e2e ace-git-commit` for retained workflow scenarios (`test/e2e/`)
+- `ace-test ace-git-commit all` for full package verification
+
 ## Configuration
 
 Override the default LLM model in `.ace/git/commit.yml` (see [defaults](.ace-defaults/git/commit.yml) for all options), or replace any prompt template in `.ace-handbook/prompts/` to match your commit style.

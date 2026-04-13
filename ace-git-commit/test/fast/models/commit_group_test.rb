@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative "../../test_helper"
 
 class CommitGroupTest < TestCase
   def test_add_file_mutates_group

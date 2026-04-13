@@ -70,8 +70,17 @@ When changes span multiple packages, `ace-git-commit` can split work by scope ba
 | `ace-git-commit --only-staged` | Commit only staged files |
 | `ace-git-commit path/ path/` | Commit specific files/dirs |
 
+## Run Package Tests
+
+Use the restarted package test model:
+
+- `ace-test ace-git-commit` for deterministic fast-loop tests
+- `ace-test ace-git-commit feat` for deterministic feature/contract tests when present
+- `ace-test-e2e ace-git-commit` for retained workflow scenarios
+- `ace-test ace-git-commit all` for complete package verification
+
 ## What to try next
 
-- [Usage Guide](usage.md) — full command reference with all options
-- [Handbook Reference](handbook.md) — skill, workflow, Conventional Commits guide, prompts
+- [Usage Guide](usage.md) -- full command reference with all options
+- [Handbook Reference](handbook.md) -- skill, workflow, Conventional Commits guide, prompts
 - Runtime help: `ace-git-commit --help`
