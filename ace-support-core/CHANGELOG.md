@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **ace-support-core v0.29.7**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+
+
+## [0.29.6] - 2026-04-11
+
+### Technical
+- Migrated package tests to `test/fast/` and `test/feat/`, replacing the legacy `test/integration/` layout while keeping deterministic-only coverage.
+- Updated README testing guidance to the public `ace-test ace-support-core` / `feat` / `all` contract and clarified no package-owned `test/e2e/` surface.
+
 ## [0.29.5] - 2026-03-31
 
 ### Changed

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Changed
+- **ace-support-mac-clipboard v0.3.3**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
+
+
+## [0.3.2] - 2026-04-11
+
+### Technical
+- Migrated deterministic package tests to `test/fast/` (`test/mac_clipboard_test.rb` -> `test/fast/mac_clipboard_test.rb`).
+- Documented `ace-support-mac-clipboard` as a fast-only package and kept deterministic verification on:
+  - `ace-test ace-support-mac-clipboard`
+  - `ace-test ace-support-mac-clipboard all`
+- Confirmed this migration does not introduce `test/feat/` or `test/e2e/` layers.
+
 ## [0.3.1] - 2026-03-29
 
 ### Technical

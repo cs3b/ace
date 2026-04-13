@@ -29,6 +29,18 @@ ace-config version
 ace-config help
 ```
 
+## Testing
+
+`ace-support-config` uses the ACE deterministic test taxonomy:
+
+```bash
+ace-test ace-support-config        # fast (default)
+ace-test ace-support-config feat   # deterministic feature coverage
+ace-test ace-support-config all    # fast + feat
+```
+
+This package does not define a package-owned `e2e` layer in this migration.
+
 ## How It Works
 
 1. A resolver builds a configuration cascade from the nearest `.ace` directory up to user-home and gem-default layers.

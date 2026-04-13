@@ -24,6 +24,18 @@
 
 **Improve CI stability** - reduce flaky test behavior with shared deterministic helpers for directory management, configuration, and environment cleanup.
 
+## Testing Contract
+
+This package is **fast-only** in the ACE testing model.
+
+- Deterministic coverage lives under `test/fast/`.
+- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+
+Run:
+
+- `ace-test ace-support-test-helpers`
+- `ace-test ace-support-test-helpers all`
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
