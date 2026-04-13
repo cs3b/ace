@@ -3,7 +3,6 @@ name: as-mark-task-done-internal
 description: Internal helper for marking tasks done with verification
 user-invocable: false
 allowed-tools:
-- Bash(ace-bundle:*)
 - Bash(ace-task:*)
 - Read
 - Write
