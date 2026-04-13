@@ -7,6 +7,14 @@ describe "ClaudeCodeClient" do
     @client = Ace::LLM::Providers::CLI::ClaudeCodeClient.new
   end
 
+  def client_with_probe_guard
+    guarded_client = Ace::LLM::Providers::CLI::ClaudeCodeClient.new
+    guarded_client.define_singleton_method(:supports_max_tokens_flag?) do
+      flunk "unexpected capability probe"
+    end
+    guarded_client
+  end
+
   it "initializes with default model" do
     model = @client.instance_variable_get(:@model)
     assert_equal "claude-sonnet-4-0", model
@@ -22,7 +30,7 @@ describe "ClaudeCodeClient" do
 
   describe "build_claude_command" do
     it "does not pass unsupported temperature flag" do
-      cmd = @client.send(:build_claude_command, temperature: 0.2)
+      cmd = client_with_probe_guard.send(:build_claude_command, temperature: 0.2)
       refute_includes cmd, "--temperature"
     end
 
@@ -45,7 +53,7 @@ describe "ClaudeCodeClient" do
     end
 
     it "preserves explicit empty tool list values from cli_args arrays" do
-      cmd = @client.send(:build_claude_command, cli_args: ["--tools", ""])
+      cmd = client_with_probe_guard.send(:build_claude_command, cli_args: ["--tools", ""])
       tools_idx = cmd.index("--tools")
 
       refute_nil tools_idx
@@ -53,7 +61,7 @@ describe "ClaudeCodeClient" do
     end
 
     it "preserves explicit tool allowlists from cli_args arrays" do
-      cmd = @client.send(:build_claude_command, cli_args: ["--tools", "Bash,Read"])
+      cmd = client_with_probe_guard.send(:build_claude_command, cli_args: ["--tools", "Bash,Read"])
       tools_idx = cmd.index("--tools")
 
       refute_nil tools_idx
@@ -78,6 +86,13 @@ describe "ClaudeCodeClient" do
         refute_nil max_tokens_idx
         assert_equal "123", cmd[max_tokens_idx + 1]
       end
+    end
+
+    it "does not probe claude help when max tokens handling is unused" do
+      cmd = client_with_probe_guard.send(:build_claude_command, cli_args: "--tools Bash")
+
+      assert_includes cmd, "--tools"
+      assert_includes cmd, "Bash"
     end
   end
 

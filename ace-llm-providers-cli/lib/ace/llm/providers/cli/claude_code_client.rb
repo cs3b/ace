@@ -146,14 +146,18 @@ module Ace
             # (128KB per-argument limit). System content is already embedded in the
             # formatted prompt via format_messages_as_prompt.
 
+            cli_args = normalized_cli_args(options)
+            max_tokens_requested = cli_args_include_max_tokens_flag?(cli_args)
+
             # Add max tokens if provided
             max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
-            if max_tokens && supports_max_tokens_flag?
-              cmd << "--max-tokens" << max_tokens.to_s
+            if max_tokens
+              max_tokens_requested = true
+              cmd.concat(["--max-tokens", max_tokens.to_s]) if supports_max_tokens_flag?
             end
 
             # User CLI args last so they take precedence (last-wins in most CLIs)
-            cmd.concat(filter_unsupported_cli_args(normalized_cli_args(options)))
+            cmd.concat(filter_unsupported_cli_args(cli_args, max_tokens_requested: max_tokens_requested))
 
             cmd
           end
@@ -192,7 +196,14 @@ module Ace
             end
           end
 
-          def filter_unsupported_cli_args(cli_args)
+          def cli_args_include_max_tokens_flag?(cli_args)
+            cli_args.each_with_index.any? do |arg, index|
+              arg == "--max-tokens" || arg.start_with?("--max-tokens=") || (arg == "--max-tokens" && !cli_args[index + 1].nil?)
+            end
+          end
+
+          def filter_unsupported_cli_args(cli_args, max_tokens_requested: false)
+            return cli_args unless max_tokens_requested
             return cli_args if supports_max_tokens_flag?
 
             filtered = []
