@@ -6,9 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.24.1] - 2026-04-13
 
 ### Changed
-- Clarified the base prompt template so `## Questions` is optional for deterministic execution prompts and `## Report` explicitly promotes the primary artifact path to a first-class deliverable when a task creates files.
+- Completed the batch i05 migration follow-through for this package and aligned it with the restarted `fast` / `feat` / `e2e` verification model.
+
+### Technical
+- Included in the coordinated assignment-driven patch release for batch i05 package updates.
+
+
+## [0.24.0] - 2026-04-12
+
+### Changed
+- Migrated package tests to the restarted `fast` / `feat` / `e2e` model:
+  - moved deterministic coverage into `test/fast`
+  - moved legacy `test/integration` coverage into `test/feat`
+  - retained workflow-value scenario coverage in `test/e2e`
+- Simplified `TS-PREP-001` scenario assets by removing low-value help/setup goals and keeping archive + bundle context workflow checks.
+
+### Technical
+- Updated package docs (`README.md`, `docs/usage.md`) to teach the restarted testing contract:
+  `ace-test`, `ace-test feat`, `ace-test all`, and `ace-test-e2e`.
 
 ## [0.23.6] - 2026-03-31
 

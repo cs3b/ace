@@ -19,6 +19,15 @@ ace-prompt-prep process
 ace-prompt-prep --version
 ```
 
+## Testing Contract
+
+```bash
+ace-test ace-prompt-prep
+ace-test ace-prompt-prep feat
+ace-test ace-prompt-prep all
+ace-test-e2e ace-prompt-prep
+```
+
 ## Commands
 
 ### `setup`

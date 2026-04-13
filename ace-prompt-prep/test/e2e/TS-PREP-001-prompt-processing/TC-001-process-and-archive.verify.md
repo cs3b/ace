@@ -1,4 +1,4 @@
-# Goal 3 — Process and Archive Verification
+# Goal 1 — Process and Archive Verification
 
 ## Injected Context
 
@@ -10,7 +10,7 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-4. **Primary captures exist** — `process.stdout`, `process.stderr`, and `process.exit` exist in `results/tc/03/`.
+4. **Primary captures exist** — `process.stdout`, `process.stderr`, and `process.exit` exist in `results/tc/01/`.
 5. **Zero exit code** — `process.exit` is `0` (processing succeeded).
 6. **Archive file created** — `archive-list.txt` shows at least one archive file with Base36-style naming.
 7. **Symlink exists** — `previous-link.txt` shows `_previous.md` targeting an archive file.

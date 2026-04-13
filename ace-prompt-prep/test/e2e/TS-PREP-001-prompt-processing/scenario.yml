@@ -8,18 +8,15 @@ cost-tier: smoke
 tool-under-test: ace-prompt-prep
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Setup workspace artifacts (directory listing, template content)"
-  results/tc/03/:  "Archive workflow artifacts (archive file, symlink verification)"
-  results/tc/04/:  "Context-mode processing artifacts (bundle output and archive evidence)"
+  results/tc/01/:  "Archive workflow artifacts (archive file, symlink verification)"
+  results/tc/02/:  "Context-mode processing artifacts (bundle output and archive evidence)"
 
 e2e-justification: >
-  All goals require the real ace-prompt-prep binary executing through a shell.
-  Setup creates real directories and template files. Processing invokes the
-  real archival pipeline with Base36 timestamp IDs via ace-b36ts. These
-  filesystem side-effects and binary interactions cannot be tested with mocks.
-  Goal 4 validates context-enabled process behavior through --bundle and
-  confirms context expansion still preserves archive lifecycle behavior.
+  This suite retains only workflow-value checks that require the real
+  ace-prompt-prep binary in a sandbox. Processing with archive lifecycle and
+  context-enabled processing via --bundle validate shell execution, filesystem
+  side effects, and integration behavior that deterministic fast/feat tests
+  cannot fully replace.
 
 requires:
   tools: [ace-prompt-prep, ace-b36ts]

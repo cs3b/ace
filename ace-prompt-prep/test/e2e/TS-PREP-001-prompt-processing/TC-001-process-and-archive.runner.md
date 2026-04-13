@@ -1,12 +1,12 @@
-# Goal 3 — Process and Archive
+# Goal 1 — Process and Archive
 
 ## Goal
 
-Place a sample prompt file into the workspace created in Goal 2, then process it using `ace-prompt-prep`. Verify that processing archives the prompt with a Base36 timestamp ID and that a `_previous.md` symlink points to the archived file.
+Place a sample prompt file into the workspace created by scenario setup, then process it using `ace-prompt-prep`. Verify that processing archives the prompt with a Base36 timestamp ID and that a `_previous.md` symlink points to the archived file.
 
 ## Workspace
 
-Save all output to `results/tc/03/`. Capture:
+Save all output to `results/tc/01/`. Capture:
 - `process.stdout`, `process.stderr`, `process.exit` from process invocation
 - `archive-list.txt` listing archived file(s)
 - `previous-link.txt` showing `_previous.md` symlink target

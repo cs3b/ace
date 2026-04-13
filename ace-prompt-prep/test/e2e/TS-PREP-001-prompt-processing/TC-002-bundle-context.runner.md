@@ -1,4 +1,4 @@
-# Goal 4 — Bundle Context Processing
+# Goal 2 — Bundle Context Processing
 
 ## Goal
 
@@ -8,7 +8,7 @@ behavior still works with context mode enabled.
 
 ## Workspace
 
-Save all output to `results/tc/04/`. Capture:
+Save all output to `results/tc/02/`. Capture:
 - `bundle.stdout`, `bundle.stderr`, `bundle.exit` from process invocation with `--bundle`
 - `bundle-output.md` containing processed output for evidence review
 - `bundle-archive-list.txt` listing archive directory files after the run
