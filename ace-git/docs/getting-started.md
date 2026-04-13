@@ -79,6 +79,15 @@ Use this for preferences, not for redefining the workflow logic.
 | Show PR metadata | `ace-git pr` |
 | Show package version | `ace-git version` |
 
+## Run Package Tests
+
+Use the restarted package test model:
+
+- `ace-test ace-git` for deterministic fast-loop tests
+- `ace-test ace-git feat` for deterministic feature/contract tests
+- `ace-test-e2e ace-git` for retained workflow scenarios
+- `ace-test ace-git all` for complete package verification
+
 ## Next Steps
 
 - Load `wfi://github/pr/create` to open a structured PR workflow

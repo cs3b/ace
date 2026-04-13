@@ -20,10 +20,11 @@ e2e-justification: >
   behavior across status, diff, branch, and PR context operations.
 
 unit-coverage-reviewed:
-  - test/commands/status_test.rb
-  - test/commands/diff_test.rb
-  - test/commands/branch_test.rb
-  - test/commands/pr_test.rb
+  - test/fast/commands/status_test.rb
+  - test/fast/commands/diff_test.rb
+  - test/fast/commands/branch_test.rb
+  - test/fast/commands/pr_test.rb
+  - test/feat/cli_routing_test.rb
 
 requires:
   tools: [ace-git, git]
@@ -31,4 +32,4 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"

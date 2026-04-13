@@ -15,4 +15,7 @@ Save artifacts to `results/tc/06/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/06/`.
 - Do not write outside the sandbox.
-- Capture stdout, stderr, and exit code as `status-json-no-pr.stdout|stderr|exit`.
+- Capture artifacts as:
+  - `status-json-no-pr.stdout`
+  - `status-json-no-pr.stderr`
+  - `status-json-no-pr.exit`

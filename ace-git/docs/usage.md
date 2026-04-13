@@ -251,6 +251,15 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 - `0` - Success
 - `1` - Error (configuration error, git error, etc.)
 
+## Testing Contract
+
+`ace-git` uses the `fast` / `feat` / `e2e` model:
+
+- `ace-test ace-git` - default deterministic suite (`test/fast/`)
+- `ace-test ace-git feat` - deterministic feature/contract suite (`test/feat/`)
+- `ace-test-e2e ace-git` - scenario workflow suite (`test/e2e/`)
+- `ace-test ace-git all` - full package suite
+
 ## Related Tools
 
 - **ace-git-commit** - Smart git commit generation
