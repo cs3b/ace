@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.5] - 2026-04-13
+
+### Fixed
+- Avoided eager Claude CLI capability probes during normal command construction so non-`max-tokens` requests no longer shell out to `claude --help`.
+
+### Technical
+- Restored deterministic command-builder coverage by guarding common-path unit tests from unexpected capability probing.
+
 ## [0.28.4] - 2026-04-13
 
 ### Fixed
