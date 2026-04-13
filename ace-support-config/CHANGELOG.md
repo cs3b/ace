@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-04-13
+
+### Fixed
+- Preserve existing `.gitignore` rules even when `ace-config init --force` refreshes bootstrap files.
+- Anchor project-root bootstrap files (`.gitignore`, `AGENTS.md`, `CLAUDE.md`) to the detected repository root so subdirectory runs do not seed them into the wrong location.
+
 ## [0.11.0] - 2026-04-13
 
 ### Changed
