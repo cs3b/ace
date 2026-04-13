@@ -5,6 +5,17 @@ purpose: Safe rebase workflow with state capture, explicit conflict triage, and 
 ace-docs:
   last-updated: 2026-03-12
   last-checked: 2026-03-21
+bundle:
+  embed_document_source: true
+  params:
+    output: cache
+    timeout: 30
+    max_size: 81920
+  sections:
+    current_repository_status:
+      title: Current Repository Status
+      commands:
+        - ace-git status --format json
 ---
 
 # Rebase Workflow
@@ -35,28 +46,80 @@ Rebase feature branches against a target branch with automatic state capture for
 # $target_branch: Branch to rebase against (default: auto-detect or origin/main)
 # $no_verify: Skip post-rebase verification (default: false)
 
-# Helper: Auto-detect target branch from task spec or default to origin/main
-get_target_branch() {
+# Helper: Normalize a branch to an explicit remote ref
+normalize_target_ref() {
+  local branch
+  branch=$(printf '%s' "$1" | tr -d '[:space:]')
+
+  case "$branch" in
+    origin/*) echo "$branch" ;;
+    refs/heads/*) echo "origin/${branch#refs/heads/}" ;;
+    refs/remotes/origin/*) echo "${branch#refs/remotes/}" ;;
+    refs/remotes/*/*) echo "${branch#refs/remotes/}" ;;
+    "") echo "origin/main" ;;
+    *) echo "origin/$branch" ;;
+  esac
+}
+
+# Helper: Auto-detect target branch from task spec
+get_task_target_branch() {
   local task_file
   task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
   if [ -n "$task_file" ] && [ -f "$task_file" ] && [ -r "$task_file" ]; then
     ruby -ryaml -e '
-      c = File.read(ARGV[0])
-      if c.start_with?("---")
-        yaml_content = c.split("---", 3)[1]
-        if yaml_content
-          data = YAML.safe_load(yaml_content, permitted_classes: [Symbol])
-          puts data.dig("worktree", "target_branch") || "origin/main"
-        else
-          puts "origin/main"
+      begin
+        c = File.read(ARGV[0])
+        if c.start_with?("---")
+          yaml_content = c.split("---", 3)[1]
+          if yaml_content
+            data = YAML.safe_load(yaml_content, permitted_classes: [Symbol])
+            worktree = data["worktree"] || data[:worktree]
+            next unless worktree.is_a?(Hash)
+            target = worktree["target_branch"] || worktree[:target_branch]
+            puts target if target
+          end
         end
-      else
-        puts "origin/main"
+      rescue
+        exit 0
       end
-    ' "$task_file" 2>/dev/null || echo "origin/main"
-  else
-    echo "origin/main"
+    ' "$task_file" 2>/dev/null
   fi
+}
+
+# Helper: Auto-detect target branch from git context (`ace-git status`)
+get_status_target_branch() {
+  ace-git status --format json 2>/dev/null | ruby -rjson -e '
+    begin
+      data = JSON.parse(STDIN.read)
+      pr_metadata = data["pr_metadata"] || data[:pr_metadata]
+      if pr_metadata.is_a?(Hash)
+        base = pr_metadata["baseRefName"] || pr_metadata[:baseRefName]
+        base ||= pr_metadata["base"] || pr_metadata[:base]
+        puts base if base
+      end
+    rescue
+      exit 0
+    end
+  ' 2>/dev/null
+}
+
+# Helper: Auto-detect target branch from task spec/context or default to origin/main
+get_target_branch() {
+  local target_branch
+
+  target_branch="$(get_task_target_branch)"
+  if [ -n "$target_branch" ]; then
+    normalize_target_ref "$target_branch"
+    return
+  fi
+
+  target_branch="$(get_status_target_branch)"
+  if [ -n "$target_branch" ]; then
+    normalize_target_ref "$target_branch"
+    return
+  fi
+
+  echo "origin/main"
 }
 
 # Helper: Recover session variables (for multi-shell workflows)

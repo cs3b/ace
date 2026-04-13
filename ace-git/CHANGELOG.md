@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Included in the coordinated assignment-driven patch release for batch i05 package updates.
 
 
+
 ### Changed
 - Expanded `as-github-pr-create` canonical skill metadata so public `create-pr` assign-step discovery is skill-owned rather than catalog-owned.
 
@@ -22,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Migrated package tests to the `fast` / `feat` / `e2e` model, moved deterministic coverage into `test/fast` and `test/feat`, and aligned TS-GIT-001 scenario artifacts with the current E2E runner/verifier contract.
-
+- Release workflow now normalizes target branch context and supports automatic PR/task source detection.
 ## [0.20.2] - 2026-04-07
 
 ### Added
