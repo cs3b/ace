@@ -1,6 +1,6 @@
 ---
 id: 8qshe0
-status: pending
+status: done
 title: Fix Duplicate IDs in ace-task and ace-idea Doctor
 tags: []
 created_at: "2026-03-29 11:35:34"
