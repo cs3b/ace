@@ -12,7 +12,8 @@ Save artifacts to `results/tc/03/`.
 Actions:
 1. Set `XDG_CACHE_HOME` to `$(pwd)/results/tc/03/xdg-cache`.
 2. Write `${XDG_CACHE_HOME}/ace-models/api.json` containing providers `anthropic`
-   and `openai` with at least one model each.
+   and `openai` with at least one model each, and include explicit model `id`
+   values for every seeded model.
 3. Run `ace-llm-providers list` and capture stdout/stderr/exit to:
    - `results/tc/03/list.stdout`
    - `results/tc/03/list.stderr`
