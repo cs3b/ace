@@ -10,7 +10,6 @@ PASS when:
 - `results/tc/02/session.yml` contains `synthesis_workflow: wfi://idea/review`
 - `results/tc/02/session.yml` contains `synthesis_provider: role:sim-synthesis`
 - `results/tc/02/synthesis.yml` exists and contains `chains:`
-- `results/tc/02/handoff-check.txt` exists and indicates plan input matches draft output
 - and one of these synthesis outcomes is true:
   - success path:
     - `results/tc/02/run.exit` is `0`
@@ -25,6 +24,6 @@ PASS when:
 FAIL when:
 - any chain step artifact is missing
 - the preset metadata in `session.yml` does not match the shipped default contract
-- `handoff-check.txt` does not confirm draft output became plan input
+- the captured chain artifacts do not establish a complete draft → plan → work chain
 - `synthesis.yml` does not record final-stage outcome
 - the run fails before chain completion

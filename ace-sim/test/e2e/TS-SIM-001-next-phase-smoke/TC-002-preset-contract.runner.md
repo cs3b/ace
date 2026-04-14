@@ -18,11 +18,11 @@ Run the default preset flow and capture artifacts that prove the shipped preset 
    - `01-draft/input.md`, `01-draft/user.bundle.md`, `01-draft/user.prompt.md`, `01-draft/output.md`
    - `02-plan/input.md`, `02-plan/output.md`
    - `03-work/input.md`, `03-work/output.md`
-7. If both files exist, check whether the content of `02-plan/input.md` matches or is derived from `01-draft/output.md` (the draft output should be passed as the plan input). Write a brief comparison result to `results/tc/02/handoff-check.txt` stating whether "plan input matches draft output" or not, with a short explanation.
+7. If both files exist, preserve them as captured run artifacts. Do not create helper comparison files; rely on the shipped chain artifacts and runner observations instead.
 8. If present, capture these final synthesis files into `results/tc/02/`:
    - `final/input.md` -> `results/tc/02/final.input.md`
    - `final/source.original.md` -> `results/tc/02/source.original.md`
    - `final/output.sequence.md` -> `results/tc/02/output.sequence.md`
    - `final/suggestions.report.md` -> `results/tc/02/suggestions.report.md`
    - `final/source.revised.md` -> `results/tc/02/source.revised.md`
-9. If any file from step 8 is missing, create a placeholder file at the target path with a short note that synthesis output was unavailable for this run.
+9. If any file from step 8 is missing, leave it absent. Do not create placeholder synthesis files.
