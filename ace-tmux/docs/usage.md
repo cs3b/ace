@@ -26,12 +26,14 @@ Examples:
 - `ace-tmux start` uses `defaults.session`
 - `ace-tmux start dev`
 - `ace-tmux start dev --detach`
+- `ace-tmux start dev --detach --name qa-dev`
 - `ace-tmux start dev --force`
 
 Options:
 
 - `--detach`, `-D`: do not attach after creation
 - `--force`: kill existing session and recreate it
+- `--name`, `-n`: override the runtime tmux session name
 - `--root`, `-r`: override session working directory
 - `--verbose`, `-v`: verbose output
 - `--quiet`, `-q`: suppress non-essential output
@@ -40,6 +42,7 @@ Behavior notes:
 
 - If session exists, `--force` is not set, and `--detach` is not set, `start` attaches to the existing session.
 - If session exists, `--force` is not set, and `--detach` is set, `start` returns without attaching.
+- `--name` changes the tmux session name used at runtime without changing which preset is loaded.
 - If no preset is provided, `defaults.session` is used.
 
 ## `ace-tmux window`

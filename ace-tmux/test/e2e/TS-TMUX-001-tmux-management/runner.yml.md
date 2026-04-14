@@ -14,7 +14,7 @@ bundle:
 # E2E Test Runner: ace-tmux Management
 
 Tool under test: ace-tmux
-Required tools: ace-tmux, tmux
+Required tools: ace-tmux
 Workspace root: (current directory)
 
 Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, and Goal 3 adds a window.
@@ -23,7 +23,7 @@ Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, and G
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
 - Execute each goal in order (1 through 3)
-- Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
+- Use only declared scenario tools
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output; all artifacts must come from real command execution
@@ -34,4 +34,4 @@ Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, and G
 
 - Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
 - The `.exit` file must contain only a numeric exit code
-- Keep optional summaries in `.md` files, but raw command captures are the primary evidence
+- Keep optional summaries in `.md` files, but real tool output and runner observations are the primary evidence

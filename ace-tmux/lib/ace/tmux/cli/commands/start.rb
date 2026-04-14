@@ -33,6 +33,7 @@ module Ace
             "default                    # Start default session",
             "dev                        # Start dev session",
             "dev --detach               # Create without attaching",
+            "dev --detach --name qa     # Create under a custom session name",
             "dev --force                # Kill existing and recreate"
           ]
 
@@ -40,6 +41,7 @@ module Ace
 
           option :detach, type: :boolean, aliases: %w[-D], desc: "Don't attach after creating session"
           option :force, type: :boolean, desc: "Kill existing session and recreate"
+          option :name, type: :string, aliases: %w[-n], desc: "Override the tmux session name"
           option :root, type: :string, aliases: %w[-r], desc: "Working directory for the session"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -64,14 +66,16 @@ module Ace
               tmux: tmux_bin
             )
 
-            puts "Starting session '#{preset}'..." unless options[:quiet]
+            session_name = options[:name] || preset
+            puts "Starting session '#{session_name}'..." unless options[:quiet]
             manager.start(
               preset,
               detach: options[:detach] || false,
               force: options[:force] || false,
+              name: options[:name],
               root: options[:root]
             )
-            puts "Session '#{preset}' created." if options[:detach] && !options[:quiet]
+            puts "Session '#{session_name}' created." if options[:detach] && !options[:quiet]
           rescue Ace::Tmux::PresetNotFoundError => e
             raise Ace::Support::Cli::Error.new(e.message)
           end

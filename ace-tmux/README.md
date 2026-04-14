@@ -21,12 +21,12 @@
 ## How It Works
 
 1. Define session and window layouts in YAML presets stored in `.ace/tmux/` (project), `~/.ace/tmux/` (user), or gem defaults.
-2. Run `ace-tmux start [PRESET]` to create a full session or `ace-tmux window [PRESET]` to inject a window into the current session.
+2. Run `ace-tmux start [PRESET]` to create a full session or `ace-tmux window [PRESET]` to inject a window into the current session. Use `ace-tmux start ... --name <session>` when you need multiple concurrent sessions from the same preset.
 3. Presets are deep-merged through the config cascade, so project-level overrides layer cleanly on top of shared defaults.
 
 ## Use Cases
 
-**Start or attach to a preset-backed session** - run `ace-tmux start [PRESET]` to create a session from YAML presets, or attach to an existing session with the same name, integrating panes for [ace-task](../ace-task) status, [ace-git](../ace-git) info, and editor windows.
+**Start or attach to a preset-backed session** - run `ace-tmux start [PRESET]` to create a session from YAML presets, or attach to an existing session with the same name, integrating panes for [ace-task](../ace-task) status, [ace-git](../ace-git) info, and editor windows. Add `--name` to reuse the preset under a different runtime session name.
 
 **Inject windows into running sessions** - run `ace-tmux window [PRESET]` to add a new window from presets without recreating the current session, useful for spinning up focused tool or test panes on the fly.
 

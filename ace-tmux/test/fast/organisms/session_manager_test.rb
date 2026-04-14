@@ -120,6 +120,33 @@ class SessionManagerTest < Minitest::Test
     assert_empty @executor.exec_commands
   end
 
+  def test_start_uses_explicit_session_name_override
+    executor = TmuxTestHelper::MockExecutor.new(
+      capture_responses: {
+        "tmux has-session -t isolated-dev" => mock_result(success: false, exit_code: 1),
+        :default => mock_result(stdout: "@0")
+      }
+    )
+    loader = Ace::Tmux::Molecules::PresetLoader.new(
+      gem_root: @temp_dir,
+      start_path: @temp_dir
+    )
+    builder = Ace::Tmux::Molecules::SessionBuilder.new(preset_loader: loader)
+    manager = Ace::Tmux::Organisms::SessionManager.new(
+      executor: executor,
+      session_builder: builder
+    )
+
+    manager.start("dev", detach: true, name: "isolated-dev")
+
+    new_session_cmd = executor.captured_commands.find { |cmd| cmd.join(" ").include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    assert_includes new_session_cmd, "isolated-dev"
+
+    select_cmds = executor.run_commands.select { |cmd| cmd.include?("select-window") }
+    assert select_cmds.any? { |cmd| cmd.include?("isolated-dev:editor") }
+  end
+
   def test_start_sends_pre_window_commands
     @manager.start("with-hooks", detach: true)
 

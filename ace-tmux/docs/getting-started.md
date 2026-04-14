@@ -26,6 +26,9 @@ Run: `ace-tmux start`.
 
 `ace-tmux` resolves the default session preset from `defaults.session` in config.
 
+For parallel workspaces from the same preset, use a custom runtime session name:
+`ace-tmux start default --detach --name review-sandbox`.
+
 ## Add a Window to a Running Session
 
 From inside tmux, run: `ace-tmux window`.

@@ -30,10 +30,12 @@ module Ace
         # @param preset_name [String] Session preset name
         # @param detach [Boolean] Skip attach after creation
         # @param force [Boolean] Kill existing session and recreate
+        # @param name [String, nil] Override runtime tmux session name
         # @param root [String, nil] Override working directory for the session
         # @return [void]
-        def start(preset_name, detach: false, force: false, root: nil)
+        def start(preset_name, detach: false, force: false, name: nil, root: nil)
           session = @session_builder.build(preset_name)
+          session.name = name if name
           session.root = root if root
 
           if session_exists?(session.name)

@@ -22,7 +22,7 @@ unit-coverage-reviewed:
   - test/fast/organisms/session_manager_test.rb
 
 requires:
-  tools: [ace-tmux, tmux]
+  tools: [ace-tmux]
   ruby: ">= 3.0"
 
 setup:
