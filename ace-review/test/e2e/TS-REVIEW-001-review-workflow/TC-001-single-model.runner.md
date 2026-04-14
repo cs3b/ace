@@ -9,10 +9,10 @@ Execute a real review using one model with a diff subject and verify session out
 Save all output to `results/tc/01/`. Capture:
 - `results/tc/01/execution.stdout`, `.stderr`, `.exit`
 - `results/tc/01/session-listing.txt`
-- `results/tc/01/review-output.md` (copy of produced review output)
 
 ## Constraints
 
 - This goal makes a real API call and requires valid provider credentials.
 - Use the `single` preset from sandbox fixtures.
 - All artifacts must come from real tool execution.
+- Do not create synthetic helper copies of review output; rely on the actual execution result and produced session state.

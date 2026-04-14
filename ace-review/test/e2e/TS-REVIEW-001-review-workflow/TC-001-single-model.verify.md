@@ -17,7 +17,7 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
    - `execution.exit` is `0` and produced a normal review output, or
    - `execution.exit` is non-zero with a clear model-availability error message (for example: missing `review-default` role model).
 3. **Session directory created** — Session listing shows session files created.
-4. **Outcome evidence captured** — `review-output.md` or stderr includes enough detail to classify the run as successful execution or explicit environment blocker.
+4. **Outcome evidence captured** — `execution.stdout` / `execution.stderr` plus the session listing include enough detail to classify the run as successful execution or explicit environment blocker.
 
 ## Verdict
 
