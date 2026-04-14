@@ -39,6 +39,7 @@ requires:
 setup:
   - git-init
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: mkdir -p .ace-wt
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - run: |

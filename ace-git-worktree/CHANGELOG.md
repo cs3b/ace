@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.20.2] - 2026-04-13
+
+### Changed
+- Hardened the basic lifecycle and task-aware E2E scenario contracts so worktree setup, remove/prune evidence, and task-worktree creation checks are stable across reruns.
+
 ## [0.20.1] - 2026-04-13
 
 ### Changed
