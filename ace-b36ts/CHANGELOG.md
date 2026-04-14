@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.5] - 2026-04-13
+
+### Technical
+- Rewrote `TS-B36TS-001` to follow the goal-based E2E contract by judging note reorganization from sandbox end state and runner observations instead of runner-authored helper artifacts.
+
 ## [0.14.4] - 2026-04-11
 
 ### Technical

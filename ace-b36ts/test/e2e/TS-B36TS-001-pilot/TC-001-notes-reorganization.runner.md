@@ -11,12 +11,9 @@ Organize five dated note files from `notes/inbox/` into a date-based archive usi
    - `{year}` is 4-digit year from source date
    - `{month}` is 2-digit month from source date
    - `{week}` is ISO week (`W01`-`W53`)
-5. Write `results/tc/01/final-reflection.txt` describing:
-   - commands used
-   - final folder layout summary
-   - one limitation or assumption
 
 ## Constraints
 - Use real `ace-b36ts` CLI outputs; do not invent tokens.
 - Keep all work inside the sandbox.
 - Do not delete note content.
+- Mention the commands used, final folder layout, and one limitation or assumption in final runner observations instead of writing a reflection file.

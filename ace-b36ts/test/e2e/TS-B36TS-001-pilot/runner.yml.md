@@ -14,11 +14,10 @@ bundle:
 Tool under test: ace-b36ts
 Workspace root: (current directory)
 
-Execute the scenario exactly once, producing concrete filesystem outcomes and one final reflection artifact.
+Execute the scenario exactly once, producing concrete filesystem outcomes.
 
 Rules:
 - Use `ace-b36ts` commands for timestamp IDs; do not fabricate IDs.
 - Move all files from `notes/inbox/` into `notes/archive/{year}/{month}/{week}/`.
 - Prefix each filename with a b36ts token generated from the note's date.
-- Save your final reflection to `results/tc/01/final-reflection.txt`.
-- Reflection must list: commands used, grouping strategy, and any assumptions.
+- Return final runner observations listing the commands used, grouping strategy, and any assumptions.
