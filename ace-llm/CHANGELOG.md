@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.6] - 2026-04-13
+
+### Fixed
+- Switched `TS-LLM-001` basic-query coverage to the explicit `--prompt` form so the scenario executes with canonical prompt input and no longer misclassifies dropped positional input as provider behavior.
+
+## [0.33.5] - 2026-04-13
+
+### Fixed
+- Hardened `TS-LLM-001` basic-query execution by persisting the exact prompt and command artifacts so empty-input/provider-contract failures are distinguished from valid model responses.
+
 ## [0.33.4] - 2026-04-13
 
 ### Fixed
