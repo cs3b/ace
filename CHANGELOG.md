@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
+
+### Fixed
+- **ace-assign v0.49.2**: Rewrote `TS-ASSIGN-002` to verify hierarchy renumbering, auto-completion, and audit flows from sandbox end state plus runner observations instead of helper artifacts.
+- **ace-git-secrets v0.14.3**: Reworked `TS-SECRETS-001` history-persistence coverage around repo outcome and runner observations while keeping explicit removal/commit evidence for diagnosis.
+- **ace-llm v0.33.6**: Switched `TS-LLM-001` basic-query coverage to explicit `--prompt` input so the scenario no longer misclassifies dropped positional input as provider behavior.
+- **ace-overseer v0.14.4**: Rewrote retained `TS-OVERSEER-001` workflow-value cases around final sandbox state and runner observations.
+- **ace-task v0.35.4**: Reworked `TS-TASK-001` smoke coverage to validate created and archived tasks from stable task-tree state plus runner observations.
+
+### Changed
+- **ace-test-runner-e2e v0.37.0**: Made runner `Observations` the canonical non-filesystem evidence channel for goal-based E2E scenarios, passed them into verifier prompts, and updated the shared E2E authoring contract around end-state-first verification.
+- **ace-test-runner-e2e v0.37.1**: Updated the canonical E2E create/review/rewrite/run guidance, templates, and references so goal-based scenarios use final sandbox state plus runner observations instead of helper artifacts under `results/`.
+
+### Technical
+- **ace-b36ts v0.14.5**: Rewrote `TS-B36TS-001` to follow the goal-based E2E contract by judging note reorganization from sandbox end state and runner observations instead of helper artifacts.
+
+### Fixed
+- **ace-assign v0.49.1**: Tightened `TS-ASSIGN-002` evidence capture so cascade renumbering and display-audit checks use concrete sandbox step artifacts and copied fixture paths.
+- **ace-git-secrets v0.14.2**: Hardened `TS-SECRETS-001` history-persistence capture so removal/commit evidence is emitted before validating the rescan oracle.
+- **ace-llm v0.33.5**: Persisted the exact prompt/command in `TS-LLM-001` so missing-input responses are distinguished from valid provider behavior.
+- **ace-overseer v0.14.3**: Tightened `TS-OVERSEER-001` preset-override and prune contracts around explicit path-check artifacts and optional pre-completion status captures.
+- **ace-task v0.35.3**: Hardened `TS-TASK-001` to derive the created task ref from stable list/filesystem evidence instead of brittle output parsing.
+- **ace-test-runner-e2e v0.36.1**: Made aggregate package/suite reports use canonical per-scenario report metadata for failed TC mapping and added explicit dirty-worktree runner diagnostics for suite triage.
+- **ace-test-runner-e2e v0.36.0**: Renamed aggregated E2E outputs to package/suite-specific report filenames and stripped ambient tmux session variables from setup/pipeline subprocesses so suite runs do not leak into the operator's live tmux session.
+
+### Added
+- **ace-tmux v0.13.0**: Added `ace-tmux start --name` for concurrent session startup from one preset and aligned tmux lifecycle docs/tests around isolated-session execution.
+
+### Technical
+- **ace-git-worktree v0.20.2**: Hardened lifecycle/task-aware E2E setup and artifact contracts so `.ace-wt` bootstrap, remove/prune evidence, and task-worktree creation checks remain stable across reruns.
+- **ace-task v0.35.2**: Refreshed `TS-TASK-001` archive and doctor smoke scenario contracts to match the current `_archive` layout and isolated invalid-status validation path.
+
 ### Fixed
 - **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
 - **ace-support-config v0.11.2**: Made bootstrap `.gitignore` detection line-aware so commented or negated `.ace-local/` mentions no longer suppress appending the actual ignore rule.

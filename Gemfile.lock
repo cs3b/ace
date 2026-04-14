@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.49.0)
+    ace-assign (0.49.2)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -14,7 +14,7 @@ PATH
 PATH
   remote: ace-b36ts
   specs:
-    ace-b36ts (0.14.4)
+    ace-b36ts (0.14.5)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -77,7 +77,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.14.1)
+    ace-git-secrets (0.14.3)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -88,7 +88,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.20.1)
+    ace-git-worktree (0.20.2)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -184,7 +184,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.33.4)
+    ace-llm (0.33.6)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -197,7 +197,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.14.2)
+    ace-overseer (0.14.4)
       ace-assign (~> 0.49)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.20)
@@ -336,7 +336,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.35.1)
+    ace-task (0.35.4)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -348,7 +348,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.35.0)
+    ace-test-runner-e2e (0.37.2)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -377,7 +377,7 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.12.1)
+    ace-tmux (0.13.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
