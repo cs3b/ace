@@ -2,7 +2,10 @@
 
 ## Goal
 
-Test the full ace-assign workflow lifecycle: create an assignment from `lifecycle/job.yaml`, verify directory structure and step files, display status, complete steps with reports, handle a failure (queue stall), add a dynamic step, retry the failed step, and complete the workflow.
+Use `ace-assign` the way a user would from docs and `--help`: create an assignment
+from the lifecycle fixture YAML, verify the assignment exists, complete the first
+step, fail the next step to stall the queue, add one recovery step dynamically,
+retry the failed step, and finish the workflow.
 
 ## Workspace
 
@@ -11,9 +14,11 @@ Save all output to `results/tc/01/`. Required artifact:
 
 ## Constraints
 
-- Create assignment from whichever fixture path exists first:
-  - `lifecycle/job.yaml`
-  - `fixtures/lifecycle/job.yaml`
+- Create the assignment with the supported public command:
+  - `ace-assign create --yaml <path-to-lifecycle-job>`
+  - use whichever fixture path exists first:
+    - `lifecycle/job.yaml`
+    - `fixtures/lifecycle/job.yaml`
 - Keep this assignment active when issuing positional finish commands; for cross-assignment targeting use `--assignment` without positional step number.
 - After creation, verify assignment.yaml, steps/, reports/ directories exist.
 - Verify 3 step files (010-analyze, 020-implement, 030-verify) with .st.md extension.
@@ -21,8 +26,8 @@ Save all output to `results/tc/01/`. Required artifact:
 - Complete analyze step with `lifecycle/report.md`, verify step 010 marked done and 020 advances.
 - Mark 020 as failed via `ace-assign fail -m "..."`, verify queue stalls.
 - Verify report is rejected on stalled queue.
-- Add dynamic step "fix-issue" with explicit inline instructions (do not use preset step lookup). Use:
-  - `ace-assign add fix-issue --instructions "Fix the stalled implementation issue" --assignment "<assignment-id>"`
+- Add one dynamic recovery step using the supported public YAML path:
+  - `ace-assign add --yaml <path-to-add-fix-step.yaml> --assignment "<assignment-id>"`
 - Complete the injected step with `lifecycle/fix-report.md`.
 - Retry failed step 020 (should NOT change current step).
 - Complete verify step with `lifecycle/verify-report.md`, then complete retry step with `lifecycle/implement-report.md`, and capture each finish command exit/status output.

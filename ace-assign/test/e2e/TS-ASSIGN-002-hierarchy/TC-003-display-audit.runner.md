@@ -6,38 +6,42 @@ Verify status displays tree structure with hierarchy indicators, and audit trail
 
 ## Workspace
 
-Save all output to `results/tc/03/`. Required artifact:
-- `results/tc/03/` — display and audit-trail evidence
+Save only real command captures to `results/tc/03/`.
 
 ## Constraints
 
 ### Tree Display
-- Create assignment from `display/job-tree.yaml`.
-- Add children: a-subtask-1 and a-subtask-2 under 010, b-subtask-1 under 020.
-- Capture status output as `status-tree.*`. Verify all 5 steps displayed.
-- Verify hierarchical display indicators (tree characters: pipe, tee, elbow) and nested step numbers (010.01, 010.02, 020.01).
+- Create assignment with the explicit command `ace-assign create --yaml ./fixtures/display/job-tree.yaml`.
+- Use `--yaml` step files for all adds in this goal; do not use free-form titles.
+- If runtime YAML files are needed, write them under sandbox scratch space such as `.ace-local/e2e-inputs/tc03/`, not under `results/`.
+- Add two child steps under 010 and one child under 020 using explicit child insertion commands:
+  - `ace-assign add --yaml <child-a-yaml> --after 010 --child`
+  - `ace-assign add --yaml <child-b-yaml> --after 010 --child`
+  - `ace-assign add --yaml <child-c-yaml> --after 020 --child`
+- Capture hierarchy display with `ace-assign status --mode full` as `status_full.*`. Do not use `--tree`.
+- Verify the full status output shows all 5 steps, hierarchy indicators, and nested step numbers (`010.01`, `010.02`, `020.01`).
 
 ### Audit Trail
-- Clean cache, create assignment from `display/job-tree.yaml`.
-- Step files are markdown files under `"$CACHE_BASE/<assignment-id>/steps/"` with `.st.md` extension (not `.yaml`).
-- Derive `<assignment-id>` from real command output and include it in your audit evidence notes.
-- For metadata checks, read the concrete step files by number prefix, e.g.:
-  - child: `010.01-*.st.md`
-  - injected sibling: `010.02-*.st.md` immediately after sibling injection
-  - renumbered target: `010.03-*.st.md` after renumbering
-- Artifact mapping is strict and must not be swapped:
-  - `child-of-metadata.stdout` must contain metadata from `010.01-*.st.md`
-  - `injected-after-metadata.stdout` must contain metadata from `010.02-*.st.md` after sibling injection
-  - `renumbered-metadata.stdout` must contain metadata from `010.03-*.st.md` after renumbering, with at least stable fields (`name`, `status`, `added_by`) and numbering evidence aligned with status snapshots
-  - `dynamic-metadata.stdout` must contain metadata from dynamic step file and include `added_by: dynamic`
-- Capture renumbered metadata before marking parent done / adding dynamic step. Do not overwrite `renumbered-metadata.stdout` afterward.
-- Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
-- Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
-- Verify renumbering occurred via status snapshots and updated file numbering.
-- Mark parent done, then add dynamic step using plain add (NO `--after`, NO `--child`):
-  - `ace-assign add "dynamic-step" --assignment "<assignment-id>"`
-  - This step must create a top-level dynamic step (e.g., `011-*.st.md`) with `added_by: dynamic`.
-- If `--after` is used for this step, the step is injection (`added_by: injected_after:*`) and does not satisfy dynamic audit.
-- If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
-- Capture all four metadata artifacts. Missing any of them is a test failure.
-- All artifacts must come from real tool execution.
+- Clean cache, then create a fresh audit assignment with the explicit command `ace-assign create --yaml ./fixtures/display/job-tree.yaml`.
+- Use scratch YAML inputs under `.ace-local/e2e-inputs/tc03/`, not under `results/`.
+- Add two child steps under 010 with explicit child insertion commands:
+  - `ace-assign add --yaml <child-a-yaml> --after 010 --child`
+  - `ace-assign add --yaml <child-b-yaml> --after 010 --child`
+- Inject a sibling after `010.01` with a non-child insertion command:
+  - `ace-assign add --yaml <sibling-after-yaml> --after 010.01`
+- Add one top-level dynamic step as described below.
+- The dynamic step command must be truly top-level:
+  - `ace-assign add --yaml .ace-local/e2e-inputs/tc03/dynamic-top.yaml`
+  - do **not** pass `--after`
+  - do **not** pass `--child`
+  - the copied dynamic step file must therefore show `added_by: dynamic`
+- Capture `create_audit.*`, `select_audit.*`, `add_child_a.*`, `add_sibling_after.*`, `add_dynamic_top.*`, and `status_audit_full.*`.
+- Create `results/tc/03/step-files/` before copying.
+- After the audit mutations, copy the real step files themselves into `results/tc/03/step-files/` using their original filenames:
+  - the child step under `010.01-*`
+  - the injected sibling under `010.02-*`
+  - the renumbered original child under `010.03-*`
+  - the dynamic top-level step under its actual number (for example `021-*`)
+- If any expected step file is missing, stop and surface that mismatch in runner observations instead of silently continuing.
+- These copied `.st.md` files are canonical outcome evidence from the tool, not synthetic helper files.
+- Mention the audit assignment id in final runner observations.

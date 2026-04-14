@@ -9,17 +9,17 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
-2. Confirm explicit artifacts under `results/tc/{NN}/`.
-3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Children created** — Child injection outputs show exit code 0. Step files 010.01, 010.02, 010.03 created.
-2. **Child metadata** — Prefer step-file metadata (`parent: "010"`, `added_by: child_of:010`). If metadata files are missing, accept status/output evidence that children were added under 010.
-3. **Sibling injection** — Sibling-injection output shows new step as 010.02 with "after 010.01" relationship, or equivalent status snapshots showing the same renumbering effect.
-4. **Renumbering evidence** — Status snapshots before/after sibling injection show numbering shifts consistent with renumbering.
-5. **Cascade renumbering** — Grandchild numbering shifts when parent numbering shifts (status evidence is sufficient; explicit `renumbered_from` metadata is optional).
+2. Use runner observations to locate the active assignment when needed.
+3. Confirm command captures under `results/tc/01/`.
+4. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+1. **Children created** — Child injection succeeds and assignment state shows `010.01`, `010.02`, and `010.03` under parent `010`.
+2. **Sibling injection renumbered the branch** — later state shows the injected sibling at `010.02` and the original child shifted to `010.03`.
+3. **Grandchild placement before second renumber** — `status_after_grandchild.*` or `add_grandchild_under_renumbered.*` shows `grandchild-01` at `010.03.01`.
+4. **Cascade renumbering** — final assignment state shows `sibling-after-parent-renumber` at `010.03`, `child-02` at `010.04`, and the descendant as `010.04.01`, proving the grandchild shifted when the parent shifted.
 
 ## Verdict
 
-- **PASS**: Child injection, sibling injection with renumbering, and cascade renumbering all produce correct numbering/state evidence.
+- **PASS**: Child injection, sibling injection with renumbering, and cascade renumbering all produce the correct final assignment state.
 - **FAIL**: Incorrect numbering, missing child/injection metadata, or cascade renumbering failure.
 
 Report: `PASS` or `FAIL` with evidence (step numbers, metadata citations).

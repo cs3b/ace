@@ -2,7 +2,9 @@
 
 ## Goal
 
-Test ace-assign fork context handling: create an assignment with mixed regular and fork-context steps, verify `status` stays status-only while `step` shows the raw instructions. Complete all steps through to assignment completion.
+Use `ace-assign` to create an assignment from the fork fixture YAML, then verify
+the user-facing difference between `status` and `step` as the workflow moves
+through regular and fork-context steps.
 
 ## Workspace
 
@@ -11,7 +13,11 @@ Save all output to `results/tc/02/`. Required artifact:
 
 ## Constraints
 
-- Create assignment from `fork/steps/8pny9s-job.yml`.
+- Create the assignment with the supported public command:
+  - `ace-assign create --yaml <path-to-fork-job>`
+  - use whichever fixture path exists first:
+    - `fork/steps/8pny9s-job.yml`
+    - `fixtures/fork/steps/8pny9s-job.yml`
 - Verify fork context parsed into step files (implement and document have `context: fork`; prepare and verify do not).
 - Capture artifacts in this exact order so each transition is unambiguous:
   1. `status.regular.*` while 010 is active; it should stay status-only.

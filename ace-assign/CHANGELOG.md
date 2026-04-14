@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.49.2] - 2026-04-13
+
+### Fixed
+- Rewrote `TS-ASSIGN-002` around sandbox end-state and runner observations so hierarchy renumbering, auto-completion, and audit coverage no longer depend on synthetic helper artifacts under `results/`.
+
+## [0.49.1] - 2026-04-13
+
+### Fixed
+- Tightened `TS-ASSIGN-002` hierarchy scenario evidence so cascade renumbering is proven from concrete step-file artifacts and display-audit checks read the copied sandbox fixture path instead of a repo-relative path.
+
 ## [0.49.0] - 2026-04-13
 
 ### Changed
