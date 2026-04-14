@@ -350,7 +350,7 @@ module Ace
             # Write suite report
             report_path = @suite_report_writer.write(
               combined_results, scenarios,
-              package: package, timestamp: timestamp, base_dir: @base_dir
+              package: package, timestamp: timestamp, base_dir: @base_dir, report_kind: :package
             )
 
             display.show_summary(combined_results, report_path)

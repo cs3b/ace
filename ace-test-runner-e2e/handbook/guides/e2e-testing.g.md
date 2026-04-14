@@ -12,6 +12,7 @@ ace-docs:
 ## Overview
 
 E2E tests are executed by an AI agent and reserved for behaviors that require real CLI execution, real tools, and real filesystem side effects.
+They must also answer a user-journey question: can a user do the job from the tool's public surface, and how much friction does that journey have?
 
 ## Canonical Conventions
 
@@ -24,7 +25,7 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
   - `TC-*.verify.md`
   - `runner.yml.md`
   - `verifier.yml.md`
-- TC artifacts use `results/tc/{NN}/`
+- TC outcome artifacts use `results/tc/{NN}/`
 - Summary reports use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
 - Scenarios declare `tags` for discovery-time filtering via `--tags`/`--exclude-tags`
 
@@ -32,15 +33,19 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
 
 - Runner is **execution-only**:
   - perform user-like CLI actions in sandbox
-  - produce evidence files under `results/tc/{NN}/`
+  - produce only final outcome evidence under `results/tc/{NN}/`
+  - return final runner observations through the harness contract
   - do not issue PASS/FAIL verdicts
   - do not perform verifier-style assertion/classification
+  - do not invent workarounds or hidden command recipes to compensate for docs/help/CLI gaps
 - Verifier is **verification-only**:
   - evaluate TC outcome from sandbox evidence
+  - use runner observations as the only non-filesystem secondary evidence source
   - apply an **impact-first** evidence order:
     1. sandbox/project state impact
-    2. explicit TC artifacts
-    3. debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
+    2. runner observations
+    3. explicit TC artifacts that are true product outcomes
+    4. debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
 - Setup ownership:
   - sandbox preparation belongs to `scenario.yml` `setup:` + `fixtures/`
   - TC runner files must not define independent environment setup procedures
@@ -53,6 +58,20 @@ Before adding a TC, confirm the behavior needs:
 - real filesystem I/O and environment state
 
 If not, keep coverage in `fast`/`feat` tests.
+
+## Public-Surface Gate
+
+Before keeping or adding a goal-style TC, confirm the user job is achievable from:
+- package README / usage docs
+- `--help`
+- declared fixtures/setup
+- the tool under test itself
+
+Reject or rewrite the TC if it depends on:
+- hidden recipes embedded in runner instructions
+- workaround branches for unsupported or undocumented behavior
+- direct supporting-tool probes as the primary oracle
+- internal details that are not necessary to prove the user job
 
 ## Cost and Scope
 
@@ -102,9 +121,14 @@ This prevents duplicate assertions across test layers.
 ## Authoring Rules
 
 - Keep runner goals outcome-oriented and deterministic.
+- Keep runner goals aligned with the public user path; if the runner needs a workaround, surface that as friction rather than teaching the workaround.
 - Keep verifier expectations impact-first, then artifacts, then debug fallback.
 - Preserve strict TC pairing (`runner` + `verify`).
-- Keep outputs inside `results/tc/{NN}/`.
+- Keep `results/tc/{NN}/` for outcome artifacts only.
+- Do not instruct runners to create helper YAML, path files, command files, or reflections in `results/`.
+- Do not judge success from runner-authored summaries when final sandbox state can prove the goal directly.
+- Use runner observations only to explain ambiguity or missing side effects, not to replace missing end-state evidence.
+- Treat any workaround noted in runner observations as a product/docs/help or scenario-design smell that must be fixed, not preserved.
 - Avoid hidden dependencies between TCs unless explicitly intended.
 
 ## Execution Artifacts
@@ -122,4 +146,8 @@ Before approving new/updated E2E tests:
 - [ ] `runner.yml.md` and `verifier.yml.md` exist
 - [ ] Every TC has both `.runner.md` and `.verify.md`
 - [ ] Artifacts are scoped to `results/tc/{NN}/`
+- [ ] Verifier primary oracle is final sandbox state or real product output, not helper artifacts
+- [ ] Runner observations are the only non-filesystem secondary evidence source
+- [ ] Scenario can be completed from docs/usage/`--help` without hidden recipes or workaround instructions
+- [ ] Any friction/workaround found during review is treated as a gap, not as a runner script opportunity
 - [ ] Value-gate metadata is present (`e2e-justification`, `unit-coverage-reviewed`, `cost-tier`)

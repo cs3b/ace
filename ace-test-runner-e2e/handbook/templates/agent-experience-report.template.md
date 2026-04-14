@@ -69,10 +69,11 @@ ace-docs:
 
 ## Workarounds Used
 
-{Document any workarounds the agent had to employ to complete the test. These indicate areas needing improvement.}
+{Document any workarounds the agent had to employ to complete the test. These are failure signals against the public-surface contract and should drive product/docs/help or scenario changes.}
 
 - **Issue:** {What required a workaround}
   **Workaround:** {What was done instead}
+  **Why this is a gap:** {Which part of the public surface or scenario contract failed}
 
 ## Positive Observations
 

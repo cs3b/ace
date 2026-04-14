@@ -12,6 +12,8 @@ module Ace
       module Molecules
         # Executes standalone scenarios using the deterministic pipeline.
         class PipelineExecutor
+          AMBIENT_TMUX_ENV_VARS = %w[TMUX TMUX_PANE].freeze
+
           # @param provider [String]
           # @param verifier_provider [String, nil]
           # @param timeout [Integer]
@@ -46,14 +48,14 @@ module Ace
               sandbox_path: sandbox_path,
               test_cases: test_cases
             )
-            merged_env = (env_vars || {}).merge(build_env)
+            merged_env = sanitize_subprocess_env((env_vars || {}).merge(build_env))
 
             runner = @prompt_bundler.prepare_runner(
               scenario: scenario,
               sandbox_path: sandbox_path,
               test_cases: test_cases
             )
-            run_llm(
+            runner_response = run_llm(
               prompt_path: runner[:prompt_path],
               system_path: runner[:system_path],
               output_path: runner[:output_path],
@@ -61,6 +63,7 @@ module Ace
               env_vars: merged_env,
               provider: @provider
             )
+            runner_observations = extract_runner_observations(runner_response[:text])
             snapshot_artifacts(report_dir, sandbox_path, scenario)
 
             missing_artifacts = missing_declared_artifacts(sandbox_path, scenario, test_cases: test_cases)
@@ -81,7 +84,8 @@ module Ace
             verifier = @prompt_bundler.prepare_verifier(
               scenario: scenario,
               sandbox_path: sandbox_path,
-              test_cases: test_cases
+              test_cases: test_cases,
+              runner_observations: runner_observations
             )
             write_command_record(report_dir, "verifier", provider: @verifier_provider, cli_args: cli_args)
             verifier_response = run_llm(
@@ -100,7 +104,7 @@ module Ace
               provider: @verifier_provider,
               started_at: started_at,
               completed_at: Time.now,
-              metadata: base_metadata(report_dir)
+              metadata: base_metadata(report_dir, runner_observations: runner_observations)
             )
           rescue => e
             begin
@@ -206,12 +210,28 @@ module Ace
             Array(scenario.test_cases).select { |tc| wanted.include?(tc.tc_id.to_s.upcase) }
           end
 
-          def base_metadata(report_dir)
-            {
+          def base_metadata(report_dir, runner_observations: nil)
+            metadata = {
               "runner_provider" => @provider,
               "verifier_provider" => @verifier_provider,
               "report_dir" => report_dir
             }
+            if runner_observations && !runner_observations.empty?
+              metadata["runner_observations"] = runner_observations
+            end
+            metadata
+          end
+
+          def sanitize_subprocess_env(env_vars)
+            sanitized = env_vars.reject { |key, _value| AMBIENT_TMUX_ENV_VARS.include?(key.to_s) }
+            AMBIENT_TMUX_ENV_VARS.each { |key| sanitized[key] = nil }
+            sanitized
+          end
+
+          def extract_runner_observations(text)
+            Atoms::SkillResultParser.parse(text)[:observations].to_s
+          rescue Atoms::ResultParser::ParseError
+            ""
           end
         end
       end

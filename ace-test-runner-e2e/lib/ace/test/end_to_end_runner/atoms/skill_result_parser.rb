@@ -13,6 +13,7 @@ module Ace
         #   - **Failed**: 0
         #   - **Total**: 8
         #   - **Report Paths**: 8p5jo2-lint-ts001-reports/*
+        #   - **Observations**: None
         #   - **Issues**: None
         #
         # Falls back to ResultParser.parse() for JSON responses.
@@ -45,6 +46,7 @@ module Ace
             fields[:failed] = extract_field(text, "Failed")
             fields[:total] = extract_field(text, "Total")
             fields[:report_paths] = extract_field(text, "Report Paths")
+            fields[:observations] = extract_field(text, "Observations")
             fields[:issues] = extract_field(text, "Issues")
 
             # Need at least test_id and status for a valid parse
@@ -69,8 +71,7 @@ module Ace
             passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass", actual: "", notes: ""} }
             failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: ""} }
 
-            issues = parsed[:issues]
-            observations = (issues && issues.downcase != "none") ? issues : ""
+            observations = normalize_observations(parsed[:observations], parsed[:issues])
 
             {
               test_id: parsed[:test_id],
@@ -213,6 +214,7 @@ module Ace
             fields[:tc_id] = extract_field(text, "TC ID")
             fields[:status] = extract_field(text, "Status")
             fields[:report_paths] = extract_field(text, "Report Paths")
+            fields[:observations] = extract_field(text, "Observations")
             fields[:issues] = extract_field(text, "Issues")
 
             # Need test_id, tc_id, and status for a valid TC parse
@@ -225,8 +227,7 @@ module Ace
           def self.to_tc_normalized(parsed)
             parsed[:status] = normalize_status(parsed[:status])
 
-            issues = parsed[:issues]
-            observations = (issues && issues.downcase != "none") ? issues : ""
+            observations = normalize_observations(parsed[:observations], parsed[:issues])
 
             {
               test_id: parsed[:test_id],
@@ -259,9 +260,22 @@ module Ace
             end
           end
 
+          def self.normalize_observations(primary, fallback = nil)
+            [primary, fallback].each do |value|
+              next if value.nil?
+
+              normalized = value.to_s.strip
+              next if normalized.empty? || normalized.casecmp("none").zero?
+
+              return normalized
+            end
+
+            ""
+          end
+
           private_class_method :parse_markdown, :to_normalized, :extract_field,
             :parse_tc_markdown, :to_tc_normalized, :normalize_status,
-            :parse_failed_tcs, :parse_minimal_verifier
+            :parse_failed_tcs, :parse_minimal_verifier, :normalize_observations
         end
       end
     end

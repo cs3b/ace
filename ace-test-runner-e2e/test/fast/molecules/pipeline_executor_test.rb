@@ -31,7 +31,7 @@ class PipelineExecutorTest < Minitest::Test
       end
     end
 
-    def prepare_verifier(scenario:, sandbox_path:, test_cases: nil)
+    def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil)
       cache_dir = File.join(sandbox_path, ".ace-local", "e2e")
       FileUtils.mkdir_p(cache_dir)
       {
@@ -40,7 +40,7 @@ class PipelineExecutorTest < Minitest::Test
         output_path: File.join(cache_dir, "verifier-output.md")
       }.tap do |paths|
         File.write(paths[:system_path], "verifier-system")
-        File.write(paths[:prompt_path], "verifier prompt")
+        File.write(paths[:prompt_path], "verifier prompt\n#{runner_observations}")
       end
     end
   end
@@ -148,6 +148,114 @@ class PipelineExecutorTest < Minitest::Test
         ["results/tc/01/optional.txt", "results/tc/01/required.txt"],
         snapshot["TC-001"].sort
       )
+    end
+  end
+
+  def test_execute_strips_ambient_tmux_vars_from_subprocess_env
+    Dir.mktmpdir do |tmpdir|
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      scenario = build_scenario(
+        tmpdir: tmpdir,
+        declared_artifacts: [],
+        optional_artifacts: []
+      )
+      executor = PipelineExecutor.new(
+        provider: "claude:haiku",
+        timeout: 10,
+        sandbox_builder: FakeSandboxBuilder.new,
+        prompt_bundler: FakePromptBundler.new,
+        report_generator: PipelineReportGenerator.new
+      )
+
+      original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+      calls = []
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |_provider, _prompt, **kwargs|
+        calls << kwargs[:subprocess_env]
+        {text: (calls.length == 1) ? "runner complete" : "### Goal 1 - Sample\n- **Verdict**: PASS\n"}
+      end
+
+      result = executor.execute(
+        scenario: scenario,
+        cli_args: "",
+        sandbox_path: sandbox_path,
+        report_dir: report_dir,
+        env_vars: {"TMUX" => "/tmp/tmux", "TMUX_PANE" => "%1", "ACE_TMUX_SESSION" => "safe-session"}
+      )
+
+      assert_equal "pass", result.status
+      assert_equal 2, calls.length
+      calls.each do |env|
+        assert_nil env["TMUX"]
+        assert_nil env["TMUX_PANE"]
+        assert_equal "safe-session", env["ACE_TMUX_SESSION"]
+      end
+    ensure
+      if original_query
+        Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+      else
+        Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+      end
+    end
+  end
+
+  def test_execute_passes_runner_observations_to_verifier_and_report_metadata
+    Dir.mktmpdir do |tmpdir|
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "01"))
+      scenario = build_scenario(
+        tmpdir: tmpdir,
+        declared_artifacts: [],
+        optional_artifacts: []
+      )
+      executor = PipelineExecutor.new(
+        provider: "claude:haiku",
+        timeout: 10,
+        sandbox_builder: FakeSandboxBuilder.new,
+        prompt_bundler: FakePromptBundler.new,
+        report_generator: PipelineReportGenerator.new
+      )
+
+      responses = [
+        {text: <<~OUT},
+          - **Test ID**: TS-PIPE-001
+          - **Status**: pass
+          - **Passed**: 1
+          - **Failed**: 0
+          - **Total**: 1
+          - **Report Paths**: ts-pipe-reports/*
+          - **Observations**: Created the declared sandbox outputs and confirmed final state.
+        OUT
+        {text: "### Goal 1 - Sample\n- **Verdict**: PASS\n- **Evidence**: sandbox state matched\n"}
+      ]
+
+      original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |_provider, _prompt, **_kwargs|
+        responses.shift
+      end
+
+      begin
+        result = executor.execute(
+          scenario: scenario,
+          cli_args: "",
+          sandbox_path: sandbox_path,
+          report_dir: report_dir
+        )
+
+        assert_equal "pass", result.status
+        metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+        assert_equal "Created the declared sandbox outputs and confirmed final state.", metadata["runner_observations"]
+
+        verifier_prompt = File.read(File.join(sandbox_path, ".ace-local", "e2e", "verifier-prompt.md"))
+        assert_includes verifier_prompt, "Created the declared sandbox outputs and confirmed final state."
+      ensure
+        if original_query
+          Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+        else
+          Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+        end
+      end
     end
   end
 

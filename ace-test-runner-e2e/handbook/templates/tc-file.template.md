@@ -16,14 +16,16 @@ ace-docs:
 ## Workspace
 
 - Working directory: {sandbox-root}
-- Output directory: `results/tc/{NN}/`
+- Outcome artifacts only: `results/tc/{NN}/`
 
 ## Constraints
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions)
-- Keep artifacts under `results/tc/{NN}/`
+- Keep only product outcomes or essential command captures under `results/tc/{NN}/`
+- Do not write helper inputs, reflections, manifests, or temp files under `results/tc/{NN}/`
 - Do not write outside sandbox
 - Execute actions only; do not assign PASS/FAIL in runner file
+- Follow the public user path from docs/usage/`--help`; do not embed hidden recipes or workaround branches in the TC
 
 <!--
 Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
@@ -35,7 +37,9 @@ Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
 - Impact Checks:
   - {Sandbox/project impact expectation}
 - Artifact Checks:
-  - {Artifact expectation}
+  - {Outcome artifact expectation}
+- Runner Observations:
+  - {How final runner observations help disambiguate the result when state alone is not enough, and record friction/workaround pressure if present}
 - Debug Fallback:
   - {Optional stdout/stderr/exit evidence when needed}
 

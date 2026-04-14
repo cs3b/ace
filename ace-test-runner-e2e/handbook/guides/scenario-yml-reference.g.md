@@ -73,6 +73,7 @@ Pairing rule:
 Artifact layout conventions:
 - canonical: `results/tc/{NN}/`
 - avoid non-TC-scoped result folders
+- keep only real outcome artifacts under `results/tc/{NN}/`; runner observations live in harness reports, not sandbox helper files
 
 Canonical summary report fields:
 - `tcs-passed`
@@ -83,6 +84,7 @@ Canonical summary report fields:
 Role contract:
 - `runner.yml.md` + `TC-*.runner.md` are execution-only.
 - `verifier.yml.md` + `TC-*.verify.md` are verification-only with impact-first checks.
+- Goal-style scenarios should be solvable from the public surface (docs/usage/`--help` + tool under test) without hidden recipes or workaround instructions.
 
 ## `requires` Object
 
@@ -91,6 +93,11 @@ requires:
   tools: [ace-lint, jq]
   ruby: ">= 3.0"
 ```
+
+`requires.tools` rules:
+- declare execution prerequisites and supporting environment dependencies
+- do not use `requires.tools` as permission to make fallback probes the primary oracle
+- for ACE CLI scenarios, support tools are setup/dependency context unless the scenario is explicitly about that support tool itself
 
 ## `setup` Directives
 
@@ -141,7 +148,7 @@ unit-coverage-reviewed:
   - test/fast/organisms/lint_orchestrator_test.rb
 tool-under-test: ace-lint
 sandbox-layout:
-  results/tc/01/: "help artifacts"
+  results/tc/01/: "Goal 1 outcome artifacts"
 requires:
   tools: [ace-lint, standardrb, jq]
   ruby: ">= 3.0"

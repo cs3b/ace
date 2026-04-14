@@ -44,11 +44,14 @@ class PipelinePromptBundlerTest < Minitest::Test
       output = bundler.prepare_verifier(
         scenario: scenario,
         sandbox_path: sandbox,
-        test_cases: ["TC-002"]
+        test_cases: ["TC-002"],
+        runner_observations: "Created archive layout and left results/tc/02/sample.txt as final output."
       )
 
       content = File.read(output[:prompt_path])
       assert_includes content, "Sandbox Artifacts"
+      assert_includes content, "Runner Observations"
+      assert_includes content, "Created archive layout"
       assert_includes content, "results/tc/02/sample.txt"
       assert_includes content, "artifact body"
       assert_includes content, "Verify Header"

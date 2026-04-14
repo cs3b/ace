@@ -71,6 +71,7 @@ For REMOVE due to overlap, replacement evidence is mandatory:
 
 **KEEP** — The TC has genuine E2E value and needs no changes. Criteria (all must be true):
 - TC passes the E2E Value Gate (tests real CLI binary + external tools + filesystem I/O)
+- TC passes the Public-Surface Gate (user can do the job from docs/usage/`--help` without hidden recipes or workarounds)
 - Related source code has no changes since `last-verified`
 - TC structure is valid and assertions are current
 
@@ -79,6 +80,7 @@ For REMOVE due to overlap, replacement evidence is mandatory:
 - TC scope is too broad (should be narrowed to only E2E-exclusive aspects)
 - TC scope is too narrow (missing assertions for related behavior in same CLI invocation)
 - TC has structure issues flagged in the review
+- TC is hidden-recipe-driven or workaround-driven but the underlying user job should still be supported by the public surface after scenario/docs/help correction
 
 **CONSOLIDATE** — The TC should merge with another TC. Criteria (any one is sufficient):
 - Multiple TCs share the same CLI invocation and could be a single TC with multiple assertions
@@ -91,6 +93,7 @@ For each classification, document:
 - For REMOVE (overlap): replacement evidence (`existing unit tests` or `planned unit backfill`)
 - For MODIFY: what specifically needs to change
 - For CONSOLIDATE: the target TC and which assertions merge
+- Whether the current TC is public-surface-valid, hidden-recipe-driven, workaround-driven, or checking an unsupported internal detail
 
 ### 4. Identify New TCs Needed
 
@@ -111,6 +114,12 @@ Review the coverage matrix for gaps that warrant new E2E tests:
 For each candidate, answer: "Does this require the full CLI binary + real external tools + real filesystem I/O?"
 - If NO: skip — unit tests cover this (or add explicit unit test action if coverage is missing)
 - If YES: include in the plan
+
+**Filter through Public-Surface Gate:**
+For each candidate, answer: "Can a user do this job through the public tool surface without hidden recipes or workarounds?"
+- If NO because the job should be supported: add a product/docs/help improvement action and do not encode the workaround into the TC
+- If NO because the detail is not user-visible: skip or narrow the TC
+- If YES: keep planning the TC
 
 ### 5. Propose Scenario Structure
 
@@ -176,6 +185,13 @@ Format the complete change plan:
 |----|---------------|
 | {tc-id} | Update assertions — {feature} behavior changed in {commit} |
 | {tc-id} | Narrow scope — remove assertions covered by unit tests |
+| {tc-id} | Remove hidden recipe / workaround dependence — rewrite around public docs/help/CLI path |
+
+### Public-Surface Gaps ({n} actions)
+
+| Action | Target | Why |
+|--------|--------|-----|
+| Update docs/help/CLI | {package/path} | {job is valid but current public surface is too weak for the E2E path} |
 
 ### CONSOLIDATE ({n} TCs → {n} TCs)
 

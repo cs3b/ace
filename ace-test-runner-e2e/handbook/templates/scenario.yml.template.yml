@@ -36,11 +36,16 @@ unit-coverage-reviewed:
 # Optional: Primary command under test
 tool-under-test: {ace-tool}
 
+# Goal-style scenarios should be doable from docs/usage/--help and the public CLI
+# without hidden runner recipes or workaround instructions.
+
 # Optional: Declared sandbox artifact layout
 sandbox-layout:
-  results/tc/01/: "Goal 1 artifacts"
+  results/tc/01/: "Goal 1 outcome artifacts"
 
 # Optional: Prerequisites
+# `requires.tools` declares dependencies; it does not justify fallback probing as
+# the main oracle for an ACE CLI scenario.
 requires:
   tools: [{tool1}, {tool2}]
   ruby: ">= 3.0"

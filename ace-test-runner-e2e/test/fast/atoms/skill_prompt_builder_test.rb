@@ -132,6 +132,7 @@ class SkillPromptBuilderTest < Minitest::Test
     assert_includes prompt, "/as-e2e-run ace-lint TS-LINT-001"
     assert_includes prompt, "not in bash"
     assert_includes prompt, "- **Status**: pass | fail | partial"
+    assert_includes prompt, "- **Observations**: ..."
   end
 
   def test_build_skill_prompt_with_different_package
@@ -204,6 +205,7 @@ class SkillPromptBuilderTest < Minitest::Test
 
     assert prompt.include?("--tc-mode")
     assert_includes prompt, "- **TC ID**: ..."
+    assert_includes prompt, "- **Observations**: ..."
   end
 
   def test_build_tc_skill_prompt_includes_sandbox_path

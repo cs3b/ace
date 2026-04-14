@@ -49,6 +49,11 @@ Use exactly one category per failed TC:
 3. `runner-infrastructure-issue`
 - Sandbox/setup/provider/parsing/orchestration issue
 
+Public-surface interpretation rules:
+- If the TC fails because it encoded a hidden recipe or workaround, classify it as `test-issue`.
+- If the intended user job is valid but the public CLI/docs/`--help` do not support it cleanly, classify it as `code-issue` with a fix target in product/docs/help rather than preserving the workaround.
+- If the failure is about internal detail that a user cannot or need not observe from the public surface, prefer narrowing/removing the TC over deepening the runner.
+
 ## Required Evidence Sources
 
 Use these files as primary evidence:
@@ -56,6 +61,8 @@ Use these files as primary evidence:
 - `experience.r.md`
 - `metadata.yml`
 - Relevant artifacts in `results/tc/{NN}/`
+
+Aggregate suite/package reports are indexing aids only. For failed TC IDs, categories, and evidence, the per-scenario `report.md` in the referenced report directory is the canonical source of truth.
 
 ## Analysis Procedure
 
@@ -68,12 +75,20 @@ ls -lt .ace-local/test-e2e/*-reports/ 2>/dev/null | head -20
 - failed TC IDs
 - reported category/evidence from metadata
 - corroborating artifact evidence
+- if analyzing from a suite/package report, read the referenced per-scenario `report.md` before accepting any failed-TC mapping
+
+If the aggregate report and per-scenario report disagree:
+- trust the per-scenario `report.md`
+- classify the mismatch itself as a runner/reporting issue in your analysis notes
+- do not plan fixes from the aggregate failed-TC mapping alone
 
 3. Reclassify each failed TC if needed
 - Use `code-issue`, `test-issue`, or `runner-infrastructure-issue`
 - Add confidence: `high|medium|low`
 - Add one disconfirming check per TC
 - If confidence is `medium` or `low`, run at least one additional diagnostic read/search before final decision
+- Before claiming sandbox escape or fixture contamination, compare repo `git status --short` before and after the relevant E2E run when that evidence is available. Do not infer escape solely from an after-the-fact dirty tree.
+- Check whether the scenario required a hidden recipe or workaround to reach the goal. If yes, record that explicitly in the evidence and classification.
 
 4. Recommend rerun scope (cost-aware)
 - `scenario` (default)

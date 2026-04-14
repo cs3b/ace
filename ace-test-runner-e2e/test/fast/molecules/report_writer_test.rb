@@ -52,6 +52,24 @@ class ReportWriterTest < Minitest::Test
     end
   end
 
+  def test_experience_report_prefers_runner_observations
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(
+        metadata: {"runner_observations" => "Created the archive files and verified final layout."},
+        observations: "Verifier saw all expected files."
+      )
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      content = File.read(paths[:experience])
+
+      assert_includes content, "Created the archive files and verified final layout."
+      assert_includes content, "Verifier saw all expected files."
+      refute_includes content, "No significant friction encountered."
+    end
+  end
+
   def test_experience_report_status_is_incomplete_when_not_pass
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")
@@ -138,6 +156,23 @@ class ReportWriterTest < Minitest::Test
       assert_equal 2, metadata["results"]["passed"]
       assert_equal 0, metadata["results"]["failed"]
       assert_equal 2, metadata["results"]["total"]
+    end
+  end
+
+  def test_metadata_includes_runner_observations_when_present
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(
+        metadata: {"runner_observations" => "Observed final task state in sandbox."},
+        observations: "Verifier matched the sandbox state."
+      )
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal "Observed final task state in sandbox.", metadata["runner_observations"]
+      assert_equal "Verifier matched the sandbox state.", metadata["verifier_observations"]
     end
   end
 

@@ -3,6 +3,8 @@
 require "fileutils"
 require "ostruct"
 require "yaml"
+require "set"
+require "date"
 require "ace/llm"
 require "ace/llm/query_interface"
 
@@ -10,7 +12,7 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Writes a suite-level final report aggregating all test results
+        # Writes an aggregated package or suite report
         #
         # Uses LLM synthesis to generate rich reports with root cause analysis,
         # friction insights, and improvement suggestions. Falls back to a static
@@ -23,7 +25,12 @@ module Ace
             @timeout = reporting["timeout"] || 60
           end
 
-          # Write a suite-level final report
+          REPORT_KINDS = {
+            package: ->(timestamp, package) { "#{timestamp}-#{package}-report.md" },
+            suite: ->(timestamp, _package) { "#{timestamp}-suite-report.md" }
+          }.freeze
+
+          # Write an aggregated report
           #
           # @param results [Array<Models::TestResult>] Test results (ordered)
           # @param scenarios [Array<Models::TestScenario>] Corresponding scenarios
@@ -31,11 +38,11 @@ module Ace
           # @param timestamp [String] Timestamp ID for this run
           # @param base_dir [String] Base directory for cache output
           # @return [String] Path to the written report file
-          def write(results, scenarios, package:, timestamp:, base_dir:)
+          def write(results, scenarios, package:, timestamp:, base_dir:, report_kind: :package, diagnostics: nil)
             cache_dir = File.join(base_dir, ".ace-local", "test-e2e")
             FileUtils.mkdir_p(cache_dir)
 
-            report_path = File.join(cache_dir, "#{timestamp}-final-report.md")
+            report_path = File.join(cache_dir, report_filename(report_kind, timestamp, package))
 
             overall_status = compute_status(results)
             executed_at = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -53,7 +60,8 @@ module Ace
               timestamp: timestamp,
               overall_status: overall_status,
               executed_at: executed_at,
-              narrative_sections: narrative_sections
+              narrative_sections: narrative_sections,
+              diagnostics: diagnostics
             )
 
             File.write(report_path, content)
@@ -61,6 +69,13 @@ module Ace
           end
 
           private
+
+          def report_filename(report_kind, timestamp, package)
+            builder = REPORT_KINDS[report_kind.to_sym]
+            raise ArgumentError, "Unknown report kind: #{report_kind}" unless builder
+
+            builder.call(timestamp, package)
+          end
 
           # Attempt LLM synthesis for narrative sections only, falling back to
           # deterministic defaults when the model is unavailable or malformed.
@@ -96,17 +111,20 @@ module Ace
               summary_content = read_report_file(report_dir, "summary.r.md")
               experience_content = read_report_file(report_dir, "experience.r.md")
 
+              report_metadata = read_report_frontmatter(report_dir)
+
               {
                 test_id: result.test_id,
                 title: scenario.title,
                 status: result.status,
-                passed: result.passed_count,
-                failed: result.failed_count,
-                total: result.total_count,
-                test_cases: result.test_cases,
+                passed: reported_count(report_metadata, result, "passed"),
+                failed: reported_count(report_metadata, result, "failed"),
+                total: reported_count(report_metadata, result, "total"),
+                test_cases: canonical_test_cases(report_metadata, result),
                 report_dir_name: report_dir ? File.basename(report_dir) : nil,
                 summary_content: summary_content,
-                experience_content: experience_content
+                experience_content: experience_content,
+                canonical_tc_source: !report_metadata.empty?
               }
             end
           end
@@ -119,6 +137,73 @@ module Ace
             return nil unless File.exist?(path)
 
             File.read(path)
+          end
+
+          def read_report_frontmatter(report_dir)
+            return {} unless report_dir
+
+            path = File.join(report_dir, "report.md")
+            return {} unless File.exist?(path)
+
+            content = File.read(path)
+            match = content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
+            return {} unless match
+
+            YAML.safe_load(match[1], permitted_classes: [Time, Date]) || {}
+          rescue
+            {}
+          end
+
+          def reported_count(report_metadata, result, kind)
+            key = "tcs-#{kind}"
+            fallback =
+              case kind
+              when "passed" then result.passed_count
+              when "failed" then result.failed_count
+              else result.total_count
+              end
+            report_metadata[key] || fallback
+          end
+
+          def canonical_test_cases(report_metadata, result)
+            return result.test_cases if report_metadata.empty?
+
+            failed_entries = Array(report_metadata["failed"]).filter_map do |entry|
+              next unless entry.is_a?(Hash)
+
+              id = entry["tc"] || entry[:tc]
+              next unless id
+
+              {
+                id: id,
+                description: "",
+                status: "fail",
+                notes: entry["evidence"] || entry[:evidence] || "See scenario report for details",
+                category: entry["category"] || entry[:category] || "runner-error"
+              }
+            end
+
+            failed_ids = failed_entries.map { |entry| entry[:id] }.to_set
+            Array(report_metadata["canonical-failed-tcs"]).each do |tc_id|
+              next if failed_ids.include?(tc_id)
+
+              failed_entries << {
+                id: tc_id,
+                description: "",
+                status: "fail",
+                notes: "See scenario report for details",
+                category: "runner-error"
+              }
+            end
+
+            passed_entries = Array(report_metadata["passed"]).filter_map do |tc_id|
+              next if failed_ids.include?(tc_id)
+
+              {id: tc_id, description: "", status: "pass", notes: ""}
+            end
+
+            canonical = passed_entries + failed_entries
+            canonical.empty? ? result.test_cases : canonical
           end
 
           def compute_status(results)
@@ -135,7 +220,7 @@ module Ace
             end
           end
 
-          def build_report(results_data, package:, timestamp:, overall_status:, executed_at:, narrative_sections:)
+          def build_report(results_data, package:, timestamp:, overall_status:, executed_at:, narrative_sections:, diagnostics:)
             total_skipped = results_data.count { |r| r[:status] == "skip" }
             total_passed = results_data.sum { |r| r[:passed] }
             total_tc = results_data.sum { |r| r[:total] }
@@ -149,11 +234,12 @@ module Ace
             parts << build_summary_table(results_data)
             parts << build_overall_line(total_passed: total_passed, total_tc: total_tc)
             parts << build_failed_section(results_data) if results_data.any? { |r| r[:failed].positive? }
+            parts << build_runner_diagnostics_section(diagnostics)
             parts << build_narrative_section("Friction Analysis", narrative_sections[:friction])
             parts << build_narrative_section("Improvement Suggestions", narrative_sections[:improvements])
             parts << build_narrative_section("Positive Observations", narrative_sections[:positive])
             parts << build_reports_section(results_data)
-            parts.join("\n")
+            parts.compact.join("\n")
           end
 
           def build_frontmatter(timestamp:, package:, overall_status:, tests_run:, executed_at:, skipped: 0)
@@ -221,6 +307,8 @@ module Ace
                   details = tc[:description].to_s if details.empty?
                   parts << "- `#{tc[:id]}` (#{category}) — #{details}"
                 end
+              else
+                parts << "- Exact failed TC mapping unavailable in aggregate view — see scenario report for canonical details."
               end
 
               if result[:report_dir_name]
@@ -231,6 +319,21 @@ module Ace
             end
 
             parts.join("\n")
+          end
+
+          def build_runner_diagnostics_section(diagnostics)
+            return nil unless diagnostics.is_a?(Hash) && diagnostics[:dirty_worktree]
+
+            entries = Array(diagnostics[:new_tracked_entries]).map { |line| "- `#{line}`" }.join("\n")
+            entries = "- No specific entries captured." if entries.empty?
+
+            <<~SECTION
+              ## Runner Diagnostics
+
+              Suite execution introduced new tracked working-tree changes relative to the pre-run snapshot.
+
+              #{entries}
+            SECTION
           end
 
           def build_narrative_section(title, content)

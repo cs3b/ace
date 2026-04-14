@@ -30,7 +30,8 @@ ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bu
 
 - Keep scenario IDs in `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
 - Keep standalone pairs as `TC-*.runner.md` + `TC-*.verify.md`
-- Keep TC artifact outputs under `results/tc/{NN}/`
+- Keep TC outcome artifacts under `results/tc/{NN}/`
+- Keep runner observations in harness reports, not sandbox helper files
 - Keep summary report fields as `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - CLI split reminder:
   - `ace-test-e2e` runs single-package tests
@@ -41,6 +42,8 @@ ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bu
 - Normalize runner files to execution-only language.
 - Normalize verifier files to verdict-only, impact-first validation.
 - Keep setup concerns in `scenario.yml` and fixtures, not in TC runner setup sections.
+- Remove helper artifact requirements from `results/tc/{NN}/`; use runner observations instead.
+- Rewrite goal-style TCs around the public user path. Do not preserve hidden recipes, workaround branches, or supporting-tool probes as the way the runner reaches the goal.
 
 ## Workflow Steps
 
@@ -120,16 +123,18 @@ Follow the E2E test writing rules:
 
 - **Run the tool first** to verify actual behavior before writing assertions
 - Apply the E2E Value Gate — every TC must require real CLI binary + external tools + filesystem I/O
-- Use `&& echo "PASS" || echo "FAIL"` patterns for every verification step
 - Follow TC ordering: error paths first, happy path, structure verification, lifecycle, end state
 - Consolidate assertions sharing the same CLI invocation into a single TC
 - Target 2-5 TCs per scenario
 - Test through the CLI interface, not library imports
-- Add command-level evidence in every runner:
-  - command output (`*.stdout`/`*.stderr`)
-  - command exit status (`*.exit`)
-- Add at least one behavioral/content assertion per command assertion set
+- Write runner goals as “do the job” outcomes, not “write a report for the verifier” chores
+- Keep `results/tc/{NN}/` for real outcomes only; avoid helper YAML, path files, command files, and reflections
+- Use runner observations as the only non-filesystem secondary evidence source
+- Make final sandbox state or real product output the primary oracle whenever possible
+- Add behavioral/content assertions only when CLI output itself is part of the user-visible outcome
 - Remove duplicate command-only TCs; fold related assertions into one TC where possible
+- Do not encode exact workaround procedures, hidden command recipes, or internal debugging tricks the user would not infer from docs/usage/`--help`
+- If the job is valid but the public surface is too weak, plan a product/docs/help fix instead of hardcoding the workaround into the TC
 
 **Load the TC template for reference:**
 ```bash
@@ -146,7 +151,9 @@ For each TC classified as MODIFY:
    - **Narrow scope** — remove assertions that unit tests cover, keep only E2E-exclusive checks
    - **Broaden scope** — add assertions for related behavior tested by the same CLI invocation
    - **Fix structure** — add missing sections, fix formatting issues
-   - **Add evidence gates** — if the existing TC relies on existence-only or missing exit/status checks, add explicit command output assertions and `.exit` captures
+   - **Replace helper-artifact oracles** — if the existing TC relies on runner-written helper files, rewrite it around final sandbox state plus runner observations
+   - **Add evidence gates** — if the existing TC relies on existence-only or missing end-state checks, strengthen the primary oracle before falling back to debug captures
+   - **Remove hidden recipes/workarounds** — if the existing TC teaches the runner how to bypass the public surface, rewrite it around the supported user path or narrow/remove the TC
 3. Update the `last-verified` field if the TC was re-run during modification
 4. Write the updated TC runner/verifier files
 
@@ -234,7 +241,7 @@ Present the execution summary:
 - [ ] TC count matches plan: {yes/no}
 - [ ] No stale references: {yes/no}
 - [ ] All scenarios have 2-5 TCs: {yes/no}
-- [ ] All modified/created TCs include command output + exit artifacts: {yes/no}
+- [ ] Modified/created TCs avoid helper files in `results/tc/{NN}/`: {yes/no}
 
 ### Next Steps
 

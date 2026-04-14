@@ -19,8 +19,21 @@ class SuiteReportWriterTest < Minitest::Test
       path = @writer.write(results, scenarios,
         package: "ace-lint", timestamp: "abc123", base_dir: tmpdir)
 
-      assert_equal File.join(tmpdir, ".ace-local", "test-e2e", "abc123-final-report.md"), path
+      assert_equal File.join(tmpdir, ".ace-local", "test-e2e", "abc123-ace-lint-report.md"), path
       assert File.exist?(path), "Report file should exist"
+    end
+  end
+
+  def test_writes_suite_report_to_suite_report_path
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_results_and_scenarios(tmpdir)
+      stub_llm_query("# LLM Report")
+
+      path = @writer.write(results, scenarios,
+        package: "suite", timestamp: "abc123", base_dir: tmpdir, report_kind: :suite)
+
+      assert_equal File.join(tmpdir, ".ace-local", "test-e2e", "abc123-suite-report.md"), path
+      assert File.exist?(path), "Suite report file should exist"
     end
   end
 
@@ -127,6 +140,62 @@ class SuiteReportWriterTest < Minitest::Test
       assert_match(/### TS-TEST-002/, content)
       assert_match(/`TC-002`/, content)
       assert_match(/Second check/, content)
+    end
+  end
+
+  def test_failed_section_prefers_canonical_report_frontmatter_over_result_counts
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
+      FileUtils.mkdir_p(report_dir)
+      File.write(File.join(report_dir, "report.md"), <<~MD)
+        ---
+        passed:
+        - TC-001
+        failed:
+        - tc: TC-009
+          category: tool-bug
+          evidence: canonical failure from scenario report
+        canonical-failed-tcs:
+        - TC-009
+        ---
+      MD
+
+      results = [
+        TestResult.new(
+          test_id: "TS-TEST-001",
+          status: "fail",
+          test_cases: [
+            {id: "TC-001", description: "placeholder", status: "pass"},
+            {id: "TC-002", description: "placeholder", status: "fail", notes: "synthetic"}
+          ],
+          summary: "One failed",
+          report_dir: report_dir
+        )
+      ]
+      scenarios = [make_scenario("TS-TEST-001", "Test One")]
+      stub_llm_query_failure(RuntimeError.new("error"))
+
+      path = @writer.write(results, scenarios,
+        package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+
+      content = File.read(path)
+      assert_match(/`TC-009` \(tool-bug\) — canonical failure from scenario report/, content)
+      refute_match(/`TC-002`/, content)
+    end
+  end
+
+  def test_runner_diagnostics_section_appears_when_dirty_worktree_is_detected
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_all_passing(tmpdir)
+      stub_llm_query("# Report")
+
+      path = @writer.write(results, scenarios,
+        package: "suite", timestamp: "ts1234", base_dir: tmpdir, report_kind: :suite,
+        diagnostics: {dirty_worktree: true, new_tracked_entries: [" M ace-assign/test/e2e/foo.yml"]})
+
+      content = File.read(path)
+      assert_match(/## Runner Diagnostics/, content)
+      assert_match(/` M ace-assign\/test\/e2e\/foo\.yml`/, content)
     end
   end
 

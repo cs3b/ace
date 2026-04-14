@@ -358,6 +358,28 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_merged_environment_strips_ambient_tmux_vars
+    Dir.mktmpdir do |sandbox|
+      original_tmux = ENV["TMUX"]
+      original_tmux_pane = ENV["TMUX_PANE"]
+      ENV["TMUX"] = "/tmp/tmux-socket,123,0"
+      ENV["TMUX_PANE"] = "%9"
+
+      result = @executor.execute(
+        setup_steps: [
+          {"run" => "printf '%s|%s' \"${TMUX-unset}\" \"${TMUX_PANE-unset}\" > tmux_env.txt"}
+        ],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal "unset|unset", File.read(File.join(sandbox, "tmux_env.txt"))
+    ensure
+      original_tmux ? ENV["TMUX"] = original_tmux : ENV.delete("TMUX")
+      original_tmux_pane ? ENV["TMUX_PANE"] = original_tmux_pane : ENV.delete("TMUX_PANE")
+    end
+  end
+
   private
 
   def build_tmux_executor(command_calls:, system_calls: [], time_source: -> { Time.now.to_i })

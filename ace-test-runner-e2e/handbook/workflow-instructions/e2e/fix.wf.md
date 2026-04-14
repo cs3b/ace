@@ -81,6 +81,7 @@ Apply fixes in this order:
 - Check for a current analysis report that satisfies the Analysis Readiness Gate.
 - If none exists, or if required fields are missing, run `ace-bundle wfi://e2e/analyze-failures`.
 - Reuse the most recent valid analysis output as the source of truth for fix selection.
+- Treat full-suite/package reruns and targeted scenario reruns as different scopes. Do not label a broader suite failure set as a regression in a previously fixed targeted scenario unless the same scenario fails again on a clean rerun.
 
 2. Pick the first prioritized item from analysis
 
@@ -99,12 +100,14 @@ Apply fixes in this order:
 
 - Fix package/tool behavior in implementation code
 - Add/update unit tests if needed
+- When the user job is valid but not achievable from docs/help/public CLI, prefer product/docs/help improvements over codifying the workaround in the scenario
 
 ### Category: test-issue
 
 - Fix scenario definition, runner/verifier criteria, fixtures, or setup steps
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
 - Keep implementation unchanged unless analysis is revised
+- Remove hidden recipes, workaround branches, and unsupported internal-detail checks from goal-style TCs
 
 4. Rerun the selected failing scope after each fix
 
@@ -138,6 +141,7 @@ ace-test-e2e ace-bundle TS-BUNDLE-001
 
 - If outcome contradicts analysis, return to `e2e/analyze-failures`
 - Update analysis report and re-select a new autonomous chosen fix decision before continuing
+- If a suite/package report conflicts with a scenario report, the scenario report wins and the aggregate mismatch must be fixed or explicitly tracked before relying on suite-level TC mappings.
 
 6. Iterate until all targeted failures are resolved
 

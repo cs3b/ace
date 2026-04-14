@@ -559,9 +559,9 @@ class SuiteOrchestratorTest < Minitest::Test
       @calls = []
     end
 
-    def write(results, scenarios, package:, timestamp:, base_dir:)
+    def write(results, scenarios, package:, timestamp:, base_dir:, report_kind: :package, diagnostics: nil)
       @calls << {results: results, scenarios: scenarios, package: package,
-                  timestamp: timestamp, base_dir: base_dir}
+                  timestamp: timestamp, base_dir: base_dir, report_kind: report_kind, diagnostics: diagnostics}
       @report_path
     end
   end
@@ -585,7 +585,7 @@ class SuiteOrchestratorTest < Minitest::Test
   end
 
   def test_report_generated_after_sequential_run
-    report_writer = StubSuiteReportWriter.new(report_path: "/tmp/test-final-report.md")
+    report_writer = StubSuiteReportWriter.new(report_path: "/tmp/test-suite-report.md")
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
       tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
@@ -613,10 +613,11 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "abc1234", call[:timestamp]
 
     # Results contain report path
-    assert_equal "/tmp/test-final-report.md", results[:report_path]
+    assert_equal "/tmp/test-suite-report.md", results[:report_path]
 
     # Output contains report path
-    assert_match(/Report: \/tmp\/test-final-report\.md/, @output.string)
+    assert_match(/Report: \/tmp\/test-suite-report\.md/, @output.string)
+    assert_equal :suite, call[:report_kind]
   end
 
   def test_report_converts_result_hashes_to_test_result_models
@@ -646,9 +647,9 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_kind_of Ace::Test::EndToEndRunner::Models::TestResult, test_result
     assert_equal "TS-LINT-001", test_result.test_id
     assert_equal "fail", test_result.status
-    assert_equal 2, test_result.passed_count
-    assert_equal 3, test_result.failed_count
-    assert_equal 5, test_result.total_count
+    assert_equal 2, test_result.metadata["tcs-passed"]
+    assert_equal 3, test_result.metadata["tcs-failed"]
+    assert_equal 5, test_result.metadata["tcs-total"]
   end
 
   def test_report_generation_failure_warns_but_does_not_raise
@@ -730,10 +731,43 @@ class SuiteOrchestratorTest < Minitest::Test
     call = report_writer.calls.first
     assert_equal 2, call[:results].size
     assert_equal "pass", call[:results][0].status
-    assert_equal 5, call[:results][0].passed_count
+    assert_equal 5, call[:results][0].metadata["tcs-passed"]
     assert_equal "fail", call[:results][1].status
-    assert_equal 3, call[:results][1].passed_count
-    assert_equal 2, call[:results][1].failed_count
+    assert_equal 3, call[:results][1].metadata["tcs-passed"]
+    assert_equal 2, call[:results][1].metadata["tcs-failed"]
+  end
+
+  def test_finalize_run_passes_dirty_worktree_diagnostics_to_report_writer
+    report_writer = StubSuiteReportWriter.new
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001/scenario.yml"]}
+    )
+
+    orchestrator = build_orchestrator(
+      discoverer: discoverer,
+      output: @output,
+      suite_report_writer: report_writer,
+      scenario_loader: StubScenarioLoader.new,
+      timestamp_generator: -> { "abc1234" }
+    )
+
+    snapshots = [
+      [" M docs/existing.md"],
+      [" M docs/existing.md", " M ace-assign/test/e2e/fixture.yml"]
+    ]
+    orchestrator.define_singleton_method(:git_status_snapshot) { snapshots.shift }
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: "TS-LINT-001", report_dir: "/tmp/reports/lint"}
+    end
+
+    orchestrator.run(parallel: false)
+
+    diagnostics = report_writer.calls.first[:diagnostics]
+    assert_equal true, diagnostics[:dirty_worktree]
+    assert_equal [" M ace-assign/test/e2e/fixture.yml"], diagnostics[:new_tracked_entries]
   end
 
   def test_no_report_when_no_results
@@ -1407,7 +1441,7 @@ class SuiteOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")
       FileUtils.mkdir_p(report_dir)
-      file_path = File.join(report_dir, "final-report.md")
+      file_path = File.join(report_dir, "suite-report.md")
 
       discoverer = StubDiscoverer.new(packages: [], tests: {})
       orchestrator = build_orchestrator(discoverer: discoverer, output: @output)

@@ -17,6 +17,8 @@ module Ace
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
         class SetupExecutor
+          AMBIENT_TMUX_ENV_VARS = %w[TMUX TMUX_PANE].freeze
+
           def initialize(command_runner: nil, system_runner: nil, time_source: nil)
             @command_runner = command_runner || method(:capture3)
             @system_runner = system_runner || method(:system)
@@ -168,8 +170,10 @@ module Ace
           # @param env [Hash] Custom environment variables
           # @return [Hash] Merged environment
           def merged_environment(env)
-            return ENV.to_h if env.empty?
-            ENV.to_h.merge(env.transform_keys(&:to_s))
+            base_env = sanitized_process_environment
+            return base_env if env.empty?
+
+            base_env.merge(env.transform_keys(&:to_s))
           end
 
           # Run a command and raise on failure
@@ -183,6 +187,10 @@ module Ace
 
           def capture3(*args, **kwargs)
             Open3.capture3(*args, **kwargs)
+          end
+
+          def sanitized_process_environment
+            ENV.to_h.merge(AMBIENT_TMUX_ENV_VARS.to_h { |key| [key, nil] })
           end
         end
       end

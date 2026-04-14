@@ -3,6 +3,7 @@
 require "open3"
 require "fileutils"
 require "yaml"
+require "set"
 require "ace/b36ts"
 
 module Ace
@@ -57,6 +58,7 @@ module Ace
           # @option options [Integer] :timeout Timeout per test in seconds
           # @return [Hash] Summary of results
           def run(options = {})
+            pre_run_worktree = git_status_snapshot
             packages = @discoverer.list_packages(base_dir: @base_dir)
 
             if packages.empty?
@@ -135,9 +137,9 @@ module Ace
 
             # Execute tests
             if options[:parallel]
-              run_parallel(package_tests, options)
+              run_parallel(package_tests, options, pre_run_worktree)
             else
-              run_sequential(package_tests, options)
+              run_sequential(package_tests, options, pre_run_worktree)
             end
           end
 
@@ -210,7 +212,7 @@ module Ace
           # @param package_tests [Hash] Package to tests mapping
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
-          def run_sequential(package_tests, options)
+          def run_sequential(package_tests, options, pre_run_worktree)
             results = {total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {}}
             start_time = Time.now
 
@@ -265,7 +267,7 @@ module Ace
             done = true
             refresh_thread&.join
 
-            finalize_run(results, package_tests, start_time)
+            finalize_run(results, package_tests, start_time, pre_run_worktree)
           end
 
           # Run tests in parallel using subprocesses
@@ -273,7 +275,7 @@ module Ace
           # @param package_tests [Hash] Package to tests mapping
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
-          def run_parallel(package_tests, options)
+          def run_parallel(package_tests, options, pre_run_worktree)
             results = {total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {}}
             queue = build_test_queue(package_tests)
             run_ids = generate_run_ids(queue.size)
@@ -297,7 +299,7 @@ module Ace
               check_running_processes(running, results)
             end
 
-            finalize_run(results, package_tests, start_time)
+            finalize_run(results, package_tests, start_time, pre_run_worktree)
           end
 
           # Build a flat queue of test items
@@ -589,8 +591,9 @@ module Ace
           # @param package_tests [Hash] Package to test files mapping
           # @param start_time [Time] When the run started
           # @return [Hash] Results with optional :report_path
-          def finalize_run(results, package_tests, start_time)
+          def finalize_run(results, package_tests, start_time, pre_run_worktree)
             write_failure_stubs(results, package_tests)
+            results[:suite_diagnostics] = build_suite_diagnostics(pre_run_worktree)
 
             @display.show_summary(results, Time.now - start_time)
             warn_on_lingering_claude_processes
@@ -709,7 +712,9 @@ module Ace
               all_results, all_scenarios,
               package: "suite",
               timestamp: timestamp,
-              base_dir: @base_dir
+              base_dir: @base_dir,
+              report_kind: :suite,
+              diagnostics: results[:suite_diagnostics]
             )
           rescue => e
             warn "Warning: Suite report generation failed (#{e.class}: #{e.message})"
@@ -726,17 +731,38 @@ module Ace
             total = result_hash[:total_cases] || 0
             failed = [total - passed, 0].max
 
-            test_cases = []
-            passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass"} }
-            failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail"} }
-
             Models::TestResult.new(
               test_id: result_hash[:test_name] || "unknown",
               status: result_hash[:status] || "error",
-              test_cases: test_cases,
+              test_cases: [],
               summary: result_hash[:summary] || result_hash[:error] || "",
-              report_dir: result_hash[:report_dir]
+              report_dir: result_hash[:report_dir],
+              metadata: {"tcs-passed" => passed, "tcs-total" => total, "tcs-failed" => failed}
             )
+          end
+
+          def git_status_snapshot
+            stdout, _stderr, status = Open3.capture3("git", "status", "--short", chdir: @base_dir)
+            return nil unless status.success?
+
+            stdout.lines.map(&:rstrip)
+          rescue
+            nil
+          end
+
+          def build_suite_diagnostics(pre_run_worktree)
+            post_run_worktree = git_status_snapshot
+            return {} unless pre_run_worktree && post_run_worktree
+
+            before = pre_run_worktree.to_set
+            new_entries = post_run_worktree.reject { |line| before.include?(line) }
+            new_tracked_entries = new_entries.reject { |line| line.start_with?("?? ") }
+            return {} if new_tracked_entries.empty?
+
+            {
+              dirty_worktree: true,
+              new_tracked_entries: new_tracked_entries
+            }
           end
 
           # Load a scenario from file into a Models::TestScenario, with fallback

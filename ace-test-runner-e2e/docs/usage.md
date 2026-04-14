@@ -126,3 +126,4 @@ ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports ls results/
 - Scenario metadata is read from each scenario directory's `scenario.yml`.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.
+- Package and suite reports are aggregate summaries. When failed TC IDs or evidence matter, use the referenced per-scenario `report.md` as the canonical source of truth.

@@ -15,19 +15,19 @@ module Ace
 
             Rules:
             - Execute each goal in order
-            - Save all artifacts to results/tc/{NN}/ directories as specified
-            - Treat the initial working directory as SANDBOX_ROOT; if a goal needs commands in a created worktree, cd there for execution but keep artifact writes under SANDBOX_ROOT/results
+            - Treat the initial working directory as SANDBOX_ROOT; if a goal needs commands in a created worktree, cd there for execution but keep any declared outcome artifacts under SANDBOX_ROOT/results
             - Do not fabricate output - all artifacts must come from real tool execution
             - If a goal fails, note the failure and continue to the next goal
-            - After all goals, output a brief summary of what you produced for each goal
+            - Do not create synthetic helper reports or temp input files under results/ unless the scenario explicitly treats them as product outcomes
+            - After all goals, return concise runner observations describing what you did and what happened
           PROMPT
 
           VERIFIER_SYSTEM_PROMPT = <<~PROMPT
             You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
             Rules:
-            - Evaluate each goal independently based solely on the artifacts provided
-            - Do not speculate about what the runner did - only judge what exists
+            - Evaluate each goal independently based on sandbox state first, then runner observations, then raw debug captures only when needed
+            - Do not speculate beyond the provided sandbox evidence and runner observations
             - For each failed goal, include a category:
               test-spec-error | tool-bug | runner-error | infrastructure-error
             - For each goal, cite specific evidence (filenames, content snippets)
@@ -60,7 +60,7 @@ module Ace
           # @param sandbox_path [String]
           # @param test_cases [Array<String>, nil]
           # @return [Hash]
-          def prepare_verifier(scenario:, sandbox_path:, test_cases: nil)
+          def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil)
             cache_dir = ensure_cache_dir(sandbox_path)
             system_path = File.join(cache_dir, "verifier-system.md")
             prompt_path = File.join(cache_dir, "verifier-prompt.md")
@@ -68,8 +68,9 @@ module Ace
             File.write(system_path, VERIFIER_SYSTEM_PROMPT)
 
             artifacts = build_artifact_section(sandbox_path)
+            observations = build_runner_observation_section(runner_observations)
             criteria = bundle_markdown_file(File.join(scenario.dir_path, "verifier.yml.md"), test_cases: test_cases)
-            File.write(prompt_path, [artifacts, criteria].join("\n\n---\n\n"))
+            File.write(prompt_path, [artifacts, observations, criteria].join("\n\n---\n\n"))
 
             {
               system_path: system_path,
@@ -166,6 +167,14 @@ module Ace
             end
 
             parts.join("\n").rstrip
+          end
+
+          def build_runner_observation_section(runner_observations)
+            <<~MARKDOWN.rstrip
+              # Runner Observations
+
+              #{runner_observations.to_s.strip.empty? ? "(none provided)" : runner_observations.to_s.strip}
+            MARKDOWN
           end
 
           def relative_path(path, root)

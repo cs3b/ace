@@ -37,10 +37,11 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   class StubSuiteReportWriter
-    def write(_results, _scenarios, package:, timestamp:, base_dir:)
+    def write(_results, _scenarios, package:, timestamp:, base_dir:, report_kind: :package)
       cache_dir = File.join(base_dir, ".ace-local", "test-e2e")
       FileUtils.mkdir_p(cache_dir)
-      report_path = File.join(cache_dir, "#{timestamp}-final-report.md")
+      suffix = (report_kind == :suite) ? "suite-report.md" : "#{package}-report.md"
+      report_path = File.join(cache_dir, "#{timestamp}-#{suffix}")
       File.write(report_path, "# #{package}\n")
       report_path
     end
@@ -238,9 +239,9 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator.run(package: "my-pkg", output: @output)
 
-      report_path = File.join(tmpdir, ".ace-local", "test-e2e", "rpt123-final-report.md")
+      report_path = File.join(tmpdir, ".ace-local", "test-e2e", "rpt123-my-pkg-report.md")
       assert File.exist?(report_path), "Suite report should be created"
-      assert_match(/Report: .*rpt123-final-report\.md/, @output.string)
+      assert_match(/Report: .*rpt123-my-pkg-report\.md/, @output.string)
     end
   end
 

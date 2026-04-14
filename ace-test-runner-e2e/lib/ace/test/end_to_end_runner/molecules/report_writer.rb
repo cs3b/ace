@@ -130,6 +130,8 @@ module Ace
           # @return [String] Path to written file
           def write_experience(result, scenario, report_dir, test_case = nil)
             path = File.join(report_dir, "experience.r.md")
+            runner_observations = result.metadata["runner_observations"].to_s.strip
+            verifier_observations = result.observations.to_s.strip
 
             tc_title_suffix = test_case ? " / #{test_case.tc_id}" : ""
 
@@ -154,22 +156,15 @@ module Ace
 
               ## Summary
 
-              Executed via ace-test-e2e CLI using LLM provider.
-              #{(result.status == "pass") ? "No significant friction encountered." : "Test execution completed with issues noted below."}
+              Runner observations captured by the harness for this scenario.
 
-              ## Friction Points
+              ## Runner Observations
 
-              ### Documentation Gaps
+              #{runner_observations.empty? ? "- None provided by runner." : runner_observations}
 
-              - Automated execution via LLM - no documentation gaps observed
+              ## Verifier Notes
 
-              ### Tool Behavior Issues
-
-              - #{result.error || "None observed"}
-
-              ## Positive Observations
-
-              - Automated test execution completed successfully via LLM
+              - #{verifier_observations.empty? ? (result.error || "None recorded.") : verifier_observations}
             REPORT
 
             File.write(path, content)
@@ -219,6 +214,8 @@ module Ace
               end,
               "failed_test_cases" => result.failed_test_case_ids
             }
+            metadata["runner_observations"] = result.metadata["runner_observations"] if result.metadata.key?("runner_observations")
+            metadata["verifier_observations"] = result.observations unless result.observations.to_s.empty?
 
             if test_case
               metadata["scenario-id"] = scenario.test_id

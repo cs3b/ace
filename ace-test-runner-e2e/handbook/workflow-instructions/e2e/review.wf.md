@@ -13,7 +13,9 @@ This workflow performs deep exploration of a package to produce a **coverage mat
 
 During review, treat the runner/verifier split as a first-class quality check:
 - Runner must be execution-only (no verdict language).
-- Verifier must be impact-first (sandbox impact before artifacts/debug).
+- Verifier must be impact-first (sandbox impact before runner observations and debug).
+- `results/tc/{NN}/` must not be used for helper inputs or verifier-feeding helper reports.
+- Goal-style TCs must also pass the public-surface check: the runner should be able to do the job from docs/usage/`--help` and the tool under test, without hidden recipes or workarounds.
 
 **Pipeline position:** Stage 1 of 3 (Explore)
 
@@ -86,9 +88,8 @@ Map what unit tests cover at each layer:
 
 **List all test files by layer:**
 ```bash
-find {PACKAGE}/test/atoms -name "*_test.rb" 2>/dev/null | sort
-find {PACKAGE}/test/molecules -name "*_test.rb" 2>/dev/null | sort
-find {PACKAGE}/test/organisms -name "*_test.rb" 2>/dev/null | sort
+find {PACKAGE}/test/fast -name "*_test.rb" 2>/dev/null | sort
+find {PACKAGE}/test/feat -name "*_test.rb" 2>/dev/null | sort
 ```
 
 **For each test file:**
@@ -100,7 +101,7 @@ Build a unit test map:
 
 | Test File | Layer | Feature Covered | Test Count | Assertion Count |
 |-----------|-------|-----------------|------------|-----------------|
-| {path} | atom | {feature} | {n} | {n} |
+| {path} | fast/feat | {feature} | {n} | {n} |
 
 ### 4. Inventory Existing E2E Coverage
 
@@ -116,22 +117,32 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
   - `tags`, `cost-tier`, `e2e-justification`, `unit-coverage-reviewed`
   - `last-verified`, `verified-by`
 - Extract the objective (what the TC verifies)
+- Record the TC's primary oracle:
+  - final sandbox state / real product output
+  - runner observations as supporting context
+  - debug fallback only when necessary
+- Record whether the job is achievable from the public surface:
+  - `valid`
+  - `hidden-recipe-driven`
+  - `workaround-driven`
+  - `unsupported-detail`
+- Record qualitative friction:
+  - `low`, `medium`, `high`
 - Identify which CLI commands the TC runs
 - Record command fingerprint (`command + key flags`) for each command assertion
-- Count verification steps (PASS/FAIL checks)
 - Map to the feature it tests
 - Mark TC evidence status:
-  - `complete` when `e2e-justification` is present, command artifacts are present, and `unit-coverage-reviewed` has at least one path
+  - `complete` when `e2e-justification` is present, the verifier is end-state-first, and `unit-coverage-reviewed` has at least one path
   - `missing` otherwise
-  - `at-risk` when evidence is existence-only or duplicate command invocations are detected
+  - `at-risk` when evidence is existence-only, helper-artifact-driven, duplicate command invocations are detected, or the TC is hidden-recipe/workaround-driven
 
 If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | Command Invocations | Feature Tested | Verifications | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
-|-------|-------|-------------|----------------|---------------|------|-----------|-------------------|------------------------|----------|
-| {id} | {title} | {command list} | {feature} | {n} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
+| TC ID | Title | Command Invocations | Feature Tested | Primary Oracle | Public Surface Fit | Friction | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
+|-------|-------|-------------|----------------|----------------|--------------------|----------|------|-----------|-------------------|------------------------|----------|---------------------|
+| {id} | {title} | {command list} | {feature} | {state / output / observations+fallback} | {valid/hidden-recipe/workaround/unsupported-detail} | {low/medium/high} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
 
 ### 5. Build Coverage Matrix
 
@@ -139,7 +150,7 @@ Combine the three inventories into a single coverage matrix:
 
 **Matrix structure:**
 - **Rows:** Features/behaviors from step 2
-- **Columns:** Unit Tests (atoms/molecules/organisms) | E2E Tests
+- **Columns:** Unit Tests (`fast`/`feat`) | E2E Tests
 - **Cells:** Test file references + counts, or "none"
 
 ```markdown
@@ -147,10 +158,10 @@ Combine the three inventories into a single coverage matrix:
 
 | Feature | Unit Tests | E2E Tests | Evidence Strength | False-Positive Risk | Status |
 |---------|-----------|-----------|------------------|----------------------|--------|
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output/state+content | low | Covered |
+| {feature} | {test files} ({n} assertions) | {TC IDs} | state+content + observations | low | Covered |
 | {feature} | {test files} ({n} assertions) | none | none | n/a | Unit-only |
-| {feature} | none | {TC IDs} ({n} verifications) | command-output | low | E2E-only |
-| {feature} | {test files} ({n} assertions) | {TC IDs} ({n} verifications) | command-output or existence-only | medium/high | Overlap |
+| {feature} | none | {TC IDs} | state+content | low | E2E-only |
+| {feature} | {test files} ({n} assertions) | {TC IDs} | debug-heavy, helper-artifact-driven, or workaround-driven | medium/high | Overlap |
 | {feature} | none | none | none | high | Gap |
 ```
 
@@ -171,7 +182,7 @@ Produce the full review report with actionable findings:
 
 **Reviewed:** {timestamp}
 **Scope:** {package-wide or scenario-id}
-**Workflow version:** 2.1
+**Workflow version:** 2.2
 
 ### Summary
 
@@ -182,8 +193,8 @@ Produce the full review report with actionable findings:
 | Unit assertions | {n} |
 | E2E scenarios | {n} |
 | E2E test cases | {n} |
-| TCs with decision evidence | {n}/{total} |
-| High-risk false-positive TCs | {n}/{total} |
+| TCs with end-state-first evidence | {n}/{total} |
+| High-risk helper-artifact TCs | {n}/{total} |
 
 ### Coverage Matrix
 
@@ -196,19 +207,19 @@ TCs that may fail the E2E Value Gate (unit tests cover the same behavior or high
 | TC ID | Feature | Overlapping Unit Tests | Recommendation |
 |-------|---------|----------------------|----------------|
 | {id} | {feature} | {test files} | Remove — unit tests cover this fully |
-| {id} | {feature} | {test files} | Keep — TC tests CLI pipeline, units test logic |
-| {id} | {feature} | {test files} | Strengthen — currently existence-only or duplicate command assertions |
+| {id} | {feature} | {test files} | Keep — TC tests real CLI journey and final integrated outcome |
+| {id} | {feature} | {test files} | Strengthen — currently helper-artifact-driven, workaround-driven, or debug-heavy |
 
 **Candidates for removal:** {n} TCs have full overlap with unit tests
 
 ### E2E Decision Record Coverage
 
-| TC ID | Evidence Status | Missing Fields |
-|-------|------------------|----------------|
-| {id} | complete | none |
-| {id} | missing | e2e-justification, unit-coverage-reviewed |
+| TC ID | Evidence Status | Public Surface Fit | Friction | Missing Fields / Contract Drift |
+|-------|------------------|--------------------|----------|-------------------------------|
+| {id} | complete | valid | low | none |
+| {id} | missing | hidden-recipe-driven | high | e2e-justification, unit-coverage-reviewed, end-state oracle |
 
-**Action:** Any TC with missing evidence should be updated in `scenario.yml` during the next rewrite cycle.
+**Action:** Any TC with missing evidence, helper-artifact drift, hidden recipes, workaround dependence, or unsupported internal-detail checks should be updated during the next rewrite cycle.
 
 ### Gap Analysis
 

@@ -31,6 +31,7 @@ This workflow guides an agent through creating a new E2E test scenario.
 - Scenario ID format: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
 - Standalone files: `TC-*.runner.md` and `TC-*.verify.md`
 - TC artifact layout: `results/tc/{NN}/`
+- Runner observations are harness-managed report data, not sandbox helper files
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - CLI split reminder:
 
@@ -40,13 +41,19 @@ This workflow guides an agent through creating a new E2E test scenario.
 ## Authoring Contract
 
 - Runner files (`runner.yml.md`, `TC-*.runner.md`) are execution-only.
+- Goal-style TCs must prove two things:
+  - the tool works
+  - a user can do the job from the public surface (`README`, usage docs, `--help`, and the CLI itself) without hidden recipes or workarounds
 - Verifier files (`verifier.yml.md`, `TC-*.verify.md`) are verdict-only with impact-first evidence order:
 
   1. sandbox/project state impact
-  2. explicit artifacts
-  3. debug captures as fallback
+  2. runner observations
+  3. explicit product outcomes
+  4. debug captures as fallback
 
 - Setup belongs to `scenario.yml` `setup:` and fixtures; do not duplicate setup in runner TC instructions.
+- Keep `results/tc/{NN}/` for real outcome artifacts only; do not ask the runner to write helper YAML, path files, command files, reflections, or verifier-facing manifests there.
+- Do not encode hidden command recipes, fallback detours, or workaround sequences in runner TC files. If the job cannot be done from the public surface, treat that as a product/docs/help gap or remove/narrow the TC.
 
 ## Workflow Steps
 
@@ -161,7 +168,7 @@ Before generating test cases, verify the proposed test has genuine E2E value.
 
 ```bash
 # Search for existing unit tests covering this area
-find {PACKAGE}/test/atoms {PACKAGE}/test/molecules {PACKAGE}/test/organisms \
+find {PACKAGE}/test/fast {PACKAGE}/test/feat \
   -name "*_test.rb" 2>/dev/null | head -20
 ```
 
@@ -186,7 +193,24 @@ All proposed behaviors are already covered by unit tests in {PACKAGE}/test/.
 No E2E test needed. Consider adding unit tests instead if coverage gaps exist.
 ```
 
-### 7a. Evidence-Gate Review Before Writing Files
+### 7a. Public-Surface Gate
+
+Before generating or keeping a goal-style TC, answer:
+**"Can a normal user complete this job from the package's public surface, without hidden recipes or workarounds?"**
+
+Public surface means:
+- package README / usage docs
+- `--help`
+- declared fixtures and `scenario.yml` setup
+- the tool under test itself
+
+Reject or narrow the TC if it depends on:
+- step-by-step runner procedures a user would not infer from docs/help
+- workaround branches to compensate for CLI/docs/help gaps
+- direct supporting-tool probes as the primary oracle for an ACE CLI scenario
+- internal-state checks that the public surface does not expose and that do not matter to the user job
+
+### 7b. Evidence-Gate Review Before Writing Files
 
 Before finalizing the test plan, block weak coverage patterns:
 
@@ -200,6 +224,21 @@ Before finalizing the test plan, block weak coverage patterns:
 
   - same command invocation, same purpose, split across multiple TCs
 
+- **Helper-artifact-driven TC**:
+
+  - runner is instructed to create YAML/TXT/MD helper files in `results/tc/{NN}/`
+  - verifier depends on those helper files instead of final sandbox state or real product output
+
+- **Hidden-recipe-driven TC**:
+
+  - the runner must follow a command sequence not discoverable from docs/usage/`--help`
+  - the TC succeeds only because the scenario teaches an internal or non-obvious workaround
+
+- **Workaround-driven TC**:
+
+  - the runner is told how to bypass a docs/help/CLI gap instead of surfacing it
+  - the verifier would pass a scenario that a normal user could not complete cleanly
+
 | TC ID | Decision (KEEP/ADD/SKIP) | Evidence Strength | E2E-only reason | Unit tests reviewed |
 |-------|---------------------------|------------------|-----------------|--------------------|
 | {tc-id} | {decision} | `command-output` | {why this needs real CLI/tools/fs} | {path1,path2} |
@@ -207,23 +246,27 @@ Before finalizing the test plan, block weak coverage patterns:
 Rules:
 
 - `existence-only` is never valid for KEEP/ADD. Use it only for SKIP rows with explicit unit-test replacement.
+- `helper-artifact-driven` is never valid for KEEP/ADD when final sandbox state could prove the goal directly.
+- `hidden-recipe-driven` and `workaround-driven` are never valid for KEEP/ADD.
 - `SKIP` rows must include replacement unit-test evidence.
-- Non-skipped rows must include command-level artifacts (`stdout`, `stderr`, `exit`, and/or explicit proof files).
+- Non-skipped rows must identify the primary oracle for the TC: final sandbox state, real product output, or debug fallback.
+- Non-skipped rows must state why the job is achievable from the public surface without hidden recipes.
 - At least one `unit tests reviewed` path is required for every row.
 - The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
 
-### 7b. E2E Decision Record (Required)
+### 7c. E2E Decision Record (Required)
 
 Before writing files, produce a decision record table for every candidate TC:
 
-| TC ID | Decision (KEEP/ADD/SKIP) | E2E-only reason | Unit tests reviewed |
-|-------|---------------------------|-----------------|---------------------|
-| {tc-id} | {decision} | {why this needs real CLI/tools/fs} | {path1,path2} |
+| TC ID | Decision (KEEP/ADD/SKIP) | E2E-only reason | Public-surface path | Unit tests reviewed |
+|-------|---------------------------|-----------------|---------------------|---------------------|
+| {tc-id} | {decision} | {why this needs real CLI/tools/fs} | {docs/help/CLI path or "not valid"} | {path1,path2} |
 
 Rules:
 
 - No TC may be created without a row in this table.
 - If decision is `SKIP`, include the unit-test evidence that replaces it.
+- If the public-surface path is missing or workaround-driven, the TC must be `SKIP` or explicitly planned as a product/docs/help improvement before creation.
 - At least one `unit tests reviewed` path is required for each row.
 - The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
 
@@ -238,6 +281,7 @@ If a context description was provided, enhance the test with:
 4. Understand the feature being tested
 5. **Run the tool** to observe actual behavior, output format, file paths, and exit codes
 6. **Verify config/input formats** by reading the actual parsing code -- never assume formats from design specs or task descriptions
+7. **Compare with the public surface** -- verify the intended user path is actually supported by docs/help, and do not compensate for gaps with hidden runner instructions
 
 **Generate test content:**
 1. Write a clear objective based on the context
@@ -254,9 +298,11 @@ If a context description was provided, enhance the test with:
 - **Verify config/input formats** by reading the parsing code -- never assume formats from BDD specs, task descriptions, or documentation
 - Include an error/negative TC only when it validates E2E-exclusive behavior (real CLI parser/runtime/tooling/filesystem) or when unit coverage has a documented gap
 - Verify actual file paths by running the tool first -- never hardcode paths from documentation or assumptions
-- Use explicit `&& echo "PASS" || echo "FAIL"` patterns for every verification step
+- Write runner goals as user outcomes, not “create a report” chores for the verifier
 - Check specific exit codes for error commands (not just "non-zero")
-- Add at least one output-content assertion for each command being verified
+- Make final sandbox state or real product output the primary oracle whenever possible
+- Do not require runner-authored helper files under `results/tc/{NN}/`
+- Add at least one behavioral/content assertion when CLI output itself is part of the outcome being tested
 
 **SHOULD (strongly recommended):**
 

@@ -16,6 +16,7 @@ class SkillResultParserTest < Minitest::Test
       - **Failed**: 0
       - **Total**: 8
       - **Report Paths**: 8p5jo2-lint-ts001-reports/*
+      - **Observations**: Verified help surface and created sandbox outputs cleanly
       - **Issues**: None
     MD
 
@@ -26,7 +27,7 @@ class SkillResultParserTest < Minitest::Test
     assert_equal 8, result[:test_cases].size
     assert(result[:test_cases].all? { |tc| tc[:status] == "pass" })
     assert_equal "8/8 passed", result[:summary]
-    assert_equal "", result[:observations]
+    assert_equal "Verified help surface and created sandbox outputs cleanly", result[:observations]
   end
 
   def test_parse_markdown_with_failures
@@ -172,6 +173,21 @@ class SkillResultParserTest < Minitest::Test
 
     result = SkillResultParser.parse(text)
     assert_equal "", result[:observations]
+  end
+
+  def test_normalized_observations_fall_back_to_issues_for_legacy_contract
+    text = <<~MD
+      - **Test ID**: TS-TEST-001
+      - **Status**: fail
+      - **Passed**: 0
+      - **Failed**: 1
+      - **Total**: 1
+      - **Report Paths**: abc-reports/*
+      - **Issues**: Permission denied on lint command
+    MD
+
+    result = SkillResultParser.parse(text)
+    assert_equal "Permission denied on lint command", result[:observations]
   end
 
   def test_normalized_issues_preserved_when_not_none

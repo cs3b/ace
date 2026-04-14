@@ -44,9 +44,9 @@ module Ace
 
           def build_execution_prompt(command:, tc_mode:)
             return_contract = if tc_mode
-              "- **Test ID**: ...\n- **TC ID**: ...\n- **Status**: pass | fail\n- **Report Paths**: ...\n- **Issues**: ..."
+              "- **Test ID**: ...\n- **TC ID**: ...\n- **Status**: pass | fail\n- **Report Paths**: ...\n- **Observations**: ...\n- **Issues**: ... (optional legacy alias)"
             else
-              "- **Test ID**: ...\n- **Status**: pass | fail | partial\n- **Passed**: ...\n- **Failed**: ...\n- **Total**: ...\n- **Report Paths**: ...\n- **Issues**: ..."
+              "- **Test ID**: ...\n- **Status**: pass | fail | partial\n- **Passed**: ...\n- **Failed**: ...\n- **Total**: ...\n- **Report Paths**: ...\n- **Observations**: ...\n- **Issues**: ... (optional legacy alias)"
             end
 
             <<~PROMPT.strip
@@ -55,8 +55,9 @@ module Ace
 
               Execution requirements:
               - Do not run `/ace-...` inside a shell command.
-              - If slash commands are unavailable, stop and report that limitation in `Issues`.
+              - If slash commands are unavailable, stop and report that limitation in `Observations`.
               - Write reports under `.ace-local/test-e2e/*-reports/`.
+              - `Observations` is required and must be a concise factual summary of actions, outcomes, and blockers without verdict language.
               - Return only this structured summary:
               #{return_contract}
             PROMPT
@@ -122,6 +123,7 @@ module Ace
 
               Verification requirements:
               - Inspect sandbox artifacts and scenario files directly.
+              - Judge from sandbox state first, then runner observations, then raw debug captures only when needed.
               - Evaluate each test case using `TC-*.verify.md` criteria when present.
               - Classify each failed test case with one category:
                 `test-spec-error`, `tool-bug`, `runner-error`, or `infrastructure-error`.

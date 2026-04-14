@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.2] - 2026-04-14
+
+### Changed
+- Added a canonical public-surface gate across the E2E handbook so goal-based scenarios must prove both that the tool works and that a user can complete the job from docs, `--help`, and the public CLI without hidden recipes or workarounds.
+- Updated the create/review/plan/rewrite/run/fix workflow guidance, shared guides, and templates to treat workaround-driven scenarios as invalid or at-risk and to record friction through runner observations instead of teaching fallback procedures.
+
+## [0.37.1] - 2026-04-13
+
+### Changed
+- Updated the canonical E2E create/review/rewrite/run guidance, templates, and references so goal-based scenarios are written around final sandbox state plus runner observations instead of helper artifacts under `results/`.
+
+## [0.37.0] - 2026-04-13
+
+### Changed
+- Made runner `Observations` the canonical non-filesystem evidence channel for goal-based E2E scenarios, passed them directly into verifier prompts, and persisted them through the harness-managed report surface.
+- Updated the shared E2E template, authoring guides, and rewrite/run workflows to require goal achievement from sandbox end state first, using runner observations as the only secondary evidence source instead of helper artifacts under `results/`.
+
+## [0.36.1] - 2026-04-13
+
+### Fixed
+- Preferred canonical per-scenario `report.md` metadata when building aggregate package and suite reports so failed TC mappings no longer drift from the underlying scenario reports.
+- Added explicit dirty-worktree diagnostics to suite reporting so tracked repo mutations are surfaced as runner diagnostics instead of being inferred after the fact.
+
+### Changed
+- Updated the canonical E2E failure-analysis and fix workflows plus usage guidance to treat aggregate reports as indexes and per-scenario reports as the source of truth for TC-level triage.
+
+## [0.36.0] - 2026-04-13
+
+### Fixed
+- Renamed aggregated E2E outputs to scope-specific package and suite report filenames instead of the ambiguous shared `final-report` label.
+- Stripped ambient `TMUX` and `TMUX_PANE` state from setup and pipeline subprocess environments so E2E runs do not accidentally attach to the operator's live tmux session.
+
+### Technical
+- Updated suite orchestrator/report writer coverage and E2E workflow guidance around the explicit package-vs-suite report contract.
+
 ## [0.35.0] - 2026-04-13
 ### Changed
 - **ace-test-runner-e2e v0.35.0**: Added optional scenario artifact declarations via `(optional)`, separated required and optional artifact tracking, and included optional outputs in manifests and snapshots without failing scenarios when they are absent.

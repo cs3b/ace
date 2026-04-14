@@ -46,12 +46,15 @@ Tag filtering happens at discovery time (before `SetupExecutor` runs). By the ti
 
 ## Execution Contract
 
-- Runner is execution-only: execute declared TC actions and capture evidence.
+- Runner is execution-only: execute declared TC actions, leave only real outcome evidence under `results/tc/{NN}/`, and return final observations through the harness.
+- Runner follows the public user path. Do not turn missing docs/help/CLI affordances into embedded workaround instructions.
 - Verifier is verification-only: determine PASS/FAIL using impact-first ordering:
   1. sandbox/project state impact
-  2. explicit artifacts
-  3. debug captures (`stdout`/`stderr`/exit) as fallback
+  2. runner observations
+  3. explicit artifacts that are true product outcomes
+  4. debug captures (`stdout`/`stderr`/exit) as fallback
 - Do not interpret setup ownership in runner TC files; setup is owned by `scenario.yml` + fixtures.
+- Treat workaround pressure recorded in runner observations as a gap to fix, not as permission to strengthen the runner script.
 
 ## Dual-Agent Verifier
 
@@ -61,7 +64,7 @@ When `--verify` is passed (or always-on for CLI pipeline runs), execution follow
 2. **Verifier agent** independently inspects the sandbox and artifacts against `TC-*.verify.md` expectations
 3. **Report generator** (`PipelineReportGenerator`) produces deterministic summary from verifier output
 
-The verifier has no access to the runner's conversation — it evaluates purely from on-disk evidence. This prevents self-confirmation bias.
+The verifier has no access to the runner's conversation — it evaluates from sandbox evidence plus the structured runner observations persisted by the harness. This prevents self-confirmation bias while still surfacing execution context.
 
 ## Subagent Mode
 
@@ -75,6 +78,7 @@ When invoked as a subagent (via Task tool from orchestrator):
 - **Failed**: {count}
 - **Total**: {count}
 - **Report Paths**: {timestamp}-{short-pkg}-{short-id}.*
+- **Observations**: Brief factual summary or "None"
 - **Issues**: Brief description or "None"
 ```
 
@@ -149,8 +153,8 @@ For each TC (TC-NNN):
 
 1. **Check filter** — skip if `FILTERED_CASES` is set and TC not in list
 2. **Read** the runner file objective
-3. **Execute** runner steps, save artifacts to `results/tc/{NN}/`
-4. **Capture** exit codes, output, error messages
+3. **Execute** runner steps, save only real outcome artifacts to `results/tc/{NN}/`
+4. **Return** factual runner observations through the harness
 5. **Evaluate** against verifier expectations
 6. **Record** Pass/Fail with per-TC evidence
 

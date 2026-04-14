@@ -40,6 +40,7 @@ module Ace
               test_cases: parsed[:test_cases],
               summary: parsed[:summary],
               error: parsed[:error],
+              observations: parsed[:observations].to_s,
               started_at: started_at,
               completed_at: completed_at,
               metadata: metadata
@@ -74,6 +75,7 @@ module Ace
               test_cases: test_cases,
               summary: "Execution pipeline failed",
               error: error_message,
+              observations: metadata["runner_observations"].to_s,
               started_at: started_at,
               completed_at: completed_at,
               metadata: metadata.merge("failure_category" => failure_category)
@@ -101,7 +103,8 @@ module Ace
               status: parsed[:status],
               test_cases: parsed[:test_cases],
               summary: parsed[:summary],
-              error: parsed[:observations]
+              error: parsed[:observations],
+              observations: parsed[:observations]
             }
           rescue Atoms::ResultParser::ParseError => e
             issue = summarize_unstructured_verifier_output(text)
@@ -109,7 +112,8 @@ module Ace
               status: "error",
               test_cases: [],
               summary: "Verifier returned unstructured output",
-              error: issue || e.message
+              error: issue || e.message,
+              observations: ""
             }
           end
 

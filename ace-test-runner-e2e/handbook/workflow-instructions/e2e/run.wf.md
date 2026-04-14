@@ -41,20 +41,25 @@ This workflow guides an agent through executing an E2E test scenario. It support
 - `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
 - Scenario IDs: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
 - Standalone TC pairs: `TC-*.runner.md` + `TC-*.verify.md`
-- TC artifacts: `results/tc/{NN}/`
+- TC outcome artifacts: `results/tc/{NN}/`
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - Tag filtering happens at discovery time (before sandbox setup)
 
 ## Execution Contract
 
-- Runner instructions are execution-only: perform actions and write evidence.
+- Runner instructions are execution-only: perform actions and return final observations.
+- The runner should follow the public user path from docs/usage/`--help` and the tool under test itself. Do not encode or normalize hidden recipes and workarounds.
 - Verifier instructions are verification-only: assign verdicts using impact-first checks:
 
   1. sandbox/project state impact
-  2. explicit artifacts
-  3. debug captures as fallback
+  2. runner observations
+  3. explicit outcome artifacts
+  4. debug captures as fallback
 
 - Do not place ad-hoc setup logic in TC runner files; sandbox setup belongs to `scenario.yml` and fixtures.
+- Do not place helper inputs, reflections, or temp manifests under `results/tc/{NN}/`.
+- Do not ask the runner to write verifier-facing summaries or audit files when final sandbox state can prove the goal directly.
+- If the runner observations show a workaround was needed, treat that as a docs/help/product or scenario-design gap, not a successful steady-state contract.
 
 ## Execution Environment Guardrail
 
@@ -67,10 +72,10 @@ For CLI providers (`ace-test-e2e`), the deterministic 6-phase pipeline handles e
 
 1. **Setup** -- `SetupExecutor` creates sandbox (git init, mise.toml, .ace symlinks, `results/tc/{NN}/` dirs)
 2. **Runner prompt** -- `SkillPromptBuilder` assembles context from `runner.yml.md` + `TC-*.runner.md`
-3. **Runner LLM** -- Agent executes TC steps in sandbox, produces artifacts
-4. **Verifier prompt** -- `SkillPromptBuilder` assembles context from `verifier.yml.md` + `TC-*.verify.md`
+3. **Runner LLM** -- Agent executes TC steps in sandbox and returns final observations
+4. **Verifier prompt** -- `SkillPromptBuilder` assembles context from `verifier.yml.md` + `TC-*.verify.md` and includes runner observations
 5. **Verifier LLM** -- Independent agent evaluates artifacts against expectations
-6. **Report** -- `PipelineReportGenerator` produces deterministic summary
+6. **Report** -- `PipelineReportGenerator` produces deterministic summary and persists runner observations in harness-managed reports
 
 When this workflow is invoked directly (not via CLI pipeline), the agent performs steps 1-6 manually using the workflow steps below.
 
@@ -93,7 +98,8 @@ When invoked as a subagent (via a batch orchestrator such as an assignment fan-o
 - **Failed**: {count}
 - **Total**: {count}
 - **Report Paths**: {timestamp}-{short-pkg}-{short-id}.*
-- **Issues**: Brief description or "None"
+- **Observations**: Brief factual summary or "None"
+- **Issues**: Brief description or "None" (legacy alias if `Observations` is unavailable)
 ```
 
 Do NOT return full report contents, detailed TC output, or setup logs.
@@ -194,7 +200,7 @@ Report missing prerequisites before proceeding.
 .ace-local/test-e2e/
 ├── 8osvnh-lint-ts001/          # Sandbox
 ├── 8osvnh-lint-ts001-reports/  # Reports (summary.r.md, experience.r.md, metadata.yml)
-└── 8osynv-final-report.md     # Suite report (sibling)
+└── 8osynv-suite-report.md     # Suite report (sibling)
 ```
 
 **Expected variables after setup:**
@@ -236,7 +242,7 @@ If `FILTERED_CASES` is set, execute only matching TCs. Otherwise execute all.
 For each TC (TC-NNN):
 1. **Check filter** -- skip if not in `FILTERED_CASES`
 2. **Read** the runner file (`TC-NNN-*.runner.md`)
-3. **Execute** runner steps, save artifacts to `results/tc/{NN}/`
+3. **Execute** runner steps and create only final outcome artifacts under `results/tc/{NN}/`
 4. **Verify** against paired `.verify.md` expectations
 5. **Record** status (Pass/Fail) with evidence
 
