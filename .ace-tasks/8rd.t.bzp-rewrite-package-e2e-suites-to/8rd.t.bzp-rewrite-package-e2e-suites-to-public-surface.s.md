@@ -1,6 +1,6 @@
 ---
 id: 8rd.t.bzp
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-04-14 07:59:41"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [.ace-local/assign/8rczn4/reports/, .ace-tasks/8rd.t.bzp-rewrite-package-e2e-suites-to]
   commands: [ace-task show 8rd.t.bzp --content]
 needs_review: false
+worktree:
+  branch: bzp-rewrite-package-e2e-suites-to-public-surface-goal-style
+  path: ../ace-t.bzp
+  created_at: "2026-04-14 10:06:14"
+  updated_at: "2026-04-14 10:06:14"
+  target_branch: main
 ---
 
 # Rewrite package E2E suites to public-surface goal style
