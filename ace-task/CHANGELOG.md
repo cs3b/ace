@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.35.4] - 2026-04-13
+
+### Fixed
+- Reworked `TS-TASK-001` smoke coverage to validate created and archived tasks from stable task-tree state plus runner observations instead of brittle helper files under `results/`.
+
+## [0.35.3] - 2026-04-13
+
+### Fixed
+- Hardened `TS-TASK-001` task-ref capture so create/show/archive smoke coverage derives the persisted short ref from stable list/filesystem evidence instead of brittle prose parsing.
+
+## [0.35.2] - 2026-04-13
+
+### Technical
+- Refreshed `TS-TASK-001` archive and doctor smoke scenario contracts to match the current `_archive` layout and isolate the invalid-status validation path.
+
 ## [0.35.1] - 2026-04-13
 
 ### Fixed
