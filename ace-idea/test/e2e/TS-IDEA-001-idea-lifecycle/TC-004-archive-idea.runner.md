@@ -11,7 +11,6 @@ through folder filtering.
 Save artifacts to `results/tc/04/`.
 
 Capture:
-- `results/tc/04/idea-id.txt` — exact idea ID reused from TC-001
 - `results/tc/04/update-archive.stdout`, `.stderr`, `.exit`
 - `results/tc/04/list-archive.stdout`, `.stderr`, `.exit`
 
@@ -22,4 +21,4 @@ Capture:
 - Keep all artifacts under `results/tc/04/`.
 - Do not write outside the sandbox.
 - Reuse the exact idea ID from `results/tc/01/idea-file.md` frontmatter (`id:`). Do not pass filename or path to `ace-idea update`.
-- Save the extracted ID to `results/tc/04/idea-id.txt` before running the archive update command.
+- Do not create helper ID artifacts; derive the ID from the existing sandbox state and perform the archive move directly.
