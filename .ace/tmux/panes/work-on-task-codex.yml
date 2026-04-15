@@ -1,4 +1,4 @@
 # Task driving pane preset (Codex)
 commands:
-  - codex --dangerously-bypass-approvals-and-sandbox /as-assign-drive
+  - ace-llm codex:gpt@yolo "/as-assign-drive" --interactive
 focus: true
