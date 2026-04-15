@@ -241,6 +241,7 @@ module Ace
             #!/usr/bin/env bash
             set -uo pipefail
             cd #{Shellwords.escape(Dir.pwd)}
+            export PROJECT_ROOT_PATH=#{Shellwords.escape(Dir.pwd)}
             export ACE_TMUX_SESSION=#{Shellwords.escape(session)}
             export ACE_ASSIGN_LAUNCH_MODE=tmux
             export ACE_ASSIGN_FORK_WINDOW=#{Shellwords.escape(fork_window)}
