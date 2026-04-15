@@ -217,8 +217,15 @@ Options:
 - `--provider <provider:model>`
 - `--cli-args <args>`
 - `--timeout <seconds>`
+- `--launch-mode auto|headless|tmux`
 - `--quiet, -q`
 - `--debug, -d`
+
+Launch modes:
+
+- `auto` (default): use tmux when the current process is already inside tmux or `ACE_TMUX_SESSION` is set; otherwise use the headless subprocess path
+- `headless`: force the existing provider subprocess path and never create tmux panes
+- `tmux`: require tmux context, create or reuse `<current-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically
 
 Provider resolution precedence for fork execution:
 

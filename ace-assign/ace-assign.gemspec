@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-nav", "~> 0.25"
   spec.add_dependency "ace-b36ts", "~> 0.13"
   spec.add_dependency "ace-support-markdown", "~> 0.3"
-  spec.add_dependency "ace-llm", "~> 0.30"
+  spec.add_dependency "ace-llm", "~> 0.34"
   spec.add_dependency "ace-task", "~> 0.31"
 
   # Development dependencies

@@ -21,6 +21,7 @@ module Ace
           option :provider, desc: "LLM provider:model override (e.g., codex:gpt-5, claude:sonnet)"
           option :cli_args, desc: "Extra CLI args for provider process"
           option :timeout, type: :integer, desc: "Execution timeout in seconds"
+          option :launch_mode, desc: "Launch mode: auto, headless, or tmux"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
@@ -51,6 +52,7 @@ module Ace
               puts "Starting fork subtree execution: #{root_step.number} - #{root_step.name}"
               puts "Assignment: #{assignment.id}"
               puts "Provider: #{resolved_provider}"
+              puts "Launch mode: #{options[:launch_mode] || Molecules::ForkSessionLauncher::DEFAULT_LAUNCH_MODE}"
               puts "Timeout: #{options[:timeout] || Ace::Assign.config.dig("execution", "timeout") || Molecules::ForkSessionLauncher::DEFAULT_TIMEOUT}s"
               puts "Next step: #{next_step.number} - #{next_step.name}" if next_step
             end
@@ -77,7 +79,8 @@ module Ace
               provider: resolved_provider,
               cli_args: options[:cli_args],
               timeout: options[:timeout],
-              cache_dir: assignment.cache_dir
+              cache_dir: assignment.cache_dir,
+              launch_mode: options[:launch_mode]
             )
             record_fork_pid_info(root_step, launch_result)
 

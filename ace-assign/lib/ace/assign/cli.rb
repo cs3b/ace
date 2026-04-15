@@ -31,6 +31,7 @@ require_relative "molecules/step_writer"
 require_relative "molecules/step_renumberer"
 require_relative "molecules/skill_assign_source_resolver"
 require_relative "molecules/fork_session_launcher"
+require_relative "molecules/tmux_fork_runner"
 require_relative "molecules/preset_inferrer"
 
 # Organisms
@@ -49,6 +50,7 @@ require_relative "cli/commands/retry_cmd"
 require_relative "cli/commands/list"
 require_relative "cli/commands/select"
 require_relative "cli/commands/fork_run"
+require_relative "cli/commands/fork_session"
 
 module Ace
   module Assign
@@ -127,6 +129,7 @@ module Ace
       register "list", wrap_command(Commands::List)
       register "select", wrap_command(Commands::Select)
       register "fork-run", wrap_command(Commands::ForkRun)
+      register "fork-session", wrap_command(Commands::ForkSession)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
