@@ -6,6 +6,9 @@ require "shellwords"
 
 require_relative "cli_args_support"
 require_relative "atoms/execution_context"
+require_relative "atoms/command_rewriter"
+require_relative "atoms/command_formatters"
+require_relative "molecules/skill_name_reader"
 
 module Ace
   module LLM
@@ -33,6 +36,7 @@ module Ace
             # Skip normal BaseClient initialization that requires API key
             @options = options
             @generation_config = options[:generation_config] || {}
+            @skill_name_reader = Molecules::SkillNameReader.new
           end
 
           # Override to indicate this client doesn't need API credentials
@@ -77,6 +81,32 @@ module Ace
               {id: "claude-sonnet-4-0", name: "Claude Sonnet 4.0", description: "Balanced model", context_size: 200_000},
               {id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", description: "Fast model", context_size: 200_000}
             ]
+          end
+
+          def interactive_supported?
+            true
+          end
+
+          def build_interactive_invocation(messages, **options)
+            validate_claude_availability!
+
+            prompt = format_messages_as_prompt(messages)
+            subprocess_env = options[:subprocess_env]
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
+
+            cmd = build_claude_interactive_command(prompt, options)
+            env = {"CLAUDECODE" => nil}
+            env.merge!(subprocess_env) if subprocess_env
+            {
+              command: cmd,
+              env: env,
+              working_dir: working_dir,
+              prompt: prompt
+            }
           end
 
           private
@@ -159,6 +189,25 @@ module Ace
             # User CLI args last so they take precedence (last-wins in most CLIs)
             cmd.concat(filter_unsupported_cli_args(cli_args, max_tokens_requested: max_tokens_requested))
 
+            cmd
+          end
+
+          def build_claude_interactive_command(prompt, options)
+            cmd = ["claude"]
+
+            if @model && @model != DEFAULT_MODEL
+              cmd << "--model" << @model
+            end
+
+            cmd.concat(
+              normalized_cli_args_without_conflicts(
+                options,
+                forbidden_flags: ["-p", "--print", "--output-format", "--input-format", "--json-schema",
+                  "--include-partial-messages", "--include-hook-events", "--no-session-persistence"],
+                label: "Claude"
+              )
+            )
+            cmd << prompt.to_s unless prompt.to_s.empty?
             cmd
           end
 
@@ -261,6 +310,29 @@ module Ace
               text: text,
               metadata: metadata
             }
+          end
+
+          def rewrite_skill_commands(prompt, working_dir: nil)
+            skills_dir = resolve_skills_dir(working_dir: working_dir)
+            return prompt unless skills_dir
+
+            skill_names = @skill_name_reader.call(skills_dir)
+            return prompt if skill_names.empty?
+
+            Atoms::CommandRewriter.call(
+              prompt,
+              skill_names: skill_names,
+              formatter: Atoms::CommandFormatters::CLAUDE_FORMATTER
+            )
+          end
+
+          def resolve_skills_dir(working_dir: nil)
+            configured = @options[:skills_dir] || @generation_config[:skills_dir]
+            return configured if configured && Dir.exist?(configured)
+
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir
+            candidate_dir = File.join(working_dir, ".claude", "skills")
+            candidate_dir if Dir.exist?(candidate_dir)
           end
 
           def extract_claude_text(response)

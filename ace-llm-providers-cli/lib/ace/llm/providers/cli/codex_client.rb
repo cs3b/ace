@@ -8,6 +8,7 @@ require_relative "cli_args_support"
 require_relative "atoms/execution_context"
 require_relative "atoms/command_rewriter"
 require_relative "atoms/command_formatters"
+require_relative "atoms/interactive_startup_policy"
 require_relative "atoms/worktree_dir_resolver"
 require_relative "molecules/skill_name_reader"
 
@@ -77,6 +78,41 @@ module Ace
               {id: "gpt-5", name: "GPT-5", description: "Advanced Codex model", context_size: 128_000},
               {id: "gpt-5-mini", name: "GPT-5 Mini", description: "Smaller, faster model", context_size: 128_000}
             ]
+          end
+
+          def interactive_supported?
+            true
+          end
+
+          def build_interactive_invocation(messages, **options)
+            validate_codex_availability!
+
+            prompt = format_messages_as_prompt(messages)
+            subprocess_env = options[:subprocess_env]
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
+
+            env = subprocess_env ? subprocess_env.to_h.dup : {}
+            overlay_home = Atoms::InteractiveStartupPolicy.codex_overlay_home(
+              working_dir: working_dir,
+              subprocess_env: subprocess_env
+            )
+            env["HOME"] = overlay_home if overlay_home
+
+            cmd = build_codex_interactive_command(
+              prompt,
+              options,
+              working_dir: working_dir
+            )
+            {
+              command: cmd,
+              env: env,
+              working_dir: working_dir,
+              prompt: prompt
+            }
           end
 
           private
@@ -179,6 +215,36 @@ module Ace
             # User CLI args last so they take precedence (last-wins in most CLIs)
             cmd.concat(normalized_cli_args(options))
 
+            cmd
+          end
+
+          def build_codex_interactive_command(prompt, options, working_dir: nil)
+            working_dir ||= Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env]
+            )
+            cmd = ["codex"]
+
+            if options[:sandbox]
+              cmd << "--sandbox" << options[:sandbox].to_s
+            end
+
+            if @model && @model != DEFAULT_MODEL
+              cmd << "--model" << @model
+            end
+
+            if (git_dir = Atoms::WorktreeDirResolver.call(working_dir: working_dir))
+              cmd << "--add-dir" << git_dir
+            end
+
+            cmd.concat(
+              normalized_cli_args_without_conflicts(
+                options,
+                forbidden_flags: ["exec", "review", "--output-last-message"],
+                label: "Codex"
+              )
+            )
+            cmd << prompt.to_s unless prompt.to_s.empty?
             cmd
           end
 

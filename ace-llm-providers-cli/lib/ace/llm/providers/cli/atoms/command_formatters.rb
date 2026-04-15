@@ -11,6 +11,9 @@ module Ace
 
             # Codex CLI: `/ace-git-commit` → `$ace-git-commit`
             CODEX_FORMATTER = ->(name) { "$#{name}" }
+
+            # Claude interactive CLI keeps slash commands unchanged.
+            CLAUDE_FORMATTER = ->(name) { "/#{name}" }
           end
         end
       end

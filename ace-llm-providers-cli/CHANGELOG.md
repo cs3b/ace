@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-04-15
+
+### Fixed
+- Added a Codex tmux startup overlay that trusts the exact working directory through a temporary per-workspace Codex home, preventing fresh tmux sandboxes from blocking on the trust prompt before agent work begins.
+
+### Changed
+- Switched tmux-facing Codex launches to reuse the shared `ace-llm --interactive` entrypoint, so provider skill translation, alias resolution, preset handling, and startup policy all flow through one path.
+
+## [0.29.0] - 2026-04-15
+
+### Added
+- Added native interactive invocation builders for Codex, Claude Code, and pi so CLI providers can be launched without their one-shot print/exec flags while still receiving translated ACE skill handoffs.
+
+### Technical
+- Added shared CLI-arg conflict guards plus Claude slash-command formatting support for the new interactive launch path.
+
 ## [0.28.6] - 2026-04-13
 
 ### Fixed

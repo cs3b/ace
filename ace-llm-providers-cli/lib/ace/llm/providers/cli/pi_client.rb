@@ -77,6 +77,31 @@ module Ace
             ]
           end
 
+          def interactive_supported?
+            true
+          end
+
+          def build_interactive_invocation(messages, **options)
+            validate_pi_availability!
+
+            prompt = format_messages_as_prompt(messages)
+            full_prompt, system_prompt = build_full_prompt(prompt, options)
+            subprocess_env = options[:subprocess_env]
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(
+              working_dir: options[:working_dir],
+              subprocess_env: subprocess_env
+            )
+            full_prompt = rewrite_skill_commands(full_prompt, working_dir: working_dir)
+
+            cmd = build_pi_interactive_command(full_prompt, options, system_prompt: system_prompt)
+            {
+              command: cmd,
+              env: subprocess_env,
+              working_dir: working_dir,
+              prompt: full_prompt
+            }
+          end
+
           private
 
           def format_messages_as_prompt(messages)
@@ -175,6 +200,31 @@ module Ace
             # User CLI args after generated flags (last-wins precedence)
             cmd.concat(normalized_cli_args(options))
 
+            cmd
+          end
+
+          def build_pi_interactive_command(full_prompt, options, system_prompt: nil)
+            cmd = ["pi"]
+
+            if system_prompt
+              cmd << "--system-prompt" << system_prompt
+            end
+
+            model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
+            provider_name, model_id = split_provider_model(model_to_use)
+            if provider_name && model_id
+              cmd << "--provider" << provider_name
+              cmd << "--model" << model_id
+            end
+
+            cmd.concat(
+              normalized_cli_args_without_conflicts(
+                options,
+                forbidden_flags: ["-p", "--print", "--no-session", "--no-skills", "--mode"],
+                label: "Pi"
+              )
+            )
+            cmd << full_prompt.to_s unless full_prompt.to_s.empty?
             cmd
           end
 
