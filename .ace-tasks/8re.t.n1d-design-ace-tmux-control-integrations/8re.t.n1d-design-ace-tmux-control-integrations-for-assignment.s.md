@@ -1,6 +1,6 @@
 ---
 id: 8re.t.n1d
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-15 15:21:32"
 estimate: TBD
@@ -8,15 +8,9 @@ dependencies: []
 tags: [ace-tmux, ace-assign, ace-demo, tmux]
 bundle:
   presets: [project]
-  files:
-    - ace-tmux/lib/ace/tmux/cli.rb
-    - ace-assign/lib/ace/assign/molecules/tmux_fork_runner.rb
-    - ace-demo/lib/ace/demo/cli/commands/record.rb
-    - .ace-tasks/8r6.t.xeu-design-ace-tmux-inspectability-and/8r6.t.xeu-design-ace-tmux-inspectability-and-recording-surfaces.s.md
-    - ux/usage.md
-  commands:
-    - ace-task show 8re.t.n1d --content
-    - ace-task show 8r6.t.xeu --content
+  files: [ace-tmux/lib/ace/tmux/cli.rb, ace-assign/lib/ace/assign/molecules/tmux_fork_runner.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, .ace-tasks/8r6.t.xeu-design-ace-tmux-inspectability-and/8r6.t.xeu-design-ace-tmux-inspectability-and-recording-surfaces.s.md, ux/usage.md]
+  commands: [ace-task show 8re.t.n1d --content, ace-task show 8r6.t.xeu --content]
+needs_review: false
 ---
 
 # Design ace-tmux control integrations for assignment and demo flows
@@ -39,16 +33,20 @@ Define the generic `ace-tmux` control-side contract so higher-level ACE tools ca
 
 1. `ace-tmux` exposes a public control surface for tmux interactions such as send, capture, wait, attach, and detach.
 2. The shared control surface serves both direct operator usage and package-to-package reuse through a Ruby API first, with CLI wrappers over the same runtime behavior.
-3. `ace-assign` consumes that shared control surface for tmux delegation behavior while keeping assignment state as the source of truth for subtree completion and failure.
-4. `ace-demo` consumes that shared control surface for tmux-aware recorder orchestration rather than embedding raw `tmux` shell commands in canonical demo tapes.
-5. The new task does not redefine or absorb the read-side runtime inventory and recording provenance work already owned by sibling task `8r6.t.xeu`.
-6. The control surface defaults to ACE-managed sessions but supports explicit targeting for demos and detached controllers.
+3. Target resolution follows one ambient-fallback rule across the public control surface: explicit CLI flags win, then ACE env vars, then live tmux context when available; unresolved targets fail clearly.
+4. `ace-tmux wait` commits to the minimum reusable v1 condition set needed by current consumers: `output`, `window-exists`, `window-active`, `pane-exists`, and `pane-exited`.
+5. `ace-tmux send` supports command text plus a bounded named-key surface rather than arbitrary raw tmux key syntax.
+6. `ace-assign` consumes that shared control surface for tmux delegation behavior while keeping assignment state as the source of truth for subtree completion and failure.
+7. `ace-demo` consumes that shared control surface for tmux-aware recorder orchestration through an additive structured YAML extension rather than embedding raw `tmux` shell commands in canonical demo tapes.
+8. The new task does not redefine or absorb the read-side runtime inventory and recording provenance work already owned by sibling task `8r6.t.xeu`.
+9. The control surface defaults to ACE-managed sessions but supports explicit targeting for demos and detached controllers.
 
 ### Interface Contract
 
 - **`ace-tmux` CLI contract**
   ```bash
   ace-tmux send --pane <target> --command "<text>"
+  ace-tmux send --pane <target> --key Enter
   ace-tmux capture --pane <target> --lines 40
   ace-tmux wait --session <name> --for window-active --window work-fs
   ace-tmux attach --session <name>
@@ -62,6 +60,7 @@ Define the generic `ace-tmux` control-side contract so higher-level ACE tools ca
   - `8r6.t.xeu` owns generic runtime inventory and recording provenance.
   - `8re.t.n1d` owns control-side interaction semantics and consumer integrations.
   - `ace-assign` and `ace-demo` must consume the shared `ace-tmux` control surface rather than redefining their own private tmux contracts.
+  - `ace-demo` adds structured tmux command maps alongside existing `type:` commands; it does not replace the current tape command model.
 
 ### Success Criteria
 
@@ -70,6 +69,7 @@ Define the generic `ace-tmux` control-side contract so higher-level ACE tools ca
 - [ ] The control surface is specified for Ruby API reuse first, with CLI wrappers over the same semantics.
 - [ ] `ace-assign` and `ace-demo` consumer behavior is defined as reuse of the shared `ace-tmux` control surface.
 - [ ] ACE-managed targeting is the default, with explicit targeting allowed where needed.
+- [ ] Ambient target-resolution precedence, bounded `wait`, and bounded named-key support are explicit.
 - [ ] Draft usage guidance exists for direct `ace-tmux` control commands and both consumer integrations.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)

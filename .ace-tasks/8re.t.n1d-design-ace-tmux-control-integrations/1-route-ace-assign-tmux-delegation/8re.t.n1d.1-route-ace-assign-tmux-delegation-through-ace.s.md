@@ -1,21 +1,17 @@
 ---
 id: 8re.t.n1d.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-15 15:21:37"
 estimate: TBD
-dependencies: []
+dependencies: [8re.t.n1d.0]
 tags: [ace-assign, ace-tmux, tmux]
 parent: 8re.t.n1d
 bundle:
   presets: [project]
-  files:
-    - ace-assign/lib/ace/assign/molecules/tmux_fork_runner.rb
-    - ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb
-    - .ace-tasks/8r6.t.xeu-design-ace-tmux-inspectability-and/8r6.t.xeu-design-ace-tmux-inspectability-and-recording-surfaces.s.md
-  commands:
-    - ace-task show 8re.t.n1d.1 --content
-    - ace-task show 8r6.t.xeu --content
+  files: [ace-assign/lib/ace/assign/molecules/tmux_fork_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, .ace-tasks/8r6.t.xeu-design-ace-tmux-inspectability-and/8r6.t.xeu-design-ace-tmux-inspectability-and-recording-surfaces.s.md]
+  commands: [ace-task show 8re.t.n1d.1 --content, ace-task show 8r6.t.xeu --content]
+needs_review: false
 ---
 
 # Route ace-assign tmux delegation through ace-tmux
@@ -34,16 +30,18 @@ Define how `ace-assign` reuses the shared `ace-tmux` runtime/control surface for
 
 ### Expected Behavior
 
-1. `ace-assign` resolves tmux sessions, windows, and panes through the shared `ace-tmux` control surface.
-2. `ace-assign` uses the shared control contract for behaviors such as current session/window resolution, `work-fs` ensure-or-reuse, pane creation or reuse, focus or selection, and command dispatch.
-3. `ace-assign` continues to use assignment state as the authoritative completion/failure signal for delegated subtree work.
-4. `ace-assign` may use tmux output capture as diagnostics, not as the primary source of truth for assignment state.
-5. The consumer contract does not redefine `ace-tmux` command shapes or runtime models privately inside `ace-assign`.
+1. `ace-assign` consumes the shared `ace-tmux` control surface defined by `8re.t.n1d.0` and does not lock a second tmux contract before that shared surface is ready.
+2. `ace-assign` resolves tmux sessions, windows, and panes through the shared `ace-tmux` control surface.
+3. `ace-assign` uses the shared control contract for behaviors such as current session/window resolution, `work-fs` ensure-or-reuse, pane creation or reuse, focus or selection, command dispatch, and bounded named-key dispatch where the shared surface requires it.
+4. `ace-assign` continues to use assignment state as the authoritative completion/failure signal for delegated subtree work.
+5. `ace-assign` may use tmux output capture as diagnostics, not as the primary source of truth for assignment state.
+6. The consumer contract does not redefine `ace-tmux` command shapes or runtime models privately inside `ace-assign`.
 
 ### Interface Contract
 
 ```bash
-ace-assign fork-run --launch-mode tmux <subtree>
+ace-assign fork-run --assignment <id>@<root> --launch-mode tmux
+ace-assign fork-run --assignment <id> --root <root> --launch-mode tmux
 ```
 
 Expected `ace-tmux` consumer behaviors:
@@ -51,6 +49,7 @@ Expected `ace-tmux` consumer behaviors:
 - ensure or reuse the `work-fs` style target window
 - start or reuse a target pane for the delegated agent
 - capture recent pane output for failure or stall diagnostics when needed
+- preserve existing public `ace-assign fork-run` argument semantics rather than inventing a positional subtree argument
 
 Error Handling:
 - when tmux targets cannot be resolved, `ace-assign` reports a clear tmux-launch failure without redefining low-level tmux errors
@@ -66,6 +65,7 @@ Edge Cases:
 - [ ] The draft covers session/window resolution, `work-fs` reuse, pane creation or reuse, dispatch, focus, and diagnostics.
 - [ ] Assignment state remains the source of truth for subtree completion and failure.
 - [ ] Diagnostic pane capture is specified as supportive evidence, not primary state.
+- [ ] All public examples use the current shipped `ace-assign fork-run` CLI shape.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -84,6 +84,7 @@ Edge Cases:
 ### Integration / E2E Validation
 
 - Walk through `ace-assign fork-run --launch-mode tmux` from current context to delegated pane startup and subtree completion.
+- Walk through both supported invocation shapes: `--assignment <id>@<root>` and `--assignment <id> --root <root>`.
 - Walk through a stalled or failed delegated run where pane capture supports diagnostics but does not replace assignment-state truth.
 
 ### Failure / Invalid Path Validation
@@ -99,6 +100,7 @@ Edge Cases:
 ## Scope of Work
 
 - Define `ace-assign` consumption of shared tmux control
+- Preserve current `ace-assign fork-run` public CLI syntax while changing only tmux-consumer behavior
 - Define `work-fs` and pane-management behavior at the contract level
 - Define diagnostic use of pane capture while preserving assignment-state truth
 

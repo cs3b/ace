@@ -22,15 +22,17 @@ ace-tmux capture --pane dev:work.0 --lines 40
 #### Expected Output
 
 - The target pane receives the command.
+- The command may be targeted explicitly, or via `ACE_TMUX_SESSION` / live tmux context when the command contract allows ambient resolution.
 - The wait operation completes when the expected output appears or fails clearly on timeout.
 - Capture returns recent pane text suitable for operator inspection.
+- The same public surface also allows bounded named-key dispatch such as `ace-tmux send --pane dev:work.0 --key Enter`.
 
 ### Scenario 2: `ace-assign` delegates a fork through `ace-tmux`
 
 **Goal**: Start a tmux-backed fork run and rely on the shared `ace-tmux` control surface for window reuse, pane dispatch, and diagnostics.
 
 ```bash
-ace-assign fork-run --launch-mode tmux 010.01
+ace-assign fork-run --assignment 8reloz@010 --launch-mode tmux
 ```
 
 #### Expected Output
@@ -49,7 +51,7 @@ ace-demo record ace-assign/docs/demo/fork-provider.tape.yml
 
 #### Expected Output
 
-- The tape uses first-class tmux-aware recorder-control directives for attach, wait, send, and detach.
+- The tape uses additive structured tmux-aware recorder-control directives for attach, wait, send, detach, and optional capture alongside existing `type:` commands.
 - Visible on-camera commands remain part of the recorded scenario when helpful.
 - Recording behavior becomes deterministic without sleep-based orchestration hacks.
 
