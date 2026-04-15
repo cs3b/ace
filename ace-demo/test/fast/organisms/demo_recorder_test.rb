@@ -477,6 +477,8 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal File.expand_path(".ace-local/demo/demo.gif", @tmp), output.visual_path
     assert_equal File.expand_path(".ace-local/demo/demo.cast", @tmp), output.cast_path
     assert_equal verification_result, output.verification
+    assert_equal yaml_path, output.tape_path
+    assert_equal sandbox_path, output.sandbox_path
     assert_equal output.cast_path, cast_verifier.args[:cast_path]
     assert_equal sandbox_path, cast_verifier.args[:sandbox_path]
     assert_equal sandbox_path, cast_verifier.args[:env]["PROJECT_ROOT_PATH"]
@@ -493,5 +495,45 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal "agg", agg_executor.cmd.first
     assert_includes agg_executor.cmd, "--font-family"
     assert_includes agg_executor.cmd, "Hack Nerd Font Mono"
+  end
+
+  def test_preserves_asciinema_sandbox_on_failed_verification
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    teardown_executor = StubTeardownExecutor.new
+    verification_result = Ace::Demo::Models::VerificationResult.new(
+      success: false,
+      status: "product-bug",
+      commands_found: ["echo ok"],
+      commands_missing: [],
+      classification: "product_bug",
+      summary: "Recorded product behavior failed verification",
+      details: {}
+    )
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: StubExecutor.new,
+      asciinema_executor: StubInteractiveExecutor.new,
+      agg_executor: StubExecutor.new,
+      cast_verifier: StubCastVerifier.new(result: verification_result),
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif"},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{"name" => "Main flow", "commands" => [{"type" => "echo ok", "sleep" => "1s"}]}]
+      ),
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: teardown_executor,
+      default_backend: "asciinema"
+    )
+
+    output = recorder.record(tape_ref: "demo")
+
+    assert_equal verification_result, output.verification
+    assert_nil teardown_executor.steps
+    assert_nil teardown_executor.sandbox_path
   end
 end

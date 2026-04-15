@@ -31,17 +31,24 @@ module Ace
           commands_missing = expected - commands_found
           required_vars = verification_spec.fetch("require_vars", [])
           missing_vars = required_vars.reject { |name| present?(captured_vars[name]) || present?(env[name]) }
+          required_output = verification_spec.fetch("require_output", [])
+          missing_output = missing_output_patterns(echoed_commands, required_output)
+          required_output_sequence = verification_spec.fetch("require_output_sequence", [])
+          missing_output_sequence = missing_output_sequence_patterns(echoed_commands, required_output_sequence)
           forbidden_hits = forbidden_output_hits(echoed_commands, verification_spec.fetch("forbid_output", []))
-          assertion_failures = run_assertions(
+          assertion_failures, assertions_skipped = run_assertions(
             verification_spec.fetch("assert_commands", []),
             sandbox_path: sandbox_path,
             env: env.merge(captured_vars)
           )
 
-          success = commands_missing.empty? && missing_vars.empty? && forbidden_hits.empty? && assertion_failures.empty?
+          success = commands_missing.empty? && missing_vars.empty? && missing_output.empty? &&
+            missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty?
           classification, status, summary, retryable = classify(
             commands_missing: commands_missing,
             missing_vars: missing_vars,
+            missing_output: missing_output,
+            missing_output_sequence: missing_output_sequence,
             forbidden_hits: forbidden_hits,
             assertion_failures: assertion_failures
           )
@@ -62,8 +69,11 @@ module Ace
               commands_expected: expected.length,
               captured_vars: captured_vars,
               missing_vars: missing_vars,
+              missing_output: missing_output,
+              missing_output_sequence: missing_output_sequence,
               forbidden_hits: forbidden_hits,
-              assertion_failures: assertion_failures
+              assertion_failures: assertion_failures,
+              assertions_skipped: assertions_skipped
             }
           )
         rescue CastParseError => e
@@ -107,16 +117,42 @@ module Ace
           end
         end
 
-        def classify(commands_missing:, missing_vars:, forbidden_hits:, assertion_failures:)
+        def classify(commands_missing:, missing_vars:, missing_output:, missing_output_sequence:, forbidden_hits:, assertion_failures:)
           return ["pass", "pass", "Verification passed", false] if commands_missing.empty? && missing_vars.empty? &&
-            forbidden_hits.empty? && assertion_failures.empty?
-          return ["instruction_defect", "instruction-defect", "Recording instructions failed verification", true] unless commands_missing.empty? && missing_vars.empty?
+            missing_output.empty? && missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty?
+          unless commands_missing.empty? && missing_vars.empty? && missing_output.empty? && missing_output_sequence.empty?
+            return ["scenario_defect", "scenario-defect", "Recording scenario failed verification", true]
+          end
 
           ["product_bug", "product-bug", "Recorded product behavior failed verification", false]
         end
 
         def normalized(command)
           command.to_s.strip.gsub(/\s+/, " ")
+        end
+
+        def missing_output_patterns(lines, patterns)
+          patterns.reject do |pattern|
+            regexp = pattern_to_regexp(pattern)
+            lines.any? { |line| line.match?(regexp) }
+          end
+        end
+
+        def missing_output_sequence_patterns(lines, patterns)
+          return [] if patterns.empty?
+
+          sequence_index = 0
+          patterns.each do |pattern|
+            regexp = pattern_to_regexp(pattern)
+            found_index = lines.each_index.find do |index|
+              index >= sequence_index && lines[index].match?(regexp)
+            end
+            return patterns[sequence_index..] unless found_index
+
+            sequence_index = found_index + 1
+          end
+
+          []
         end
 
         def extract_output_vars(lines)
@@ -153,9 +189,10 @@ module Ace
         end
 
         def run_assertions(commands, sandbox_path:, env:)
-          return [] if commands.empty?
+          return [[], false] if commands.empty?
+          return [[], true] if sandbox_path.to_s.strip.empty?
 
-          commands.filter_map do |command|
+          failures = commands.filter_map do |command|
             stdout, stderr, status = @command_runner.call(command, sandbox_path, env)
             next if status.to_i.zero?
 
@@ -166,6 +203,7 @@ module Ace
               stderr: stderr.to_s.strip
             }
           end
+          [failures, false]
         end
 
         def default_command_runner(command, sandbox_path, env)

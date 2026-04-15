@@ -29,7 +29,31 @@ Tapes are VHS script files that define terminal sessions: commands to type, timi
 
 ## Instructions
 
-1. **Preview the tape** before writing:
+1. **Define the demo contract before scripting anything**:
+
+   Capture these decisions in notes or the task/PR before you create a tape:
+
+   - **Viewpoint**: what exact terminal or tmux client is being recorded
+   - **Starting state**: what must already be visible on screen before the trigger action
+   - **Trigger action**: the concrete command or interaction that causes the behavior
+   - **Visible reaction**: the system state change that must be seen in the recording
+   - **End state**: what the reviewer should understand after the recording finishes
+
+   For demos about tmux, panes, windows, or session routing, the contract must explicitly say which tmux client view is being recorded. A shell transcript alone is not sufficient if the feature is about visible tmux behavior.
+
+2. **Keep setup off-camera unless setup is the feature**:
+
+   Pre-stage long or distracting setup before recording whenever possible:
+
+   - create fixtures, assignments, and helper scripts before the recording starts
+   - start from the state the viewer must recognize
+   - only leave setup on camera when the setup step itself is what the demo is proving
+
+   For tmux fork/window demos, prefer starting in the operator's normal work window and let the recording capture the visible transition into the fork window. Do not begin already attached to the fork window unless the feature is specifically about that attach flow.
+
+   If the demo is intended to be durable evidence for docs, review, or PR proof, prefer a committed `.tape.yml` / asciinema flow over ad-hoc inline/VHS capture so the resulting `.cast` can be re-verified later.
+
+3. **Preview the tape** before writing:
 
    ```bash
    ace-demo create <name> --dry-run -- "cmd1" "cmd2"
@@ -37,7 +61,7 @@ Tapes are VHS script files that define terminal sessions: commands to type, timi
 
    This prints the generated tape content without writing any file.
 
-2. **Create the tape**:
+4. **Create the tape**:
 
    ```bash
    ace-demo create <name> -- "cmd1" "cmd2"
@@ -48,13 +72,13 @@ Tapes are VHS script files that define terminal sessions: commands to type, timi
    ace-demo create <name> --desc "What this demo shows" --tags "feature,setup" -- "cmd1" "cmd2"
    ```
 
-3. **Update an existing tape** (overwrite):
+5. **Update an existing tape** (overwrite):
 
    ```bash
    ace-demo create <name> --force -- "cmd1" "cmd2"
    ```
 
-4. **Verify** the created tape:
+6. **Verify** the created tape:
 
    ```bash
    ace-demo show <name>
@@ -62,7 +86,7 @@ Tapes are VHS script files that define terminal sessions: commands to type, timi
 
    This displays metadata and full tape contents.
 
-5. **List all available tapes** to confirm visibility:
+7. **List all available tapes** to confirm visibility:
 
    ```bash
    ace-demo list
@@ -87,3 +111,5 @@ Tapes are VHS script files that define terminal sessions: commands to type, timi
 - Tape file created at `.ace/demo/tapes/<name>.tape`
 - `ace-demo show <name>` displays correct metadata and commands
 - `ace-demo list` shows the new tape
+- The tape starts from the intended viewer-recognizable state instead of rebuilding irrelevant setup on camera
+- For state-transition demos, the tape visibly shows `before -> trigger -> visible effect -> after`

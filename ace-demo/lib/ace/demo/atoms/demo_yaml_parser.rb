@@ -171,6 +171,14 @@ module Ace
 
           normalized = {}
           normalized["require_vars"] = normalize_string_list(verify["require_vars"], "verify.require_vars", source_path) if verify.key?("require_vars")
+          normalized["require_output"] = normalize_string_list(verify["require_output"], "verify.require_output", source_path) if verify.key?("require_output")
+          if verify.key?("require_output_sequence")
+            normalized["require_output_sequence"] = normalize_string_list(
+              verify["require_output_sequence"],
+              "verify.require_output_sequence",
+              source_path
+            )
+          end
           normalized["forbid_output"] = normalize_string_list(verify["forbid_output"], "verify.forbid_output", source_path) if verify.key?("forbid_output")
           normalized["assert_commands"] = normalize_string_list(verify["assert_commands"], "verify.assert_commands", source_path) if verify.key?("assert_commands")
           normalized

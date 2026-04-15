@@ -143,9 +143,10 @@ ace-demo record hello --pr 42 --dry-run
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
 - `.tape.yml` paths default to `asciinema` backend: scenes compile to script, record to `.cast`, then convert to GIF with `agg`.
-- Asciinema YAML recordings are verified after capture. `verify:` rules can require exported variables, forbid error output, and run final-state assertions.
-- Verification failures are classified as `instruction_defect`, `product_bug`, or `verification_error`.
+- Asciinema YAML recordings are verified after capture. `verify:` rules can require exported variables, require visible output, require ordered output transitions, forbid error output, and run final-state assertions.
+- Verification failures are classified as `scenario_defect`, `product_bug`, or `verification_error`.
 - Any non-pass verification fails the record command, writes an error report to `.ace-local/demo/`, and prevents PR upload/comment.
+- `ace-demo verify <cast> --tape <tape>` re-runs verification for an existing `.cast` file; include `--sandbox-path` when you need assertion replay from a preserved failed-recording sandbox.
 - `.tape.yml` settings can define `backend`, `playback_speed`, and `output`; CLI flags override those values.
 - Raw `.tape` and inline recordings use VHS-compatible flow.
 - `mp4` recording output is unsupported; use `gif`, or use `--backend vhs --format webm` for compatibility output.
@@ -163,6 +164,35 @@ Retimed: .ace-local/demo/hello-4x.gif (4x)
 Uploaded: hello-1700000000.gif -> https://github.com/OWNER/REPO/releases/download/demo-assets/hello-1700000000.gif
 Posted demo comment to PR #42
 ```
+
+## `ace-demo verify <cast> --tape <tape>`
+
+### Syntax
+
+```bash
+ace-demo verify .ace-local/demo/hello.cast --tape ace-demo/docs/demo/hello.tape.yml
+ace-demo verify .ace-local/demo/hello.cast --tape hello --sandbox-path .ace-local/demo/sandbox/8abc12
+ace-demo verify /tmp/demo.cast --tape ./demo.tape.yml --report-dir /tmp/demo-reports
+```
+
+### Arguments
+
+- `<cast>` — existing asciinema cast file path
+
+### Options
+
+| Option | Alias | Required | Purpose |
+|--------|-------|----------|---------|
+| `--tape` | — | Yes | Tape preset name or `.tape.yml` path |
+| `--sandbox-path` | — | No | Replay `assert_commands` against a preserved recording sandbox |
+| `--report-dir` | — | No | Directory for non-pass verification reports |
+
+### Behavior
+
+- `verify` re-runs cast verification without re-recording the demo.
+- It requires a YAML tape (`.tape.yml` / `.tape.yaml`) because verification reads the `verify:` contract and scene commands from the parsed spec.
+- When `--sandbox-path` is omitted, `assert_commands` are skipped and the output reports that assertion replay did not run.
+- Non-pass results write a markdown+json verification report and exit non-zero.
 
 ## `ace-demo retime <file>`
 

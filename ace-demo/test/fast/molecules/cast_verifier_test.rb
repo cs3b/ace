@@ -54,10 +54,10 @@ class CastVerifierTest < AceDemoTestCase
     result = @verifier.verify(cast_path: cast_path, tape_spec: @spec)
 
     assert_equal false, result.success?
-    assert_equal "instruction-defect", result.status
+    assert_equal "scenario-defect", result.status
     assert_equal ["echo hi"], result.commands_found
     assert_equal ["pwd"], result.commands_missing
-    assert_equal "instruction_defect", result.classification
+    assert_equal "scenario_defect", result.classification
     assert_equal true, result.retryable?
   end
 
@@ -123,7 +123,7 @@ class CastVerifierTest < AceDemoTestCase
     assert_equal 5, result.details[:echoed_commands_recorded]
   end
 
-  def test_classifies_missing_required_vars_as_instruction_defect
+  def test_classifies_missing_required_vars_as_scenario_defect
     cast_path = File.join(@tmp, "missing-vars.cast")
     File.write(cast_path, <<~CAST)
       {"version":3,"command":"bash --noprofile --norc -i"}
@@ -137,8 +137,43 @@ class CastVerifierTest < AceDemoTestCase
     )
 
     assert_equal false, result.success?
-    assert_equal "instruction_defect", result.classification
+    assert_equal "scenario_defect", result.classification
     assert_equal ["DEMO_TASK_REF"], result.details[:missing_vars]
+  end
+
+  def test_classifies_missing_required_output_as_scenario_defect
+    cast_path = File.join(@tmp, "missing-output.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","work\\n"]
+    CAST
+
+    result = @verifier.verify(
+      cast_path: cast_path,
+      tape_spec: @spec.merge("verify" => {"require_output" => ["work-fs"]})
+    )
+
+    assert_equal false, result.success?
+    assert_equal "scenario_defect", result.classification
+    assert_equal ["work-fs"], result.details[:missing_output]
+  end
+
+  def test_classifies_missing_required_output_sequence_as_scenario_defect
+    cast_path = File.join(@tmp, "missing-sequence.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","work-fs\\n"]
+      [0.20,"o","work\\n"]
+    CAST
+
+    result = @verifier.verify(
+      cast_path: cast_path,
+      tape_spec: @spec.merge("verify" => {"require_output_sequence" => ["work", "work-fs"]})
+    )
+
+    assert_equal false, result.success?
+    assert_equal "scenario_defect", result.classification
+    assert_equal ["work-fs"], result.details[:missing_output_sequence]
   end
 
   def test_classifies_forbidden_output_as_product_bug
@@ -188,5 +223,29 @@ class CastVerifierTest < AceDemoTestCase
     assert_equal true, result.success?
     assert_equal "pass", result.status
     assert_equal "8r6.t.vpn", result.details[:captured_vars]["DEMO_TASK_REF"]
+  end
+
+  def test_skips_assert_commands_without_sandbox_path
+    command_runner = lambda do |_command, _sandbox_path, _env|
+      raise "command runner should not be called"
+    end
+    verifier = Ace::Demo::Molecules::CastVerifier.new(command_runner: command_runner)
+    cast_path = File.join(@tmp, "skip-assertions.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","echo hi\\r\\n"]
+    CAST
+
+    result = verifier.verify(
+      cast_path: cast_path,
+      tape_spec: {
+        "scenes" => [{"commands" => [{"type" => "echo hi"}]}],
+        "verify" => {"assert_commands" => ['test -f demo.txt']}
+      },
+      env: {}
+    )
+
+    assert_equal true, result.success?
+    assert_equal true, result.details[:assertions_skipped]
   end
 end

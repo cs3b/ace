@@ -2,6 +2,6 @@
 
 module Ace
   module Demo
-    VERSION = '0.24.3'
+    VERSION = '0.24.6'
   end
 end

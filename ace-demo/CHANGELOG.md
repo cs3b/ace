@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.24.6] - 2026-04-15
+
+### Fixed
+- Made `ace-demo record` print verification summaries safely when optional failure detail arrays are absent, so reruns surface the real verification outcome instead of crashing in CLI output formatting.
+
+## [0.24.5] - 2026-04-15
+
+### Added
+- Added `ace-demo verify` plus a dedicated cast-analysis workflow so failed asciinema recordings can be re-verified and routed to scenario, product, or verifier fixes before re-recording.
+
+### Changed
+- Expanded YAML demo verification with required visible output and ordered output-transition checks, renamed scenario-side failures to `scenario_defect`, and preserved failed recording sandboxes/manifests for follow-up triage.
+
+## [0.24.4] - 2026-04-15
+
+### Changed
+- Tightened demo planning and recording workflows so tmux/UI demos define the visible transition up front and validate the operator viewpoint before recording.
+
+### Technical
+- Refreshed the handbook demo workflow instructions to reject recordings that miss the visible `before -> trigger -> effect -> after` contract for state-transition demos.
+
 ## [0.24.3] - 2026-04-13
 
 ### Changed

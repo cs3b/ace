@@ -156,7 +156,9 @@ module Ace
             recording = normalize_recording_result(recorder.record(**record_kwargs))
             puts "Recorded backend: #{recording.backend}"
             puts "Cast: #{recording.cast_path}" if recording.cast_path
-            ensure_successful_verification!(recording)
+            manifest_path = Molecules::RecordingManifestWriter.new.write(recording: recording)
+            ensure_successful_verification!(recording, manifest_path: manifest_path)
+            puts "Manifest: #{manifest_path}"
             puts "Recorded: #{recording.visual_path}"
 
             attach_path = recording.visual_path
@@ -314,11 +316,16 @@ module Ace
             puts "Summary: #{verification.summary}" if verification.summary
             missing = verification.commands_missing
             puts "Missing commands: #{missing.join(', ')}" unless missing.empty?
-            missing_vars = verification.details&.fetch(:missing_vars, [])
+            missing_vars = verification.details&.fetch(:missing_vars, []) || []
             puts "Missing vars: #{missing_vars.join(', ')}" unless missing_vars.empty?
+            missing_output = verification.details&.fetch(:missing_output, []) || []
+            puts "Missing output: #{missing_output.join(', ')}" unless missing_output.empty?
+            missing_sequence = verification.details&.fetch(:missing_output_sequence, []) || []
+            puts "Missing output sequence: #{missing_sequence.join(' -> ')}" unless missing_sequence.empty?
+            puts "Assertions replay: skipped" if verification.details&.fetch(:assertions_skipped, false)
           end
 
-          def ensure_successful_verification!(recording)
+          def ensure_successful_verification!(recording, manifest_path: nil)
             verification = recording.verification
             return unless verification
 
@@ -329,6 +336,7 @@ module Ace
               demo_name: verification_demo_name(recording),
               verification: verification
             )
+            Molecules::RecordingManifestWriter.new.write(recording: recording) if manifest_path
             puts "Verification report: #{report_path}"
             raise Ace::Support::Cli::Error, "Demo verification failed (#{verification.classification}). Report: #{report_path}"
           end
