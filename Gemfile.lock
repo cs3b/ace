@@ -336,7 +336,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.35.4)
+    ace-task (0.35.5)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
