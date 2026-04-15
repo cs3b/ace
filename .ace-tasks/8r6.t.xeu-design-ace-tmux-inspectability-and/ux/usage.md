@@ -9,6 +9,8 @@
 
 ## Usage Scenarios
 
+This usage draft covers the read-side surface only: `ace-tmux state`, recording enablement, persisted artifact reporting, and provenance fields. Interactive control commands such as `send`, `wait`, live pane-tail `capture`, `attach`, and `detach` belong to sibling task `8re.t.n1d`.
+
 ### Scenario 1: Inspect runtime tmux state for ACE-managed sessions and panes
 
 **Goal**: An operator or higher-level ACE tool queries tmux runtime state to find active ACE-managed sessions, windows, and panes.
@@ -25,7 +27,7 @@ ace-tmux state --format json
   - pane and window identifiers
   - liveness hints and current commands where available
   - effective recording status and the `source_scope` that enabled recording
-  - artifact directories or manifest paths for recorded panes
+  - persisted artifact directories or manifest paths for recorded panes
 
 ### Scenario 2: Configure recording through ACE-managed tmux presets
 
@@ -66,7 +68,7 @@ ace-tmux start --record
 
 - `ace-tmux` starts the session with recording enabled for ACE-managed panes unless overridden at a lower scope.
 - Recording remains scoped to ACE-managed panes rather than arbitrary existing tmux panes.
-- Recorded artifacts are stored under `.ace-local/tmux/`.
+- Persisted recording artifacts are stored under `.ace-local/tmux/`.
 
 ### Scenario 4: Inspect recorded evidence after manual takeover work
 
@@ -86,4 +88,5 @@ ace-tmux state --format json
 ## Notes for Implementer
 
 - Visible fork launch behavior is owned by sibling task `8r6.t.u53`.
+- Interactive control behavior is owned by sibling task `8re.t.n1d`.
 - Full usage documentation to be completed during work-on-task step using `wfi://docs/update-usage`.
