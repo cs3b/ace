@@ -372,6 +372,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       wrapper = File.join(tmp_dir, "sessions", "010-tmux-launch.sh")
       assert File.exist?(wrapper), "tmux launch wrapper should be written"
       wrapper_contents = File.read(wrapper)
+      assert_includes wrapper_contents, "export PROJECT_ROOT_PATH=#{Dir.pwd}"
       assert_includes wrapper_contents, "printf '%s\n' \\$as-assign-drive\\ abc123@010"
       assert_equal [], fake.calls, "tmux mode should run through the pane wrapper, not direct query"
       assert_equal "claude:sonnet", interactive.calls.last[:provider_model]

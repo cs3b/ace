@@ -34,6 +34,8 @@ setup:
     PROJECT_ROOT_PATH="$PWD" ace-assign create --yaml fork-demo-job.yaml
     ruby -e 'link = ".ace-local/assign/.latest"; abort "no latest assignment" unless File.symlink?(link); File.write("ASSIGN_ID", File.basename(File.readlink(link)))'
 - run: tmux new-session -d -s fork-demo -n work -c "$PWD" "bash --noprofile --norc -i"
+- run: |
+    bash -lc 'sleep 45; tmux detach-client -s fork-demo || true' >/tmp/ace-demo-fork-provider-detach.log 2>&1 &
 scenes:
 - name: Attach to the operator work window
   commands:
@@ -46,19 +48,19 @@ scenes:
   - type: ACE_TMUX_SESSION=fork-demo PROJECT_ROOT_PATH="$PWD" ace-assign status --assignment "$(cat ASSIGN_ID)@010"
     sleep: 2s
   - type: bash -lc 'ACE_TMUX_SESSION=fork-demo PROJECT_ROOT_PATH="$PWD" ace-assign fork-run --assignment "$(cat ASSIGN_ID)@010" --launch-mode tmux --provider codex:gpt@yolo --cli-args "--no-alt-screen" --timeout 120 &'
-    sleep: 25s
+    sleep: 35s
 verify:
   require_output:
   - work
   - work-fs
   - $as-assign-drive
-  - Working (
+  - Explored
   require_output_sequence:
   - work
   - ace-assign fork-run
   - work-fs
   - $as-assign-drive
-  - Working (
+  - Explored
   forbid_output:
   - requires an active tmux session
   - Could not resolve current tmux window
