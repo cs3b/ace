@@ -18,11 +18,16 @@ module Ace
         end
 
         def available_providers
-          ["claude"]
+          ["claude", "codex"]
         end
 
-        def models_for_provider(_provider)
-          ["sonnet"]
+        def models_for_provider(provider)
+          case provider
+          when "codex"
+            ["gpt"]
+          else
+            ["sonnet"]
+          end
         end
 
         def resolve_alias(input)
@@ -46,7 +51,7 @@ module Ace
           QueryInterface.query("claude:sonnet", "hi", cli_args: "dangerously-skip-permissions")
         end
 
-        assert_equal "dangerously-skip-permissions", client.received_options[:cli_args]
+        assert_equal ["dangerously-skip-permissions"], client.received_options[:cli_args]
       end
 
       def test_query_interface_threads_sandbox
@@ -82,18 +87,26 @@ module Ace
           end
         end
 
-        assert_equal "--verbose", client.received_options[:cli_args]
+        assert_equal ["--verbose"], client.received_options[:cli_args]
       end
 
       def test_query_interface_merges_preset_cli_args_with_explicit_cli_args
         client = FakeClient.new
         registry = FakeRegistry.new(client)
 
-        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
-          QueryInterface.query("codex:gpt@yolo", "hi", cli_args: "--no-alt-screen")
+        preset_loader = proc do |provider, preset|
+          next({"cli_args" => ["--dangerously-bypass-approvals-and-sandbox"]}) if provider == "codex" && preset == "yolo"
+
+          raise "unexpected preset lookup: #{provider}@#{preset}"
         end
 
-        assert_equal "--dangerously-bypass-approvals-and-sandbox --no-alt-screen", client.received_options[:cli_args]
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          Ace::LLM::Molecules::PresetLoader.stub(:load_for_provider, preset_loader) do
+            QueryInterface.query("codex:gpt@yolo", "hi", cli_args: "--no-alt-screen")
+          end
+        end
+
+        assert_equal ["--dangerously-bypass-approvals-and-sandbox", "--no-alt-screen"], client.received_options[:cli_args]
       end
 
       def test_claude_ro_preset_allows_bash_and_read_tools
