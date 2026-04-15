@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-04-15
+
+### Fixed
+- Updated the `cli_args` threading feature tests to match the normalized array contract and stub provider preset loading directly, so `ace-test ace-llm` no longer fails on stale scalar expectations or package-local preset lookup assumptions.
+
 ## [0.35.0] - 2026-04-15
 
 ### Fixed
