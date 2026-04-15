@@ -1,0 +1,22 @@
+session:
+  name: watch-sequential-operations
+  description: Sequential fork continuation flow
+
+steps:
+  - name: child-one
+    context: fork
+    instructions: |
+      Execute the first delegated subtree.
+    sub_steps:
+      - do-one
+
+  - name: child-two
+    context: fork
+    instructions: |
+      Execute the second delegated subtree.
+    sub_steps:
+      - do-two
+
+  - name: inline-tail
+    instructions: |
+      This step should remain for the driver after watch completes.

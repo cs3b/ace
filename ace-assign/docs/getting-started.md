@@ -126,6 +126,7 @@ ace-assign finish --message report.md --assignment abc123@010.01
 | `ace-assign add --step NAME` | Insert preset step dynamically |
 | `ace-assign retry 040` | Retry failed step as linked work |
 | `ace-assign fork-run --root 010.01` | Execute a subtree in forked context |
+| `ace-assign watch --assignment abc123` | Continue sequential fork work until inline/manual work resumes |
 
 ## Next steps
 

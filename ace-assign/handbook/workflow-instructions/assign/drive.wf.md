@@ -351,7 +351,7 @@ The driver MUST NOT pause for user input between child fork-runs within a batch 
 1. Verify the child's reports (see Subtree Guard below).
 2. If reports indicate successful completion, immediately launch the next pending child.
 3. Treat the entire batch loop as a single unit of execution -- only pause on quality concerns flagged during report review.
-4. For timeout-constrained environments: launch `fork-run` in background, poll for completion, then loop to the next child without pausing.
+4. Delegate fork waiting and resume logic to `ace-assign watch`; do not hand-roll shell sleep loops inside the workflow.
 
 Conversational boundary rule:
 
@@ -393,21 +393,16 @@ After launching `ace-assign fork-run`, the driver remains inside the same drive 
 
 - Treat "fork subtree is still running" as an internal progress state, not as a stop condition.
 - Do not end the turn, emit a final user-facing completion summary, or hand control back to the user merely because the driver is waiting on fork completion.
-- Poll the forked subtree every 6 minutes by default. Use two signals on each poll:
+- Delegate fork waiting and resume logic to `ace-assign watch`.
+- Treat `ace-assign status` as the source of truth. The watcher may use PID/session telemetry, but queue state remains canonical.
+- Run:
 
-  1. poll the live fork session/process handle
-  2. poll scoped assignment status with `ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"`
+  ```bash
+  ace-assign watch --assignment "$ASSIGNMENT_TARGET"
+  ```
 
-- Treat scoped assignment status as the source of truth for subtree completion. Terminal PTY output is helpful telemetry, but it is not the canonical completion signal.
-- Continue polling until one of these is true:
-
-  - the `fork-run` process exits
-  - scoped status for the subtree proves every step inside that subtree is terminal (`done` or `failed`)
-  - the workflow reaches a documented blocker or failure path
-
-- If scoped subtree status is terminal, immediately treat the fork as complete even if the PTY stayed quiet or the original terminal handle has already disappeared.
-- A quiet terminal is not a stall by itself. Only treat the fork as stalled when there is no scoped status movement, no new subtree reports, and no process exit for about 30 minutes.
-- When the wait ends, immediately re-enter the parent drive loop. Do not stop between "fork finished" and "next runnable step started."
+- If the watcher returns because the assignment or scoped subtree is complete, continue with the post-fork checklist and then complete the broader workflow if no runnable work remains.
+- If the watcher returns because only inline/manual work remains, immediately continue the main drive loop and execute that work. Do not stop between "watch finished" and "next runnable step started."
 
 #### Post-Fork Resume Checklist
 
@@ -435,28 +430,8 @@ Detached-resume rule:
 Concrete example:
 
 - Incorrect: launch `fork-run` for `040`, post "waiting on subtree", stop responding, and never resume `070`.
-- Correct: launch `fork-run` for `040`, poll until it finishes, review reports, re-check `ace-assign status --assignment "$ASSIGNMENT_TARGET"`, then advance and launch `070` if it is the next runnable step.
+- Correct: launch `fork-run` for `040`, run `ace-assign watch --assignment "$ASSIGNMENT_TARGET"`, review reports, re-check `ace-assign status --assignment "$ASSIGNMENT_TARGET"`, then advance and launch `070` if it is the next runnable step.
 - Correct after interruption: re-run `/as-assign-drive <assignment-id>`, detect that `040` is already terminal from scoped status/reports, then immediately advance and launch `070`.
-
-> **Long-running execution:** `fork-run` typically takes 10-30 minutes depending on subtree complexity. If your environment has bash timeout limits (e.g., Claude Code's 10-minute Bash tool limit), run `fork-run` in background and poll for completion:
->
-> ```bash
-> # Run fork-run in background (use run_in_background: true in Claude Code)
-> ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
->
-> # Poll scoped status every 6 minutes until subtree completes
-> while true; do
->   STATUS_JSON=$(ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" --format json)
->   COMPLETE=$(echo "$STATUS_JSON" | ruby -rjson -e '
->     json = JSON.parse(STDIN.read)
->     steps = json["steps"] || []
->     puts steps.all? { |step| step["status"] == "done" || step["status"] == "failed" }
->   ')
->   [ "$COMPLETE" = "true" ] && break
->   sleep 360
-> done
-> ace-assign status --assignment "$ASSIGNMENT_TARGET"
-> ```
 
 #### Subtree Completion: Task Status Verification
 

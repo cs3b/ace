@@ -1,0 +1,32 @@
+test-id: TS-ASSIGN-003
+title: "ace-assign Multi-Assignment and Fork-Run Operations"
+timeout: 900
+area: assign
+package: ace-assign
+priority: high
+tags: [deep, "use-case:assign", operations]
+cost-tier: happy-path
+tool-under-test: ace-assign
+
+sandbox-layout:
+  results/tc/01/: "Multi-assignment operator flow evidence"
+  results/tc/02/: "Fork-run delegated subtree evidence"
+  results/tc/03/: "Watch-driven sequential fork continuation evidence"
+
+e2e-justification: >
+  Assignment operators rely on explicit assignment targeting and scoped subtree
+  execution. This scenario validates those user-visible operations through real
+  CLI journeys: working with multiple concurrent assignments, executing a
+  fork-enabled subtree using `fork-run` with scoped assignment syntax, and
+  continuing sequential fork children through `watch` without user prompts.
+
+requires:
+  tools: [ace-assign]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - copy-fixtures
+  - agent-env:
+      PROJECT_ROOT_PATH: .

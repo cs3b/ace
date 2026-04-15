@@ -49,6 +49,7 @@ require_relative "cli/commands/retry_cmd"
 require_relative "cli/commands/list"
 require_relative "cli/commands/select"
 require_relative "cli/commands/fork_run"
+require_relative "cli/commands/watch"
 
 module Ace
   module Assign
@@ -70,7 +71,8 @@ module Ace
         ["retry", "Retry failed step"],
         ["list", "List all assignments"],
         ["select", "Select active assignment"],
-        ["fork-run", "Run subtree in forked process"]
+        ["fork-run", "Run subtree in forked process"],
+        ["watch", "Watch and continue forked assignment work"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -80,7 +82,8 @@ module Ace
         "ace-assign start                      # Start next workable step",
         "ace-assign finish --message done.md    # Complete active step",
         "cat report.md | ace-assign finish     # Complete step via stdin",
-        "ace-assign fork-run 010.01            # Run subtree in subprocess"
+        "ace-assign fork-run 010.01            # Run subtree in subprocess",
+        "ace-assign watch --assignment abc123  # Continue forked queue work"
       ].freeze
 
       # Captured command exit code from last run
@@ -127,6 +130,7 @@ module Ace
       register "list", wrap_command(Commands::List)
       register "select", wrap_command(Commands::Select)
       register "fork-run", wrap_command(Commands::ForkRun)
+      register "watch", wrap_command(Commands::Watch)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

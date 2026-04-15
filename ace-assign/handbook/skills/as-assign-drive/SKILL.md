@@ -26,7 +26,7 @@ Load and run `ace-bundle wfi://assign/drive` in the current project, then follow
 Hard stop rule:
 
 - Do not stop after intermediate progress.
-- Do not stop while waiting on a forked subtree; keep polling and resume the parent drive loop as soon as the subtree reaches a terminal state.
+- Do not stop while waiting on a forked subtree; `ace-assign watch` owns fork waiting and queue continuation until control legitimately returns to the workflow.
 - Treat `ace-assign status --assignment <id>@<root>` as the source of truth for fork completion; quiet terminal output is not enough reason to stop or declare a stall.
 - If a prior terminal or drive session ended, re-enter from assignment state and continue from the next runnable work instead of depending on the old terminal handle.
 - Before any final response, re-check pinned assignment status. If any runnable `pending` or `in_progress` work remains, continue driving.

@@ -16,13 +16,13 @@ class AssignDriveContractTest < AceAssignTestCase
   def test_drive_workflow_requires_status_driven_fork_resume
     content = drive_workflow
 
-    assert_includes content, "Poll the forked subtree every 6 minutes by default."
-    assert_includes content, "Treat scoped assignment status as the source of truth for subtree completion."
-    assert_includes content, "ace-assign step --assignment \"$ASSIGNMENT_TARGET\""
-    assert_includes content, "If scoped subtree status is terminal, immediately treat the fork as complete"
+    assert_includes content, "Delegate fork waiting and resume logic to `ace-assign watch`."
+    assert_includes content, "ace-assign watch --assignment \"$ASSIGNMENT_TARGET\""
+    assert_includes content, "Treat `ace-assign status` as the source of truth."
+    assert_includes content, "If the watcher returns because only inline/manual work remains"
     assert_includes content, "If a prior drive session or terminal ended, a new `/as-assign-drive` invocation MUST recover from assignment state"
     assert_includes content, "Correct after interruption: re-run `/as-assign-drive <assignment-id>`"
-    assert_includes content, "sleep 360"
+    refute_includes content, "sleep 360"
   end
 
   def test_drive_skill_remains_a_thin_workflow_wrapper
@@ -30,7 +30,7 @@ class AssignDriveContractTest < AceAssignTestCase
 
     assert_includes content, "workflow: wfi://assign/drive"
     assert_includes content, "Load and run `ace-bundle wfi://assign/drive`"
-    assert_includes content, "source of truth for fork completion"
+    assert_includes content, "`ace-assign watch` owns fork waiting and queue continuation"
     assert_includes content, "re-enter from assignment state"
     refute_includes content, "Planned steps are mandatory work items."
     refute_includes content, "External Action Rule (Attempt-First)"

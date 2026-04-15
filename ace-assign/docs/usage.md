@@ -218,6 +218,32 @@ Options:
 - `--cli-args <args>`
 - `--timeout <seconds>`
 - `--quiet, -q`
+
+### `ace-assign watch`
+
+Watch active forked assignment work and continue to the next forkable subtree without
+returning control between child completions.
+
+Invocation:
+
+```bash
+ace-assign watch --assignment <id>
+ace-assign watch --assignment <id>@010
+```
+
+Options:
+
+- `--assignment <id>` or `--assignment <id>@<root>`
+- `--root <step-number>`
+- `--poll-interval <seconds>`
+- `--quiet, -q`
+- `--debug, -d`
+
+Behavior:
+
+- Watches existing in-progress forked subtrees and recovers from assignment state after interruption.
+- Launches the next pending fork-enabled subtree immediately after the prior child completes.
+- Stops only when the watched assignment/subtree is complete, failed, or the next runnable step requires inline/manual execution outside the deterministic CLI.
 - `--debug, -d`
 
 Provider resolution precedence for fork execution:
