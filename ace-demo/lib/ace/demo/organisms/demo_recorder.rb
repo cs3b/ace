@@ -79,7 +79,8 @@ module Ace
           @executor.run(cmd)
           Models::RecordingResult.new(
             backend: "vhs",
-            visual_path: output_path
+            visual_path: output_path,
+            tape_path: tape_path
           )
         end
 
@@ -128,14 +129,22 @@ module Ace
               vhs_bin: @vhs_bin
             )
             @executor.run(cmd, chdir: sandbox[:path])
-            return Models::RecordingResult.new(backend: "vhs", visual_path: raw_output_path) unless selected_speed
+            return Models::RecordingResult.new(
+              backend: "vhs",
+              visual_path: raw_output_path,
+              tape_path: tape_path
+            ) unless selected_speed
 
             retimed = @media_retimer.retime(
               input_path: raw_output_path,
               speed: selected_speed[:label],
               output_path: retime_output_path
             )
-            Models::RecordingResult.new(backend: "vhs", visual_path: retimed[:output_path])
+            Models::RecordingResult.new(
+              backend: "vhs",
+              visual_path: retimed[:output_path],
+              tape_path: tape_path
+            )
           ensure
             @teardown_executor.execute(steps: spec["teardown"] || [], sandbox_path: sandbox[:path]) if sandbox
           end
@@ -154,6 +163,7 @@ module Ace
           FileUtils.mkdir_p(File.dirname(retime_output_path)) if retime_output_path
 
           sandbox = @sandbox_builder.build(source_tape_path: tape_path, setup_steps: spec["setup"] || [])
+          verification = nil
           begin
             inject_sandbox_env(spec, sandbox[:path])
             env = (settings["env"] || {}).transform_values(&:to_s)
@@ -200,10 +210,14 @@ module Ace
               backend: "asciinema",
               cast_path: cast_output_path,
               visual_path: visual_path,
-              verification: verification
+              verification: verification,
+              tape_path: tape_path,
+              sandbox_path: sandbox[:path]
             )
           ensure
-            @teardown_executor.execute(steps: spec["teardown"] || [], sandbox_path: sandbox[:path]) if sandbox
+            if sandbox && (verification.nil? || verification.success?)
+              @teardown_executor.execute(steps: spec["teardown"] || [], sandbox_path: sandbox[:path])
+            end
           end
         end
 

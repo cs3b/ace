@@ -39,6 +39,8 @@ class DemoYamlParserTest < AceDemoTestCase
         "description" => "demo",
         "verify" => {
           "require_vars" => ["DEMO_ISSUE_NUMBER"],
+          "require_output" => ["work-fs"],
+          "require_output_sequence" => ["work", "work-fs"],
           "forbid_output" => ["GitHub sync warning"],
           "assert_commands" => ['test "$DEMO_ISSUE_NUMBER" = "123"']
         },
@@ -50,6 +52,8 @@ class DemoYamlParserTest < AceDemoTestCase
     )
 
     assert_equal ["DEMO_ISSUE_NUMBER"], parsed["verify"]["require_vars"]
+    assert_equal ["work-fs"], parsed["verify"]["require_output"]
+    assert_equal ["work", "work-fs"], parsed["verify"]["require_output_sequence"]
     assert_equal ["GitHub sync warning"], parsed["verify"]["forbid_output"]
     assert_equal ['test "$DEMO_ISSUE_NUMBER" = "123"'], parsed["verify"]["assert_commands"]
   end

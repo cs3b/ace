@@ -39,7 +39,10 @@ module Ace
 
           append_list(lines, "Missing Commands", verification.commands_missing)
           append_list(lines, "Missing Vars", details[:missing_vars])
+          append_list(lines, "Missing Output", details[:missing_output])
+          append_list(lines, "Missing Output Sequence", details[:missing_output_sequence])
           append_hits(lines, "Forbidden Output Hits", details[:forbidden_hits])
+          append_assertion_skip(lines, details[:assertions_skipped])
           append_assertions(lines, details[:assertion_failures])
 
           if details[:error]
@@ -98,6 +101,15 @@ module Ace
             lines << "  Stdout: `#{failure[:stdout]}`" unless failure[:stdout].to_s.empty?
             lines << "  Stderr: `#{failure[:stderr]}`" unless failure[:stderr].to_s.empty?
           end
+          lines << ""
+        end
+
+        def append_assertion_skip(lines, assertions_skipped)
+          return unless assertions_skipped
+
+          lines << "## Assertion Replay"
+          lines << ""
+          lines << "- Assertion commands were skipped because no sandbox path was available."
           lines << ""
         end
       end

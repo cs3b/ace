@@ -25,6 +25,7 @@ class CliTest < AceDemoTestCase
     assert_includes output, "list"
     assert_includes output, "show"
     assert_includes output, "record"
+    assert_includes output, "verify"
     assert_includes output, "retime"
     assert_includes output, "attach"
   end
@@ -397,6 +398,50 @@ class CliTest < AceDemoTestCase
           assert_includes result[:stdout], "Verification report: .ace-local/demo/hello-error-report.md"
           assert_includes result[:stderr], "Demo verification failed (product_bug)"
         end
+      end
+    end
+  end
+
+  def test_verify_command_passes_for_existing_cast
+    Dir.mktmpdir("ace_demo_cli_verify") do |dir|
+      cast_path = File.join(dir, "demo.cast")
+      tape_path = File.join(dir, "demo.tape.yml")
+      File.write(cast_path, <<~CAST)
+        {"version":3,"command":"bash --noprofile --norc -i"}
+        [0.10,"o","echo hi\\r\\n"]
+      CAST
+      File.write(tape_path, "description: demo\n")
+
+      Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+        "scenes" => [{"commands" => [{"type" => "echo hi"}]}],
+        "verify" => {}
+      }) do
+        result = invoke(["verify", cast_path, "--tape", tape_path])
+        assert_equal 0, result[:result]
+        assert_includes result[:stdout], "Verification: pass"
+      end
+    end
+  end
+
+  def test_verify_command_writes_report_for_non_pass_result
+    Dir.mktmpdir("ace_demo_cli_verify_fail") do |dir|
+      cast_path = File.join(dir, "demo.cast")
+      tape_path = File.join(dir, "demo.tape.yml")
+      report_dir = File.join(dir, "reports")
+      File.write(cast_path, <<~CAST)
+        {"version":3,"command":"bash --noprofile --norc -i"}
+        [0.10,"o","echo hi\\r\\n"]
+      CAST
+      File.write(tape_path, "description: demo\n")
+
+      Ace::Demo::Atoms::DemoYamlParser.stub(:parse_file, {
+        "scenes" => [{"commands" => [{"type" => "echo hi"}, {"type" => "pwd"}]}],
+        "verify" => {}
+      }) do
+        result = invoke(["verify", cast_path, "--tape", tape_path, "--report-dir", report_dir])
+        assert_equal 1, result[:result]
+        assert_includes result[:stdout], "Verification: scenario-defect"
+        assert_includes result[:stdout], "Verification report: #{File.join(report_dir, "demo-error-report.md")}"
       end
     end
   end
