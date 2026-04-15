@@ -4,8 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-llm v0.35.0**: Preserved preset CLI args when `ace-llm --interactive` also receives explicit `--cli-args`, so tmux Codex launches keep `@yolo` autonomy while still accepting extra runtime flags.
+- **ace-llm-providers-cli v0.30.0**: Added a per-workspace Codex tmux startup overlay that trusts the live working directory without mutating the operator's real `~/.codex`, removing the fresh-sandbox trust prompt that blocked visible fork work.
+
 ### Changed
+- **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
+
+### Technical
+- Updated the checked-in tmux `work-on` Codex pane preset to launch through `ace-llm --interactive`, unifying Overseer and assignment forks on the same provider startup path.
+
+### Changed
+- **ace-assign v0.51.0**: Switched tmux fork execution to launch real interactive agents through `ace-llm --interactive`, auto-send the scoped `/as-assign-drive <assignment>@<root>` handoff, and track completion from subtree state instead of pane exit.
+- **ace-llm v0.34.0**: Added `--interactive` so CLI-backed providers can launch their native terminal UIs through the normal alias/preset/translation path.
+- **ace-llm-providers-cli v0.29.0**: Added interactive launch builders for Codex, Claude Code, and pi, including skill-translation support and strict rejection of one-shot-only CLI flags in interactive mode.
+- **ace-assign v0.50.3**: Fixed tmux fork-window lookup for explicit-session launches, tightened the committed `fork-provider` tape/setup, and refreshed the verified tmux fork demo artifacts (`.gif`, `.cast`, manifest) from a passing rerun.
+- **ace-demo v0.24.6**: Made `ace-demo record` handle missing optional verification-detail arrays without crashing so failed reruns report the real verification result cleanly.
+- **ace-demo v0.24.5**: Added reusable cast verification and cast-analysis flows for asciinema demos, with richer output-transition checks and preserved failed-recording manifests/sandboxes for triage.
+- **ace-assign v0.50.2**: Fixed tmux fork-window detection when fork launches rely on `ACE_TMUX_SESSION` and replaced the stale fork-provider tape with a verifier-backed `work -> work-fs` demo.
+- **ace-demo v0.24.4**: Tightened demo planning/recording workflows so tmux and other UI demos must define and visibly capture the actual `before -> trigger -> effect -> after` transition from the operator viewpoint.
+- **ace-assign v0.50.1**: Refreshed the tmux fork demo asset so the recorded `fork-run` flow visibly opens the fork staging window from the current work window.
 - **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
+- **ace-assign v0.50.0**: Added `ace-assign fork-run --launch-mode auto|headless|tmux`, tmux-backed fork pane orchestration in a `<current-window>-fs` staging window, persisted tmux fork-session metadata, and refreshed assign docs/demo coverage for the new fork runtime.
 
 ### Fixed
 - **ace-assign v0.49.2**: Rewrote `TS-ASSIGN-002` to verify hierarchy renumbering, auto-completion, and audit flows from sandbox end state plus runner observations instead of helper artifacts.
