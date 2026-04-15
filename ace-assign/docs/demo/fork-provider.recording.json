@@ -1,0 +1,32 @@
+{
+  "backend": "asciinema",
+  "tape_path": "/home/mc/ace-t.u53.0/ace-assign/docs/demo/fork-provider.tape.yml",
+  "cast_path": "/home/mc/ace-t.u53.0/ace-assign/docs/demo/fork-provider.cast",
+  "visual_path": "/home/mc/ace-t.u53.0/ace-assign/docs/demo/fork-provider.gif",
+  "sandbox_path": "/home/mc/ace-t.u53.0/.ace-local/demo/sandbox/8rekyn",
+  "verification": {
+    "status": "scenario-defect",
+    "classification": "scenario_defect",
+    "summary": "Recording scenario failed verification",
+    "retryable": true,
+    "report_path": "/home/mc/ace-t.u53.0/.ace-local/demo/fork-provider-error-report.md",
+    "details": {
+      "cast_path": "/home/mc/ace-t.u53.0/ace-assign/docs/demo/fork-provider.cast",
+      "inputs_recorded": 0,
+      "echoed_commands_recorded": 70,
+      "script_commands_recorded": 0,
+      "commands_expected": 7,
+      "captured_vars": {
+        "ACE_TMUX_SESSION": "fork-demo PROJECT_ROOT_PATH=\"$PWD\" ace-assign fork-run --assignment \"$(cat ASSIGN_ID)@010\" --launch-mode tmux --provider codex:gpt@yolo --cli-args \"--no-alt-screen\" --timeout 120"
+      },
+      "missing_vars": [],
+      "missing_output": [
+        "{\"Task context\" => nil}"
+      ],
+      "missing_output_sequence": null,
+      "forbidden_hits": [],
+      "assertion_failures": [],
+      "assertions_skipped": false
+    }
+  }
+}

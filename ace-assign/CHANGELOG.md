@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-04-15
+
+### Changed
+- Tightened the committed tmux fork demo contract so the recording is aimed at the visible `work -> work-fs -> agent starts working` transition instead of a synthetic transcript.
+
+### Technical
+- Made tmux fork wrappers print the translated skill handoff before launching the interactive agent, keeping the fork pane bootstrap visible and testable.
+
+## [0.51.0] - 2026-04-15
+
+### Changed
+- Reworked tmux fork execution to start a real interactive agent session via `ace-llm --interactive` in the `<current-window>-fs` pane and auto-send the scoped `/as-assign-drive <assignment>@<root>` handoff instead of running the old headless fork-session wrapper in tmux.
+
+### Technical
+- Switched tmux fork completion tracking from pane-process exit to subtree-state polling so interactive agents can stay open while forked assignment progress is still tracked to completion.
+
+## [0.50.3] - 2026-04-15
+
+### Fixed
+- Fixed tmux fork-window lookup by correcting `TmuxForkRunner` result normalization, so explicit-session launches resolve the current window instead of failing under detached-session demo/recording runs.
+
+### Changed
+- Refined the committed `fork-provider` asciinema tape/setup and refreshed the demo artifacts (`.gif`, `.cast`, and recording manifest) after rerunning the verified tmux fork demo against PR-ready behavior.
+
+## [0.50.2] - 2026-04-15
+
+### Fixed
+- Resolved tmux-backed fork window detection when `ACE_TMUX_SESSION` is set without a live `TMUX` variable, so visible fork demos and detached-session launches still resolve the current window correctly.
+
+### Changed
+- Replaced the stale `fork-provider` demo tape with an asciinema/YAML recording that verifies the real `work -> work-fs` tmux fork transition.
+
+## [0.50.1] - 2026-04-15
+
+### Changed
+- Refreshed the tmux-backed fork demo asset so the recorded flow starts in the operator work window and visibly opens the fork staging window during `fork-run`.
+
+## [0.50.0] - 2026-04-15
+
+### Changed
+- Added `ace-assign fork-run --launch-mode auto|headless|tmux`, keeping the existing headless subprocess path while allowing tmux-backed fork execution in the current tmux session.
+- Tmux-backed fork runs now create or reuse a `<current-window>-fs` window, launch forked provider sessions in panes there, and persist tmux session/window/pane metadata alongside existing fork session files.
+
+### Technical
+- Added an internal `ace-assign fork-session` entrypoint plus launcher/test coverage to reuse the existing provider-backed fork session path from tmux panes.
+- Added a recorded tmux fork demo GIF under `docs/demo/` and updated usage docs for the new launch-mode contract.
+
 ## [0.49.2] - 2026-04-13
 
 ### Fixed

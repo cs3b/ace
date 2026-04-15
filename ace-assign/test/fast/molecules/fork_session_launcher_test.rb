@@ -3,6 +3,76 @@
 require_relative "../../test_helper"
 
 class ForkSessionLauncherTest < AceAssignTestCase
+  class FakeTmuxRunner
+    def initialize(enabled: false, session: "dev", window: "task")
+      @enabled = enabled
+      @session = session
+      @window = window
+    end
+
+    def tmux_context?
+      @enabled
+    end
+
+    def current_session
+      @session if @enabled
+    end
+
+    def current_window
+      @window if @enabled
+    end
+
+    def fork_window_name(base_window)
+      "#{base_window}-fs"
+    end
+
+    def ensure_window(session:, name:, root:)
+      {created: true, target: "#{session}:#{name}", root: root}
+    end
+
+    def prepare_pane(session:, window:, root:, keep_existing:)
+      @last_prepare = {session: session, window: window, root: root, keep_existing: keep_existing}
+      "%42"
+    end
+
+    def run_script_in_pane(pane_target:, script_path:)
+      @last_script = {pane_target: pane_target, script_path: script_path}
+    end
+
+    def select_window(session:, window:)
+      @last_select = {session: session, window: window}
+    end
+
+    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:)
+      meta = File.exist?(session_meta_file) ? YAML.safe_load_file(session_meta_file) : {}
+      meta["launch_mode"] = "tmux"
+      meta["tmux_session"] = session
+      meta["tmux_window"] = window
+      meta["tmux_pane_id"] = pane
+      File.write(session_meta_file, meta.to_yaml)
+    end
+  end
+
+  class FakeInteractiveBuilder
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def build(provider_model:, prompt:, cli_args: nil, **_options)
+      @calls << {provider_model: provider_model, prompt: prompt, cli_args: cli_args}
+      {
+        command: ["ace-llm", provider_model, prompt, "--interactive"],
+        env: {},
+        working_dir: Dir.pwd,
+        prompt: "$as-assign-drive abc123@010",
+        provider: provider_model.split(":").first,
+        model: provider_model.split(":")[1]
+      }
+    end
+  end
+
   class FakeQueryInterface
     attr_reader :calls
 
@@ -20,13 +90,22 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end
   end
 
+  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", interactive_builder: nil)
+    Ace::Assign::Molecules::ForkSessionLauncher.new(
+      config: config,
+      query_interface: query_interface,
+      tmux_runner: FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window),
+      interactive_builder: interactive_builder
+    )
+  end
+
   def test_launch_uses_config_defaults_and_passes_scoped_assignment_argument
     fake = FakeQueryInterface.new
     config = {
       "execution" => {"provider" => "codex:gpt-5@yolo", "timeout" => 900},
       "providers" => {}
     }
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010.01")
 
@@ -44,7 +123,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       "execution" => {"provider" => "claude:sonnet@yolo", "timeout" => 1800},
       "providers" => {}
     }
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(
       assignment_id: "abc123",
@@ -62,7 +141,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       "execution" => {"provider" => "codex:gpt-5@yolo", "timeout" => 900},
       "providers" => {}
     }
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010")
 
@@ -76,7 +155,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       "execution" => {"provider" => "claude:sonnet", "timeout" => 1800},
       "providers" => {}
     }
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.01", cache_dir: tmp_dir)
@@ -96,7 +175,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_text)
+    launcher = build_launcher(config: config, query_interface: fake_with_text)
 
     with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.02", cache_dir: tmp_dir)
@@ -116,7 +195,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "codex:gpt-5", "timeout" => 900}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_text)
+    launcher = build_launcher(config: config, query_interface: fake_with_text)
 
     with_temp_cache do |tmp_dir|
       sessions_dir = File.join(tmp_dir, "sessions")
@@ -138,7 +217,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_metadata)
+    launcher = build_launcher(config: config, query_interface: fake_with_metadata)
 
     with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010.02", cache_dir: tmp_dir)
@@ -161,7 +240,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "codex:gpt-5", "timeout" => 900}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_no_session)
+    launcher = build_launcher(config: config, query_interface: fake_no_session)
 
     with_temp_cache do |tmp_dir|
       launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
@@ -169,7 +248,6 @@ class ForkSessionLauncherTest < AceAssignTestCase
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
       assert File.exist?(session_file), "Session metadata file should still be created"
       meta = YAML.safe_load_file(session_file)
-      # session_id may be nil (if SessionFinder also returns nil) or detected by fallback
       assert_equal "codex", meta["provider"]
     end
   end
@@ -182,9 +260,8 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "pi:pi-model", "timeout" => 900}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_no_session)
+    launcher = build_launcher(config: config, query_interface: fake_no_session)
 
-    # Stub detect_provider_session to return a detected session
     launcher.define_singleton_method(:detect_provider_session) do |_provider, _prompt|
       {session_id: "detected-pi-sess-001", session_path: "/fake/path"}
     end
@@ -208,9 +285,8 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end.new
 
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_session)
+    launcher = build_launcher(config: config, query_interface: fake_with_session)
 
-    # Stub detect_provider_session — should NOT be called
     fallback_called = false
     launcher.define_singleton_method(:detect_provider_session) do |_provider, _prompt|
       fallback_called = true
@@ -230,22 +306,76 @@ class ForkSessionLauncherTest < AceAssignTestCase
   def test_launch_skips_session_metadata_when_no_cache_dir
     fake = FakeQueryInterface.new
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010")
 
-    # No cache_dir means no sessions dir, so no file should be written — just verify no error
     assert true
   end
 
   def test_launch_omits_last_message_file_when_no_cache_dir
     fake = FakeQueryInterface.new
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010")
 
     call = fake.calls.last
     assert_nil call[:options][:last_message_file]
+  end
+
+  def test_launch_mode_tmux_requires_tmux_context
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: false)
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      launcher.launch(assignment_id: "abc123", fork_root: "010", launch_mode: "tmux")
+    end
+
+    assert_includes error.message, "requires an active tmux session"
+  end
+
+  def test_launch_mode_auto_uses_tmux_when_context_available
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      tmux_enabled: true,
+      session: "dev",
+      window: "work",
+      interactive_builder: interactive
+    )
+
+    with_temp_cache do |tmp_dir|
+      steps_dir = File.join(tmp_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
+      File.write(File.join(steps_dir, "010-demo-root.st.md"), <<~STEP)
+        ---
+        name: demo-root
+        status: done
+        context: fork
+        ---
+        done
+      STEP
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "auto")
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "tmux", meta["launch_mode"]
+      assert_equal "dev", meta["tmux_session"]
+      assert_equal "work-fs", meta["tmux_window"]
+      assert_equal "%42", meta["tmux_pane_id"]
+
+      wrapper = File.join(tmp_dir, "sessions", "010-tmux-launch.sh")
+      assert File.exist?(wrapper), "tmux launch wrapper should be written"
+      wrapper_contents = File.read(wrapper)
+      assert_includes wrapper_contents, "printf '%s\n' \\$as-assign-drive\\ abc123@010"
+      assert_equal [], fake.calls, "tmux mode should run through the pane wrapper, not direct query"
+      assert_equal "claude:sonnet", interactive.calls.last[:provider_model]
+      assert_equal "/as-assign-drive abc123@010", interactive.calls.last[:prompt]
+    end
   end
 end

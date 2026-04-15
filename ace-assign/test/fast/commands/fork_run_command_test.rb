@@ -21,7 +21,7 @@ class ForkRunCommandTest < AceAssignTestCase
       @cache_base = cache_base
     end
 
-    def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil)
+    def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, **_kwargs)
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
       assignment = manager.load(assignment_id)
 
