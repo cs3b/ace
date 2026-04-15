@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+require "digest"
+require "fileutils"
+require "tmpdir"
 
 describe "CodexClient" do
   before do
@@ -115,6 +118,87 @@ describe "CodexClient" do
       cmd = @client.send(:build_codex_command, "Test prompt", {})
 
       refute_includes cmd, "--output-last-message"
+    end
+  end
+
+  describe "build_interactive_invocation" do
+    it "builds interactive codex command without exec and rewrites skills" do
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          @client.stub(:resolve_skills_dir, "/tmp/skills") do
+            @client.instance_variable_get(:@skill_name_reader).stub(:call, ["as-assign-drive"]) do
+              invocation = @client.build_interactive_invocation([{role: "user", content: "/as-assign-drive abc123@010"}])
+              assert_equal "codex", invocation[:command][0]
+              refute_includes invocation[:command], "exec"
+              assert_includes invocation[:command].join(" "), "$as-assign-drive abc123@010"
+            end
+          end
+        end
+      end
+    end
+
+    it "uses an overlay HOME in tmux context" do
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          invocation = @client.build_interactive_invocation(
+            [{role: "user", content: "/as-assign-drive abc123@010"}],
+            working_dir: "/tmp/demo-sandbox",
+            subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
+          )
+
+          expected_home = File.join("/tmp/demo-sandbox", ".ace-local", "llm", "codex-home", Digest::SHA256.hexdigest("/tmp/demo-sandbox")[0, 12])
+          assert_equal expected_home, invocation[:env]["HOME"]
+          refute_includes invocation[:command], "-c"
+        end
+      end
+    end
+
+    it "does not change HOME outside tmux context" do
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          invocation = @client.build_interactive_invocation(
+            [{role: "user", content: "/as-assign-drive abc123@010"}],
+            working_dir: "/tmp/demo-sandbox",
+            subprocess_env: {"ACE_TMUX_SESSION" => nil, "TMUX" => nil}
+          )
+
+          refute invocation[:env].key?("HOME")
+        end
+      end
+    end
+
+    it "writes a trusted project entry into the overlay config" do
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          Dir.mktmpdir do |tmp_dir|
+            real_home = File.join(tmp_dir, "real-home")
+            FileUtils.mkdir_p(File.join(real_home, ".codex"))
+            File.write(File.join(real_home, ".codex", "config.toml"), "[foo]\nbar = 1\n")
+            File.write(File.join(real_home, ".codex", "auth.json"), "{}")
+            File.write(File.join(real_home, ".codex", "installation_id"), "abc123")
+
+            previous_home = ENV["HOME"]
+            invocation = nil
+            begin
+              ENV["HOME"] = real_home
+              invocation = @client.build_interactive_invocation(
+                [{role: "user", content: "/as-assign-drive abc123@010"}],
+                working_dir: File.join(tmp_dir, 'demo-"sandbox"'),
+                subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
+              )
+            ensure
+              ENV["HOME"] = previous_home
+            end
+
+            config_path = File.join(invocation[:env]["HOME"], ".codex", "config.toml")
+            content = File.read(config_path)
+            trusted_path = File.join(tmp_dir, 'demo-"sandbox"')
+            expected_header = %{[projects."#{trusted_path.gsub("\\", "\\\\").gsub("\"", "\\\"")}"]}
+            assert_includes content, expected_header
+            assert_includes content, 'trust_level = "trusted"'
+          end
+        end
+      end
     end
   end
 

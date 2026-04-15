@@ -96,6 +96,18 @@ describe "ClaudeCodeClient" do
     end
   end
 
+  describe "build_interactive_invocation" do
+    it "builds interactive claude command without print mode" do
+      @client.stub(:validate_claude_availability!, nil) do
+        invocation = @client.build_interactive_invocation([{role: "user", content: "/as-assign-drive abc123@010"}])
+        assert_equal "claude", invocation[:command][0]
+        refute_includes invocation[:command], "-p"
+        refute_includes invocation[:command], "--print"
+        assert_includes invocation[:command].join(" "), "/as-assign-drive abc123@010"
+      end
+    end
+  end
+
   describe "supports_max_tokens_flag?" do
     def status(success)
       Object.new.tap do |obj|

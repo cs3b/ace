@@ -119,6 +119,23 @@ describe "PiClient" do
     end
   end
 
+  describe "build_interactive_invocation" do
+    it "builds interactive pi command with translated skill syntax" do
+      @client.stub(:pi_available?, true) do
+        @client.stub(:resolve_skills_dir, "/tmp/skills") do
+          @client.instance_variable_get(:@skill_name_reader).stub(:call, ["as-assign-drive"]) do
+            invocation = @client.build_interactive_invocation([{role: "user", content: "/as-assign-drive abc123@010"}])
+            assert_equal "pi", invocation[:command][0]
+            refute_includes invocation[:command], "-p"
+            refute_includes invocation[:command], "--no-session"
+            refute_includes invocation[:command], "--no-skills"
+            assert_includes invocation[:command].join(" "), "/skill:as-assign-drive abc123@010"
+          end
+        end
+      end
+    end
+  end
+
   describe "split_provider_model" do
     it "splits provider/model correctly" do
       provider, model = @client.send(:split_provider_model, "anthropic/claude-opus-4-6")
