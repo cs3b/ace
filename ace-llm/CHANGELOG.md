@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-04-15
+
+### Fixed
+- Merged preset CLI args with explicit `--cli-args` so interactive launches keep provider autonomy presets such as `@yolo` while still accepting additional flags like `--no-alt-screen`.
+
+### Technical
+- Threaded the current working directory and subprocess environment explicitly through `ace-llm --interactive` so provider-side startup policy hooks can make launch decisions from the real execution context.
+
+## [0.34.0] - 2026-04-15
+
+### Added
+- Added `ace-llm --interactive` for supported CLI-backed providers so alias resolution, presets, thinking levels, and canonical skill handoff translation can launch the provider's native interactive terminal UI in one call.
+
+### Changed
+- Documented interactive launch usage in the README, getting-started guide, and usage guide, including the tmux fork handoff pattern built around `/as-assign-drive <assignment>@<root>`.
+
 ## [0.33.6] - 2026-04-13
 
 ### Fixed

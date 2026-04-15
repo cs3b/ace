@@ -18,7 +18,7 @@
 
 ![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
-`ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt-5:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths. Fallback routing and retry behavior keep prompt workflows resilient.
+`ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt-5:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths, or start supported CLI providers in native interactive mode with `--interactive`. Fallback routing and retry behavior keep prompt workflows resilient.
 
 ## Testing
 
@@ -46,6 +46,8 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 **Control reasoning depth** - append a thinking level (`codex:gpt-5:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
 
 **Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`.
+
+**Launch real interactive agents** - use `--interactive` for supported CLI providers so alias resolution, presets, and skill translation still flow through `ace-llm`, but the provider starts its native terminal UI instead of one-shot print mode.
 
 **Build resilient prompt workflows** - configure fallback chains and retry behavior through the [config cascade](.ace-defaults/llm/config.yml) so transient provider issues do not block work.
 

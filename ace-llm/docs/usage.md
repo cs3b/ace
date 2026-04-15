@@ -3,8 +3,8 @@ doc-type: how-to-guide
 title: ace-llm Usage Guide
 purpose: Usage guide for ace-llm CLI — querying providers, managing output, and handling errors.
 ace-docs:
-  last-updated: 2026-03-23
-  last-checked: 2026-03-23
+  last-updated: 2026-04-15
+  last-checked: 2026-04-15
 ---
 
 # ace-llm Usage Guide
@@ -46,6 +46,7 @@ ace-llm PROVIDER PROMPT --model MODEL [options]
 | `--prompt PROMPT` | | Explicit prompt text (overrides positional) | none |
 | `--cli-args TEXT` | | Extra flags for CLI providers | none |
 | `--timeout SECONDS` | | Request timeout in seconds | `120` |
+| `--interactive` / `--no-interactive` | | Start the provider's native interactive CLI instead of one-shot query | `false` |
 | `--force` / `--no-force` | | Overwrite output path | `false` |
 | `--quiet` / `--no-quiet` | `-q` | Suppress non-essential output | `false` |
 | `--verbose` / `--no-verbose` | | Verbose output | `false` |
@@ -120,6 +121,24 @@ When writing to file, output is multiline and includes fields such as:
 - `Provider: ...`
 - `Execution time: ...`
 - `Tokens: ...`
+
+### Start an interactive CLI agent
+
+```bash
+ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive
+ace-llm claude:sonnet "/as-assign-drive abc123@010" --interactive
+ace-llm pi:zai/glm-4.7 "/as-assign-drive abc123@010" --interactive
+```
+
+Interactive mode is for CLI-backed providers that support a native interactive UI. `ace-llm` still resolves aliases, model suffixes, presets, and skill translation before launching the provider.
+
+In interactive mode:
+
+- `codex` launches `codex` directly, not `codex exec`
+- `claude` launches `claude` directly, not `claude -p`
+- `pi` launches `pi` directly, not `pi -p`
+
+Interactive mode rejects one-shot-only options such as `--output`, non-text `--format`, `--temperature`, and `--max-tokens`.
 
 ### List providers
 

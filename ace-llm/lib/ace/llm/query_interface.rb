@@ -212,7 +212,7 @@ module Ace
         generation_opts = {}
         resolved_temperature = first_non_nil(temperature, execution_overrides["temperature"])
         resolved_max_tokens = first_non_nil(max_tokens, execution_overrides["max_tokens"])
-        resolved_cli_args = first_non_nil(cli_args, execution_overrides["cli_args"])
+        resolved_cli_args = append_cli_args(execution_overrides["cli_args"], cli_args)
         resolved_system_append = first_non_empty(system_append, execution_overrides["system_append"])
         resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
         resolved_working_dir = first_non_nil(working_dir, execution_overrides["working_dir"])

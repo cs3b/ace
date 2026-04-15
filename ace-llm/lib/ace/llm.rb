@@ -28,6 +28,7 @@ require_relative "llm/molecules/provider_model_parser"
 require_relative "llm/molecules/format_handlers"
 require_relative "llm/molecules/client_registry"
 require_relative "llm/molecules/fallback_orchestrator"
+require_relative "llm/molecules/interactive_command_builder"
 
 require_relative "llm/query_interface"
 

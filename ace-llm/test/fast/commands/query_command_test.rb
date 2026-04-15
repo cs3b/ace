@@ -87,6 +87,46 @@ class QueryCommandTest < AceLlmTestCase
     assert_equal 600.0, captured_timeout
   end
 
+  def test_interactive_mode_builds_and_executes_invocation
+    invocation = {
+      command: ["codex", "$as-assign-drive abc123@010"],
+      env: {"FOO" => "bar"},
+      working_dir: "/tmp/project"
+    }
+    builder = Object.new
+    builder.define_singleton_method(:build) do |**kwargs|
+      @received = kwargs
+      invocation
+    end
+    def builder.received = @received
+
+    command = Ace::LLM::CLI::Commands::Query.new
+    captured = nil
+    command.define_singleton_method(:execute_interactive_invocation) do |payload|
+      captured = payload
+    end
+
+    Ace::LLM::Molecules::InteractiveCommandBuilder.stub(:new, builder) do
+      command.call(provider_model: "codex:gpt-5", prompt_text: "/as-assign-drive abc123@010", interactive: true)
+    end
+
+    assert_equal invocation, captured
+    assert_equal "codex:gpt-5", builder.received[:provider_model]
+    assert_equal "/as-assign-drive abc123@010", builder.received[:prompt]
+    assert_equal Dir.pwd, builder.received[:working_dir]
+    assert_equal ENV.to_h, builder.received[:subprocess_env]
+  end
+
+  def test_interactive_mode_rejects_output_options
+    command = Ace::LLM::CLI::Commands::Query.new
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(provider_model: "codex:gpt-5", prompt_text: "hi", interactive: true, output: "/tmp/out.txt")
+    end
+
+    assert_includes error.message, "Interactive mode does not support --output"
+  end
+
   def test_model_flag_with_invalid_provider_shows_error
     with_real_config do
       # When positional arg "test" is present, it's interpreted as provider_model

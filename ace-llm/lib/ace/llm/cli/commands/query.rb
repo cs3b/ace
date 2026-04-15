@@ -32,6 +32,7 @@ module Ace
           option :model, type: :string, desc: "Model name (overrides PROVIDER[:MODEL])"
           option :prompt, type: :string, desc: "Prompt text (overrides positional PROMPT)"
           option :force, type: :boolean, default: false, desc: "Force overwrite existing files"
+          option :interactive, type: :boolean, default: false, desc: "Start an interactive CLI session instead of one-shot query"
 
           option :version, type: :boolean, desc: "Show version information"
           option :list_providers, type: :boolean, desc: "List available LLM providers"
@@ -88,6 +89,7 @@ module Ace
             puts "      --timeout SECONDS          Request timeout in seconds"
             puts "      --model MODEL              Model name (overrides PROVIDER[:MODEL])"
             puts "      --prompt PROMPT            Prompt text (overrides positional PROMPT)"
+            puts "      --interactive              Start an interactive CLI session"
             puts "      --force                    Force overwrite existing files"
             puts "  -q, --quiet                    Suppress config summary output"
             puts "  -d, --debug                    Enable debug output"
@@ -101,6 +103,7 @@ module Ace
             puts '  ace-llm claude:sonnet "Summarize this diff" --preset rw'
             puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
             puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
+            puts '  ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive'
             puts ""
             puts "Provider Aliases:"
             puts "  Short aliases for common provider:MODEL combinations:"
@@ -150,6 +153,23 @@ module Ace
             system_append_text = options[:system_append] ? file_handler.read_content(options[:system_append]) : nil
             normalized_timeout = normalize_timeout(options[:timeout])
 
+            if options[:interactive]
+              validate_interactive_options!(options)
+              invocation = Ace::LLM::Molecules::InteractiveCommandBuilder.new.build(
+                provider_model: @provider_model,
+                prompt: prompt_text,
+                system: system_text,
+                cli_args: options[:cli_args],
+                system_append: system_append_text,
+                preset: options[:preset],
+                model: (@model_from_option ? nil : options[:model]),
+                working_dir: Dir.pwd,
+                subprocess_env: ENV.to_h
+              )
+              execute_interactive_invocation(invocation)
+              return
+            end
+
             resolved_model_override = @model_from_option ? nil : options[:model]
             response = Ace::LLM::QueryInterface.query(
               @provider_model,
@@ -176,6 +196,26 @@ module Ace
               raise Ace::Support::Cli::Error, "#{e.message}\nAvailable providers: #{available.join(", ")}"
             end
             raise
+          end
+
+          def validate_interactive_options!(options)
+            conflicts = []
+            conflicts << "--output" if options[:output]
+            conflicts << "--force" if options[:force]
+            conflicts << "--temperature" unless options[:temperature].nil?
+            conflicts << "--max-tokens" unless options[:max_tokens].nil?
+            explicit_format = options[:format]
+            conflicts << "--format" if explicit_format && explicit_format != "text"
+            return if conflicts.empty?
+
+            raise Ace::Support::Cli::Error, "Interactive mode does not support #{conflicts.join(', ')}"
+          end
+
+          def execute_interactive_invocation(invocation)
+            env = invocation[:env].respond_to?(:to_h) ? invocation[:env].to_h : {}
+            command = invocation[:command]
+            working_dir = invocation[:working_dir]
+            Kernel.exec(env, *command, chdir: working_dir)
           end
 
           def output_response(response, options)

@@ -3,8 +3,8 @@ doc-type: user
 title: Getting Started with ace-llm
 purpose: Documentation for ace-llm/docs/getting-started.md
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-15
+  last-checked: 2026-04-15
 ---
 
 # Getting Started with ace-llm
@@ -42,6 +42,12 @@ Use provider:model directly when needed:
 
 ```bash
 ace-llm google:gemini-2.5-flash "Explain service objects in Ruby"
+```
+
+Start a native interactive CLI session when you want the provider UI instead of one-shot output:
+
+```bash
+ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive
 ```
 
 ## Exploring providers and models
@@ -102,6 +108,7 @@ Then run queries normally; `ace-llm` retries transient failures and falls back t
 | `ace-llm google --model gemini-3-flash-preview --prompt "Hi"` | Select provider + explicit model |
 | `ace-llm gflash --output /tmp/out.md --format markdown` | Save formatted output to file |
 | `ace-llm gflash@ro "Review this diff"` | Run with preset suffix |
+| `ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive` | Start a real interactive agent session |
 
 ## Testing Contract
 
