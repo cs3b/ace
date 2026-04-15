@@ -41,6 +41,7 @@ To avoid known `--content` stalls in some environments:
    - `ace-task plan <ref>` (path mode, reuse cached plan when available)
    - The most recent plan artifact plus current task spec, documented in the step report
 4. If stalls repeat, add a follow-up fix task and capture evidence in the retrospective.
+5. If implementation reveals the spec or spike contract is materially wrong, stale, or missing an adoption path, stop and either update the spec or add a follow-up task before continuing.
 
 ## Primary Directive
 
@@ -58,6 +59,7 @@ Work through the plan checklist, step by step:
 - If the spec says X, implement X — don't gold-plate, don't simplify away requirements
 - If spec and plan conflict, spec wins — the plan is a HOW, not a WHAT
 - If the spec is ambiguous or incomplete: stop and ask, don't assume
+- If runtime work materially changes a public contract promised by a spike (flags, naming, fallback behavior, proof surface, ownership boundary), do not silently drift. Update the task/spec or create a follow-up task before release or demo cleanup.
 
 **Prior implementation awareness:**
 - Before creating new modules, search for existing implementations of the same concern — especially spike or prototype code from prior subtasks
@@ -75,6 +77,7 @@ Work through the plan checklist, step by step:
 - `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress — the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification
 - Never modify task frontmatter directly — use `ace-task update <ref> --set key=value`
+- If the task implements a spike outcome, verify before marking done that deferred gaps and adoption follow-ups are explicit rather than left implicit in release notes or retrospectives.
 
 ## Code Conventions
 

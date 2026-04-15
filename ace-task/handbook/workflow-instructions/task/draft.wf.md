@@ -172,6 +172,22 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 **Anti-pattern**: 8 subtasks drafted upfront, each adding features, then a late subtask undoes half.
 **Correct pattern**: 1 spike subtask validates the end-state, then remaining subtasks build toward it.
 
+Every spike-first draft must also declare the spike type:
+- **Design-contract spike**: validates target behavior and ownership boundaries, but does not yet claim runnable proof
+- **Proof-of-concept spike**: validates target behavior with runnable proof, not only a design contract
+
+For both spike types, the draft must include:
+1. one **Validated End-State Scenario**
+2. one **Concept Inventory** with kept / changed / new / rejected outcomes
+3. one **Adopted Decisions / Rejected Decisions / Deferred Gaps** section
+4. one **Follow-up Tasks After Spike** section naming the next implementation or adoption work that must happen if the spike succeeds
+
+For proof-of-concept spikes, the draft must additionally include:
+1. one concrete **Proof Artifact Plan** describing what runnable evidence will prove the spike
+2. success criteria that require the proof artifact, not only the concept inventory
+
+Do not treat "we now understand the design" as sufficient spike completion when the spike affects a runtime, UX, or execution-path contract. A useful spike must also leave a clear proof path and explicit next task.
+
 8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
      * Behavioral Specification section with embedded template
@@ -242,6 +258,9 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * [ ] Draft is decision-complete: no unresolved behavior choices left for implementer
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
+     * [ ] Spike tasks declare whether they are `design-contract` or `proof-of-concept`
+     * [ ] Spike tasks include explicit follow-up task(s) after the spike
+     * [ ] Proof-of-concept spikes include a runnable proof artifact plan
 
 12. **Run Quality Pass (Better, Not More)**
    * Perform one concise quality pass before finalizing:
