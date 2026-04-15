@@ -85,6 +85,17 @@ module Ace
         assert_equal "--verbose", client.received_options[:cli_args]
       end
 
+      def test_query_interface_merges_preset_cli_args_with_explicit_cli_args
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          QueryInterface.query("codex:gpt@yolo", "hi", cli_args: "--no-alt-screen")
+        end
+
+        assert_equal "--dangerously-bypass-approvals-and-sandbox --no-alt-screen", client.received_options[:cli_args]
+      end
+
       def test_claude_ro_preset_allows_bash_and_read_tools
         preset_path = File.expand_path("../../.ace-defaults/llm/presets/claude/ro.yml", __dir__)
         preset = YAML.load_file(preset_path)
