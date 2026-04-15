@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.5] - 2026-04-15
+
+### Changed
+- Tightened spike-task drafting, review, and work-on-task guidance so spikes must declare whether they are design-contract or proof-of-concept work, define explicit follow-up tasks, and stop implementation flow when runtime work materially drifts from the promised spike contract.
+
 ## [0.35.4] - 2026-04-13
 
 ### Fixed

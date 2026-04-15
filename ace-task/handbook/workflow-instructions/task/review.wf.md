@@ -239,6 +239,27 @@ While review-task primarily serves as the draft-to-pending gate, it can provide 
 
 For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus on content enhancement and question generation only.
 
+### Completed Spike Review
+
+When the reviewed task is a completed spike, treat spike usefulness as a review target:
+
+- Compare the archived spike contract against the shipped public/runtime contract instead of assuming the spike remained accurate.
+- Classify every meaningful difference as exactly one of:
+  - **intentional and adopted**
+  - **intentional but deferred to follow-up**
+  - **spec miss that must be corrected**
+- Verify that the spike left a reusable adoption path:
+  - explicit next task(s) exist
+  - deferred gaps are named, not implied
+  - any promised proof artifact exists if the spike was a proof-of-concept
+- Fail closed on spike usefulness if the spike completed without an explicit follow-up task, even if later implementation succeeded through ad-hoc decisions.
+- In the review summary for completed spikes, explicitly state whether the spike produced:
+  - a reusable contract
+  - a reusable proof artifact
+  - a reusable next-task decision
+
+Treat "concept inventory exists" as insufficient by itself for a successful spike review when the spike was meant to guide real runtime or UX work.
+
 ## Decision Guidance
 
 ### When to Use This Workflow
@@ -270,6 +291,7 @@ For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus
 - No loss of existing information
 - Clear improvement in task clarity or completeness
 - User receives actionable list of questions to answer (if any)
+- Completed spike reviews identify contract drift and verify explicit follow-up tasks
 
 ## Task Management Integration
 
