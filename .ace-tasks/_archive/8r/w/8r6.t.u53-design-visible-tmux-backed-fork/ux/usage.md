@@ -12,6 +12,7 @@
 ### Scenario 1: Run a forked subtree visibly in tmux
 
 **Goal**: An operator launches a forked subtree and watches it in tmux instead of treating it as an invisible background process.
+**Prerequisite**: Run from an ACE-managed tmux task window (or equivalent environment that provides `ACE_TMUX_SESSION`).
 
 ```bash
 ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
@@ -22,6 +23,7 @@ ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
 - `ace-assign` announces visible fork execution for subtree `010`.
 - tmux creates or reuses a sibling window named from the current window with a `-fork` suffix.
 - The subtree appears in its own pane within that fork window.
+- The same provider-backed fork session contract still runs inside the visible pane; visible mode changes operator visibility, not assignment authority.
 - `ace-assign` still reports subtree completion or failure from assignment state rather than from pane visibility alone.
 - If the pane exits early before assignment state is terminal, the operator-facing diagnostics include recent pane tail output.
 
@@ -36,7 +38,7 @@ ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
 #### Expected Output
 
 - `ace-assign` reports that visible tmux execution is unavailable in the current environment.
-- The command falls back to the existing provider-backed launcher unless quiet mode suppresses the notice.
+- The command falls back to the existing provider-backed launcher unless quiet mode suppresses the downgrade notice.
 - Assignment behavior remains correct even though no visible fork window is created.
 
 ### Scenario 3: Visible pane exits before assignment state is terminal
@@ -52,6 +54,7 @@ ace-assign fork-run --assignment 8r6.t.u53@010 --launch-mode tmux-visible
 - `ace-assign` reports that the visible pane surface ended before subtree completion was observed.
 - The error includes recent pane-tail output for operator diagnosis.
 - If a sibling tmux inspectability surface already exposes additional references, `ace-assign` may include them without redefining their schema here.
+- Pane exit alone does not mark the subtree complete; assignment state remains authoritative.
 
 ## Notes for Implementer
 
