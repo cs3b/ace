@@ -48,7 +48,7 @@ module Ace
             option :no_commit, desc: "Skip committing task changes", type: :boolean, aliases: ["--no-commit"]
             option :no_push, desc: "Skip pushing task changes", type: :boolean, aliases: ["--no-push"]
             option :no_upstream, desc: "Skip pushing with upstream tracking", type: :boolean, aliases: ["--no-upstream"]
-            option :no_pr, desc: "Skip creating draft PR", type: :boolean, aliases: ["--no-pr"]
+            option :no_pr, desc: "Skip creating draft PR", type: :boolean
             option :push_remote, desc: "Remote to push to", aliases: []
             option :no_auto_navigate, desc: "Stay in current directory", type: :boolean, aliases: ["--no-auto-navigate"]
             option :commit_message, desc: "Custom commit message", aliases: []

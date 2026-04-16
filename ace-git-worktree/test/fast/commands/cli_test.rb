@@ -268,6 +268,13 @@ class CliTest < Minitest::Test
     assert_match(/Error:|Invalid|numeric/i, combined_output)
   end
 
+  def test_create_command_parses_pr_flag_without_positional_fallback
+    parsed = Ace::Support::Cli::Parser.new(Ace::Git::Worktree::CLI::Commands::Create).parse(["--pr", "296"])
+
+    assert_equal "296", parsed[:pr]
+    assert_nil parsed[:branch]
+  end
+
   private
 
   def run_cli(args)
