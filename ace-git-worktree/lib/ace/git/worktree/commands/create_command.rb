@@ -824,7 +824,7 @@ module Ace
 
             if tmux_enabled?
               if ace_tmux_available?
-                Kernel.exec("ace-tmux", "--root", worktree_path)
+                Kernel.exec("ace-tmux", "start", "--root", worktree_path)
               else
                 puts "Warning: tmux is enabled in config but ace-tmux is not installed."
                 puts "Install ace-tmux or disable tmux in .ace/git/worktree.yml"
