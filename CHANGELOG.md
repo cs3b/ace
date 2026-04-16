@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-git-worktree v0.20.5**: Updated `ace-git-worktree create` tmux integration so it uses `ace-tmux start` outside tmux and `ace-tmux window` when already nested in a tmux session.
 - **ace-git-worktree v0.20.4**: Fixed `ace-git-worktree create --pr <number>` so `ace-tmux` is launched with the required `start` subcommand.
 - **ace-llm v0.35.1**: Corrected the `cli_args` threading feature tests to assert the normalized array contract and stub Codex preset loading directly, restoring a clean `ace-test ace-llm` package run.
 - **ace-llm v0.35.0**: Preserved preset CLI args when `ace-llm --interactive` also receives explicit `--cli-args`, so tmux Codex launches keep `@yolo` autonomy while still accepting extra runtime flags.
