@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+- **ace-git-worktree v0.20.5**: Used `ace-tmux window` when already in a tmux session and `ace-tmux start` otherwise, so nested worktree creation stays correctly in-session.
 - **ace-git-worktree v0.20.4**: Fixed `create --pr <number>` to avoid an `ace-tmux` subcommand mismatch when launching project tmux sessions.
 - **ace-git-worktree v0.20.3**: Fixed `create --pr <number>` parsing so `--pr` is not treated as a positional branch argument when routed through `ace-support-cli`.
 

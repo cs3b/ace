@@ -816,6 +816,7 @@ module Ace
           #
           # When tmux config is enabled and ace-tmux is available, launches a tmux
           # session rooted at the worktree path (replaces current process).
+          # Uses `start` outside tmux and `window` inside tmux.
           # Otherwise falls back to displaying the cd command.
           #
           # @param worktree_path [String] Path to the worktree
@@ -824,7 +825,8 @@ module Ace
 
             if tmux_enabled?
               if ace_tmux_available?
-                Kernel.exec("ace-tmux", "start", "--root", worktree_path)
+                command = ENV["TMUX"].to_s.strip.empty? ? "start" : "window"
+                Kernel.exec("ace-tmux", command, "--root", worktree_path)
               else
                 puts "Warning: tmux is enabled in config but ace-tmux is not installed."
                 puts "Install ace-tmux or disable tmux in .ace/git/worktree.yml"

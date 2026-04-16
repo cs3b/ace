@@ -582,7 +582,10 @@ class CreateCommandTest < Minitest::Test
     end
   end
 
-  def test_tmux_enabled_with_ace_tmux_available_calls_exec
+  def test_tmux_enabled_with_ace_tmux_available_calls_exec_for_task
+    original_tmux = ENV["TMUX"]
+    ENV.delete("TMUX")
+
     mock_worktree_manager = Minitest::Mock.new
     mock_result = {
       success: true,
@@ -614,6 +617,175 @@ class CreateCommandTest < Minitest::Test
 
     assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
     mock_worktree_manager.verify
+  ensure
+    if original_tmux
+      ENV["TMUX"] = original_tmux
+    else
+      ENV.delete("TMUX")
+    end
+  end
+
+  def test_tmux_enabled_with_ace_tmux_available_calls_exec_for_pr
+    original_tmux = ENV["TMUX"]
+    ENV.delete("TMUX")
+
+    # Mock gh CLI availability and metadata
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        mock_metadata_result = {
+          success: true,
+          metadata: {
+            "number" => 26,
+            "title" => "Add authentication feature",
+            "headRefName" => "feature/auth",
+            "baseRefName" => "main",
+            "isCrossRepository" => false,
+            "headRepositoryOwner" => {"login" => "owner"}
+          }
+        }
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+          # Mock PR worktree creation
+          mock_worktree_manager = Minitest::Mock.new
+          mock_worktree_manager.expect(:create_pr, {
+            success: true,
+            pr_number: 26,
+            pr_title: "Add authentication feature",
+            worktree_path: "/path/to/worktree",
+            branch: "pr-26",
+            tracking: "origin/feature/auth",
+            directory_name: "ace-pr-26"
+          }, [Integer, Hash, Hash])
+
+          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+          exec_called_with = nil
+          mock_exec = ->(*args) { exec_called_with = args }
+
+          command.stub(:tmux_enabled?, true) do
+            command.stub(:ace_tmux_available?, true) do
+              Kernel.stub(:exec, mock_exec) do
+                capture_io do
+                  result = command.run(["--pr", "26"])
+                  assert_equal 0, result
+                end
+              end
+            end
+          end
+
+          assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
+          mock_worktree_manager.verify
+        end
+      end
+    end
+  ensure
+    if original_tmux
+      ENV["TMUX"] = original_tmux
+    else
+      ENV.delete("TMUX")
+    end
+  end
+
+  def test_tmux_enabled_with_tmux_session_calls_window_for_task
+    original_tmux = ENV["TMUX"]
+    ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
+
+    mock_worktree_manager = Minitest::Mock.new
+    mock_result = {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }
+    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    exec_called_with = nil
+    mock_exec = ->(* args) { exec_called_with = args }
+
+    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+      command.stub(:tmux_enabled?, true) do
+        command.stub(:ace_tmux_available?, true) do
+          Kernel.stub(:exec, mock_exec) do
+            capture_io do
+              result = command.run(["--task", "081"])
+              assert_equal 0, result
+            end
+          end
+        end
+      end
+    end
+
+    assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
+    mock_worktree_manager.verify
+  ensure
+    if original_tmux
+      ENV["TMUX"] = original_tmux
+    else
+      ENV.delete("TMUX")
+    end
+  end
+
+  def test_tmux_enabled_with_tmux_session_calls_window_for_pr
+    original_tmux = ENV["TMUX"]
+    ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
+
+    # Mock gh CLI availability and metadata
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        mock_metadata_result = {
+          success: true,
+          metadata: {
+            "number" => 26,
+            "title" => "Add authentication feature",
+            "headRefName" => "feature/auth",
+            "baseRefName" => "main",
+            "isCrossRepository" => false,
+            "headRepositoryOwner" => {"login" => "owner"}
+          }
+        }
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+          # Mock PR worktree creation
+          mock_worktree_manager = Minitest::Mock.new
+          mock_worktree_manager.expect(:create_pr, {
+            success: true,
+            pr_number: 26,
+            pr_title: "Add authentication feature",
+            worktree_path: "/path/to/worktree",
+            branch: "pr-26",
+            tracking: "origin/feature/auth",
+            directory_name: "ace-pr-26"
+          }, [Integer, Hash, Hash])
+
+          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+          exec_called_with = nil
+          mock_exec = ->(*args) { exec_called_with = args }
+
+          command.stub(:tmux_enabled?, true) do
+            command.stub(:ace_tmux_available?, true) do
+              Kernel.stub(:exec, mock_exec) do
+                capture_io do
+                  result = command.run(["--pr", "26"])
+                  assert_equal 0, result
+                end
+              end
+            end
+          end
+
+          assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
+          mock_worktree_manager.verify
+        end
+      end
+    end
+  ensure
+    if original_tmux
+      ENV["TMUX"] = original_tmux
+    else
+      ENV.delete("TMUX")
+    end
   end
 
   def test_tmux_enabled_without_ace_tmux_shows_warning_and_cd
