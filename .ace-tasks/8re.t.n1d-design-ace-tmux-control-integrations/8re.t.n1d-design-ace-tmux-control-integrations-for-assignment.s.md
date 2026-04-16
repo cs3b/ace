@@ -1,6 +1,6 @@
 ---
 id: 8re.t.n1d
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-04-15 15:21:32"
 estimate: TBD
@@ -11,6 +11,12 @@ bundle:
   files: [ace-tmux/lib/ace/tmux/cli.rb, ace-assign/lib/ace/assign/molecules/tmux_fork_runner.rb, ace-demo/lib/ace/demo/cli/commands/record.rb, .ace-tasks/8r6.t.xeu-design-ace-tmux-inspectability-and/8r6.t.xeu-design-ace-tmux-inspectability-and-recording-surfaces.s.md, ux/usage.md]
   commands: [ace-task show 8re.t.n1d --content, ace-task show 8r6.t.xeu --content]
 needs_review: false
+worktree:
+  branch: n1d-design-ace-tmux-control-integrations-for-assignment-and-demo-flows
+  path: ../ace-t.n1d
+  created_at: "2026-04-16 02:15:23"
+  updated_at: "2026-04-16 02:15:23"
+  target_branch: main
 ---
 
 # Design ace-tmux control integrations for assignment and demo flows
