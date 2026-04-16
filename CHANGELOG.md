@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - **ace-llm v0.35.1**: Corrected the `cli_args` threading feature tests to assert the normalized array contract and stub Codex preset loading directly, restoring a clean `ace-test ace-llm` package run.
 - **ace-llm v0.35.0**: Preserved preset CLI args when `ace-llm --interactive` also receives explicit `--cli-args`, so tmux Codex launches keep `@yolo` autonomy while still accepting extra runtime flags.
 - **ace-llm-providers-cli v0.30.0**: Added a per-workspace Codex tmux startup overlay that trusts the live working directory without mutating the operator's real `~/.codex`, removing the fresh-sandbox trust prompt that blocked visible fork work.
+- **ace-git-worktree v0.20.3**: Fixed `ace-git-worktree create --pr <number>` parsing so PR mode is correctly detected and branch positional fallbacks are not used.
 
 ### Changed
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
