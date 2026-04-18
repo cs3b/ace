@@ -59,6 +59,22 @@ class TaskPlanGeneratorTest < AceTaskTestCase
     assert_includes error.message, "empty output"
   end
 
+  def test_generate_wraps_provider_timeouts_as_cli_errors
+    provider_timeout_class = Class.new(StandardError)
+    provider_timeout_class.define_singleton_method(:name) { "Ace::LLM::ProviderError" }
+
+    @client.define_singleton_method(:query) do |*_args, **_kwargs|
+      raise provider_timeout_class, "Codex CLI execution timed out after 15 seconds"
+    end
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      @generator.generate(task: @task, context_files: [])
+    end
+
+    assert_includes error.message, "Plan generation failed"
+    assert_includes error.message, "timed out after 15 seconds"
+  end
+
   def test_generate_with_cache_dir_uses_file_based_prompts
     @client.next_response = {text: "# Plan from files\n"}
     cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")

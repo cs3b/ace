@@ -10,10 +10,11 @@ class TaskPlanCommandTest < AceTaskTestCase
       attr_accessor :last_init_kwargs
     end
 
-    def initialize(model:, cli_args: nil)
+    def initialize(model:, cli_args: nil, timeout: nil)
       @model = model
       @cli_args = cli_args
-      self.class.last_init_kwargs = {model: model, cli_args: cli_args}
+      @timeout = timeout
+      self.class.last_init_kwargs = {model: model, cli_args: cli_args, timeout: timeout}
     end
 
     def prompt_paths
@@ -88,6 +89,7 @@ class TaskPlanCommandTest < AceTaskTestCase
 
     assert_equal "role:planner", FakeGenerator.last_init_kwargs[:model]
     assert_nil FakeGenerator.last_init_kwargs[:cli_args]
+    assert_nil FakeGenerator.last_init_kwargs[:timeout]
   end
 
   def test_model_override_does_not_inject_codex_cli_args
@@ -111,6 +113,12 @@ class TaskPlanCommandTest < AceTaskTestCase
     assert_nil FakeGenerator.last_init_kwargs[:cli_args]
   end
 
+  def test_timeout_override_is_passed_to_generator
+    run_cli(%w[plan q7w --refresh --timeout 30])
+
+    assert_equal 30, FakeGenerator.last_init_kwargs[:timeout]
+  end
+
   def test_errors_when_task_not_found
     result = run_cli(%w[plan zzz])
 
@@ -120,7 +128,7 @@ class TaskPlanCommandTest < AceTaskTestCase
 
   def test_backend_failure_is_reported
     failing_class = Class.new do
-      def initialize(model:, cli_args: nil)
+      def initialize(model:, cli_args: nil, timeout: nil)
       end
 
       def prompt_paths

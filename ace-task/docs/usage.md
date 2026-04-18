@@ -96,7 +96,7 @@ List tasks with optional filtering by status, tags, or folder.
 
 **Status legend:** `◇ draft` `○ pending` `▶ in-progress` `✓ done` `✗ blocked` `– skipped` `— cancelled`
 
-**Priority:** `▲ critical` `▲ high` `▼ low` — Subtasks: `›N`
+**Priority:** `▲ critical` `▲ high` `▼ low` -- Subtasks: `›N`
 
 | Option | Alias | Description |
 |--------|-------|-------------|
@@ -166,20 +166,31 @@ Resolve or generate a task implementation plan. Reuses fresh cached plans when a
 | `--refresh` | Force plan regeneration |
 | `--content` | Print full plan content instead of path |
 | `--model` | Provider:model override for plan generation |
+| `--timeout` | LLM request timeout in seconds for plan generation |
 
 ```bash
 ace-task plan q7w
 ace-task plan q7w --refresh
 ace-task plan q7w --content
+ace-task plan q7w --timeout 30
 ace-task plan q7w --model gemini:flash-latest
 ```
 
+By default, `ace-task plan` uses `role:planner`. Override with `--model` when you need a specific provider/model.
+
 For automation, prefer `ace-task plan <ref>` (path output) and read the plan file directly.
+For E2E validation, path mode is the recommended contract because it verifies
+real plan artifact creation without depending on inline LLM output rendering.
 Use `--content` only when inline output is needed. If `--content` appears stalled for ~3 minutes, cancel and rerun path mode.
 
-### ace-task github-sync [REF]
+### ace-task github-sync REF
 
 Synchronize linked GitHub issues for one task or all linked tasks.
+
+Preconditions:
+
+- Task frontmatter includes `github_issue: <number>`.
+- GitHub authentication is configured for the current environment.
 
 | Option | Alias | Description |
 |--------|-------|-------------|
@@ -188,6 +199,13 @@ Synchronize linked GitHub issues for one task or all linked tasks.
 ```bash
 ace-task github-sync q7w
 ace-task github-sync --all
+```
+
+```bash
+# Verify auth and task metadata before syncing
+gh auth status
+ace-task show q7w --content
+ace-task github-sync q7w
 ```
 
 ### ace-task doctor
