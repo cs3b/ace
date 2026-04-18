@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [0.25.1] - 2026-04-16
+
+### Technical
+- Updated `TS-COMP-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so public-surface smoke runs remain compatible with the shared E2E sandbox contract.
+
+## [0.25.0] - 2026-04-14
+
+### Changed
+- Rewrote `TS-COMP-001` around public-surface goal-style contracts by preserving core smoke journeys, replacing brittle compact-refusal fixture behavior, and adding documented `--mode agent` and `benchmark` smoke goals.
+
+### Technical
+- Updated scenario manifests, decision records, and verification criteria to align with impact-first E2E evidence while keeping package test coverage references current.
+
 ## [0.24.9] - 2026-04-13
 
 ### Changed
