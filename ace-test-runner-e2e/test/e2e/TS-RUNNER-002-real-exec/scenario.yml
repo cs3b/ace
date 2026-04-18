@@ -1,0 +1,36 @@
+test-id: TS-RUNNER-002
+title: "ace-test-runner-e2e Real Run + Verify + Shell Helper"
+area: runner
+package: ace-test-runner-e2e
+priority: high
+duration: ~15min
+cost-tier: happy-path
+tags: [happy-path, "use-case:runner", "goal-style"]
+tool-under-test: ace-test-e2e
+
+sandbox-layout:
+  .ace-local/test-e2e/runner-002-report/: "Deterministic report root for run+verify"
+  results/tc/01/: "real run command captures"
+  results/tc/02/: "report tree and verifier output evidence"
+  results/tc/03/: "ace-test-e2e-sh usage evidence"
+
+e2e-justification: >
+  This scenario validates real end-to-end execution of ace-test-e2e with verifier
+  enabled (not dry-run only), then validates public shell-helper behavior over the
+  generated report tree path.
+
+unit-coverage-reviewed:
+  - test/fast/molecules/test_executor_test.rb
+  - test/fast/molecules/pipeline_report_generator_test.rb
+  - test/fast/molecules/report_writer_test.rb
+  - test/fast/molecules/suite_report_writer_test.rb
+
+requires:
+  tools: [ace-test-e2e, ace-test-e2e-sh, git]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
+  - copy-fixtures
+  - run: git add -A && git commit -m "initial" --quiet

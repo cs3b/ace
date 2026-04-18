@@ -12,7 +12,7 @@ sandbox-layout:
   results/tc/01/: "ace-test-e2e help output artifacts"
   results/tc/02/: "invalid package dry-run error artifacts"
   results/tc/03/: "repo-backed dry-run discovery artifacts"
-  results/tc/04/: "ace-test-e2e-suite help output artifacts"
+  results/tc/04/: "ace-test-e2e-suite help and control-flow artifacts"
 
 e2e-justification: >
   These checks validate real packaged executable behavior (`ace-test-e2e`,
@@ -34,6 +34,6 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
-  - run: "mkdir -p ace-demo/test/e2e && cp -r $ACE_E2E_SOURCE_ROOT/ace-demo/test/e2e/TS-DEMO-001-cli-smoke ace-demo/test/e2e/"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
+  - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet

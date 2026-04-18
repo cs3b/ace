@@ -1,17 +1,17 @@
-# Goal 3 - Dry-Run Discovers Repo Scenarios
+# Goal 3 - Public Shell Helper Coverage (`ace-test-e2e-sh`)
 
 ## Goal
 
-Run `ace-test-e2e` in dry-run mode against a package fixture copied by
-scenario setup and capture scenario discovery output.
+Use `ace-test-e2e-sh` against the generated report path to prove public shell-helper
+surface behavior on valid sandbox paths.
 
 ## Workspace
 
 Save artifacts to `results/tc/03/`.
 
 Capture:
-- `results/tc/03/discovery.stdout`, `.stderr`, `.exit` from:
-  `ace-test-e2e ace-demo --dry-run --tags smoke`
+- `results/tc/03/sh_ls.stdout`, `.stderr`, `.exit` from:
+  `ace-test-e2e-sh .ace-local/test-e2e/runner-002-report ls`
 
 ## Constraints
 
