@@ -22,6 +22,11 @@ Workspace root: (current directory)
 
 Execute each goal in order.
 
+## Public surface references
+
+- `ace-git/docs/usage.md`
+- `ace-git --help`
+
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners

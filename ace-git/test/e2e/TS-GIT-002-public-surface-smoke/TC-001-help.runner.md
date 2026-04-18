@@ -1,9 +1,8 @@
-# Goal 1 -- Git Status
+# Goal 1 - Help Surface
 
 ## Goal
 
-Run `ace-git status --no-pr` and capture output against the current sandbox
-working tree state.
+Run `ace-git --help` and capture output that exposes documented command routing and command list.
 
 ## Workspace
 
@@ -15,4 +14,3 @@ Save artifacts to `results/tc/01/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
-- Setup ownership belongs to `scenario.yml`; do not run additional bootstrap recipes in this goal.

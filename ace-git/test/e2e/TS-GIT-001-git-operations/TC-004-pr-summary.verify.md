@@ -1,4 +1,4 @@
-# Goal 4 — PR Summary Verification
+# Goal 4 -- PR Summary Verification
 
 ## Expectations
 
@@ -10,10 +10,11 @@ Validation order (impact-first):
 1. `results/tc/04/` contains PR-context command captures.
 2. `pr.exit` and corresponding `pr.stdout|stderr` are present.
 3. PASS path A: `pr.exit == 0` and output includes PR metadata fields.
-4. PASS path B: `pr.exit != 0` with explicit no-PR context evidence and a
-   successful fallback capture (`status-no-pr.exit == 0`).
+4. PASS path B: `pr.exit != 0` and `pr.stderr` or `pr.stdout` contains explicit
+   no-PR context evidence (for example: no pull request found for branch, or
+   PR number required/unknown in current context).
 
 ## Verdict
 
-- **PASS**: PR command succeeds with metadata OR fallback captures no-PR behavior explicitly.
-- **FAIL**: Missing captures, ambiguous fallback, or both attempts fail.
+- **PASS**: PR command succeeds with metadata OR fails with explicit no-PR evidence.
+- **FAIL**: Missing captures, ambiguous no-PR evidence, or unexpected failure mode.

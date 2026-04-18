@@ -1,0 +1,34 @@
+test-id: TS-GIT-002
+title: "ace-git Public-Surface Smoke"
+area: git
+package: ace-git
+priority: medium
+cost-tier: smoke
+tags: [smoke, "use-case:git", "goal-style", "public-surface"]
+tool-under-test: ace-git
+
+sandbox-layout:
+  results/tc/01/: "Help surface artifacts"
+  results/tc/02/: "Range-routing artifacts"
+
+e2e-justification: >
+  Verifies documented public CLI entrypoints for help and range shorthand
+  routing behavior that must remain runnable from usage docs without hidden setup.
+
+unit-coverage-reviewed:
+  - test/feat/cli_routing_test.rb
+  - test/fast/commands/diff_test.rb
+
+requires:
+  tools: [ace-git, git]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: "printf 'base\n' > smoke-range.txt"
+  - run: "git add smoke-range.txt"
+  - run: "git commit -m 'seed smoke range fixture'"
+  - run: "printf 'delta\n' >> smoke-range.txt"
+  - run: "git add smoke-range.txt"
+  - run: "git commit -m 'add range delta commit'"

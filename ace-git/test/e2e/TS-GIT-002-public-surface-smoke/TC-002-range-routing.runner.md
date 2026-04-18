@@ -1,9 +1,8 @@
-# Goal 2 -- Git Diff
+# Goal 2 - Range Routing to Diff
 
 ## Goal
 
-Run `ace-git diff` against deterministic scenario-managed repository state and
-capture output showing the tracked change appears in diff formatting.
+Run `ace-git HEAD~1..HEAD` and capture output proving range shorthand routes through diff behavior.
 
 ## Workspace
 
@@ -15,4 +14,4 @@ Save artifacts to `results/tc/02/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/02/`.
 - Do not write outside the sandbox.
-- Setup ownership belongs to `scenario.yml`; do not create or mutate tracked files in this goal.
+- Setup ownership belongs to `scenario.yml`; do not mutate files in this goal.
