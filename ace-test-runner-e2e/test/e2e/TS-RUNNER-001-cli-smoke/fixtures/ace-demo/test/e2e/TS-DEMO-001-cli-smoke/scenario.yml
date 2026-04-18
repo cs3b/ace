@@ -1,0 +1,11 @@
+test-id: TS-DEMO-001
+title: "Fixture demo smoke scenario"
+area: demo
+package: ace-demo
+priority: low
+cost-tier: smoke
+tags: [smoke, "use-case:demo"]
+tool-under-test: ace-test-e2e
+requires:
+  tools: [ace-test-e2e]
+  ruby: ">= 3.0"
