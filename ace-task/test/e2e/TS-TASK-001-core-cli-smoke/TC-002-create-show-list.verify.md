@@ -7,14 +7,16 @@ The verifier receives the `results/` directory tree and sandbox path.
 ## Expectations
 
 Validation order (impact-first):
-1. Confirm `.ace-tasks` contains a new task spec file.
+1. Confirm the sandbox root `.ace-tasks` contains a new task spec file.
 2. Confirm captures for create/list/show exist under `results/tc/02/`.
-3. Use runner observations to disambiguate which short ref was shown.
-4. Use stderr/exit only as fallback.
+3. Confirm `results/tc/02/resolved-ref.txt` exists and contains a non-empty short ref.
+4. Use runner observations to disambiguate which short ref was shown.
+5. Use stderr/exit only as fallback.
 
 1. `create.exit`, `list.exit`, and `show.exit` are all `0`.
 2. `create.stdout`, `list.stdout`, and `show.stdout` consistently reference the created task title and a full short ref.
-3. `.ace-tasks/` contains a new `.s.md` task file for `E2E smoke task`.
+3. `resolved-ref.txt` value appears in `show.stdout`.
+4. The sandbox root `.ace-tasks/` contains a new `.s.md` task file for `E2E smoke task`.
 
 ## Verdict
 
