@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4] - 2026-04-18
+
+### Technical
+- Strengthened retained suite failure-propagation E2E coverage so Goal 2 now proves the injected failing file through a direct `ace-test` precheck before validating `ace-test-suite` aggregate failure propagation.
+
+## [0.25.3] - 2026-04-16
+
+### Technical
+- Reworked retained suite failure-propagation E2E setup to use a deterministic failing fast-test fixture and require non-zero exit evidence tied to the injected failure path.
+
+## [0.25.2] - 2026-04-16
+
+### Technical
+- Updated `TS-TEST-001` and `TS-TEST-002` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so test-runner E2E flows remain compatible with the shared read-only source-root contract.
+
+## [0.25.1] - 2026-04-15
+
+### Fixed
+- Corrected `TS-TEST-002` suite scenario command contracts to run `ace-test-suite` from sandbox `PATH` and aligned verifier expectations with the same public command surface.
+
+## [0.25.0] - 2026-04-15
+
+### Changed
+- Reworked `ace-test-runner` E2E suites to public-surface goal style by removing duplicate TS-TEST-001 group coverage, enforcing canonical TS-TEST-002 suite invocation, and adding suite `--target` pass-through scenario coverage.
+- Updated `docs/usage.md` with canonical `ace-test-e2e ace-test-runner` guidance and explicit suite E2E invocation constraints.
+
 ## [0.24.2] - 2026-04-13
 
 ### Fixed
