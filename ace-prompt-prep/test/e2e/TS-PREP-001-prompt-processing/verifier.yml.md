@@ -8,6 +8,8 @@ bundle:
   files:
     - ./TC-001-process-and-archive.verify.md
     - ./TC-002-bundle-context.verify.md
+    - ./TC-003-setup-workspace.verify.md
+    - ./TC-004-task-scoped-process.verify.md
 ---
 
 # E2E Verification: ace-prompt-prep
@@ -33,4 +35,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/4 passed**
