@@ -1,5 +1,5 @@
 test-id: TS-SIM-001
-title: "ace-sim validate-idea smoke"
+title: "ace-sim public-surface smoke"
 area: sim
 package: ace-sim
 timeout: 900
@@ -12,14 +12,12 @@ sandbox-layout:
   results/tc/01/: "Help survey observations"
   results/tc/02/: "Default preset behavioral run evidence"
   results/tc/03/: "Explicit CLI override + one-step synthesis evidence"
-  results/tc/04/: "Full-chain synthesis evidence with dual final artifacts"
   results/tc/05/: "Validate-task preset run contract evidence"
-  results/tc/06/: "Validation guard failure-path evidence"
 
 e2e-justification: >
-  This scenario validates end-to-end CLI execution and file-chained artifact
-  contracts for preset-driven simulation. Fast deterministic tests cover internals; this
-  verifies real binary behavior.
+  This scenario validates end-to-end CLI execution through public user journeys.
+  Fast deterministic tests cover internals. E2E checks only user-visible outcomes and
+  real recorded run artifacts, without synthetic placeholder pass paths.
 
 requires:
   tools: [ace-sim, ace-llm, ace-bundle]

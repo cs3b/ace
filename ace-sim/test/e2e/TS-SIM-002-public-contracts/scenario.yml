@@ -1,0 +1,27 @@
+test-id: TS-SIM-002
+title: "ace-sim public contract checks"
+area: sim
+package: ace-sim
+timeout: 600
+priority: high
+tags: [smoke, dry-run, "use-case:simulation"]
+cost-tier: smoke
+tool-under-test: ace-sim
+
+sandbox-layout:
+  results/tc/01/: "Dry-run public contract evidence"
+
+e2e-justification: >
+  This scenario verifies the documented dry-run public contract. It focuses on
+  real CLI-observable behavior and recorded run metadata without provider-output
+  placeholders.
+
+requires:
+  tools: [ace-sim, ace-bundle]
+
+setup:
+  - copy-fixtures
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - agent-env:
+      PROJECT_ROOT_PATH: .

@@ -1,7 +1,7 @@
 # Goal 3: Explicit CLI Override Behavior
 
 ## Objective
-Verify explicit CLI custom values override preset defaults and run one-step final synthesis.
+Verify explicit CLI custom values override preset defaults and run one-step final synthesis with real recorded outcomes.
 
 ## Steps
 1. Create source file `results/tc/03/source.md` with sample markdown content.
@@ -17,8 +17,4 @@ Verify explicit CLI custom values override preset defaults and run one-step fina
    - `session.yml` -> `results/tc/03/session.yml`
    - `synthesis.yml` -> `results/tc/03/synthesis.yml`
    - `chains/glite-1/01-draft/output.md` -> `results/tc/03/draft.output.md`
-   - `final/source.original.md` -> `results/tc/03/source.original.md`
-   - `final/output.sequence.md` -> `results/tc/03/output.sequence.md`
-   - `final/suggestions.report.md` -> `results/tc/03/suggestions.report.md`
-   - `final/source.revised.md` -> `results/tc/03/source.revised.md`
-6. If any final synthesis artifact in step 5 is missing, create a placeholder file at the target path with a short note that synthesis output was unavailable for this run.
+6. Preserve real command outcomes only. Do not create placeholder artifacts for missing synthesis output files.
