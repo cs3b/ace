@@ -24,7 +24,14 @@ class PipelinePromptBundlerTest < Minitest::Test
       assert File.exist?(output[:system_path]), "runner system prompt should be written"
       assert File.exist?(output[:prompt_path]), "runner prompt should be written"
 
+      system_prompt = File.read(output[:system_path])
       content = File.read(output[:prompt_path])
+      assert_includes system_prompt, "keep stdout and stderr separate"
+      assert_includes system_prompt, "matching `.stdout`, `.stderr`, and `.exit` files"
+      assert_includes system_prompt, "Preserve the sandbox runtime environment"
+      assert_includes system_prompt, "do not wrap them with `timeout`, `env -i`"
+      assert_includes system_prompt, "Do not bypass the public CLI with repo-local executables"
+      assert_includes system_prompt, "Persist each command's `.stdout`, `.stderr`, and `.exit` files immediately"
       assert_includes content, "Runner Header"
       assert_includes content, "Goal 2"
       refute_includes content, "Goal 1"
@@ -45,17 +52,33 @@ class PipelinePromptBundlerTest < Minitest::Test
         scenario: scenario,
         sandbox_path: sandbox,
         test_cases: ["TC-002"],
-        runner_observations: "Created archive layout and left results/tc/02/sample.txt as final output."
+        runner_observations: "Created archive layout and left results/tc/02/sample.txt as final output.",
+        artifact_contract: {
+          "TC-002" => {
+            "required_artifacts" => ["results/tc/02/sample.txt", "results/tc/02/sample.exit"],
+            "present_required_artifacts" => ["results/tc/02/sample.txt"],
+            "missing_required_artifacts" => ["results/tc/02/sample.exit"],
+            "optional_artifacts" => ["results/tc/02/notes.md"],
+            "present_optional_artifacts" => []
+          }
+        }
       )
 
       content = File.read(output[:prompt_path])
+      assert_includes content, "Project Context"
+      assert_includes content, "Sandbox Context"
+      assert_includes content, "- Package: `ace-b36ts`"
       assert_includes content, "Sandbox Artifacts"
       assert_includes content, "Runner Observations"
       assert_includes content, "Created archive layout"
       assert_includes content, "results/tc/02/sample.txt"
       assert_includes content, "artifact body"
+      assert_includes content, "Artifact Contract"
+      assert_includes content, "Missing required artifacts"
+      assert_includes content, "results/tc/02/sample.exit"
       assert_includes content, "Verify Header"
       assert_includes content, "Goal 2 verify"
+      assert_includes content, "Inspect the sandbox directly when verifying source-of-truth state."
       refute_includes content, "Goal 1 verify"
     end
   end

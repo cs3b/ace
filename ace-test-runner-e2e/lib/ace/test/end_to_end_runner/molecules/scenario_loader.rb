@@ -47,7 +47,8 @@ module Ace
               test_cases: test_cases,
               tags: parse_tags(frontmatter["tags"]),
               tool_under_test: frontmatter["tool-under-test"],
-              sandbox_layout: frontmatter["sandbox-layout"] || {}
+              sandbox_layout: frontmatter["sandbox-layout"] || {},
+              sandbox_profile: parse_sandbox_profile(frontmatter["sandbox-profile"], yml_path)
             )
           end
 
@@ -155,7 +156,12 @@ module Ace
             runner_content = File.read(runner_file)
             verify_content = File.read(verify_file)
             scenario_dir = File.dirname(runner_file)
-            declared_artifacts, optional_artifacts = declared_artifacts_for(scenario_dir, runner_content, verify_content)
+            declared_artifacts, optional_artifacts = declared_artifacts_for(
+              scenario_dir,
+              tc_id,
+              runner_content,
+              verify_content
+            )
 
             Models::TestCase.new(
               tc_id: tc_id,
@@ -227,6 +233,18 @@ module Ace
             tags.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
           end
 
+          def parse_sandbox_profile(raw_profile, source_path)
+            profile = raw_profile.to_s.strip
+            return Molecules::ConfigLoader.default_sandbox_profile if profile.empty?
+
+            allowed = %w[ace-default bundle-only custom]
+            return profile if allowed.include?(profile)
+
+            raise ArgumentError,
+              "Invalid sandbox-profile in #{source_path}: #{profile.inspect}. " \
+              "Allowed values: #{allowed.join(", ")}"
+          end
+
           # Detect fixtures directory if it exists
           #
           # @param scenario_dir [String] Path to the scenario directory
@@ -236,12 +254,16 @@ module Ace
             Dir.exist?(path) ? File.expand_path(path) : nil
           end
 
-          def declared_artifacts_for(scenario_dir, runner_content, verify_content)
+          def declared_artifacts_for(scenario_dir, tc_id, runner_content, verify_content)
             scenario_frontmatter = parse_scenario_yml(File.join(scenario_dir, "scenario.yml"))
             required_artifacts = []
             optional_artifacts = []
 
-            required_artifacts.concat(Array((scenario_frontmatter["sandbox-layout"] || {}).keys))
+            required_artifacts.concat(
+              Array((scenario_frontmatter["sandbox-layout"] || {}).keys).select do |path|
+                declared_artifact_matches_tc?(path, tc_id)
+              end
+            )
 
             [runner_content, verify_content].each do |content|
               extract_declared_artifacts(content).each do |entry|
@@ -258,6 +280,24 @@ module Ace
             optional = optional.reject { |path| required.include?(path) }
 
             [required.sort, optional.sort]
+          end
+
+          def declared_artifact_matches_tc?(path, tc_id)
+            artifact_index = extract_declared_artifact_index(path)
+            return true if artifact_index.nil?
+
+            tc_index = extract_tc_index(tc_id)
+            tc_index && artifact_index == tc_index
+          end
+
+          def extract_declared_artifact_index(path)
+            match = path.to_s.match(%r{\Aresults/tc/(\d{1,3})(?:/|$)})
+            match ? match[1].to_i : nil
+          end
+
+          def extract_tc_index(tc_id)
+            match = tc_id.to_s.match(/\ATC-(\d+)/i)
+            match ? match[1].to_i : nil
           end
 
           def extract_declared_artifacts(markdown)

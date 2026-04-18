@@ -53,6 +53,18 @@ module Ace
             config.dig("execution", "parallel") || 3
           end
 
+          # @return [String] Default sandbox bootstrap profile
+          def self.default_sandbox_profile
+            config = load
+            config.dig("sandbox", "profile") || "ace-default"
+          end
+
+          # @return [String] Dedicated Ruby version for sandbox runtime
+          def self.default_sandbox_ruby_version
+            config = load
+            config.dig("sandbox", "ruby_version") || "3.4.9"
+          end
+
           # @return [Array<String>] CLI provider names
           def self.cli_providers
             config = load

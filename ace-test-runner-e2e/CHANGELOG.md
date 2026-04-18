@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.8] - 2026-04-16
+
+### Fixed
+- Synced protocol-source package trees into prepared sandboxes before deterministic setup, preserved the sanitized setup environment for runner and verifier execution, and tightened the shared runner contract to require direct `ace-*` commands with immediate `.stdout` / `.stderr` / `.exit` persistence.
+
+## [0.38.7] - 2026-04-16
+
+### Fixed
+- Reused already prepared CLI-provider sandboxes during pipeline execution so the runner no longer rewrites tracked sandbox state after deterministic setup, which prevents staged-path failures caused by post-setup provider-directory symlinks.
+
+## [0.38.6] - 2026-04-16
+
+### Fixed
+- Scoped declared sandbox-layout artifacts to the active test case, recorded present-versus-missing required artifacts in harness snapshots and report metadata, and passed that contract into verifier prompts.
+- Added canonical goal-verdict reporting so generated scenario reports keep the authoritative failed-TC mapping even when narrative evidence includes contradictory wording.
+
+## [0.38.5] - 2026-04-16
+
+### Fixed
+- Synced package protocol-source manifests into copied E2E sandboxes so bundled workflow and skill resolution continues to work after sandbox setup.
+- Hardened the shared runner prompt contract to preserve sandbox runtime `PATH`/environment and forbid wrapper patterns that break direct `ace-*` execution.
+
+## [0.38.4] - 2026-04-16
+
+### Fixed
+- Built a dedicated sandbox runtime for E2E runs with sandbox-local Gemfile, Bundler state, gem home, bin shims, verifier sandbox context, preserved report-directory reuse, and wrapper-compatible launch behavior so sandboxed commands stop leaking back into the source worktree.
+
+## [0.38.3] - 2026-04-16
+
+### Fixed
+- Stripped inherited Bundler and Ruby env leakage from sandboxed E2E subprocesses, created sandbox-local Bundler state, preserved failure-stub report directories in suite aggregation, and aligned shared setup templates/docs with the `ACE_E2E_SOURCE_ROOT` source-root contract.
+
+## [0.38.2] - 2026-04-16
+
+### Fixed
+- Prepared setup steps with sandbox runtime environment, hardened runtime directory permissions for tmux access, and kept sandbox support paths aligned with the active `bubblewrap` execution model.
+
+## [0.38.1] - 2026-04-15
+
+### Fixed
+- Tightened the Linux `bubblewrap` sandbox mounts to preserve required device access such as `/dev/null` while keeping the host filesystem isolated.
+- Moved sandbox support directories outside the copied repo workspace so E2E setup steps like `git add -A` no longer stage sandbox home, tmp, or runtime files.
+
+## [0.38.0] - 2026-04-15
+
+### Changed
+- Rewrote `TS-RUNNER-001` to use public fixture-driven discovery (`copy-fixtures`) and expanded suite control-flow coverage beyond help-only output.
+- Added `TS-RUNNER-002` to cover real non-dry run report generation, verifier-output evidence, and explicit `ace-test-e2e-sh` public shell-helper usage.
+- Updated `docs/usage.md` with safe shell-helper workflows tied to deterministic `.ace-local/test-e2e/` report paths.
+
+### Fixed
+- Routed setup/runner/verifier subprocesses through the new sandbox backend, kept user-facing verifier metadata in written reports, and taught the minimal verifier parser to accept standalone `Results: X/Y passed` summaries.
+
 ## [0.37.2] - 2026-04-14
 
 ### Changed

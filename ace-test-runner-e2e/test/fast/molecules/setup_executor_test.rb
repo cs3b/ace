@@ -211,7 +211,30 @@ class SetupExecutorTest < Minitest::Test
       )
 
       assert result[:success]
-      assert_equal({"FOO" => "bar", "BAZ" => "qux"}, result[:env])
+      assert_equal "bar", result[:env]["FOO"]
+      assert_equal "qux", result[:env]["BAZ"]
+      assert result[:env].key?("PATH")
+    end
+  end
+
+  def test_reserved_env_keys_are_ignored
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [
+          {"agent-env" => {
+            "PROJECT_ROOT_PATH" => "/tmp/override",
+            "PATH" => "/tmp/bin",
+            "ACE_CONFIG_PATH" => "/tmp/config",
+            "SAFE_VALUE" => "ok"
+          }}
+        ],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal "ok", result[:env]["SAFE_VALUE"]
+      refute result[:env].key?("ACE_CONFIG_PATH")
+      refute_equal "/tmp/bin", result[:env]["PATH"]
     end
   end
 
@@ -223,7 +246,51 @@ class SetupExecutorTest < Minitest::Test
       )
 
       assert result[:success]
-      assert_equal({}, result[:env])
+      assert result[:env].key?("PATH")
+    end
+  end
+
+  def test_execute_returns_prepared_env_with_provider_credentials
+    Dir.mktmpdir do |sandbox|
+      old_google = ENV["GOOGLE_API_KEY"]
+      old_gemini = ENV["GEMINI_API_KEY"]
+      ENV["GOOGLE_API_KEY"] = "google-secret"
+      ENV.delete("GEMINI_API_KEY")
+
+      result = @executor.execute(
+        setup_steps: [{"run" => "printf '%s' \"$GOOGLE_API_KEY\" > provider.txt"}],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal "google-secret", File.read(File.join(sandbox, "provider.txt"))
+      assert_equal "google-secret", result[:env]["GOOGLE_API_KEY"]
+    ensure
+      old_google.nil? ? ENV.delete("GOOGLE_API_KEY") : ENV["GOOGLE_API_KEY"] = old_google
+      old_gemini.nil? ? ENV.delete("GEMINI_API_KEY") : ENV["GEMINI_API_KEY"] = old_gemini
+    end
+  end
+
+  def test_sandbox_backend_prepares_env_before_setup_steps
+    sandbox_backend = Class.new do
+      def prepared_env(base_env)
+        base_env.merge(
+          "HOME" => "/tmp/ace-home",
+          "TMPDIR" => "/tmp/ace-tmp",
+          "XDG_RUNTIME_DIR" => "/tmp/ace-runtime",
+          "TMUX_TMPDIR" => "/tmp/ace-runtime"
+        )
+      end
+    end.new
+
+    executor = Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new(sandbox_backend: sandbox_backend)
+
+    Dir.mktmpdir do |sandbox|
+      result = executor.execute(setup_steps: [], sandbox_dir: sandbox)
+
+      assert result[:success]
+      assert_equal "/tmp/ace-home", result[:env]["HOME"]
+      assert_equal "/tmp/ace-runtime", result[:env]["TMUX_TMPDIR"]
     end
   end
 
@@ -241,7 +308,7 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "TS-TEST-001-e2e", result[:tmux_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
-      assert_equal [%w[tmux new-session -d -s TS-TEST-001-e2e]], calls
+      assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEST-001-e2e"], calls.first.drop(1)
     end
   end
 
@@ -260,7 +327,7 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "8pny7t0", result[:tmux_session]
       assert_equal "8pny7t0", result[:env]["ACE_TMUX_SESSION"]
-      assert_equal [%w[tmux new-session -d -s 8pny7t0]], calls
+      assert_equal ["tmux", "new-session", "-d", "-s", "8pny7t0"], calls.first.drop(1)
     end
   end
 
@@ -278,7 +345,7 @@ class SetupExecutorTest < Minitest::Test
       assert result[:success]
       assert_equal "TS-TEST-001-e2e", result[:tmux_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
-      assert_equal [%w[tmux new-session -d -s TS-TEST-001-e2e]], calls
+      assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEST-001-e2e"], calls.first.drop(1)
     end
   end
 
@@ -294,7 +361,7 @@ class SetupExecutorTest < Minitest::Test
 
       assert result[:success]
       assert_equal "ace-e2e-123456", result[:tmux_session]
-      assert_equal [%w[tmux new-session -d -s ace-e2e-123456]], calls
+      assert_equal ["tmux", "new-session", "-d", "-s", "ace-e2e-123456"], calls.first.drop(1)
     end
   end
 
@@ -316,7 +383,7 @@ class SetupExecutorTest < Minitest::Test
       executor.teardown
 
       assert_equal [["tmux", "kill-session", "-t", "TS-TEARDOWN-001-e2e"]], system_calls
-      assert_equal [%w[tmux new-session -d -s TS-TEARDOWN-001-e2e]], command_calls
+      assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEARDOWN-001-e2e"], command_calls.first.drop(1)
     end
   end
 
@@ -324,10 +391,10 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          {"agent-env" => {"PROJECT_ROOT_PATH" => "/custom/path"}},
           {"run" => "echo $PROJECT_ROOT_PATH > prp_out.txt"}
         ],
-        sandbox_dir: sandbox
+        sandbox_dir: sandbox,
+        initial_env: {"PROJECT_ROOT_PATH" => "/custom/path"}
       )
 
       assert result[:success]

@@ -216,6 +216,10 @@ module Ace
             }
             metadata["runner_observations"] = result.metadata["runner_observations"] if result.metadata.key?("runner_observations")
             metadata["verifier_observations"] = result.observations unless result.observations.to_s.empty?
+            metadata["missing_required_artifacts"] = result.metadata["missing_required_artifacts"] if result.metadata.key?("missing_required_artifacts")
+            metadata["works_for_end_user"] = result.metadata["works_for_end_user"] if result.metadata.key?("works_for_end_user")
+            metadata["user_friction"] = result.metadata["user_friction"] if result.metadata.key?("user_friction")
+            metadata["user_feedback"] = result.metadata["user_feedback"] if result.metadata.key?("user_feedback")
 
             if test_case
               metadata["scenario-id"] = scenario.test_id

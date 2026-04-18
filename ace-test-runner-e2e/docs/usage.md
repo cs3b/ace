@@ -111,19 +111,25 @@ Opens a shell or runs a command inside an E2E sandbox directory. Useful for insp
 - `command` (optional): command to execute; omit for an interactive bash session
 
 The tool validates that the path is inside `.ace-local/test-e2e/` and sets `PROJECT_ROOT_PATH` to the sandbox directory.
+On Linux it re-enters the sandbox through `bubblewrap` before launching the requested shell or command.
 
-### Examples
+### Safe usage pattern
+
+Use a deterministic report path or captured run-id directory first, then pass that path to `ace-test-e2e-sh`.
 
 ```bash
-ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports bash
-ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports git status
-ace-test-e2e-sh .ace-local/test-e2e/i50jj3-lint-001-reports ls results/
+ace-test-e2e ace-lint TS-LINT-001 --report-dir .ace-local/test-e2e/manual-lint-run
+ace-test-e2e-sh .ace-local/test-e2e/manual-lint-run ls
+ace-test-e2e-sh .ace-local/test-e2e/manual-lint-run git status
 ```
+
+When using default report paths, derive the newest directory from `.ace-local/test-e2e/` before invoking `ace-test-e2e-sh`.
 
 ## Notes
 
 - `ace-test-e2e` runs scenario workflows from `test/e2e/`; deterministic package coverage should run via `ace-test <package>` (default `fast`) and `ace-test <package> feat`.
 - Scenario metadata is read from each scenario directory's `scenario.yml`.
+- `sandbox-layout` is a soft outcome hint for directory prep and verifier context, not a hard pass/fail artifact gate.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.
 - Package and suite reports are aggregate summaries. When failed TC IDs or evidence matter, use the referenced per-scenario `report.md` as the canonical source of truth.

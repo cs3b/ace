@@ -80,6 +80,48 @@ class PipelineReportGeneratorTest < Minitest::Test
     end
   end
 
+  def test_generate_captures_overall_user_outcome_fields
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: PASS
+          - **Evidence**: command worked from help text
+
+          ### Goal 2 - Roundtrip
+          - **Verdict**: FAIL
+          - **Category**: discoverability-gap
+          - **Evidence**: required a hidden workaround not documented in help
+
+          ## Overall User Outcome
+          - **Works for end user**: partial
+          - **Friction**: Needed hidden setup knowledge.
+          - **Feedback**: Document the required setup or remove the hidden dependency.
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "partial", result.status
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "partial", metadata["works_for_end_user"]
+      assert_equal "Needed hidden setup knowledge.", metadata["user_friction"]
+      assert_equal "Document the required setup or remove the hidden dependency.", metadata["user_feedback"]
+      assert_equal "discoverability-gap", metadata["failed"].first["category"]
+
+      goal_report = File.read(File.join(report_dir, "report.md"))
+      assert_includes goal_report, "Works for end user | partial"
+      assert_includes goal_report, "Needed hidden setup knowledge."
+    end
+  end
+
   def test_generate_extracts_multiline_evidence_blocks
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")
@@ -170,6 +212,38 @@ class PipelineReportGeneratorTest < Minitest::Test
 
       summary = File.read(File.join(report_dir, "summary.r.md"))
       assert_includes summary, "no sandbox artifacts were provided"
+    end
+  end
+
+  def test_generate_marks_canonical_goal_verdicts_and_preserves_contradictory_evidence_notes
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: PASS
+          - **Evidence**: **Verdict correction**: FAIL because a stale helper file was missing.
+
+          ### Goal 2 - Roundtrip
+          - **Verdict**: FAIL
+          - **Category**: missing-artifact
+          - **Evidence**: required exit artifact missing
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "partial", result.status
+
+      goal_report = File.read(File.join(report_dir, "report.md"))
+      assert_includes goal_report, "## Canonical Goal Verdicts"
+      assert_includes goal_report, "| TC-001 | PASS |"
+      assert_includes goal_report, "Canonical verdict PASS. Preserved verifier note:"
     end
   end
 

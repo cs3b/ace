@@ -238,6 +238,37 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_parses_sandbox_profile
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-SANDBOX-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-SANDBOX-001
+          title: Sandbox Profile Test
+          area: test
+          sandbox-profile: bundle-only
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal "bundle-only", scenario.sandbox_profile
+    end
+  end
+
+  def test_load_rejects_invalid_sandbox_profile
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-SANDBOX-002",
+        scenario_yml: <<~YAML)
+          test-id: TS-SANDBOX-002
+          title: Bad Sandbox Profile
+          area: test
+          sandbox-profile: impossible
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid sandbox-profile/, error.message)
+    end
+  end
+
   def test_load_with_timeout_override
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-TIMEOUT-001",
@@ -318,6 +349,37 @@ class ScenarioLoaderTest < Minitest::Test
 
       assert_equal ["results/tc/01", "results/tc/01/stdout"], test_case.declared_artifacts
       assert_equal ["results/tc/01/summary.md"], test_case.optional_artifacts
+    end
+  end
+
+  def test_load_standalone_scopes_sandbox_layout_to_current_tc
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-LAYOUT-001",
+        scenario_yml: <<~YAML,
+          test-id: TS-LAYOUT-001
+          title: Layout Scope
+          area: test
+          sandbox-layout:
+            results/tc/01/: "First phase"
+            results/tc/02/: "Second phase"
+        YAML
+        standalone_tcs: {
+          "TC-001-first" => {
+            runner: "# Goal\n\n- `results/tc/01/stdout`",
+            verify: "# Verify\n\n- `results/tc/01/stdout` required artifact."
+          },
+          "TC-002-second" => {
+            runner: "# Goal\n\n- `results/tc/02/stdout`",
+            verify: "# Verify\n\n- `results/tc/02/stdout` required artifact."
+          }
+        })
+
+      scenario = @loader.load(scenario_dir)
+      tc01 = scenario.test_cases.find { |tc| tc.tc_id == "TC-001" }
+      tc02 = scenario.test_cases.find { |tc| tc.tc_id == "TC-002" }
+
+      assert_equal ["results/tc/01", "results/tc/01/stdout"], tc01.declared_artifacts
+      assert_equal ["results/tc/02", "results/tc/02/stdout"], tc02.declared_artifacts
     end
   end
 

@@ -434,6 +434,17 @@ class SkillResultParserTest < Minitest::Test
     assert_includes result[:observations], "notes/inbox/"
   end
 
+  def test_parse_verifier_results_only_line
+    text = "**Results: 1/1 passed**"
+
+    result = SkillResultParser.parse_verifier(text)
+
+    assert_equal "pass", result[:status]
+    assert_equal 1, result[:test_cases].size
+    assert_equal "pass", result[:test_cases].first[:status]
+    assert_equal "1/1 passed", result[:summary]
+  end
+
   def test_parse_tc_result_has_single_test_case
     text = <<~MD
       - **Test ID**: TS-LINT-001

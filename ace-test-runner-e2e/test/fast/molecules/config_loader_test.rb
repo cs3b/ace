@@ -29,6 +29,10 @@ class ConfigLoaderTest < Minitest::Test
         "timeout" => 600,
         "parallel" => 3
       },
+      "sandbox" => {
+        "profile" => "ace-default",
+        "ruby_version" => "3.4.9"
+      },
       "providers" => {
         "cli" => %w[claude gemini codex codexoss opencode pi]
       },
@@ -102,6 +106,14 @@ class ConfigLoaderTest < Minitest::Test
   def test_default_parallel_matches_execution_config
     config = ConfigLoader.load
     assert_equal config.dig("execution", "parallel"), ConfigLoader.default_parallel
+  end
+
+  def test_default_sandbox_profile_accessor
+    assert_equal "ace-default", ConfigLoader.default_sandbox_profile
+  end
+
+  def test_default_sandbox_ruby_version_accessor
+    assert_equal "3.4.9", ConfigLoader.default_sandbox_ruby_version
   end
 
   def test_cli_providers_accessor

@@ -611,6 +611,7 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-003", %w[TC-001])
+      expected_run_ids = %w[run-a run-b run-c]
 
       received_run_ids = []
       mutex = Mutex.new
@@ -631,6 +632,9 @@ class TestOrchestratorTest < Minitest::Test
         provider: "claude:sonnet",
         executor: executor
       )
+      orchestrator.define_singleton_method(:generate_timestamps) do |count|
+        expected_run_ids.first(count)
+      end
 
       orchestrator.run(
         package: "my-pkg",
@@ -641,7 +645,16 @@ class TestOrchestratorTest < Minitest::Test
       assert_equal 3, received_run_ids.size
       assert received_run_ids.none?(&:nil?), "All run_ids should be non-nil for CLI provider"
       assert_equal received_run_ids.uniq.size, received_run_ids.size, "All run_ids should be unique"
+      assert_equal expected_run_ids.sort, received_run_ids.sort
     end
+  end
+
+  def test_generate_timestamps_returns_unique_values
+    orchestrator = create_orchestrator
+    run_ids = orchestrator.send(:generate_timestamps, 3)
+
+    assert_equal 3, run_ids.size
+    assert_equal 3, run_ids.uniq.size
   end
 
   def test_parallel_execution_runs_all_tests
@@ -1104,9 +1117,39 @@ class TestOrchestratorTest < Minitest::Test
 
   private
 
+  class StubRuntimeBuilder
+    def prepare(sandbox_root:, env:, tool_names: nil)
+      runtime_root = File.join(sandbox_root, ".ace-local", "e2e-runtime")
+      bin_root = File.join(runtime_root, "bin")
+      FileUtils.mkdir_p(bin_root)
+      write_shim(File.join(bin_root, "ace-config"))
+      write_shim(File.join(bin_root, "ace-handbook"))
+
+      {
+        runtime_root: runtime_root,
+        env: env.merge(
+          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_root),
+          "ACE_E2E_SOURCE_ROOT" => env["ACE_E2E_SOURCE_ROOT"] || Dir.pwd,
+          "ACE_CONFIG_PATH" => File.join(sandbox_root, ".ace"),
+          "PATH" => [bin_root, ENV["PATH"].to_s].join(File::PATH_SEPARATOR)
+        )
+      }
+    end
+
+    private
+
+    def write_shim(path)
+      File.write(path, <<~SH)
+        #!/usr/bin/env bash
+        exit 0
+      SH
+      FileUtils.chmod(0o755, path)
+    end
+  end
+
   def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil,
     suite_report_writer: nil, report_writer: nil, integration_runner: nil, discoverer: nil,
-    scenario_loader: nil, setup_executor_factory: nil)
+    scenario_loader: nil, setup_executor_factory: nil, runtime_builder: nil)
     base = base_dir || File.expand_path("../../../..", __dir__)
     TestOrchestrator.new(
       provider: provider || "test:stub",
@@ -1120,7 +1163,8 @@ class TestOrchestratorTest < Minitest::Test
       scenario_loader: scenario_loader,
       report_writer: report_writer || StubReportWriter.new,
       suite_report_writer: suite_report_writer || StubSuiteReportWriter.new,
-      setup_executor_factory: setup_executor_factory
+      setup_executor_factory: setup_executor_factory,
+      runtime_builder: runtime_builder || StubRuntimeBuilder.new
     )
   end
 

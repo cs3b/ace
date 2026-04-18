@@ -183,6 +183,33 @@ module Ace
 
           def self.parse_minimal_verifier(text)
             compact = text.to_s.strip
+            results_match = compact.match(/Results:\s*(\d+)\s*\/\s*(\d+)\s*passed/i)
+            if results_match
+              passed = results_match[1].to_i
+              total = results_match[2].to_i
+              status = if total.zero?
+                "fail"
+              elsif passed == total
+                "pass"
+              elsif passed.zero?
+                "fail"
+              else
+                "partial"
+              end
+              failed = [total - passed, 0].max
+              test_cases = []
+              passed.times { |i| test_cases << {id: "TC-#{format("%03d", i + 1)}", description: "", status: "pass", actual: "", notes: ""} }
+              failed.times { |i| test_cases << {id: "TC-#{format("%03d", passed + i + 1)}", description: "", status: "fail", actual: "", notes: "", category: "unknown"} }
+
+              return {
+                test_id: "",
+                status: status,
+                test_cases: test_cases,
+                summary: "#{passed}/#{total} passed",
+                observations: compact
+              }
+            end
+
             status_match = compact.match(/\b(PASS|FAIL|PARTIAL|ERROR)\b/i)
             return parse(text) unless status_match
 

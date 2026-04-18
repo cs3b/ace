@@ -1566,6 +1566,7 @@ class SuiteOrchestratorTest < Minitest::Test
       assert_equal "ace-lint", data["package"]
       assert_equal "error", data["status"]
       assert_equal "TS-LINT-001", data["test-id"]
+      assert_equal File.dirname(metadata_files.first), results[:packages]["ace-lint"].first[:report_dir]
     end
   end
 
@@ -1696,6 +1697,38 @@ class SuiteOrchestratorTest < Minitest::Test
       metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
       assert_equal 1, metadata_files.size, "Should not write additional stub when metadata exists"
       assert_equal existing_report_dir, File.dirname(metadata_files.first)
+    end
+  end
+
+  def test_parse_test_output_uses_preflight_summary_when_present
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = build_orchestrator(discoverer: discoverer, output: @output)
+
+    output = "Preflight: test/feat/setup_executor_tmux_test.rb (fail)\nPreflight failed: 1/2 files passed\n1 test(s) failed: PREFLIGHT\n"
+    result = orchestrator.send(:parse_test_output, output, 1, "TS-RUNNER-001-cli-smoke")
+
+    assert_equal "fail", result[:status]
+    assert_equal "Preflight failed: 1/2 files passed", result[:summary]
+  end
+
+  def test_normalize_report_dir_resolves_scenario_dir_from_package_report_file
+    Dir.mktmpdir do |tmpdir|
+      scenario_report_dir = File.join(tmpdir, "reports", "ts-runner-002")
+      FileUtils.mkdir_p(scenario_report_dir)
+      package_report = File.join(tmpdir, "8abc-test-runner-report.md")
+      relative_dir = "reports/ts-runner-002"
+      File.write(package_report, <<~MD)
+        # ace-test-runner-e2e
+
+        | Test ID | Report Dir |
+        | --- | --- |
+        | TS-RUNNER-002 | `#{relative_dir}` |
+      MD
+
+      orchestrator = build_orchestrator(discoverer: StubDiscoverer.new(packages: [], tests: {}), output: @output)
+      normalized = orchestrator.send(:normalize_report_dir, package_report, "TS-RUNNER-002-real-exec")
+
+      assert_equal scenario_report_dir, normalized
     end
   end
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require_relative "../lib/ace/test/end_to_end_runner"
+
 # ace-test-e2e-sh - Execute commands within E2E test sandbox
 #
 # Usage:
@@ -57,11 +59,14 @@ unless Dir.exist?(test_dir)
   exit 1
 end
 
-Dir.chdir(test_dir)
-ENV["PROJECT_ROOT_PATH"] = test_dir
+backend = Ace::Test::EndToEndRunner::Molecules::BwrapSandboxBackend.new(
+  sandbox_root: test_dir,
+  source_root: ENV["ACE_E2E_SOURCE_ROOT"]
+)
+env = backend.prepared_env("PROJECT_ROOT_PATH" => test_dir, "ACE_E2E_SOURCE_ROOT" => ENV["ACE_E2E_SOURCE_ROOT"])
 
 if ARGV.empty?
-  exec "bash"
+  backend.exec(["bash"], chdir: test_dir, env: env)
 else
-  exec(*ARGV)
+  backend.exec(ARGV, chdir: test_dir, env: env)
 end

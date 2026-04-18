@@ -37,13 +37,19 @@ Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
 - Impact Checks:
   - {Sandbox/project impact expectation}
 - Artifact Checks:
-  - {Outcome artifact expectation}
+  - {Outcome artifact expectation when a real end-user-visible file or output should exist}
 - Runner Observations:
   - {How final runner observations help disambiguate the result when state alone is not enough, and record friction/workaround pressure if present}
 - Debug Fallback:
   - {Optional stdout/stderr/exit evidence when needed}
 
+## Overall User Outcome
+
+- **Works for end user**: {yes|partial|no}
+- **Friction**: {User-visible friction or `None`}
+- **Feedback**: {Product/docs/help feedback or `None`}
+
 ## Verdict
 
-- Pass when impact and artifact checks are satisfied from sandbox evidence.
+- Pass when the public path works from sandbox evidence. Missing helper artifacts alone should not fail the goal.
 -->
