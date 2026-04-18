@@ -283,6 +283,15 @@ body_wrap: 80
 EOF
 ```
 
+### Verify cascade with public commands
+
+Confirm the project overrides are visible without internal Ruby probing:
+
+```bash
+ace-config diff --file .ace/git/commit.yml
+ace-bundle prompt://git-commit.system
+```
+
 ### Add a custom workflow
 
 Create a project-specific workflow that's immediately available as `wfi://deploy`:
