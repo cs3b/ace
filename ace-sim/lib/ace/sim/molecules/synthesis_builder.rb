@@ -29,6 +29,7 @@ module Ace
 
         def overall_status(chains, final_stage: nil)
           return "failed" if final_stage && final_stage["status"] == "failed"
+          return "ok" if final_stage && final_stage["status"] == "skipped" && chains.empty?
           return "failed" if chains.empty?
           return "failed" if chains.all? { |chain| chain["status"] == "failed" }
           return "partial" if chains.any? { |chain| chain["status"] == "failed" }

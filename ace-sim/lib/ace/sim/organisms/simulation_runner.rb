@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "fileutils"
+
 module Ace
   module Sim
     module Organisms
@@ -25,22 +27,12 @@ module Ace
             output_path: File.join(run_dir, "input.md")
           )
 
-          chains = []
-          session.providers.each do |provider|
-            1.upto(session.repeat) do |iteration|
-              chains << run_chain(
-                session: session,
-                run_dir: run_dir,
-                provider: provider,
-                iteration: iteration,
-                bundled_input_path: bundled_input_path
-              )
-            end
-          end
+          chains = session.dry_run? ? [] : run_chains(session: session, run_dir: run_dir, bundled_input_path: bundled_input_path)
 
-          final_stage = nil
-          if session.synthesis_enabled?
-            final_stage = final_synthesis_executor.execute(
+          final_stage = if session.dry_run?
+            skipped_final_stage(run_dir: run_dir, bundled_input_path: bundled_input_path)
+          elsif session.synthesis_enabled?
+            final_synthesis_executor.execute(
               run_dir: run_dir,
               session: session,
               chains: chains,
@@ -106,6 +98,22 @@ module Ace
         attr_reader :session_store, :stage_executor, :synthesis_builder, :final_synthesis_executor,
           :source_bundler
 
+        def run_chains(session:, run_dir:, bundled_input_path:)
+          chains = []
+          session.providers.each do |provider|
+            1.upto(session.repeat) do |iteration|
+              chains << run_chain(
+                session: session,
+                run_dir: run_dir,
+                provider: provider,
+                iteration: iteration,
+                bundled_input_path: bundled_input_path
+              )
+            end
+          end
+          chains
+        end
+
         def run_chain(session:, run_dir:, provider:, iteration:, bundled_input_path:)
           current_input_path = bundled_input_path
           step_results = []
@@ -158,6 +166,30 @@ module Ace
             session.regenerate_run_id!
             retry
           end
+        end
+
+        def skipped_final_stage(run_dir:, bundled_input_path:)
+          final_dir = session_store.final_dir(run_dir)
+          source_original_path = File.join(final_dir, "source.original.md")
+          input_path = File.join(final_dir, "input.md")
+
+          FileUtils.mkdir_p(final_dir)
+          FileUtils.cp(bundled_input_path, source_original_path)
+          File.write(
+            input_path,
+            <<~MD
+              # ace-sim dry-run final stage
+
+              Dry-run skipped provider chain execution and final synthesis.
+            MD
+          )
+
+          {
+            "status" => "skipped",
+            "reason" => "dry-run",
+            "source_original_path" => source_original_path,
+            "input_path" => input_path
+          }
         end
 
         def failure_reason(chains, final_stage)

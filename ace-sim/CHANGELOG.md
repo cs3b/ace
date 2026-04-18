@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-04-16
+
+### Fixed
+- Implemented real `--dry-run` semantics so dry runs record session and synthesis metadata without executing provider chains or final synthesis, and updated retained task-preset E2E verification to accept the actual run-directory artifacts as the canonical proof.
+
+## [0.15.3] - 2026-04-16
+
+### Fixed
+- Updated `TS-SIM-002` dry-run verification to accept both supported public synthesis failure messages when the run metadata records a failed final stage.
+
+## [0.15.2] - 2026-04-16
+
+### Fixed
+- Relaxed `TS-SIM-001` default-preset verification to accept successful public run artifacts without hard-requiring `session.yml`, while preserving the stricter metadata checks on constrained external-failure paths.
+
+## [0.15.1] - 2026-04-16
+
+### Fixed
+- Softened retained smoke E2E contracts so provider-constrained failure paths are judged from recorded run metadata and user-visible outcomes instead of requiring full chain artifact completion.
+
+## [0.15.0] - 2026-04-15
+
+### Changed
+- Rewrote E2E coverage to public-surface contracts by narrowing `TS-SIM-001` to retained high-value journeys, removing placeholder-based artifact assumptions, and adding `TS-SIM-002` for dry-run public contract validation.
+- Updated package usage documentation to clarify dry-run verification expectations and final synthesis failure-path recording semantics.
+
 ## [0.14.2] - 2026-04-13
 ### Fixed
 - **ace-sim v0.14.2**: Improved run-id uniqueness by extending run-id generation and collision handling so `SimulationRunner` retries more times before failing when run directories already exist.

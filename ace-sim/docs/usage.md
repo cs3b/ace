@@ -78,6 +78,7 @@ Run fails with `Missing step config` if a required step file is not found.
 - If not passed, synthesis defaults use: preset `synthesis_provider`, then global config `sim.synthesis_provider`.
 - `--synthesis-provider` requires `--synthesis-workflow` to be set.
 - `--dry-run` is a non-mutating preview and cannot be combined with `--writeback`.
+- `synthesis.yml` always records the final-stage outcome. External provider failures are recorded as `final_stage.status: failed`; callers should treat this as run evidence, not synthesize placeholder artifacts.
 
 ## Artifacts
 
@@ -113,7 +114,7 @@ Final directory:
 - `draft`, `plan`, `work` are common defaults; custom step order is supported via `--steps`.
 - After all chains complete, the synthesis stage gathers feedback from every stage to propose improvements and produce a revised source artifact.
 - Synthesis is optional; enable via preset or explicit `--synthesis-workflow`.
-- `--dry-run` does not perform provider calls.
+- `--dry-run` does not perform provider calls and should be verified via recorded run metadata/artifacts instead of provider output files.
 
 ## Test Commands
 
