@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-04-16
+
+### Fixed
+- Exported resolved browser executable variables for VHS runs and aligned non-browser E2E verification with explicit constrained-environment failure evidence.
+
+## [0.25.0] - 2026-04-14
+
+### Changed
+- Rewrote `TS-DEMO-001` smoke E2E coverage around public-surface goal contracts by adding non-dry-run preset recording success coverage and stabilizing dry-run and missing-`--pr` verification assertions.
+
+### Technical
+- Added `TC-005-record-preset-success-artifact` runner/verifier assets and updated scenario/aggregate E2E manifests to execute and verify 5 goals.
+- Updated scenario setup to use `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` for resilient `mise.toml` bootstrap in package sandbox runs.
+
 ## [0.24.6] - 2026-04-15
 
 ### Fixed

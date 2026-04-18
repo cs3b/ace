@@ -30,13 +30,23 @@ class VhsExecutorTest < AceDemoTestCase
   end
 
   def test_run_returns_execution_result_on_success
-    Open3.stub(:capture3, proc { |_a, *_rest|
-      ["ok", "", FakeStatus.new(true, 0)]
+    calls = []
+    Open3.stub(:capture3, proc { |*args|
+      calls << args
+      if args[0] == "bash"
+        ["/usr/bin/chromium\n", "", FakeStatus.new(true, 0)]
+      else
+        ["ok", "", FakeStatus.new(true, 0)]
+      end
     }) do
       result = @executor.run(["vhs", "demo.tape", "--output", "demo.gif"])
       assert result.success?
       assert_equal "ok", result.stdout
     end
+
+    env = calls.last[0]
+    assert_equal "/usr/bin/chromium", env["BROWSER"]
+    assert_equal "/usr/bin/chromium", env["CHROME_BIN"]
   end
 
   def test_run_raises_vhs_not_found
@@ -47,11 +57,32 @@ class VhsExecutorTest < AceDemoTestCase
   end
 
   def test_run_raises_execution_error_on_non_zero
-    Open3.stub(:capture3, proc { |_a, *_rest|
-      ["", "boom", FakeStatus.new(false, 1)]
+    Open3.stub(:capture3, proc { |*args|
+      if args[0] == "bash"
+        ["/usr/bin/chromium\n", "", FakeStatus.new(true, 0)]
+      else
+        ["", "boom", FakeStatus.new(false, 1)]
+      end
     }) do
       error = assert_raises(Ace::Demo::VhsExecutionError) { @executor.run(["vhs", "demo.tape"]) }
       assert_includes error.message, "boom"
     end
+  end
+
+  def test_run_uses_empty_browser_env_when_no_browser_found
+    captured_env = nil
+
+    Open3.stub(:capture3, proc { |*args|
+      if args[0] == "bash"
+        ["", "", FakeStatus.new(false, 1)]
+      else
+        captured_env = args[0]
+        ["ok", "", FakeStatus.new(true, 0)]
+      end
+    }) do
+      @executor.run(["vhs", "demo.tape"])
+    end
+
+    assert_equal({}, captured_env)
   end
 end
