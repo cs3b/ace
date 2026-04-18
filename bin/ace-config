@@ -4,7 +4,7 @@
 require "pathname"
 
 ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
-ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+ENV["BUNDLE_GEMFILE"] ||= ace_meta_root.join("Gemfile").to_s
 
 require "bundler/setup"
 
