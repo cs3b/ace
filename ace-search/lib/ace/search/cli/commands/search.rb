@@ -183,6 +183,7 @@ module Ace
           end
 
           def apply_preset
+            puts "Using preset: #{@options[:preset]}" if @options[:format] == :text
             preset_manager = Ace::Search::Molecules::PresetManager.new
             @options = preset_manager.merge_with_options(@options[:preset], @options)
           end
@@ -201,7 +202,7 @@ module Ace
           def output_results(result)
             # Print summary for text format
             if @options[:format] == :text
-              puts Ace::Search::Organisms::ResultFormatter.format_summary(
+              summary = Ace::Search::Organisms::ResultFormatter.format_summary(
                 result[:results],
                 mode: result[:mode],
                 pattern: @pattern,
@@ -209,7 +210,10 @@ module Ace
                 scope: @options[:scope],
                 search_path: @options[:search_path]
               )
-              puts ""
+              unless summary.empty?
+                puts summary
+                puts ""
+              end
             end
 
             # Print results

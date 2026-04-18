@@ -19,6 +19,8 @@ module Ace
             parse_ripgrep_json(output)
           when :files_only
             parse_ripgrep_files_only(output)
+          when :counts
+            parse_ripgrep_counts(output)
           else
             parse_ripgrep_text(output)
           end
@@ -102,6 +104,20 @@ module Ace
             {
               type: :file,
               path: file_path
+            }
+          end
+        end
+
+        # Parse ripgrep --count output (file:count)
+        def parse_ripgrep_counts(output)
+          output.lines.map(&:strip).reject(&:empty?).filter_map do |line|
+            match = line.match(/\A(.+?):(\d+)\z/)
+            next unless match
+
+            {
+              type: :count,
+              path: match[1],
+              count: match[2].to_i
             }
           end
         end

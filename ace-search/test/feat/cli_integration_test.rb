@@ -173,6 +173,30 @@ module Ace
         assert_match(/PATTERN \[SEARCH_PATH\]/, stdout, "Help should show optional SEARCH_PATH argument")
       end
 
+      def test_preset_search_surfaces_preset_name
+        skip_unless_rg_available
+
+        Dir.mktmpdir("ace-search-preset") do |dir|
+          FileUtils.mkdir_p(File.join(dir, ".ace", "search", "presets"))
+          File.write(File.join(dir, "notes.md"), "TODO: verify preset banner\n")
+          File.write(
+            File.join(dir, ".ace", "search", "presets", "daily-scan.yml"),
+            <<~YAML
+              name: daily-scan
+              max_results: 5
+            YAML
+          )
+
+          stdout, _stderr, status = Open3.capture3(
+            @exe_path, "TODO", "--preset", "daily-scan",
+            chdir: dir
+          )
+
+          assert status.success?, "Command should succeed"
+          assert_includes stdout, "Using preset: daily-scan"
+        end
+      end
+
       def test_warns_on_nonexistent_explicit_path
         skip_unless_rg_available
 
