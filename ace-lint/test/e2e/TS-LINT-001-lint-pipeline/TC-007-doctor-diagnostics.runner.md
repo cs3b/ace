@@ -2,7 +2,7 @@
 
 ## Goal
 
-Test ace-lint's `--doctor` mode in two environments: (1) a healthy configuration directory with valid config, and (2) a directory with a YAML syntax error in config. Verify doctor detects and reports the issue.
+Test ace-lint's `--doctor` mode in two documented troubleshooting environments: (1) healthy config, and (2) malformed YAML config. Verify doctor reports both states clearly.
 
 ## Workspace
 
@@ -12,7 +12,13 @@ Save all output to `results/tc/07/`. Capture:
 
 ## Constraints
 
-- Set up two subdirectories: one with valid `.ace/lint/.rubocop.yml` and one with intentionally broken `.ace/lint/.rubocop.yml` (bad indentation/YAML syntax).
-- Initialize each as a git repo (ace-lint may require it).
+- Set up two subdirectories and run doctor from inside each one:
+  - `valid-config/` with a valid `.ace/lint/.rubocop.yml`
+  - `syntax-error/` with an intentionally malformed `.ace/lint/.rubocop.yml`
+- The malformed file must be the exact config path that doctor discovers via `.ace/lint/`; do not place the syntax break in `.standard.yml` or any unrelated file.
+- Follow the troubleshooting flow documented in `ace-lint/docs/usage.md` for healthy vs malformed config checks.
 - Run `ace-lint --doctor` in each subdirectory and capture both outputs separately.
+- Persist captures as:
+  - `results/tc/07/healthy/doctor.stdout`, `.stderr`, `.exit`
+  - `results/tc/07/malformed/doctor.stdout`, `.stderr`, `.exit`
 - All artifacts must come from real tool execution, not fabricated.

@@ -1,16 +1,16 @@
-# Goal 1 — Help Survey
+# Goal 1 — Public Surface Survey
 
 ## Goal
 
-Explore `ace-lint --help` and any subcommand help it provides. Summarize what the tool does, list its flags (especially --fix, --no-report, --validators, --doctor), available validators, and report formats. Note the report generation behavior and any configuration options.
+Map the retained public surface for this scenario using only `ace-lint --help` and `ace-lint/docs/usage.md`. Summarize the documented CLI flows used by later goals, with explicit references for `--auto-fix`, `--no-report`, `--validators`, and `--doctor`.
 
 ## Workspace
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+Save all output to `results/tc/01/`. Write `public-surface-map.md` that links each later goal to a documented help/docs entry.
 
 ## Constraints
 
-- Use only `ace-lint` to gather information. Do not create files manually or fabricate output.
+- Use only `ace-lint --help` plus `ace-lint/docs/usage.md` for discovery. Do not use hidden recipes.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or options.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
+- Your map should reflect what help/docs actually report, not assumptions.
 - **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.

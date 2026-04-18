@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+
+tool = File.basename($PROGRAM_NAME)
+args = ARGV.dup
+
+if args.include?("--version")
+  puts "#{tool} 1.0.0-e2e"
+  exit 0
+end
+
+fix = args.delete("--fix") || args.delete("--autocorrect")
+
+loop do
+  idx = args.index("--format")
+  break unless idx
+
+  args.slice!(idx, 2)
+end
+
+loop do
+  idx = args.index("--config")
+  break unless idx
+
+  args.slice!(idx, 2)
+end
+
+files = args.reject { |entry| entry.start_with?("-") }
+failed = false
+
+entries = files.map do |path|
+  content = File.exist?(path) ? File.read(path) : ""
+  offenses = []
+
+  if content.include?("missing end")
+    offenses << {
+      "severity" => "fatal",
+      "cop_name" => "Lint/Syntax",
+      "message" => "unexpected end-of-input, expecting `end`",
+      "location" => {"line" => 3, "column" => 1}
+    }
+    failed = true
+  elsif content.include?("value=[1,2,3]")
+    if fix
+      File.write(path, <<~RUBY)
+        # frozen_string_literal: true
+
+        class Demo
+          def call
+            value = [1, 2, 3]
+            puts value.join(",")
+          end
+        end
+      RUBY
+    else
+      offenses << {
+        "severity" => "convention",
+        "cop_name" => "Layout/Spacing",
+        "message" => "Use spaces around `=`",
+        "location" => {"line" => 3, "column" => 10}
+      }
+      failed = true
+    end
+  end
+
+  {"path" => path, "offenses" => offenses}
+end
+
+puts JSON.pretty_generate({"files" => entries})
+exit(failed ? 1 : 0)
