@@ -5,6 +5,30 @@ All notable changes to ace-bundle will be documented in this file.
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
 ## [Unreleased]
+
+## [0.43.3] - 2026-04-16
+
+### Technical
+- Aligned `TS-BUNDLE-001` preset-loading verification with the documented `**/*.js` routing behavior so valid preset matches are preserved without treating unrelated files as failures.
+
+## [0.43.2] - 2026-04-16
+
+### Fixed
+- Corrected `TS-BUNDLE-001` file-pattern verification so root-level markdown matched by `*.md` remains valid while genuinely out-of-scope test files stay excluded.
+
+## [0.43.1] - 2026-04-16
+
+### Technical
+- Updated `TS-BUNDLE-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so goal runs stay compatible with read-only source mounts.
+
+## [0.43.0] - 2026-04-14
+
+### Changed
+- Rewrote `TS-BUNDLE-001` to a retained public-surface goal set by consolidating file-pattern checks into Goal 2, reframing Goal 4 around user-visible routing behavior, and renaming Goal 5 to CLI output consistency and error semantics.
+
+### Technical
+- Updated scenario/runner/verifier manifests to the retained 4-goal layout and removed the standalone TC-003 goal assets.
+
 ## [0.42.1] - 2026-04-13
 
 ### Changed
