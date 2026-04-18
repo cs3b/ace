@@ -98,6 +98,55 @@ ace-lint --doctor-verbose
 
 `--format` is ignored (with warning) when `--auto-fix` or `--auto-fix-with-agent` is used.
 
+## Grouped Validator Config Routing
+
+`ace-lint` can route Ruby files to validator sets by path group using `.ace/lint/ruby.yml`:
+
+```yaml
+groups:
+  legacy:
+    patterns:
+      - "**/legacy/**/*.rb"
+    validators:
+      - rubocop
+  modern:
+    patterns:
+      - "**/modern/**/*.rb"
+    validators:
+      - standardrb
+  default:
+    patterns:
+      - "**/*.rb"
+    validators:
+      - standardrb
+```
+
+Minimal runnable flow:
+
+```bash
+ace-lint fixtures/legacy/app.rb fixtures/modern/app.rb
+ace-lint fixtures/legacy/app.rb fixtures/modern/app.rb --validators rubocop
+```
+
+The first command uses group routing from config. The second demonstrates that `--validators` overrides config selection.
+
+## Doctor Troubleshooting
+
+Use `--doctor` to verify validator/config health:
+
+1. Healthy config check:
+```bash
+ace-lint --doctor
+```
+Expected: summary reports healthy configuration and validator availability.
+
+2. Malformed YAML check:
+Create an intentionally malformed `.ace/lint/.rubocop.yml` and run:
+```bash
+ace-lint --doctor
+```
+Expected: diagnostics report config parse/validation issues without crashing.
+
 ## Example Output
 
 **All files pass:**

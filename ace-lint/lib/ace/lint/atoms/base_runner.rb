@@ -47,9 +47,11 @@ module Ace
           # @return [Hash] Result with :success, :errors, :warnings
           def run(file_paths, fix: false, config_path: nil)
             paths = Array(file_paths)
-            return unavailable_result unless available?
+            executable = resolve_command_path(command_name)
+            return unavailable_result unless executable
 
             cmd = build_command(paths, fix: fix, config_path: config_path)
+            cmd[0] = executable if command_invocation?(cmd[0], command_name)
             stdout, stderr, status = Open3.capture3(*cmd)
 
             if status.success?
@@ -206,8 +208,43 @@ module Ace
           # @param cmd [String] Command name
           # @return [Boolean] True if command exists
           def system_has_command?(cmd)
-            # Cross-platform: use system with redirect to null
-            system("#{cmd} --version > /dev/null 2>&1")
+            !resolve_command_path(cmd).nil?
+          end
+
+          def resolve_command_path(cmd)
+            candidate = cmd.to_s
+            return nil if candidate.empty?
+            return candidate if command_path_executable?(candidate) && candidate.include?(File::SEPARATOR)
+
+            candidate_directories.each do |directory|
+              next if directory.to_s.empty?
+
+              path = File.join(directory, candidate)
+              return path if command_path_executable?(path)
+            end
+
+            nil
+          end
+
+          def candidate_directories
+            directories = []
+            runtime_root = ENV["ACE_E2E_SANDBOX_RUNTIME_ROOT"].to_s.strip
+            project_root = ENV["PROJECT_ROOT_PATH"].to_s.strip
+
+            directories << File.join(runtime_root, "bin") unless runtime_root.empty?
+            directories << File.join(project_root, "bin") unless project_root.empty?
+            directories << File.join(Dir.pwd, "bin")
+            directories.concat(ENV.fetch("PATH", "").split(File::PATH_SEPARATOR))
+            directories.map { |entry| File.expand_path(entry) }.uniq
+          end
+
+          def command_path_executable?(path)
+            File.file?(path) && File.executable?(path)
+          end
+
+          def command_invocation?(value, command)
+            invocation = value.to_s
+            invocation == command.to_s || File.basename(invocation) == command.to_s
           end
 
           # Check if severity indicates an error

@@ -38,6 +38,8 @@
 
 **Process and act on lint reports** - use `/as-lint-process-report` to analyze lint output and coordinate fixes, pairing with [ace-docs](../ace-docs) for documentation maintenance workflows that complement lint validation.
 
+For public verification paths around grouped validator routing, doctor troubleshooting, and retained test commands, see the [Usage Guide](docs/usage.md#grouped-validator-config-routing), [doctor troubleshooting](docs/usage.md#doctor-troubleshooting), and [test commands](docs/usage.md#test-commands).
+
 ## Testing Model
 
 `ace-lint` follows the restarted testing contract:

@@ -240,6 +240,26 @@ class Ace::Lint::Organisms::ReportGeneratorTest < Minitest::Test
     assert_includes content, "lib/formatted.rb"
   end
 
+  def test_fixed_summary_matches_fixed_markdown_count
+    results = [create_formatted_result, create_formatted_result(file_path: "lib/other_formatted.rb")]
+
+    result = Ace::Lint::Organisms::ReportGenerator.generate(
+      results,
+      project_root: @temp_dir
+    )
+
+    assert result[:success]
+
+    report_path = File.join(result[:dir], "report.json")
+    report = JSON.parse(File.read(report_path))
+    fixed_md = File.read(File.join(result[:dir], "fixed.md"))
+
+    assert_equal 2, report.dig("summary", "fixed")
+    assert_equal 2, report.dig("results", "fixed").length
+    assert_includes fixed_md, "lib/formatted.rb"
+    assert_includes fixed_md, "lib/other_formatted.rb"
+  end
+
   def test_generates_pending_md_for_files_with_issues
     results = [create_failed_result, create_warnings_only_result]
 
@@ -349,9 +369,9 @@ class Ace::Lint::Organisms::ReportGeneratorTest < Minitest::Test
     )
   end
 
-  def create_formatted_result
+  def create_formatted_result(file_path: "lib/formatted.rb")
     Ace::Lint::Models::LintResult.new(
-      file_path: "lib/formatted.rb",
+      file_path: file_path,
       success: true,
       errors: [],
       warnings: [],

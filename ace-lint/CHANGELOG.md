@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
 ## [Unreleased]
+
+## [0.30.4] - 2026-04-18
+
+### Technical
+- Tightened retained lint E2E contracts to keep report-dir, fixed-count, and `--no-report` assertions anchored to same-run evidence, and added deterministic regression coverage for the public no-report and fixed-summary contracts.
+
+## [0.30.3] - 2026-04-16
+
+### Fixed
+- Resolved validator executables from sandbox runtime and project-local `bin/` paths so Ruby validator runs work with scenario-local shims instead of ambient `PATH` assumptions.
+
+### Technical
+- Aligned `TS-LINT-001` runner prompts and sandbox fixtures with hermetic validator-shim execution inside copied E2E sandboxes.
+
+## [0.30.2] - 2026-04-16
+
+### Fixed
+- Corrected `TS-LINT-001` doctor diagnostics setup so the malformed configuration case writes the exact `.ace/lint/.rubocop.yml` path inspected by `ace-lint --doctor`, restoring real malformed-config coverage instead of a false healthy duplicate.
+
+## [0.30.1] - 2026-04-16
+
+### Technical
+- Updated `TS-LINT-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so lint-pipeline E2E runs stay compatible with the shared sandbox model.
+
+## [0.30.0] - 2026-04-14
+
+### Changed
+- Reworked `TS-LINT-001` to a stricter public-surface goal contract by mapping retained flows to docs/help and splitting integrated batch outcomes from the standalone `--no-report` contract.
+- Added `TC-008-no-report-public-contract` coverage and updated runner/verifier bundles to eight goals.
+
+### Technical
+- Added explicit grouped-validator config routing and doctor troubleshooting examples to `docs/usage.md` for self-serve scenario guidance.
+
 ## [0.29.1] - 2026-04-13
 
 ### Changed
