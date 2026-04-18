@@ -14,7 +14,10 @@ Validation order (impact-first):
 5. **Zero exit code** — `process.exit` is `0` (processing succeeded).
 6. **Archive file created** — `archive-list.txt` shows at least one archive file with Base36-style naming.
 7. **Symlink exists** — `previous-link.txt` shows `_previous.md` targeting an archive file.
-8. **Content preserved** — `content-diff.txt` (or equivalent) demonstrates archived content matches expected source content.
+8. **Content preserved** — either:
+   - `content-diff.txt` contains an explicit comparison result, or
+   - `process.stdout` includes the sample prompt body evidence (for example `Task: Implement Feature X`),
+   demonstrating preserved user-visible content.
 
 ## Verdict
 

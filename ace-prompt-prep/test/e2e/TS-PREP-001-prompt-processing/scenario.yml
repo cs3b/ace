@@ -10,6 +10,8 @@ tool-under-test: ace-prompt-prep
 sandbox-layout:
   results/tc/01/:  "Archive workflow artifacts (archive file, symlink verification)"
   results/tc/02/:  "Context-mode processing artifacts (bundle output and archive evidence)"
+  results/tc/03/:  "Setup workflow artifacts (workspace initialization evidence)"
+  results/tc/04/:  "Task-scoped process artifacts (task path output and archive evidence)"
 
 e2e-justification: >
   This suite retains only workflow-value checks that require the real
@@ -19,12 +21,12 @@ e2e-justification: >
   cannot fully replace.
 
 requires:
-  tools: [ace-prompt-prep, ace-b36ts]
+  tools: [ace-prompt-prep, ace-b36ts, ace-task]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
   - copy-fixtures
   - write-file:
       path: .ace/prompt-prep/config.yml
