@@ -1,5 +1,12 @@
 # E2E Decision Record - TS-LLMCLI-001 CLI Check Smoke
 
+## Verification Lifecycle Metadata
+
+- Last verified: 2026-04-15
+- Verified by: assignment `8rddnp@010.15` (`work-on-task` for task `8rd.t.bzp.e`)
+- Verification entrypoint: `ace-test-e2e ace-llm-providers-cli --scenario TS-LLMCLI-001-cli-check-smoke`
+- Metadata refresh trigger: update this block whenever a testcase contract, verifier rule, or expected summary text changes.
+
 | TC ID | Decision | E2E-only reason | Unit tests reviewed |
 | --- | --- | --- | --- |
 | TC-001 help surface | ADD | Verifies packaged executable wiring and user-visible help contract from a real shell command path. | `test/fast/edge/cli_execution_edge_test.rb`, `test/fast/llm_providers_cli_test.rb` |

@@ -32,7 +32,7 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
-  - run: "mkdir -p tools"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ] && command -v mise >/dev/null 2>&1; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
+  - run: "mkdir -p results/tc/02/home tc03-stubs"
   - agent-env:
       PROJECT_ROOT_PATH: .
