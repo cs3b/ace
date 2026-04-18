@@ -10,13 +10,15 @@ Save only real command captures to `results/tc/03/`.
 
 ## Constraints
 
-- Reuse the task created in Goal 2 by resolving its full short ref from prior real command captures when available.
-- Do not depend on any helper ref-tracking file.
+- Reuse the task created in Goal 2 by reading `results/tc/02/resolved-ref.txt` when available.
 - Capture command outputs only; the verifier will inspect the archive tree directly.
-- Mention the resolved task ref in final runner observations if it was reused.
+- If `resolved-ref.txt` is missing or invalid, create a fallback task in this goal and persist its ref to `results/tc/03/fallback-ref.txt`.
+- Mention the resolved task ref and which path was used (reused or fallback) in final runner observations.
 
 ## Steps
 
-1. Resolve the target task ref from Goal 2 command captures when available; otherwise create a fallback task and use that ref.
-2. Run `ace-task update <ref> --set status=done --move-to archive` and save `update.*`.
-3. Run `ace-task show <ref>` and save `show-after-update.*`.
+1. Resolve the target task ref from `results/tc/02/resolved-ref.txt` when available.
+2. If the handoff file is missing or unusable, run `ace-task create "E2E smoke fallback task" --status pending`, capture `fallback-create.*`, and use that ref.
+3. Persist the selected target ref to `results/tc/03/fallback-ref.txt` (even when Goal 2 handoff was used) so verifier evidence is deterministic.
+4. Run `ace-task update <ref> --set status=done --move-to archive` and save `update.*`.
+5. Run `ace-task show <ref>` and save `show-after-update.*`.
