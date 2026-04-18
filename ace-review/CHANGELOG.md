@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.53.4] - 2026-04-16
+
+### Technical
+- Hardened retained multi-model and docs-path review E2E runners to persist `.stdout`, `.stderr`, and `.exit` artifacts consistently across success, timeout, and provider-constrained paths.
+
+## [0.53.3] - 2026-04-16
+
+### Fixed
+- Updated retained `TS-REVIEW-001` execution fixtures to use installed direct review models, require explicit diff subjects, and drive the single/multi-model flows through the public executable review path instead of stopping at session preparation.
+
+## [0.53.2] - 2026-04-16
+
+### Fixed
+- Switched retained `TS-REVIEW-001` multi-model fixtures from the missing `review-claude` role to installed review roles so the scenario validates real multi-provider review execution instead of local CLI availability drift.
+
+## [0.53.1] - 2026-04-16
+
+### Fixed
+- Updated docs-path onboarding E2E verification to accept bounded timeout evidence when help discovery and review session artifacts prove the documented path is discoverable.
+
+## [0.53.0] - 2026-04-15
+
+### Changed
+- Rewrote retained `TS-REVIEW-001` E2E goals to enforce public docs/help command-path guidance and added
+  `TC-003-docs-path-onboarding` coverage.
+- Tightened E2E verifier contracts so provider/model unavailability is treated as a failure path instead of a
+  PASS-equivalent outcome.
+
+### Technical
+- Updated scenario manifests and decision records to reflect three-goal execution (`X/3`) and the strict outcome
+  policy for onboarding-facing review workflows.
+
 ## [0.52.1] - 2026-04-13
 
 ### Changed
