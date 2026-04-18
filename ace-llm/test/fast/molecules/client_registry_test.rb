@@ -285,9 +285,9 @@ module Ace
             "name" => "codex",
             "class" => "TestProviders::CodexClient",
             "gem" => "test-gem",
-            "models" => ["gpt-5", "gpt-5-mini"],
+            "models" => ["gpt-5.4", "gpt-5.4-mini"],
             "aliases" => {
-              "model" => {"mini" => "gpt-5-mini", "5" => "gpt-5"}
+              "model" => {"mini" => "gpt-5.4-mini", "5" => "gpt-5.4"}
             }
           },
           "claude" => {
@@ -301,11 +301,11 @@ module Ace
         registry = create_registry_with(providers)
 
         # provider:provider auto-resolves to provider:default_model
-        assert_equal "codex:gpt-5", registry.resolve_alias("codex:codex")
+        assert_equal "codex:gpt-5.4", registry.resolve_alias("codex:codex")
         assert_equal "claude:claude-opus-4-1", registry.resolve_alias("claude:claude")
 
         # Existing model aliases still work
-        assert_equal "codex:gpt-5-mini", registry.resolve_alias("codex:mini")
+        assert_equal "codex:gpt-5.4-mini", registry.resolve_alias("codex:mini")
 
         # Non-matching alias passes through unchanged
         assert_equal "codex:unknown", registry.resolve_alias("codex:unknown")

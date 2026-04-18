@@ -35,6 +35,7 @@ module Ace
         sandbox: nil,
         working_dir: nil,
         subprocess_env: nil,
+        subprocess_command_prefix: nil,
         last_message_file: nil)
         registry = Molecules::ClientRegistry.new
         parser = Molecules::ProviderModelParser.new(registry: registry)
@@ -70,6 +71,7 @@ module Ace
           sandbox: sandbox,
           working_dir: working_dir,
           subprocess_env: subprocess_env,
+          subprocess_command_prefix: subprocess_command_prefix,
           last_message_file: last_message_file
         )
         execution_overrides = load_execution_overrides(
@@ -130,6 +132,7 @@ module Ace
               sandbox: sandbox,
               working_dir: working_dir,
               subprocess_env: subprocess_env,
+              subprocess_command_prefix: subprocess_command_prefix,
               last_message_file: last_message_file
             )
           }
@@ -202,7 +205,8 @@ module Ace
       private_class_method :load_execution_overrides
 
       def self.build_generation_opts(provider:, preset:, thinking_level:, temperature:, max_tokens:, system_file:,
-        prompt_file:, cli_args:, system_append:, sandbox:, working_dir:, subprocess_env:, last_message_file:)
+        prompt_file:, cli_args:, system_append:, sandbox:, working_dir:, subprocess_env:, subprocess_command_prefix:,
+        last_message_file:)
         execution_overrides = load_execution_overrides(
           provider: provider,
           preset: preset,
@@ -217,6 +221,10 @@ module Ace
         resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
         resolved_working_dir = first_non_nil(working_dir, execution_overrides["working_dir"])
         resolved_subprocess_env = merge_hash_values(execution_overrides["subprocess_env"], subprocess_env)
+        resolved_subprocess_command_prefix = first_non_nil(
+          subprocess_command_prefix,
+          execution_overrides["subprocess_command_prefix"]
+        )
 
         generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
         generation_opts[:max_tokens] = resolved_max_tokens unless resolved_max_tokens.nil?
@@ -227,6 +235,7 @@ module Ace
         generation_opts[:sandbox] = resolved_sandbox if resolved_sandbox
         generation_opts[:working_dir] = resolved_working_dir unless blank_value?(resolved_working_dir)
         generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
+        generation_opts[:subprocess_command_prefix] = resolved_subprocess_command_prefix unless blank_value?(resolved_subprocess_command_prefix)
         generation_opts[:last_message_file] = last_message_file if last_message_file
         generation_opts
       end

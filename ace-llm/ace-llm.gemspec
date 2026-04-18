@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-config", "~> 0.9"
   spec.add_dependency "ace-support-core", "~> 0.29"
-  spec.add_dependency "ace-support-models", "~> 0.10"
+  spec.add_dependency "ace-support-models", "~> 0.11"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "addressable", "~> 2.8"
   spec.add_dependency "kramdown", "~> 2.0"
