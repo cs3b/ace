@@ -76,7 +76,9 @@ module Ace
           puts "This may take a few minutes for large document sets..." if documents.count > 10
           response = execute_llm_query(prompts, session_dir)
 
-          # Response is already saved to report.md by ace-llm's output option
+          unless response && File.exist?(response) && !File.read(response).strip.empty?
+            raise "Consistency analysis did not produce a completed report"
+          end
 
           # Save metadata for reference
           save_metadata(documents, pattern, session_dir)

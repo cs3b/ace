@@ -44,8 +44,9 @@ module Ace
               Project config: .ace/docs/config.yml
 
             Output:
-              Analysis results printed to stdout
-              Exit codes: 0 (success), 1 (error)
+              Prints an analysis summary and writes session artifacts to .ace-local/docs/analyze-<id>/
+              Key files: analysis.md, metadata.yml, prompt-system.md, prompt-user.md
+              Exit codes: 0 (success), 1 (error), 2 (no changes), 3 (analysis error)
           DESC
 
           example [

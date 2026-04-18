@@ -94,6 +94,15 @@ ace-docs analyze docs/architecture.md --since '2026-03-01'
 ace-docs analyze docs/usage.md --exclude-renames --exclude-moves
 ```
 
+Deterministic workflow notes:
+
+- `analyze` always targets one managed file and prints a session output directory on success.
+- Session artifacts are written under `.ace-local/docs/analyze-<id>/` and include:
+  - `analysis.md`
+  - `metadata.yml`
+  - `prompt-system.md`
+  - `prompt-user.md`
+
 ## analyze-consistency
 
 Analyze consistency across multiple documents.
@@ -130,6 +139,14 @@ ace-docs analyze-consistency --terminology
 ace-docs analyze-consistency --duplicates --threshold 80
 ace-docs analyze-consistency --package ace-docs
 ```
+
+Deterministic workflow notes:
+
+- `analyze-consistency` prints `Report saved to: <path>` when it produces a report.
+- Session artifacts are written under `.ace-local/docs/sessions/analyze-consistency-<timestamp>/` and include:
+  - `report.md`
+  - `metadata.yml`
+  - `documents.json`
 
 ## update
 

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.34.1] - 2026-04-16
+
+### Fixed
+- Made `analyze-consistency` fail closed when no report file is produced and aligned E2E verification with explicit provider-unavailable evidence.
+
+## [0.34.0] - 2026-04-14
+
+### Added
+- Added a new goal-style `TS-DOCS-002-analysis-workflows` E2E scenario covering `ace-docs analyze` and `ace-docs analyze-consistency` command journeys with impact-first verification guidance.
+
+### Changed
+- Hardened `TS-DOCS-001` verifier expectations for discover/validate/status to prioritize seeded state and stable outcome semantics over brittle phrasing checks.
+- Expanded usage guidance for `analyze` and `analyze-consistency` with deterministic artifact/report location notes for reproducible CLI workflows.
+- Updated `analyze` and `analyze-consistency` command help text to document output/report artifact locations and accurate exit-code behavior.
+
 ## [0.33.1] - 2026-04-13
 
 ### Changed

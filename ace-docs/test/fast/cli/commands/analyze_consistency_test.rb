@@ -97,6 +97,18 @@ module Ace
             # Expected - analyzer will fail without proper setup
             # We just want to ensure the type conversion doesn't raise
           end
+
+          def test_execute_consistency_analysis_returns_error_when_report_missing
+            analyzer = Minitest::Mock.new
+            analyzer.expect(:analyze, nil, [nil])
+
+            command = AnalyzeConsistency.new
+            Ace::Docs::Organisms::CrossDocumentAnalyzer.stub(:new, analyzer) do
+              assert_equal 1, command.send(:execute_consistency_analysis, nil, {})
+            end
+
+            analyzer.verify
+          end
         end
       end
     end
