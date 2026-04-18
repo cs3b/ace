@@ -10,7 +10,7 @@ bundle:
     - ./TC-002-extension-inference.verify.md
     - ./TC-003-priority-and-exact-match.verify.md
     - ./TC-004-error-handling.verify.md
-    - ./TC-005-cross-protocol.verify.md
+    - ./TC-006-create-from-template-public-path.verify.md
 ---
 
 # E2E Verification: ace-nav

@@ -8,18 +8,19 @@ cost-tier: smoke
 tool-under-test: ace-nav
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations + sources command captures"
-  results/tc/02/:  "Extension inference chain evidence (shorthand, full, generic)"
-  results/tc/03/:  "Inference priority and exact-match evidence"
-  results/tc/04/:  "Error handling captures (missing resource, informative errors)"
-  results/tc/05/:  "Cross-protocol inference evidence (wfi:// vs guide://)"
+  results/tc/01/: "Help survey observations + sources command captures"
+  results/tc/02/: "Public resolve journey evidence (guide + workflow)"
+  results/tc/03/: "Discovery-to-listing workflow evidence"
+  results/tc/04/: "Error handling captures (missing resource, informative errors)"
+  results/tc/06/: "Create-from-template public-path evidence"
 
 e2e-justification: >
-  These checks validate real CLI navigation behavior across protocol inference,
-  precedence resolution, and cross-protocol discovery using filesystem-backed
-  handbook sources. Deterministic parser/scanner/registry logic is covered in
-  fast and feat tests; this scenario retains only full pipeline behavior that
-  requires real command execution with fixtures.
+  These checks validate real CLI navigation and creation behavior through public
+  command surfaces: discover commands via help/sources, resolve usable resource
+  targets, browse actionable listings, create output artifacts, and verify
+  graceful error handling. Deterministic parser/scanner/priority internals are
+  covered in fast and feat tests; this scenario retains only full pipeline
+  behavior that requires real command execution with fixtures.
 
 unit-coverage-reviewed:
   - test/fast/commands/cli_test.rb
@@ -36,7 +37,7 @@ requires:
 
 setup:
   - git-init
-  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; fi"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
   - agent-env:
       PROJECT_ROOT_PATH: .
   - copy-fixtures

@@ -10,7 +10,7 @@ bundle:
     - ./TC-002-extension-inference.runner.md
     - ./TC-003-priority-and-exact-match.runner.md
     - ./TC-004-error-handling.runner.md
-    - ./TC-005-cross-protocol.runner.md
+    - ./TC-006-create-from-template-public-path.runner.md
 ---
 
 # E2E Test Runner: ace-nav
@@ -19,15 +19,14 @@ Tool under test: ace-nav
 Required tools: ace-nav
 Workspace root: (current directory)
 
-Execute each goal sequentially. Goal 1 is discovery — all later goals
-build on what you learn there. Do not re-run --help after Goal 1.
+Execute each goal sequentially. Goal 1 is discovery and informs later goals.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 5)
+- Execute each goal in order as listed
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
-- Save all artifacts to results/tc/{NN}/ directories as specified
+- Save all artifacts to `results/tc/{NN}/` directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
@@ -38,4 +37,4 @@ build on what you learn there. Do not re-run --help after Goal 1.
 When a goal requires capturing command output:
 - Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
 - The `.exit` file contains only the numeric exit code (e.g., `0` or `1`)
-- Summary or analysis files (.md) are optional extras — the raw captures are the primary artifacts
+- Summary or analysis files (`.md`) are optional extras unless explicitly required by the goal

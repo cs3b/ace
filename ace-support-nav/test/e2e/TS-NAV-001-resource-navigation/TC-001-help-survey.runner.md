@@ -1,22 +1,24 @@
-# Goal 1 — Help Survey
+# Goal 1 — Help Survey and Actionable Discovery
 
 ## Goal
 
-Explore `ace-nav --help` and any subcommand help it provides. Summarize what the tool does, list its supported protocols (e.g., guide://, wfi://, tmpl://), flags, and options. Note the extension inference behavior and any configuration options mentioned. Also run `ace-nav sources` to capture source listing output as command-surface evidence.
+Use `ace-nav --help` (and command help as needed) to discover practical commands and protocols, then produce observations that can directly drive later goals. Capture `ace-nav sources` output as concrete command-surface evidence.
 
 ## Workspace
 
-Save all output to `results/tc/01/`. Write an observations file summarizing your findings.
+Save all output to `results/tc/01/`.
 
-Capture `ace-nav sources` command output:
+Required artifacts:
+- `results/tc/01/observations.md` — concise findings from help output, including at least one actionable command chain for later goals
 - `results/tc/01/sources.stdout`
 - `results/tc/01/sources.stderr`
 - `results/tc/01/sources.exit`
 
 ## Constraints
 
-- Use only `ace-nav` to gather information. Do not create files manually or fabricate output.
-- Start with `--help` to discover the tool's interface. Do not assume flag names or protocols.
-- Run `ace-nav sources` after the help survey and persist raw captures to the files above.
-- Your observations file should reflect what the tool actually reports, not what you expect it to report.
-- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.
+- Use only `ace-nav` commands.
+- Start with `ace-nav --help`; avoid assumptions not supported by help text.
+- Observations must include:
+  - supported protocol examples discovered from help
+  - at least one command sequence that will be used later (for example `resolve` then `list`/`sources`, then `create`)
+- All captures must come from real execution output.

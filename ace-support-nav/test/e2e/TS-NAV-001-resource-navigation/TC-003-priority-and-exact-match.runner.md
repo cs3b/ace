@@ -1,19 +1,20 @@
-# Goal 3 — Inference Priority and Exact Match
+# Goal 3 — Discovery to Listing Workflow
 
 ## Goal
 
-Test two behaviors: (1) when multiple extension variants exist for the same base name, verify the shorthand extension wins (highest priority); (2) when an explicit extension is provided, verify it bypasses inference and matches exactly.
+Use the public CLI flow discovered in Goal 1 to browse available resources with `ace-nav list` and confirm list output is actionable for later resolve/create operations.
 
 ## Workspace
 
-Save all output to `results/tc/03/`. Capture:
-- `results/tc/03/priority.stdout`, `.stderr`, `.exit` — resolving a resource where `.g.md`, `.guide.md`, and `.md` all exist
-- `results/tc/03/exact-match.stdout`, `.stderr`, `.exit` — resolving with explicit `.guide.md` extension
+Save all output to `results/tc/03/`.
+
+Capture artifacts:
+- `results/tc/03/list.stdout`, `.stderr`, `.exit` — list matching resources for a protocol/pattern
+- `results/tc/03/list-tree.stdout`, `.stderr`, `.exit` — optional tree/browsing form for the same domain
 
 ## Constraints
 
-- The sandbox fixtures include `multi-ext.g.md`, `multi-ext.guide.md`, and `multi-ext.md` for the priority test.
-- For the priority test, resolve `guide://multi-ext` (no extension) — shorthand `.g.md` should win.
-- For the exact-match test, resolve `guide://coding-standards.guide.md` (with explicit extension) — should match exactly without inference.
-- Using what you learned from Goal 1, invoke ace-nav appropriately. Do not assume syntax beyond what Goal 1 revealed.
-- All artifacts must come from real tool execution, not fabricated.
+- Use `ace-nav list` with protocol patterns discovered in Goal 1.
+- Focus on user-facing browse utility (non-empty, actionable listings), not internal priority ordering.
+- Keep command usage within public help-documented flags and syntax.
+- All artifacts must come from real command execution.
