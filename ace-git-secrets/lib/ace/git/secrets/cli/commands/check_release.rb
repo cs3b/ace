@@ -18,7 +18,7 @@ module Ace
 
             option :strict, type: :boolean, default: false,
               desc: "Fail on medium confidence matches"
-            option :format, type: :string, aliases: ["f"], default: "table",
+            option :format, type: :string, aliases: ["f"],
               desc: "Output format (table, json)"
             option :debug, type: :boolean, default: false,
               desc: "Show debug output"

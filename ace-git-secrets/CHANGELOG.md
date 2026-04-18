@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-04-18
+
+### Technical
+- Relaxed the retained help-survey verifier to accept the current five-line parity summary when it is grounded in captured help output and still proves `check-release` discovery plus config-driven whitelist behavior.
+
+## [0.15.2] - 2026-04-16
+
+### Fixed
+- Stopped forcing table output defaults in `scan` and `check-release`, allowing configured `output.format` values to drive the public CLI output contract consistently across normal and release checks.
+
+## [0.15.1] - 2026-04-16
+
+### Fixed
+- Tightened the focused config-cascade E2E to run `scan --verbose`, making output-format config effects visible and proving CLI precedence over user config with concrete stdout evidence.
+
+## [0.15.0] - 2026-04-15
+
+### Changed
+- Rewrote `TS-SECRETS-001` to public-surface goal style by aligning help/docs parity, narrowing brittle broad checks, shifting rewrite validation to saved-report artifacts, and removing the legacy error-handling TC from retained scope.
+- Added `TS-SECRETS-002-remediation-path` to validate the saved-report remediation flow (`scan -> revoke --scan-file -> rewrite-history --dry-run --scan-file`) with impact-first verification.
+
 ## [0.14.3] - 2026-04-13
 
 ### Fixed

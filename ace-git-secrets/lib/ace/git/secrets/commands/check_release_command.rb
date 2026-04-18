@@ -33,7 +33,8 @@ module Ace
             result = gate.check
 
             # Output formatted result
-            puts gate.format_result(result, format: @options[:format] || "table")
+            format = @options[:format] || Ace::Git::Secrets.config.dig("output", "format") || "table"
+            puts gate.format_result(result, format: format)
 
             result[:exit_code]
           rescue => e
