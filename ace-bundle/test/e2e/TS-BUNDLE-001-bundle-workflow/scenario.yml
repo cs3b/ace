@@ -1,5 +1,5 @@
 test-id: TS-BUNDLE-001
-title: "ace-bundle Goal-Based E2E"
+title: "ace-bundle Public-Surface Goal E2E"
 area: bundle
 package: ace-bundle
 priority: high
@@ -9,17 +9,16 @@ tool-under-test: ace-bundle
 
 sandbox-layout:
   results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Preset loading artifacts (section output, simple preset output)"
-  results/tc/03/:  "File pattern matching evidence (included/excluded files)"
-  results/tc/04/:  "Output routing evidence (auto-format threshold + explicit --output overrides)"
-  results/tc/05/:  "CLI-API parity evidence (output comparison, error handling)"
+  results/tc/02/:  "Preset loading + file-pattern evidence"
+  results/tc/04/:  "Output routing evidence (default routing + explicit --output)"
+  results/tc/05/:  "CLI consistency and error semantics evidence"
 
 e2e-justification: >
   All goals require the real ace-bundle binary executing through a shell.
-  Preset loading discovers and processes real filesystem presets. Section
-  workflow executes embedded commands and resolves file globs. Auto-format
-  thresholds depend on actual output size. CLI-API parity requires both
-  binary and Ruby API execution. None of this is testable with mocks.
+  Preset loading and file-pattern behavior depend on real filesystem presets and
+  pattern expansion. Output routing must be validated from user-visible CLI
+  output behavior. Error semantics require real CLI execution on invalid input.
+  None of this is testable with mocks.
 
 requires:
   tools: [ace-bundle]
@@ -28,8 +27,8 @@ requires:
 setup:
   - git-init
   - run: |
-      if [ -f "$PROJECT_ROOT_PATH/mise.toml" ]; then
-        cp "$PROJECT_ROOT_PATH/mise.toml" mise.toml
+      if [ -f "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml" ]; then
+        cp "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml" mise.toml
         mise trust mise.toml
       fi
   - copy-fixtures

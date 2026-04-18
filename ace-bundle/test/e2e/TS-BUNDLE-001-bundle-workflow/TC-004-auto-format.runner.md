@@ -1,14 +1,10 @@
-# Goal 4 — Output Routing (Threshold + Override)
+# Goal 4 — Output Routing (Default + Override)
 
 ## Goal
 
-Validate output routing in one consolidated flow:
-- Auto-format threshold behavior:
-  - small content (under 500 lines) routes to stdio
-  - large content (over 500 lines) routes to cache
-- Explicit override behavior:
-  - `--output stdio` requests stdio for large content; capture observed routing outcome
-  - `--output cache` forces small content to cache
+Validate user-visible output routing behavior in one consolidated flow:
+- default routing behavior for smaller vs larger bundle payloads
+- explicit override behavior for `--output stdio` and `--output cache`
 
 ## Workspace
 
@@ -21,7 +17,8 @@ Save all output to `results/tc/04/`. Run exactly these four commands and capture
 
 ## Constraints
 
-- The sandbox has `small-test` (few lines) and `large-test` (600+ lines) at `.ace/bundle/presets/`.
-- Load via positional file path (not `--file` flag) so that auto-format threshold routing applies.
-- Run exactly the four commands above. Do not add additional test cases.
+- The sandbox has `small-test` and `large-test` presets at `.ace/bundle/presets/`.
+- Use positional file paths (not `--file`) so default routing behavior is exercised.
+- Assert routing only through user-visible outputs/artifacts, not internal threshold implementation details.
+- Run exactly the four commands above. Do not add extra test cases.
 - All artifacts must come from real tool execution, not fabricated.
