@@ -2,30 +2,46 @@
 
 ## Goal
 
-Verify compact mode refusal semantics for rule-heavy content with explicit guidance to retry exact mode.
+Verify compact mode refusal semantics for a rule-heavy source created from behavior-driven constraints (no
+verbatim fixture dependency), with explicit guidance to retry exact mode.
 
 ## Workspace
 
 Save artifacts to `results/tc/04/`.
 
 Actions:
-1. Create `results/tc/04/rules.md` with **exactly** this content (copy verbatim, no changes):
+1. Create `results/tc/04/rules.md` with this rule-heavy policy content:
 
 ```markdown
-# Policy Decisions
+# Architecture Decisions
 
-All workflows must be self-contained.
+## Workflow Self Containment
 
-## Impact
+All AI workflows must be completely self-contained with embedded templates and context.
+Workflows cannot depend on other workflows or external files except standard context documents.
+When executing workflows, never load external guides or templates.
 
-Agents should never load external templates.
+## XML Template Embedding
 
-Commands must include explicit evidence on failure.
+Use XML format `<documents>` and `<template>` tags for embedded templates.
+Preserve XML template blocks exactly.
+Never use four-tick markdown blocks for templates.
 
-Outputs required for every run shall be saved locally.
+## Consistent Path Standards
 
-- Only allow approved file paths
-- Users must not bypass validation
+All document paths must be relative to project root, never absolute.
+Never use paths starting with `./` or `../`.
+Always validate path references before command execution.
+
+## Operational Constraints
+
+Commands that fail must include exact command, stderr evidence, and next action.
+Agents must not bypass required verification steps.
+Agents must stop on ambiguous product decisions and create HITL requests.
+
+- Only approved paths may be modified.
+- Every failure requires explicit evidence.
+- Verification commands are mandatory before completion.
 ```
 
 2. Run `ace-compressor results/tc/04/rules.md --mode compact --format stdio`.
