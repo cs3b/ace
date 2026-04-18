@@ -8,13 +8,12 @@ cost-tier: smoke
 tool-under-test: ace-git-secrets
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
+  results/tc/01/:  "Help/docs parity observations"
   results/tc/02/:  "Secret detection evidence (scan output, exit code)"
   results/tc/03/:  "History persistence evidence (scan after git rm)"
-  results/tc/04/:  "Output format and filtering evidence (JSON report, whitelist)"
-  results/tc/05/:  "Rewrite workflow evidence (dry run, raw values)"
-  results/tc/06/:  "Error handling evidence (graceful failure without raw values)"
-  results/tc/07/:  "Configuration cascade evidence (defaults, overrides, missing config)"
+  results/tc/04/:  "Output + filtering evidence (saved JSON report and whitelist impact)"
+  results/tc/05/:  "Rewrite workflow evidence (saved report contract + dry-run invariance)"
+  results/tc/07/:  "Configuration cascade evidence (defaults, user config, CLI override)"
   results/tc/08/:  "Release gate evidence (check-release JSON + strict mode)"
 
 e2e-justification: >

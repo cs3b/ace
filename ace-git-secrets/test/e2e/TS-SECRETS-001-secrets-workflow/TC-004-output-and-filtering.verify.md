@@ -1,4 +1,4 @@
-# Goal 4 — Output Format and Filtering Verification
+# Goal 4 — Output Report + Whitelist Impact Verification
 
 ## Injected Context
 
@@ -6,19 +6,20 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **JSON report artifacts exist** — results/tc/04/ contains a JSON report copy.
-2. **Valid JSON structure** — The report contains `tokens` and `scan_metadata` keys.
-3. **Whitelist active** — The whitelist scan still detects non-whitelisted secrets (non-zero exit).
-4. **Filtered results** — If whitelist scan details are available, test/ directory files are excluded from results.
+
+1. **Saved report artifacts exist** — `saved-report.path` and `saved-report.json` are present.
+2. **Saved report structure is valid** — `saved-report.json` includes `tokens` and `scan_metadata` keys.
+3. **Whitelist config is explicit** — `whitelist-config.yml` includes a file rule for `test/**`.
+4. **Whitelist behavior preserves true findings** — whitelist scan exit remains non-zero and evidence indicates non-whitelisted secret detection still occurs.
+5. **Whitelist behavior evidence is explicit** — whitelist scan artifacts include explicit filtering evidence (for example, a `Whitelisted: <n> token(s)` line or equivalent structured indicator).
 
 ## Verdict
 
-- **PASS**: JSON report has valid structure, whitelist correctly filters while still detecting non-whitelisted secrets.
-- **FAIL**: Invalid JSON, whitelist not working, or captures missing.
+- **PASS**: Saved report contract is valid and whitelist impact is demonstrated without masking non-whitelisted findings.
+- **FAIL**: Missing/invalid saved report, missing whitelist config evidence, or incorrect whitelist behavior.
 
-Report: `PASS` or `FAIL` with evidence (JSON structure, whitelist behavior).
+Report: `PASS` or `FAIL` with evidence.

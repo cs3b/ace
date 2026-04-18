@@ -16,4 +16,3 @@ Save all output to `results/tc/03/`. Capture:
 - The scan uses `gitleaks git` which inspects full commit history.
 - All artifacts must come from real tool execution, not fabricated.
 - `results/tc/03/removal.stdout` must include both the file-removal command output and the commit confirmation in one captured artifact or appended real command output.
-- `results/tc/03/removal.stderr` is allowed and should be captured when present.

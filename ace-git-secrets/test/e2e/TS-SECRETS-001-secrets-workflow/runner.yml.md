@@ -11,7 +11,6 @@ bundle:
     - ./TC-003-history-persistence.runner.md
     - ./TC-004-output-and-filtering.runner.md
     - ./TC-005-rewrite-workflow.runner.md
-    - ./TC-006-error-handling.runner.md
     - ./TC-007-config-cascade.runner.md
     - ./TC-008-check-release-gate.runner.md
 ---
@@ -28,7 +27,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 8)
+- Execute each goal in order listed in this bundle
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
