@@ -12,6 +12,7 @@ bundle:
     - ./TC-004-delete-and-rename.verify.md
     - ./TC-005-auto-split.verify.md
     - ./TC-006-no-split.verify.md
+    - ./TC-007-only-staged-contract.verify.md
 ---
 
 # E2E Verification: ace-git-commit
@@ -37,4 +38,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/6 passed**
+Final line: **Results: X/7 passed**

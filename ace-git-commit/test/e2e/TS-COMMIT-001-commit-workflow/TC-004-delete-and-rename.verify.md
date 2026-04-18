@@ -13,8 +13,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 - **Both commit sets exist** — results/tc/04/ contains captures for delete and rename commits.
 - **Delete commit succeeds** — Exit code 0, git show shows deletion of the file.
-- **Rename commit succeeds** — Exit code 0, git show shows rename and modification.
-- **Final state correct** — Deleted file is absent, renamed file exists, keeper file contains new content.
+- **Rename commit succeeds** — Exit code 0, and commit/stat output shows the intended rename-or-add path plus the keeper modification.
+- **Final state correct** — explicit final-state artifacts are the primary oracle: they show the deleted file is absent, the renamed file exists, and `keeper.rb` contains the new content.
 
 ## Verdict
 
