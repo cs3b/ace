@@ -1,17 +1,16 @@
 ---
-description: "E2E verifier input for ace-handbook CLI smoke"
+description: "E2E verifier input for ace-handbook sync behavior"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-surface.verify.md
-    - ./TC-002-status-table.verify.md
-    - ./TC-003-status-json.verify.md
+    - ./TC-001-sync-provider-projection.verify.md
+    - ./TC-002-status-unknown-provider-error.verify.md
 ---
 
-# E2E Verification: ace-handbook CLI Smoke
+# E2E Verification: ace-handbook sync behavior
 
 You are an E2E test verifier. Inspect artifacts and render PASS/FAIL verdicts.
 
@@ -41,4 +40,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/2 passed**
