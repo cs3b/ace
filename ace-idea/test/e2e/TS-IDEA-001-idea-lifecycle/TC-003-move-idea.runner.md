@@ -3,11 +3,12 @@
 ## Goal
 
 Move the created idea to root scope with `ace-idea update {id} --move-to next`.
-Then verify filesystem state by confirming the idea remains under `.ace-ideas/`
-(root scope), does not create a dedicated `_next/` directory, and is visible in the
-`--in next` listing.
-Also run `ace-idea list --in next` to confirm the moved idea appears in
-the filtered listing.
+Derive `{id}` from the visible `Idea created: <id> ...` line in
+`results/tc/01/create.stdout`, save it to `results/tc/03/idea-id.txt`, then use that
+ID for the update command.
+After the update, verify filesystem state by confirming the idea remains under
+`.ace-ideas/` (root scope), does not create a dedicated `_next/` directory, and is
+visible in the `--in next` listing.
 
 ## Workspace
 
@@ -24,5 +25,6 @@ Capture:
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/03/`.
 - Do not write outside the sandbox.
-- Reuse the exact idea ID from `results/tc/01/idea-file.md` frontmatter (`id:`). Do not pass the idea filename, basename, or path to `ace-idea update`.
+- Reuse the exact idea ID from the `Idea created:` line in `results/tc/01/create.stdout`.
+- Do not pass the idea filename, basename, or path to `ace-idea update`.
 - Save the extracted ID to `results/tc/03/idea-id.txt` before running the update command.

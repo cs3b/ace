@@ -6,6 +6,8 @@ priority: high
 cost-tier: happy-path
 tags: [happy-path, "use-case:idea"]
 tool-under-test: ace-idea
+last-verified: "2026-04-14"
+freshness-policy: "Update last-verified when runner/verify goal behavior changes."
 
 sandbox-layout:
   results/tc/01/: "Idea creation artifacts"
@@ -35,4 +37,12 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      mkdir -p .ace/idea
+      cat > .ace/idea/config.yml <<'YAML'
+      idea:
+        root_dir: .ace-ideas
+      YAML
+  - agent-env:
+      PROJECT_ROOT_PATH: .
