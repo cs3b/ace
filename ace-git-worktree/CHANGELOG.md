@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ace-git-worktree v0.20.4**: Fixed `create --pr <number>` to avoid an `ace-tmux` subcommand mismatch when launching project tmux sessions.
 - **ace-git-worktree v0.20.3**: Fixed `create --pr <number>` parsing so `--pr` is not treated as a positional branch argument when routed through `ace-support-cli`.
 
+## [0.21.3] - 2026-04-18
+
+### Technical
+- Persisted the exact dry-run remove target in retained lifecycle E2E coverage so `TS-WORKTREE-001` verifies no-op behavior from the real created worktree instead of a brittle hardcoded path check.
+
+## [0.21.2] - 2026-04-16
+
+### Technical
+- Aligned retained task-aware JSON metadata E2E verification with the current compact `task_id` contract and the main-worktree null-task behavior.
+
+## [0.21.1] - 2026-04-16
+
+### Technical
+- Corrected `TS-WORKTREE-001` lifecycle verification so post-create worktree evidence is judged before later remove/prune steps intentionally clean up the sandbox state.
+
+## [0.21.0] - 2026-04-14
+
+### Changed
+- Rewrote retained basic-lifecycle and task-aware E2E runner/verifier contracts around explicit public command journeys and impact-first end-state checks.
+- Added new goal-style E2E coverage for config surface validation and PR worktree lifecycle flows.
+- Updated usage and getting-started docs with the minimal JSON output contract, task/non-task filter examples, and remove-by-task `--delete-branch` guidance.
+
 ## [0.20.2] - 2026-04-13
 
 ### Changed

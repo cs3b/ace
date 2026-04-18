@@ -3,7 +3,7 @@ doc-type: user
 title: ace-git-worktree CLI Usage Reference
 purpose: Command reference for ace-git-worktree
 ace-docs:
-  last-updated: 2026-03-22
+  last-updated: 2026-04-14
   last-checked: 2026-03-22
 ---
 
@@ -112,6 +112,45 @@ Would remove task.081
 
 **Next steps:** Re-run either command without `--dry-run` once the preview looks correct.
 
+### Scenario 4: Filter Task and Non-Task Worktrees
+
+**Goal:** Show task-associated worktrees separately from non-task worktrees.
+
+**Commands:**
+
+```bash
+ace-git-worktree list --show-tasks
+ace-git-worktree list --task-associated
+ace-git-worktree list --no-task-associated
+```
+
+**Expected output:**
+
+```text
+... --show-tasks includes task metadata ...
+... --task-associated excludes the main worktree ...
+... --no-task-associated shows main/non-task entries only ...
+```
+
+### Scenario 5: Remove by Task and Delete Branch
+
+**Goal:** Remove a task worktree and also delete its branch in one command.
+
+**Commands:**
+
+```bash
+ace-git-worktree remove --task 081 --delete-branch
+ace-git-worktree list
+```
+
+**Expected output:**
+
+```text
+Removed worktree for task 081
+Deleted branch ...
+... task.081 no longer appears in list output ...
+```
+
 ## Commands
 
 ### `ace-git-worktree create [BRANCH]`
@@ -164,11 +203,19 @@ ace-git-worktree list --search auth
 * `--format` - Output format: `table`, `json`, or `simple`
 * `--show-tasks` - Include task associations
 * `--task-associated` - Show only task-associated worktrees
+* `--no-task-associated` - Show only non-task worktrees
 * `--usable` - Show only usable worktrees
 * `--search` - Filter by branch-name pattern
 * `-q`, `--quiet` - Suppress non-essential output
 * `-v`, `--verbose` - Show verbose output
 * `-d`, `--debug` - Show debug output
+
+**Minimal JSON contract (`--format json`):**
+
+- Output is valid JSON (`array` or object containing worktree entries).
+- Each entry includes a stable path/identity surface usable by scripts (`path` and `branch` fields).
+- Task-associated entries expose `task_id`.
+- Non-task entries either omit `task_id` or set it to `null`.
 
 ### `ace-git-worktree switch [IDENTIFIER]`
 

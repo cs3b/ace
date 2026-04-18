@@ -3,7 +3,7 @@ doc-type: user
 title: ace-git-worktree Getting Started
 purpose: Tutorial for first-run ace-git-worktree workflows
 ace-docs:
-  last-updated: 2026-03-22
+  last-updated: 2026-04-14
   last-checked: 2026-03-22
 ---
 
@@ -105,6 +105,57 @@ Add hooks, auto-push, tmux launch, or PR automation only after the basic create/
 | List worktrees with task info | `ace-git-worktree list --show-tasks` |
 | Remove a task worktree | `ace-git-worktree remove --task 081` |
 | Preview stale cleanup | `ace-git-worktree prune --dry-run` |
+
+## Goal-Style Examples
+
+Use these focused flows when validating public lifecycle behavior end-to-end.
+
+### Dry-run no-op check
+
+```bash
+ace-git-worktree create bugfix/test-fix --dry-run
+ace-git-worktree remove --task 081 --dry-run
+ace-git-worktree list
+```
+
+### Remove lifecycle with branch deletion
+
+```bash
+ace-git-worktree remove --task 081 --delete-branch
+ace-git-worktree list
+```
+
+### Task filtering behavior
+
+```bash
+ace-git-worktree list --show-tasks
+ace-git-worktree list --task-associated
+ace-git-worktree list --no-task-associated
+```
+
+### Prune final-state check
+
+```bash
+ace-git-worktree prune --dry-run
+ace-git-worktree prune
+ace-git-worktree list
+```
+
+### PR worktree lifecycle
+
+```bash
+ace-git-worktree create --pr 26
+ace-git-worktree switch pr-26
+ace-git-worktree remove pr-26
+```
+
+### Config surface validation
+
+```bash
+ace-git-worktree config --show
+ace-git-worktree config --validate
+ace-git-worktree config --files
+```
 
 ## Validate Package Tests
 
