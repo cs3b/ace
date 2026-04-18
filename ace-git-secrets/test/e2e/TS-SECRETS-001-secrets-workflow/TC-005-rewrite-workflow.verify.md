@@ -1,4 +1,4 @@
-# Goal 5 — Rewrite Workflow Verification
+# Goal 5 — Rewrite Workflow (Saved Report Contract) Verification
 
 ## Injected Context
 
@@ -6,19 +6,19 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Dry-run artifacts exist** — results/tc/05/ contains dry-run captures and HEAD hash files.
-2. **Dry-run succeeds** — Exit code 0 and output indicates dry-run mode.
-3. **HEAD unchanged** — before-head.txt and after-head.txt contain the same hash.
-4. **Raw values present** — Scan output shows tokens with raw_value field containing actual token values.
+
+1. **Saved report artifact exists** — `saved-report.json` is present.
+2. **Saved report carries revocation data** — `saved-report.json` contains token entries with `raw_value` fields.
+3. **Dry-run succeeds with scan-file** — dry-run exit code is `0` and output indicates dry-run mode.
+4. **Dry-run is history-safe** — `before-head.txt` equals `after-head.txt`.
 
 ## Verdict
 
-- **PASS**: Dry-run completes without modifying history, and scan output includes raw_value fields.
-- **FAIL**: History modified during dry-run, or raw_value missing from scan output.
+- **PASS**: Saved report contract is valid and dry-run rewrite completes without history mutation.
+- **FAIL**: Missing `raw_value`, dry-run failure, or HEAD change during dry-run.
 
 Report: `PASS` or `FAIL` with evidence.

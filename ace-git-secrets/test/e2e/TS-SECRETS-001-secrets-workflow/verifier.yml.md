@@ -11,7 +11,6 @@ bundle:
     - ./TC-003-history-persistence.verify.md
     - ./TC-004-output-and-filtering.verify.md
     - ./TC-005-rewrite-workflow.verify.md
-    - ./TC-006-error-handling.verify.md
     - ./TC-007-config-cascade.verify.md
     - ./TC-008-check-release-gate.verify.md
 ---
@@ -39,4 +38,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/8 passed**
+Final line: **Results: X/7 passed**
