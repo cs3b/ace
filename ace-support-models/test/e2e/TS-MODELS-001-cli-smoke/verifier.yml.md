@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-models-cache-clear.verify.md
     - ./TC-003-providers-list-show.verify.md
     - ./TC-004-invalid-filter.verify.md
+    - ./TC-005-cache-status-after-sync.verify.md
+    - ./TC-006-cache-diff-after-refresh.verify.md
 ---
 
 # E2E Verification: ace-support-models CLI Smoke
@@ -37,4 +39,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/6 passed**

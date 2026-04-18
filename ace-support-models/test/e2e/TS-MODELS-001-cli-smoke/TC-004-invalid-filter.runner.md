@@ -10,10 +10,10 @@ Run an invalid filter invocation and capture operator-visible failure semantics
 Save artifacts to `results/tc/04/`.
 
 Actions:
-1. Set `XDG_CACHE_HOME` to `$(pwd)/results/tc/04/xdg-cache` and seed a minimal
-   `${XDG_CACHE_HOME}/ace-models/api.json` so search reaches filter validation.
-2. Run `ace-models search -f badfilter`.
-3. Capture stdout/stderr/exit to:
+1. Set `XDG_CACHE_HOME` to `$(pwd)/results/tc/04/xdg-cache`.
+2. Ensure `${XDG_CACHE_HOME}` exists.
+3. Run `ace-models search -f badfilter`.
+4. Capture stdout/stderr/exit to:
    - `results/tc/04/invalid-filter.stdout`
    - `results/tc/04/invalid-filter.stderr`
    - `results/tc/04/invalid-filter.exit`

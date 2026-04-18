@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-models-cache-clear.runner.md
     - ./TC-003-providers-list-show.runner.md
     - ./TC-004-invalid-filter.runner.md
+    - ./TC-005-cache-status-after-sync.runner.md
+    - ./TC-006-cache-diff-after-refresh.runner.md
 ---
 
 # E2E Test Runner: ace-support-models CLI Smoke
@@ -23,7 +25,7 @@ Execute each goal in order.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 4)
+- Execute each goal in order (1 through 6)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to `results/tc/{NN}/` directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

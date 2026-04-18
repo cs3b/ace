@@ -10,8 +10,10 @@ tool-under-test: ace-models
 sandbox-layout:
   results/tc/01/: "CLI help captures for both executables"
   results/tc/02/: "Cache clear lifecycle evidence"
-  results/tc/03/: "Providers list/show evidence from seeded cache"
-  results/tc/04/: "Invalid filter error-path evidence"
+  results/tc/03/: "Providers list/show evidence after public sync"
+  results/tc/04/: "Invalid filter error-path evidence without manual cache seeding"
+  results/tc/05/: "Cache status after sync evidence"
+  results/tc/06/: "Cache diff after refresh evidence"
 
 e2e-justification: >
   These checks validate packaged executable wiring, real process exit semantics,
@@ -31,6 +33,6 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp $ACE_E2E_SOURCE_ROOT/mise.toml mise.toml && mise trust mise.toml"
   - agent-env:
       PROJECT_ROOT_PATH: .
