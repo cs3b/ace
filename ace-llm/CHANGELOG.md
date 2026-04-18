@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.1] - 2026-04-16
+
+### Fixed
+- Switched the fresh-default `commit` role to prefer `google:lite` before CLI fallbacks so new `ace-config init` projects keep generated commit messages working when stale CLI aliases or unavailable local CLIs would otherwise break message generation.
+
+## [0.36.0] - 2026-04-15
+
+### Changed
+- Reworked `TS-LLM-001` to public-surface goal style by tightening model-routing evidence checks, adding `TC-003` output-file-contract coverage, and prioritizing end-state/output artifacts over helper-only signals.
+- Added `TS-LLM-002` provider-discovery coverage for `ace-llm --list-providers` so public setup-hint and provider-list output behavior is verified as a first-class E2E journey.
+
+### Technical
+- Updated runtime dependency constraint to `ace-support-models ~> 0.11` after the coordinated support-models minor release.
+
 ## [0.35.1] - 2026-04-15
 
 ### Fixed

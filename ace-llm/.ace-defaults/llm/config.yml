@@ -98,9 +98,9 @@ llm:
     # --- Utility ---
     prompt-enhance: *utility-lite
     commit:
+      - google:lite
       - codex:mini
       - claude:haiku
-      - gemini:flash-latest
     docs-analysis: *utility-lite
     idea-enhance:
       - gemini:flash-latest

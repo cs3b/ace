@@ -76,6 +76,17 @@ module Ace
         assert_equal "/tmp/e2e-sandbox", client.received_options[:working_dir]
       end
 
+      def test_query_interface_threads_subprocess_command_prefix
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          QueryInterface.query("claude:sonnet", "hi", subprocess_command_prefix: ["bwrap", "--"])
+        end
+
+        assert_equal ["bwrap", "--"], client.received_options[:subprocess_command_prefix]
+      end
+
       def test_cli_command_threads_cli_args
         client = FakeClient.new
         registry = FakeRegistry.new(client)

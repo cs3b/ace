@@ -3,6 +3,7 @@
 require_relative "../../test_helper"
 require "ace/llm/configuration"
 require "ace/support/models"
+require "tmpdir"
 
 module Ace
   module LLM
@@ -72,6 +73,18 @@ module Ace
           assert_match(/were skipped/, stderr)
           assert_match(/ace-llm --list-providers/, stderr)
         end
+      end
+
+      def test_fresh_default_commit_role_prefers_google_lite_first
+        original_test_mode = Ace::Support::Config.test_mode
+        Ace::Support::Config.test_mode = false
+
+        with_temp_dir do
+          configuration = Configuration.new
+          assert_equal ["google:lite", "codex:mini", "claude:haiku"], configuration.roles["commit"]
+        end
+      ensure
+        Ace::Support::Config.test_mode = original_test_mode
       end
 
       def test_provider_inactive_checks_filtered_state
