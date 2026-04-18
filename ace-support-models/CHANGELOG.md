@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-04-16
+
+### Fixed
+- Normalized sync stats calculation for partial and string-keyed provider payloads so `ace-models sync` and `ace-models status` no longer raise when cache/provider entries omit structured model hashes.
+
+## [0.11.1] - 2026-04-16
+
+### Fixed
+- Updated smoke scenario setup to source `mise.toml` from `ACE_E2E_SOURCE_ROOT` inside sandboxed runs and relaxed diff verification to accept the current public diff summary vocabulary.
+
+## [0.11.0] - 2026-04-15
+
+### Changed
+- Reworked `TS-MODELS-001` E2E to public-surface goal contracts by replacing cache hand-seeding with public `ace-models sync` setup, simplifying invalid-filter coverage, and adding cache status/diff goal cases.
+- Added deterministic fixture-driven sync support via `ACE_MODELS_FIXTURE_JSON` / `ACE_MODELS_API_URL` to keep cache-dependent provider E2E flows reproducible without hidden cache-shape recipes.
+
+### Fixed
+- Aligned cache-missing guidance to the flat command surface (`ace-models sync`) across provider/cache CLI errors and executable migration hints.
+
 ## [0.10.2] - 2026-04-13
 
 ### Fixed

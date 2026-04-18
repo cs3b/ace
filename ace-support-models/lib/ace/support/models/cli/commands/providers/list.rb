@@ -20,7 +20,7 @@ module Ace
                 cache_manager = Molecules::CacheManager.new
 
                 unless cache_manager.cached?
-                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models cache sync' first.")
+                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models sync' first.")
                 end
 
                 providers = cache_manager.list_providers

@@ -25,7 +25,7 @@ module Ace
                 end
 
                 unless status_data[:cached]
-                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models cache sync' first.")
+                  raise Ace::Support::Cli::Error.new("No cache data. Run 'ace-models sync' first.")
                 end
 
                 puts "Cache Status:"

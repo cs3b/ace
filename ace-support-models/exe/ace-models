@@ -8,7 +8,7 @@ require_relative "../lib/ace/support/models/cli"
 old_cache_path = File.join(Dir.home, ".cache", "ace-llm-models-dev")
 if Dir.exist?(old_cache_path)
   warn "Note: Old cache detected at ~/.cache/ace-llm-models-dev"
-  warn "Run: ace-models sync && rm -rf ~/.cache/ace-llm-models-dev"
+  warn "Run: ace-models sync then rm -rf ~/.cache/ace-llm-models-dev"
 end
 
 # No args → show help

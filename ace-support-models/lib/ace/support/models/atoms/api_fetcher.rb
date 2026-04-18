@@ -10,6 +10,8 @@ module Ace
         # Fetches data from the models.dev API using Faraday (ADR-010 compliant)
         class ApiFetcher
           API_URL = "https://models.dev/api.json"
+          FIXTURE_JSON_ENV = "ACE_MODELS_FIXTURE_JSON"
+          API_URL_ENV = "ACE_MODELS_API_URL"
           TIMEOUT = 30
           OPEN_TIMEOUT = 10
           MAX_RETRIES = 2
@@ -21,8 +23,12 @@ module Ace
             # @return [String] Raw JSON response
             # @raise [NetworkError] on network failures
             # @raise [ApiError] on non-200 responses
-            def fetch(url = API_URL)
-              response = connection.get(url)
+            def fetch(url = nil)
+              fixture_json = ENV[FIXTURE_JSON_ENV]
+              return fixture_json unless fixture_json.to_s.strip.empty?
+
+              resolved_url = url || ENV[API_URL_ENV] || API_URL
+              response = connection.get(resolved_url)
 
               unless response.success?
                 raise ApiError.new(
