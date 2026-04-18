@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-04-16
+
+### Technical
+- Updated `TS-NAV-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so resource-navigation smoke runs stay compatible with read-only source-root mounts.
+
+## [0.28.0] - 2026-04-15
+
+### Changed
+- Reworked `TS-NAV-001` E2E coverage to public-surface goal contracts by rewriting discovery/resolve/listing goals around actionable user outcomes instead of extension-priority internals.
+- Added `TC-006 create-from-template public path` coverage to verify end-to-end creation behavior through `ace-nav create` with real filesystem outputs.
+- Updated package Quick Start guidance to include one complete user journey (`resolve -> list -> sources -> create`) and explicit user-facing success signals.
+
 ## [0.27.3] - 2026-04-13
 
 ### Fixed
