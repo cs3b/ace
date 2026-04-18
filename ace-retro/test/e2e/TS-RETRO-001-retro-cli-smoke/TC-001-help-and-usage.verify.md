@@ -7,7 +7,7 @@ Validation order (impact-first):
 2. Use debug evidence only as fallback.
 
 1. `help.exit` is `0`.
-2. `help.stdout` includes command usage/help content for `ace-retro`.
+2. `help.stdout` includes command usage/help content for `ace-retro`, including documented command surface entries (for example `create`, `list`, `show`, `update`, `doctor`).
 3. `create-missing-title.exit` is non-zero (`1` expected).
 4. `create-missing-title.stderr` includes `Title required`.
 
