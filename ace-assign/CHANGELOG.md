@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.3] - 2026-04-18
+
+### Technical
+- Corrected `TS-ASSIGN-001` lifecycle fixture-path guidance so Goal 1 resolves the real sandbox fixture files and no longer records a false create failure before the lifecycle flow completes.
+
+## [0.53.2] - 2026-04-16
+
+### Technical
+- Reworked retained fork-context E2E capture around explicit regular, fork, return, and final checkpoints so lifecycle transitions are proven from stable artifacts instead of generic completion text.
+
+## [0.53.1] - 2026-04-16
+
+### Fixed
+- Hid failed retry history from compact `ace-assign status` pending previews after assignment completion so terminal state no longer mixes `Status: completed` with a misleading `Pending steps:` block.
+
+### Technical
+- Added a status-command regression covering completed assignments with failed retry ancestry and validated the retained lifecycle E2E path against the corrected compact status output.
+
+## [0.53.0] - 2026-04-15
+
+### Changed
+- Rewrote retained assignment E2E runner/verifier contracts to emphasize public command journeys and impact-first state oracles over rigid capture choreography.
+- Added `TS-ASSIGN-003` operations coverage for multi-assignment operator flow and scoped `fork-run` delegation behavior.
+
+### Technical
+- Refreshed hierarchy/lifecycle/fork scenario guidance so debug artifacts remain fallback evidence and CLI-visible status transitions are primary evidence.
+
 ## [0.52.0] - 2026-04-15
 
 ### Changed
