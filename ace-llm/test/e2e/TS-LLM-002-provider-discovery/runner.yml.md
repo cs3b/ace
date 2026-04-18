@@ -1,35 +1,30 @@
 ---
-description: "E2E runner input for ace-llm query scenarios"
+description: "E2E runner input for ace-llm provider discovery"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-basic-query.runner.md
-    - ./TC-002-model-selection.runner.md
-    - ./TC-003-output-file-contract.runner.md
+    - ./TC-001-list-providers-public-surface.runner.md
 ---
 
-# E2E Test Runner: ace-llm Query Scenarios
+# E2E Test Runner: ace-llm Provider Discovery
 
 Tool under test: ace-llm
 Required tools: ace-llm
 Workspace root: (current directory)
 
-These goals require configured provider credentials in sandbox.
-
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 3)
+- Execute each goal in order (1 through 1)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output; all artifacts must come from real command execution
 - For each command capture stdout, stderr, and exit code
-- If provider credentials are missing, capture explicit error output and continue
-- If a goal fails, continue to the next goal
+- If a goal fails, continue to completion and preserve evidence
 
 ## Artifact conventions
 

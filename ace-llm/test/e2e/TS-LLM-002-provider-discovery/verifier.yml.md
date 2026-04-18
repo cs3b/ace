@@ -1,17 +1,15 @@
 ---
-description: "E2E verifier input for ace-llm query scenarios"
+description: "E2E verifier input for ace-llm provider discovery"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-basic-query.verify.md
-    - ./TC-002-model-selection.verify.md
-    - ./TC-003-output-file-contract.verify.md
+    - ./TC-001-list-providers-public-surface.verify.md
 ---
 
-# E2E Verification: ace-llm Query Scenarios
+# E2E Verification: ace-llm Provider Discovery
 
 You are an E2E test verifier. Inspect artifacts and render PASS/FAIL verdicts.
 
@@ -29,11 +27,13 @@ You are an E2E test verifier. Inspect artifacts and render PASS/FAIL verdicts.
 
 ## Output Format
 
-For each goal output:
+Output exactly this structure (do not omit any section, even when PASS):
 
-### Goal N — <title>
+### Goal 1 — List Providers Public Surface
 - **Verdict**: PASS | FAIL
-- **Category**: <one of the categories above when FAIL>
+- **Category**: N/A when PASS, otherwise one of: test-spec-error | tool-bug | runner-error | infrastructure-error
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/1 passed**
+
+Do not return only the final `Results` line.

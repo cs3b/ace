@@ -14,7 +14,7 @@ Validation order (impact-first):
    - model-selection success (for example JSON output content), or
    - explicit provider auth/config failure tied to the Goal 2 command.
 4. If Goal 2 fails before inference, `*.stderr` must still reference the Goal 2
-   target (`openai` / `gpt-4o-mini`) so model routing intent is observable.
+   target (`google` / `gemini-flash-latest`) so model routing intent is observable.
 5. Output format behavior (`json`) is reflected in artifact content when the
    command succeeds.
 
