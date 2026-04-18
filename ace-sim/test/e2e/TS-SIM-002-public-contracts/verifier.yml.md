@@ -1,18 +1,15 @@
 ---
-description: "E2E verifier input for ace-sim public-surface smoke"
+description: "E2E verifier input for ace-sim dry-run public contract"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-001-help-survey.verify.md
-    - ./TC-002-preset-contract.verify.md
-    - ./TC-003-run-chain-artifacts.verify.md
-    - ./TC-005-validate-task-preset.verify.md
+    - ./TC-001-dry-run-public-contract.verify.md
 ---
 
-# E2E Verification: ace-sim Public-Surface Smoke
+# E2E Verification: ace-sim Dry-Run Public Contract
 
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
@@ -35,4 +32,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/1 passed**

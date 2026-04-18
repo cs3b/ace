@@ -20,7 +20,7 @@ Exercise the shipped `validate-task` preset and capture run artifacts that prove
    - `chains/glite-1/02-plan/output.md` -> `results/tc/05/plan.output.md`
    - `chains/glite-1/03-work/input.md` -> `results/tc/05/work.input.md`
    - `chains/glite-1/03-work/output.md` -> `results/tc/05/work.output.md`
-   - `final/input.md` -> `results/tc/05/final.input.md`
+   - `final/input.md` -> `results/tc/05/final.input.md` when it is present and easy to copy directly
 6. Preserve the actual run outcome. Do not fabricate success. The verifier will accept either:
    - a successful synthesis run with final output artifacts, or
    - a failed final synthesis where chain completion evidence and `synthesis.yml` final-stage failure are present.

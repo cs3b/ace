@@ -12,19 +12,17 @@
 | TC | Classification | Reason | Deterministic Replacement Needed |
 |---|---|---|---|
 | TC-001-help-survey | KEEP | Validates real CLI help surface and option visibility on the binary entrypoints. | No |
-| TC-002-preset-contract | KEEP | Validates full default preset chain behavior and run artifact contract in a real run directory. | No |
-| TC-003-run-chain-artifacts | KEEP | Validates CLI override routing and one-step synthesis behavior with provider-aware fallback path. | No |
-| TC-004-full-chain-synthesis | KEEP | Validates full-chain aggregation into final synthesis inputs and recorded outcome behavior. | No |
+| TC-002-preset-contract | KEEP (narrow) | Validates default preset chain contract with contract-level artifact checks (not brittle tree assertions). | No |
+| TC-003-run-chain-artifacts | KEEP (rewrite) | Validates override routing and one-step synthesis with real success/failure evidence only (no synthetic placeholders). | No |
 | TC-005-validate-task-preset | KEEP | Validates shipped `validate-task` preset plan/work chain contract and synthesis metadata. | No |
-| TC-006-synthesis-provider-guard | KEEP | Validates user-facing CLI guard behavior for invalid synthesis option combinations. | No |
 
 ## Decisions
-- `REMOVE`: none
-- `MODIFY`: scenario wording only (`unit tests` -> `fast deterministic tests`) to align with current model
+- `REMOVE`: `TC-004-full-chain-synthesis`, `TC-006-synthesis-provider-guard` (noise/overlap reduced for smoke scope)
+- `MODIFY`: `TC-002-preset-contract`, `TC-003-run-chain-artifacts` to prefer public contract and real final-state evidence
 - `CONSOLIDATE`: none
-- `ADD`: none
+- `ADD`: new scenario `TS-SIM-002-public-contracts` for dry-run public contract coverage
 
 ## Resulting Structure
-- Keep single scenario `TS-SIM-001-next-phase-smoke` with 6 TCs.
-- Maintain scenario-only E2E coverage under `test/e2e/`.
-- Keep deterministic assertions outside E2E in `test/fast/`.
+- Keep scenario `TS-SIM-001-next-phase-smoke` with 4 TCs (`001`, `002`, `003`, `005`).
+- Add scenario `TS-SIM-002-public-contracts` for dry-run public contract verification.
+- Maintain scenario-only E2E coverage under `test/e2e/` and keep deterministic guard checks in `test/fast/`.
