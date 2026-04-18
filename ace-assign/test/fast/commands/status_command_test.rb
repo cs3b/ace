@@ -110,6 +110,44 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_compact_completed_assignment_hides_failed_retry_history_from_pending_preview
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "analyze", "instructions" => "Analyze requirements"},
+        {"name" => "implement", "instructions" => "Implement change"},
+        {"name" => "verify", "instructions" => "Verify output"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      report = create_report(cache_dir, "done")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      executor.advance(report)
+
+      failed_report = create_report(cache_dir, "HITL: stalled implementation requires fix")
+      executor.fail(failed_report)
+      output = capture_io do
+        Ace::Assign::CLI::Commands::RetryCmd.new.call(step_ref: "020")
+      end
+      executor.start_step
+      executor.advance(report)
+      executor.advance(report)
+
+      status_output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id).first
+
+      assert_includes output.first, "retry of 020"
+      assert_includes status_output, "Status: completed"
+      refute_includes status_output, "Pending steps:"
+      refute_includes status_output, "020 failed implement"
+      refute_includes status_output, "Failed steps:"
+      assert_includes status_output, "Pending: 0"
+      assert_includes status_output, "Failed: 1"
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_full_mode_prints_tree_without_instructions
     with_temp_cache do |cache_dir|
       steps = [

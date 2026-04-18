@@ -136,10 +136,10 @@ module Ace
               compact_last_done_line(state)
             ]
 
-            pending = pending_preview_steps(state)
-            unless pending.empty?
-              lines << "Pending steps:"
-              pending.each do |step|
+            preview_heading, preview_steps = compact_preview(state)
+            unless preview_steps.empty?
+              lines << preview_heading
+              preview_steps.each do |step|
                 lines << preview_step_line(step)
               end
             end
@@ -190,8 +190,14 @@ module Ace
             File.basename(name.to_s, File.extname(name.to_s))
           end
 
-          def pending_preview_steps(state)
-            state.steps.select { |step| %i[in_progress pending failed].include?(step.status) }.first(PREVIEW_LIMIT)
+          def compact_preview(state)
+            active_or_pending = state.steps.select { |step| %i[in_progress pending].include?(step.status) }.first(PREVIEW_LIMIT)
+            return ["Pending steps:", active_or_pending] unless active_or_pending.empty?
+
+            failed_preview = state.failed.first(PREVIEW_LIMIT)
+            return ["Failed steps:", failed_preview] if state.assignment_state == :failed && failed_preview.any?
+
+            [nil, []]
           end
 
           def preview_step_line(step)
