@@ -1,12 +1,13 @@
-# Goal 3 Verification - Providers list/show with seeded cache
+# Goal 3 Verification - Providers list/show after public sync
 
 ## Expectation
 
-With seeded cache data, `ace-llm-providers list` and `show anthropic` succeed
+After `ace-models sync`, `ace-llm-providers list` and `show anthropic` succeed
 and emit provider/model details.
 
 ## PASS Criteria
 
+- `results/tc/03/sync.exit` is `0`
 - `results/tc/03/list.exit` is `0`
 - `results/tc/03/show.exit` is `0`
 - `results/tc/03/list.stdout` includes `Providers (`
