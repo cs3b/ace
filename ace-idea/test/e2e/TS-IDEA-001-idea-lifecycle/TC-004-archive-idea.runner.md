@@ -20,5 +20,5 @@ Capture:
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/04/`.
 - Do not write outside the sandbox.
-- Reuse the exact idea ID from `results/tc/01/idea-file.md` frontmatter (`id:`). Do not pass filename or path to `ace-idea update`.
-- Do not create helper ID artifacts; derive the ID from the existing sandbox state and perform the archive move directly.
+- Reuse the exact idea ID saved in `results/tc/03/idea-id.txt` (derived from the public create output flow).
+- Do not pass filename or path to `ace-idea update`.
