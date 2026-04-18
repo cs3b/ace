@@ -13,6 +13,7 @@ bundle:
     - ./TC-005-multi-task.verify.md
     - ./TC-006-json-metadata.verify.md
     - ./TC-007-remove-and-cleanup.verify.md
+    - ./TC-008-create-pr-worktree-lifecycle.verify.md
 ---
 
 # E2E Verification: ace-git-worktree (Task-Aware)
@@ -38,4 +39,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/7 passed**
+Final line: **Results: X/8 passed**

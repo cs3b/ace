@@ -12,7 +12,7 @@ Save all output to `results/tc/06/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-worktree list with JSON format flag.
-- Both task worktrees (8pp.t.q7w and 8pp.t.r8x) from previous goals should be present.
+- Use explicit public command: `ace-git-worktree list --format json`.
+- Both task worktrees (`q7w` and `r8x`) from previous goals should be present.
 - Parse or inspect the JSON output to verify task metadata fields.
 - All artifacts must come from real tool execution, not fabricated.

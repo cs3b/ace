@@ -2,7 +2,7 @@
 
 ## Goal
 
-Use the switch command to get the path of a worktree created in Goal 2. Then test the list command with different output formats: table, JSON, and simple. Verify that switch returns a valid path, JSON output is parseable, table output has headers, and simple output is compact.
+Use `switch` to resolve a created worktree path, then run `list` in table, JSON, and simple formats. Keep this goal focused on usable output: switch path must resolve, JSON must parse, and table/simple output must remain human-usable.
 
 ## Workspace
 
@@ -14,6 +14,10 @@ Save all output to `results/tc/03/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-worktree switch and list with format options.
+- Use explicit public commands:
+  1. `ace-git-worktree switch feature/test-worktree`
+  2. `ace-git-worktree list`
+  3. `ace-git-worktree list --format json`
+  4. `ace-git-worktree list --format simple`
 - Worktrees from Goal 2 must still exist for this goal to work.
 - All artifacts must come from real tool execution, not fabricated.

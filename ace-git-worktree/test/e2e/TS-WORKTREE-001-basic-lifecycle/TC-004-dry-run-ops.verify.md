@@ -15,7 +15,7 @@ Validation order (impact-first):
 2. **Create dry-run shows plan** — create-dry.stdout indicates what would be created (path or branch name) and exit code is 0.
 3. **Create dry-run is no-op** — create-dry-check.txt confirms the planned worktree directory does NOT exist.
 4. **Remove dry-run shows target** — remove-dry.stdout identifies the worktree that would be removed and exit code is 0.
-5. **Remove dry-run is no-op** — remove-dry-check.txt confirms the worktree still exists after dry-run.
+5. **Remove dry-run is no-op** — the dry-run target remains visible after the command. Prefer `list-after.stdout` plus `remove-dry-target.txt` as the primary proof; use `remove-dry-check.txt` as supporting filesystem evidence.
 
 ## Verdict
 

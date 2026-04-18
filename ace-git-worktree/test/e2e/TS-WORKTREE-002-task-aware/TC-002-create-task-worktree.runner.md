@@ -13,7 +13,9 @@ Save all output to `results/tc/02/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-worktree create with task-aware flags for task 8pp.t.q7w.
+- Use explicit public commands:
+  1. `ace-git-worktree create --task 8pp.t.q7w`
+  2. `ace-git-worktree list --show-tasks`
 - The sandbox has taskflow fixtures with task 8pp.t.q7w (8pp.t.q7w-test-feature) already defined.
 - All artifacts must come from real tool execution, not fabricated.
 - Use the worktree path printed by the create command when producing `fs-check.txt`; this goal should validate creation directly, not repeat the filter checks covered in Goal 3.

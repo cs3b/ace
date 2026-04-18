@@ -12,6 +12,7 @@ bundle:
     - ./TC-004-dry-run-ops.runner.md
     - ./TC-005-remove-worktree.runner.md
     - ./TC-006-prune-orphaned.runner.md
+    - ./TC-007-config-surface-validation.runner.md
 ---
 
 # E2E Test Runner: ace-git-worktree (Basic Lifecycle)
@@ -26,7 +27,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 6)
+- Execute each goal in order (1 through 7)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
