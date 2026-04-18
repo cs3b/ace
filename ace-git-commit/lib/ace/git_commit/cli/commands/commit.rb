@@ -20,6 +20,9 @@ module Ace
 
             When no files are specified, all changes are staged.
             When files are provided, only those files are staged and committed.
+            When changes span configured scopes, commits may auto-split by scope.
+            Use --no-split to force one commit, or --only-staged to commit only
+            files already in the index.
 
             Configuration:
               Global config:  ~/.ace/git/commit.yml
@@ -33,7 +36,7 @@ module Ace
             "-i 'fix bug'                # With intention",
             "-m 'feat: add'              # With explicit message",
             "--only-staged                # Only staged changes",
-            "--no-split                   # Force a single commit"
+            "--no-split pkg-a pkg-b       # Force a single commit across scopes"
           ]
 
           # Define files as variadic argument (can be 0 or more)
@@ -43,7 +46,7 @@ module Ace
           option :intention, type: :string, aliases: %w[-i], desc: "Provide context for LLM message generation"
           option :message, type: :string, aliases: %w[-m], desc: "Use provided message directly (no LLM)"
           option :model, type: :string, desc: "Override default LLM model (e.g., glite, gflash)"
-          option :only_staged, type: :boolean, aliases: %w[-s], desc: "Commit only currently staged changes"
+          option :only_staged, type: :boolean, aliases: %w[-s], desc: "Commit only currently staged changes and preserve unstaged edits"
           option :staged, type: :boolean, desc: "Alias for --only-staged"
           option :dry_run, type: :boolean, aliases: %w[-n], desc: "Show what would be committed without doing it"
           option :force, type: :boolean, aliases: %w[-f], desc: "Force operation (for future use)"

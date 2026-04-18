@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4] - 2026-04-16
+
+### Technical
+- Split the retained dry-run and path-scoped commit E2E capture into explicit `dry-run/` and `path-only/` artifact sets so verification requires both halves of the public workflow.
+
+## [0.25.3] - 2026-04-16
+
+### Technical
+- Relaxed `TS-COMMIT-001` auto-split verification to prove split behavior and path scoping without depending on an exact commit-count shape from the coordinated commit set.
+
+## [0.25.2] - 2026-04-16
+
+### Fixed
+- Strengthened `TS-COMMIT-001` delete/rename verification around explicit final-state artifacts so the retained E2E flow no longer depends on Git rename heuristics from `git show --stat`.
+
+## [0.25.1] - 2026-04-16
+
+### Fixed
+- Relaxed dry-run E2E verification to accept equivalent proof that dry-run preserved HEAD and did not silently commit staged changes before the subsequent path-scoped commit.
+
+## [0.25.0] - 2026-04-15
+
+### Changed
+- Rewrote `TS-COMMIT-001` split/no-split E2E goals around explicit public
+  setup and impact-first verification, and added `TC-007-only-staged-contract`
+  coverage for the staged-only user journey.
+- Expanded `docs/usage.md` and CLI help text with reproducible split/no-split
+  setup guidance and explicit `--only-staged` git-state expectations.
+
 ## [0.24.2] - 2026-04-13
 
 ### Technical
