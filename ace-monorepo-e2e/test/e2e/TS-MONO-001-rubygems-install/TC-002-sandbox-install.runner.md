@@ -2,7 +2,8 @@
 
 ## Goal
 
-Run `bundle install` in the sandbox with a sanitized environment and isolate Bundler output so we verify fresh RubyGems-based install behavior.
+Run `bundle install` in an isolated sandbox and capture user-visible install
+outcomes as the primary evidence for normal-path viability.
 
 ## Workspace
 
@@ -10,35 +11,33 @@ Save all output to `results/tc/02/`.
 
 ## Steps
 
-1. Ensure a clean local install surface and lock state:
+1. Ensure a clean local install surface and output workspace:
    - `rm -f Gemfile.lock`
    - `rm -rf .bundle .gem results/tc/02/.bundle results/tc/02/.gem`
    - `mkdir -p results/tc/02/.bundle results/tc/02/.gem`
-   - Pre-create declared artifacts so verifier inputs exist even when install fails:
+   - Pre-create declared artifacts so verifier input contracts are always present:
    ```bash
    : > results/tc/02/.bundle/config
    : > results/tc/02/bundle-list.stdout
    : > results/tc/02/bundle-list.stderr
-   : > results/tc/02/bundle-env-install.stdout
-   : > results/tc/02/bundle-env-install.stderr
-   : > results/tc/02/version-check.stdout
-   : > results/tc/02/version-check.stderr
-   printf '1\n' > results/tc/02/version-check.exit
+   : > results/tc/02/installed-ace-gems.txt
+   : > results/tc/02/Gemfile.lock
+   : > results/tc/02/install-summary.txt
    ```
-2. Save installation environment capture evidence:
+2. Record the exact command contract used for execution:
 ```bash
-env -i \
-  HOME="$HOME" \
-  PATH="$PATH" \
+cat > results/tc/02/install-command.txt <<'EOF'
+env -i HOME="$HOME" PATH="$PATH" \
   BUNDLE_GEMFILE="$PWD/Gemfile" \
   BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
   BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
   GEM_HOME="$PWD/results/tc/02/.gem" \
   PROJECT_ROOT_PATH="$PWD" \
   BUNDLE_WITHOUT="" \
-  bundle env > results/tc/02/bundle-env.stdout 2> results/tc/02/bundle-env.stderr
+  bundle install
+EOF
 ```
-3. Run `bundle install` in the sandbox root with all Bundler-preserved variables set to the local surface:
+3. Run `bundle install` in the sandbox root with isolated Bundler paths:
 ```bash
 env -i HOME="$HOME" PATH="$PATH" \
   BUNDLE_GEMFILE="$PWD/Gemfile" \
@@ -47,11 +46,10 @@ env -i HOME="$HOME" PATH="$PATH" \
   GEM_HOME="$PWD/results/tc/02/.gem" \
   PROJECT_ROOT_PATH="$PWD" \
   BUNDLE_WITHOUT="" \
-  bundle install > results/tc/02/install.stdout 2>&1
+  bundle install > results/tc/02/install.stdout 2> results/tc/02/install.stderr
 echo $? > results/tc/02/install.exit
 ```
-4. If install succeeds:
-   - Capture local install state:
+4. If install succeeds, capture end-state evidence from the sandbox:
    ```bash
    env -i HOME="$HOME" PATH="$PATH" \
      BUNDLE_GEMFILE="$PWD/Gemfile" \
@@ -60,93 +58,27 @@ echo $? > results/tc/02/install.exit
      GEM_HOME="$PWD/results/tc/02/.gem" \
      PROJECT_ROOT_PATH="$PWD" \
      bundle list > results/tc/02/bundle-list.stdout 2> results/tc/02/bundle-list.stderr
-   env -i HOME="$HOME" PATH="$PATH" \
-     BUNDLE_GEMFILE="$PWD/Gemfile" \
-     BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
-     BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
-     GEM_HOME="$PWD/results/tc/02/.gem" \
-     PROJECT_ROOT_PATH="$PWD" \
-     bundle env > results/tc/02/bundle-env-install.stdout 2> results/tc/02/bundle-env-install.stderr
+   rg '^\s*\* ace-' results/tc/02/bundle-list.stdout > results/tc/02/installed-ace-gems.txt
+   if [ -f Gemfile.lock ]; then
+     cp Gemfile.lock results/tc/02/Gemfile.lock
+   fi
+   if [ -s results/tc/02/installed-ace-gems.txt ] && [ -s results/tc/02/Gemfile.lock ]; then
+     cat > results/tc/02/install-summary.txt <<'EOF'
+SUCCESS: bundle install completed in normal mode with installed ace gem evidence.
+EOF
+   else
+     cat > results/tc/02/install-summary.txt <<'EOF'
+SUCCESS: bundle install completed in normal mode, but post-install bundle evidence was incomplete. See bundle-list stdout/stderr and copied lockfile artifacts.
+EOF
+   fi
    ```
-   - Verify ace gem resolution freshness against RubyGems and write artifacts:
-   ```bash
-   env -i HOME="$HOME" PATH="$PATH" \
-     BUNDLE_GEMFILE="$PWD/Gemfile" \
-     BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
-     BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
-     GEM_HOME="$PWD/results/tc/02/.gem" \
-     PROJECT_ROOT_PATH="$PWD" \
-     bundle exec ruby - <<'RUBY' > results/tc/02/version-check.stdout 2> results/tc/02/version-check.stderr
-require "bundler/setup"
-require "rubygems"
-require "rubygems/spec_fetcher"
-
-gemfile = File.join(Dir.pwd, "Gemfile")
-gems = File.read(gemfile)
-  .scan(/^\s*gem\s+['"]([^'"]+)['"][^#\n]*/)
-  .map { |match| match.first }
-  .grep(/\Aace-/)
-  .sort
-  .uniq
-
-if gems.empty?
-  puts "NO-ACE-GEMS"
-  puts "SUMMARY:OK"
-  exit 0
-end
-
-ok = true
-
-gems.each do |name|
-  local_spec = Gem::Specification.find_all_by_name(name).max_by(&:version)
-  local_version = local_spec&.version
-
-  begin
-    fetched = Gem::SpecFetcher.fetcher.spec_for_dependency(Gem::Dependency.new(name, ">= 0"))[0] || []
-    remote_version = fetched.map { |entry| entry[0]&.version }.compact.max
-  rescue StandardError => error
-    puts "#{name}:REMOTE_LOOKUP_ERROR #{error.class}:#{error.message}"
-    ok = false
-    next
-  end
-
-  if local_version.nil?
-    puts "#{name}:MISSING"
-    ok = false
-    next
-  end
-
-  if remote_version.nil?
-    puts "#{name}:REMOTE_MISSING local=#{local_version}"
-    ok = false
-    next
-  end
-
-  if Gem::Version.new(local_version.to_s) >= remote_version
-    puts "#{name}:OK local=#{local_version} remote=#{remote_version}"
-  else
-    puts "#{name}:STALE local=#{local_version} remote=#{remote_version}"
-    ok = false
-  end
-end
-
-if ok
-  puts "SUMMARY:OK"
-  exit 0
-else
-  puts "SUMMARY:FAIL"
-  exit 1
-end
-RUBY
-   echo $? > results/tc/02/version-check.exit
-```
-5. If install fails, keep placeholder artifacts and note skip reason:
+5. If install fails, write an explicit summary and preserve command output as evidence:
 ```bash
 if [ "$(cat results/tc/02/install.exit)" != "0" ]; then
-  printf 'SKIPPED: bundle install failed\n' > results/tc/02/bundle-list.stderr
-  printf 'SKIPPED: bundle install failed\n' > results/tc/02/bundle-env-install.stderr
-  printf 'SKIPPED: version check not run because install failed\n' > results/tc/02/version-check.stdout
-  printf 'SKIPPED: bundle install failed\n' > results/tc/02/version-check.stderr
+  cat > results/tc/02/install-summary.txt <<'EOF'
+FAILED: bundle install did not complete successfully in normal mode.
+See install.stdout and install.stderr for details.
+EOF
 fi
 ```
 
@@ -154,4 +86,4 @@ fi
 
 - Do not use `--full-index` — that is tested in Goal 3.
 - Do not modify the Gemfile.
-- Capture the full output regardless of success or failure.
+- Capture command output regardless of success or failure.

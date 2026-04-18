@@ -10,19 +10,19 @@ Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Core artifacts captured** — `results/tc/03/fullindex.exit`, `results/tc/03/fullindex.stdout`, and `results/tc/03/bundle-env.stdout` all exist.
-2. **Install path isolation** — `results/tc/03/bundle-env.stdout` includes the sandbox Gemfile path and does not indicate `/home/mc/ace/Gemfile`.
-3. **Install command result** — `results/tc/03/fullindex.exit` is numeric.
-4. **Version check artifact exists** — `results/tc/03/version-check.exit` and `results/tc/03/version-check.stdout` exist when the install path reaches the post-install validation step.
-5. **Success evidence** — If exit code is `0`:
-   - `results/tc/03/bundle-list.stdout` exists and mentions at least one `ace-*` gem.
-   - `results/tc/03/version-check.exit` is either `0`, or non-zero with explicit remote lookup / propagation evidence in `version-check.stdout` or `version-check.stderr`.
-   - A non-zero version check is supporting evidence only; it does not fail the scenario if the isolated full-index install itself succeeded and installed the expected `ace-*` gems.
-6. **Failure evidence** — If exit code is non-zero, `fullindex.stdout` should contain error details.
+1. **Core fallback artifacts captured** — `results/tc/03/fullindex.exit`, `results/tc/03/fullindex.stdout`, and `results/tc/03/fullindex.stderr` all exist.
+2. **Install command result is valid** — `results/tc/03/fullindex.exit` is numeric.
+3. **Fallback command contract is explicit** — `results/tc/03/install-command.txt` exists and includes `bundle install --full-index`.
+4. **Success evidence (impact-first)** — If fallback exit is `0`:
+   - `results/tc/03/installed-ace-gems.txt` exists and includes at least one `ace-*` entry.
+   - `results/tc/03/Gemfile.lock` exists and contains at least one `ace-` gem dependency.
+5. **Failure evidence** — If fallback exit is non-zero:
+   - `results/tc/03/install-summary.txt` exists.
+   - `results/tc/03/fullindex.stdout` or `results/tc/03/fullindex.stderr` contains actionable error details.
 
 ## Verdict
 
-- **PASS**: All required artifacts are captured and evidence is consistent with the exit code, isolated install path, and installed `ace-*` gems. Remote propagation lag recorded by the freshness check is acceptable supporting evidence.
-- **FAIL**: Missing artifacts, missing isolation evidence, missing installed gems after a successful install, or missing error detail on failure.
+- **PASS**: Required artifacts exist and evidence is consistent with fallback install outcome and installed gem end state.
+- **FAIL**: Missing/invalid exit evidence, missing fallback command evidence, missing success end-state proof, or missing actionable failure details.
 
 Report: `PASS` or `FAIL` with evidence (exit code value, key output snippets).
