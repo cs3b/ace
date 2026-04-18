@@ -21,6 +21,7 @@ skill:
 Load and run `ace-bundle wfi://assign/drive` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
 
 Hard stop rule:
+
 - Do not stop after intermediate progress.
 - Do not stop while waiting on a forked subtree; keep polling and resume the parent drive loop as soon as the subtree reaches a terminal state.
 - Treat `ace-assign status --assignment <id>@<root>` as the source of truth for fork completion; quiet terminal output is not enough reason to stop or declare a stall.

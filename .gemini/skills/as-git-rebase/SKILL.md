@@ -15,11 +15,11 @@ source: ace-git
 assign:
   source: wfi://git/rebase
   steps:
-  - name: rebase-with-main
-    description: Rebase current branch onto origin/main while preserving changelog
-      intent
+  - name: rebase-with-target
+    description: Rebase current branch onto the target branch
     intent:
       phrases:
+      - rebase with target branch
       - rebase with main
       - rebase with origin main
       - rebase onto main

@@ -1,6 +1,7 @@
 ---
 name: as-e2e-fix
-description: Diagnose, fix, and rerun failing E2E tests systematically, generating failure analysis when needed
+description: Diagnose, fix, and rerun failing E2E tests systematically, generating
+  failure analysis when needed
 user-invocable: true
 allowed-tools:
 - Bash(ace-task:*)
