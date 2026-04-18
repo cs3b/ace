@@ -1,0 +1,61 @@
+test-id: TS-DOCS-002
+title: "ace-docs Analysis Workflows"
+area: docs
+package: ace-docs
+priority: medium
+cost-tier: smoke
+tags: [smoke, "use-case:analysis"]
+tool-under-test: ace-docs
+
+sandbox-layout:
+  results/tc/05/: "Analyze single-doc workflow artifacts"
+  results/tc/06/: "Analyze-consistency workflow artifacts"
+
+e2e-justification: >
+  Validates public analysis command workflows through documented CLI paths,
+  including deterministic artifact/report locations and operator-visible
+  output contracts.
+
+unit-coverage-reviewed:
+  - test/fast/cli/commands/analyze_test.rb
+  - test/fast/cli/commands/analyze_consistency_test.rb
+  - test/fast/organisms/cross_document_analyzer_test.rb
+
+requires:
+  tools: [ace-docs, bash]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: |
+      mkdir -p docs results/tc/05 results/tc/06
+      cat > docs/guide.md <<'MD'
+      ---
+      doc-type: guide
+      title: Guide
+      purpose: Analysis fixture
+      ace-docs:
+        last-updated: 2025-01-01
+      ---
+      # Guide
+
+      Initial content.
+      MD
+      cat > docs/reference.md <<'MD'
+      ---
+      doc-type: reference
+      title: Reference
+      purpose: Analysis fixture
+      ace-docs:
+        last-updated: 2025-01-01
+      ---
+      # Reference
+
+      Initial content.
+      MD
+      for n in 05 06; do
+        printf "seeded analysis corpus\n" > "results/tc/${n}/setup.stdout"
+        : > "results/tc/${n}/setup.stderr"
+        printf "0\n" > "results/tc/${n}/setup.exit"
+      done
