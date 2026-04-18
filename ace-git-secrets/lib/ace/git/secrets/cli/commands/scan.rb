@@ -19,7 +19,7 @@ module Ace
             desc "Scan Git history for authentication tokens"
 
             option :since, type: :string, desc: "Start scanning from commit or date"
-            option :format, type: :string, aliases: ["f"], default: "table",
+            option :format, type: :string, aliases: ["f"],
               desc: "Stdout format when --verbose is used (table, json, yaml)"
             option :report_format, type: :string, aliases: ["r"], default: "json",
               desc: "Format for saved report file (json, markdown)"

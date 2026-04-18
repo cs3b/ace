@@ -141,6 +141,32 @@ class CLITest < GitSecretsTestCase
     end
   end
 
+  def test_scan_does_not_force_default_format_when_flag_is_absent
+    captured = nil
+
+    Ace::Git::Secrets::Commands::ScanCommand.stub(:execute, ->(options) {
+      captured = options
+      0
+    }) do
+      capture_io { dispatch_cli(["scan"]) rescue SystemExit }
+    end
+
+    assert_nil captured[:format]
+  end
+
+  def test_scan_preserves_explicit_format_flag
+    captured = nil
+
+    Ace::Git::Secrets::Commands::ScanCommand.stub(:execute, ->(options) {
+      captured = options
+      0
+    }) do
+      capture_io { dispatch_cli(["scan", "--format", "json"]) rescue SystemExit }
+    end
+
+    assert_equal "json", captured[:format]
+  end
+
   def test_check_release_succeeds_when_clean
     @mock_repo.add_file("clean.txt", "no secrets")
 
