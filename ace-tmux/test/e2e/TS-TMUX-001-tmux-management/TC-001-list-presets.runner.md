@@ -20,6 +20,10 @@ Save artifacts to `results/tc/01/`.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
 - Capture command stdout/stderr/exit as raw artifacts.
+- After the list command completes, immediately persist exactly one handoff artifact before moving to Goal 2:
+  - `selected-preset.txt` when at least one preset is available, or
+  - `no-preset.txt` when none are available.
 - Write one of:
-  - `selected-preset.txt` containing only the selected preset name, or
+  - `selected-preset.txt` containing only the selected preset name (not section
+    headers such as `sessions:`), or
   - `no-preset.txt` explaining why no preset was available.
