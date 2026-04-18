@@ -7,9 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-04-16
+
+### Changed
+- Added `ace-task plan --timeout` so path-based plan generation can be bounded explicitly from the public CLI.
+- Documented bounded plan generation and timeout troubleshooting in the getting-started and usage guides.
+
+### Fixed
+- Converted planner-provider timeout failures into actionable CLI errors instead of surfacing raw timeout backtraces.
+- Updated `TS-TASK-002` path-mode verification to accept explicit timeout diagnostics when plan generation cannot complete within the requested bound.
+
+## [0.35.7] - 2026-04-16
+
+### Fixed
+- Refined `TS-TASK-001` smoke verification around sandbox-root task trees, archive layout, and invalid-status doctor evidence so retained E2E goals track the current public CLI behavior.
+
+## [0.35.6] - 2026-04-15
+
+### Fixed
+- Tightened `TS-TASK-002` plan-path verification to require at least one successful path-mode plan artifact while keeping explicit diagnostics for failed dependency paths.
+
 ## [0.35.5] - 2026-04-15
 
 ### Changed
+- Reworked retained `TS-TASK-001` goal contracts to use deterministic task-ref handoff artifacts across create/show/update/archive smoke journeys.
+- Added `TS-TASK-002` auxiliary public CLI journeys for `status` and `plan` command coverage, with explicit sandbox diagnostics for unavailable planning dependencies.
+- Updated usage docs with E2E-safe `ace-task plan <ref>` path-mode guidance and `github-sync` precondition examples.
 - Tightened spike-task drafting, review, and work-on-task guidance so spikes must declare whether they are design-contract or proof-of-concept work, define explicit follow-up tasks, and stop implementation flow when runtime work materially drifts from the promised spike contract.
 
 ## [0.35.4] - 2026-04-13

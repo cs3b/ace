@@ -24,6 +24,7 @@ module Ace
             "q7w                          # Reuse fresh plan or generate new",
             "q7w --refresh                # Force regeneration",
             "q7w --content                # Print full plan content",
+            "q7w --timeout 30             # Fail fast if plan generation stalls",
             "q7w --model gemini:flash-latest  # Override planning model"
           ]
 
@@ -32,6 +33,7 @@ module Ace
           option :refresh, type: :boolean, desc: "Force plan regeneration"
           option :content, type: :boolean, desc: "Print full plan content instead of path"
           option :model, type: :string, desc: "Provider:model override for plan generation"
+          option :timeout, type: :integer, desc: "LLM request timeout in seconds for plan generation"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -58,7 +60,7 @@ module Ace
 
             context_files = capture_context_files(task)
             model = options[:model] || default_model(config)
-            generator = plan_generator(model)
+            generator = plan_generator(model, timeout: options[:timeout])
             content = generator.generate(
               task: task,
               context_files: context_files,
@@ -104,13 +106,15 @@ module Ace
             end
           end
 
-          def plan_generator(model, cli_args: nil)
+          def plan_generator(model, cli_args: nil, timeout: nil)
             klass = self.class.generator_class || Molecules::TaskPlanGenerator
-            klass.new(model: model, cli_args: cli_args)
+            kwargs = {model: model, cli_args: cli_args}
+            kwargs[:timeout] = timeout if timeout
+            klass.new(**kwargs)
           end
 
           def default_model(config)
-            config.dig("task", "plan", "model") || "gemini:flash-latest"
+            config.dig("task", "plan", "model") || "role:planner"
           end
         end
       end

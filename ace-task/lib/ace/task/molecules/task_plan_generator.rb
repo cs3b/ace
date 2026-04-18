@@ -35,7 +35,9 @@ module Ace
           )
         rescue Ace::Support::Cli::Error
           raise
-        rescue RuntimeError, IOError, Errno::ENOENT, Errno::ECONNREFUSED, Timeout::Error => e
+        rescue StandardError => e
+          raise unless recoverable_query_error?(e)
+
           raise Ace::Support::Cli::Error.new(
             "Plan generation failed: #{e.message}. Retry with --refresh or choose a working --model."
           )
@@ -134,6 +136,16 @@ module Ace
 
           require "ace/llm"
           Ace::LLM::QueryInterface
+        end
+
+        def recoverable_query_error?(error)
+          return true if error.class.name == "Ace::LLM::ProviderError"
+
+          error.is_a?(RuntimeError) ||
+            error.is_a?(IOError) ||
+            error.is_a?(Errno::ENOENT) ||
+            error.is_a?(Errno::ECONNREFUSED) ||
+            error.is_a?(Timeout::Error)
         end
       end
     end

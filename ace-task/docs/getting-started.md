@@ -96,7 +96,10 @@ Converts the behavioral spec into an implementation checklist using an LLM. Plan
 ```bash
 ace-task plan abc --refresh            # Force regeneration
 ace-task plan abc --content            # Print full plan inline
+ace-task plan abc --timeout 30         # Fail fast if generation stalls
 ```
+
+`ace-task plan` uses `role:planner` by default. Pass `--model provider:model` to override it for a specific run.
 
 ## 6) Keep task health in check
 
