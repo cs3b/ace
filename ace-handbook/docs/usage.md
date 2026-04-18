@@ -127,6 +127,15 @@ packages, rerun:
 
 ```bash
 ace-handbook sync
+ace-handbook sync --provider pi
+ace-handbook status --provider pi --format json
+```
+
+Unknown provider IDs are a public error contract and should fail with a non-zero exit plus an `Unknown provider: ...`
+message:
+
+```bash
+ace-handbook status --provider definitely-not-a-provider
 ```
 
 ## Notes

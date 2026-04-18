@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.4] - 2026-04-16
+
+### Technical
+- Updated `TS-HANDBOOK-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so handbook smoke flows stay aligned with the shared read-only source-root contract.
+
+## [0.27.3] - 2026-04-15
+
+### Fixed
+- Corrected `TS-HANDBOOK-002` setup to copy `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so sandboxed E2E runs load source-root tooling consistently.
+
+### Changed
+- Corrected release-proof command references to use positional `ace-test-e2e ace-monorepo-e2e TS-MONO-001` invocation.
+
+## [0.27.2] - 2026-04-15
+
+### Changed
+- Updated RubyGems propagation proof docs to use the supported positional `ace-test-e2e ace-monorepo-e2e TS-MONO-001` invocation and current scenario path.
+
+## [0.27.0] - 2026-04-14
+
+### Changed
+- Rewrote `ace-handbook` E2E coverage to public-surface goal style by retaining the CLI smoke flow and adding `TS-HANDBOOK-002` sync/provider-error behavior scenarios.
+- Tightened `TS-HANDBOOK-001` verifier contracts to prioritize user-visible output and enforce stronger status JSON shape expectations.
+
+### Technical
+- Updated usage guidance with explicit `sync --provider` and unknown-provider error-path examples aligned to the E2E public contract.
+
 ## [0.26.2] - 2026-04-13
 
 ### Changed
@@ -63,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.23.5] - 2026-03-31
 
 ### Changed
-- Replaced `wfi://release/rubygems-verify-install` workflow with E2E scenario `TS-MONO-001-rubygems-install` in `ace-monorepo-e2e/`. Updated all skill and doc references to use `ace-test-e2e ace-monorepo-e2e --test-id TS-MONO-001`.
+- Replaced `wfi://release/rubygems-verify-install` workflow with E2E scenario `TS-MONO-001-rubygems-install` in `ace-monorepo-e2e/`. Updated all skill and doc references to use `ace-test-e2e ace-monorepo-e2e TS-MONO-001`.
 
 ## [0.23.4] - 2026-03-31
 
