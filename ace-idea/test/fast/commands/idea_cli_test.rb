@@ -274,6 +274,23 @@ class IdeaCliTest < AceIdeaTestCase
     end
   end
 
+  def test_list_archive_after_move_to_archive
+    with_ideas_dir do |root|
+      id = "8ppq7w"
+      create_idea_fixture(root, id: id, slug: "archived-idea")
+
+      with_cli_root(root) do
+        update = run_cli(["update", id, "--move-to", "archive"])
+        assert_equal 0, update[:exit_code], update[:stderr]
+
+        result = run_cli(["list", "--in", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/Archived idea/, result[:stdout])
+        refute_match(/No ideas found/, result[:stdout])
+      end
+    end
+  end
+
   def test_list_filter_by_status
     with_ideas_dir do |root|
       create_idea_fixture(root, id: "aaa111", slug: "pending-idea", status: "pending")

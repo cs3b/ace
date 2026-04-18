@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.21.2] - 2026-04-18
+
+### Fixed
+- Pinned `TS-IDEA-001` to a sandbox-local `.ace-ideas` root so archive-listing lifecycle coverage no longer depends on ambient project-root discovery.
+
+### Technical
+- Added a CLI regression proving `ace-idea list --in archive` surfaces an idea immediately after `update --move-to archive`.
+
+## [0.21.1] - 2026-04-16
+
+### Fixed
+- Updated `TS-IDEA-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}`, keeping idea lifecycle runs compatible with read-only source-root mounts.
+
+## [0.21.0] - 2026-04-14
+
+### Changed
+- Reworked `TS-IDEA-001` lifecycle runner instructions around public command-output ID flow (`create` output to `update`/archive transitions) instead of hidden frontmatter ID recipes.
+
+### Technical
+- Reduced duplicated list assertions across lifecycle scenario goals and added lightweight scenario freshness metadata (`last-verified` + freshness policy) for E2E maintenance.
+
 ## [0.20.2] - 2026-04-13
 
 ### Fixed
