@@ -1,5 +1,5 @@
 ---
-description: "E2E verifier input for ace-bundle goal-based tests"
+description: "E2E verifier input for ace-bundle public-surface goal tests"
 bundle:
   embed_document_source: true
   params:
@@ -8,9 +8,8 @@ bundle:
   files:
     - ./TC-001-help-survey.verify.md
     - ./TC-002-preset-loading.verify.md
-    - ./TC-003-file-patterns.verify.md
     - ./TC-004-auto-format.verify.md
-    - ./TC-005-cli-api-parity.verify.md
+    - ./TC-005-cli-consistency-error-semantics.verify.md
 ---
 
 # E2E Verification: ace-bundle
@@ -24,7 +23,7 @@ You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdict
   2. explicit artifacts under `results/tc/{NN}/`
   3. debug captures (`stdout`, `stderr`, `.exit`) only as fallback
 - Evaluate each goal independently based solely on the artifacts provided
-- Do not speculate about what the runner did — only judge what exists
+- Do not speculate about what the runner did; only judge what exists
 - For each goal, cite specific evidence (filenames, content snippets)
 - Follow the output format exactly
 
@@ -36,4 +35,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/5 passed**
+Final line: **Results: X/4 passed**

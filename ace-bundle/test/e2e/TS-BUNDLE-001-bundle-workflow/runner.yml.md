@@ -1,5 +1,5 @@
 ---
-description: "E2E runner input for ace-bundle goal-based tests"
+description: "E2E runner input for ace-bundle public-surface goal tests"
 bundle:
   embed_document_source: true
   params:
@@ -8,9 +8,8 @@ bundle:
   files:
     - ./TC-001-help-survey.runner.md
     - ./TC-002-preset-loading.runner.md
-    - ./TC-003-file-patterns.runner.md
     - ./TC-004-auto-format.runner.md
-    - ./TC-005-cli-api-parity.runner.md
+    - ./TC-005-cli-consistency-error-semantics.runner.md
 ---
 
 # E2E Test Runner: ace-bundle
@@ -19,17 +18,17 @@ Tool under test: ace-bundle
 Required tools: ace-bundle
 Workspace root: (current directory)
 
-Execute each goal sequentially. Goal 1 is discovery — all later goals
+Execute each goal sequentially. Goal 1 is discovery and all later goals
 build on what you learn there. Do not re-run --help after Goal 1.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 5)
+- Execute each goal in order (1, 2, 4, 5)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
-- Do not fabricate output — all artifacts must come from real tool execution
+- Do not fabricate output; all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal
 
@@ -37,5 +36,5 @@ build on what you learn there. Do not re-run --help after Goal 1.
 
 When a goal requires capturing command output:
 - Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
-- The `.exit` file contains only the numeric exit code (e.g., `0` or `1`)
-- Summary or analysis files (.md) are optional extras — the raw captures are the primary artifacts
+- The `.exit` file contains only the numeric exit code (for example `0` or `1`)
+- Summary or analysis files (`.md`) are optional extras; raw captures are the primary artifacts
