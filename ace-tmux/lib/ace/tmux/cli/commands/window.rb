@@ -22,13 +22,13 @@ module Ace
               # Add code-editor window to current session
               $ ace-tmux window code-editor
 
-              # Add to a specific session
+              # Outside tmux, target a specific session explicitly
               $ ace-tmux window code-editor --session dev
           DESC
 
           example [
             "code-editor               # Add to current session",
-            "code-editor -s dev        # Add to specific session"
+            "code-editor -s dev        # Outside tmux path: add to specific session"
           ]
 
           argument :preset, required: false, desc: "Window preset name (default: from config)"

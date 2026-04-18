@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.14.3] - 2026-04-16
+
+### Technical
+- Hardened retained tmux preset and existing-session E2E verification to avoid false missing-artifact requirements and to accept stable session continuity evidence across lifecycle commands.
+
+## [0.14.2] - 2026-04-16
+
+### Technical
+- Relaxed existing-session E2E verification to judge session reuse from lifecycle continuity and captured state instead of brittle wording differences in tmux output.
+
+## [0.14.1] - 2026-04-16
+
+### Fixed
+- Routed tmux commands through an explicit sandbox socket path and enforced safe socket-directory permissions so isolated E2E sessions can be reused reliably.
+
+## [0.14.0] - 2026-04-15
+
+### Added
+- Added `TS-TMUX-002` to validate the outside-tmux `ace-tmux window --session` public workflow with explicit success and constrained-execution branches.
+
+### Changed
+- Expanded `TS-TMUX-001` with an existing-session lifecycle goal and tightened goal-style verifier contracts for preset/start/window evidence continuity.
+- Clarified outside-tmux session-targeting usage in command help and usage documentation.
+
 ## [0.13.0] - 2026-04-13
 
 ### Added
