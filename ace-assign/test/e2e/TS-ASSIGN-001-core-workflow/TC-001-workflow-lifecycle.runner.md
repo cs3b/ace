@@ -2,34 +2,40 @@
 
 ## Goal
 
-Use `ace-assign` the way a user would from docs and `--help`: create an assignment
-from the lifecycle fixture YAML, verify the assignment exists, complete the first
-step, fail the next step to stall the queue, add one recovery step dynamically,
-retry the failed step, and finish the workflow.
+Execute the public lifecycle journey end-to-end using documented `ace-assign` commands:
+create assignment, complete current step, fail next step, add one recovery step,
+retry failed step, and finish the assignment.
 
 ## Workspace
 
-Save all output to `results/tc/01/`. Required artifact:
-- `results/tc/01/` — workflow lifecycle execution evidence
+Save output to `results/tc/01/`.
 
 ## Constraints
 
-- Create the assignment with the supported public command:
+- Create the assignment with:
   - `ace-assign create --yaml <path-to-lifecycle-job>`
   - use whichever fixture path exists first:
-    - `lifecycle/job.yaml`
+    - `ace-assign/test/e2e/TS-ASSIGN-001-core-workflow/fixtures/lifecycle/job.yaml`
     - `fixtures/lifecycle/job.yaml`
-- Keep this assignment active when issuing positional finish commands; for cross-assignment targeting use `--assignment` without positional step number.
-- After creation, verify assignment.yaml, steps/, reports/ directories exist.
-- Verify 3 step files (010-analyze, 020-implement, 030-verify) with .st.md extension.
-- First step should be in_progress with skill field and array instructions.
-- Complete analyze step with `lifecycle/report.md`, verify step 010 marked done and 020 advances.
-- Mark 020 as failed via `ace-assign fail -m "..."`, verify queue stalls.
-- Verify report is rejected on stalled queue.
-- Add one dynamic recovery step using the supported public YAML path:
+    - `lifecycle/job.yaml`
+- Verify assignment directories and step files exist (`assignment.yaml`, `steps/`, `reports/`).
+- Prove user-visible lifecycle transitions via `ace-assign status` snapshots and command outputs:
+  - initial active step,
+  - step advancement after first finish,
+  - stalled queue after failure,
+  - retry insertion,
+  - terminal completion.
+- Add one recovery step using the public YAML add path:
   - `ace-assign add --yaml <path-to-add-fix-step.yaml> --assignment "<assignment-id>"`
-- Complete the injected step with `lifecycle/fix-report.md`.
-- Retry failed step 020 (should NOT change current step).
-- Complete verify step with `lifecycle/verify-report.md`, then complete retry step with `lifecycle/implement-report.md`, and capture each finish command exit/status output.
-- Final status must show no active step and an all-done terminal queue (for example "All steps complete!" or "Assignment completed!").
-- All artifacts must come from real tool execution.
+  - use whichever fixture path exists first:
+    - `ace-assign/test/e2e/TS-ASSIGN-001-core-workflow/fixtures/lifecycle/add-fix-step.yaml`
+    - `fixtures/lifecycle/add-fix-step.yaml`
+    - `lifecycle/add-fix-step.yaml`
+- Complete remaining runnable steps and capture finish outputs.
+- Final state must show an all-terminal queue with no active step.
+
+## Evidence Guidance
+
+- Prefer end-state artifacts (status snapshots, reports, assignment tree evidence).
+- Keep debug captures (`stdout`, `stderr`, `.exit`) as secondary fallback.
+- Artifact naming can be consistent but does not need rigid fixture-specific choreography.

@@ -1,0 +1,11 @@
+session:
+  name: multi-assignment-a
+  description: Assignment A for operator flow
+
+steps:
+  - name: analyze
+    instructions: |
+      Analyze repository state.
+  - name: verify
+    instructions: |
+      Verify assignment A flow.

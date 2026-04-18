@@ -6,23 +6,20 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
-2. Confirm explicit artifacts under `results/tc/{NN}/`.
+2. Confirm explicit artifacts under `results/tc/02/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-Fallback tolerance:
-- If `results/tc/02/` is entirely absent, treat this goal as **inconclusive-pass** and rely on captured fork-context evidence from other test cases in the same run.
-1. **Assignment created** — `create.exit` contains `0`.
-2. **Regular step status** — `status.regular.stdout` (or `status.01.stdout` fallback) stays status-only and does not include raw instruction text.
-3. **Regular step instructions** — `step.regular.stdout` shows the raw regular step content ("Load project context").
-4. **Fork step display** — `step.fork.stdout` captured after `finish.010` shows structured fork instruction sections (for example "Onboard", "Work", "Report").
-5. **Context transitions** — Prefer `status.back-to-regular.stdout` captured after `finish.020`; it should show the queue returned to step `030`. `step.back-to-regular.stdout` should show the raw regular instructions for the verify step.
-6. **Workflow completion** — `status.final.stdout` or `finish.040.final.stdout` shows completion with all 4 steps done.
+
+1. **Assignment created** — `results/tc/02/create.exit` is `0`.
+2. **Regular view baseline** — `status-regular.*` and `step-regular.*` exist, both exits are `0`, and they show regular step behavior before fork activation.
+3. **Fork view activation** — `finish-010.exit` is `0`, then `status-fork.*` and `step-fork.*` exist, both exits are `0`, and `step-fork.stdout` reflects fork-structured guidance.
+4. **Back-to-regular transition** — `finish-020.exit` is `0`, then `status-return.*` and `step-return.*` exist, both exits are `0`, and `step-return.stdout` shows the queue returned to regular step behavior.
+5. **Workflow completion** — `finish-030.exit`, `finish-040.exit`, and `status-final.exit` are `0`, and final status evidence shows all workflow steps terminal.
 
 ## Verdict
 
-- **PASS**: `status` stays status-only, `step` returns the correct regular/fork instructions, post-020 evidence proves the queue returned to regular step `030`, and workflow completes.
-- **FAIL**: Status still carries raw instructions, fork-step structured instructions are absent from `step`, transition artifacts are missing or contradictory, or workflow is incomplete.
+- **PASS**: The named regular, fork, return, and final checkpoints all exist and clearly differentiate the context transitions through completion.
+- **FAIL**: Named transition checkpoints are missing/contradictory, or workflow does not complete.
 
-Report: `PASS` or `FAIL` with evidence (content snippets from status captures).
+Report: `PASS` or `FAIL` with evidence (transition checkpoints + final status).

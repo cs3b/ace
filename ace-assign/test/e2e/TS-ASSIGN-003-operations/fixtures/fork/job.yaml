@@ -1,0 +1,21 @@
+session:
+  name: fork-run-operations
+  description: Scoped fork-run delegation flow
+
+steps:
+  - name: precheck
+    instructions: |
+      Collect baseline status.
+
+  - name: delegated-subtree
+    context: fork
+    instructions: |
+      Execute delegated subtree using fork-run.
+    sub_steps:
+      - onboard
+      - plan-task
+      - work-on-task
+
+  - name: postcheck
+    instructions: |
+      Validate post-fork state.

@@ -1,0 +1,8 @@
+session:
+  name: multi-assignment-b
+  description: Assignment B for operator flow
+
+steps:
+  - name: prepare
+    instructions: |
+      Prepare assignment B context.
