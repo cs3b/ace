@@ -28,7 +28,9 @@ Save artifacts to `results/tc/03/`.
   cleanup commands to prove internal state that `ace-tmux` does not expose.
 - If no window preset is available from `ace-tmux list windows`, write
   `window-skip.md` with an explicit reason and do not fabricate a preset.
-- Do not use `results/tc/01/selected-preset.txt` as a window preset input.
+- Do not reuse the Goal 1 session-preset handoff as the window preset input.
 - Capture either:
   - successful `ace-tmux window` evidence tied to the target session, or
   - explicit constrained execution note (`window-skip.md`) with reason.
+- If `ace-tmux window` is attempted and exits non-zero, capture `window-failure.md`
+  with a short root-cause note tied to stdout/stderr/exit artifacts.

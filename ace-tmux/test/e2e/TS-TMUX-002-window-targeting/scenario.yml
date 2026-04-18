@@ -1,0 +1,28 @@
+test-id: TS-TMUX-002
+title: "ace-tmux Outside-Tmux Window Targeting"
+area: tmux
+package: ace-tmux
+priority: low
+cost-tier: deep
+tags: [deep, "use-case:tmux", "mode:outside-tmux"]
+tool-under-test: ace-tmux
+
+sandbox-layout:
+  results/tc/05/: "Outside-tmux window targeting artifacts"
+
+e2e-justification: >
+  Validates public CLI behavior for `ace-tmux window --session` when running
+  outside tmux. This path depends on runtime tmux/session behavior and cannot be
+  fully validated with isolated unit tests.
+
+unit-coverage-reviewed:
+  - test/fast/commands/cli_test.rb
+  - test/fast/organisms/window_manager_test.rb
+
+requires:
+  tools: [ace-tmux]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
