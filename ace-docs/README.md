@@ -36,6 +36,8 @@
 
 **Enforce docs quality in release loops** - pair with [ace-lint](../ace-lint) for markdown checks and use `ace-docs` update workflows to keep guides, READMEs, and references in sync.
 
+For concrete analyze/update entry points and deterministic CLI examples, see the [Usage Guide](docs/usage.md#analyze) and the [analyze-and-update workflow examples](docs/usage.md#analyze-and-update-workflow).
+
 ## Testing Contract
 
 Run deterministic package coverage with:

@@ -34,8 +34,9 @@ module Ace
               Project config: .ace/docs/config.yml
 
             Output:
-              Consistency report in markdown format (default)
-              Exit codes: 0 (success), 1 (issues found with --strict), 2 (error)
+              Prints report location and writes artifacts under .ace-local/docs/sessions/analyze-consistency-<timestamp>/
+              Key files: report.md, metadata.yml, documents.json
+              Exit codes: 0 (success), 1 (error)
           DESC
 
           example [
