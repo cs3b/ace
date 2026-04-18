@@ -1,0 +1,29 @@
+test-id: TS-LLM-002
+title: "ace-llm Provider Discovery"
+area: llm
+package: ace-llm
+priority: low
+cost-tier: basic
+tags: [basic, "use-case:provider-discovery"]
+tool-under-test: ace-llm
+
+sandbox-layout:
+  results/tc/01/: "Provider list artifacts"
+
+e2e-justification: >
+  Requires real CLI provider discovery output and setup-hint surfaces that are
+  user-facing and validated through `ace-llm --list-providers` end-state artifacts.
+
+unit-coverage-reviewed:
+  - test/feat/cli_contract_test.rb
+  - test/fast/commands/query_command_test.rb
+
+requires:
+  tools: [ace-llm]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - agent-env:
+      PROJECT_ROOT_PATH: .
