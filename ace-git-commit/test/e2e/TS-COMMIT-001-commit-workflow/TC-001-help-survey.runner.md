@@ -2,7 +2,10 @@
 
 ## Goal
 
-Explore `ace-git-commit --help` and any subcommand help. Summarize what the tool does, list its flags (especially -m, -n/--dry-run, --no-split, path arguments), and note the auto-split behavior and message generation features.
+Explore `ace-git-commit --help` and any subcommand help. Summarize what the tool
+does, list its flags (especially `-m`, `-n/--dry-run`, `--only-staged`,
+`--no-split`, and path arguments), and note auto-split behavior and message
+generation features.
 
 ## Workspace
 

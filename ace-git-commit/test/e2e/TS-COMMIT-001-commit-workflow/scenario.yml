@@ -14,13 +14,14 @@ sandbox-layout:
   results/tc/04/:  "Delete and rename commit evidence"
   results/tc/05/:  "Auto-split evidence (multiple commits from different scopes)"
   results/tc/06/:  "No-split override evidence (single commit across scopes)"
+  results/tc/07/:  "Only-staged evidence (staged commit, unstaged preserved)"
 
 e2e-justification: >
   All goals require the real ace-git-commit binary executing through a shell
   with a real git repository. Commit creation, path handling, file deletion
-  detection, rename tracking, and auto-split based on config scopes all
-  depend on real git state. Unit tests verify message formatting; these
-  tests verify the full commit pipeline end-to-end.
+  detection, rename tracking, auto-split based on config scopes, and staged-
+  only commits all depend on real git state. Unit tests verify message
+  formatting; these tests verify the full commit pipeline end-to-end.
 
 unit-coverage-reviewed:
   - test/fast/git_commit_test.rb

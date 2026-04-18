@@ -13,7 +13,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 - **File exists** — At least one file exists in `results/tc/01/`.
 - **Substantive content** — The file contains more than 5 lines of non-empty text.
-- **Mentions key flags** — The content references at least two of: -m, --dry-run, --no-split, path arguments.
+- **Mentions key flags** — The content references at least two of: `-m`,
+  `--dry-run`, `--only-staged`, `--no-split`, path arguments.
 - **Observations present** — The content includes at least one observation about the tool's interface.
 
 ## Verdict
