@@ -1,0 +1,33 @@
+test-id: TS-HANDBOOK-002
+title: "ace-handbook sync behavior"
+area: handbook
+package: ace-handbook
+priority: high
+tags: [core, "use-case:handbook-sync", "error-path:provider"]
+cost-tier: happy-path
+tool-under-test: ace-handbook
+
+sandbox-layout:
+  results/tc/01/: "sync provider projection evidence"
+  results/tc/02/: "status unknown provider error evidence"
+
+e2e-justification: >
+  Sync and provider-validation behavior are user-visible CLI contracts that depend
+  on real runtime wiring, file projection side effects, and command exit semantics.
+  This scenario validates those contracts through direct `ace-handbook` execution.
+
+unit-coverage-reviewed:
+  - test/fast/cli/commands/sync_test.rb
+  - test/fast/cli/commands/status_test.rb
+  - test/fast/organisms/provider_syncer_test.rb
+  - test/fast/organisms/status_collector_test.rb
+
+requires:
+  tools: [ace-handbook]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - agent-env:
+      PROJECT_ROOT_PATH: .
