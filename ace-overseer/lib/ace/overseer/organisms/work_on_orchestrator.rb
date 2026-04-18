@@ -11,8 +11,8 @@ module Ace
           task_loader: nil, config: nil, assignment_detector: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
-          @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
+          @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new(task_manager: @task_manager)
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
         end

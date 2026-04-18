@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.11] - 2026-04-18
+
+### Technical
+- Relaxed retained watch-mode E2E verification to tolerate bounded `Open3` stream-closure noise when the visible `status --watch` behavior and controlled shutdown codes are otherwise correct.
+
+## [0.14.10] - 2026-04-16
+
+### Fixed
+- Normalized `status --watch` interrupt handling so watch-mode exits no longer dump a Ruby stack trace, and aligned retained E2E verification with the bounded termination codes the command now emits.
+
+## [0.14.9] - 2026-04-16
+
+### Fixed
+- Reused the orchestrator task manager when launching default assignments so multi-task `work-on` flows no longer partially provision a task and then fail lookup against a different task-resolution path.
+
+## [0.14.8] - 2026-04-16
+
+### Fixed
+- Relaxed `TS-OVERSEER-001` prune verification to judge the documented public prune flow from captured dry-run/prune artifacts and resulting state instead of requiring echoed command lines.
+
+## [0.14.7] - 2026-04-16
+
+### Fixed
+- Taught tmux window opening to create the target session when it is missing so sandboxed overseer E2E runs can open task windows reliably on the intended socket.
+
+## [0.14.6] - 2026-04-15
+
+### Changed
+- Reworked `TS-OVERSEER-001` into a public-surface goal contract by absorbing standalone help survey into Goal 2 preflight, simplifying prune flow to normal lifecycle commands, and tightening rerun/override checks to stable status/worktree oracles.
+- Added `TS-OVERSEER-002` status-and-operations coverage with watch-refresh and multi-task bundle journeys.
+- Updated `docs/usage.md` with explicit public verification paths for preset override, idempotent rerun, and minimal prune lifecycle checks.
+
+### Fixed
+- Updated the `ace-assign` runtime dependency constraint to `~> 0.53` so overseer remains aligned with the current assign minor release line.
+
 ## [0.14.4] - 2026-04-13
 
 ### Fixed

@@ -109,4 +109,20 @@ class StatusCommandTest < AceOverseerTestCase
       end
     end
   end
+
+  def test_watch_interrupt_returns_cleanly_without_stack_trace
+    collector = FakeCollector.new({contexts: []})
+    command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
+
+    command.define_singleton_method(:run_watch_loop) do |_format, _options|
+      raise Interrupt
+    end
+
+    stdout, stderr = capture_io do
+      command.call(format: "table", watch: true)
+    end
+
+    assert_empty stdout
+    assert_empty stderr
+  end
 end

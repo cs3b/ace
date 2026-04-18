@@ -220,6 +220,32 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     end
   end
 
+  def test_default_assignment_launcher_uses_injected_task_manager
+    task_manager = FakeTaskManager.new("280" => {metadata: {}, is_orchestrator: false})
+    captured_task_manager = nil
+
+    Ace::Overseer::Molecules::AssignmentLauncher.stub(:new, ->(**kwargs) {
+      captured_task_manager = kwargs[:task_manager]
+      FakeAssignmentLauncher.new
+    }) do
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: task_manager,
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          {worktree_path: "/tmp/worktree", branch: "280-feature", created: false}
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        config: {
+          "default_assign_preset" => "work-on-task"
+        },
+        assignment_detector: ->(_path) {}
+      )
+
+      orchestrator.call(task_ref: "280")
+    end
+
+    assert_same task_manager, captured_task_manager
+  end
+
   def test_does_not_pass_subtask_refs_for_non_orchestrator_task
     Dir.mktmpdir("task.150") do |worktree|
       task = {metadata: {}, is_orchestrator: false}

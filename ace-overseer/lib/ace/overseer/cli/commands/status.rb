@@ -31,6 +31,8 @@ module Ace
             else
               run_once(format)
             end
+          rescue Interrupt
+            nil
           rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
           end
