@@ -10,6 +10,7 @@ bundle:
     - ./TC-002-create-and-show-tape-lifecycle.verify.md
     - ./TC-003-record-inline-dry-run-preview.verify.md
     - ./TC-004-attach-pr-validation-error.verify.md
+    - ./TC-005-record-preset-success-artifact.verify.md
 ---
 
 # E2E Verification: ace-demo CLI Smoke
@@ -37,4 +38,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/5 passed**

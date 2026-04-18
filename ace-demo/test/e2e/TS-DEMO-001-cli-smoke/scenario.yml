@@ -12,6 +12,7 @@ sandbox-layout:
   results/tc/02/: "Create/show tape lifecycle artifacts"
   results/tc/03/: "Inline record dry-run preview artifacts"
   results/tc/04/: "Attach argument-validation error artifacts"
+  results/tc/05/: "Preset record success artifact outputs"
 
 e2e-justification: >
   These checks require the real ace-demo executable, real command parsing through
@@ -34,5 +35,5 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: git add -A && git commit -m "initial" --quiet
