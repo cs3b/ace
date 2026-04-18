@@ -70,4 +70,10 @@ class CliTest < Minitest::Test
     # Verify start command is registered (without executing it)
     assert CLI::REGISTERED_COMMANDS.any? { |cmd, _| cmd == "start" }
   end
+
+  def test_window_help_mentions_outside_tmux_session_targeting
+    output = capture_io { CLI.start(["window", "--help"]) }[0]
+    assert_match(/outside tmux/i, output)
+    assert_match(/--session/, output)
+  end
 end

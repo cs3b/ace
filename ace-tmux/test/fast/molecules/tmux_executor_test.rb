@@ -3,6 +3,21 @@
 require_relative "../../test_helper"
 
 class TmuxExecutorTest < Minitest::Test
+  class FakeStatus
+    def initialize(success, code)
+      @success = success
+      @code = code
+    end
+
+    def success?
+      @success
+    end
+
+    def exitstatus
+      @code
+    end
+  end
+
   def setup
     @executor = Ace::Tmux::Molecules::TmuxExecutor.new
   end
@@ -40,5 +55,30 @@ class TmuxExecutorTest < Minitest::Test
     assert_equal "error", result.stderr
     refute result.success?
     assert_equal 2, result.exit_code
+  end
+
+  def test_capture_targets_explicit_socket_when_tmux_tmpdir_present
+    original_tmux_tmpdir = ENV["TMUX_TMPDIR"]
+    ENV["TMUX_TMPDIR"] = "/tmp/ace-tmux"
+    captured = nil
+    mkdir_calls = []
+    chmod_calls = []
+
+    FileUtils.stub(:mkdir_p, proc { |path| mkdir_calls << path }) do
+      FileUtils.stub(:chmod, proc { |mode, path| chmod_calls << [mode, path] }) do
+        Open3.stub(:capture3, proc { |*cmd|
+          captured = cmd
+          ["ok", "", FakeStatus.new(true, 0)]
+        }) do
+          @executor.capture(["tmux", "list-sessions"])
+        end
+      end
+    end
+
+    assert_equal ["/tmp/ace-tmux/tmux-#{Process.uid}"], mkdir_calls
+    assert_equal [[0o700, "/tmp/ace-tmux/tmux-#{Process.uid}"]], chmod_calls
+    assert_equal ["tmux", "-S", "/tmp/ace-tmux/tmux-#{Process.uid}/default", "list-sessions"], captured
+  ensure
+    ENV["TMUX_TMPDIR"] = original_tmux_tmpdir
   end
 end

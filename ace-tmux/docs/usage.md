@@ -54,6 +54,7 @@ Examples:
 - `ace-tmux window` uses `defaults.window`
 - `ace-tmux window cc`
 - `ace-tmux window cc --session dev`
+- `ace-tmux window cc --session dev` (outside tmux path)
 - `ace-tmux window cc --root ~/work/repo`
 
 Options:
