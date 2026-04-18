@@ -27,13 +27,15 @@ module Ace
             # @return [Array(String, String, Process::Status)] [stdout, stderr, status]
             # @raise [Ace::LLM::ProviderError] on timeout
             def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
+              command_prefix: nil,
               isolate_process_group: true, cleanup_group_on_exit: true)
               normalized_timeout = normalize_timeout(timeout)
               opts = {}
               opts[:chdir] = chdir if chdir
               opts[:pgroup] = true if isolate_process_group
 
-              args = env ? [env, *cmd] : cmd
+              full_cmd = Array(command_prefix) + cmd
+              args = env ? [env, *full_cmd] : full_cmd
 
               Open3.popen3(*args, **opts) do |stdin, stdout, stderr, wait_thr|
                 pid = wait_thr.pid

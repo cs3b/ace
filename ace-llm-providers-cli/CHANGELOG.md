@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-04-16
+
+### Fixed
+- Updated shipped Codex defaults from the rejected `gpt-5-mini` alias path to the current `gpt-5.4` / `gpt-5.4-mini` catalog and aligned the CLI client metadata with those model IDs.
+- Added shipped `flash-latest` and `pro-latest` Gemini aliases backed by declared default models so fresh-provider fallback chains no longer target missing Gemini aliases.
+
+## [0.31.1] - 2026-04-16
+
+### Fixed
+- Updated `TS-LLMCLI-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}`, keeping CLI smoke runs compatible with read-only source-root mounts.
+
+## [0.31.0] - 2026-04-15
+
+### Changed
+- Reworked `TS-LLMCLI-001` to public-surface goal-style guidance by removing hidden `which` interception,
+  introducing deterministic sandbox-safe runtime/stub setup, and clarifying provider-discovery harness rules.
+
+### Technical
+- Added E2E verification lifecycle metadata guidance (`Last verified`, `Verified by`, refresh trigger) in
+  scenario decision/verifier docs.
+- Updated package README testing guidance for deterministic provider-discovery harness behavior.
+
 ## [0.30.0] - 2026-04-15
 
 ### Fixed

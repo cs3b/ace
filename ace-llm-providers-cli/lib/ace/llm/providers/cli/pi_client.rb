@@ -57,7 +57,7 @@ module Ace
             full_prompt = rewrite_skill_commands(full_prompt, working_dir: working_dir)
 
             cmd = build_pi_command(full_prompt, options, system_prompt: system_prompt)
-            stdout, stderr, status = execute_pi_command(cmd, working_dir: working_dir)
+            stdout, stderr, status = execute_pi_command(cmd, working_dir: working_dir, options: options)
 
             parse_pi_response(stdout, stderr, status, full_prompt, options)
           rescue => e
@@ -250,13 +250,15 @@ module Ace
             [parts[0], parts[1]]
           end
 
-          def execute_pi_command(cmd, timeout: nil, working_dir: nil)
+          def execute_pi_command(cmd, timeout: nil, working_dir: nil, options: {})
             timeout_val = timeout || @options[:timeout] || 120
             Molecules::SafeCapture.call(
               cmd,
               timeout: timeout_val,
               stdin_data: "",
               chdir: working_dir,
+              env: options[:subprocess_env],
+              command_prefix: options[:subprocess_command_prefix],
               provider_name: "Pi"
             )
           end

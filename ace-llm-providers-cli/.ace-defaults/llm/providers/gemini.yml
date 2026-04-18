@@ -19,7 +19,9 @@ aliases:
     2.0-flash: gemini-2.0-flash
     1.5-pro: gemini-1.5-pro-latest
     flash: gemini-2.5-flash
+    flash-latest: gemini-2.5-flash
     pro: gemini-2.5-pro
+    pro-latest: gemini-2.5-pro
 capabilities:
   - text_generation
   - code_generation

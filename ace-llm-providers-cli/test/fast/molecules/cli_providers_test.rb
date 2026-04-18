@@ -43,7 +43,8 @@ describe "CLI Providers" do
       captured_cmd = nil
 
       @client.stub :validate_claude_availability!, true do
-        @client.stub :execute_claude_command, lambda { |cmd, prompt, subprocess_env: nil, working_dir: nil|
+        @client.stub :execute_claude_command, lambda { |cmd, prompt, subprocess_env: nil, working_dir: nil,
+          subprocess_command_prefix: nil|
           captured_cmd = cmd
           ['{"result":"ok","usage":{}}', "", status]
         } do
@@ -88,8 +89,8 @@ describe "CLI Providers" do
     it "can list models" do
       models = @client.list_models
       assert_kind_of Array, models
-      assert models.any? { |m| m[:id] == "gpt-5" }
-      assert models.any? { |m| m[:id] == "gpt-5-mini" }
+      assert models.any? { |m| m[:id] == "gpt-5.4" }
+      assert models.any? { |m| m[:id] == "gpt-5.4-mini" }
     end
   end
 

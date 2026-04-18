@@ -14,8 +14,11 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-[ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md)
+[ace-llm Usage Guide](../ace-llm/docs/usage.md) | [ace-llm Handbook](../ace-llm/docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
+
 `ace-llm-providers-cli` extends [ace-llm](../ace-llm) with provider clients that execute through installed CLI tools (Claude, Codex, OpenCode, Gemini, pi, Codex OSS) while preserving the shared command interface. Provider defaults live in versioned YAML, and a health-check command verifies local readiness.
+
+This package intentionally does not ship a package-local `docs/` directory. Public usage and operator guidance live in the shared [ace-llm Usage Guide](../ace-llm/docs/usage.md), while `ace-llm-providers-cli-check --help` remains the authoritative runtime help surface for local readiness checks.
 
 ## How It Works
 
@@ -37,10 +40,8 @@
 - `ace-test ace-llm-providers-cli feat` runs deterministic feature coverage from `test/feat/`.
 - `ace-test ace-llm-providers-cli all` runs fast + feat deterministic coverage.
 - `ace-test-e2e ace-llm-providers-cli` runs retained workflow scenarios from `test/e2e/`.
+- E2E provider-discovery scenarios avoid helper interception: the no-tools path uses a baseline PATH
+  (`/usr/bin:/bin`), and success-path stubs are kept as text scripts in a dedicated sandbox stub directory.
 
 The package no longer uses legacy `test/integration` naming and does not use
 `ace-test ace-llm-providers-cli e2e` as a deterministic test path.
-
----
-
-Part of [ACE](https://github.com/cs3b/ace)
