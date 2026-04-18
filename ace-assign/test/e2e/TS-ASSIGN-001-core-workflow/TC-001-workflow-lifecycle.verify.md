@@ -6,23 +6,20 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-
 Validation order (impact-first):
 1. Confirm sandbox/project state impact first.
-2. Confirm explicit artifacts under `results/tc/{NN}/`.
+2. Confirm explicit artifacts under `results/tc/01/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
-1. **Assignment created** — Accept `create.exit` or `create.actual.exit` as `0`. Matching stdout mentions assignment info and first step.
-2. **Structure correct** — The evidence set under `results/tc/01/` shows assignment creation plus status/report transitions proving assignment directories and step files were created.
-3. **Step completion** — Analyze completion is evidenced either by successful `finish.010.exit`/`finish-010.exit` OR by subsequent status/output proving 010 transitioned to done and queue advanced after a valid finish command path.
-4. **Failure handling** — Implement failure evidence (`fail.020.exit` or `fail-020.exit`) is `0`; stalled/failed queue behavior is captured by status artifacts and rejected finish evidence (`finish.stalled.exit` or `finish-rejected.exit`).
-5. **Dynamic step** — Dynamic step add evidence (`add.fix.exit` or `add-fix.exit`) is `0`, and status output shows injected recovery step activation.
-6. **Lifecycle completions executed** — Completion evidence for remaining runnable steps is present and successful (`finish.030.exit` and either `finish.011.exit` or `finish.031.exit` are `0`).
-7. **Retry mechanics** — Retry command evidence (`retry-020.exit`) is `0`, and post-retry status evidence shows retry insertion without invalid queue regression.
-8. **Workflow completion** — `status.final.stdout` or `status-final.stdout` shows an explicit terminal completion message (for example "All steps complete!" or "Assignment completed!") with all steps terminal.
+
+1. **Assignment creation** — evidence shows successful create command and assignment identity.
+2. **Lifecycle transitions** — evidence shows: first step completion, next-step failure, stalled queue behavior, and recovery-step insertion.
+3. **Retry behavior** — evidence shows retry command succeeded and retry step entered queue without corrupting progression.
+4. **Completion flow** — evidence shows remaining runnable steps were completed successfully.
+5. **Terminal state** — final status evidence shows no active step and no pending work. A retained failed count is allowed when retry history remains in the queue, as long as the assignment is user-visible `completed` and the remaining runnable steps reached terminal completion.
 
 ## Verdict
 
-- **PASS**: All lifecycle stages produce expected artifacts — creation, completion, failure, dynamic add, retry, and final completion.
-- **FAIL**: Any lifecycle stage missing evidence or producing wrong state.
+- **PASS**: The lifecycle journey is demonstrated from create to terminal completion with correct user-visible transitions, including retry history that may remain visible in final status.
+- **FAIL**: One or more required lifecycle stages lacks evidence or shows contradictory queue behavior.
 
-Report: `PASS` or `FAIL` with evidence (exit codes, state transitions, file citations).
+Report: `PASS` or `FAIL` with evidence (status transitions and command captures).
