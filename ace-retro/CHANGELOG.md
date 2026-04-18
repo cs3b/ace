@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.18.2] - 2026-04-16
+
+### Technical
+- Tightened `TS-RETRO-001` doctor corruption instructions to require a deterministic YAML syntax break, keeping the negative-path smoke check aligned with real error-level doctor failures.
+
+## [0.18.1] - 2026-04-16
+
+### Technical
+- Updated `TS-RETRO-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so retro smoke runs remain compatible with read-only source mounts.
+
+## [0.18.0] - 2026-04-15
+
+### Changed
+- Refined `TS-RETRO-001` public-surface smoke guidance by making help/usage parity checks explicit and tightening the doctor healthy-to-failure transition around impact-first evidence.
+
+### Technical
+- Reduced brittle corruption-capture coupling in `TC-004` runner/verifier docs and clarified doctor negative-path expectations in `docs/usage.md`.
+
 ## [0.17.1] - 2026-04-13
 
 ### Changed
