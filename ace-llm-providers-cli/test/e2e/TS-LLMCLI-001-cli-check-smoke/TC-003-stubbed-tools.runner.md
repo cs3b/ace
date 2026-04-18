@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run the CLI with sandbox stub binaries for all providers and capture deterministic success-path behavior.
+Run the CLI with minimal provider stubs in an isolated PATH and capture deterministic success-path behavior.
 
 ## Workspace
 
@@ -10,15 +10,16 @@ Save artifacts to `results/tc/03/`.
 
 Capture:
 - `results/tc/03/stubbed-tools.stdout`, `.stderr`, `.exit` from:
-  - `PATH="$PWD/tools:$PATH" ./ace-llm-providers-cli/exe/ace-llm-providers-cli-check`
+  - `RUBY_BIN="$(command -v ruby)" && env PATH="$PWD/tc03-stubs:/usr/bin:/bin" "$RUBY_BIN" ./ace-llm-providers-cli/exe/ace-llm-providers-cli-check`
 
 Preparation:
-- Create executable stubs in `tools/` before invocation:
-  - `tools/claude` should print a Claude-like version string for `--version`
-  - `tools/codex` should exit `0` for `--version` and `--help`
-  - `tools/opencode` should print a version for `--version`
-  - `tools/codex-oss` should print a `codex`-containing version for `--version`
-- Remove or override any no-tools `tools/which` shim so provider stubs are discoverable.
+- Create `tc03-stubs` and keep it isolated to this test case.
+- Create executable provider stubs in `tc03-stubs` before invocation:
+  - `claude`: supports `--version` and prints a Claude-like version line
+  - `codex`: supports `--version` and `--help` with exit `0`
+  - `opencode`: supports `--version` and prints a version line
+  - `codex-oss`: supports `--version` and prints a `codex`-containing version line
+- Keep stubs minimal; avoid emulating broader provider behavior.
 
 ## Constraints
 
