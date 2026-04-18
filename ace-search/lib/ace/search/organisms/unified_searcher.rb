@@ -76,7 +76,13 @@ module Ace
 
           return {success: false, error: result[:error]} unless result[:success]
 
-          parse_mode = options[:files_with_matches] ? :files_only : :text
+          parse_mode = if options[:files_with_matches]
+            :files_only
+          elsif options[:count]
+            :counts
+          else
+            :text
+          end
           matches = @result_parser.parse_ripgrep_output(result[:stdout], parse_mode)
 
           # Limit results
@@ -118,6 +124,7 @@ module Ace
           rg_opts[:after_context] = options[:after_context] if options[:after_context]
           rg_opts[:glob] = options[:glob] if options[:glob]
           rg_opts[:hidden] = options[:hidden] if options[:hidden]
+          rg_opts[:count] = options[:count] if options[:count]
           rg_opts[:files_with_matches] = options[:files_with_matches] if options[:files_with_matches]
           rg_opts[:max_count] = options[:max_results] if options[:max_results]
           rg_opts[:search_path] = options[:search_path] if options[:search_path]

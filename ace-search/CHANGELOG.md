@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-04-16
+
+### Fixed
+- Made `--count` use true count-mode parsing and formatting so count searches emit counts only instead of full match listings.
+
+## [0.26.2] - 2026-04-16
+
+### Technical
+- Updated `TS-SEARCH-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so search workflow E2E runs stay compatible with the shared sandbox contract.
+
+## [0.26.1] - 2026-04-16
+
+### Fixed
+- Added explicit `Using preset:` output for preset-driven searches and updated E2E verification to accept mirrored package-suite artifacts when runner captures are routed under the package root.
+
+## [0.26.0] - 2026-04-15
+
+### Changed
+- Rewrote `TS-SEARCH-001` E2E journeys to public-surface goal style by reframing file/count/JSON paths around user-visible outcomes and removing implementation-coupled probes.
+- Added `TC-005` preset-driven and `TC-006` git-scoped workflow coverage, and expanded runner/verifier contracts to six retained goals.
+
+### Technical
+- Hardened scenario setup with a guarded `mise.toml` trust step and updated verifier markdown contracts for lint-clean execution.
+
 ## [0.25.2] - 2026-04-13
 
 ### Technical

@@ -63,6 +63,18 @@ module Ace
           assert_equal "No results found", output
         end
 
+        def test_format_text_with_count_results
+          results = [
+            {type: :count, path: "lib/test.rb", count: 3},
+            {type: :count, path: "test/helper.rb", count: 1}
+          ]
+
+          output = ResultFormatter.format(results, format: :text)
+
+          assert_match(/lib\/test\.rb: 3/, output)
+          assert_match(/test\/helper\.rb: 1/, output)
+        end
+
         def test_format_summary
           results = [{type: :file, path: "test.rb"}]
           options = {mode: :file, pattern: "*.rb", glob: "lib/**"}
@@ -73,6 +85,12 @@ module Ace
           assert_match(/mode: file/, summary)
           assert_match(/pattern: "\*\.rb"/, summary)
           assert_match(/glob: lib\/\*\*/, summary)
+        end
+
+        def test_format_summary_is_blank_for_count_mode
+          summary = ResultFormatter.format_summary([{type: :count, path: "test.rb", count: 2}], count: true)
+
+          assert_equal "", summary
         end
       end
     end

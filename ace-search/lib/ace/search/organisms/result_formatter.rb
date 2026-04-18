@@ -35,6 +35,8 @@ module Ace
             case result[:type]
             when :file
               lines << format_file_result(result)
+            when :count
+              lines << format_count_result(result)
             when :match
               lines << format_match_result(result, options)
             end
@@ -59,6 +61,10 @@ module Ace
           "  #{path}:#{line}:#{column}: #{text}"
         end
 
+        def self.format_count_result(result)
+          "  #{result[:path]}: #{result[:count]}"
+        end
+
         # Format results as JSON
         def self.format_json(results)
           JSON.pretty_generate({
@@ -77,6 +83,8 @@ module Ace
 
         # Format summary header
         def self.format_summary(results, options = {})
+          return "" if options[:count]
+
           count = results.size
           mode = options[:mode] || "search"
           pattern = options[:pattern] || ""
