@@ -37,11 +37,16 @@
 ## Quick Start
 
 ```bash
-ace-nav resolve wfi://setup           # Locate a workflow instruction
-ace-nav resolve guide://configuration # Find a guide by protocol URI
-ace-nav list 'wfi://*test*'           # Wildcard search across sources
-ace-nav --sources                     # List all registered handbook sources
+ace-nav resolve guide://markdown-style             # Resolve a guide path
+ace-nav list 'wfi://*test*'                        # Browse candidate workflows
+ace-nav sources                                    # List all registered sources
+ace-nav create wfi://setup ./tmp/setup-copy.wf.md # Create from URI into a file
 ```
+
+Expected user-facing success criteria for this journey:
+- `resolve` returns a usable path for the requested resource.
+- `list` and `sources` return actionable entries for follow-up commands.
+- `create` writes the requested file at the provided target path.
 
 ## Testing
 
