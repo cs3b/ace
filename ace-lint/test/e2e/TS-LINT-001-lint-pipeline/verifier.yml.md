@@ -10,9 +10,10 @@ bundle:
     - ./TC-002-valid-lint.verify.md
     - ./TC-003-fix-mode.verify.md
     - ./TC-004-error-detection.verify.md
-    - ./TC-005-batch-mixed.verify.md
+    - ./TC-005-batch-integrated-outcomes.verify.md
     - ./TC-006-config-routing.verify.md
     - ./TC-007-doctor-diagnostics.verify.md
+    - ./TC-008-no-report-public-contract.verify.md
 ---
 
 # E2E Verification: ace-lint
@@ -38,4 +39,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/7 passed**
+Final line: **Results: X/8 passed**

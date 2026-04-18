@@ -10,15 +10,16 @@ bundle:
     - ./TC-002-valid-lint.runner.md
     - ./TC-003-fix-mode.runner.md
     - ./TC-004-error-detection.runner.md
-    - ./TC-005-batch-mixed.runner.md
+    - ./TC-005-batch-integrated-outcomes.runner.md
     - ./TC-006-config-routing.runner.md
     - ./TC-007-doctor-diagnostics.runner.md
+    - ./TC-008-no-report-public-contract.runner.md
 ---
 
 # E2E Test Runner: ace-lint
 
 Tool under test: ace-lint
-Required tools: ace-lint, standardrb, rubocop, jq
+Required tools: ace-lint, jq
 Workspace root: (current directory)
 
 Execute each goal sequentially. Goal 1 is discovery — all later goals
@@ -27,7 +28,8 @@ build on what you learn there. Do not re-run --help after Goal 1.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 7)
+- Scenario setup already installs deterministic validator shims into `$ACE_E2E_SANDBOX_RUNTIME_ROOT/bin`; keep that runtime PATH active when running goals
+- Execute each goal in order (1 through 8)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

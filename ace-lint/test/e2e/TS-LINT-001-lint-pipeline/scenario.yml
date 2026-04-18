@@ -8,17 +8,18 @@ cost-tier: smoke
 tool-under-test: ace-lint
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Valid file lint report artifacts (report.json, ok.md)"
-  results/tc/03/:  "Fix mode artifacts (modified file diff, fixed.md)"
+  results/tc/01/:  "Help + docs public-surface map"
+  results/tc/02/:  "Valid lint end-state artifacts and report evidence"
+  results/tc/03/:  "Fix mode end-state artifacts (modified file, fixed evidence)"
   results/tc/04/:  "Syntax error artifacts (pending.md, exit code)"
-  results/tc/05/:  "Batch mixed results (categorization, all three .md files)"
-  results/tc/06/:  "Configuration routing evidence (group config, CLI override)"
-  results/tc/07/:  "Doctor diagnostics output (healthy env, YAML error detection)"
+  results/tc/05/:  "Batch integrated outcomes (passed/fixed/failed)"
+  results/tc/06/:  "Configuration routing evidence from documented public path"
+  results/tc/07/:  "Doctor diagnostics output (healthy vs malformed YAML)"
+  results/tc/08/:  "--no-report public contract evidence"
 
 e2e-justification: >
   All goals require the real ace-lint binary executing through a shell with
-  real standardrb/rubocop validators. Lint pipeline generates filesystem
+  deterministic scenario-local validator shims. Lint pipeline generates filesystem
   artifacts (report.json, markdown files). Fix mode modifies real files.
   Doctor mode inspects real tool availability and config files. None of
   this is testable with mocks.
@@ -39,10 +40,13 @@ unit-coverage-reviewed:
   - test/fast/commands/lint_command_test.rb
 
 requires:
-  tools: [ace-lint, standardrb, rubocop, jq]
+  tools: [ace-lint, jq]
   ruby: ">= 3.0"
 
 setup:
   - git-init
-  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; fi"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
   - copy-fixtures
+  - run: |
+      install -m 0755 bin/standardrb "$ACE_E2E_SANDBOX_RUNTIME_ROOT/bin/standardrb"
+      install -m 0755 bin/rubocop "$ACE_E2E_SANDBOX_RUNTIME_ROOT/bin/rubocop"

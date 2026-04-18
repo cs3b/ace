@@ -2,9 +2,9 @@
 
 ## Goal
 
-Test that ace-lint discovers configuration from `.ace/lint/ruby.yml` and routes files to different validators based on group patterns. Also verify that `--validators` CLI flag overrides the config.
+Test that ace-lint discovers configuration from `.ace/lint/ruby.yml` and routes files to different validators based on group patterns. Also verify that `--validators` CLI flag overrides config, following the public example in `ace-lint/docs/usage.md`.
 
-Set up the following config at `.ace/lint/ruby.yml`:
+Set up the documented grouped-validator config at `.ace/lint/ruby.yml`:
 ```yaml
 groups:
   legacy:
@@ -24,7 +24,7 @@ groups:
       - standardrb
 ```
 
-Then lint both `legacy/app.rb` and `modern/app.rb` and verify both succeed. Then re-lint with `--validators rubocop` to prove CLI overrides config.
+Then lint both `legacy/app.rb` and `modern/app.rb` and verify both succeed. Re-lint with `--validators rubocop` to prove CLI override precedence.
 
 ## Workspace
 
@@ -34,5 +34,7 @@ Save all output to `results/tc/06/`. Capture:
 
 ## Constraints
 
-- Use the existing `fixtures/legacy/app.rb` and `fixtures/modern/app.rb` paths and create only the `.ace/lint/ruby.yml` config required for routing.
+- Scenario setup copies the fixture tree into the sandbox root, so use `legacy/app.rb` and `modern/app.rb` directly. Do not prefix them with `fixtures/`.
+- Scenario setup already installs deterministic validator shims into the sandbox runtime PATH; use the provided environment as-is.
+- Create only the `.ace/lint/ruby.yml` config from public docs.
 - All artifacts must come from real tool execution, not fabricated.
