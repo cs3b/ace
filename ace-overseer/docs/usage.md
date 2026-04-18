@@ -72,3 +72,27 @@ Start task work: `ace-overseer work-on --task 8q4.t.umu.1`.
 Check dashboard: `ace-overseer status`.
 
 Preview then prune: `ace-overseer prune --dry-run`, then `ace-overseer prune --yes`.
+
+## Public Verification Paths
+
+Use these user-visible checks when validating behavior end-to-end:
+
+- Preset override path:
+
+  1. `ace-overseer work-on --task <task-ref> --preset <preset-name>`
+  2. `ace-git-worktree list` (confirm worktree exists for `<task-ref>`)
+  3. `ace-overseer status --format json` (confirm the task appears with assignment/preset details)
+
+- Idempotent rerun oracle:
+
+  1. Run `ace-overseer work-on --task <task-ref>` twice
+  2. Verify one task entry remains in `ace-overseer status --format json`
+  3. Verify only one matching worktree exists in `ace-git-worktree list`
+
+- Prune lifecycle minimal flow:
+
+  1. `ace-task done <task-ref>`
+  2. `ace-overseer prune --dry-run`
+  3. `ace-overseer prune --yes`
+  4. `ace-git-worktree list` to confirm removed vs retained task worktrees
+  5. `ace-overseer prune --dry-run` to confirm no remaining safe candidates
