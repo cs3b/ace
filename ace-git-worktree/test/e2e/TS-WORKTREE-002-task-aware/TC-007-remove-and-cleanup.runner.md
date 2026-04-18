@@ -15,7 +15,10 @@ Save all output to `results/tc/07/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-worktree remove with task-aware flags.
+- Use explicit public commands:
+  1. `ace-git-worktree remove --task 8pp.t.r8x`
+  2. `ace-git-worktree remove --task 8pp.t.q7w --delete-branch`
+  3. `ace-git-worktree list`
 - For task 8pp.t.r8x: remove by task ID without deleting the branch.
 - For task 8pp.t.q7w: remove by task ID with --delete-branch to also delete the associated branch.
 - After removal, verify clean state via list, git branch, and filesystem checks.

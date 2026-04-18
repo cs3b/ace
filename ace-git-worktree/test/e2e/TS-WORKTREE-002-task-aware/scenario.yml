@@ -15,6 +15,7 @@ sandbox-layout:
   results/tc/05/:  "Multi-task worktree evidence"
   results/tc/06/:  "JSON output with task metadata"
   results/tc/07/:  "Remove and cleanup evidence"
+  results/tc/08/:  "PR lifecycle evidence"
 
 e2e-justification: >
   Task-aware worktree operations require real git worktrees, real taskflow

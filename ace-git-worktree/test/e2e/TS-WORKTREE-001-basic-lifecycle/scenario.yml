@@ -14,6 +14,7 @@ sandbox-layout:
   results/tc/04/:  "Dry-run operations evidence"
   results/tc/05/:  "Remove worktree evidence"
   results/tc/06/:  "Prune orphaned worktree evidence"
+  results/tc/07/:  "Config surface validation evidence"
 
 e2e-justification: >
   All goals require real git worktree operations through a shell. Creating,

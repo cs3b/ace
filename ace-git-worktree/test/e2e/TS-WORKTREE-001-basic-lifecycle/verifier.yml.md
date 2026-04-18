@@ -12,6 +12,7 @@ bundle:
     - ./TC-004-dry-run-ops.verify.md
     - ./TC-005-remove-worktree.verify.md
     - ./TC-006-prune-orphaned.verify.md
+    - ./TC-007-config-surface-validation.verify.md
 ---
 
 # E2E Verification: ace-git-worktree (Basic Lifecycle)
@@ -38,4 +39,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/6 passed**
+Final line: **Results: X/7 passed**

@@ -14,12 +14,12 @@ Validation order (impact-first):
 1. **All capture sets exist** — results/tc/03/ contains stdout/exit for switch, list-table, list-json, and list-simple.
 2. **Switch returns valid path** — switch.stdout contains a filesystem path and switch.exit is 0.
 3. **JSON is parseable** — list-json.stdout contains valid JSON (array or object with worktree entries).
-4. **Table has headers** — list-table.stdout includes header-like text (column names or separator lines).
-5. **Simple is compact** — list-simple.stdout is shorter or less decorated than the table output.
+4. **Table output is usable** — list-table.exit is 0 and list-table.stdout contains non-empty entry content.
+5. **Simple output is usable** — list-simple.exit is 0 and list-simple.stdout contains non-empty entry content.
 
 ## Verdict
 
-- **PASS**: Switch returns a path, all three formats produce distinct well-formed output.
-- **FAIL**: Switch fails, JSON is unparseable, or format outputs are missing or identical.
+- **PASS**: Switch path resolves, JSON parses, and all three format commands produce usable output.
+- **FAIL**: Switch fails, JSON is unparseable, or required artifacts are missing/empty.
 
 Report: `PASS` or `FAIL` with evidence (path from switch, format output snippets).

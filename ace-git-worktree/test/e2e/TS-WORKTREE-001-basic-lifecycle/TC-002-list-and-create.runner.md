@@ -14,7 +14,11 @@ Save all output to `results/tc/02/`. Capture:
 
 ## Constraints
 
-- Using what you learned from Goal 1, invoke ace-git-worktree list and create commands.
+- Use explicit public commands:
+  1. `ace-git-worktree list`
+  2. `ace-git-worktree create feature/test-worktree`
+  3. `ace-git-worktree create --from main bugfix/test-fix`
+  4. `ace-git-worktree list`
 - The sandbox has branches `feature/test-worktree` and `bugfix/test-fix` available.
 - All artifacts must come from real tool execution, not fabricated.
 - Perform the captures in this exact order:
