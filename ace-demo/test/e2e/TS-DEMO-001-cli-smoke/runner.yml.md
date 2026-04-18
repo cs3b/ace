@@ -10,6 +10,7 @@ bundle:
     - ./TC-002-create-and-show-tape-lifecycle.runner.md
     - ./TC-003-record-inline-dry-run-preview.runner.md
     - ./TC-004-attach-pr-validation-error.runner.md
+    - ./TC-005-record-preset-success-artifact.runner.md
 ---
 
 # E2E Test Runner: ace-demo CLI Smoke
@@ -23,7 +24,7 @@ Execute each goal in order.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 4)
+- Execute each goal in order (1 through 5)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to `results/tc/{NN}/` directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
