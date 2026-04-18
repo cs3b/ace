@@ -8,7 +8,6 @@ bundle:
   files:
     - ./TC-001-run-package-tests.verify.md
     - ./TC-002-run-specific-file.verify.md
-    - ./TC-003-run-test-group.verify.md
 ---
 
 # E2E Verification: ace-test Core Execution
@@ -36,4 +35,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/3 passed**
+Final line: **Results: X/2 passed**

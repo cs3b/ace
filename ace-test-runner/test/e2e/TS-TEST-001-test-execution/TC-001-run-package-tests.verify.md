@@ -8,8 +8,10 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. Artifacts exist in `results/tc/01/`.
-2. Exit code is `0`.
-3. Captured output includes executed test summary details.
+2. `results/tc/01/command.txt` records `ace-test "$PROJECT_ROOT_PATH/ace-search" atoms`.
+3. `results/tc/01/report-files.txt` confirms report output under `results/tc/01/reports`.
+4. Exit code is `0`.
+5. Captured output includes executed test summary details.
 
 ## Verdict
 

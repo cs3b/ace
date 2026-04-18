@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-run-full-suite.verify.md
     - ./TC-002-verify-failure-propagation.verify.md
+    - ./TC-003-suite-target-pass-through.verify.md
 ---
 
 # E2E Verification: ace-test-suite Behavior
@@ -35,4 +36,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/3 passed**
