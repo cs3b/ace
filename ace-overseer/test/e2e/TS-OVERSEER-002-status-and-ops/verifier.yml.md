@@ -1,18 +1,16 @@
 ---
-description: "E2E verifier input for ace-overseer goal-based tests"
+description: "E2E verifier input for ace-overseer status and ops tests"
 bundle:
   embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
-    - ./TC-002-work-on.verify.md
-    - ./TC-003-idempotent-rerun.verify.md
-    - ./TC-004-preset-override.verify.md
-    - ./TC-005-prune-workflow.verify.md
+    - ./TC-006-status-watch-refresh.verify.md
+    - ./TC-007-work-on-multi-task-bundle.verify.md
 ---
 
-# E2E Verification: ace-overseer
+# E2E Verification: ace-overseer status and operations
 
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
@@ -38,4 +36,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/2 passed**

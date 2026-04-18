@@ -1,0 +1,20 @@
+name: work-on-task
+description: Scenario-local multi-task preset for overseer E2E
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+
+expansion:
+  batch-parent:
+    name: batch-tasks
+    number: "010"
+    instructions: "Batch container for {{taskrefs}}."
+
+  foreach: taskrefs
+  child-template:
+    name: "work-on-{{item}}"
+    parent: "010"
+    context: fork
+    instructions: "Work on task {{item}}."

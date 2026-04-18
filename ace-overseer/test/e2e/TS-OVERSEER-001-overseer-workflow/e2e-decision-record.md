@@ -2,7 +2,7 @@
 
 | TC ID | Decision | E2E-only reason | Unit tests reviewed |
 | --- | --- | --- | --- |
-| TC-001 help survey | KEEP | Validates real packaged CLI help output and command discoverability from binary execution. | `test/fast/commands/cli_test.rb` |
+| TC-001 help survey | MERGED | Standalone survey merged into Goal 2 preflight so command-surface discovery remains covered without a separate brittle scenario. | `test/fast/commands/cli_test.rb` |
 | TC-002 work-on | KEEP | Requires real worktree + tmux + assignment orchestration side effects that are not fully representable in isolated unit assertions. | `test/fast/organisms/work_on_orchestrator_test.rb`, `test/fast/molecules/assignment_launcher_test.rb` |
 | TC-003 idempotent rerun | KEEP | Confirms end-to-end rerun behavior against real repo/tmux/assignment state transitions, not just method-level stubs. | `test/fast/organisms/work_on_orchestrator_test.rb`, `test/fast/molecules/worktree_provisioner_test.rb` |
 | TC-004 preset override | KEEP | Ensures CLI/user-facing preset resolution works through the full invocation path and persisted environment context. | `test/fast/atoms/preset_resolver_test.rb`, `test/fast/commands/work_on_command_test.rb` |

@@ -1,0 +1,3 @@
+# ace-tmux config for TS-OVERSEER-002 e2e tests
+defaults:
+  window: task

@@ -1,19 +1,25 @@
-# Goal 2 — Work-On Happy Path
+# Goal 2 -- Work-On Happy Path
 
 ## Goal
 
-Use `ace-overseer work-on` with task 8pp.t.q7w to create a worktree, open a tmux window, and initialize an assignment using the default preset. Verify all three resources are created.
+Run a lightweight CLI surface preflight, then use `ace-overseer work-on --task 8pp.t.q7w` to create a worktree, open a tmux window, and initialize an assignment with the default preset.
 
 ## Workspace
 
 Save all output to `results/tc/02/`. Capture:
-- The command's stdout, stderr, and exit code
-- Worktree verification (ace-git-worktree list showing task 8pp.t.q7w)
-- Tmux verification (tmux list showing window for task)
+
+- `results/tc/02/help-preflight.stdout` from `ace-overseer --help`
+- `results/tc/02/help-preflight.stderr` from `ace-overseer --help`
+- `results/tc/02/help-preflight.exit` from `ace-overseer --help`
+- The work-on command's stdout, stderr, and exit code
+- Worktree verification (`ace-git-worktree list` showing task 8pp.t.q7w)
+- Tmux verification (`tmux list-windows -t "$ACE_TMUX_SESSION"`)
 - Assignment verification in both status modes:
+
   - `ace-overseer status --format table`
   - `ace-overseer status --format json`
-- `results/tc/02/overseer-status.json` — machine-readable overseer status output
+
+- `results/tc/02/overseer-status.json` -- machine-readable overseer status output
 - `results/tc/02/overseer-status-table.stdout`
 - `results/tc/02/overseer-status-table.exit` and `results/tc/02/overseer-status-table.stderr`
 - `results/tc/02/overseer-status.exit` and `results/tc/02/overseer-status.stderr`
@@ -21,7 +27,7 @@ Save all output to `results/tc/02/`. Capture:
 ## Constraints
 
 - The sandbox has task 8pp.t.q7w in .ace-tasks/ and default preset in .ace/assign/presets/.
-- Using what you learned from Goal 1, invoke ace-overseer work-on.
-- When verifying tmux windows, target `ACE_TMUX_SESSION` explicitly (for example `tmux list-windows -t "$ACE_TMUX_SESSION"`).
+- Preflight should remain minimal: only capture the top-level `ace-overseer --help` output needed for command-surface confirmation.
+- When verifying tmux windows, target `ACE_TMUX_SESSION` explicitly.
 - Verify assignment activation via `ace-overseer status --format json` (cross-worktree oracle), not root-scoped `ace-assign status`.
 - All artifacts must come from real tool execution, not fabricated.

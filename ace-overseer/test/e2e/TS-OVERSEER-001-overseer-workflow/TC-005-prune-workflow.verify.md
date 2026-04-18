@@ -1,4 +1,4 @@
-# Goal 5 — Prune Workflow Verification
+# Goal 5 -- Prune Workflow Verification
 
 ## Injected Context
 
@@ -7,27 +7,21 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 ## Expectations
 
 Validation order (impact-first):
+
 - Confirm sandbox/project state impact first.
 - Use runner observations to identify the q7w worktree path when needed.
 - Confirm explicit artifacts under `results/tc/{NN}/`.
 - Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 Checks:
-1. **All required capture sets exist** — results/tc/05/ contains assignment completion evidence, dry-run, prune, and post-prune captures. `task-q7w-assign-status-before.*` is optional supporting evidence only.
-2. **Correct prune flow used** — the captured prune output shows only normal prune flow (`ace-overseer prune --dry-run`, `ace-overseer prune --yes`) with no assignment-prune flags, no `--force`, and no positional targets.
-3. **Assignment completion or safety rejection proven** — either:
-   - `ace-assign finish --message` succeeds and status-after shows assignment state `completed`; or
-   - assignment completion is blocked with explicit safety message (for example no active assignment) and prune output documents safety rejection.
-4. **Prune final state (primary oracle)** — one of:
-   - if assignment completion succeeded, after prune --yes, `worktree-list-after-prune` excludes task q7w and still includes task r8x; or
-   - if assignment completion was explicitly blocked, prune behavior follows task status:
-     - when task q7w is still active/in-progress, q7w is preserved with safety rejection evidence; or
-     - when task q7w is marked done, q7w may be pruned while r8x remains.
-5. **Clean state** — follow-up dry-run shows no safe candidates remaining.
+1. **Required captures exist** -- results/tc/05/ contains `task-done.*`, `dry-run.*`, `prune.*`, `worktree-list-after-prune.*`, and `dry-run-final.*`.
+2. **Correct prune flow used** -- the captured artifacts match the normal public prune flow only: `dry-run.*`, `prune.*`, and `dry-run-final.*` are present, and there is no evidence of forbidden flags/targets or assignment/force prune modes.
+3. **Safety oracle** -- if q7w still has an incomplete assignment, prune reports 0 safe candidates / 0 pruned worktrees and `worktree-list-after-prune` still includes q7w; task r8x also remains present.
+4. **Clean follow-up state** -- final dry-run shows no remaining safe prune candidates.
 
 ## Verdict
 
-- **PASS**: Prune ran in correct mode/context and final system state matches the applicable oracle (removal after completion, or preservation with explicit safety rejection).
-- **FAIL**: Wrong prune mode (including forbidden flags/targets), missing safety/completion evidence, final worktree state contradicts applicable oracle, or captures missing.
+- **PASS**: Normal prune flow executed and final system state matches the expected safety oracle, including retaining unsafe worktrees.
+- **FAIL**: Wrong prune mode, missing required captures, or final worktree state contradicts expected behavior.
 
 Report: `PASS` or `FAIL` with evidence.

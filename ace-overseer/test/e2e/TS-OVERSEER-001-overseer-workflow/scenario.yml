@@ -9,11 +9,10 @@ cost-tier: happy-path
 tool-under-test: ace-overseer
 
 sandbox-layout:
-  results/tc/01/:  "Help survey observations"
-  results/tc/02/:  "Work-on happy path evidence (worktree, tmux, assignment)"
-  results/tc/03/:  "Idempotent re-run evidence"
-  results/tc/04/:  "Preset override evidence"
-  results/tc/05/:  "Prune workflow evidence (dry-run, safe removal, preserve unsafe)"
+  results/tc/02/:  "Work-on happy path evidence (includes help preflight)"
+  results/tc/03/:  "Idempotent re-run evidence (public-state oracle)"
+  results/tc/04/:  "Preset override evidence (public output + status)"
+  results/tc/05/:  "Prune workflow evidence (minimal normal flow)"
 
 e2e-justification: >
   All goals require the real ace-overseer binary orchestrating real git
@@ -37,8 +36,7 @@ requires:
 
 setup:
   - git-init
-  - tmux-session:
-      name-source: run-id
+  - tmux-session
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
