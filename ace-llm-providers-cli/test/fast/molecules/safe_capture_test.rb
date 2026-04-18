@@ -96,6 +96,19 @@ module Ace
               assert status.success?
             end
 
+            def test_command_prefix_wraps_subprocess
+              stdout, _stderr, status = SafeCapture.call(
+                ["ruby", "-e", "print ENV['ACE_SAFE_CAPTURE_TEST']"],
+                timeout: 5,
+                command_prefix: ["env", "ACE_SAFE_CAPTURE_TEST=wrapped"],
+                env: {"ACE_SAFE_CAPTURE_TEST" => "inner"},
+                stdin_data: nil
+              )
+
+              assert_equal "wrapped", stdout
+              assert status.success?
+            end
+
             def test_default_provider_name
               error = assert_raises(Ace::LLM::ProviderError) do
                 SafeCapture.call(["sleep", "2"], timeout: FAST_TIMEOUT)

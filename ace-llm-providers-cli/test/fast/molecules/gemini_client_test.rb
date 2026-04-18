@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+require "yaml"
 
 describe "GeminiClient" do
   before do
@@ -30,6 +31,13 @@ describe "GeminiClient" do
     assert models.any? { |m| m[:id] == "gemini-2.5-pro" }
     assert models.any? { |m| m[:id] == "gemini-2.0-flash" }
     assert models.any? { |m| m[:id] == "gemini-1.5-pro-latest" }
+  end
+
+  it "ships latest gemini aliases in provider defaults" do
+    config = YAML.safe_load_file(File.expand_path("../../../.ace-defaults/llm/providers/gemini.yml", __dir__))
+
+    assert_equal "gemini-2.5-flash", config.dig("aliases", "model", "flash-latest")
+    assert_equal "gemini-2.5-pro", config.dig("aliases", "model", "pro-latest")
   end
 
   it "formats string prompts correctly" do
@@ -280,6 +288,24 @@ describe "GeminiClient" do
       end
 
       assert_equal({"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"}, captured_kwargs[:env])
+    end
+
+    it "passes subprocess_command_prefix to SafeCapture" do
+      captured_kwargs = nil
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+
+      @client.stub(:gemini_available?, true) do
+        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+          captured_kwargs = kwargs
+          ['{"response":"ok"}', "", mock_status]
+        }) do
+          @client.generate("Hi", subprocess_command_prefix: ["bwrap", "--"])
+        end
+      end
+
+      assert_equal ["bwrap", "--"], captured_kwargs[:command_prefix]
     end
 
     it "builds command with pre-existing files when system_file and prompt_file provided" do

@@ -269,6 +269,7 @@ module Ace
               timeout: timeout_val,
               chdir: working_dir,
               env: options[:subprocess_env],
+              command_prefix: options[:subprocess_command_prefix],
               provider_name: "Gemini"
             )
           end

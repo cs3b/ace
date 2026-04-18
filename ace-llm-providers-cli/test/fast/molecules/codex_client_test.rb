@@ -4,6 +4,7 @@ require_relative "../../test_helper"
 require "digest"
 require "fileutils"
 require "tmpdir"
+require "yaml"
 
 describe "CodexClient" do
   before do
@@ -12,13 +13,13 @@ describe "CodexClient" do
 
   it "initializes with default model" do
     model = @client.instance_variable_get(:@model)
-    assert_equal "gpt-5", model
+    assert_equal "gpt-5.4", model
   end
 
   it "can be initialized with custom model" do
-    client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5-mini")
+    client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5.4-mini")
     model = client.instance_variable_get(:@model)
-    assert_equal "gpt-5-mini", model
+    assert_equal "gpt-5.4-mini", model
   end
 
   it "needs_credentials? returns false" do
@@ -32,8 +33,18 @@ describe "CodexClient" do
   it "can list models" do
     models = @client.list_models
     assert_kind_of Array, models
-    assert models.any? { |m| m[:id] == "gpt-5" }
-    assert models.any? { |m| m[:id] == "gpt-5-mini" }
+    assert models.any? { |m| m[:id] == "gpt-5.3-codex" }
+    assert models.any? { |m| m[:id] == "gpt-5.3-codex-spark" }
+    assert models.any? { |m| m[:id] == "gpt-5.4" }
+    assert models.any? { |m| m[:id] == "gpt-5.4-mini" }
+  end
+
+  it "ships current codex aliases in provider defaults" do
+    config = YAML.safe_load_file(File.expand_path("../../../.ace-defaults/llm/providers/codex.yml", __dir__))
+
+    assert_equal "gpt-5.4", config.dig("aliases", "model", "gpt")
+    assert_equal "gpt-5.3-codex", config.dig("aliases", "model", "codex")
+    assert_equal "gpt-5.4-mini", config.dig("aliases", "model", "mini")
   end
 
   it "formats string prompts correctly" do
@@ -77,11 +88,11 @@ describe "CodexClient" do
     end
 
     it "includes model flag when non-default model specified" do
-      client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5-mini")
+      client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5.4-mini")
       cmd = client.send(:build_codex_command, "Test prompt", {})
 
       assert_includes cmd, "--model"
-      assert_includes cmd, "gpt-5-mini"
+      assert_includes cmd, "gpt-5.4-mini"
     end
 
     it "includes --add-dir when in a git worktree" do
@@ -257,7 +268,7 @@ describe "CodexClient" do
               result = @client.generate("Hi")
               assert_equal "Hello from Codex!", result[:text]
               assert_equal "codex", result[:metadata][:provider]
-              assert_equal "gpt-5", result[:metadata][:model]
+              assert_equal "gpt-5.4", result[:metadata][:model]
             end
           end
         end

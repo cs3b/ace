@@ -205,6 +205,8 @@ module Ace
               timeout: timeout_val,
               stdin_data: "",
               chdir: working_dir,
+              env: options[:subprocess_env],
+              command_prefix: options[:subprocess_command_prefix],
               provider_name: "OpenCode"
             )
           end

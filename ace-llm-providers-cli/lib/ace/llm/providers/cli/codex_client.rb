@@ -31,7 +31,7 @@ module Ace
           end
 
           # Default model (can be overridden by config)
-          DEFAULT_MODEL = "gpt-5"
+          DEFAULT_MODEL = "gpt-5.4"
 
           def initialize(model: nil, **options)
             @model = model || DEFAULT_MODEL
@@ -75,8 +75,10 @@ module Ace
             # Return models based on what the CLI supports
             # Actual models come from YAML config
             [
-              {id: "gpt-5", name: "GPT-5", description: "Advanced Codex model", context_size: 128_000},
-              {id: "gpt-5-mini", name: "GPT-5 Mini", description: "Smaller, faster model", context_size: 128_000}
+              {id: "gpt-5.3-codex", name: "GPT-5.3 Codex", description: "Code-specialized Codex model", context_size: 128_000},
+              {id: "gpt-5.3-codex-spark", name: "GPT-5.3 Codex Spark", description: "Faster Codex model", context_size: 128_000},
+              {id: "gpt-5.4", name: "GPT-5.4", description: "Advanced Codex model", context_size: 128_000},
+              {id: "gpt-5.4-mini", name: "GPT-5.4 Mini", description: "Smaller, faster Codex model", context_size: 128_000}
             ]
           end
 
@@ -273,6 +275,7 @@ module Ace
               stdin_data: input,
               chdir: working_dir,
               env: options[:subprocess_env],
+              command_prefix: options[:subprocess_command_prefix],
               provider_name: "Codex"
             )
           end

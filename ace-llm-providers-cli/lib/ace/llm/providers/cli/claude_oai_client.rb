@@ -61,7 +61,8 @@ module Ace
               cmd,
               prompt,
               subprocess_env: subprocess_env,
-              working_dir: working_dir
+              working_dir: working_dir,
+              subprocess_command_prefix: options[:subprocess_command_prefix]
             )
 
             parse_claude_response(stdout, stderr, status, prompt, options)
@@ -154,7 +155,7 @@ module Ace
             cmd
           end
 
-          def execute_claude_command(cmd, prompt, subprocess_env: nil, working_dir: nil)
+          def execute_claude_command(cmd, prompt, subprocess_env: nil, working_dir: nil, subprocess_command_prefix: nil)
             timeout_val = @options[:timeout] || 120
 
             # Build env with backend-specific vars for Anthropic-compatible routing
@@ -169,6 +170,7 @@ module Ace
               stdin_data: prompt.to_s,
               chdir: working_dir,
               env: env,
+              command_prefix: subprocess_command_prefix,
               provider_name: "Claude OAI"
             )
           end

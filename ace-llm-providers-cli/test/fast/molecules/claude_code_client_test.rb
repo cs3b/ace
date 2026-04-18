@@ -237,21 +237,29 @@ describe "ClaudeCodeClient" do
   describe "generate passes subprocess_env through" do
     it "forwards subprocess_env from options to execute_claude_command" do
       captured_subprocess_env = :not_called
+      captured_command_prefix = :not_called
       messages = [{role: "user", content: "hello"}]
 
       @client.stub(:validate_claude_availability!, nil) do
-        @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil, working_dir: nil|
+        @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil, working_dir: nil,
+          subprocess_command_prefix: nil|
           captured_subprocess_env = subprocess_env
+          captured_command_prefix = subprocess_command_prefix
           mock_status = Object.new
           mock_status.define_singleton_method(:success?) { true }
           mock_status.define_singleton_method(:exitstatus) { 0 }
           ['{"result":"ok"}', "", mock_status]
         end
 
-        @client.generate(messages, subprocess_env: {"ACE_TMUX_SESSION" => "test-session"})
+        @client.generate(
+          messages,
+          subprocess_env: {"ACE_TMUX_SESSION" => "test-session"},
+          subprocess_command_prefix: ["bwrap", "--"]
+        )
       end
 
       assert_equal({"ACE_TMUX_SESSION" => "test-session"}, captured_subprocess_env)
+      assert_equal ["bwrap", "--"], captured_command_prefix
     end
   end
 
