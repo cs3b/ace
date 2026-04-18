@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.7] - 2026-04-16
+
+### Technical
+- Captured explicit archive-tree, inbox-empty, and shared-token evidence in `TS-B36TS-001` so reorganization and decode roundtrip verification no longer depend on inferred sandbox state.
+
+## [0.14.6] - 2026-04-15
+
+### Technical
+- Expanded `TS-B36TS-001` into a public-surface goal workflow with repaired TC-001 contract checks and new decode/split-json cases (`TC-002`, `TC-003`) verified through real CLI outputs.
+
 ## [0.14.5] - 2026-04-13
 
 ### Technical
