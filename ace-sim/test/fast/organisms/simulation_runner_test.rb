@@ -5,6 +5,23 @@ require "fileutils"
 require "tmpdir"
 
 class SimulationRunnerTest < AceSimTestCase
+  class CountingRunner
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def call(args)
+      @calls << args
+      if args[0] == "ace-bundle"
+        output_path = args[args.index("--output") + 1]
+        File.write(output_path, "bundled input\n")
+      end
+      {success: true, stdout: "", stderr: "", exit_code: 0}
+    end
+  end
+
   class SelectiveRunner
     def initialize(fail_provider: nil, fail_step: nil, fail_final: false)
       @fail_provider = fail_provider
@@ -54,7 +71,7 @@ class SimulationRunnerTest < AceSimTestCase
   end
 
   def build_session(source:, run_id: "runtest", providers: ["codex:mini"], repeat: 1,
-    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true,
+    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: false,
     steps: %w[draft plan], step_bundles: nil)
     default_step_bundles = {
       "draft" => File.expand_path("../../../.ace-defaults/sim/steps/draft.md", __dir__),
@@ -162,6 +179,39 @@ class SimulationRunnerTest < AceSimTestCase
       run_dir = File.join(dir, "simulations", "runtest")
       assert Dir.exist?(File.join(run_dir, "chains", "codex-mini-1"))
       assert Dir.exist?(File.join(run_dir, "chains", "codex-mini-2"))
+    end
+  end
+
+  def test_dry_run_skips_provider_and_final_synthesis_execution
+    Dir.mktmpdir do |dir|
+      source = File.join(dir, "source.md")
+      File.write(source, "initial")
+      store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
+      counting_runner = CountingRunner.new
+      runner = build_runner(store: store, stage_runner: counting_runner, final_runner: counting_runner)
+
+      result = runner.run(
+        build_session(
+          source: source,
+          dry_run: true,
+          synthesis_workflow: "wfi://task/review",
+          synthesis_provider: "glite"
+        )
+      )
+
+      assert result[:success]
+      assert_equal "ok", result[:status]
+      assert_equal [], result[:chains]
+      assert_equal "skipped", result[:final_stage]["status"]
+      assert_equal "dry-run", result[:final_stage]["reason"]
+      assert_equal 1, counting_runner.calls.length
+      assert_equal "ace-bundle", counting_runner.calls.first[0]
+
+      run_dir = File.join(dir, "simulations", "runtest")
+      assert File.exist?(File.join(run_dir, "session.yml"))
+      assert File.exist?(File.join(run_dir, "synthesis.yml"))
+      assert File.exist?(File.join(run_dir, "final", "input.md"))
+      refute Dir.exist?(File.join(run_dir, "chains", "codex-mini-1"))
     end
   end
 
