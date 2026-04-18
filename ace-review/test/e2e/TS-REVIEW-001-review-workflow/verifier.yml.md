@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-single-model.verify.md
     - ./TC-002-multi-model.verify.md
+    - ./TC-003-docs-path-onboarding.verify.md
 ---
 
 # E2E Verification: ace-review Execution Workflows
@@ -36,8 +37,9 @@ For each goal output:
 Required headings for this suite:
 - `### Goal 1 — Single Model Execution`
 - `### Goal 2 — Multi-Model and Reviewers Format`
+- `### Goal 3 — Docs Path Onboarding`
 
-Always include both goal sections, even when verdict is FAIL.
+Always include all goal sections, even when verdict is FAIL.
 Do not output only a summary line.
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/3 passed**

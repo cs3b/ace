@@ -1,2 +1,2 @@
 defaults:
-  model: "role:review-default"
+  model: "codex:mini@ro"

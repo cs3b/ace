@@ -13,15 +13,14 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ### Checks
 1. **Artifacts exist** — `results/tc/01/` contains execution captures and a session listing.
-2. **Execution result is explicit** — either:
-   - `execution.exit` is `0` and produced a normal review output, or
-   - `execution.exit` is non-zero with a clear model-availability error message (for example: missing `review-default` role model).
-3. **Session directory created** — Session listing shows session files created.
-4. **Outcome evidence captured** — `execution.stdout` / `execution.stderr` plus the session listing include enough detail to classify the run as successful execution or explicit environment blocker.
+2. **Execution succeeded** — `execution.exit` is `0`.
+3. **Meaningful review output exists** — `execution.stdout` or generated session files show substantive review output (not only startup/error text).
+4. **Session directory created** — Session listing shows session files created.
+5. **Failure evidence is actionable when not successful** — if execution fails, stderr clearly identifies a prerequisite/provider issue.
 
 ## Verdict
 
-- **PASS**: Execution succeeds with meaningful output, or fails explicitly due to missing model configuration with clear evidence.
-- **FAIL**: Execution outcome is ambiguous, session artifacts are missing, or failure lacks actionable error details.
+- **PASS**: Execution succeeds with meaningful review output and session artifacts.
+- **FAIL**: Execution is non-zero (including provider/model unavailability), output is ambiguous/non-meaningful, session artifacts are missing, or failure details are not actionable.
 
 Report: `PASS` or `FAIL` with evidence.

@@ -10,6 +10,7 @@ tool-under-test: ace-review
 sandbox-layout:
   results/tc/01/: "Single-model execution artifacts"
   results/tc/02/: "Multi-model and reviewer-format execution artifacts"
+  results/tc/03/: "Docs-path onboarding execution artifacts"
 
 e2e-justification: >
   These remaining goals require real ace-review CLI execution with live provider

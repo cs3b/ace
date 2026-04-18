@@ -8,6 +8,8 @@ Date: 2026-04-12
   - Reason: validates full review execution path with real provider call and persisted session artifacts.
 - `TC-002-multi-model`
   - Reason: validates multi-model and reviewers-format orchestration with real execution outputs.
+- `TC-003-docs-path-onboarding`
+  - Reason: proves a user can discover and execute the workflow from public docs/help without hidden setup recipes.
 
 ## Remove
 - `TC-001-help-survey`
@@ -26,3 +28,6 @@ Date: 2026-04-12
   - `test/fast/*`
   - `test/feat/*`
 - Recorded deterministic files under `unit-coverage-reviewed` in `scenario.yml`.
+
+## Verification Contract Notes
+- Provider/model unavailability is now an explicit failure path for these goals, not a PASS-equivalent outcome.

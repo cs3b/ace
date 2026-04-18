@@ -13,15 +13,15 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ### Checks
 1. **Both capture sets exist** — `results/tc/02/` contains artifacts for `multi` and `reviewers` runs.
-2. **Both execution outcomes are explicit** — each run is either:
-   - successful (`*.exit` is `0` with generated outputs), or
-   - an explicit model-availability blocker with actionable stderr (for example: no model for `review-default`).
-3. **Session outputs exist** — Session listing files show session artifacts for both runs.
-4. **Evidence is actionable** — artifacts clearly show either successful review generation or explicit environment limitation.
+2. **Both executions succeeded** — `multi.exit` and `reviewers.exit` are both `0`.
+3. **Both runs produced meaningful review output** — each run either emits substantive review text directly or
+   shows a saved review report path plus session artifacts proving a review report file was created.
+4. **Session outputs exist** — Session listing files show session artifacts for both runs.
+5. **Failure evidence is actionable when not successful** — if either run fails, stderr clearly identifies a prerequisite/provider issue.
 
 ## Verdict
 
-- **PASS**: Multi-model and reviewer-format runs produce either successful output artifacts or explicit model-availability blocker evidence.
-- **FAIL**: Either run has ambiguous/missing evidence or fails without actionable diagnostics.
+- **PASS**: Multi-model and reviewer-format runs both succeed with meaningful output artifacts.
+- **FAIL**: Either run is non-zero (including provider/model unavailability), has ambiguous/non-meaningful output, is missing session artifacts, or lacks actionable failure diagnostics.
 
 Report: `PASS` or `FAIL` with evidence.
