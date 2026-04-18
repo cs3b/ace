@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-run-full-suite.runner.md
     - ./TC-002-verify-failure-propagation.runner.md
+    - ./TC-003-suite-target-pass-through.runner.md
 ---
 
 # E2E Test Runner: ace-test-suite Behavior
@@ -16,13 +17,14 @@ Tool under test: ace-test-suite
 Required tools: ace-test-suite, ace-test
 Workspace root: (current directory)
 
-Goal 1 validates normal suite execution; Goal 2 intentionally introduces a
-failing test file in sandbox and verifies non-zero propagation.
+Goal 1 validates normal suite execution, Goal 2 intentionally introduces a
+failing test file in sandbox and verifies non-zero propagation, and Goal 3
+validates suite `--target` pass-through.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 2)
+- Execute each goal in order (1 through 3)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

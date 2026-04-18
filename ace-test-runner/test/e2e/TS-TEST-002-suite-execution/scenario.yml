@@ -10,6 +10,7 @@ tool-under-test: ace-test-suite
 sandbox-layout:
   results/tc/01/: "Cross-package suite execution artifacts"
   results/tc/02/: "Failure propagation artifacts"
+  results/tc/03/: "Suite target pass-through artifacts"
 
 e2e-justification: >
   Validates cross-package orchestration and exit-code propagation from
@@ -26,7 +27,16 @@ requires:
 
 setup:
   - git-init
-  - run: "echo $PROJECT_ROOT_PATH > .monorepo-root"
-  - run: "if [ -f \"$PROJECT_ROOT_PATH/mise.toml\" ]; then cp \"$PROJECT_ROOT_PATH/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
-  - run: "mkdir -p .ace/test && if [ -f \"$PROJECT_ROOT_PATH/.ace/test/suite.yml\" ]; then cp \"$PROJECT_ROOT_PATH/.ace/test/suite.yml\" .ace/test/suite.yml; elif [ -f \".ace-defaults/test/suite.yml\" ]; then cp .ace-defaults/test/suite.yml .ace/test/suite.yml; elif [ -f \"ace-test-runner/.ace-defaults/test/suite.yml\" ]; then cp ace-test-runner/.ace-defaults/test/suite.yml .ace/test/suite.yml; fi"
-  - run: "if [ -d \"ace-test-runner\" ]; then mkdir -p ace-test-runner/.ace/test && if [ -f \"ace-test-runner/.ace-defaults/test/suite.yml\" ]; then cp ace-test-runner/.ace-defaults/test/suite.yml ace-test-runner/.ace/test/suite.yml; fi; fi"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; elif [ -f \"mise.toml\" ]; then mise trust mise.toml; fi"
+  - run: |
+      mkdir -p .ace/test ace-test-runner/.ace/test
+      cat > .ace/test/suite.yml <<'YAML'
+      test_suite:
+        max_parallel: 1
+        packages:
+          - name: ace-test-runner
+            path: ace-test-runner
+            group: foundation
+            priority: 1
+      YAML
+      cp .ace/test/suite.yml ace-test-runner/.ace/test/suite.yml
