@@ -3,6 +3,27 @@
 require "test_helper"
 
 class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
+  def with_env(overrides)
+    previous = overrides.transform_values { |_,| nil }
+    overrides.each_key { |key| previous[key] = ENV[key] }
+    overrides.each do |key, value|
+      if value.nil?
+        ENV.delete(key)
+      else
+        ENV[key] = value
+      end
+    end
+    yield
+  ensure
+    previous.each do |key, value|
+      if value.nil?
+        ENV.delete(key)
+      else
+        ENV[key] = value
+      end
+    end
+  end
+
   # Helper to stub availability check and Open3.capture3 for testing
   # Uses system_has_command? stub for availability and Open3.capture3 for actual linting
   def stub_standardrb_run(output: "", stderr: "", exit_status: 0, available: true)
@@ -16,6 +37,7 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
 
     # Stub the availability check
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, available) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:resolve_command_path, available ? "standardrb" : nil) do
       # Also stub RuboCop to avoid real subprocess calls when tests interleave
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, true) do
         # Stub Open3.capture3 for the actual linting command
@@ -25,6 +47,7 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
           Ace::Lint::Atoms::RuboCopRunner.available?
           yield
         end
+      end
       end
     end
   end
@@ -38,6 +61,26 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
   def test_available_returns_false_when_standardrb_missing
     stub_standardrb_run(exit_status: 1, available: false) do
       refute Ace::Lint::Atoms::StandardrbRunner.available?
+    end
+  end
+
+  def test_available_checks_sandbox_runtime_bin_before_path
+    Dir.mktmpdir("standardrb-runtime-bin") do |tmpdir|
+      runtime_bin = File.join(tmpdir, "runtime", "bin")
+      FileUtils.mkdir_p(runtime_bin)
+      executable = File.join(runtime_bin, "standardrb")
+      File.write(executable, "#!/usr/bin/env bash\nexit 0\n")
+      FileUtils.chmod(0o755, executable)
+
+      Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
+
+      with_env(
+        "ACE_E2E_SANDBOX_RUNTIME_ROOT" => File.join(tmpdir, "runtime"),
+        "PROJECT_ROOT_PATH" => nil,
+        "PATH" => ""
+      ) do
+        assert Ace::Lint::Atoms::StandardrbRunner.available?
+      end
     end
   end
 
@@ -179,6 +222,39 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
     # Verify --fix is in the command args
     # called_with is the full args array, check if it includes --fix
     assert_includes called_with, "--fix"
+  end
+
+  def test_run_uses_resolved_runtime_bin_executable
+    Dir.mktmpdir("standardrb-runtime-exec") do |tmpdir|
+      runtime_bin = File.join(tmpdir, "runtime", "bin")
+      FileUtils.mkdir_p(runtime_bin)
+      executable = File.join(runtime_bin, "standardrb")
+      File.write(executable, "#!/usr/bin/env bash\nexit 0\n")
+      FileUtils.chmod(0o755, executable)
+
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+      mock_status.define_singleton_method(:exitstatus) { 0 }
+      called_with = nil
+
+      Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
+
+      with_env(
+        "ACE_E2E_SANDBOX_RUNTIME_ROOT" => File.join(tmpdir, "runtime"),
+        "PROJECT_ROOT_PATH" => nil,
+        "PATH" => ""
+      ) do
+        Open3.stub(:capture3, ->(*args) {
+          called_with = args
+          ["", "", mock_status]
+        }) do
+          result = Ace::Lint::Atoms::StandardrbRunner.run("test.rb")
+          assert result[:success]
+        end
+      end
+
+      assert_equal executable, called_with[0]
+    end
   end
 
   def test_build_command_includes_fix_flag

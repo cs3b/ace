@@ -137,6 +137,17 @@ class LintCommandTest < Minitest::Test
     assert_equal 0, result[:exit_code], result[:stderr]
   end
 
+  def test_no_report_suppresses_reports_section
+    path = "valid.md"
+    File.write(path, "# Title\n\nValid content.\n")
+
+    result = run_cli(["--no-report", path])
+
+    assert_equal 0, result[:exit_code], result[:stderr]
+    refute_includes result[:stdout], "Reports:"
+    refute Dir.exist?(File.join(@tmp_dir, ".ace-local", "lint"))
+  end
+
   private
 
   def with_stubbed_agent_query(response_text)
