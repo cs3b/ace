@@ -21,13 +21,16 @@ module Ace
           # @param prompt_bundler [Molecules::PipelinePromptBundler]
           # @param report_generator [Molecules::PipelineReportGenerator]
           def initialize(provider:, verifier_provider: nil, timeout:, sandbox_builder: nil, prompt_bundler: nil,
-            report_generator: nil)
+            report_generator: nil, sandbox_backend_factory: nil)
             @provider = provider
             @verifier_provider = verifier_provider || provider
             @timeout = timeout
             @sandbox_builder = sandbox_builder || PipelineSandboxBuilder.new
             @prompt_bundler = prompt_bundler || PipelinePromptBundler.new
             @report_generator = report_generator || PipelineReportGenerator.new
+            @sandbox_backend_factory = sandbox_backend_factory || lambda { |sandbox_path, source_root: nil|
+              Molecules::BwrapSandboxBackend.new(sandbox_root: sandbox_path, source_root: source_root)
+            }
           end
 
           # @param scenario [Models::TestScenario]
@@ -43,12 +46,25 @@ module Ace
             write_command_record(report_dir, "runner", provider: @provider, cli_args: cli_args)
             write_tc_manifests(report_dir, scenario, test_cases: test_cases)
 
-            build_env = @sandbox_builder.build(
-              scenario: scenario,
-              sandbox_path: sandbox_path,
-              test_cases: test_cases
-            )
+            build_env = if prepared_sandbox?(sandbox_path, env_vars)
+              @sandbox_builder.prepare_existing_sandbox(
+                scenario: scenario,
+                sandbox_path: sandbox_path,
+                test_cases: test_cases
+              )
+            else
+              @sandbox_builder.build(
+                scenario: scenario,
+                sandbox_path: sandbox_path,
+                test_cases: test_cases
+              )
+            end
             merged_env = sanitize_subprocess_env((env_vars || {}).merge(build_env))
+            sandbox_backend = @sandbox_backend_factory.call(
+              sandbox_path,
+              source_root: merged_env["ACE_E2E_SOURCE_ROOT"] || merged_env[:ACE_E2E_SOURCE_ROOT]
+            )
+            merged_env = sandbox_backend.prepared_env(merged_env)
 
             runner = @prompt_bundler.prepare_runner(
               scenario: scenario,
@@ -61,31 +77,18 @@ module Ace
               output_path: runner[:output_path],
               cli_args: cli_args,
               env_vars: merged_env,
+              subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: merged_env),
               provider: @provider
             )
             runner_observations = extract_runner_observations(runner_response[:text])
-            snapshot_artifacts(report_dir, sandbox_path, scenario)
-
-            missing_artifacts = missing_declared_artifacts(sandbox_path, scenario, test_cases: test_cases)
-            unless missing_artifacts.empty?
-              return @report_generator.write_failure_report(
-                scenario: scenario,
-                report_dir: report_dir,
-                provider: @verifier_provider,
-                started_at: started_at,
-                completed_at: Time.now,
-                error_message: "Declared artifacts were not produced: #{missing_artifacts.join(", ")}",
-                failure_category: "missing-artifact",
-                test_cases: missing_artifact_cases(missing_artifacts),
-                metadata: base_metadata(report_dir)
-              )
-            end
+            artifact_contract = snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases: test_cases)
 
             verifier = @prompt_bundler.prepare_verifier(
               scenario: scenario,
               sandbox_path: sandbox_path,
               test_cases: test_cases,
-              runner_observations: runner_observations
+              runner_observations: runner_observations,
+              artifact_contract: artifact_contract
             )
             write_command_record(report_dir, "verifier", provider: @verifier_provider, cli_args: cli_args)
             verifier_response = run_llm(
@@ -94,6 +97,7 @@ module Ace
               output_path: verifier[:output_path],
               cli_args: cli_args,
               env_vars: merged_env,
+              subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: merged_env),
               provider: @verifier_provider
             )
 
@@ -104,7 +108,11 @@ module Ace
               provider: @verifier_provider,
               started_at: started_at,
               completed_at: Time.now,
-              metadata: base_metadata(report_dir, runner_observations: runner_observations)
+              metadata: base_metadata(
+                report_dir,
+                runner_observations: runner_observations,
+                artifact_contract: artifact_contract
+              )
             )
           rescue => e
             begin
@@ -132,7 +140,7 @@ module Ace
 
           private
 
-          def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:, provider:)
+          def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:, subprocess_command_prefix:, provider:)
             prompt = File.read(prompt_path)
             system = File.read(system_path)
             sandbox_dir = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
@@ -146,6 +154,7 @@ module Ace
               fallback: false,
               output: output_path,
               subprocess_env: env_vars,
+              subprocess_command_prefix: subprocess_command_prefix,
               working_dir: sandbox_dir
             )
           end
@@ -181,26 +190,25 @@ module Ace
             )
           end
 
-          def snapshot_artifacts(report_dir, sandbox_path, scenario)
-            snapshot = select_test_cases(scenario, nil).to_h do |test_case|
-              all_artifacts = Array(test_case.declared_artifacts) + Array(test_case.optional_artifacts)
-              [test_case.tc_id, all_artifacts.select { |path| File.exist?(File.join(sandbox_path, path)) }]
+          def snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases:)
+            snapshot = select_test_cases(scenario, test_cases).to_h do |test_case|
+              required = Array(test_case.declared_artifacts).sort
+              optional = Array(test_case.optional_artifacts).sort
+              present_required = required.select { |path| File.exist?(File.join(sandbox_path, path)) }
+              present_optional = optional.select { |path| File.exist?(File.join(sandbox_path, path)) }
+              missing_required = required - present_required
+
+              [test_case.tc_id, {
+                "present_artifacts" => (present_required + present_optional).sort,
+                "required_artifacts" => required,
+                "present_required_artifacts" => present_required,
+                "missing_required_artifacts" => missing_required,
+                "optional_artifacts" => optional,
+                "present_optional_artifacts" => present_optional
+              }]
             end
             File.write(File.join(report_dir, "artifact-snapshot.json"), JSON.pretty_generate(snapshot))
-          end
-
-          def missing_declared_artifacts(sandbox_path, scenario, test_cases:)
-            select_test_cases(scenario, test_cases).flat_map do |test_case|
-              Array(test_case.declared_artifacts).reject do |path|
-                File.exist?(File.join(sandbox_path, path))
-              end
-            end.uniq.sort
-          end
-
-          def missing_artifact_cases(paths)
-            paths.map do |path|
-              {id: path, description: path, status: "fail", notes: path, category: "missing-artifact"}
-            end
+            snapshot
           end
 
           def select_test_cases(scenario, test_cases)
@@ -210,7 +218,7 @@ module Ace
             Array(scenario.test_cases).select { |tc| wanted.include?(tc.tc_id.to_s.upcase) }
           end
 
-          def base_metadata(report_dir, runner_observations: nil)
+          def base_metadata(report_dir, runner_observations: nil, artifact_contract: nil)
             metadata = {
               "runner_provider" => @provider,
               "verifier_provider" => @verifier_provider,
@@ -219,6 +227,11 @@ module Ace
             if runner_observations && !runner_observations.empty?
               metadata["runner_observations"] = runner_observations
             end
+            if artifact_contract
+              metadata["missing_required_artifacts"] = artifact_contract.to_h.transform_values do |entry|
+                Array(entry["missing_required_artifacts"])
+              end.reject { |_tc_id, paths| paths.empty? }
+            end
             metadata
           end
 
@@ -226,6 +239,15 @@ module Ace
             sanitized = env_vars.reject { |key, _value| AMBIENT_TMUX_ENV_VARS.include?(key.to_s) }
             AMBIENT_TMUX_ENV_VARS.each { |key| sanitized[key] = nil }
             sanitized
+          end
+
+          def prepared_sandbox?(sandbox_path, env_vars)
+            return false unless env_vars.is_a?(Hash) && !env_vars.empty?
+
+            env_root = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
+            return false if env_root.to_s.strip.empty?
+
+            File.expand_path(env_root) == File.expand_path(sandbox_path)
           end
 
           def extract_runner_observations(text)

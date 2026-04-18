@@ -17,6 +17,7 @@ module Ace
             missing-artifact
             state-drift
             behavior-regression
+            discoverability-gap
           ].freeze
 
           # @param report_writer [Molecules::ReportWriter]
@@ -33,6 +34,7 @@ module Ace
           # @return [Models::TestResult]
           def generate(scenario:, verifier_output:, report_dir:, provider:, started_at:, completed_at:, metadata: {})
             parsed = parse_verifier_output(verifier_output, scenario)
+            merged_metadata = metadata.merge(parsed[:metadata] || {})
 
             result = Models::TestResult.new(
               test_id: scenario.test_id,
@@ -43,7 +45,7 @@ module Ace
               observations: parsed[:observations].to_s,
               started_at: started_at,
               completed_at: completed_at,
-              metadata: metadata
+              metadata: merged_metadata
             )
 
             FileUtils.mkdir_p(report_dir)
@@ -96,7 +98,7 @@ module Ace
 
           def parse_verifier_output(text, scenario)
             goals = parse_goal_sections(text, scenario)
-            return build_result_from_goals(goals) unless goals.empty?
+            return build_result_from_goals(goals, text) unless goals.empty?
 
             parsed = Atoms::SkillResultParser.parse_verifier(text)
             {
@@ -104,7 +106,8 @@ module Ace
               test_cases: parsed[:test_cases],
               summary: parsed[:summary],
               error: parsed[:observations],
-              observations: parsed[:observations]
+              observations: parsed[:observations],
+              metadata: extract_overall_user_outcome(text)
             }
           rescue Atoms::ResultParser::ParseError => e
             issue = summarize_unstructured_verifier_output(text)
@@ -113,7 +116,8 @@ module Ace
               test_cases: [],
               summary: "Verifier returned unstructured output",
               error: issue || e.message,
-              observations: ""
+              observations: "",
+              metadata: {}
             }
           end
 
@@ -196,12 +200,12 @@ module Ace
             return normalize_category(explicit) if explicit
 
             inline = block.to_s.match(
-              /`(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)`/i
+              /`(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression|discoverability-gap)`/i
             )
             return normalize_category(inline[1]) if inline
 
             paren = block.to_s.match(
-              /\((test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)\)/i
+              /\((test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression|discoverability-gap)\)/i
             )
             return normalize_category(paren[1]) if paren
 
@@ -211,7 +215,7 @@ module Ace
           def normalize_category(value)
             category = value.to_s.strip.downcase
             match = category.match(
-              /\b(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression)\b/
+              /\b(test-spec-error|tool-bug|runner-error|infrastructure-error|missing-artifact|state-drift|behavior-regression|discoverability-gap)\b/
             )
             return match[1] if match
 
@@ -243,7 +247,7 @@ module Ace
             nil
           end
 
-          def build_result_from_goals(goals)
+          def build_result_from_goals(goals, text)
             passed = goals.count { |goal| goal[:status] == "pass" }
             total = goals.size
             status = if passed == total
@@ -257,8 +261,23 @@ module Ace
             {
               status: status,
               test_cases: goals,
-              summary: "#{passed}/#{total} passed"
+              summary: "#{passed}/#{total} passed",
+              observations: "",
+              error: nil,
+              metadata: extract_overall_user_outcome(text)
             }
+          end
+
+          def extract_overall_user_outcome(text)
+            works = text.to_s.match(/\*\*Works for end user\*\*:\s*(yes|partial|no)/i)&.captures&.first
+            friction = text.to_s.match(/^\s*[-*]?\s*\*\*Friction\*\*:\s*(.+?)\s*$/im)&.captures&.first
+            feedback = text.to_s.match(/^\s*[-*]?\s*\*\*Feedback\*\*:\s*(.+?)\s*$/im)&.captures&.first
+
+            metadata = {}
+            metadata["works_for_end_user"] = works.to_s.downcase unless works.to_s.empty?
+            metadata["user_friction"] = friction.to_s.strip unless friction.to_s.strip.empty?
+            metadata["user_feedback"] = feedback.to_s.strip unless feedback.to_s.strip.empty?
+            metadata
           end
 
           def summarize_unstructured_verifier_output(text)
@@ -305,10 +324,18 @@ module Ace
               end,
               "canonical-failed-tcs" => result.failed_test_case_ids
             }
+            frontmatter["works-for-end-user"] = result.metadata["works_for_end_user"] if result.metadata["works_for_end_user"]
+            frontmatter["user-friction"] = result.metadata["user_friction"] if result.metadata["user_friction"]
+            frontmatter["user-feedback"] = result.metadata["user_feedback"] if result.metadata["user_feedback"]
+            frontmatter["missing-required-artifacts"] = result.metadata["missing_required_artifacts"] if result.metadata["missing_required_artifacts"]
             frontmatter_yaml = YAML.dump(frontmatter).sub(/\A---\s*\n/, "").sub(/\.\.\.\s*\n\z/, "")
 
             rows = result.test_cases.map do |tc|
-              "| #{tc[:id]} | #{tc[:status].upcase} | #{tc[:notes]} |"
+              "| #{tc[:id]} | #{tc[:status].upcase} | #{canonical_goal_evidence(tc)} |"
+            end.join("\n")
+
+            verdict_rows = result.test_cases.map do |tc|
+              "| #{tc[:id]} | #{tc[:status].upcase} |"
             end.join("\n")
 
             content = <<~REPORT
@@ -332,9 +359,30 @@ module Ace
               | Failed | #{failed} |
               | Total  | #{total} |
               | Score  | #{(score * 100).round(1)}% |
+
+              ## Canonical Goal Verdicts
+
+              | Goal | Canonical Verdict |
+              |------|-------------------|
+              #{verdict_rows}
+
+              ## Overall User Outcome
+
+              | Field | Value |
+              |-------|-------|
+              | Works for end user | #{result.metadata["works_for_end_user"] || "unspecified"} |
+              | Friction | #{result.metadata["user_friction"] || "None"} |
+              | Feedback | #{result.metadata["user_feedback"] || "None"} |
             REPORT
 
             File.write(path, content)
+          end
+
+          def canonical_goal_evidence(test_case)
+            notes = test_case[:notes].to_s.strip
+            return notes unless notes.match?(/\bverdict\s+correction\b/i)
+
+            "Canonical verdict #{test_case[:status].to_s.upcase}. Preserved verifier note: #{notes}"
           end
         end
       end

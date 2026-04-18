@@ -6,6 +6,16 @@ class TestExecutorTest < Minitest::Test
   TestExecutor = Ace::Test::EndToEndRunner::Molecules::TestExecutor
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
 
+  class FakeSandboxBackend
+    def prepared_env(env)
+      env.merge("HOME" => "/tmp/fake-home", "TMPDIR" => "/tmp/fake-tmp", "XDG_RUNTIME_DIR" => "/tmp/fake-runtime")
+    end
+
+    def command_prefix(chdir:, env:)
+      ["bwrap", "--chdir", chdir, "--"]
+    end
+  end
+
   def test_execute_pipeline_requires_deterministic_paths
     executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
     scenario = create_scenario
@@ -23,7 +33,11 @@ class TestExecutorTest < Minitest::Test
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       scenario = create_pipeline_scenario(scenario_dir)
-      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+      executor = TestExecutor.new(
+        provider: "claude:sonnet",
+        timeout: 10,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+      )
 
       captured_timeouts = []
       responses = [
@@ -76,7 +90,11 @@ class TestExecutorTest < Minitest::Test
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       scenario = create_pipeline_scenario(scenario_dir)
-      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+      executor = TestExecutor.new(
+        provider: "claude:sonnet",
+        timeout: 10,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+      )
 
       calls = []
       responses = [
@@ -128,6 +146,8 @@ class TestExecutorTest < Minitest::Test
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:subprocess_env]["PROJECT_ROOT_PATH"]
       assert_equal File.expand_path(sandbox_path), calls.first[:kwargs][:working_dir]
       assert_equal File.expand_path(sandbox_path), calls.last[:kwargs][:working_dir]
+      assert_equal ["bwrap", "--chdir", File.expand_path(sandbox_path), "--"], calls.first[:kwargs][:subprocess_command_prefix]
+      assert_equal ["bwrap", "--chdir", File.expand_path(sandbox_path), "--"], calls.last[:kwargs][:subprocess_command_prefix]
     end
   end
 
@@ -166,7 +186,11 @@ class TestExecutorTest < Minitest::Test
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       scenario = create_pipeline_scenario(scenario_dir)
-      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+      executor = TestExecutor.new(
+        provider: "claude:sonnet",
+        timeout: 10,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+      )
 
       responses = [
         {text: "Runner completed."},
@@ -337,7 +361,11 @@ class TestExecutorTest < Minitest::Test
       end
     end
 
-    assert_equal env_vars, captured_kwargs[:subprocess_env], "env_vars should be passed as subprocess_env to QueryInterface.query for TC execution"
+    assert_equal env_vars["ACE_TMUX_SESSION"], captured_kwargs[:subprocess_env]["ACE_TMUX_SESSION"]
+    assert_equal "/tmp/sb", captured_kwargs[:subprocess_env]["PROJECT_ROOT_PATH"]
+    assert_equal "/tmp/sb.support/home", captured_kwargs[:subprocess_env]["HOME"]
+    assert_equal "/tmp/sb.support/tmp", captured_kwargs[:subprocess_env]["TMPDIR"]
+    assert_equal "/tmp/sb.support/runtime", captured_kwargs[:subprocess_env]["XDG_RUNTIME_DIR"]
     assert_equal "/tmp/sb", captured_kwargs[:working_dir], "sandbox_path should be threaded as working_dir for TC execution"
   end
 

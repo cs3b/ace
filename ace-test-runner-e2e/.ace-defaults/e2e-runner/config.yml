@@ -53,6 +53,10 @@ execution:
   # Number of tests to run in parallel (1 = sequential)
   parallel: 3
 
+sandbox:
+  profile: "ace-default"
+  ruby_version: "3.4.9"
+
 # Provider configuration
 providers:
   # CLI providers use deterministic pipeline execution (runner + verifier)

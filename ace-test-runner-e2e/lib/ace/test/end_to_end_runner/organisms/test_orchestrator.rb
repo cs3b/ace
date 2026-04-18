@@ -33,7 +33,7 @@ module Ace
           def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil,
             executor: nil, progress: false, discoverer: nil, integration_runner: nil,
             scenario_loader: nil, report_writer: nil, suite_report_writer: nil,
-            setup_executor_factory: nil)
+            setup_executor_factory: nil, runtime_builder: nil)
             config = Molecules::ConfigLoader.load
             @provider = provider || config.dig("execution", "runner_provider") ||
               config.dig("execution", "provider") || "claude:sonnet"
@@ -48,7 +48,11 @@ module Ace
             @executor = executor || Molecules::TestExecutor.new(provider: @provider, timeout: @timeout, config: config)
             @report_writer = report_writer || Molecules::ReportWriter.new
             @suite_report_writer = suite_report_writer || Molecules::SuiteReportWriter.new(config: config)
-            @setup_executor_factory = setup_executor_factory || -> { Molecules::SetupExecutor.new }
+            @setup_executor_factory = setup_executor_factory || ->(sandbox_backend: nil) { Molecules::SetupExecutor.new(sandbox_backend: sandbox_backend) }
+            @runtime_builder = runtime_builder || Molecules::SandboxRuntimeBuilder.new(
+              source_root: @base_dir,
+              ruby_version: config.dig("sandbox", "ruby_version") || Molecules::ConfigLoader.default_sandbox_ruby_version
+            )
           end
 
           # Run E2E tests for a package, optionally filtering by test ID
@@ -144,14 +148,28 @@ module Ace
                 }
               }
             end
-            setup_executor = @setup_executor_factory.call
+            Molecules::PipelineSandboxBuilder.new(config_root: @base_dir).sync_protocol_sources_into(sandbox_dir)
+            runtime_result = @runtime_builder.prepare(
+              sandbox_root: sandbox_dir,
+              env: package_copy_result[:env],
+              tool_names: scenario.requires.fetch("tools", [])
+            )
+            sandbox_backend = Molecules::BwrapSandboxBackend.new(
+              sandbox_root: sandbox_dir,
+              source_root: runtime_result.dig(:env, "ACE_E2E_SOURCE_ROOT")
+            )
+            setup_executor = if @setup_executor_factory.arity.zero?
+              @setup_executor_factory.call
+            else
+              @setup_executor_factory.call(sandbox_backend: sandbox_backend)
+            end
             result = setup_executor.execute(
-              setup_steps: scenario.setup_steps,
+              setup_steps: effective_setup_steps_for(scenario),
               sandbox_dir: sandbox_dir,
               fixture_source: scenario.fixture_path,
               scenario_name: scenario.test_id,
               run_id: timestamp,
-              initial_env: package_copy_result[:env]
+              initial_env: runtime_result[:env]
             )
 
             unless result[:success]
@@ -166,6 +184,29 @@ module Ace
             end
 
             [File.expand_path(sandbox_dir), env, setup_executor]
+          end
+
+          def effective_setup_steps_for(scenario)
+            steps = Array(scenario.setup_steps)
+            return steps unless scenario.sandbox_profile == "ace-default"
+
+            has_config_init = setup_contains_command?(steps, "ace-config init")
+            has_handbook_sync = setup_contains_command?(steps, "ace-handbook sync")
+            bootstrap = []
+            bootstrap << {"run" => "ace-config init"} unless has_config_init
+            bootstrap << {"run" => "ace-handbook sync"} unless has_handbook_sync
+            return steps if bootstrap.empty?
+
+            insert_after = steps.index("git-init")
+            return bootstrap + steps unless insert_after
+
+            steps.dup.insert(insert_after + 1, *bootstrap)
+          end
+
+          def setup_contains_command?(steps, fragment)
+            steps.any? do |step|
+              step.is_a?(Hash) && step["run"].to_s.include?(fragment)
+            end
           end
 
           # Run a single test

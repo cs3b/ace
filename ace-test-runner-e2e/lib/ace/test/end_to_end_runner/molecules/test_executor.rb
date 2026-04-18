@@ -16,7 +16,7 @@ module Ace
           # @param provider [String] LLM provider:model string
           # @param timeout [Integer] Request timeout in seconds
           # @param config [Hash] Configuration hash (string keys) from ConfigLoader
-          def initialize(provider: nil, timeout: nil, config: nil)
+          def initialize(provider: nil, timeout: nil, config: nil, sandbox_backend_factory: nil)
             config ||= Molecules::ConfigLoader.load
             @provider = provider || config.dig("execution", "runner_provider") ||
               config.dig("execution", "provider") || "claude:sonnet"
@@ -25,6 +25,9 @@ module Ace
             @timeout = timeout || config.dig("execution", "timeout") || 300
             @prompt_builder = Atoms::PromptBuilder.new
             @cli_provider_adapter = Atoms::CliProviderAdapter.new(config)
+            @sandbox_backend_factory = sandbox_backend_factory || lambda { |sandbox_path, source_root: nil|
+              Molecules::BwrapSandboxBackend.new(sandbox_root: sandbox_path, source_root: source_root)
+            }
           end
 
           # Execute a single test scenario via LLM
@@ -195,9 +198,10 @@ module Ace
           # Execute TC via skill invocation for CLI providers
           def execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: nil, run_id: nil, env_vars: nil)
             with_tc_error_handling(scenario) do |started_at|
+              sandbox_backend, prepared_env = prepared_env_for(sandbox_path, env_vars)
               prompt = @cli_provider_adapter.build_tc_skill_prompt(
                 test_case: test_case, scenario: scenario,
-                sandbox_path: sandbox_path, run_id: run_id, env_vars: env_vars
+                sandbox_path: sandbox_path, run_id: run_id, env_vars: prepared_env
               )
 
               response = Ace::LLM::QueryInterface.query(
@@ -205,7 +209,8 @@ module Ace
                 system: nil, cli_args: cli_args,
                 timeout: @timeout, fallback: false,
                 working_dir: sandbox_path,
-                subprocess_env: env_vars
+                subprocess_env: prepared_env,
+                subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: prepared_env)
               )
 
               invocation_error = detect_skill_invocation_error(response[:text])
@@ -326,8 +331,21 @@ module Ace
             @pipeline_executors[timeout] ||= Molecules::PipelineExecutor.new(
               provider: @provider,
               verifier_provider: @verifier_provider,
-              timeout: timeout
+              timeout: timeout,
+              sandbox_backend_factory: @sandbox_backend_factory
             )
+          end
+
+          def build_sandbox_backend(sandbox_path, env_vars)
+            @sandbox_backend_factory.call(
+              sandbox_path,
+              source_root: env_vars&.dig("ACE_E2E_SOURCE_ROOT") || env_vars&.dig(:ACE_E2E_SOURCE_ROOT)
+            )
+          end
+
+          def prepared_env_for(sandbox_path, env_vars)
+            sandbox_backend = build_sandbox_backend(sandbox_path, env_vars || {})
+            [sandbox_backend, sandbox_backend.prepared_env(env_vars || {})]
           end
         end
       end

@@ -18,11 +18,17 @@ module Ace
         # system calls via Open3 and FileUtils.
         class SetupExecutor
           AMBIENT_TMUX_ENV_VARS = %w[TMUX TMUX_PANE].freeze
+          BUNDLER_ENV_PREFIXES = %w[BUNDLE BUNDLER].freeze
+          STRIPPED_ENV_KEYS = %w[RUBYOPT RUBYLIB].freeze
+          RESERVED_ENV_KEYS = Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
+            PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
+          ]
 
-          def initialize(command_runner: nil, system_runner: nil, time_source: nil)
+          def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
             @system_runner = system_runner || method(:system)
             @time_source = time_source || -> { Time.now.to_i }
+            @sandbox_backend = sandbox_backend
           end
 
           # Execute all setup steps in a sandbox directory
@@ -35,27 +41,52 @@ module Ace
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {})
             FileUtils.mkdir_p(sandbox_dir)
-            env = initial_env.dup
+            env = if @sandbox_backend
+              @sandbox_backend.prepared_env(initial_env.dup)
+            else
+              initial_env.dup
+            end
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
             @run_id = run_id
+            @teardown_env = nil
 
             setup_steps.each do |step|
               execute_step(step, sandbox_dir, env, fixture_source)
               steps_completed += 1
             end
 
-            {success: true, steps_completed: steps_completed, error: nil, env: env, tmux_session: @tmux_session}
+            {
+              success: true,
+              steps_completed: steps_completed,
+              error: nil,
+              env: merged_environment(env),
+              tmux_session: @tmux_session
+            }
           rescue => e
-            {success: false, steps_completed: steps_completed, error: e.message, env: env, tmux_session: @tmux_session}
+            {
+              success: false,
+              steps_completed: steps_completed,
+              error: e.message,
+              env: merged_environment(env),
+              tmux_session: @tmux_session
+            }
           end
 
           # Clean up resources created during setup (e.g. tmux session)
           def teardown
             return unless @tmux_session
 
-            @system_runner.call("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
+            if @sandbox_backend
+              @sandbox_backend.capture3(
+                ["tmux", "kill-session", "-t", @tmux_session],
+                chdir: @teardown_env&.fetch("PROJECT_ROOT_PATH", Dir.pwd) || Dir.pwd,
+                env: @teardown_env || {}
+              )
+            else
+              @system_runner.call("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
+            end
             @tmux_session = nil
           end
 
@@ -109,11 +140,21 @@ module Ace
             else
               @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{@time_source.call}"
             end
-            _stdout, stderr, status = @command_runner.call("tmux", "new-session", "-d", "-s", session_name)
+            tmux_env = merged_environment(env).merge("TMUX_TMPDIR" => env["TMUX_TMPDIR"].to_s.empty? ? nil : env["TMUX_TMPDIR"])
+            if @sandbox_backend
+              _stdout, stderr, status = @sandbox_backend.capture3(
+                ["tmux", "new-session", "-d", "-s", session_name],
+                chdir: env["PROJECT_ROOT_PATH"] || Dir.pwd,
+                env: tmux_env
+              )
+            else
+              _stdout, stderr, status = @command_runner.call(tmux_env, "tmux", "new-session", "-d", "-s", session_name)
+            end
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 
             @tmux_session = session_name
             env["ACE_TMUX_SESSION"] = session_name
+            @teardown_env = merged_environment(env)
           end
 
           # Initialize a git repo with test user config
@@ -131,20 +172,25 @@ module Ace
           end
 
           # Execute a shell command in the sandbox
-          # NOTE: Uses shell invocation (bash -lc) intentionally to support
-          # shell operators (&&, |, >) in scenario.yml setup steps. Commands originate from
+          # NOTE: Uses shell invocation intentionally to support shell operators
+          # (&&, |, >) in scenario.yml setup steps. Commands originate from
           # committed scenario.yml files, not user input, so shell injection risk is mitigated.
+          # We explicitly disable profile/rc loading to keep sandbox env authoritative.
           def handle_run(command, sandbox_dir, env)
             full_env = merged_environment(env)
-            # Re-export env vars after profile sourcing to protect against
-            # mise's shell hook clobbering.
+            # Re-export env vars inside the command to keep explicit sandbox
+            # values authoritative across compound shell expressions.
             export_vars = env.dup
             %w[PROJECT_ROOT_PATH].each do |key|
               export_vars[key] ||= ENV[key] if ENV[key]
             end
             exports = export_vars.map { |k, v| "export #{k}=#{Shellwords.shellescape(v.to_s)}" }.join("; ")
             wrapped = exports.empty? ? command : "#{exports}; #{command}"
-            stdout, stderr, status = Open3.capture3(full_env, "bash", "-lc", wrapped, chdir: sandbox_dir)
+            stdout, stderr, status = if @sandbox_backend
+              @sandbox_backend.capture3(["bash", "--noprofile", "--norc", "-c", wrapped], chdir: sandbox_dir, env: full_env)
+            else
+              Open3.capture3(full_env, "bash", "--noprofile", "--norc", "-c", wrapped, chdir: sandbox_dir)
+            end
 
             unless status.success?
               raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
@@ -162,7 +208,12 @@ module Ace
 
           # Merge environment variables for subsequent steps
           def handle_env(vars, env)
-            vars.each { |k, v| env[k.to_s] = v.to_s }
+            vars.each do |k, v|
+              key = k.to_s
+              next if RESERVED_ENV_KEYS.include?(key)
+
+              env[key] = v.to_s
+            end
           end
 
           # Merge custom env vars with the process environment
@@ -178,7 +229,12 @@ module Ace
 
           # Run a command and raise on failure
           def run_command(*args, chdir:, env: {})
-            _stdout, stderr, status = @command_runner.call(merged_environment(env), *args, chdir: chdir)
+            merged_env = merged_environment(env)
+            _stdout, stderr, status = if @sandbox_backend
+              @sandbox_backend.capture3(args, chdir: chdir, env: merged_env)
+            else
+              @command_runner.call(merged_env, *args, chdir: chdir)
+            end
 
             unless status.success?
               raise "Command failed (exit #{status.exitstatus}): #{args.join(" ")}\n#{stderr}"
@@ -190,7 +246,15 @@ module Ace
           end
 
           def sanitized_process_environment
-            ENV.to_h.merge(AMBIENT_TMUX_ENV_VARS.to_h { |key| [key, nil] })
+            ENV.to_h.each_with_object({}) do |(key, value), env|
+              if AMBIENT_TMUX_ENV_VARS.include?(key) || STRIPPED_ENV_KEYS.include?(key) ||
+                  BUNDLER_ENV_PREFIXES.any? { |prefix| key.start_with?(prefix) }
+                env[key] = nil
+                next
+              end
+
+              env[key] = value
+            end
           end
         end
       end

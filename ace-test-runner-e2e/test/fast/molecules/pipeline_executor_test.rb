@@ -11,13 +11,33 @@ class PipelineExecutorTest < Minitest::Test
   TestCase = Ace::Test::EndToEndRunner::Models::TestCase
 
   class FakeSandboxBuilder
+    attr_reader :build_calls, :prepare_existing_calls
+
+    def initialize
+      @build_calls = []
+      @prepare_existing_calls = []
+    end
+
     def build(scenario:, sandbox_path:, test_cases: nil)
+      @build_calls << {scenario: scenario, sandbox_path: sandbox_path, test_cases: test_cases}
       FileUtils.mkdir_p(sandbox_path)
       {"PROJECT_ROOT_PATH" => File.expand_path(sandbox_path)}
+    end
+
+    def prepare_existing_sandbox(scenario:, sandbox_path:, test_cases: nil)
+      @prepare_existing_calls << {scenario: scenario, sandbox_path: sandbox_path, test_cases: test_cases}
+      FileUtils.mkdir_p(sandbox_path)
+      {}
     end
   end
 
   class FakePromptBundler
+    attr_reader :prepare_verifier_calls
+
+    def initialize
+      @prepare_verifier_calls = []
+    end
+
     def prepare_runner(scenario:, sandbox_path:, test_cases: nil)
       cache_dir = File.join(sandbox_path, ".ace-local", "e2e")
       FileUtils.mkdir_p(cache_dir)
@@ -31,7 +51,14 @@ class PipelineExecutorTest < Minitest::Test
       end
     end
 
-    def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil)
+    def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil, artifact_contract: nil)
+      @prepare_verifier_calls << {
+        scenario: scenario,
+        sandbox_path: sandbox_path,
+        test_cases: test_cases,
+        runner_observations: runner_observations,
+        artifact_contract: artifact_contract
+      }
       cache_dir = File.join(sandbox_path, ".ace-local", "e2e")
       FileUtils.mkdir_p(cache_dir)
       {
@@ -45,30 +72,62 @@ class PipelineExecutorTest < Minitest::Test
     end
   end
 
-  def test_missing_required_artifacts_ignores_optional
+  class FakeSandboxBackend
+    attr_reader :prepared_env_calls, :command_prefix_calls
+
+    def initialize
+      @prepared_env_calls = []
+      @command_prefix_calls = []
+    end
+
+    def prepared_env(env)
+      @prepared_env_calls << env
+      env.merge("HOME" => "/tmp/fake-home", "TMPDIR" => "/tmp/fake-tmp", "XDG_RUNTIME_DIR" => "/tmp/fake-runtime")
+    end
+
+    def command_prefix(chdir:, env:)
+      @command_prefix_calls << {chdir: chdir, env: env}
+      ["bwrap", "--chdir", chdir, "--"]
+    end
+  end
+
+  def test_missing_declared_artifacts_do_not_short_circuit_verifier
     Dir.mktmpdir do |tmpdir|
       sandbox_path = File.join(tmpdir, "sandbox")
       report_dir = File.join(tmpdir, "reports")
       FileUtils.mkdir_p(sandbox_path)
-
-      FileUtils.mkdir_p(File.join(sandbox_path, "results", "tc", "01"))
-      File.write(File.join(sandbox_path, "results", "tc", "01", "optional.txt"), "optional")
+      fake_backend = FakeSandboxBackend.new
 
       scenario = build_scenario(
         tmpdir: tmpdir,
         declared_artifacts: ["results/tc/01/required.txt"],
         optional_artifacts: ["results/tc/01/optional.txt"]
       )
+      prompt_bundler = FakePromptBundler.new
       executor = PipelineExecutor.new(
         provider: "claude:haiku",
         timeout: 10,
         sandbox_builder: FakeSandboxBuilder.new,
-        prompt_bundler: FakePromptBundler.new
+        prompt_bundler: prompt_bundler,
+        report_generator: PipelineReportGenerator.new,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { fake_backend }
       )
 
+      responses = [
+        {text: "runner output"},
+        {text: <<~OUT}
+          ### Goal 1 - Sample
+          - **Verdict**: PASS
+          - **Evidence**: verifier judged final state without helper artifacts
+
+          **Results: 1/1 passed**
+        OUT
+      ]
       original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
-      Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **_kwargs|
-        {text: "runner output"}
+      prefixes = []
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **kwargs|
+        prefixes << kwargs[:subprocess_command_prefix]
+        responses.shift
       end
       begin
         result = executor.execute(
@@ -78,8 +137,9 @@ class PipelineExecutorTest < Minitest::Test
           report_dir: report_dir
         )
 
-        assert_equal "error", result.status
-        assert_includes result.error, "results/tc/01/required.txt"
+        assert_equal "pass", result.status
+        assert_equal 2, fake_backend.command_prefix_calls.size
+        assert_equal [["bwrap", "--chdir", sandbox_path, "--"], ["bwrap", "--chdir", sandbox_path, "--"]], prefixes
       ensure
         if original_query
           Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
@@ -91,6 +151,15 @@ class PipelineExecutorTest < Minitest::Test
       manifest = JSON.parse(File.read(File.join(report_dir, "tc001.manifest.json")))
       assert_includes manifest.keys, "optional_artifacts"
       assert_equal ["results/tc/01/optional.txt"], manifest["optional_artifacts"]
+
+      snapshot = JSON.parse(File.read(File.join(report_dir, "artifact-snapshot.json")))
+      assert_equal ["results/tc/01/required.txt"], snapshot["TC-001"]["missing_required_artifacts"]
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal({"TC-001" => ["results/tc/01/required.txt"]}, metadata["missing_required_artifacts"])
+
+      verifier_call = prompt_bundler.prepare_verifier_calls.last
+      assert_equal ["results/tc/01/required.txt"], verifier_call[:artifact_contract]["TC-001"]["missing_required_artifacts"]
     end
   end
 
@@ -114,7 +183,8 @@ class PipelineExecutorTest < Minitest::Test
         timeout: 10,
         sandbox_builder: FakeSandboxBuilder.new,
         prompt_bundler: FakePromptBundler.new,
-        report_generator: PipelineReportGenerator.new
+        report_generator: PipelineReportGenerator.new,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
       )
 
       responses = [
@@ -146,7 +216,7 @@ class PipelineExecutorTest < Minitest::Test
       snapshot = JSON.parse(File.read(File.join(report_dir, "artifact-snapshot.json")))
       assert_equal(
         ["results/tc/01/optional.txt", "results/tc/01/required.txt"],
-        snapshot["TC-001"].sort
+        snapshot["TC-001"]["present_artifacts"].sort
       )
     end
   end
@@ -165,7 +235,8 @@ class PipelineExecutorTest < Minitest::Test
         timeout: 10,
         sandbox_builder: FakeSandboxBuilder.new,
         prompt_bundler: FakePromptBundler.new,
-        report_generator: PipelineReportGenerator.new
+        report_generator: PipelineReportGenerator.new,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
       )
 
       original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
@@ -199,6 +270,69 @@ class PipelineExecutorTest < Minitest::Test
     end
   end
 
+  def test_execute_reuses_prepared_sandbox_without_rebuilding_it
+    Dir.mktmpdir do |tmpdir|
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(sandbox_path)
+      FileUtils.mkdir_p(File.join(sandbox_path, ".ace", "llm", "providers"))
+      File.write(File.join(sandbox_path, ".ace", "llm", "providers", "anthropic.yml"), "provider: anthropic\n")
+
+      scenario = build_scenario(
+        tmpdir: tmpdir,
+        declared_artifacts: [],
+        optional_artifacts: []
+      )
+      sandbox_builder = FakeSandboxBuilder.new
+      executor = PipelineExecutor.new(
+        provider: "claude:haiku",
+        timeout: 10,
+        sandbox_builder: sandbox_builder,
+        prompt_bundler: FakePromptBundler.new,
+        report_generator: PipelineReportGenerator.new,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+      )
+
+      responses = [
+        {text: "runner complete"},
+        {text: "### Goal 1 - Sample\n- **Verdict**: PASS\n"}
+      ]
+
+      original_query = Ace::LLM::QueryInterface.method(:query) if Ace::LLM::QueryInterface.respond_to?(:query)
+      calls = []
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |*_args, **kwargs|
+        calls << kwargs[:subprocess_env]
+        responses.shift
+      end
+      begin
+        result = executor.execute(
+          scenario: scenario,
+          cli_args: "",
+          sandbox_path: sandbox_path,
+          report_dir: report_dir,
+          env_vars: {
+            "PROJECT_ROOT_PATH" => File.expand_path(sandbox_path),
+            "ACE_E2E_SOURCE_ROOT" => File.expand_path(tmpdir),
+            "CUSTOM" => "preserved"
+          }
+        )
+
+        assert_equal "pass", result.status
+      ensure
+        if original_query
+          Ace::LLM::QueryInterface.define_singleton_method(:query, original_query)
+        else
+          Ace::LLM::QueryInterface.singleton_class.send(:remove_method, :query)
+        end
+      end
+
+      assert_equal 0, sandbox_builder.build_calls.length
+      assert_equal 1, sandbox_builder.prepare_existing_calls.length
+      assert_equal "provider: anthropic\n", File.read(File.join(sandbox_path, ".ace", "llm", "providers", "anthropic.yml"))
+      assert_equal "preserved", calls.first["CUSTOM"]
+    end
+  end
+
   def test_execute_passes_runner_observations_to_verifier_and_report_metadata
     Dir.mktmpdir do |tmpdir|
       sandbox_path = File.join(tmpdir, "sandbox")
@@ -214,7 +348,8 @@ class PipelineExecutorTest < Minitest::Test
         timeout: 10,
         sandbox_builder: FakeSandboxBuilder.new,
         prompt_bundler: FakePromptBundler.new,
-        report_generator: PipelineReportGenerator.new
+        report_generator: PipelineReportGenerator.new,
+        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
       )
 
       responses = [

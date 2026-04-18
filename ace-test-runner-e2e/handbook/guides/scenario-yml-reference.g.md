@@ -46,7 +46,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 |-------|------|---------|-------------|
 | `priority` | string | `medium` | Test priority: `high`, `medium`, `low` |
 | `tool-under-test` | string | — | Primary command/tool validated |
-| `sandbox-layout` | object | `{}` | Declared artifact paths and expected outputs |
+| `sandbox-layout` | object | `{}` | Outcome-path hints used to precreate directories and guide verification |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `timeout` | integer | — | Optional per-scenario execution timeout in seconds |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
@@ -74,6 +74,7 @@ Artifact layout conventions:
 - canonical: `results/tc/{NN}/`
 - avoid non-TC-scoped result folders
 - keep only real outcome artifacts under `results/tc/{NN}/`; runner observations live in harness reports, not sandbox helper files
+- absence of a declared path is debug context, not a standalone failure reason
 
 Canonical summary report fields:
 - `tcs-passed`
@@ -119,7 +120,7 @@ setup:
   - git-init
   - tmux-session:
       name-source: run-id
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - agent-env:
@@ -154,7 +155,7 @@ requires:
   ruby: ">= 3.0"
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: "."

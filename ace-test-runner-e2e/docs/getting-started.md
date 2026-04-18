@@ -37,7 +37,7 @@ ace-test-e2e ace-lint TS-LINT-001
 What happens:
 
 - Deterministic preflight tests are discovered from `ace-lint/test/feat/**/*_test.rb` before scenario metadata from `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`.
-- Setup runs in an isolated sandbox.
+- On Linux, setup and CLI-provider execution run inside a `bubblewrap` sandbox.
 - Integration and scenario runs write sandbox and report outputs to `.ace-local/test-e2e/...`.
 
 ## Understanding test formats
@@ -72,7 +72,7 @@ Typical run output includes:
 
 - scenario-level pass/fail summary
 - per-test-case execution details
-- verifier output and evidence links
+- verifier score, end-user outcome, and feedback
 
 ## Common commands
 

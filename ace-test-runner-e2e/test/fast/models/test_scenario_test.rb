@@ -28,6 +28,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal "~5min", scenario.duration
     assert_equal({}, scenario.requires)
     assert_nil scenario.timeout
+    assert_equal "ace-default", scenario.sandbox_profile
   end
 
   def test_short_package
@@ -96,6 +97,7 @@ class TestScenarioTest < Minitest::Test
       test_cases: [tc],
       tags: ["smoke", "happy-path"],
       tool_under_test: "ace-lint",
+      sandbox_profile: "bundle-only",
       sandbox_layout: {"output/" => "Report output"}
     )
     assert_equal 900, scenario.timeout
@@ -105,6 +107,7 @@ class TestScenarioTest < Minitest::Test
     assert_equal [tc], scenario.test_cases
     assert_equal ["smoke", "happy-path"], scenario.tags
     assert_equal "ace-lint", scenario.tool_under_test
+    assert_equal "bundle-only", scenario.sandbox_profile
     assert_equal({"output/" => "Report output"}, scenario.sandbox_layout)
   end
 

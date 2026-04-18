@@ -16,7 +16,15 @@ module Ace
             Rules:
             - Execute each goal in order
             - Treat the initial working directory as SANDBOX_ROOT; if a goal needs commands in a created worktree, cd there for execution but keep any declared outcome artifacts under SANDBOX_ROOT/results
+            - Preserve the sandbox runtime environment; do not reset PATH, HOME, or other provided env vars
+            - If `ACE_E2E_SANDBOX_RUNTIME_ROOT` is set, make sure command execution uses `$ACE_E2E_SANDBOX_RUNTIME_ROOT/bin` on PATH in the shell where you run scenario commands
+            - Run `ace-*` commands directly; do not wrap them with `timeout`, `env -i`, or other execution wrappers that can change behavior or hide diagnostics
+            - Do not bypass the public CLI with repo-local executables such as `./exe/ace-*`, `bin/ace-*`, or `ruby .../exe/ace-*`
             - Do not fabricate output - all artifacts must come from real tool execution
+            - When a goal requires command captures, keep stdout and stderr separate; do not merge streams and do not use `2>&1`
+            - A command capture set is incomplete unless the matching `.stdout`, `.stderr`, and `.exit` files all exist
+            - Persist each command's `.stdout`, `.stderr`, and `.exit` files immediately after that command finishes, before starting the next command
+            - When a successful command prints a filesystem path to a generated artifact, copy that artifact into `results/` if the goal asks for supporting evidence from the generated file
             - If a goal fails, note the failure and continue to the next goal
             - Do not create synthetic helper reports or temp input files under results/ unless the scenario explicitly treats them as product outcomes
             - After all goals, return concise runner observations describing what you did and what happened
@@ -27,9 +35,12 @@ module Ace
 
             Rules:
             - Evaluate each goal independently based on sandbox state first, then runner observations, then raw debug captures only when needed
+            - Treat declared artifacts and helper filenames as hints, not as the source of truth
+            - If a helper file is missing or stale, inspect the sandbox directly before failing the goal
+            - Use read-only commands in the sandbox when they materially improve confidence (for example: git log/status/show, ls/find/cat)
             - Do not speculate beyond the provided sandbox evidence and runner observations
             - For each failed goal, include a category:
-              test-spec-error | tool-bug | runner-error | infrastructure-error
+              test-spec-error | tool-bug | runner-error | infrastructure-error | missing-artifact
             - For each goal, cite specific evidence (filenames, content snippets)
             - Follow the output format exactly
           PROMPT
@@ -60,17 +71,20 @@ module Ace
           # @param sandbox_path [String]
           # @param test_cases [Array<String>, nil]
           # @return [Hash]
-          def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil)
+          def prepare_verifier(scenario:, sandbox_path:, test_cases: nil, runner_observations: nil, artifact_contract: nil)
             cache_dir = ensure_cache_dir(sandbox_path)
             system_path = File.join(cache_dir, "verifier-system.md")
             prompt_path = File.join(cache_dir, "verifier-prompt.md")
 
             File.write(system_path, VERIFIER_SYSTEM_PROMPT)
 
+            project_context = build_project_context_section(scenario)
+            sandbox_context = build_sandbox_context_section(sandbox_path)
             artifacts = build_artifact_section(sandbox_path)
+            contract = build_artifact_contract_section(artifact_contract)
             observations = build_runner_observation_section(runner_observations)
             criteria = bundle_markdown_file(File.join(scenario.dir_path, "verifier.yml.md"), test_cases: test_cases)
-            File.write(prompt_path, [artifacts, observations, criteria].join("\n\n---\n\n"))
+            File.write(prompt_path, [project_context, sandbox_context, artifacts, contract, observations, criteria].join("\n\n---\n\n"))
 
             {
               system_path: system_path,
@@ -169,12 +183,91 @@ module Ace
             parts.join("\n").rstrip
           end
 
+          def build_project_context_section(scenario)
+            package_root = File.expand_path("../../..", scenario.dir_path)
+            source_root = File.expand_path("..", package_root)
+            files = [
+              File.join(package_root, "README.md"),
+              File.join(package_root, "docs", "usage.md"),
+              File.join(package_root, "docs", "getting-started.md"),
+              File.join(source_root, "CLAUDE.md")
+            ].select { |path| File.file?(path) }.first(3)
+
+            parts = []
+            parts << "# Project Context"
+            parts << ""
+            parts << "- Package: `#{scenario.package}`"
+            parts << "- Test ID: `#{scenario.test_id}`"
+            parts << "- Sandbox profile: `#{scenario.sandbox_profile}`"
+            parts << ""
+
+            files.each do |file|
+              parts << "## `#{File.basename(file)}`"
+              parts << "```"
+              parts << safe_read(file)
+              parts << "```"
+              parts << ""
+            end
+
+            parts.join("\n").rstrip
+          end
+
+          def build_sandbox_context_section(sandbox_path)
+            sandbox_path = File.expand_path(sandbox_path)
+            entries = Dir.glob(File.join(sandbox_path, "*"), File::FNM_DOTMATCH)
+              .reject { |path| %w[. ..].include?(File.basename(path)) }
+              .sort
+
+            parts = []
+            parts << "# Sandbox Context"
+            parts << ""
+            parts << "- Sandbox root: `#{sandbox_path}`"
+            parts << "- Inspect the sandbox directly when verifying source-of-truth state."
+            parts << ""
+            parts << "## Top-level entries"
+            parts << "```"
+            parts.concat(entries.map { |path| relative_path(path, sandbox_path) })
+            parts << "```"
+
+            parts.join("\n").rstrip
+          end
+
           def build_runner_observation_section(runner_observations)
             <<~MARKDOWN.rstrip
               # Runner Observations
 
               #{runner_observations.to_s.strip.empty? ? "(none provided)" : runner_observations.to_s.strip}
             MARKDOWN
+          end
+
+          def build_artifact_contract_section(artifact_contract)
+            return "# Artifact Contract\n\n(no snapshot provided)" if artifact_contract.nil? || artifact_contract.empty?
+
+            parts = []
+            parts << "# Artifact Contract"
+            parts << ""
+            parts << "Use this only as supporting context. Missing helper artifacts may be acceptable when sandbox state still proves the goal."
+            parts << ""
+
+            artifact_contract.sort.each do |tc_id, entry|
+              parts << "## #{tc_id}"
+              parts << ""
+              parts << "- Required artifacts: #{format_artifact_list(entry["required_artifacts"])}"
+              parts << "- Present required artifacts: #{format_artifact_list(entry["present_required_artifacts"])}"
+              parts << "- Missing required artifacts: #{format_artifact_list(entry["missing_required_artifacts"])}"
+              parts << "- Optional artifacts: #{format_artifact_list(entry["optional_artifacts"])}"
+              parts << "- Present optional artifacts: #{format_artifact_list(entry["present_optional_artifacts"])}"
+              parts << ""
+            end
+
+            parts.join("\n").rstrip
+          end
+
+          def format_artifact_list(paths)
+            items = Array(paths)
+            return "(none)" if items.empty?
+
+            items.map { |path| "`#{path}`" }.join(", ")
           end
 
           def relative_path(path, root)

@@ -499,6 +499,7 @@ module Ace
           # @return [Hash] Parsed result with :passed_cases and :total_cases
           def parse_subprocess_result(process)
             result = parse_test_output(process[:output], process[:thread].value.exitstatus, extract_test_name(process[:test_file]))
+            result[:report_dir] = normalize_report_dir(result[:report_dir], result[:test_name])
             result[:raw_output] = process[:output]
 
             # For non-pass results, check agent-written metadata as authoritative source
@@ -510,6 +511,34 @@ module Ace
             result
           rescue => e
             {status: "error", error: "Failed to parse result: #{e.message}"}
+          end
+
+          def normalize_report_dir(report_dir, test_name)
+            return report_dir if report_dir.nil? || report_dir.empty?
+            return report_dir if File.directory?(report_dir)
+            return report_dir unless File.file?(report_dir)
+
+            resolved = resolve_report_dir_from_suite_report(report_dir, canonical_test_id(test_name))
+            resolved || report_dir
+          rescue
+            report_dir
+          end
+
+          def resolve_report_dir_from_suite_report(report_path, test_id)
+            return nil unless report_path.end_with?(".md")
+            return nil if test_id.nil? || test_id.empty?
+
+            content = File.read(report_path)
+            escaped = Regexp.escape(test_id)
+            table_match = content.match(/^\|\s*#{escaped}\s*\|\s*`([^`]+)`\s*\|$/m)
+            return nil unless table_match
+
+            File.expand_path(table_match[1], File.dirname(report_path))
+          end
+
+          def canonical_test_id(test_name)
+            match = test_name.to_s.match(/\A(TS-[A-Z0-9]+-\d+[a-z]*)/i)
+            match ? match[1].upcase : test_name
           end
 
           # Override result from agent-written metadata.yml when subprocess exit code is misleading
@@ -578,7 +607,9 @@ module Ace
               error_msg ||= "Test execution returned ERROR status"
               base.merge(status: "error", error: error_msg)
             else
-              summary = output.match(/(\d+)\/(\d+) passed/)&.captures&.join("/") || "Test failed"
+              summary = output.lines.filter_map { |line| line[/^(Preflight failed: .+?)\s*$/, 1] }.last
+              summary ||= output.match(/(\d+)\/(\d+) passed/)&.captures&.join("/")
+              summary ||= "Test failed"
               base.merge(status: "fail", summary: summary)
             end
           rescue => e
@@ -644,6 +675,7 @@ module Ace
                   "status" => result[:status]
                 }
                 File.write(File.join(stub_dir, "metadata.yml"), YAML.dump(stub_data))
+                result[:report_dir] = stub_dir
 
                 if result[:raw_output] && !result[:raw_output].empty?
                   File.write(File.join(stub_dir, "subprocess_output.log"), result[:raw_output])
