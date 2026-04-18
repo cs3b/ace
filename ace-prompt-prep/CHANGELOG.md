@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.5] - 2026-04-18
+
+### Technical
+- Updated retained bundle-context E2E verification to assert the current bundled-output markers instead of obsolete `bundle:` frontmatter formatting.
+
+## [0.25.4] - 2026-04-16
+
+### Technical
+- Updated `TS-PREP-001` task-scoped process evidence to persist `task-create.*`, derive the task ID from real `ace-task create` output when needed, and verify the current `task-create` / `task-setup` / `task-process` contract without relying on a brittle helper file.
+
+## [0.25.3] - 2026-04-16
+
+### Technical
+- Updated `TS-PREP-001` task-scoped process verification to assert the current `task-setup.*` and `task-process.*` artifact contract instead of stale `task-create.*` expectations.
+
+## [0.25.2] - 2026-04-16
+
+### Fixed
+- Updated `TS-PREP-001` task-scoped verification to prove task reuse from workspace, archive, and symlink evidence without requiring setup/process stdout to repeat the task ID verbatim.
+
+## [0.25.1] - 2026-04-16
+
+### Technical
+- Updated `TS-PREP-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` so prompt-prep smoke runs stay aligned with the shared E2E sandbox contract.
+
+## [0.25.0] - 2026-04-15
+
+### Changed
+- Rewrote `TS-PREP-001` to strengthen bundle-mode evidence and add two public-surface journeys:
+  `ace-prompt-prep setup` workspace initialization and task-scoped `setup/process --task` execution.
+
+### Technical
+- Stabilized verifier contracts to prefer impact-first artifact evidence while tolerating deterministic harness
+  formatting variance (`content-diff` and task-id/workspace evidence sources).
+
 ## [0.24.2] - 2026-04-13
 
 ### Technical
