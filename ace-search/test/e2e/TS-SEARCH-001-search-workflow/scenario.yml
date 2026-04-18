@@ -11,13 +11,15 @@ tool-under-test: ace-search
 sandbox-layout:
   results/tc/01/: "Content-search artifacts"
   results/tc/02/: "File-search artifacts"
-  results/tc/03/: "Count-mode artifacts"
+  results/tc/03/: "Count/list artifacts"
   results/tc/04/: "JSON-output artifacts"
+  results/tc/05/: "Preset-driven artifacts"
+  results/tc/06/: "Git-scope artifacts"
 
 e2e-justification: >
-  Requires real ripgrep-backed execution across content, file, count, and JSON
-  output modes through the CLI with filesystem traversal and output formatting
-  behavior.
+  Requires real ripgrep-backed execution across content, file, count/list,
+  JSON output, preset invocation, and git-scoped modes through the public CLI
+  with user-visible outcome verification.
 
 unit-coverage-reviewed:
   - test/feat/cli_integration_test.rb
@@ -30,4 +32,4 @@ requires:
 
 setup:
   - git-init
-  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ]; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
