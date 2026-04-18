@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.22.0] - 2026-04-15
+
+### Changed
+- Reworked `TS-GIT-001` E2E contracts to use scenario-owned setup, removed runner bootstrap/fallback recipes, and tightened PR verification to direct `ace-git pr` outcomes.
+- Added `TS-GIT-002-public-surface-smoke` with help and range-routing coverage to validate documented public CLI entrypoints.
+
 ## [0.21.1] - 2026-04-13
 
 ### Changed
