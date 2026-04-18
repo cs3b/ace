@@ -36,6 +36,8 @@
 
 **Preview and control commit behavior safely** - use `--dry-run` to preview, `--only-staged` for strict staging, or `-m` for explicit messages, with configuration cascade from [ace-support-config](../ace-support-config) for project and user overrides.
 
+For the retained public verification flows, see the reproducible examples in the [Usage Guide](docs/usage.md#reproducible-split-and-no-split-setup) and [`--only-staged` expected git state](docs/usage.md#--only-staged-expected-git-state).
+
 ## Testing Contract
 
 `ace-git-commit` follows the restarted package test model:

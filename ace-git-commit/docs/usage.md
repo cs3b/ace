@@ -32,9 +32,9 @@ By default, stages ALL changes and generates a commit. Pass specific files to sc
 | `--intention` | `-i` | Context hint for message generation (e.g. "fix auth bug") |
 | `--message` | `-m` | Use this message directly instead of generating |
 | `--model` | | Provider:model override (e.g. role:commit, gpt4, claude) |
-| `--only-staged` | `-s` | Commit only already-staged files (don't auto-stage) |
+| `--only-staged` | `-s` | Commit only already-staged files and keep unstaged edits untouched |
 | `--dry-run` | `-n` | Preview message without committing |
-| `--no-split` | | Disable automatic scope-based commit splitting |
+| `--no-split` | | Disable automatic scope-based commit splitting (single commit across scopes) |
 | `--force` | `-f` | Force commit (future use) |
 
 ### Global Options
@@ -74,6 +74,43 @@ ace-git-commit -m "fix(auth): handle expired tokens"
 # Disable scope-based splitting in monorepo
 ace-git-commit --no-split
 ```
+
+## Reproducible Split and No-Split Setup
+
+Use package-level config to make split behavior explicit and reproducible:
+
+```bash
+mkdir -p pkg-a/.ace/git pkg-b/.ace/git
+
+cat > pkg-a/.ace/git/commit.yml <<'YAML'
+git:
+  conventions:
+    scope: pkg-a
+YAML
+
+cat > pkg-b/.ace/git/commit.yml <<'YAML'
+git:
+  conventions:
+    scope: pkg-b
+YAML
+```
+
+Then modify files in both packages:
+
+- Default behavior: `ace-git-commit pkg-a pkg-b` creates per-scope commits when split conditions are met.
+- Override behavior: `ace-git-commit --no-split pkg-a pkg-b` forces one commit containing both scopes.
+
+## `--only-staged` Expected Git State
+
+`--only-staged` uses the current index as the commit contract:
+
+1. Stage one or more files with `git add`.
+2. Leave other changes unstaged.
+3. Run `ace-git-commit --only-staged`.
+
+Expected outcome:
+- The new commit contains only staged files.
+- Unstaged modifications remain in `git status` after the commit.
 
 ## Configuration
 
