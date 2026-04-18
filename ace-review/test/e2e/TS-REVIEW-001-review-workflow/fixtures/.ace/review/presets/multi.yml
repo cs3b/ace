@@ -1,7 +1,7 @@
 description: "Multi-model E2E test"
 models:
-  - role:review-claude
-  - role:review-codex
+  - gemini:flash-latest@ro
+  - codex:mini@ro
 instructions:
   system: "Brief code review."
   user: "List issues only."

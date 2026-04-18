@@ -1,5 +1,5 @@
 description: "Single model E2E test"
-model: role:review-codex
+model: codex:mini@ro
 instructions:
   system: "Brief code review."
   user: "List issues in 1-2 sentences."

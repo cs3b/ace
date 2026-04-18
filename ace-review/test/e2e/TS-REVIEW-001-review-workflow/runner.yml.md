@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-single-model.runner.md
     - ./TC-002-multi-model.runner.md
+    - ./TC-003-docs-path-onboarding.runner.md
 ---
 
 # E2E Test Runner: ace-review Execution Workflows
@@ -21,7 +22,7 @@ Execute each goal sequentially.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 2)
+- Execute each goal in order (1 through 3)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
