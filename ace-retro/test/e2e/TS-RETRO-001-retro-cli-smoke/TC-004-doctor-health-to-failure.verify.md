@@ -7,10 +7,10 @@ Validation order (impact-first):
 2. Confirm command artifacts under `results/tc/04/`.
 3. Use debug captures as fallback.
 
-1. `doctor-healthy.exit` is `0`.
-2. `doctor-broken.exit` is non-zero (`1` expected).
-3. `doctor-broken.stdout` or `.stderr` shows issue detection/failure messaging.
-4. `corrupted-file.path` and `corrupted-file.md` show a real in-sandbox corruption step occurred, and the captured content is structurally invalid (malformed frontmatter).
+1. `corrupted-file.path` exists, points to a scenario-local `.ace-retros/*.retro.md` file, and `corrupted-file.md` captures a structurally invalid frontmatter mutation.
+2. `doctor-healthy.exit` is `0`.
+3. `doctor-broken.exit` is non-zero (`1` expected).
+4. `doctor-broken.stdout` or `.stderr` shows issue detection/failure messaging.
 
 ## Verdict
 
