@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-exact-stdio-and-stats.verify.md
     - ./TC-003-per-source-output.verify.md
     - ./TC-004-compact-refusal.verify.md
+    - ./TC-005-agent-mode-smoke.verify.md
+    - ./TC-006-benchmark-smoke.verify.md
 ---
 
 # E2E Verification: ace-compressor CLI Smoke
@@ -37,4 +39,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/6 passed**
