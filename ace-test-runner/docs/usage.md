@@ -90,6 +90,14 @@ ace-test-suite [options]
 - `--help`: print usage help
 - `--version`: print suite version
 
+### `ace-test-suite` examples
+
+```bash
+ace-test-suite --config .ace/test/suite.yml
+ace-test-suite --config .ace/test/suite.yml --target fast
+ace-test-suite --config .ace/test/suite.yml --timeout 1200
+```
+
 ## Notes
 
 - `ace-test` resolves package arguments using ACE package discovery.
@@ -97,5 +105,7 @@ ace-test-suite [options]
 - Bare `ace-test <package>` resolves to the `fast` target.
 - `feat` is the deterministic feature layer with controlled local IO.
 - Scenario E2E is run with `ace-test-e2e <package>`, not `ace-test <package> e2e`.
+- Canonical `ace-test-runner` scenario E2E invocation is `ace-test-e2e ace-test-runner`.
+- For suite E2E coverage, prefer explicit config + target (`--config .ace/test/suite.yml`, optional `--target fast`) rather than fallback command branching.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.
 - Package defaults and user config are merged with CLI options.
