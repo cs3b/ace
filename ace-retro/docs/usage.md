@@ -131,6 +131,8 @@ ace-retro doctor --check frontmatter
 ace-retro doctor --json
 ```
 
+For negative-path validation in a test sandbox, run `ace-retro doctor` once on healthy files, then re-run after introducing invalid frontmatter in a sandbox-local retro file; the second run should exit non-zero with issue output.
+
 ## Common Commands
 
 | Command | What it does |
