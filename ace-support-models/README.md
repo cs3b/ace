@@ -45,6 +45,16 @@ ace-test ace-support-models all       # all deterministic lanes
 ace-test-e2e ace-support-models       # retained workflow scenarios
 ```
 
+For deterministic E2E setup of cache-dependent provider commands, use the public
+`ace-models sync` path with a fixture payload:
+
+```bash
+export ACE_MODELS_FIXTURE_JSON='{"anthropic":{"models":{"claude-sonnet-4":{"id":"claude-sonnet-4"}}}}'
+ace-models sync
+ace-llm-providers list
+unset ACE_MODELS_FIXTURE_JSON
+```
+
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)

@@ -12,6 +12,8 @@ class ApiFetcherTest < AceModelsTestCase
   def teardown
     # Reset connection to allow fresh connections in next test
     Ace::Support::Models::Atoms::ApiFetcher.instance_variable_set(:@connection, nil)
+    ENV.delete("ACE_MODELS_FIXTURE_JSON")
+    ENV.delete("ACE_MODELS_API_URL")
   end
 
   def test_fetch_success
@@ -91,6 +93,24 @@ class ApiFetcherTest < AceModelsTestCase
     end
 
     assert_match(/SSL/i, error.message)
+  end
+
+  def test_fetch_returns_fixture_json_when_env_is_set
+    ENV["ACE_MODELS_FIXTURE_JSON"] = '{"providers":{"anthropic":{"models":{"claude-3-7-sonnet":{"id":"claude-3-7-sonnet"}}}}}'
+
+    result = Ace::Support::Models::Atoms::ApiFetcher.fetch
+
+    assert_match(/anthropic/, result)
+    assert_match(/claude-3-7-sonnet/, result)
+  end
+
+  def test_fetch_uses_api_url_env_when_url_not_provided
+    ENV["ACE_MODELS_API_URL"] = "http://test.example/api.json"
+    stub_request_with_response(200, '{"source":"env"}')
+
+    result = Ace::Support::Models::Atoms::ApiFetcher.fetch
+
+    assert_equal '{"source":"env"}', result
   end
 
   def test_api_url_constant

@@ -90,7 +90,8 @@ module Ace
             models_by_provider = {}
 
             data.each do |provider_id, provider_data|
-              count = (provider_data["models"] || {}).size
+              models = provider_models(provider_data)
+              count = models.size
               models_by_provider[provider_id] = count
               model_count += count
             end
@@ -100,6 +101,13 @@ module Ace
               model_count: model_count,
               top_providers: models_by_provider.sort_by { |_, v| -v }.first(10).to_h
             }
+          end
+
+          def provider_models(provider_data)
+            return {} unless provider_data.is_a?(Hash)
+
+            models = provider_data["models"] || provider_data[:models]
+            models.is_a?(Hash) ? models : {}
           end
         end
       end

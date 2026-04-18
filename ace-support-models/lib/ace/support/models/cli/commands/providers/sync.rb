@@ -53,7 +53,7 @@ module Ace
                   puts orchestrator.format_result(result)
                 end
               rescue CacheError => e
-                raise Ace::Support::Cli::Error.new("#{e.message}. Run 'ace-models cache sync' first to download model data.")
+                raise Ace::Support::Cli::Error.new("#{e.message}. Run 'ace-models sync' first to download model data.")
               rescue ConfigError => e
                 raise Ace::Support::Cli::Error.new("Config error: #{e.message}")
               end
