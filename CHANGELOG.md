@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-llm v0.36.3**: Fixed `ace-llm --interactive` startup for `codex` so alias-style `/as-onboard` interactive prompts no longer fail on a missing `subprocess_command_prefix` keyword.
 - **ace-git-secrets v0.15.4**: Corrected usage documentation for machine-parseable `check-release --format json` output and config-driven format defaults.
 - **ace-llm v0.36.2**: Refreshed Codex model examples and help guidance to use the current stable `codex:gpt` alias and documented current provider aliases.
 - **ace-bundle v0.43.4**: Added support for documented `bundle.sources` frontmatter entries so prompt-prep and bundle workflows can expand file, command, and preset sources through the public context path.
