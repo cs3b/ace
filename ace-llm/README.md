@@ -18,7 +18,7 @@
 
 ![ace-llm demo](docs/demo/ace-llm-getting-started.gif)
 
-`ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt-5:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths, or start supported CLI providers in native interactive mode with `--interactive`. Fallback routing and retry behavior keep prompt workflows resilient.
+`ace-llm` gives developers and coding agents one command surface for querying any LLM provider. Address models by alias (`gflash`, `sonnet`), explicit `provider:model` notation, or with thinking levels (`codex:gpt:high`) and execution presets (`cc@ro`). Pass prompts and system instructions inline or as file paths, or start supported CLI providers in native interactive mode with `--interactive`. Fallback routing and retry behavior keep prompt workflows resilient.
 
 ## Testing
 
@@ -43,7 +43,7 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 **Switch providers with aliases** - use short names like `gflash`, `sonnet`, `opus` instead of full `provider:model` notation. Aliases resolve through versioned YAML in [`.ace-defaults/`](docs/usage.md).
 
-**Control reasoning depth** - append a thinking level (`codex:gpt-5:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
+**Control reasoning depth** - append a thinking level (`codex:gpt:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
 
 **Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`.
 

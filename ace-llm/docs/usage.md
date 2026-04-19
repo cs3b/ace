@@ -3,8 +3,8 @@ doc-type: how-to-guide
 title: ace-llm Usage Guide
 purpose: Usage guide for ace-llm CLI — querying providers, managing output, and handling errors.
 ace-docs:
-  last-updated: 2026-04-15
-  last-checked: 2026-04-15
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # ace-llm Usage Guide
@@ -65,6 +65,14 @@ Common aliases in current defaults:
 | `gflash` | `google:flash` -> `google:gemini-flash-latest` |
 | `glite` | `google:lite` -> `google:gemini-flash-lite-latest` |
 | `gpro` | `google:pro` -> `google:gemini-2.5-pro` |
+| `gemini:flash-latest` | `gemini:gemini-2.5-flash` |
+| `gemini:pro-latest` | `gemini:gemini-2.5-pro` |
+| `codex:gpt` | `codex:gpt-5.4` |
+| `codex:mini` | `codex:gpt-5.4-mini` |
+| `codex:codex` | `codex:gpt-5.3-codex` |
+| `codex:spark` | `codex:gpt-5.3-codex-spark` |
+| `codex-gpt5` | `codex:gpt-5.4` |
+| `codex-mini` | `codex:gpt-5.4-mini` |
 | `sonnet` | `anthropic:s` -> `anthropic:claude-sonnet-4-5` |
 | `opus` | `anthropic:o` -> `anthropic:claude-opus-4-5` |
 | `haiku` | `anthropic:h` -> `anthropic:claude-haiku-4-5` |
@@ -74,7 +82,7 @@ Preset suffixes can be applied with `@` or `--preset`:
 
 ```bash
 ace-llm cc@ro "Summarize this diff"
-ace-llm codex:gpt-5@yolo "Fix this bug"
+ace-llm codex:gpt@yolo "Fix this bug"
 ace-llm claude:sonnet "Review this file" --preset rw
 ```
 
@@ -93,7 +101,7 @@ Preset configs are loaded from `.ace-defaults/llm/presets/<provider>/<preset>.ym
 Thinking levels control reasoning depth for CLI providers that support extended thinking. Append `:level` after the model:
 
 ```bash
-ace-llm codex:gpt-5:high "Explain this architecture"
+ace-llm codex:gpt:high "Explain this architecture"
 ace-llm claude:sonnet:low "Quick summary"
 ace-llm codex:spark:medium@ro "Review this diff"
 ```
@@ -125,7 +133,7 @@ When writing to file, output is multiline and includes fields such as:
 ### Start an interactive CLI agent
 
 ```bash
-ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive
+ace-llm codex:gpt@yolo "/as-assign-drive abc123@010" --interactive
 ace-llm claude:sonnet "/as-assign-drive abc123@010" --interactive
 ace-llm pi:zai/glm-4.7 "/as-assign-drive abc123@010" --interactive
 ```
