@@ -10,15 +10,15 @@ Save only real command captures to `results/tc/03/`.
 
 ## Constraints
 
-- Reuse the task created in Goal 2 by reading `results/tc/02/resolved-ref.txt` when available.
+- Create a fresh archive-specific task in this goal; do not move the Goal 2 task, because Goal 2 proves the non-archived create/list/show state.
 - Capture command outputs only; the verifier will inspect the archive tree directly.
-- If `resolved-ref.txt` is missing or invalid, create a fallback task in this goal and persist its ref to `results/tc/03/fallback-ref.txt`.
-- Mention the resolved task ref and which path was used (reused or fallback) in final runner observations.
+- Persist the archive-specific ref to `results/tc/03/archive-ref.txt`.
+- Mention the archive-specific task ref in final runner observations.
 
 ## Steps
 
-1. Resolve the target task ref from `results/tc/02/resolved-ref.txt` when available.
-2. If the handoff file is missing or unusable, run `ace-task create "E2E smoke fallback task" --status pending`, capture `fallback-create.*`, and use that ref.
-3. Persist the selected target ref to `results/tc/03/fallback-ref.txt` (even when Goal 2 handoff was used) so verifier evidence is deterministic.
+1. Run `ace-task create "E2E smoke archive task" --status pending` and save `archive-create.*`.
+2. Resolve the created task ref from `archive-create.stdout`.
+3. Persist the selected target ref to `results/tc/03/archive-ref.txt`.
 4. Run `ace-task update <ref> --set status=done --move-to archive` and save `update.*`.
 5. Run `ace-task show <ref>` and save `show-after-update.*`.
