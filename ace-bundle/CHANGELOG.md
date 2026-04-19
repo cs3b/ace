@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.43.5] - 2026-04-19
+
+### Changed
+- Documented the `bundle.sources` preset shorthand in the configuration and getting-started guides so generated bundle presets can use the public file, command, and preset source-list contract.
+
 ## [0.43.4] - 2026-04-19
 
 ### Fixed

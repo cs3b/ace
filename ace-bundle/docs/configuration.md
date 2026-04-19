@@ -3,8 +3,8 @@ doc-type: user
 title: Configuration Guide
 purpose: Documentation for ace-bundle/docs/configuration.md
 ace-docs:
-  last-updated: 2026-01-17
-  last-checked: 2026-03-21
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # Configuration Guide
@@ -60,6 +60,7 @@ bundle:
   params:           # Output and processing parameters
   base:             # Path or protocol to a file for base content
   embed_document_source: bool  # Include the preset file itself in output
+  sources:          # Unified source list for files, commands, and presets
   files:            # List of files to include (simplified format)
   commands:         # List of commands to execute (simplified format)
   diffs:            # Git diff ranges (simplified format)
@@ -200,6 +201,32 @@ bundle:
     - CHANGELOG.md
 ---
 ```
+
+### Unified Source List
+
+Use `bundle.sources` when you want one ordered list that mixes files, commands, and presets. This is equivalent to using
+the dedicated `files`, `commands`, and `presets` keys, but it is easier to generate from prompt-preparation workflows.
+
+```yaml
+---
+description: "Mixed context sources"
+bundle:
+  sources:
+    - file: README.md
+    - file: docs/**/*.md
+    - command: git status --short
+    - preset: project-base
+---
+```
+
+`sources` entries are normalized internally before the bundle runs:
+
+- `file` entries are loaded like `bundle.files`
+- `command` entries are executed like `bundle.commands`
+- `preset` entries are composed like top-level `presets`
+
+You can mix `sources` with the dedicated keys when needed. Prefer dedicated keys for hand-written presets that benefit
+from separate sections, and prefer `sources` for compact generated presets.
 
 ## Section-Based Format Examples
 
