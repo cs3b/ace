@@ -20,5 +20,7 @@ Save all output to `results/tc/02/`. Capture:
 - Use only `ace-prompt-prep` for processing; do not fabricate archive artifacts.
 - Prepare the prompt content before invocation so it includes:
   - a unique marker token in the body: `BUNDLE_CONTEXT_CHECKPOINT`
-  - a `context` block with at least one resolvable source (prefer `docs/architecture.md`)
+  - a `bundle.sources` block with at least one resolvable source (prefer `ace-prompt-prep/docs/usage.md`)
+- After saving `bundle.stdout`, immediately copy the same processed stdout content to `results/tc/02/bundle-output.md`.
+- If stdout is empty, still create `bundle-output.md` as an empty file so missing-output and empty-output failures are distinguishable.
 - Validate from captured artifacts, not assumptions, that context mode did not break archive behavior.

@@ -24,4 +24,6 @@ Save all output to `results/tc/04/`. Capture:
 - Persist `task-create.stdout`, `.stderr`, and `.exit` before starting `setup --task`.
 - If you also write `task-id.txt`, its value must match the task ID shown in `task-create.stdout`.
 - Ensure the task prompt content contains marker token `TASK_SCOPE_CHECKPOINT` before processing.
+- After saving `task-process.stdout`, immediately copy the same processed stdout content to `results/tc/04/task-output.md`.
+- If stdout is empty, still create `task-output.md` as an empty file so missing-output and empty-output failures are distinguishable.
 - Validate task-scope behavior using captured filesystem and output artifacts, not assumptions.
