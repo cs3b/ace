@@ -1,7 +1,7 @@
 description: "Reviewers format E2E test"
 reviewers:
   - name: "reviewer-1"
-    model: "gemini:flash-latest@ro"
+    model: "codex:mini@ro"
   - name: "reviewer-2"
     model: "codex:mini@ro"
 instructions:
