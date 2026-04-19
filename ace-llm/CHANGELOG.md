@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.3] - 2026-04-19
+
+### Fixed
+- Fixed `ace-llm --interactive` startup for Codex aliases so the `/as-onboard` and related interactive alias prompts are launched with a valid subprocess command shape instead of aborting with a missing keyword.
+
 ## [0.36.2] - 2026-04-19
 
 ### Fixed
