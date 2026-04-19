@@ -19,7 +19,7 @@ bundle:
 # E2E Test Runner: ace-git-worktree (Task-Aware)
 
 Tool under test: ace-git-worktree
-Required tools: ace-git-worktree, git
+Required tools: ace-git-worktree, git, gh
 Workspace root: (current directory)
 
 Execute each goal sequentially. Goal 1 is discovery — all later goals

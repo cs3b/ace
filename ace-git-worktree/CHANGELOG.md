@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ace-git-worktree v0.20.4**: Fixed `create --pr <number>` to avoid an `ace-tmux` subcommand mismatch when launching project tmux sessions.
 - **ace-git-worktree v0.20.3**: Fixed `create --pr <number>` parsing so `--pr` is not treated as a positional branch argument when routed through `ace-support-cli`.
 
+## [0.21.4] - 2026-04-19
+
+### Technical
+- Updated the retained task-aware PR lifecycle E2E contract to treat missing or unauthenticated GitHub CLI access as a valid graceful-prerequisite branch when the command surfaces an actionable error and leaves no partial PR worktree behind.
+
 ## [0.21.3] - 2026-04-18
 
 ### Technical
