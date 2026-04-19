@@ -155,6 +155,30 @@ class PlainMarkdownLoadTest < AceTestCase
       "Should include referenced file content"
   end
 
+  def test_bundle_sources_file_entries_expand_as_files
+    temp_file = File.join(@temp_dir, "test-sources-config.md")
+    sample_file = File.join(@temp_dir, "sample-source.txt")
+    File.write(sample_file, "Sample content for sources test")
+
+    content = <<~MARKDOWN
+      ---
+      bundle:
+        sources:
+          - file: #{sample_file}
+      ---
+
+      # Prompt Body
+    MARKDOWN
+
+    File.write(temp_file, content)
+
+    result = Ace::Bundle.load_file(temp_file, compressor_source_scope: "per-source", compressor_mode: "exact")
+
+    refute result.metadata[:error], "Expected no error, got: #{result.metadata[:error]}"
+    assert_includes result.content.to_s, "Sample content for sources test",
+      "Should include file content referenced through bundle.sources"
+  end
+
   def test_template_keys_still_work
     # Files with files: key should still be processed as templates
     temp_file = File.join(@temp_dir, "test-template-keys.md")
