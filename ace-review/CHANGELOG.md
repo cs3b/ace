@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.5] - 2026-04-19
+
+### Technical
+- Stabilized retained multi-model and reviewers-format E2E fixtures by pinning them to installed direct review models instead of ambient mixed-provider availability.
+
 ## [0.53.4] - 2026-04-16
 
 ### Technical
