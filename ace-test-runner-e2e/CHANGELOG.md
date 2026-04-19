@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.9] - 2026-04-19
+
+### Changed
+- Strengthened the E2E failure-analysis and fix workflows to require explicit docs/help drift reporting for every failed TC, so stale usage docs or CLI help surfaced by E2E failures become concrete fix targets instead of hidden runner workarounds.
+
 ## [0.38.8] - 2026-04-16
 
 ### Fixed

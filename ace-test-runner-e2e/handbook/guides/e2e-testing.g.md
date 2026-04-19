@@ -3,8 +3,8 @@ doc-type: guide
 title: E2E Testing Guide
 purpose: Conventions and best practices for agent-executed end-to-end tests
 ace-docs:
-  last-updated: 2026-03-12
-  last-checked: 2026-03-21
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # E2E Testing Guide
@@ -72,6 +72,10 @@ Reject or rewrite the TC if it depends on:
 - workaround branches for unsupported or undocumented behavior
 - direct supporting-tool probes as the primary oracle
 - internal details that are not necessary to prove the user job
+
+When an E2E failure shows that a valid user job is not discoverable from docs, usage guides, or `--help`, treat that as
+docs/help drift. Failure analysis must record the stale or missing public surface and the exact docs/help target to
+update instead of teaching the runner a workaround.
 
 ## Cost and Scope
 
@@ -150,4 +154,5 @@ Before approving new/updated E2E tests:
 - [ ] Runner observations are the only non-filesystem secondary evidence source
 - [ ] Scenario can be completed from docs/usage/`--help` without hidden recipes or workaround instructions
 - [ ] Any friction/workaround found during review is treated as a gap, not as a runner script opportunity
+- [ ] Failure analysis records docs/help drift from failed public user paths, or explicitly records `None`
 - [ ] Value-gate metadata is present (`e2e-justification`, `unit-coverage-reviewed`, `cost-tier`)

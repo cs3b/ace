@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Test::EndToEndRunner Handbook Reference
 purpose: Package-local skills, workflows, and source map for ace-test-runner-e2e
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # Ace::Test::EndToEndRunner Handbook Reference
@@ -18,7 +18,7 @@ ace-docs:
 | `as-e2e-review` | Review E2E coverage quality and scenario fidelity |
 | `as-e2e-plan-changes` | Plan scenario updates from review output |
 | `as-e2e-rewrite` | Rewrite scenario files according to change plan |
-| `as-e2e-fix` | Diagnose and repair failing E2E scenarios |
+| `as-e2e-fix` | Diagnose and repair failing E2E scenarios, including docs/help drift surfaced by failures |
 | `as-e2e-manage` | Orchestrate review -> plan -> rewrite lifecycle |
 | `as-e2e-setup-sandbox` | Prepare and validate E2E sandbox environment |
 
@@ -31,11 +31,11 @@ ace-docs:
 | `wfi://e2e/review` | Produce structured E2E review findings |
 | `wfi://e2e/plan-changes` | Convert findings into executable change plan |
 | `wfi://e2e/rewrite` | Apply change plan to scenario/test files |
-| `wfi://e2e/fix` | Triage and fix failing E2E tests |
+| `wfi://e2e/fix` | Triage and fix failing E2E tests, requiring docs/help drift analysis before fixes |
 | `wfi://e2e/manage` | Coordinate review/plan/rewrite pipeline |
 | `wfi://e2e/setup-sandbox` | Standardized sandbox preparation |
 | `wfi://e2e/execute` | Execute prepared scenarios in existing sandbox contexts |
-| `wfi://e2e/analyze-failures` | Analyze recurring failure surfaces and patterns |
+| `wfi://e2e/analyze-failures` | Analyze failed TCs, classify root cause, and report stale docs/help surfaces |
 
 ## Source paths
 
