@@ -23,7 +23,7 @@ Capture:
 
 Execution guidance:
 1. Create `ace-test-runner/test/fast/atoms/intentional_failure_test.rb` inside the sandbox with one deterministic failing test whose class name or failure message is uniquely identifiable (for example `IntentionalFailureTest` and `INTENTIONAL_E2E_FAILURE_SENTINEL`).
-2. Save that file path to `results/tc/02/injected-test.path`.
+2. Immediately save that file path to `results/tc/02/injected-test.path` before running any test command or cleanup step.
 3. Run `ace-test <path-from-injected-test.path>` first and persist `precheck.command.txt`, `precheck.stdout`, `precheck.stderr`, and `precheck.exit`. The precheck must fail non-zero and its output must visibly reference the injected file, test class, or sentinel message.
 4. Run `ace-test-suite --config .ace/test/suite.yml --target fast`.
 5. Persist `command.txt`, `stdout.txt`, `stderr.txt`, and `.exit` even when the suite command fails.

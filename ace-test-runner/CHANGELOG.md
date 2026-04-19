@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.5] - 2026-04-19
+
+### Technical
+- Tightened retained suite failure-propagation runner guidance to persist the injected failing-test path before precheck and cleanup steps.
+
 ## [0.25.4] - 2026-04-18
 
 ### Technical
