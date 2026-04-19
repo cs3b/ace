@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.38.10**: Added strict runner ordering guidance, verifier artifact mtimes, and direct goal-number-to-TC mapping so E2E reports surface out-of-order captures without shifting failed TC IDs.
 - **ace-llm v0.36.3**: Fixed `ace-llm --interactive` startup for `codex` so alias-style `/as-onboard` interactive prompts no longer fail on a missing `subprocess_command_prefix` keyword.
 - **ace-git-secrets v0.15.4**: Corrected usage documentation for machine-parseable `check-release --format json` output and config-driven format defaults.
 - **ace-llm v0.36.2**: Refreshed Codex model examples and help guidance to use the current stable `codex:gpt` alias and documented current provider aliases.
@@ -37,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
 
 ### Technical
+- Coordinated retained E2E contract patch releases for PR-auth prerequisite handling and overseer work-on capture ordering: `ace-git-worktree v0.21.4` and `ace-overseer v0.14.12`.
 - Coordinated retained E2E contract patch releases after the targeted failure triage: `ace-b36ts v0.14.8`, `ace-prompt-prep v0.25.6`, `ace-review v0.53.5`, `ace-task v0.36.1`, and `ace-test-runner v0.25.5`.
 - **ace-task v0.35.5**: Tightened spike-task workflow guidance so design/runtime spikes must declare proof expectations, explicit follow-up tasks, and spec-refresh behavior when implementation materially drifts from the spike contract.
 - Updated the checked-in tmux `work-on` Codex pane preset to launch through `ace-llm --interactive`, unifying Overseer and assignment forks on the same provider startup path.
