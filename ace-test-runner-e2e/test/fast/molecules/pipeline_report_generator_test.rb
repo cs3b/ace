@@ -80,6 +80,51 @@ class PipelineReportGeneratorTest < Minitest::Test
     end
   end
 
+  def test_generate_maps_non_one_based_goal_numbers_to_matching_tc_ids
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+      scenario = TestScenario.new(
+        test_id: "TS-OVERSEER-001",
+        title: "Overseer Pipeline",
+        area: "overseer",
+        package: "ace-overseer",
+        file_path: File.join(tmpdir, "scenario.yml"),
+        content: "",
+        test_cases: [
+          TestCase.new(tc_id: "TC-002", title: "Work-On", content: "", file_path: File.join(tmpdir, "TC-002.runner.md")),
+          TestCase.new(tc_id: "TC-003", title: "Rerun", content: "", file_path: File.join(tmpdir, "TC-003.runner.md")),
+          TestCase.new(tc_id: "TC-004", title: "Preset", content: "", file_path: File.join(tmpdir, "TC-004.runner.md")),
+          TestCase.new(tc_id: "TC-005", title: "Prune", content: "", file_path: File.join(tmpdir, "TC-005.runner.md"))
+        ]
+      )
+
+      result = generator.generate(
+        scenario: scenario,
+        verifier_output: <<~OUT,
+          ### Goal 2 - Work-On Happy Path
+          - **Verdict**: FAIL
+          - **Category**: runner-error
+          - **Evidence**: postcondition capture predates work-on exit
+
+          ### Goal 3 - Idempotent Re-Run
+          - **Verdict**: PASS
+          - **Evidence**: reuse was visible
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal ["TC-002", "TC-003"], result.test_cases.map { |tc| tc[:id] }
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "TC-002", metadata["failed"].first["tc"]
+      assert_includes File.read(File.join(report_dir, "report.md")), "| TC-003 | PASS |"
+    end
+  end
+
   def test_generate_captures_overall_user_outcome_fields
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")

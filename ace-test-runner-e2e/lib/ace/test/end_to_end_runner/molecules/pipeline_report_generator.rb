@@ -140,7 +140,9 @@ module Ace
               evidence = extract_evidence(block)
               next if verdict.nil?
 
-              tc_id = scenario_test_cases[goal_number - 1]&.tc_id || format("TC-%03d", goal_number)
+              direct_goal_id = format("TC-%03d", goal_number)
+              direct_match = scenario_test_cases.find { |tc| tc.tc_id.to_s.upcase == direct_goal_id }
+              tc_id = direct_match&.tc_id || scenario_test_cases[goal_number - 1]&.tc_id || direct_goal_id
               category = extract_category(block, evidence)
 
               {

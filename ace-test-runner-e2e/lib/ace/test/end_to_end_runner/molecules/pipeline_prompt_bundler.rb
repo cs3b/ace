@@ -2,6 +2,7 @@
 
 require "date"
 require "fileutils"
+require "time"
 require "yaml"
 
 module Ace
@@ -21,9 +22,11 @@ module Ace
             - Run `ace-*` commands directly; do not wrap them with `timeout`, `env -i`, or other execution wrappers that can change behavior or hide diagnostics
             - Do not bypass the public CLI with repo-local executables such as `./exe/ace-*`, `bin/ace-*`, or `ruby .../exe/ace-*`
             - Do not fabricate output - all artifacts must come from real tool execution
+            - Never background commands or start dependent verification captures before the command they verify has completed
             - When a goal requires command captures, keep stdout and stderr separate; do not merge streams and do not use `2>&1`
             - A command capture set is incomplete unless the matching `.stdout`, `.stderr`, and `.exit` files all exist
             - Persist each command's `.stdout`, `.stderr`, and `.exit` files immediately after that command finishes, before starting the next command
+            - For commands that establish state, write that command's `.exit` file before running any list/status/fs-check/tmux verification for the same goal
             - When a successful command prints a filesystem path to a generated artifact, copy that artifact into `results/` if the goal asks for supporting evidence from the generated file
             - If a goal fails, note the failure and continue to the next goal
             - Do not create synthetic helper reports or temp input files under results/ unless the scenario explicitly treats them as product outcomes
@@ -37,6 +40,7 @@ module Ace
             - Evaluate each goal independently based on sandbox state first, then runner observations, then raw debug captures only when needed
             - Treat declared artifacts and helper filenames as hints, not as the source of truth
             - If a helper file is missing or stale, inspect the sandbox directly before failing the goal
+            - Use artifact mtimes to detect runner ordering mistakes; if postcondition captures are older than the primary command's stdout/stderr/exit, classify the goal as `runner-error` unless direct sandbox state proves a product failure after the command completed
             - Use read-only commands in the sandbox when they materially improve confidence (for example: git log/status/show, ls/find/cat)
             - Do not speculate beyond the provided sandbox evidence and runner observations
             - For each failed goal, include a category:
@@ -167,6 +171,13 @@ module Ace
             parts << "## Directory tree"
             parts << "```"
             parts.concat(tree_entries)
+            parts << "```"
+            parts << ""
+            parts << "## File metadata"
+            parts << "```"
+            files.each do |file|
+              parts << "#{relative_path(file, sandbox_path)}\tmtime=#{File.mtime(file).utc.iso8601}"
+            end
             parts << "```"
             parts << ""
             parts << "## File contents"
