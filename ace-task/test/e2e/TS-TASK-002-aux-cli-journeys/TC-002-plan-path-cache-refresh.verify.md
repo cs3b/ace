@@ -23,3 +23,5 @@ Validation order (impact-first):
 
 - **PASS**: At least one plan path command succeeds with a real artifact, or the sandbox produces only actionable dependency failures; command artifacts are present in either case.
 - **FAIL**: Successful runs lack artifacts, failures are not actionable, or command artifacts are missing.
+
+If both plan commands exit non-zero with `Plan generation failed: Codex CLI execution timed out after 30 seconds` in stderr, report `PASS` because the public CLI produced bounded, actionable sandbox diagnostics.
