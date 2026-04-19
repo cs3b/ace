@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.8] - 2026-04-19
+
+### Technical
+- Hardened `TS-B36TS-001` decode roundtrip runner guidance so the encoded token is persisted before public decode commands execute.
+
 ## [0.14.7] - 2026-04-16
 
 ### Technical
