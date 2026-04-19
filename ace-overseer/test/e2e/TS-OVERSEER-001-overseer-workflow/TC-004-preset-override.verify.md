@@ -15,10 +15,11 @@ Validation order (impact-first):
 
 Checks:
 1. **Artifacts exist** -- results/tc/04/ contains `work-on.*` and supporting verification outputs.
-2. **Zero exit code** -- Command succeeded.
-3. **Exact worktree path created** -- the sandbox now contains a worktree for task `8pp.t.r8x`, and runner observations or `work-on.stdout` identify the created path.
-4. **Task association evidence** -- supporting evidence ties the created path or list output to task 8pp.t.r8x.
-5. **Custom preset used** -- Assignment details reference the custom preset name.
+2. **Capture ordering is coherent** -- worktree and status captures must not be older than `work-on.exit`; if they are older, classify as runner ordering error.
+3. **Zero exit code** -- Command succeeded.
+4. **Exact worktree path created** -- the sandbox now contains a worktree for task `8pp.t.r8x`, and runner observations or `work-on.stdout` identify the created path.
+5. **Task association evidence** -- public `ace-git-worktree list` output must show task `r8x`; `ace-overseer status --format json` should show the r8x assignment when available.
+6. **Custom preset used** -- Assignment details reference the custom preset name.
 
 ## Verdict
 

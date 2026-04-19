@@ -28,6 +28,7 @@ Save all output to `results/tc/02/`. Capture:
 
 - The sandbox has task 8pp.t.q7w in .ace-tasks/ and default preset in .ace/assign/presets/.
 - Preflight should remain minimal: only capture the top-level `ace-overseer --help` output needed for command-surface confirmation.
+- Run `ace-overseer work-on --task 8pp.t.q7w` to completion and write `work-on.stdout`, `work-on.stderr`, and `work-on.exit` before starting worktree, tmux, or status verification captures.
 - When verifying tmux windows, target `ACE_TMUX_SESSION` explicitly.
 - Verify assignment activation via `ace-overseer status --format json` (cross-worktree oracle), not root-scoped `ace-assign status`.
 - All artifacts must come from real tool execution, not fabricated.
