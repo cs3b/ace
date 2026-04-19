@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-bundle v0.43.4**: Added support for documented `bundle.sources` frontmatter entries so prompt-prep and bundle workflows can expand file, command, and preset sources through the public context path.
 - **ace-git-worktree v0.20.5**: Updated `ace-git-worktree create` tmux integration so it uses `ace-tmux start` outside tmux and `ace-tmux window` when already nested in a tmux session.
 - **ace-git-worktree v0.20.4**: Fixed `ace-git-worktree create --pr <number>` so `ace-tmux` is launched with the required `start` subcommand.
 - **ace-llm v0.35.1**: Corrected the `cli_args` threading feature tests to assert the normalized array contract and stub Codex preset loading directly, restoring a clean `ace-test ace-llm` package run.
@@ -31,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
 
 ### Technical
+- Coordinated retained E2E contract patch releases after the targeted failure triage: `ace-b36ts v0.14.8`, `ace-prompt-prep v0.25.6`, `ace-review v0.53.5`, `ace-task v0.36.1`, and `ace-test-runner v0.25.5`.
 - **ace-task v0.35.5**: Tightened spike-task workflow guidance so design/runtime spikes must declare proof expectations, explicit follow-up tasks, and spec-refresh behavior when implementation materially drifts from the spike contract.
 - Updated the checked-in tmux `work-on` Codex pane preset to launch through `ace-llm --interactive`, unifying Overseer and assignment forks on the same provider startup path.
 - Coordinated retained E2E contract patch releases for scenario-proof fixes: `ace-assign v0.53.3`, `ace-git-secrets v0.15.3`, `ace-git-worktree v0.21.3`, `ace-lint v0.30.4`, `ace-overseer v0.14.11`, `ace-prompt-prep v0.25.5`, and `ace-test-runner v0.25.4`.
