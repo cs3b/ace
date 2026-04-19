@@ -23,7 +23,7 @@ module Ace
           final_prompt = prompt.to_s
           raise Error, "No prompt specified. Use positional prompt or --prompt." if final_prompt.empty?
 
-          generation_opts = QueryInterface.send(
+        generation_opts = QueryInterface.send(
             :build_generation_opts,
             provider: parse_result.provider,
             preset: resolved_preset,
@@ -37,6 +37,7 @@ module Ace
             sandbox: sandbox,
             working_dir: working_dir,
             subprocess_env: subprocess_env,
+            subprocess_command_prefix: nil,
             last_message_file: nil
           )
 
