@@ -1,10 +1,17 @@
 ---
+name: e2e-analyze-failures
+description: Analyze failing E2E scenarios, classify root causes, and surface docs/help drift before fixes.
+allowed-tools:
+- Bash(ace-bundle:*)
+- Read
+- Grep
+- Glob
 doc-type: workflow
 title: Analyze E2E Failures Workflow
 purpose: analyze-e2e-failures workflow instruction
 ace-docs:
-  last-updated: 2026-03-04
-  last-checked: 2026-03-21
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # Analyze E2E Failures Workflow
@@ -17,6 +24,7 @@ This workflow determines whether each failure is caused by:
 - application/tool code
 - E2E test definition/spec
 - E2E runner/infrastructure
+- stale, missing, or misleading docs/help that made the public user path unclear
 
 ## Hard Rule
 
@@ -51,7 +59,7 @@ Use exactly one category per failed TC:
 
 Public-surface interpretation rules:
 - If the TC fails because it encoded a hidden recipe or workaround, classify it as `test-issue`.
-- If the intended user job is valid but the public CLI/docs/`--help` do not support it cleanly, classify it as `code-issue` with a fix target in product/docs/help rather than preserving the workaround.
+- If the intended user job is valid but the public CLI/docs/`--help` do not support it cleanly, classify it as `code-issue` with a fix target in product docs/help or CLI help rather than preserving the workaround.
 - If the failure is about internal detail that a user cannot or need not observe from the public surface, prefer narrowing/removing the TC over deepening the runner.
 
 ## Required Evidence Sources
@@ -90,13 +98,25 @@ If the aggregate report and per-scenario report disagree:
 - Before claiming sandbox escape or fixture contamination, compare repo `git status --short` before and after the relevant E2E run when that evidence is available. Do not infer escape solely from an after-the-fact dirty tree.
 - Check whether the scenario required a hidden recipe or workaround to reach the goal. If yes, record that explicitly in the evidence and classification.
 
-4. Recommend rerun scope (cost-aware)
+4. Audit docs/help drift for each failed TC
+- Identify the user job the TC is trying to prove.
+- Check the public surface that a normal user or agent would consult:
+  - package `README.md`
+  - package `docs/usage.md`
+  - package `docs/getting-started.md`
+  - package `docs/handbook.md`
+  - direct command `--help` output for the command involved
+- Record whether the failure exposes stale, missing, or misleading docs/help.
+- If drift exists, list concrete docs/help update targets and make them part of the fix target.
+- If no drift exists, record `None` explicitly. Do not omit the docs/help assessment.
+
+5. Recommend rerun scope (cost-aware)
 - `scenario` (default)
 - `package`
 - `suite`
 with explicit rationale
 
-5. Choose autonomous fix decision per failed TC
+6. Choose autonomous fix decision per failed TC
 - Select a single primary fix action
 - Provide concrete file targets in priority order
 - Define explicit no-touch boundaries
@@ -112,6 +132,17 @@ Produce this section before exiting:
 | Scenario / TC | Category | Evidence | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
 |---|---|---|---|---|---|---|---|---|---|---|
 | TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | re-run scenario after spec adjustment | scenario |
+```
+
+Then produce a docs/help drift section. This section is required even when no drift is found:
+
+```markdown
+## Docs / Help Drift From E2E Failures
+
+| Scenario / TC | User Job | Public Surface Checked | Drift Found | Evidence | Update Targets | Action |
+|---|---|---|---|---|---|---|
+| TS-FOO-001 / TC-003 | user-facing job being tested | README, docs/usage.md, --help | yes | docs show stale flag missing from help | docs/usage.md, CLI --help | update docs/help before preserving scenario path |
+| TS-BAR-001 / TC-001 | user-facing job being tested | README, docs/usage.md, --help | no | public path is documented and help matches | None | no docs/help update |
 ```
 
 Then include:
@@ -136,6 +167,7 @@ Then include:
 - Fix target is explicit per failed TC
 - Fix target files are explicit per failed TC (primary + fallback)
 - No-touch boundaries are explicit per failed TC
+- Docs/help drift is assessed for every failed TC with concrete update targets or `None`
 - A single autonomous chosen fix decision is present per failed TC
 - Rerun scope recommendation is cost-aware
 - No code/scenario/runner edits were made in this workflow
