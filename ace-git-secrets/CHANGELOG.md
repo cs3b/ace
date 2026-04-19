@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-04-19
+
+### Fixed
+- Corrected the usage guide for JSON release-gate output and config-driven format defaults so docs match the current `scan` and `check-release` public output behavior.
+
 ## [0.15.3] - 2026-04-18
 
 ### Technical
