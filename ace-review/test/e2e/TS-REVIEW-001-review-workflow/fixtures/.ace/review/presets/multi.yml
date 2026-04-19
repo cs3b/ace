@@ -1,6 +1,6 @@
 description: "Multi-model E2E test"
 models:
-  - gemini:flash-latest@ro
+  - codex:mini@ro
   - codex:mini@ro
 instructions:
   system: "Brief code review."
