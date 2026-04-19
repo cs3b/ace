@@ -449,6 +449,7 @@ module Ace
               (frontmatter.keys & %w[preset presets files commands include exclude diffs]).any?
             # Use frontmatter as the main config
             config = unwrap_bundle_config(frontmatter)
+            config = normalize_bundle_sources(config)
 
             # Merge params into options if present
             params = config["params"]
@@ -613,6 +614,7 @@ module Ace
 
         def load_from_preset_config(preset, options)
           bundle_config = preset[:bundle] || {}
+          bundle_config = normalize_bundle_sources(bundle_config)
 
           # Apply CLI overrides to context config (CLI takes precedence)
           bundle_config = apply_cli_overrides(bundle_config)
@@ -890,6 +892,8 @@ module Ace
         end
 
         def process_template_config(config)
+          config = normalize_bundle_sources(config)
+
           # Apply CLI overrides to config (CLI takes precedence)
           config = apply_cli_overrides(config)
 
@@ -987,6 +991,39 @@ module Ace
           end
 
           bundle
+        end
+
+        def normalize_bundle_sources(config)
+          return config unless config.is_a?(Hash)
+
+          sources = config["sources"] || config[:sources]
+          return config unless sources.is_a?(Array) && sources.any?
+
+          normalized = config.dup
+          files = Array(normalized["files"] || normalized[:files])
+          commands = Array(normalized["commands"] || normalized[:commands])
+          presets = Array(normalized["presets"] || normalized[:presets])
+
+          sources.each do |source|
+            case source
+            when Hash
+              source_file = source["file"] || source[:file]
+              source_command = source["command"] || source[:command]
+              source_preset = source["preset"] || source[:preset]
+              files << source_file if source_file
+              commands << source_command if source_command
+              presets << source_preset if source_preset
+            when String
+              files << source
+            end
+          end
+
+          normalized["files"] = files.compact.uniq if files.any?
+          normalized["commands"] = commands.compact.uniq if commands.any?
+          normalized["presets"] = presets.compact.uniq if presets.any?
+          normalized.delete("sources")
+          normalized.delete(:sources)
+          normalized
         end
 
         def format_bundle(bundle, format)

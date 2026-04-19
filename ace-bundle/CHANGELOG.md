@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.43.4] - 2026-04-19
+
+### Fixed
+- Added support for documented `bundle.sources` frontmatter entries so file, command, and preset sources expand through the same public bundle path as direct `files`, `commands`, and `presets` keys.
+
 ## [0.43.3] - 2026-04-16
 
 ### Technical
