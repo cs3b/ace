@@ -3,8 +3,8 @@ doc-type: user
 title: ace-git-secrets Usage Guide
 purpose: CLI reference for ace-git-secrets
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-19
+  last-checked: 2026-04-19
 ---
 
 # ace-git-secrets Usage Guide
@@ -42,6 +42,7 @@ Behavior:
 - Summary output goes to stdout by default
 - A full report is always saved to `.ace-local/git-secrets/sessions/`
 - The saved JSON report includes raw token values needed by `revoke` and `rewrite-history`
+- When `--format` is omitted, verbose stdout uses `output.format` from config before falling back to `table`
 
 Options:
 
@@ -171,8 +172,8 @@ ace-git-secrets check-release --strict
 ace-git-secrets check-release --format json
 ```
 
-Prefer exit codes for automation. `check-release --format json` currently includes banner text, so it is better suited to
-inspection than strict machine parsing.
+Prefer exit codes for pass/fail automation. Use `check-release --format json` when automation also needs the structured
+release-gate result; JSON output is emitted without banner text.
 
 ## Configuration
 
@@ -197,6 +198,9 @@ output:
 github:
   api_url: https://github.mycompany.com/api/v3
 ```
+
+The `output.format` value is used as the default stdout format for commands that support formatted output when their
+`--format` option is not provided.
 
 Use whitelist rules for known safe examples or fixtures. Keep real credentials out of the whitelist and revoke them
 instead.
