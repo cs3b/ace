@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-git-secrets v0.15.4**: Corrected usage documentation for machine-parseable `check-release --format json` output and config-driven format defaults.
+- **ace-llm v0.36.2**: Refreshed Codex model examples and help guidance to use the current stable `codex:gpt` alias and documented current provider aliases.
 - **ace-bundle v0.43.4**: Added support for documented `bundle.sources` frontmatter entries so prompt-prep and bundle workflows can expand file, command, and preset sources through the public context path.
 - **ace-git-worktree v0.20.5**: Updated `ace-git-worktree create` tmux integration so it uses `ace-tmux start` outside tmux and `ace-tmux window` when already nested in a tmux session.
 - **ace-git-worktree v0.20.4**: Fixed `ace-git-worktree create --pr <number>` so `ace-tmux` is launched with the required `start` subcommand.
@@ -29,6 +31,8 @@ All notable changes to this project will be documented in this file.
 - **ace-git-secrets v0.15.2**: Let configured `output.format` values drive `scan` and `check-release` output by removing forced table defaults from the CLI layer.
 
 ### Changed
+- **ace-bundle v0.43.5**: Documented the `bundle.sources` preset shorthand in configuration and getting-started docs so generated context presets use the public source-list contract.
+- **ace-test-runner-e2e v0.38.9**: Required E2E failure analysis and fix workflows to report docs/help drift for every failed TC so stale public instructions become explicit fix targets.
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
 
 ### Technical
