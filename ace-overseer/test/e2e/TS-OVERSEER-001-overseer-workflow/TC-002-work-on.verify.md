@@ -15,11 +15,12 @@ Validation order (impact-first):
 Checks:
 1. **Artifacts exist** -- results/tc/02/ contains preflight help output plus work-on/status captures.
 2. **Help preflight captured** -- `ace-overseer --help` output exists and references at least two subcommands (work-on, status, prune).
-3. **Zero exit code** -- work-on command succeeded.
-4. **Worktree created** -- Worktree list shows an entry for task 8pp.t.q7w.
-5. **Tmux window created** -- Tmux output shows a task-related window was created or reused.
-6. **Assignment active (overseer oracle)** -- `overseer-status.json` shows task 8pp.t.q7w with active assignment state.
-7. **Table status output captured** -- `overseer-status-table.stdout` exists and is non-empty.
+3. **Capture ordering is coherent** -- worktree, tmux, and status captures must not be older than `work-on.exit`; if they are older, classify as runner ordering error.
+4. **Zero exit code** -- work-on command succeeded.
+5. **Worktree created** -- Worktree list shows an entry for task 8pp.t.q7w.
+6. **Tmux window created** -- Tmux output shows a task-related window was created or reused.
+7. **Assignment active (overseer oracle)** -- `overseer-status.json` shows task 8pp.t.q7w with active assignment state.
+8. **Table status output captured** -- `overseer-status-table.stdout` exists and is non-empty.
 
 ## Verdict
 

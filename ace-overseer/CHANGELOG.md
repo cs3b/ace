@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.12] - 2026-04-19
+
+### Technical
+- Tightened retained overseer E2E runner and verifier contracts so `work-on` postcondition captures cannot run before the primary command has completed, and preset-override verification requires public `r8x` worktree evidence.
+
 ## [0.14.11] - 2026-04-18
 
 ### Technical

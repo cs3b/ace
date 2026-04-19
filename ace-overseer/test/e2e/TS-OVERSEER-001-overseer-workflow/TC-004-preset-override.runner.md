@@ -17,6 +17,7 @@ Save all output to `results/tc/04/`. Capture:
 ## Constraints
 
 - The sandbox has task 8pp.t.r8x and a custom-e2e-preset preset.
+- Run `ace-overseer work-on --task 8pp.t.r8x --preset custom-e2e-preset` to completion and write `work-on.stdout`, `work-on.stderr`, and `work-on.exit` before starting worktree or status captures.
 - Verify using stable public outputs (`worktree list` and `ace-overseer status`), not hidden/internal files.
 - All artifacts must come from real tool execution, not fabricated.
 - Mention the created worktree path in final runner observations.
