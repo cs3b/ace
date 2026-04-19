@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.10] - 2026-04-19
+
+### Fixed
+- Added strict runner ordering guidance, verifier artifact mtimes, and direct goal-number-to-TC mapping so E2E reports classify out-of-order postcondition captures as runner errors instead of shifting failed TC IDs.
+
 ## [0.38.9] - 2026-04-19
 
 ### Changed
