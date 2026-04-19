@@ -99,18 +99,19 @@ module Ace
             puts '  ace-llm google:gemini-2.5-flash "What is Ruby?"'
             puts '  ace-llm gflash "Quick question" # using alias'
             puts '  ace-llm gflash@ro "Summarize this diff"'
-            puts '  ace-llm codex:gpt-5:high@ro "Review this code"'
+            puts '  ace-llm codex:gpt:high@ro "Review this code"'
             puts '  ace-llm claude:sonnet "Summarize this diff" --preset rw'
             puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
             puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
-            puts '  ace-llm codex:gpt-5@yolo "/as-assign-drive abc123@010" --interactive'
+            puts '  ace-llm codex:gpt@yolo "/as-assign-drive abc123@010" --interactive'
             puts ""
             puts "Provider Aliases:"
             puts "  Short aliases for common provider:MODEL combinations:"
-            puts "    gflash    → google:gemini-2.5-flash"
-            puts "    glite     → google:gemini-2.0-flash-lite"
-            puts "    gpt4      → openai:gpt-4"
-            puts "    claude    → anthropic:claude-3-5-sonnet"
+            puts "    gflash    → google:gemini-flash-latest"
+            puts "    glite     → google:gemini-flash-lite-latest"
+            puts "    codex:gpt → codex:gpt-5.4"
+            puts "    cc        → claude:sonnet"
+            puts "    sonnet    → anthropic:claude-sonnet-4-5"
           end
 
           def show_provider_help

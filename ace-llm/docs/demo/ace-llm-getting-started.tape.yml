@@ -16,7 +16,7 @@ scenes:
     sleep: 4s
   - type: ace-llm glite 'Say hello in one sentence'
     sleep: 4s
-  - type: ace-llm codex:gpt-5:medium@yolo 'Say hello in one sentence'
+  - type: ace-llm codex:gpt:medium@yolo 'Say hello in one sentence'
     sleep: 5s
   - type: ace-llm codex:spark:low@ro 'Say hello in one sentence'
     sleep: 5s

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.2] - 2026-04-19
+
+### Fixed
+- Refreshed Codex model examples in README, usage, getting-started, demo, and help output from stale `codex:gpt-5` forms to the current stable `codex:gpt` alias and updated current provider alias guidance.
+
 ## [0.36.1] - 2026-04-16
 
 ### Fixed
