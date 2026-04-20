@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-04-20
+
+### Technical
+- Stabilized `TS-SECRETS-001` help-survey verification by checking explicit public-surface facts instead of an arbitrary observation line count.
+- Relaxed `TS-SECRETS-001` rewrite dry-run verification to reuse the canonical saved report captured by the prior scan goal instead of requiring a duplicate copy.
+- Clarified `TS-SECRETS-001` config-cascade verification so table/plain CLI override output is recognized as distinct from config-driven JSON output.
+- Allowed `TS-SECRETS-001` history-persistence verification to use later real scan artifacts as fallback post-removal evidence when the dedicated rescan capture is missing.
+
 ## [0.15.4] - 2026-04-19
 
 ### Fixed

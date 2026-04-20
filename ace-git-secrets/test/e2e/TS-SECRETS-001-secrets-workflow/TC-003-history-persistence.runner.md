@@ -15,4 +15,5 @@ Save all output to `results/tc/03/`. Capture:
 - Remove config.env with `git rm`, commit, then re-scan.
 - The scan uses `gitleaks git` which inspects full commit history.
 - All artifacts must come from real tool execution, not fabricated.
-- `results/tc/03/removal.stdout` must include both the file-removal command output and the commit confirmation in one captured artifact or appended real command output.
+- `results/tc/03/removal.stdout` must include both the file-removal evidence and commit confirmation.
+- If you realize after committing that the removal command output was not captured, populate `removal.stdout` from real git evidence such as `git status --short`, `git log --stat -1`, and/or `git show --stat --oneline HEAD`; do not leave the artifact missing.
