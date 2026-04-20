@@ -71,7 +71,7 @@ ace-idea create "Add retry logic to webhook delivery" --tags reliability,webhook
 This creates a markdown file in `.ace-ideas/`:
 
 ```
-.ace-ideas/_next/8r2f4-add-retry-logic-to-webhook-delivery/
+.ace-ideas/8r2f4-add-retry-logic-to-webhook-delivery/
   8r2f4-add-retry-logic-to-webhook-delivery.idea.s.md
 ```
 
@@ -84,7 +84,7 @@ ace-idea show 8r2f4                        # show one idea
 ace-idea update 8r2f4 --move-to next       # move between buckets
 ```
 
-Idea locations: `_next/` (up next), `_maybe/` (considering), `_review/` (needs review), `_archive/` (done).
+Idea locations: root scope is the virtual `next` queue; `_maybe/`, `_review/`, and `_archive/` are physical folders.
 
 ## 2. Draft a task from the idea
 
