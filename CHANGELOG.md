@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-retro v0.18.3**: Updated retro synthesis and self-improvement workflow archive steps to use `ace-retro update REF --move-to archive`, matching the current CLI surface.
 - **ace-test-runner-e2e v0.38.10**: Added strict runner ordering guidance, verifier artifact mtimes, and direct goal-number-to-TC mapping so E2E reports surface out-of-order captures without shifting failed TC IDs.
 - **ace-llm v0.36.3**: Fixed `ace-llm --interactive` startup for `codex` so alias-style `/as-onboard` interactive prompts no longer fail on a missing `subprocess_command_prefix` keyword.
 - **ace-git-secrets v0.15.4**: Corrected usage documentation for machine-parseable `check-release --format json` output and config-driven format defaults.
