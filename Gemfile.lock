@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.53.3)
+    ace-assign (0.53.4)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.34)
       ace-support-cli (~> 0.6)
@@ -156,7 +156,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.21.2)
+    ace-idea (0.21.3)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
