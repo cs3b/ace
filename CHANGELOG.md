@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
 
 ### Technical
+- **ace-lint v0.30.5**: Fixed validator chain fast-test mocks to stub command-path resolution with validator availability, keeping the package suite hermetic when local Ruby linter executables are absent.
 - Coordinated retained E2E contract patch releases for assignment hierarchy targeting and idea next-queue documentation drift: `ace-assign v0.53.4` and `ace-idea v0.21.3`.
 - Coordinated retained E2E contract patch releases for public-surface verifier stability: `ace-git-secrets v0.15.5` and `ace-support-nav v0.28.2`.
 - Coordinated retained E2E contract patch releases for PR-auth prerequisite handling and overseer work-on capture ordering: `ace-git-worktree v0.21.4` and `ace-overseer v0.14.12`.
