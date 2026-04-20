@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-04-20
+
+### Fixed
+- Updated retro synthesis and self-improvement workflows to archive consumed retros with `ace-retro update REF --move-to archive`, matching the current CLI after the standalone `move` command removal.
+
 ## [0.18.2] - 2026-04-16
 
 ### Technical

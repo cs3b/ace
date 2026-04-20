@@ -184,7 +184,7 @@ Populate the retro with the root cause analysis, the fix applied, and the expect
 If the input source was an existing retro, archive it after the improvement has been applied — the retro has been "consumed":
 
 ```bash
-ace-retro move REF --to archive
+ace-retro update REF --move-to archive
 ```
 
 ## Success Criteria
