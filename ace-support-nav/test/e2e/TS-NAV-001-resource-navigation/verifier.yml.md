@@ -8,7 +8,7 @@ bundle:
   files:
     - ./TC-001-help-survey.verify.md
     - ./TC-002-extension-inference.verify.md
-    - ./TC-003-priority-and-exact-match.verify.md
+    - ./TC-003-discovery-listing.verify.md
     - ./TC-004-error-handling.verify.md
     - ./TC-006-create-from-template-public-path.verify.md
 ---

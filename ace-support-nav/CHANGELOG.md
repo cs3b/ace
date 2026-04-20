@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-04-20
+
+### Technical
+- Stabilized `TS-NAV-001` discovery-listing verification by requiring canonical `list.*` captures for the public `ace-nav list` workflow.
+
 ## [0.28.1] - 2026-04-16
 
 ### Technical
