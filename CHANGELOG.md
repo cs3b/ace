@@ -372,7 +372,7 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
 
-## [2026-04-05
+## [0.9.938] - 2026-04-05
 
 ### Fixed
 - **ace-assign v0.42.4**: Scoped canonical `skill://` and `wfi://` discovery to in-project defaults and explicitly registered external sources, and preserved child `skill` metadata only for hand-authored explicit split sub-steps.
