@@ -429,14 +429,16 @@ module Ace
           # Uses Ace::B36ts library to encode unique IDs with 50ms precision,
           # ensuring distinct timestamps for parallel test runs.
           #
+          # Offset uses 0.1 (100ms) instead of 0.05 to avoid collisions with
+          # the 50ms encoder's approximate bucket size.
+          #
           # @param count [Integer] Number of unique timestamps needed
           # @return [Array<String>] Array of unique timestamp strings
           def generate_timestamps(count)
-            base_tick = (Time.now.utc.to_r * 20).floor
+            base_time = Time.now.utc
 
             count.times.map do |i|
-              tick_time = Time.at((base_tick + i).fdiv(20)).utc
-              Ace::B36ts.encode(tick_time, format: :"50ms")
+              Ace::B36ts.encode(base_time + (i * 0.1), format: :"50ms")
             end
           end
 

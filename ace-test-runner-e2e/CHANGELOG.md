@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.11] - 2026-04-20
+
+### Fixed
+- Spaced batch run IDs by 100ms in `TestOrchestrator` so generated 50ms-format IDs remain unique under fast consecutive suite execution.
+
 ## [0.38.10] - 2026-04-19
 
 ### Fixed
