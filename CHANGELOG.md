@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
 
 ### Technical
+- Coordinated retained E2E contract patch releases for public-surface verifier stability: `ace-git-secrets v0.15.5` and `ace-support-nav v0.28.2`.
 - Coordinated retained E2E contract patch releases for PR-auth prerequisite handling and overseer work-on capture ordering: `ace-git-worktree v0.21.4` and `ace-overseer v0.14.12`.
 - Coordinated retained E2E contract patch releases after the targeted failure triage: `ace-b36ts v0.14.8`, `ace-prompt-prep v0.25.6`, `ace-review v0.53.5`, `ace-task v0.36.1`, and `ace-test-runner v0.25.5`.
 - **ace-task v0.35.5**: Tightened spike-task workflow guidance so design/runtime spikes must declare proof expectations, explicit follow-up tasks, and spec-refresh behavior when implementation materially drifts from the spike contract.
