@@ -154,6 +154,10 @@ Options:
 ### `ace-assign finish [STEP] --message VALUE`
 
 Complete current in-progress step (or explicit step in active assignment) with report content.
+Use positional `STEP` only for the active assignment. When targeting another
+assignment or a scoped subtree, pass `--assignment <id>` or
+`--assignment <id@step>` without a positional `STEP`; the command finishes the
+current in-progress step in that target.
 
 `--message` accepts:
 

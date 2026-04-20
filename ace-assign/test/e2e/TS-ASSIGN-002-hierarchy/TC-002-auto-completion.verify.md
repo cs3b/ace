@@ -15,16 +15,22 @@ Validation order (impact-first):
 ### Single-Level
 1. **Children exist under parent**.
 2. **Parent cannot finish early while children remain incomplete**.
-3. **Child completion commands succeeded**.
-4. **Parent auto-completes after all children are done**.
-5. **Queue advances to next top-level step**.
+3. **Targeting is valid** — `select-single.exit`, `finish-single-1.exit`, and
+   `finish-single-2.exit` are `0`; stderr must not contain the positional
+   `STEP` plus `--assignment` error.
+4. **Child completion commands succeeded**.
+5. **Parent auto-completes after all children are done**.
+6. **Queue advances to next top-level step**.
 
 ### Multi-Level
-6. **Grandparent/parent/grandchild hierarchy exists**.
-7. **Grandchild completion command succeeded**.
-8. **Ancestor cascade auto-completion occurs**.
-9. **Auto-completion report/state evidence exists for ancestors**.
-10. **Queue advances to the next top-level step**.
+7. **Grandparent/parent/grandchild hierarchy exists**.
+8. **Targeting is valid** — `select-multi.exit` and `finish-multi-1.exit` are
+   `0`; stderr must not contain the positional `STEP` plus `--assignment`
+   error.
+9. **Grandchild completion command succeeded**.
+10. **Ancestor cascade auto-completion occurs**.
+11. **Auto-completion report/state evidence exists for ancestors**.
+12. **Queue advances to the next top-level step**.
 
 ## Verdict
 
