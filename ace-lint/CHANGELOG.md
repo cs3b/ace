@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.5] - 2026-04-20
+
+### Technical
+- Fixed validator chain unit-test mocks so command-path resolution is stubbed alongside validator availability, keeping the fast suite hermetic on machines without local `standardrb` or `rubocop` executables.
+
 ## [0.30.4] - 2026-04-18
 
 ### Technical

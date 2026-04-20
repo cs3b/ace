@@ -3,6 +3,17 @@
 require "test_helper"
 
 class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
+  def stub_command_paths
+    standardrb_path = ->(cmd) { cmd == "standardrb" ? "standardrb" : nil }
+    rubocop_path = ->(cmd) { cmd == "rubocop" ? "rubocop" : nil }
+
+    Ace::Lint::Atoms::StandardrbRunner.stub(:resolve_command_path, standardrb_path) do
+      Ace::Lint::Atoms::RuboCopRunner.stub(:resolve_command_path, rubocop_path) do
+        yield
+      end
+    end
+  end
+
   # Helper to stub both runners' availability and linting
   def stub_runners(standardrb: {available: true, result: nil}, rubocop: {available: true, result: nil})
     # Reset caches before stubbing so stubs are called (not cached results)
@@ -13,31 +24,33 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
     # Stub availability checks for both runners
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, standardrb[:available]) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, rubocop[:available]) do
-        # Stub Open3.capture3 for actual linting commands
-        Open3.stub(:capture3, ->(*args) {
-          if args.first == "standardrb"
-            result = standardrb[:result] || {success: true, errors: [], warnings: []}
-            mock_status = Object.new
-            mock_status.define_singleton_method(:success?) { result[:success] }
-            mock_status.define_singleton_method(:exitstatus) { result[:success] ? 0 : 1 }
-            [result.to_json, "", mock_status]
-          elsif args.first == "rubocop"
-            result = rubocop[:result] || {success: true, errors: [], warnings: []}
-            mock_status = Object.new
-            mock_status.define_singleton_method(:success?) { result[:success] }
-            mock_status.define_singleton_method(:exitstatus) { result[:success] ? 0 : 1 }
-            [result.to_json, "", mock_status]
-          else
-            mock_fail = Object.new
-            mock_fail.define_singleton_method(:success?) { false }
-            mock_fail.define_singleton_method(:exitstatus) { 1 }
-            ["", "", mock_fail]
+        stub_command_paths do
+          # Stub Open3.capture3 for actual linting commands
+          Open3.stub(:capture3, ->(*args) {
+            if args.first == "standardrb"
+              result = standardrb[:result] || {success: true, errors: [], warnings: []}
+              mock_status = Object.new
+              mock_status.define_singleton_method(:success?) { result[:success] }
+              mock_status.define_singleton_method(:exitstatus) { result[:success] ? 0 : 1 }
+              [result.to_json, "", mock_status]
+            elsif args.first == "rubocop"
+              result = rubocop[:result] || {success: true, errors: [], warnings: []}
+              mock_status = Object.new
+              mock_status.define_singleton_method(:success?) { result[:success] }
+              mock_status.define_singleton_method(:exitstatus) { result[:success] ? 0 : 1 }
+              [result.to_json, "", mock_status]
+            else
+              mock_fail = Object.new
+              mock_fail.define_singleton_method(:success?) { false }
+              mock_fail.define_singleton_method(:exitstatus) { 1 }
+              ["", "", mock_fail]
+            end
+          }) do
+            # Pre-populate both caches with stub values so subsequent tests hit cache
+            Ace::Lint::Atoms::StandardrbRunner.available?
+            Ace::Lint::Atoms::RuboCopRunner.available?
+            yield
           end
-        }) do
-          # Pre-populate both caches with stub values so subsequent tests hit cache
-          Ace::Lint::Atoms::StandardrbRunner.available?
-          Ace::Lint::Atoms::RuboCopRunner.available?
-          yield
         end
       end
     end
@@ -155,20 +168,22 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
     # Stub availability for both runners
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, true) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, true) do
-        Open3.stub(:capture3, ->(*args) {
-          if args.first == "standardrb"
-            call_count[:standardrb] += 1
-            [standardrb_result.to_json, "", mock_status]
-          elsif args.first == "rubocop"
-            call_count[:rubocop] += 1
-            [rubocop_result.to_json, "", mock_status]
-          end
-        }) do
-          chain = Ace::Lint::Molecules::ValidatorChain.new([:standardrb, :rubocop])
-          result = chain.run(["test.rb"])
+        stub_command_paths do
+          Open3.stub(:capture3, ->(*args) {
+            if args.first == "standardrb"
+              call_count[:standardrb] += 1
+              [standardrb_result.to_json, "", mock_status]
+            elsif args.first == "rubocop"
+              call_count[:rubocop] += 1
+              [rubocop_result.to_json, "", mock_status]
+            end
+          }) do
+            chain = Ace::Lint::Molecules::ValidatorChain.new([:standardrb, :rubocop])
+            result = chain.run(["test.rb"])
 
-          # Should have only 1 warning (deduplicated)
-          assert_equal 1, result[:warnings].size
+            # Should have only 1 warning (deduplicated)
+            assert_equal 1, result[:warnings].size
+          end
         end
       end
     end
@@ -211,22 +226,24 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
     # Stub availability for both runners
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, true) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, true) do
-        Open3.stub(:capture3, ->(*args) {
-          if args.first == "standardrb"
-            [standardrb_result.to_json, "", mock_status]
-          elsif args.first == "rubocop"
-            [rubocop_result.to_json, "", mock_status]
+        stub_command_paths do
+          Open3.stub(:capture3, ->(*args) {
+            if args.first == "standardrb"
+              [standardrb_result.to_json, "", mock_status]
+            elsif args.first == "rubocop"
+              [rubocop_result.to_json, "", mock_status]
+            end
+          }) do
+            # Pre-populate both caches with stub values so subsequent tests hit cache
+            Ace::Lint::Atoms::StandardrbRunner.available?
+            Ace::Lint::Atoms::RuboCopRunner.available?
+
+            chain = Ace::Lint::Molecules::ValidatorChain.new([:standardrb, :rubocop])
+            result = chain.run(["test.rb"])
+
+            # Should have both warnings (different issues)
+            assert_equal 2, result[:warnings].size
           end
-        }) do
-          # Pre-populate both caches with stub values so subsequent tests hit cache
-          Ace::Lint::Atoms::StandardrbRunner.available?
-          Ace::Lint::Atoms::RuboCopRunner.available?
-
-          chain = Ace::Lint::Molecules::ValidatorChain.new([:standardrb, :rubocop])
-          result = chain.run(["test.rb"])
-
-          # Should have both warnings (different issues)
-          assert_equal 2, result[:warnings].size
         end
       end
     end
