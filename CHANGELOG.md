@@ -6,7 +6,6 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.939] - 2026-04-20
 
-
 ### Fixed
 - **ace-test-runner-e2e v0.38.11**: Spaced `TestOrchestrator` batch run IDs by 100ms so 50ms-format timestamp IDs stay unique during fast consecutive package-suite execution.
 - **ace-retro v0.18.3**: Updated retro synthesis and self-improvement workflow archive steps to use `ace-retro update REF --move-to archive`, matching the current CLI surface.
@@ -37,89 +36,14 @@ All notable changes to this project will be documented in this file.
 - **ace-overseer v0.14.9**: Reused the same task manager through default assignment launch so multi-task `work-on` flows keep task resolution consistent after provisioning.
 - **ace-git-secrets v0.15.2**: Let configured `output.format` values drive `scan` and `check-release` output by removing forced table defaults from the CLI layer.
 
-### Changed
-- **ace-bundle v0.43.5**: Documented the `bundle.sources` preset shorthand in configuration and getting-started docs so generated context presets use the public source-list contract.
-- **ace-test-runner-e2e v0.38.9**: Required E2E failure analysis and fix workflows to report docs/help drift for every failed TC so stale public instructions become explicit fix targets.
-- **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
-
-### Technical
-- **ace-lint v0.30.5**: Fixed validator chain fast-test mocks to stub command-path resolution with validator availability, keeping the package suite hermetic when local Ruby linter executables are absent.
-- Coordinated retained E2E contract patch releases for assignment hierarchy targeting and idea next-queue documentation drift: `ace-assign v0.53.4` and `ace-idea v0.21.3`.
-- Coordinated retained E2E contract patch releases for public-surface verifier stability: `ace-git-secrets v0.15.5` and `ace-support-nav v0.28.2`.
-- Coordinated retained E2E contract patch releases for PR-auth prerequisite handling and overseer work-on capture ordering: `ace-git-worktree v0.21.4` and `ace-overseer v0.14.12`.
-- Coordinated retained E2E contract patch releases after the targeted failure triage: `ace-b36ts v0.14.8`, `ace-prompt-prep v0.25.6`, `ace-review v0.53.5`, `ace-task v0.36.1`, and `ace-test-runner v0.25.5`.
-- **ace-task v0.35.5**: Tightened spike-task workflow guidance so design/runtime spikes must declare proof expectations, explicit follow-up tasks, and spec-refresh behavior when implementation materially drifts from the spike contract.
-- Updated the checked-in tmux `work-on` Codex pane preset to launch through `ace-llm --interactive`, unifying Overseer and assignment forks on the same provider startup path.
-- Coordinated retained E2E contract patch releases for scenario-proof fixes: `ace-assign v0.53.3`, `ace-git-secrets v0.15.3`, `ace-git-worktree v0.21.3`, `ace-lint v0.30.4`, `ace-overseer v0.14.11`, `ace-prompt-prep v0.25.5`, and `ace-test-runner v0.25.4`.
-- Coordinated retained E2E contract patch releases aligned fork-context checkpoints, review capture completeness, split commit/path-only evidence, compact worktree JSON task IDs, deterministic suite-failure propagation, and tmux session/preset handoff verification in `ace-assign v0.53.2`, `ace-git-commit v0.25.4`, `ace-git-worktree v0.21.2`, `ace-review v0.53.4`, `ace-test-runner v0.25.3`, and `ace-tmux v0.14.3`.
-
-### Changed
-- **ace-assign v0.51.0**: Switched tmux fork execution to launch real interactive agents through `ace-llm --interactive`, auto-send the scoped `/as-assign-drive <assignment>@<root>` handoff, and track completion from subtree state instead of pane exit.
-- **ace-llm v0.34.0**: Added `--interactive` so CLI-backed providers can launch their native terminal UIs through the normal alias/preset/translation path.
-- **ace-llm-providers-cli v0.29.0**: Added interactive launch builders for Codex, Claude Code, and pi, including skill-translation support and strict rejection of one-shot-only CLI flags in interactive mode.
-- **ace-assign v0.50.3**: Fixed tmux fork-window lookup for explicit-session launches, tightened the committed `fork-provider` tape/setup, and refreshed the verified tmux fork demo artifacts (`.gif`, `.cast`, manifest) from a passing rerun.
-- **ace-demo v0.24.6**: Made `ace-demo record` handle missing optional verification-detail arrays without crashing so failed reruns report the real verification result cleanly.
-- **ace-demo v0.24.5**: Added reusable cast verification and cast-analysis flows for asciinema demos, with richer output-transition checks and preserved failed-recording manifests/sandboxes for triage.
-- **ace-assign v0.50.2**: Fixed tmux fork-window detection when fork launches rely on `ACE_TMUX_SESSION` and replaced the stale fork-provider tape with a verifier-backed `work -> work-fs` demo.
-- **ace-demo v0.24.4**: Tightened demo planning/recording workflows so tmux and other UI demos must define and visibly capture the actual `before -> trigger -> effect -> after` transition from the operator viewpoint.
-- **ace-assign v0.50.1**: Refreshed the tmux fork demo asset so the recorded `fork-run` flow visibly opens the fork staging window from the current work window.
-- **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
-- **ace-assign v0.50.0**: Added `ace-assign fork-run --launch-mode auto|headless|tmux`, tmux-backed fork pane orchestration in a `<current-window>-fs` staging window, persisted tmux fork-session metadata, and refreshed assign docs/demo coverage for the new fork runtime.
-
-### Fixed
 - **ace-assign v0.53.1**, **ace-review v0.53.3**, and **ace-lint v0.30.2**: Tightened retained E2E/public-status contracts by fixing completed assignment status previews after retry recovery, making review execution scenarios use explicit executable diff targets with installed direct models, and correcting lint doctor malformed-config setup to hit the actual `.ace/lint/.rubocop.yml` path.
 
-### Fixed
 - **ace-bundle v0.43.2**, **ace-git-commit v0.25.2**, **ace-overseer v0.14.8**, **ace-prompt-prep v0.25.2**, **ace-review v0.53.2**, and **ace-sim v0.15.3**: Tightened retained E2E contracts around observable public behavior by correcting preset filtering, task-scoped reuse evidence, prune-flow verification, multi-reviewer fixture selection, dry-run failure wording, and delete/rename final-state proofing.
 
-### Technical
-- Coordinated verifier and scenario patch releases for the E2E hardening pass: `ace-bundle v0.43.3`, `ace-git-commit v0.25.3`, `ace-git-worktree v0.21.1`, `ace-prompt-prep v0.25.3`, and `ace-tmux v0.14.2`.
-- **ace-retro v0.18.2**: Made the retained doctor negative-path smoke scenario require deterministic YAML-syntax corruption so the failure path continues to exercise real doctor error handling.
-
-### Fixed
 - **ace-test-runner-e2e v0.38.3**: Isolated sandboxed E2E runs from inherited Bundler/Ruby state, kept failure-stub report directories attached in suite aggregation, and aligned shared E2E templates/docs with the `ACE_E2E_SOURCE_ROOT` setup contract.
 - **ace-support-models v0.11.2**: Fixed sync stats calculation for partial and string-keyed provider payloads so `ace-models` smoke flows no longer crash in end-to-end runs.
 - **ace-git-secrets v0.15.1** and **ace-sim v0.15.2**: Tightened E2E verification around observable config precedence and successful preset runs so goal verdicts follow public user-facing evidence instead of brittle helper artifacts.
 
-### Technical
-- Coordinated patch releases for sandbox setup alignment and artifact-proofed E2E scenarios: `ace-b36ts v0.14.7`, `ace-bundle v0.43.1`, `ace-compressor v0.25.1`, `ace-handbook v0.27.4`, `ace-idea v0.21.1`, `ace-lint v0.30.1`, `ace-llm-providers-cli v0.31.1`, `ace-prompt-prep v0.25.1`, `ace-retro v0.18.1`, `ace-search v0.26.2`, `ace-support-nav v0.28.1`, and `ace-test-runner v0.25.2`.
-
-### Changed
-- **ace-task v0.36.0**: Added `ace-task plan --timeout`, documented bounded plan execution, and turned planner-provider timeout failures into actionable CLI diagnostics instead of raw stack traces.
-- **ace-tmux v0.14.0**: Expanded public-surface E2E coverage with existing-session lifecycle and outside-tmux `window --session` scenarios, and aligned usage/help guidance with explicit session-targeting flows.
-- **ace-test-runner v0.25.0**: Reworked retained E2E journeys to public-surface goals by removing duplicate TS-TEST-001 group coverage, enforcing one canonical TS-TEST-002 suite invocation path, adding suite `--target` pass-through coverage, and updating usage docs for canonical `ace-test-e2e ace-test-runner` guidance.
-- **ace-task v0.35.5**: Reworked `TS-TASK-001` deterministic ref handoff coverage, added `TS-TASK-002` auxiliary `status`/`plan` public CLI journeys, and aligned usage docs with E2E-safe plan path-mode plus `github-sync` preconditions.
-- **ace-support-nav v0.28.0**: Reworked `TS-NAV-001` to public-surface goal contracts (actionable discovery, user-facing resolve/list workflows, and create-path verification), added `TC-006` create coverage, and aligned README quick-start guidance to the documented `resolve -> list -> sources -> create` journey.
-- **ace-support-models v0.11.0**: Reworked `TS-MODELS-001` to public-sync public-surface goals (including new cache status/diff journeys), added deterministic fixture-driven sync setup for E2E, and aligned cache-missing guidance to the flat `ace-models sync` surface.
-- **ace-sim v0.15.0**: Reworked `ace-sim` E2E coverage to public-surface goal contracts by narrowing retained smoke journeys, adding dry-run contract scenario coverage, and aligning usage docs with recorded synthesis failure-path semantics.
-- **ace-search v0.26.0**: Rewrote `TS-SEARCH-001` to public-surface goal contracts, expanded retained coverage to six goals (including preset-driven and git-scoped workflows), and removed implementation-coupled path/token probes from runner and verifier expectations.
-- **ace-review v0.53.0**: Reworked `TS-REVIEW-001` to enforce docs/help-driven execution goals, added
-  `TC-003-docs-path-onboarding`, and tightened verifier PASS semantics so provider/model blockers are explicit
-  failures rather than success-equivalent outcomes.
-- **ace-retro v0.18.0**: Tightened `TS-RETRO-001` public-surface smoke contracts by clarifying help/usage parity checks, reducing brittle doctor corruption coupling, and documenting doctor negative-path expectations in package usage docs.
-- **ace-prompt-prep v0.25.0**: Rewrote `TS-PREP-001` bundle evidence contracts, added public-surface setup
-  and task-scoped `--task` E2E journeys, and stabilized verifier expectations around impact-first artifacts.
-- **ace-overseer v0.14.6**: Reworked `TS-OVERSEER-001` to public-surface goal contracts (including absorbed help preflight and simplified prune flow), added `TS-OVERSEER-002` status/ops journeys, and updated usage docs with explicit public verification paths.
-- **ace-handbook v0.27.1**: Updated release-proof documentation to use the canonical `TS-MONO-001` invocation and current scenario path references.
-- **ace-handbook v0.27.2**: Corrected release-proof docs to use the supported positional `ace-test-e2e ace-monorepo-e2e TS-MONO-001` command form.
-- **ace-handbook v0.27.3**: Fixed `TS-HANDBOOK-002` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` and aligned release-proof command references with the positional `ace-test-e2e` TEST_ID contract.
-- **ace-lint v0.30.0**: Reworked `TS-LINT-001` to public-surface goal contracts, split batch integrated outcomes from the standalone `--no-report` contract, and documented grouped-validator routing plus doctor troubleshooting examples in usage docs.
-- **ace-git v0.22.0**: Reworked `TS-GIT-001` E2E contracts to scenario-managed setup and direct PR-command assertions, and added `TS-GIT-002` public-surface smoke coverage for `--help` and range-routing behavior.
-- **ace-bundle v0.43.0**: Rewrote retained `TS-BUNDLE-001` around public CLI workflows by consolidating file-pattern checks into Goal 2, reframing Goal 4 routing assertions to user-visible outcomes, and renaming Goal 5 to CLI consistency and error semantics.
-- **ace-compressor v0.25.0**: Rewrote `TS-COMP-001` to public-surface goal-style coverage by preserving retained smoke journeys, replacing brittle compact-refusal fixture behavior, and adding documented `--mode agent` and `benchmark` workflows.
-- **ace-assign v0.53.0**: Rewrote retained `TS-ASSIGN-001` / `TS-ASSIGN-002` E2E contracts around public command journeys and impact-first status/report outcomes, and added `TS-ASSIGN-003` operations coverage for multi-assignment and scoped fork-run delegation flows.
-- **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
-- **ace-test-runner-e2e v0.38.0**: Reworked package E2E coverage to public-surface goal style by replacing hidden fixture plumbing in `TS-RUNNER-001`, adding real run/verifier/shell-helper coverage in `TS-RUNNER-002`, routing setup/runner/verifier subprocesses through the sandbox backend, hardening verifier parsing for standalone `Results: X/Y passed` summaries, and updating usage docs with safe deterministic `ace-test-e2e-sh` workflows.
-- **ace-docs v0.34.0**: Reworked docs-operation E2E verification to stable state-based semantics, added `TS-DOCS-002` coverage for `analyze` / `analyze-consistency` workflows, and documented deterministic analysis artifact/report locations in usage/help output.
-- **ace-git-commit v0.25.0**: Rewrote split/no-split E2E journeys to use explicit public setup, added a new `--only-staged` end-to-end goal contract, and documented reproducible split/no-split and staged-only expectations in usage/help.
-- **ace-git-secrets v0.15.0**: Rewrote `TS-SECRETS-001` to public-surface goal style and added `TS-SECRETS-002` saved-report remediation-path coverage for `scan -> revoke --scan-file -> rewrite-history --dry-run`.
-- **ace-git-worktree v0.21.0**: Rewrote retained goal-based E2E prompts around explicit public commands, added config-surface and PR lifecycle scenarios, and updated usage/getting-started docs for JSON/filter/remove public contracts.
-- **ace-handbook v0.27.0**: Rewrote handbook E2E coverage to public-surface goal style by adding sync/provider-error workflows (`TS-HANDBOOK-002`) and tightening retained smoke verifier contracts for table/JSON status output.
-- **ace-idea v0.21.0**: Reworked `TS-IDEA-001` lifecycle coverage to use public `create` output ID flow for move/archive transitions, reduced duplicated list assertions, and added scenario freshness metadata for maintenance.
-- **ace-llm v0.36.0**: Reworked `TS-LLM-001` with output-contract and stronger model-routing assertions, added `TS-LLM-002` provider-discovery coverage for `ace-llm --list-providers`, and aligned the runtime dependency line with `ace-support-models v0.11.0`.
-- **ace-llm-providers-cli v0.31.0**: Reworked `TS-LLMCLI-001` to public-surface goal style with deterministic sandbox-safe no-tools/stubbed-tools setup, removed hidden helper interception, and added explicit E2E verification lifecycle metadata guidance.
-
-### Fixed
 - **ace-test-runner-e2e v0.38.2**: Prepared sandboxed setup steps with the runtime E2E environment, hardened runtime-directory permissions for tmux access, and kept the `bubblewrap` execution path aligned with isolated support directories.
 - **ace-tmux v0.14.1**: Routed tmux commands through the sandbox socket path and enforced safe socket-directory permissions so isolated sessions can be reused reliably.
 - **ace-overseer v0.14.7**: Created missing tmux sessions automatically before opening task windows so sandboxed `work-on` flows stay on the intended socket.
@@ -140,17 +64,6 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.35.4**: Reworked `TS-TASK-001` smoke coverage to validate created and archived tasks from stable task-tree state plus runner observations.
 - **ace-task v0.35.6**: Tightened `TS-TASK-002` plan-path verification to require at least one successful path-mode artifact while preserving actionable diagnostics for failed dependency paths.
 
-### Changed
-- **ace-test-runner-e2e v0.37.0**: Made runner `Observations` the canonical non-filesystem evidence channel for goal-based E2E scenarios, passed them into verifier prompts, and updated the shared E2E authoring contract around end-state-first verification.
-- **ace-test-runner-e2e v0.37.1**: Updated the canonical E2E create/review/rewrite/run guidance, templates, and references so goal-based scenarios use final sandbox state plus runner observations instead of helper artifacts under `results/`.
-
-### Technical
-- Dependency-following patch release to align runtime constraints with the new assign minor line: `ace-overseer v0.14.5`.
-- **ace-b36ts v0.14.6**: Expanded `TS-B36TS-001` into a public-surface goal workflow, repaired TC-001 oracle drift, and added decode/split-json goal cases with real CLI-output verification.
-- **ace-b36ts v0.14.5**: Rewrote `TS-B36TS-001` to follow the goal-based E2E contract by judging note reorganization from sandbox end state and runner observations instead of helper artifacts.
-- **ace-demo v0.25.0**: Expanded `TS-DEMO-001` to include non-dry-run preset recording success coverage and stabilized verifier expectations around public CLI contract wording.
-
-### Fixed
 - **ace-assign v0.49.1**: Tightened `TS-ASSIGN-002` evidence capture so cascade renumbering and display-audit checks use concrete sandbox step artifacts and copied fixture paths.
 - **ace-git-secrets v0.14.2**: Hardened `TS-SECRETS-001` history-persistence capture so removal/commit evidence is emitted before validating the rescan oracle.
 - **ace-llm v0.33.5**: Persisted the exact prompt/command in `TS-LLM-001` so missing-input responses are distinguished from valid provider behavior.
@@ -159,14 +72,6 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.36.1**: Made aggregate package/suite reports use canonical per-scenario report metadata for failed TC mapping and added explicit dirty-worktree runner diagnostics for suite triage.
 - **ace-test-runner-e2e v0.36.0**: Renamed aggregated E2E outputs to package/suite-specific report filenames and stripped ambient tmux session variables from setup/pipeline subprocesses so suite runs do not leak into the operator's live tmux session.
 
-### Added
-- **ace-tmux v0.13.0**: Added `ace-tmux start --name` for concurrent session startup from one preset and aligned tmux lifecycle docs/tests around isolated-session execution.
-
-### Technical
-- **ace-git-worktree v0.20.2**: Hardened lifecycle/task-aware E2E setup and artifact contracts so `.ace-wt` bootstrap, remove/prune evidence, and task-worktree creation checks remain stable across reruns.
-- **ace-task v0.35.2**: Refreshed `TS-TASK-001` archive and doctor smoke scenario contracts to match the current `_archive` layout and isolated invalid-status validation path.
-
-### Fixed
 - **ace-support-nav v0.27.3**: Canonicalized cookbook dedupe keys with realpath-first normalization so real and symlinked source roots collapse to one listing while keeping source-priority ordering.
 - **ace-support-config v0.11.2**: Made bootstrap `.gitignore` detection line-aware so commented or negated `.ace-local/` mentions no longer suppress appending the actual ignore rule.
 - **ace-llm-providers-cli v0.28.6**: Cleared `CLAUDECODE` during Claude help capability probes so nested Claude Code sessions do not cache false negatives for `--max-tokens` support.
@@ -212,7 +117,65 @@ All notable changes to this project will be documented in this file.
 - **ace-support-cli v0.6.4**: Fixed top-level help rendering so CLI usage consistently appears as `Usage: <program> [COMMAND]`.
 - **ace-support-models v0.10.2**: Fixed API cache parsing to normalize mixed provider/model payloads (including array-form models), restoring `ace-llm-providers list/show` model counts from cached responses.
 
+### Added
+- **ace-tmux v0.13.0**: Added `ace-tmux start --name` for concurrent session startup from one preset and aligned tmux lifecycle docs/tests around isolated-session execution.
+
+- **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
+
 ### Changed
+- **ace-bundle v0.43.5**: Documented the `bundle.sources` preset shorthand in configuration and getting-started docs so generated context presets use the public source-list contract.
+- **ace-test-runner-e2e v0.38.9**: Required E2E failure analysis and fix workflows to report docs/help drift for every failed TC so stale public instructions become explicit fix targets.
+- **ace-assign v0.52.0**: Refined the tmux fork demo contract around the visible `work -> work-fs -> agent starts working` transition and kept the interactive handoff bootstrap visible in the fork pane.
+
+- **ace-assign v0.51.0**: Switched tmux fork execution to launch real interactive agents through `ace-llm --interactive`, auto-send the scoped `/as-assign-drive <assignment>@<root>` handoff, and track completion from subtree state instead of pane exit.
+- **ace-llm v0.34.0**: Added `--interactive` so CLI-backed providers can launch their native terminal UIs through the normal alias/preset/translation path.
+- **ace-llm-providers-cli v0.29.0**: Added interactive launch builders for Codex, Claude Code, and pi, including skill-translation support and strict rejection of one-shot-only CLI flags in interactive mode.
+- **ace-assign v0.50.3**: Fixed tmux fork-window lookup for explicit-session launches, tightened the committed `fork-provider` tape/setup, and refreshed the verified tmux fork demo artifacts (`.gif`, `.cast`, manifest) from a passing rerun.
+- **ace-demo v0.24.6**: Made `ace-demo record` handle missing optional verification-detail arrays without crashing so failed reruns report the real verification result cleanly.
+- **ace-demo v0.24.5**: Added reusable cast verification and cast-analysis flows for asciinema demos, with richer output-transition checks and preserved failed-recording manifests/sandboxes for triage.
+- **ace-assign v0.50.2**: Fixed tmux fork-window detection when fork launches rely on `ACE_TMUX_SESSION` and replaced the stale fork-provider tape with a verifier-backed `work -> work-fs` demo.
+- **ace-demo v0.24.4**: Tightened demo planning/recording workflows so tmux and other UI demos must define and visibly capture the actual `before -> trigger -> effect -> after` transition from the operator viewpoint.
+- **ace-assign v0.50.1**: Refreshed the tmux fork demo asset so the recorded `fork-run` flow visibly opens the fork staging window from the current work window.
+- **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
+- **ace-assign v0.50.0**: Added `ace-assign fork-run --launch-mode auto|headless|tmux`, tmux-backed fork pane orchestration in a `<current-window>-fs` staging window, persisted tmux fork-session metadata, and refreshed assign docs/demo coverage for the new fork runtime.
+
+- **ace-task v0.36.0**: Added `ace-task plan --timeout`, documented bounded plan execution, and turned planner-provider timeout failures into actionable CLI diagnostics instead of raw stack traces.
+- **ace-tmux v0.14.0**: Expanded public-surface E2E coverage with existing-session lifecycle and outside-tmux `window --session` scenarios, and aligned usage/help guidance with explicit session-targeting flows.
+- **ace-test-runner v0.25.0**: Reworked retained E2E journeys to public-surface goals by removing duplicate TS-TEST-001 group coverage, enforcing one canonical TS-TEST-002 suite invocation path, adding suite `--target` pass-through coverage, and updating usage docs for canonical `ace-test-e2e ace-test-runner` guidance.
+- **ace-task v0.35.5**: Reworked `TS-TASK-001` deterministic ref handoff coverage, added `TS-TASK-002` auxiliary `status`/`plan` public CLI journeys, and aligned usage docs with E2E-safe plan path-mode plus `github-sync` preconditions.
+- **ace-support-nav v0.28.0**: Reworked `TS-NAV-001` to public-surface goal contracts (actionable discovery, user-facing resolve/list workflows, and create-path verification), added `TC-006` create coverage, and aligned README quick-start guidance to the documented `resolve -> list -> sources -> create` journey.
+- **ace-support-models v0.11.0**: Reworked `TS-MODELS-001` to public-sync public-surface goals (including new cache status/diff journeys), added deterministic fixture-driven sync setup for E2E, and aligned cache-missing guidance to the flat `ace-models sync` surface.
+- **ace-sim v0.15.0**: Reworked `ace-sim` E2E coverage to public-surface goal contracts by narrowing retained smoke journeys, adding dry-run contract scenario coverage, and aligning usage docs with recorded synthesis failure-path semantics.
+- **ace-search v0.26.0**: Rewrote `TS-SEARCH-001` to public-surface goal contracts, expanded retained coverage to six goals (including preset-driven and git-scoped workflows), and removed implementation-coupled path/token probes from runner and verifier expectations.
+- **ace-review v0.53.0**: Reworked `TS-REVIEW-001` to enforce docs/help-driven execution goals, added
+  `TC-003-docs-path-onboarding`, and tightened verifier PASS semantics so provider/model blockers are explicit
+  failures rather than success-equivalent outcomes.
+- **ace-retro v0.18.0**: Tightened `TS-RETRO-001` public-surface smoke contracts by clarifying help/usage parity checks, reducing brittle doctor corruption coupling, and documenting doctor negative-path expectations in package usage docs.
+- **ace-prompt-prep v0.25.0**: Rewrote `TS-PREP-001` bundle evidence contracts, added public-surface setup
+  and task-scoped `--task` E2E journeys, and stabilized verifier expectations around impact-first artifacts.
+- **ace-overseer v0.14.6**: Reworked `TS-OVERSEER-001` to public-surface goal contracts (including absorbed help preflight and simplified prune flow), added `TS-OVERSEER-002` status/ops journeys, and updated usage docs with explicit public verification paths.
+- **ace-handbook v0.27.1**: Updated release-proof documentation to use the canonical `TS-MONO-001` invocation and current scenario path references.
+- **ace-handbook v0.27.2**: Corrected release-proof docs to use the supported positional `ace-test-e2e ace-monorepo-e2e TS-MONO-001` command form.
+- **ace-handbook v0.27.3**: Fixed `TS-HANDBOOK-002` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}` and aligned release-proof command references with the positional `ace-test-e2e` TEST_ID contract.
+- **ace-lint v0.30.0**: Reworked `TS-LINT-001` to public-surface goal contracts, split batch integrated outcomes from the standalone `--no-report` contract, and documented grouped-validator routing plus doctor troubleshooting examples in usage docs.
+- **ace-git v0.22.0**: Reworked `TS-GIT-001` E2E contracts to scenario-managed setup and direct PR-command assertions, and added `TS-GIT-002` public-surface smoke coverage for `--help` and range-routing behavior.
+- **ace-bundle v0.43.0**: Rewrote retained `TS-BUNDLE-001` around public CLI workflows by consolidating file-pattern checks into Goal 2, reframing Goal 4 routing assertions to user-visible outcomes, and renaming Goal 5 to CLI consistency and error semantics.
+- **ace-compressor v0.25.0**: Rewrote `TS-COMP-001` to public-surface goal-style coverage by preserving retained smoke journeys, replacing brittle compact-refusal fixture behavior, and adding documented `--mode agent` and `benchmark` workflows.
+- **ace-assign v0.53.0**: Rewrote retained `TS-ASSIGN-001` / `TS-ASSIGN-002` E2E contracts around public command journeys and impact-first status/report outcomes, and added `TS-ASSIGN-003` operations coverage for multi-assignment and scoped fork-run delegation flows.
+- **ace-test-runner-e2e v0.37.2**: Added a handbook-level public-surface gate so goal-based E2E scenarios must prove users can do the job from docs, `--help`, and the public CLI without hidden recipes or workarounds, and updated the review/create/rewrite/fix guidance to treat workaround-driven tests as gaps instead of robust contracts.
+- **ace-test-runner-e2e v0.38.0**: Reworked package E2E coverage to public-surface goal style by replacing hidden fixture plumbing in `TS-RUNNER-001`, adding real run/verifier/shell-helper coverage in `TS-RUNNER-002`, routing setup/runner/verifier subprocesses through the sandbox backend, hardening verifier parsing for standalone `Results: X/Y passed` summaries, and updating usage docs with safe deterministic `ace-test-e2e-sh` workflows.
+- **ace-docs v0.34.0**: Reworked docs-operation E2E verification to stable state-based semantics, added `TS-DOCS-002` coverage for `analyze` / `analyze-consistency` workflows, and documented deterministic analysis artifact/report locations in usage/help output.
+- **ace-git-commit v0.25.0**: Rewrote split/no-split E2E journeys to use explicit public setup, added a new `--only-staged` end-to-end goal contract, and documented reproducible split/no-split and staged-only expectations in usage/help.
+- **ace-git-secrets v0.15.0**: Rewrote `TS-SECRETS-001` to public-surface goal style and added `TS-SECRETS-002` saved-report remediation-path coverage for `scan -> revoke --scan-file -> rewrite-history --dry-run`.
+- **ace-git-worktree v0.21.0**: Rewrote retained goal-based E2E prompts around explicit public commands, added config-surface and PR lifecycle scenarios, and updated usage/getting-started docs for JSON/filter/remove public contracts.
+- **ace-handbook v0.27.0**: Rewrote handbook E2E coverage to public-surface goal style by adding sync/provider-error workflows (`TS-HANDBOOK-002`) and tightening retained smoke verifier contracts for table/JSON status output.
+- **ace-idea v0.21.0**: Reworked `TS-IDEA-001` lifecycle coverage to use public `create` output ID flow for move/archive transitions, reduced duplicated list assertions, and added scenario freshness metadata for maintenance.
+- **ace-llm v0.36.0**: Reworked `TS-LLM-001` with output-contract and stronger model-routing assertions, added `TS-LLM-002` provider-discovery coverage for `ace-llm --list-providers`, and aligned the runtime dependency line with `ace-support-models v0.11.0`.
+- **ace-llm-providers-cli v0.31.0**: Reworked `TS-LLMCLI-001` to public-surface goal style with deterministic sandbox-safe no-tools/stubbed-tools setup, removed hidden helper interception, and added explicit E2E verification lifecycle metadata guidance.
+
+- **ace-test-runner-e2e v0.37.0**: Made runner `Observations` the canonical non-filesystem evidence channel for goal-based E2E scenarios, passed them into verifier prompts, and updated the shared E2E authoring contract around end-state-first verification.
+- **ace-test-runner-e2e v0.37.1**: Updated the canonical E2E create/review/rewrite/run guidance, templates, and references so goal-based scenarios use final sandbox state plus runner observations instead of helper artifacts under `results/`.
+
 - **ace-assign v0.49.0**: Split assignment status from instruction loading, made compact/full/progress status modes state-only, added `ace-assign step` for current/next/exact step instructions, and tightened `start` / `finish` to concise next-step handoff output.
 - **ace-support-config v0.11.0**: `ace-config init` now bootstraps project-root `AGENTS.md` / `CLAUDE.md` guidance and appends `.ace-local/` to existing `.gitignore` files without overwriting user-owned guidance files.
 - **ace-assign v0.48.0**: Removed the shipped `verify-e2e` assignment step from standard assignment flows and narrowed assignment verification to deterministic package checks plus `ace-test-suite --target all`.
@@ -277,7 +240,57 @@ All notable changes to this project will be documented in this file.
 - **ace-support-markdown v0.3.4**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 - **ace-support-test-helpers v0.14.2**: Standardized shared package tests to the fast-only layout and updated testing flow defaults.
 - **ace-test v0.7.2**: Moved package coverage to test/fast and updated the testing contract.
+- **ace-test-runner-e2e v0.29.10**: Documented the E2E migration dual-path contract in shared `.ace/e2e-runner/config.yml` by retaining explicit legacy fallback keys alongside `test-e2e/scenarios`.
+- **ace-task v0.33.2**: Updated the live GitHub sync demo tape to assert exported task/issue refs, forbid known sync/runtime errors, and verify final issue closure during recording.
+- **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
+- **ace-task v0.31.10**: Updated ACE-linked issue lifecycle guidance to prefer task metadata plus ACE-managed sync over PR footer closure requirements, while retaining PR closure keywords as optional manual guidance.
+- **ace-task v0.32.0**: Added linked GitHub issue lifecycle support with `--github-issue`, `ace-task github-sync`, frontmatter validation for `github.issues`, and task lifecycle sync hooks.
+- **ace-git v0.19.4**: Added reusable GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for shared ACE issue lifecycle operations.
+- **ace-review v0.51.8**: Migrated GitHub CLI execution to the shared `ace-git` executor and removed package-local executor duplication.
+- **ace-task v0.33.0**: Switched linked issue metadata to singular `github_issue` ownership, updated task lifecycle sync hooks and docs around canonical task-owned GitHub issues, and reworked the GitHub sync demo to show live issue creation and automatic closure.
+- **ace-git v0.20.2**: Added shared GitHub issue sync primitives for broader reuse and strengthened sync ownership/error handling.
+- **ace-task v0.33.3**: Updated linked-issue metadata and sync behavior around singular ownership and reusable sync flow routing.
+- **ace-review v0.51.10**: Switched review GitHub CLI integrations to the shared `ace-git` executor to reduce package-specific duplication.
+- **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
+- **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
+- **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.
+- **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
+- **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
+- **ace-assign v0.43.0**: Migrated internal helper-step ownership to canonical non-public skills/workflows and tightened assign-step discovery to `user-invocable: true` skills only.
+- **ace-assign v0.43.1**: Migrated public step metadata ownership to canonical skill `assign.steps` and updated assign resolution to prefer `skill.execution.workflow` with legacy fallback.
+- **ace-assign v0.44.0**: Normalized runtime execution around canonical step `source` (`skill://...` and explicit `wfi://...`) with legacy compatibility fallback, and aligned assign workflow docs to source-first contracts.
+- **ace-bundle v0.41.4**: Expanded `as-onboard` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-git v0.19.4**: Expanded `as-github-pr-create` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-review v0.51.8**: Expanded `as-review-pr` canonical skill metadata for skill-owned public assign-step discovery.
+- **ace-task v0.31.10**: Expanded canonical `as-task-plan`/`as-task-work` skill metadata for skill-owned public assign-step discovery.
+- **ace-test v0.6.3**: Expanded `as-test-verify-suite` canonical skill metadata while retaining template rendering in catalog YAML.
+- **ace-lint v0.28.0**: Aligned canonical skill validation with the skill-first contract by allowing capability skills without workflow bindings while keeping workflow/orchestration binding requirements and capability `assign:` restrictions.
+- Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
+
 ### Technical
+- **ace-lint v0.30.5**: Fixed validator chain fast-test mocks to stub command-path resolution with validator availability, keeping the package suite hermetic when local Ruby linter executables are absent.
+- Coordinated retained E2E contract patch releases for assignment hierarchy targeting and idea next-queue documentation drift: `ace-assign v0.53.4` and `ace-idea v0.21.3`.
+- Coordinated retained E2E contract patch releases for public-surface verifier stability: `ace-git-secrets v0.15.5` and `ace-support-nav v0.28.2`.
+- Coordinated retained E2E contract patch releases for PR-auth prerequisite handling and overseer work-on capture ordering: `ace-git-worktree v0.21.4` and `ace-overseer v0.14.12`.
+- Coordinated retained E2E contract patch releases after the targeted failure triage: `ace-b36ts v0.14.8`, `ace-prompt-prep v0.25.6`, `ace-review v0.53.5`, `ace-task v0.36.1`, and `ace-test-runner v0.25.5`.
+- **ace-task v0.35.5**: Tightened spike-task workflow guidance so design/runtime spikes must declare proof expectations, explicit follow-up tasks, and spec-refresh behavior when implementation materially drifts from the spike contract.
+- Updated the checked-in tmux `work-on` Codex pane preset to launch through `ace-llm --interactive`, unifying Overseer and assignment forks on the same provider startup path.
+- Coordinated retained E2E contract patch releases for scenario-proof fixes: `ace-assign v0.53.3`, `ace-git-secrets v0.15.3`, `ace-git-worktree v0.21.3`, `ace-lint v0.30.4`, `ace-overseer v0.14.11`, `ace-prompt-prep v0.25.5`, and `ace-test-runner v0.25.4`.
+- Coordinated retained E2E contract patch releases aligned fork-context checkpoints, review capture completeness, split commit/path-only evidence, compact worktree JSON task IDs, deterministic suite-failure propagation, and tmux session/preset handoff verification in `ace-assign v0.53.2`, `ace-git-commit v0.25.4`, `ace-git-worktree v0.21.2`, `ace-review v0.53.4`, `ace-test-runner v0.25.3`, and `ace-tmux v0.14.3`.
+
+- Coordinated verifier and scenario patch releases for the E2E hardening pass: `ace-bundle v0.43.3`, `ace-git-commit v0.25.3`, `ace-git-worktree v0.21.1`, `ace-prompt-prep v0.25.3`, and `ace-tmux v0.14.2`.
+- **ace-retro v0.18.2**: Made the retained doctor negative-path smoke scenario require deterministic YAML-syntax corruption so the failure path continues to exercise real doctor error handling.
+
+- Coordinated patch releases for sandbox setup alignment and artifact-proofed E2E scenarios: `ace-b36ts v0.14.7`, `ace-bundle v0.43.1`, `ace-compressor v0.25.1`, `ace-handbook v0.27.4`, `ace-idea v0.21.1`, `ace-lint v0.30.1`, `ace-llm-providers-cli v0.31.1`, `ace-prompt-prep v0.25.1`, `ace-retro v0.18.1`, `ace-search v0.26.2`, `ace-support-nav v0.28.1`, and `ace-test-runner v0.25.2`.
+
+- Dependency-following patch release to align runtime constraints with the new assign minor line: `ace-overseer v0.14.5`.
+- **ace-b36ts v0.14.6**: Expanded `TS-B36TS-001` into a public-surface goal workflow, repaired TC-001 oracle drift, and added decode/split-json goal cases with real CLI-output verification.
+- **ace-b36ts v0.14.5**: Rewrote `TS-B36TS-001` to follow the goal-based E2E contract by judging note reorganization from sandbox end state and runner observations instead of helper artifacts.
+- **ace-demo v0.25.0**: Expanded `TS-DEMO-001` to include non-dry-run preset recording success coverage and stabilized verifier expectations around public CLI contract wording.
+
+- **ace-git-worktree v0.20.2**: Hardened lifecycle/task-aware E2E setup and artifact contracts so `.ace-wt` bootstrap, remove/prune evidence, and task-worktree creation checks remain stable across reruns.
+- **ace-task v0.35.2**: Refreshed `TS-TASK-001` archive and doctor smoke scenario contracts to match the current `_archive` layout and isolated invalid-status validation path.
+
 - Dependency-following patch release after the `ace-assign v0.49.0` line update: `ace-overseer v0.14.2`.
 - **ace-support-core v0.29.8**: Shipped generic project-root bootstrap templates for `.gitignore`, `AGENTS.md`, and `CLAUDE.md` to support safer fresh-project initialization.
 - Tightened version-format contract coverage to validate semantic-version shape instead of pinned or partial matches in `ace-git-commit v0.24.2`, `ace-hitl v0.8.7`, `ace-llm v0.33.3`, `ace-llm-providers-cli v0.28.2`, `ace-prompt-prep v0.24.2`, `ace-search v0.25.2`, `ace-support-core v0.29.7`, and `ace-support-test-helpers v0.14.2`.
@@ -331,38 +344,6 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.44.1**: Preserved canonical step-level `assign.steps` `name`/`description` during skill-backed step rendering so step-specific descriptions are not replaced by top-level skill text.
 - **ace-lint v0.28.1**: Allowed canonical `assign.steps` metadata in skill validation and added regression coverage for the updated schema contract.
 
-### Added
-- **ace-demo v0.24.1**: Added fail-closed demo recording verification with clearer failure classification and structured report paths.
-
-### Changed
-- **ace-test-runner-e2e v0.29.10**: Documented the E2E migration dual-path contract in shared `.ace/e2e-runner/config.yml` by retaining explicit legacy fallback keys alongside `test-e2e/scenarios`.
-- **ace-task v0.33.2**: Updated the live GitHub sync demo tape to assert exported task/issue refs, forbid known sync/runtime errors, and verify final issue closure during recording.
-- **ace-hitl v0.8.1**: Expanded package description wording to explicitly use "human in the loop (HITL)" in `summary`/`description` and aligned CLI-facing docs wording to the explicit terminology.
-- **ace-task v0.31.10**: Updated ACE-linked issue lifecycle guidance to prefer task metadata plus ACE-managed sync over PR footer closure requirements, while retaining PR closure keywords as optional manual guidance.
-- **ace-task v0.32.0**: Added linked GitHub issue lifecycle support with `--github-issue`, `ace-task github-sync`, frontmatter validation for `github.issues`, and task lifecycle sync hooks.
-- **ace-git v0.19.4**: Added reusable GitHub issue sync primitives (`GhCliExecutor`, `GithubIssueSync`) for shared ACE issue lifecycle operations.
-- **ace-review v0.51.8**: Migrated GitHub CLI execution to the shared `ace-git` executor and removed package-local executor duplication.
-- **ace-task v0.33.0**: Switched linked issue metadata to singular `github_issue` ownership, updated task lifecycle sync hooks and docs around canonical task-owned GitHub issues, and reworked the GitHub sync demo to show live issue creation and automatic closure.
-- **ace-git v0.20.2**: Added shared GitHub issue sync primitives for broader reuse and strengthened sync ownership/error handling.
-- **ace-task v0.33.3**: Updated linked-issue metadata and sync behavior around singular ownership and reusable sync flow routing.
-- **ace-review v0.51.10**: Switched review GitHub CLI integrations to the shared `ace-git` executor to reduce package-specific duplication.
-- **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
-- **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
-- **ace-assign v0.42.8**: Optimized command execution test setup by injecting catalog/source resolvers and caching workflow parsing artifacts at test scope.
-- **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
-- **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
-- **ace-assign v0.43.0**: Migrated internal helper-step ownership to canonical non-public skills/workflows and tightened assign-step discovery to `user-invocable: true` skills only.
-- **ace-assign v0.43.1**: Migrated public step metadata ownership to canonical skill `assign.steps` and updated assign resolution to prefer `skill.execution.workflow` with legacy fallback.
-- **ace-assign v0.44.0**: Normalized runtime execution around canonical step `source` (`skill://...` and explicit `wfi://...`) with legacy compatibility fallback, and aligned assign workflow docs to source-first contracts.
-- **ace-bundle v0.41.4**: Expanded `as-onboard` canonical skill metadata for skill-owned public assign-step discovery.
-- **ace-git v0.19.4**: Expanded `as-github-pr-create` canonical skill metadata for skill-owned public assign-step discovery.
-- **ace-review v0.51.8**: Expanded `as-review-pr` canonical skill metadata for skill-owned public assign-step discovery.
-- **ace-task v0.31.10**: Expanded canonical `as-task-plan`/`as-task-work` skill metadata for skill-owned public assign-step discovery.
-- **ace-test v0.6.3**: Expanded `as-test-verify-suite` canonical skill metadata while retaining template rendering in catalog YAML.
-- **ace-lint v0.28.0**: Aligned canonical skill validation with the skill-first contract by allowing capability skills without workflow bindings while keeping workflow/orchestration binding requirements and capability `assign:` restrictions.
-- Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
-
-### Technical
 - **ace-hitl v0.8.3**: Updated the CLI version contract test to match the current released version after the batch migration patch fix.
 - **ace-assign v0.42.7**: Reduced command test runtime by introducing dependency-injected catalog/source resolution and cached step/workflow loading in `ace-assign`.
 - **ace-test-runner v0.19.2**: Stabilized the process-monitor timeout integration scenario by increasing the queued-package timeout test budget under suite load.
@@ -370,7 +351,6 @@ All notable changes to this project will be documented in this file.
 - **ace-git v0.20.2**: Added and reused shared GitHub issue-sync infrastructure with stricter ownership validation for task-linked issue updates.
 - **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
-
 
 ## [0.9.938] - 2026-04-05
 
