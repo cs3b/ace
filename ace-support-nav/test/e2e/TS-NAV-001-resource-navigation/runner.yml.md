@@ -8,7 +8,7 @@ bundle:
   files:
     - ./TC-001-help-survey.runner.md
     - ./TC-002-extension-inference.runner.md
-    - ./TC-003-priority-and-exact-match.runner.md
+    - ./TC-003-discovery-listing.runner.md
     - ./TC-004-error-handling.runner.md
     - ./TC-006-create-from-template-public-path.runner.md
 ---

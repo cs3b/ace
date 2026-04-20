@@ -11,7 +11,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
-1. **List capture sets exist** — `results/tc/03/` contains stdout/stderr/exit files for both list commands.
+1. **Canonical list capture sets exist** — `results/tc/03/` contains `list.stdout`, `list.stderr`, `list.exit`, `list-tree.stdout`, `list-tree.stderr`, and `list-tree.exit`.
 2. **List commands succeeded** — `list.exit` and `list-tree.exit` are `0`.
 3. **Listings are actionable** — At least one listing output includes protocol URI(s) or path rows usable for follow-on commands.
 4. **No internal-priority assertion** — Verification avoids requiring extension-priority internals; it evaluates visible browse usefulness only.
@@ -19,6 +19,6 @@ Validation order (impact-first):
 ## Verdict
 
 - **PASS**: Listing commands succeed and produce actionable browse output.
-- **FAIL**: Missing captures, non-zero exits, or empty/non-actionable listing output.
+- **FAIL**: Missing canonical captures, non-zero exits, or empty/non-actionable listing output. Protocol-specific extra captures may support diagnosis but do not replace `list.*`.
 
 Report: `PASS` or `FAIL` with evidence (listing snippets and exit codes).
