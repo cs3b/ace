@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.939] - 2026-04-20
+
+
 ### Fixed
 - **ace-test-runner-e2e v0.38.11**: Spaced `TestOrchestrator` batch run IDs by 100ms so 50ms-format timestamp IDs stay unique during fast consecutive package-suite execution.
 - **ace-retro v0.18.3**: Updated retro synthesis and self-improvement workflow archive steps to use `ace-retro update REF --move-to archive`, matching the current CLI surface.
@@ -368,7 +371,8 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner v0.19.3**: Expanded process-monitor suite coverage for queued-package timeouts under full-suite execution.
 - Dependency-following patch release after the `ace-assign` 0.44 line update: `ace-overseer v0.13.10`.
 
-## [0.9.938] - 2026-04-05
+
+## [2026-04-05
 
 ### Fixed
 - **ace-assign v0.42.4**: Scoped canonical `skill://` and `wfi://` discovery to in-project defaults and explicitly registered external sources, and preserved child `skill` metadata only for hand-authored explicit split sub-steps.
