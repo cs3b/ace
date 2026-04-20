@@ -28,3 +28,9 @@ Capture:
 - Reuse the exact idea ID from the `Idea created:` line in `results/tc/01/create.stdout`.
 - Do not pass the idea filename, basename, or path to `ace-idea update`.
 - Save the extracted ID to `results/tc/03/idea-id.txt` before running the update command.
+- Run `ace-idea update {id} --move-to next` and capture the required
+  `update.*` files before proceeding to Goal 4.
+- Run `ace-idea list --in next` and capture the required `list-next.*` files
+  before proceeding to Goal 4.
+- Do not summarize these commands as completed unless the raw command captures
+  exist under `results/tc/03/`.

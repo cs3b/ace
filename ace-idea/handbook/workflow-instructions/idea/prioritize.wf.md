@@ -94,7 +94,7 @@ Systematically organize, prioritize, and align queued ideas with current project
      ```
 
    **How it works:**
-   * Updates move idea files between folders (`_next`, `_maybe`, `_anytime`)
+   * Updates move idea files between physical folders (`_maybe`, `_anytime`) or back to the root-scope `next` queue
    * Ideas are listed per folder when using `ace-idea list --in <folder>`
    * The same command can also update metadata such as `status` when needed
 
