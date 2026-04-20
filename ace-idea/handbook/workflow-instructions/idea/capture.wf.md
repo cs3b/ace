@@ -178,8 +178,8 @@ ace-idea update q7w --move-to archive
 * **Note**: Clipboard functionality requires `ace-support-mac-clipboard` gem
 
 **"Invalid target folder" Error:**
-* **Cause**: `--move-to` was given a virtual filter (e.g., `next`) instead of a physical folder
-* **Solution**: Use a physical folder: `maybe`, `anytime`, `archive`, or any custom name. Note: `next` is a virtual filter for listing, not a physical folder — omit `--move-to` to place ideas in root
+* **Cause**: `--move-to` was given an unsupported or invalid folder value
+* **Solution**: Use a physical folder such as `maybe`, `anytime`, `archive`, or any custom name. Use `--move-to next` or `--move-to root` to place ideas in the root-scope next queue.
 
 **LLM Enhancement Failures:**
 * **Cause**: API issues, model unavailability, or `--no-llm-enhance` flag

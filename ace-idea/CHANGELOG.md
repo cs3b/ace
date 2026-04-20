@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-04-20
+
+### Fixed
+- Updated stale idea workflow and root quick-start docs so `next` is consistently documented as the root-scope queue alias rather than a physical `_next` folder.
+
+### Technical
+- Tightened `TS-IDEA-001` move-to-next E2E contracts so Goal 3 requires raw update/list artifacts and verifies the `next` transition before the later archive step mutates final state.
+
 ## [0.21.2] - 2026-04-18
 
 ### Fixed
