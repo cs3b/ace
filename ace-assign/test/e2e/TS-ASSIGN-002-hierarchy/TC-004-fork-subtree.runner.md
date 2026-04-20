@@ -13,13 +13,28 @@ Save all output to `results/tc/04/`. Required artifact:
 
 - Create assignment from `subtree/job.yaml`. Capture assignment ID.
 - Verify initial current step is outside the subtree (010-precheck).
-- Capture both table and JSON output for each status snapshot.
+- Derive the assignment ID from this goal's own `create.stdout` artifact and
+  save it to `assignment-id.txt`. Never reuse IDs from fixture filenames,
+  examples, prior goals, or previous runs.
+- Capture both table and JSON output for each status snapshot using these exact
+  stable filenames:
+  - initial unscoped table: `status-initial.stdout`, `.stderr`, `.exit`
+  - initial unscoped JSON: `status-initial.json`, `status-initial-json.stderr`,
+    `status-initial-json.exit`
+  - scoped table: `status-scoped.stdout`, `.stderr`, `.exit`
+  - scoped JSON: `status-scoped.json`, `status-scoped-json.stderr`,
+    `status-scoped-json.exit`
+  - post-scope unscoped table: `status-after-scope.stdout`, `.stderr`, `.exit`
+  - post-scope unscoped JSON: `status-after-scope.json`,
+    `status-after-scope-json.stderr`, `status-after-scope-json.exit`
 - Capture explicit step-state snapshots before and after the scoped inspection
   using stable filenames `step-states-before.stdout` and
   `step-states-after.stdout`. These should reflect the full unscoped assignment
   state, not only the subtree view.
 - Use scoped syntax exactly: `ace-assign status --assignment "<id>@020"` for `status-scoped.stdout` and `status-scoped.json`.
 - Use unscoped syntax exactly: `ace-assign status --assignment "<id>"` for `status-after-scope.stdout` and `status-after-scope.json`.
+- Use `--format json` for the `.json` captures and table output for the
+  `.stdout` captures.
 - Do **not** reuse unscoped output for scoped capture.
 - Verify scoped status detects fork subtree root (020-subtree-a).
 - Verify scoped status shows only subtree steps: 020, 020.01, 020.02, 020.03.

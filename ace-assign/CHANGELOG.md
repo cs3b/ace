@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.4] - 2026-04-20
+
+### Technical
+- Tightened `TS-ASSIGN-002` hierarchy E2E contracts so auto-completion uses derived assignment IDs, valid cross-assignment `finish --assignment` syntax, and explicit scoped status artifacts for subtree verification.
+- Clarified `ace-assign finish` usage docs so positional step targeting is reserved for the active assignment while cross-assignment/scoped completion uses `--assignment <id[@step]>`.
+
 ## [0.53.3] - 2026-04-18
 
 ### Technical
