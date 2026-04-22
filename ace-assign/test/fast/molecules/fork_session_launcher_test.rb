@@ -27,11 +27,13 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end
 
     def ensure_window(session:, name:, root:)
-      {created: true, target: "#{session}:#{name}", root: root}
+      {created: true, target: "@42", window_id: "@42", root: root}
     end
 
-    def prepare_pane(session:, window:, root:, keep_existing:)
-      @last_prepare = {session: session, window: window, root: root, keep_existing: keep_existing}
+    def prepare_pane(session:, window:, root:, keep_existing:, window_target: nil)
+      @last_prepare = {
+        session: session, window: window, window_target: window_target, root: root, keep_existing: keep_existing
+      }
       "%42"
     end
 
@@ -39,15 +41,16 @@ class ForkSessionLauncherTest < AceAssignTestCase
       @last_script = {pane_target: pane_target, script_path: script_path}
     end
 
-    def select_window(session:, window:)
-      @last_select = {session: session, window: window}
+    def select_window(session:, window:, window_target: nil)
+      @last_select = {session: session, window: window, window_target: window_target}
     end
 
-    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:)
+    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:, window_id: nil)
       meta = File.exist?(session_meta_file) ? YAML.safe_load_file(session_meta_file) : {}
       meta["launch_mode"] = "tmux"
       meta["tmux_session"] = session
       meta["tmux_window"] = window
+      meta["tmux_window_id"] = window_id if window_id
       meta["tmux_pane_id"] = pane
       File.write(session_meta_file, meta.to_yaml)
     end
@@ -367,6 +370,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       assert_equal "tmux", meta["launch_mode"]
       assert_equal "dev", meta["tmux_session"]
       assert_equal "work-fs", meta["tmux_window"]
+      assert_equal "@42", meta["tmux_window_id"]
       assert_equal "%42", meta["tmux_pane_id"]
 
       wrapper = File.join(tmp_dir, "sessions", "010-tmux-launch.sh")

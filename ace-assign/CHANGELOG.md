@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.5] - 2026-04-22
+
+### Fixed
+- Reused the shared `ace-tmux` window-name sanitizer for tmux fork windows so dotted base windows produce safe fork names such as `ace-t-k5a-fs`.
+- Targeted fork-window pane setup and selection by tmux window ID after lookup or creation, avoiding name parsing failures and duplicate-name ambiguity.
+
 ## [0.53.4] - 2026-04-20
 
 ### Technical
