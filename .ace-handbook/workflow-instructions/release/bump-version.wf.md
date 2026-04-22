@@ -313,7 +313,7 @@ Error: CHANGELOG.md missing
 ## Notes
 
 * This workflow handles **single package** version bumping only
-* For multi-package coordinated releases, use `wfi://release/publish` (or `/as-release`)
+* For multi-package coordinated releases, use `wfi://release/local` (or `/as-release`)
 * Only committed changes are analyzed - uncommitted work is ignored
 * BREAKING CHANGE must appear in commit body for MAJOR bump detection
 * **Explicit bump level** (patch|minor|major) overrides automatic detection
