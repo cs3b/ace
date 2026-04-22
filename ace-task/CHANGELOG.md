@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Tightened the task draft workflow so GitHub issue URL inputs must create the parent or single task with `--github-issue <number>` and sync the linked issue.
+
 ## [0.36.1] - 2026-04-19
 
 ### Technical

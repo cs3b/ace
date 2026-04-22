@@ -6,7 +6,7 @@ description: Create behavior-first draft tasks and subtasks with vertical slicin
 doc-type: workflow
 purpose: task draft workflow instruction
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-22'
 ---
 
 # Draft Task - Behavior-First Specification
@@ -36,6 +36,11 @@ Create high-level behavioral specifications that define WHAT the system should d
      * User stories or experience descriptions
      * Interface specifications or contracts
    * If files are referenced, read their contents
+   * If the input is a GitHub issue URL, extract the issue number and treat it
+     as task lifecycle metadata. Use that number with `ace-task create
+     --github-issue <number>` when creating the parent task or single flat task.
+     The issue URL may still appear in the task body as source context, but the
+     lifecycle link belongs in task frontmatter as `github_issue`.
    * **Intent mapping from enhanced ideas**: When the source idea contains the
      3-Question Delegation Brief sections (`What I Hope to Accomplish`,
      `What "Complete" Looks Like`, `Success Criteria`), use them as the
@@ -79,6 +84,7 @@ Create high-level behavioral specifications that define WHAT the system should d
         - What users experience: [UX description]
         - Interface contract: [CLI/API/UI examples]
         - Success criteria: [Measurable outcomes]
+        - Linked GitHub issue: #[issue-number] (when drafting from a GitHub issue)
         - Status: draft (needs implementation planning)
 
      2. [Next Task Title] - [User experience summary]
@@ -127,12 +133,14 @@ Create high-level behavioral specifications that define WHAT the system should d
    **Pattern A -- Single flat task (default):**
    ```bash
    ace-task create "Task Title" --status draft --estimate "TBD"
+   ace-task create "Task Title" --status draft --estimate "TBD" --github-issue 276
    ```
 
    **Pattern B -- Orchestrator with subtasks:**
    ```bash
    # 1. Create the parent task first
    ace-task create "Parent Title" --status draft --estimate "TBD"
+   ace-task create "Parent Title" --status draft --estimate "TBD" --github-issue 276
    # Returns: v.X.Y+task.NNN
 
    # 2. Add each subtask with --child-of (auto-converts parent to orchestrator)
@@ -157,6 +165,12 @@ Create high-level behavioral specifications that define WHAT the system should d
    * For subtasks, list required shared context files explicitly in EACH subtask's bundle (no implicit inheritance)
    * Include behavioral specification template
    * Focus on behavioral content, leave implementation for replan step
+   * When drafting from a GitHub issue:
+     * Put `--github-issue <number>` only on the parent/orchestrator or single
+       flat task create command unless separate subtasks each own distinct
+       GitHub issues.
+     * Run `ace-task github-sync <parent-or-task-ref>` after creation so the
+       GitHub issue receives the ACE task tracking update.
 
 ### Spike-First Rule for Engine/Pipeline Redesigns
 
@@ -248,6 +262,8 @@ Do not treat "we now understand the design" as sufficient spike completion when 
    * **Validation Checklist:**
      * [ ] All behavioral requirements captured as drafts
      * [ ] Task files have status: draft
+     * [ ] GitHub issue inputs are linked through `github_issue` frontmatter on the parent/single task
+     * [ ] Linked GitHub issue inputs have been synced with `ace-task github-sync <ref>`
      * [ ] Behavioral specifications are complete
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
@@ -354,6 +370,10 @@ All code implementation happens during `ace-bundle wfi://task/work` (status: in-
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
 * Clear handoff to review-task for readiness validation and promotion to pending
+* **REQUIRED when drafting from a GitHub issue URL:**
+  * The parent/orchestrator or single flat task is created with `--github-issue <number>`
+  * The task frontmatter contains `github_issue: <number>`
+  * `ace-task github-sync <ref>` has updated the linked issue
 * **REQUIRED when drafting from ideas:**
   * All source idea files marked as done via `ace-idea move <id> --to archive`
   * Task references updated to new idea file locations
@@ -376,6 +396,15 @@ All code implementation happens during `ace-bundle wfi://task/work` (status: in-
 
 **Example 3: Interface-focused requirements**
 > "Draft task for CLI tool: auth-manager with login, logout, and status commands"
+
+**Example 4: GitHub issue integration**
+> "Draft a task from https://github.com/cs3b/ace/issues/276"
+
+Create the parent or single task with the linked issue number:
+
+```bash
+ace-task create "Task Title" --status draft --estimate "TBD" --github-issue 276
+```
 
 ---
 
