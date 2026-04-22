@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.4] - 2026-04-22
+
+### Fixed
+- Replaced tmux Codex HOME overlays with Codex command-line `-C` and trust config overrides so agent sessions keep the user's normal `HOME` for git, GitHub CLI, and other tool authentication.
+
+## [0.31.3] - 2026-04-22
+
+### Technical
+- Added Codex provider-default regression assertions that explicitly reject stale `gpt-5-mini` model references in shipped model and alias mappings.
+
 ## [0.31.2] - 2026-04-16
 
 ### Fixed
