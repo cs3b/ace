@@ -17,6 +17,7 @@ bundle:
     - ace-task show 8rl.t.k5a
 tags: []
 created_at: "2026-04-22 13:25:52"
+github_issue: 298
 ---
 
 # Make ACE quick start ready out of the box
