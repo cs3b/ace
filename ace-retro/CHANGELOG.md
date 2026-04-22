@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Added a self-improvement root-cause category for wrong-layer fixes where the symptom package is patched before the shared primitive owner is identified.
+
+### Technical
+- Added workflow contract coverage for the new wrong-layer self-improvement category.
+
 ## [0.18.3] - 2026-04-20
 
 ### Fixed
