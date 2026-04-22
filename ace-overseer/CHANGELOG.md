@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.13] - 2026-04-22
+
+### Fixed
+- Matched existing tmux windows through the shared `ace-tmux` sanitized window-name policy so worktrees with punctuation are not reopened under duplicate names.
+
 ## [0.14.12] - 2026-04-19
 
 ### Technical
