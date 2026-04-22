@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
+
 ## [0.9.939] - 2026-04-20
 
 ### Fixed
