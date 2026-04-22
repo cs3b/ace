@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-04-22
+
+### Technical
+- **ace-handbook-integration-pi v0.3.8**: Bumped patch release to keep dependency constraints aligned with `ace-handbook v0.28.0`.
+
 ## [0.3.7] - 2026-04-13
 
 ### Changed

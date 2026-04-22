@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
 
+### Changed
+- **ace-handbook v0.28.0**: Added local `as-release` workflow support and documented a dedicated `release/local` flow for repository preparation.
+
+### Technical
+- **Dependency follow-up**: Patch-released handbook integrations to match the new core version line: `ace-handbook-integration-claude` v0.3.8, `ace-handbook-integration-codex` v0.3.7, `ace-handbook-integration-gemini` v0.3.7, `ace-handbook-integration-opencode` v0.3.7, and `ace-handbook-integration-pi` v0.3.8.
+
 ## [0.9.939] - 2026-04-20
 
 ### Fixed

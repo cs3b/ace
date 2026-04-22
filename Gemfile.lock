@@ -106,37 +106,37 @@ PATH
 PATH
   remote: ace-handbook-integration-claude
   specs:
-    ace-handbook-integration-claude (0.3.7)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-claude (0.3.8)
+      ace-handbook (~> 0.28)
 
 PATH
   remote: ace-handbook-integration-codex
   specs:
-    ace-handbook-integration-codex (0.3.6)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-codex (0.3.7)
+      ace-handbook (~> 0.28)
 
 PATH
   remote: ace-handbook-integration-gemini
   specs:
-    ace-handbook-integration-gemini (0.3.6)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-gemini (0.3.7)
+      ace-handbook (~> 0.28)
 
 PATH
   remote: ace-handbook-integration-opencode
   specs:
-    ace-handbook-integration-opencode (0.3.6)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-opencode (0.3.7)
+      ace-handbook (~> 0.28)
 
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.3.7)
-      ace-handbook (~> 0.22)
+    ace-handbook-integration-pi (0.3.8)
+      ace-handbook (~> 0.28)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.27.4)
+    ace-handbook (0.28.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)

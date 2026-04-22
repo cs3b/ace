@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-opencode will be documented in t
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-04-22
+
+### Technical
+- **ace-handbook-integration-opencode v0.3.7**: Bumped patch release to keep dependency constraints aligned with `ace-handbook v0.28.0`.
+
 ## [0.3.6] - 2026-04-13
 
 ### Changed
