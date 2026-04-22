@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/tmux"
+
 module Ace
   module Overseer
     module Molecules
@@ -36,7 +38,7 @@ module Ace
           session = ENV["ACE_TMUX_SESSION"]
           return false unless session
 
-          name = File.basename(worktree_path.to_s)
+          name = Ace::Tmux::Atoms::WindowNameSanitizer.call(File.basename(worktree_path.to_s))
           result = @tmux_executor.capture(["tmux", "list-windows", "-t", session, "-F", '#{window_name}'])
           return false unless result.success?
 

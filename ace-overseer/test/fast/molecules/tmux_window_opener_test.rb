@@ -120,4 +120,22 @@ class TmuxWindowOpenerTest < AceOverseerTestCase
   ensure
     ENV["ACE_TMUX_SESSION"] = original_session
   end
+
+  def test_reuses_existing_sanitized_tmux_window_name
+    command = FakeTmuxWindowCommand.new
+    executor = FakeTmuxExecutor.new(window_list: "ace-t-k5a\nother\n")
+
+    opener = Ace::Overseer::Molecules::TmuxWindowOpener.new(
+      tmux_window_command: command,
+      tmux_executor: executor
+    )
+
+    original_session = ENV["ACE_TMUX_SESSION"]
+    ENV["ACE_TMUX_SESSION"] = "ace-e2e-test"
+    opener.open(worktree_path: "/wt/ace-t.k5a")
+
+    assert_empty command.calls
+  ensure
+    ENV["ACE_TMUX_SESSION"] = original_session
+  end
 end
