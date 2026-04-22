@@ -59,10 +59,15 @@ module Ace
         private
 
         def resolve_window_name(explicit_name, root, preset_name)
-          return explicit_name if explicit_name
-          return File.basename(root) if root
+          raw_name = if explicit_name
+            explicit_name
+          elsif root
+            File.basename(root)
+          else
+            preset_name
+          end
 
-          preset_name
+          Atoms::WindowNameSanitizer.call(raw_name)
         end
 
         def detect_current_session

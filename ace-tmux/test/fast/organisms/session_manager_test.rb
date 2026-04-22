@@ -102,7 +102,7 @@ class SessionManagerTest < Minitest::Test
     @manager.start("dev", detach: true)
 
     select_cmds = @executor.run_commands.select { |cmd| cmd.include?("select-window") }
-    assert select_cmds.any? { |cmd| cmd.include?("dev:editor") }
+    assert select_cmds.any? { |cmd| cmd.include?("@0") }
   end
 
   def test_start_attaches_when_not_detached
@@ -144,7 +144,7 @@ class SessionManagerTest < Minitest::Test
     assert_includes new_session_cmd, "isolated-dev"
 
     select_cmds = executor.run_commands.select { |cmd| cmd.include?("select-window") }
-    assert select_cmds.any? { |cmd| cmd.include?("isolated-dev:editor") }
+    assert select_cmds.any? { |cmd| cmd.include?("@0") }
   end
 
   def test_start_sends_pre_window_commands
@@ -365,14 +365,49 @@ class SessionManagerTest < Minitest::Test
   end
 
   def test_start_with_root_override_names_first_window_from_basename
-    @manager.start("dev", detach: true, root: "/home/mc/my-project")
+    @manager.start("dev", detach: true, root: "/home/mc/my.project")
 
     new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
     assert new_session_cmd, "Expected new-session command"
     # First window should be named after the root directory basename, not the preset window name
     cmd_str = new_session_cmd.join(" ")
     assert_includes cmd_str, "my-project"
+    assert_includes new_session_cmd, "-n"
+    assert_equal "my-project", new_session_cmd[new_session_cmd.index("-n") + 1]
     refute_includes cmd_str, "-n editor", "Should not use preset window name when root override provided"
+  end
+
+  def test_start_sanitizes_additional_window_names
+    write_preset(@temp_dir, "sessions", "punctuated", {
+      "name" => "punctuated",
+      "root" => "/tmp/project",
+      "windows" => [
+        {"name" => "main", "panes" => [{"commands" => ["bash"]}]},
+        {"name" => "ace-t.k5a:fs", "panes" => [{"commands" => ["pwd"]}]}
+      ]
+    })
+
+    loader = Ace::Tmux::Molecules::PresetLoader.new(
+      gem_root: @temp_dir,
+      start_path: @temp_dir
+    )
+    builder = Ace::Tmux::Molecules::SessionBuilder.new(preset_loader: loader)
+    executor = TmuxTestHelper::MockExecutor.new(
+      capture_responses: {
+        "tmux has-session -t punctuated" => mock_result(success: false, exit_code: 1),
+        :default => mock_result(stdout: "@0")
+      }
+    )
+    manager = Ace::Tmux::Organisms::SessionManager.new(
+      executor: executor,
+      session_builder: builder
+    )
+
+    manager.start("punctuated", detach: true)
+
+    new_window_cmd = executor.captured_commands.find { |cmd| cmd.include?("new-window") }
+    assert_includes new_window_cmd, "ace-t-k5a-fs"
+    refute_includes new_window_cmd, "ace-t.k5a:fs"
   end
 
   def test_start_without_root_names_first_window_from_preset_root

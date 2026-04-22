@@ -70,6 +70,7 @@ Behavior notes:
 - Inside tmux, current session is auto-detected.
 - Outside tmux, provide `--session` (or set `ACE_TMUX_SESSION`).
 - If no preset is provided, `defaults.window` is used.
+- ACE-managed window names are normalized to `A-Z`, `a-z`, `0-9`, `_`, and `-`; other punctuation is replaced with `-`.
 
 ## `ace-tmux list`
 

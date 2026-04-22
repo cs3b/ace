@@ -23,6 +23,7 @@ module Ace
           @executor = executor
           @session_builder = session_builder
           @tmux = tmux
+          @window_targets = {}
         end
 
         # Start a session from a preset
@@ -37,6 +38,7 @@ module Ace
           session = @session_builder.build(preset_name)
           session.name = name if name
           session.root = root if root
+          @window_targets = {}
 
           if session_exists?(session.name)
             if force
@@ -61,7 +63,7 @@ module Ace
         # Mirrors WindowManager#resolve_window_name: root basename wins over preset name.
         def resolve_first_window_name(preset_window_name, root_override, session_root)
           effective_root = root_override || session_root || Dir.pwd
-          File.basename(effective_root)
+          Atoms::WindowNameSanitizer.call(File.basename(effective_root), fallback: preset_window_name || "window")
         end
 
         def session_exists?(name)
@@ -88,6 +90,8 @@ module Ace
           )
           result = @executor.capture(cmd)
           window_target = result.stdout.strip
+          record_window_target(first_window_name, window_target)
+          record_window_target(first_window&.name, window_target) if first_window
 
           # Set up panes for the first window (it was created with the session)
           setup_panes(session, first_window, window_target) if first_window
@@ -98,15 +102,18 @@ module Ace
           # Skip first window (already created with session)
           session.windows.drop(1).each do |window|
             window_root = window.root || session.root
+            window_name = Atoms::WindowNameSanitizer.call(window.name)
             cmd = Atoms::TmuxCommandBuilder.new_window(
               session.name,
-              name: window.name,
+              name: window_name,
               root: window_root,
               print_format: '#{window_id}',
               tmux: @tmux
             )
             result = @executor.capture(cmd)
             window_target = result.stdout.strip
+            record_window_target(window_name, window_target)
+            record_window_target(window.name, window_target)
             setup_panes(session, window, window_target)
           end
         end
@@ -263,13 +270,20 @@ module Ace
 
         def select_startup_window(session, first_window_target: nil)
           target = if session.startup_window
-            "#{session.name}:#{session.startup_window}"
+            startup_window = Atoms::WindowNameSanitizer.call(session.startup_window)
+            @window_targets[startup_window] || @window_targets[session.startup_window] || "#{session.name}:#{startup_window}"
           else
             first_window_target || "#{session.name}:#{session.windows.first&.name || 0}"
           end
 
           cmd = Atoms::TmuxCommandBuilder.select_window(target, tmux: @tmux)
           @executor.run(cmd)
+        end
+
+        def record_window_target(name, target)
+          return if name.to_s.empty? || target.to_s.empty?
+
+          @window_targets[name] = target
         end
 
         def attach_session(session)

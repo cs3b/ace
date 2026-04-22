@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed session targeting so commands now respect an active `TMUX` session and avoid forcing legacy `tmux -S` socket targeting when already inside tmux.
 
+## [0.14.4] - 2026-04-22
+
+### Fixed
+- Sanitized ACE-managed tmux window names so path-derived names such as `ace-t.k5a` become tmux-safe targets like `ace-t-k5a`.
+- Tracked startup windows by tmux window ID after creation so session startup selection no longer depends on raw or punctuation-bearing window names.
+
 ## [0.14.3] - 2026-04-16
 
 ### Technical

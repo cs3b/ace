@@ -59,9 +59,8 @@ module Ace
               tmux: tmux_bin
             )
 
-            effective_name = options[:name] || (options[:root] ? File.basename(options[:root]) : preset)
-            puts "Adding window '#{effective_name}' (preset: #{preset})..." unless options[:quiet]
-            manager.add_window(preset, session: options[:session], root: options[:root], name: options[:name])
+            puts "Adding window from preset '#{preset}'..." unless options[:quiet]
+            effective_name = manager.add_window(preset, session: options[:session], root: options[:root], name: options[:name])
             puts "Window '#{effective_name}' added." unless options[:quiet]
           rescue Ace::Tmux::PresetNotFoundError => e
             raise Ace::Support::Cli::Error.new(e.message)

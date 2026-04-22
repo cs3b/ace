@@ -136,16 +136,18 @@ class WindowManagerTest < Minitest::Test
     result = @manager.add_window("code-editor", session: "dev", root: "/home/mc/ace-task.240.02")
 
     new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
-    assert_includes new_window_cmd, "ace-task.240.02"
-    assert_equal "ace-task.240.02", result
+    assert_includes new_window_cmd, "ace-task-240-02"
+    refute_includes new_window_cmd, "ace-task.240.02"
+    assert_equal "ace-task-240-02", result
   end
 
   def test_add_window_name_from_explicit_flag
-    result = @manager.add_window("code-editor", session: "dev", name: "custom-name")
+    result = @manager.add_window("code-editor", session: "dev", name: "custom.name:one")
 
     new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
-    assert_includes new_window_cmd, "custom-name"
-    assert_equal "custom-name", result
+    assert_includes new_window_cmd, "custom-name-one"
+    refute_includes new_window_cmd, "custom.name:one"
+    assert_equal "custom-name-one", result
   end
 
   def test_add_window_name_explicit_overrides_root
