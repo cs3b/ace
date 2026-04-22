@@ -14,7 +14,7 @@ Use this full-stack setup path before the walkthrough:
 bundle add --group "development, test" \
   ace-idea ace-task ace-sim \
   ace-overseer ace-assign ace-git-worktree ace-tmux \
-  ace-bundle ace-handbook ace-search ace-docs ace-llm \
+  ace-bundle ace-handbook ace-search ace-docs ace-llm ace-llm-providers-cli \
   ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
   ace-git-commit ace-git-secrets ace-git \
   ace-handbook-integration-claude ace-handbook-integration-codex
@@ -34,6 +34,8 @@ ace-config init
 ```
 
 This seeds your local `.ace/` config, adds starter agent guidance files when missing, and ensures `.ace-local/` is ignored for project-local ACE artifacts.
+On first run, expect a large tracked setup diff under `.ace/`, projected agent directories (for example `.claude/skills/`,
+`.codex/skills/`, `.gemini/skills/`), guidance files, and Bundler files.
 
 4. Sync handbook assets to your agent platforms:
 
@@ -47,6 +49,9 @@ ace-handbook sync
 ace-llm --list-providers
 ace-bundle project
 ```
+
+Treat `ace-llm --list-providers` as the canonical provider availability check. If CLI providers are unavailable, verify
+`ace-llm-providers-cli` is in your install list. API-only usage remains valid even when local CLI provider probes are unavailable.
 
 6. Optional assignment sanity check in plain projects:
 

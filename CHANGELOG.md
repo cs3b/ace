@@ -6,12 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
+- **ace-support-config v0.12.1**: Hardened `ace-config doctor` readiness checks by validating stale `aliases.global` provider targets and accepting semantic `.ace-local` ignore patterns instead of exact-line matching.
+- **ace-llm-providers-cli v0.31.4**: Replaced tmux Codex HOME overlays with per-launch `-C` and trust config overrides so interactive Codex sessions keep the user's normal `HOME` for git, GitHub CLI, and other auth-sensitive tools.
+- **ace-tmux v0.14.4**: Centralized ACE-managed tmux window-name sanitization so dotted or punctuation-bearing worktree/window names become safe tmux targets and startup selection uses window IDs.
+- **ace-assign v0.53.5**: Reused the shared tmux sanitizer for fork windows and targeted fork panes/windows by tmux window ID after lookup or creation.
+- **ace-overseer v0.14.13**: Reused sanitized tmux window-name matching so worktrees with punctuation do not reopen duplicate windows.
+
+### Added
+- **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
 ### Changed
 - **ace-handbook v0.28.0**: Added local `as-release` workflow support and documented a dedicated `release/local` flow for repository preparation.
+- **ace-git-commit v0.26.0**: Improved setup-time LLM failure guidance to include failed role/model context, provider/setup remediation commands, deterministic direct-message fallback (`--only-staged --no-split -m`), and matching docs/test coverage including `TS-COMMIT-001` goal 8.
 
 ### Technical
 - **Dependency follow-up**: Patch-released handbook integrations to match the new core version line: `ace-handbook-integration-claude` v0.3.8, `ace-handbook-integration-codex` v0.3.7, `ace-handbook-integration-gemini` v0.3.7, `ace-handbook-integration-opencode` v0.3.7, and `ace-handbook-integration-pi` v0.3.8.
+- **ace-llm v0.36.5**: Stabilized deterministic verification by stubbing CLI routing tests away from provider fallback HTTP calls and removing retry sleep from fallback model-format coverage.
+- **ace-support-config v0.12.0**: Added doctor command/spec coverage for CLI wiring, alias/package/discovery checks, and probe skip behavior.
+- **ace-assign v0.53.5 / ace-overseer v0.14.13**: Tightened runtime dependency constraints to `ace-tmux ~> 0.14.4` for the shared sanitizer API.
+- **ace-git-commit v0.26.1**: Tightened `TS-COMMIT-001` Goal 7/8 staging contracts to prevent generated `results/` artifacts from contaminating staged-only commit evidence.
 
 ## [0.9.939] - 2026-04-20
 
@@ -76,6 +89,7 @@ All notable changes to this project will be documented in this file.
 - **ace-lint v0.30.3**: Resolved validator executables from sandbox runtime and project-local `bin/` paths so Ruby validator runs work with scenario-local shims instead of ambient `PATH` assumptions.
 - **ace-lint v0.30.2**: Corrected `TS-LINT-001` doctor diagnostics setup so the malformed configuration case writes the exact `.ace/lint/.rubocop.yml` path inspected by `ace-lint --doctor`, restoring real malformed-config coverage instead of a false healthy duplicate.
 - **ace-lint v0.28.1**: Allowed canonical `assign.steps` metadata in skill validation for workflow/orchestration skills.
+- **ace-llm v0.36.4**: Added a regression guard for fresh `commit` role defaults so stale `codex:gpt-5-mini` mappings cannot reappear while keeping `codex:mini` fallback behavior intact.
 - **ace-llm v0.36.3**: Fixed `ace-llm --interactive` startup for Codex aliases so the `/as-onboard` and related interactive alias prompts are launched with a valid subprocess command shape instead of aborting with a missing keyword.
 - **ace-llm v0.36.2**: Refreshed Codex model examples in README, usage, getting-started, demo, and help output from stale `codex:gpt-5` forms to the current stable `codex:gpt` alias and updated current provider alias guidance.
 - **ace-llm v0.36.1**: Switched the fresh-default `commit` role to prefer `google:lite` before CLI fallbacks so new `ace-config init` projects keep generated commit messages working when stale CLI aliases or unavailable local CLIs would otherwise break message generation.
@@ -87,6 +101,7 @@ All notable changes to this project will be documented in this file.
 - **ace-llm v0.33.3**: Added `codex:mini` as a fallback model for the `commit` role after `glite`, so role-based commit-message generation tries a secondary model instead of failing when `glite` is unavailable.
 - **ace-llm v0.33.2**: Fixed provider credential availability checks so role-based model selection no longer crashes when a provider relies on fallback environment keys.
 - **ace-llm v0.33.0**: Preserved full fallback target selectors (including provider/model + suffix context) across fallback attempts and rebuilt generation options per target instead of reusing stale primary-provider options.
+- **ace-llm-providers-cli v0.31.3**: Added Codex provider-default regression assertions that explicitly reject stale `gpt-5-mini` model references in shipped model and alias mappings.
 - **ace-llm-providers-cli v0.31.2**: Updated shipped Codex defaults from the rejected `gpt-5-mini` alias path to the current `gpt-5.4` / `gpt-5.4-mini` catalog and aligned the CLI client metadata with those model IDs.
 - **ace-llm-providers-cli v0.31.2**: Added shipped `flash-latest` and `pro-latest` Gemini aliases backed by declared default models so fresh-provider fallback chains no longer target missing Gemini aliases.
 - **ace-llm-providers-cli v0.31.1**: Updated `TS-LLMCLI-001` sandbox setup to source `mise.toml` from `${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}`, keeping CLI smoke runs compatible with read-only source-root mounts.

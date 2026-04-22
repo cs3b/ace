@@ -10,6 +10,8 @@ bundle:
     - ./TC-002-task-create.verify.md
     - ./TC-003-protocol-nav.verify.md
     - ./TC-004-config-cascade.verify.md
+    - ./TC-005-fresh-setup-contract.verify.md
+    - ./TC-006-commit-fallback.verify.md
 ---
 
 # E2E Verification: Quick-Start Local Validation
@@ -19,11 +21,13 @@ You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdict
 ## Rules
 
 - Use impact-first verification order:
+
   1. sandbox/project state impact
   2. explicit artifacts under `results/tc/{NN}/`
   3. debug captures (`stdout`, `stderr`, `.exit`) only as fallback
+
 - Evaluate each goal independently based solely on the artifacts provided
-- Do not speculate about what the runner did — only judge what exists
+- Do not speculate about what the runner did -- only judge what exists
 - For each goal, cite specific evidence (filenames, content snippets)
 - Follow the output format exactly
 
@@ -31,8 +35,9 @@ You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdict
 
 For each goal output:
 
-### Goal N — <title>
+### Goal N -- <title>
+
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/6 passed**

@@ -84,14 +84,14 @@ Use this full-stack path for a new project (Ruby 3.2+):
 bundle add --group "development, test" \
   ace-idea ace-task ace-sim \
   ace-overseer ace-assign ace-git-worktree ace-tmux \
-  ace-bundle ace-handbook ace-search ace-docs \
+  ace-bundle ace-handbook ace-search ace-docs ace-llm ace-llm-providers-cli \
   ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
   ace-git-commit ace-git-secrets ace-git \
   ace-handbook-integration-claude ace-handbook-integration-codex
 # Also available: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
 
-Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled in automatically.
+Dependencies like `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled in automatically.
 
 2. Install gems:
 
@@ -111,12 +111,18 @@ ace-config init
 ace-handbook sync
 ```
 
+`ace-config init` and `ace-handbook sync` intentionally generate a large tracked setup set on first run, including `.ace/`,
+project guidance files, projected agent skill folders (for example `.claude/skills/` and `.codex/skills/`), and Bundler files.
+
 5. Verify provider discovery and project context:
 
 ```bash
 ace-llm --list-providers
 ace-bundle project
 ```
+
+`ace-llm --list-providers` is the canonical provider availability check. If CLI providers appear unavailable, confirm
+`ace-llm-providers-cli` is included in your install list. API-only setups can still use ACE with API-backed providers.
 
 If `bundle install` fails immediately after a large ACE release, rerun with:
 
