@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.k5a.4
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-llm/test/e2e/TS-LLM-002-provider-discovery/scenario.yml
-    - ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/scenario.yml
-    - ace-support-config/test/feat/config_initializer_bootstrap_test.rb
-  commands:
-    - ace-task show 8rl.t.k5a.4
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-llm/test/e2e/TS-LLM-002-provider-discovery/scenario.yml, ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/scenario.yml, ace-support-config/test/feat/config_initializer_bootstrap_test.rb]
+  commands: [ace-task show 8rl.t.k5a.4]
 tags: []
 parent: 8rl.t.k5a
 created_at: "2026-04-22 13:26:14"
+needs_review: false
 ---
 
 # Validate fresh-repo quick-start path

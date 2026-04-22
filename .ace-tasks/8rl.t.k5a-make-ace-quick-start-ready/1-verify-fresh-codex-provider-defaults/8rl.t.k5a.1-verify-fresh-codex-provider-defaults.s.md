@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.k5a.1
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - ace-llm/.ace-defaults/llm/config.yml
-    - ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml
-    - ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb
-    - ace-llm/test/fast/organisms/configuration_test.rb
-    - ace-llm-providers-cli/test/fast/molecules/codex_client_test.rb
-  commands:
-    - ace-task show 8rl.t.k5a.1
+  presets: [project]
+  files: [ace-llm/.ace-defaults/llm/config.yml, ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml, ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb, ace-llm/test/fast/organisms/configuration_test.rb, ace-llm-providers-cli/test/fast/molecules/codex_client_test.rb]
+  commands: [ace-task show 8rl.t.k5a.1]
 tags: []
 parent: 8rl.t.k5a
 created_at: "2026-04-22 13:26:01"
+needs_review: false
 ---
 
 # Verify fresh Codex provider defaults

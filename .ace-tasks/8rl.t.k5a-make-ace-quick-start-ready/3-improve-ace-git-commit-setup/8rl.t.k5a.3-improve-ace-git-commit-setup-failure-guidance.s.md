@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.k5a.3
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb
-    - ace-git-commit/lib/ace/git_commit/cli/commands/commit.rb
-    - ace-git-commit/docs/getting-started.md
-    - ace-git-commit/docs/usage.md
-    - ace-git-commit/test/fast/molecules/message_generator_test.rb
-  commands:
-    - ace-task show 8rl.t.k5a.3
+  presets: [project]
+  files: [ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb, ace-git-commit/lib/ace/git_commit/cli/commands/commit.rb, ace-git-commit/docs/getting-started.md, ace-git-commit/docs/usage.md, ace-git-commit/test/fast/molecules/message_generator_test.rb]
+  commands: [ace-task show 8rl.t.k5a.3]
 tags: []
 parent: 8rl.t.k5a
 created_at: "2026-04-22 13:26:09"
+needs_review: false
 ---
 
 # Improve ace-git-commit setup failure guidance

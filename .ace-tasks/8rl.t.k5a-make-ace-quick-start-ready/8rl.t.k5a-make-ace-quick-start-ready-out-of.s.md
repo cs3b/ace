@@ -1,23 +1,17 @@
 ---
 id: 8rl.t.k5a
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-llm/.ace-defaults/llm/config.yml
-    - ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml
-    - ace-support-config/lib/ace/support/config/organisms/config_initializer.rb
-    - ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb
-  commands:
-    - ace-task show 8rl.t.k5a
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-llm/.ace-defaults/llm/config.yml, ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml, ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb]
+  commands: [ace-task show 8rl.t.k5a]
 tags: []
 created_at: "2026-04-22 13:25:52"
 github_issue: 298
+needs_review: false
 ---
 
 # Make ACE quick start ready out of the box

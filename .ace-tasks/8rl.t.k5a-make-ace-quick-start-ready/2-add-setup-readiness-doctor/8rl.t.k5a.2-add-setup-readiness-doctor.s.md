@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.k5a.2
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - ace-support-config/lib/ace/support/config/cli.rb
-    - ace-support-config/lib/ace/support/config/organisms/config_initializer.rb
-    - ace-support-config/test/feat/config_initializer_bootstrap_test.rb
-    - ace-llm/docs/usage.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.k5a.2
+  presets: [project]
+  files: [ace-support-config/lib/ace/support/config/cli.rb, ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, ace-support-config/test/feat/config_initializer_bootstrap_test.rb, ace-llm/docs/usage.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/ux-usage.md]
+  commands: [ace-task show 8rl.t.k5a.2]
 tags: []
 parent: 8rl.t.k5a
 created_at: "2026-04-22 13:26:05"
+needs_review: false
 ---
 
 # Add setup readiness doctor
