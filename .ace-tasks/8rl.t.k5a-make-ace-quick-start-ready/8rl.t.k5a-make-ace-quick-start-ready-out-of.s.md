@@ -1,6 +1,6 @@
 ---
 id: 8rl.t.k5a
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
@@ -12,6 +12,12 @@ tags: []
 created_at: "2026-04-22 13:25:52"
 github_issue: 298
 needs_review: false
+worktree:
+  branch: k5a-make-ace-quick-start-ready-out-of-the-box
+  path: ../ace-t.k5a
+  created_at: "2026-04-22 14:46:52"
+  updated_at: "2026-04-22 14:46:52"
+  target_branch: main
 ---
 
 # Make ACE quick start ready out of the box
