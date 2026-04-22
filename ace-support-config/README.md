@@ -23,11 +23,14 @@ This package now owns the `ace-config` executable for managing `.ace` configurat
 
 ```bash
 ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config doctor [--json] [--no-probe]
 ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
 ace-config list [--verbose]
 ace-config version
 ace-config help
 ```
+
+Use `ace-config doctor` after a fresh setup to check quick-start readiness without mutating the project. It verifies local setup hygiene, provider package availability, `ace-llm --list-providers` discovery, configured aliases, and optional provider probe readiness. Add `--json` for machine-readable output or `--no-probe` when credentials or network probes should be skipped.
 
 ## Testing
 

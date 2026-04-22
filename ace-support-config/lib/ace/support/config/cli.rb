@@ -3,6 +3,7 @@
 require "optparse"
 require_relative "organisms/config_initializer"
 require_relative "organisms/config_diff"
+require_relative "organisms/setup_doctor"
 require_relative "models/config_templates"
 
 module Ace
@@ -25,6 +26,8 @@ module Ace
             run_diff(argv)
           when "list"
             run_list(argv)
+          when "doctor"
+            run_doctor(argv)
           when "version", "--version"
             show_version
           when "help", "--help", "-h"
@@ -164,6 +167,33 @@ module Ace
           puts "Use 'ace-config init' to initialize all configurations"
         end
 
+        def run_doctor(argv)
+          options = {json: false, no_probe: false}
+
+          parser = OptionParser.new do |opts|
+            opts.banner = <<~BANNER.chomp
+              NAME
+                ace-config doctor - Check setup readiness for quick-start workflows
+
+              USAGE
+                ace-config doctor [OPTIONS]
+
+              OPTIONS
+            BANNER
+            opts.on("--json", "Output checks as JSON") { options[:json] = true }
+            opts.on("--no-probe", "Skip tiny live provider probes") { options[:no_probe] = true }
+            opts.on("-h", "--help", "Show this help") do
+              puts opts
+              exit
+            end
+          end
+
+          parser.parse!(argv)
+
+          exit_code = Organisms::SetupDoctor.new.run(json: options[:json], no_probe: options[:no_probe])
+          exit(exit_code) if exit_code.positive?
+        end
+
         def show_version
           puts "ace-config #{Ace::Support::Config::VERSION}"
         end
@@ -180,6 +210,7 @@ module Ace
               init [GEM]                        Initialize configuration for specific gem or all
               diff [GEM]                        Compare configs with examples
               list                              List available ace-* gems with example configs
+              doctor                            Check setup readiness for quick-start workflows
               version                           Show version
               help                              Show this help
 
