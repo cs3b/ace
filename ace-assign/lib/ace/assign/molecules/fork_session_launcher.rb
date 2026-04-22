@@ -123,6 +123,7 @@ module Ace
           pane_target = tmux_runner.prepare_pane(
             session: session,
             window: fork_window,
+            window_target: window_info[:target],
             root: Dir.pwd,
             keep_existing: window_info[:created]
           )
@@ -147,7 +148,9 @@ module Ace
           )
 
           tmux_runner.run_script_in_pane(pane_target: pane_target, script_path: script_path)
-          tmux_runner.select_window(session: session, window: fork_window) if window_info[:created] && current_window != fork_window
+          if window_info[:created] && current_window != fork_window
+            tmux_runner.select_window(session: session, window: fork_window, window_target: window_info[:target])
+          end
           write_tmux_launch_metadata(
             session_meta_file: session_meta_file,
             provider: invocation[:provider],
@@ -158,7 +161,8 @@ module Ace
             session_meta_file: session_meta_file,
             session: session,
             window: fork_window,
-            pane: pane_target
+            pane: pane_target,
+            window_id: window_info[:window_id]
           )
           wait_for_subtree_terminal(
             assignment_id: assignment_id,

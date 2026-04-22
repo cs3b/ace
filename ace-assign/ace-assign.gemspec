@@ -47,6 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-llm", "~> 0.34"
   spec.add_dependency "ace-task", "~> 0.31"
+  spec.add_dependency "ace-tmux", "~> 0.14.4"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.13"

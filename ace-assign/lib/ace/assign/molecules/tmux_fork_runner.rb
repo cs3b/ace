@@ -4,6 +4,7 @@ require "fileutils"
 require "open3"
 require "shellwords"
 require "yaml"
+require "ace/tmux"
 
 module Ace
   module Assign
@@ -48,23 +49,29 @@ module Ace
         end
 
         def fork_window_name(base_window)
-          base = base_window.to_s.strip
-          return base if base.end_with?("-fs")
+          base = base_window.to_s.strip.sub(/-fs\z/, "")
+          sanitized = Ace::Tmux::Atoms::WindowNameSanitizer.call(base, fallback: "fork")
 
-          "#{base}-fs"
+          "#{sanitized}-fs"
         end
 
         def ensure_window(session:, name:, root:)
-          return {created: false, target: "#{session}:#{name}"} if window_exists?(session: session, name: name)
+          if (window_id = find_window_id(session: session, name: name))
+            return {created: false, target: window_id, window_id: window_id, name: name}
+          end
 
-          result = capture([tmux_binary, "new-window", "-t", "#{session}:", "-n", name, "-c", File.expand_path(root)])
+          result = capture([
+            tmux_binary, "new-window", "-t", "#{session}:", "-n", name, "-c", File.expand_path(root),
+            "-P", "-F", '#{window_id}'
+          ])
           raise Error, "Failed to create tmux fork window #{name}: #{result.stderr}" unless result.success?
 
-          {created: true, target: "#{session}:#{name}"}
+          window_id = result.stdout
+          {created: true, target: window_id, window_id: window_id, name: name}
         end
 
-        def prepare_pane(session:, window:, root:, keep_existing:)
-          target = "#{session}:#{window}"
+        def prepare_pane(session:, window:, root:, keep_existing:, window_target: nil)
+          target = window_target || "#{session}:#{window}"
           if keep_existing
             pane = first_pane(target)
             set_pane_remain_on_exit(pane)
@@ -81,8 +88,9 @@ module Ace
           pane
         end
 
-        def select_window(session:, window:)
-          run!([tmux_binary, "select-window", "-t", "#{session}:#{window}"], "select tmux fork window #{window}")
+        def select_window(session:, window:, window_target: nil)
+          target = window_target || "#{session}:#{window}"
+          run!([tmux_binary, "select-window", "-t", target], "select tmux fork window #{window}")
         end
 
         def run_script_in_pane(pane_target:, script_path:)
@@ -106,7 +114,7 @@ module Ace
           raise Error, "Invalid tmux fork status file: #{status_file}"
         end
 
-        def merge_tmux_metadata(session_meta_file:, session:, window:, pane:)
+        def merge_tmux_metadata(session_meta_file:, session:, window:, pane:, window_id: nil)
           data = if File.exist?(session_meta_file)
             YAML.safe_load_file(session_meta_file) || {}
           else
@@ -115,6 +123,7 @@ module Ace
           data["launch_mode"] = "tmux"
           data["tmux_session"] = session
           data["tmux_window"] = window
+          data["tmux_window_id"] = window_id if window_id
           data["tmux_pane_id"] = pane
           File.write(session_meta_file, data.to_yaml)
         end
@@ -123,11 +132,16 @@ module Ace
 
         attr_reader :tmux_binary
 
-        def window_exists?(session:, name:)
-          result = capture([tmux_binary, "list-windows", "-t", session, "-F", '#{window_name}'])
-          return false unless result.success?
+        def find_window_id(session:, name:)
+          result = capture([tmux_binary, "list-windows", "-t", session, "-F", "#{'#{window_id}'}\t#{'#{window_name}'}"])
+          return nil unless result.success?
 
-          result.stdout_lines.any? { |value| value == name }
+          result.stdout_lines.each do |line|
+            window_id, window_name = line.split("\t", 2)
+            return window_id if window_name == name && !window_id.to_s.empty?
+          end
+
+          nil
         end
 
         def active_window_name(session)

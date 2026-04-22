@@ -115,4 +115,59 @@ class TmuxForkRunnerTest < AceAssignTestCase
     assert_equal ["work"], result.stdout_lines
     assert result.success?
   end
+
+  def test_fork_window_name_uses_shared_tmux_safe_name
+    runner = FakeTmuxForkRunner.new
+
+    assert_equal "ace-t-k5a-fs", runner.fork_window_name("ace-t.k5a")
+    assert_equal "ace-t-k5a-fs", runner.fork_window_name("ace-t.k5a-fs")
+  end
+
+  def test_ensure_window_reuses_existing_window_id
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "list-windows", "-t", "demo", "-F", "#{'#{window_id}'}\t#{'#{window_name}'}"] =>
+          "@7\tace-t-k5a-fs\n@8\tother"
+      }
+    )
+
+    info = runner.ensure_window(session: "demo", name: "ace-t-k5a-fs", root: Dir.pwd)
+
+    assert_equal({created: false, target: "@7", window_id: "@7", name: "ace-t-k5a-fs"}, info)
+    assert_equal 1, runner.commands.length
+  end
+
+  def test_ensure_window_creates_window_and_returns_window_id
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "list-windows", "-t", "demo", "-F", "#{'#{window_id}'}\t#{'#{window_name}'}"] => "",
+        ["tmux", "new-window", "-t", "demo:", "-n", "ace-t-k5a-fs", "-c", File.expand_path(Dir.pwd),
+          "-P", "-F", '#{window_id}'] => "@9"
+      }
+    )
+
+    info = runner.ensure_window(session: "demo", name: "ace-t-k5a-fs", root: Dir.pwd)
+
+    assert_equal({created: true, target: "@9", window_id: "@9", name: "ace-t-k5a-fs"}, info)
+  end
+
+  def test_prepare_pane_targets_window_id
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "list-panes", "-t", "@9", "-F", '#{pane_id}'] => "%1"
+      }
+    )
+
+    pane = runner.prepare_pane(
+      session: "demo",
+      window: "ace-t-k5a-fs",
+      window_target: "@9",
+      root: Dir.pwd,
+      keep_existing: true
+    )
+
+    assert_equal "%1", pane
+    assert_includes runner.commands, ["tmux", "list-panes", "-t", "@9", "-F", '#{pane_id}']
+    assert_includes runner.commands, ["tmux", "select-layout", "-t", "@9", "tiled"]
+  end
 end
