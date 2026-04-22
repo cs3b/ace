@@ -10,6 +10,7 @@ leaves unstaged changes untouched in the working tree.
 Save all output to `results/tc/07/`. Capture:
 - The command's stdout, stderr, and exit code
 - `git status --short` before and after the command
+- `git diff --name-only --cached` before invoking `ace-git-commit`
 - `git show --stat HEAD` for the new commit
 - Evidence of one staged file and one unstaged file before invoking
   `ace-git-commit --only-staged`
@@ -17,7 +18,9 @@ Save all output to `results/tc/07/`. Capture:
 ## Constraints
 
 - Modify at least two tracked files.
-- Stage only one file with `git add`.
+- Stage only one intended source file with an explicit `git add <path>` command.
+- Never use `git add .` or `git add -A` in this goal.
+- Ensure generated `results/` artifacts are not staged before invoking `ace-git-commit` (for example, `git restore --staged results || true`).
 - Leave at least one modified file unstaged.
 - Invoke `ace-git-commit --only-staged -m "<message>"`.
 - Verify the committed diff includes only staged file(s) and unstaged

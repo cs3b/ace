@@ -60,6 +60,27 @@ class GitCommitCliRoutingTest < TestCase
     end
   end
 
+  def test_cli_renders_git_commit_error_as_controlled_failure
+    mock_orchestrator = Minitest::Mock.new
+    mock_orchestrator.expect(:execute, nil) do |options|
+      options.is_a?(Ace::GitCommit::Models::CommitOptions) ||
+        raise("expected CommitOptions, got #{options.class}")
+      raise Ace::GitCommit::Error, "Failed to generate commit message with ACE role 'role:commit': Provider unavailable\n\nLLM setup checks:\n  ace-llm --list-providers\n  ace-config doctor\n\nFallback commit command:\n  ace-git-commit --only-staged --no-split -m \"chore: set up ace tooling\""
+    end
+
+    result = Ace::GitCommit::Organisms::CommitOrchestrator.stub(:new, mock_orchestrator) do
+      invoke_cli(Ace::GitCommit::CLI, ["-i", "set up ace tooling"])
+    end
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Failed to generate commit message with ACE role 'role:commit'"
+    assert_includes result[:stderr], "ace-llm --list-providers"
+    assert_includes result[:stderr], "ace-config doctor"
+    assert_includes result[:stderr], 'ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"'
+    refute_match(/backtrace|traceback/i, result[:stderr])
+    mock_orchestrator.verify
+  end
+
   private
 
   def stub_commit_orchestrator(&block)

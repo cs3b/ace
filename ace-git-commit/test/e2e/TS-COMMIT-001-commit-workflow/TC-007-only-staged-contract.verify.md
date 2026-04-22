@@ -14,6 +14,8 @@ Validation order (impact-first):
 - **Artifacts exist** — `results/tc/07/` contains status snapshots, command
   captures, and commit evidence.
 - **Zero exit code** — command exit capture is `0`.
+- **Staged set is clean** — the pre-command cached diff capture does not include
+  `results/` paths.
 - **Only staged committed** — `git show --stat HEAD` includes the staged file
   and does not include the intentionally unstaged file.
 - **Unstaged preserved** — post-command `git status --short` still shows the

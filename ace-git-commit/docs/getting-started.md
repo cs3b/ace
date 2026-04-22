@@ -60,6 +60,18 @@ ace-git-commit ace-review/README.md ace-review/docs/getting-started.md
 
 When changes span multiple packages, `ace-git-commit` can split work by scope based on your config so commit history stays clean.
 
+## Setup failure recovery (first commit)
+
+If your first LLM-backed commit fails because provider credentials or model access are not ready, run:
+
+```bash
+ace-llm --list-providers
+ace-config doctor
+ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+```
+
+This keeps your staged setup files commit-able even when `role:commit` or an explicit model cannot be used yet.
+
 ## Common Commands
 
 | Command | What it does |

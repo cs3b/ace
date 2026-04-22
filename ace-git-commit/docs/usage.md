@@ -109,6 +109,7 @@ Then modify files in both packages:
 3. Run `ace-git-commit --only-staged`.
 
 Expected outcome:
+
 - The new commit contains only staged files.
 - Unstaged modifications remain in `git status` after the commit.
 
@@ -126,6 +127,25 @@ git:
       enabled: true
       detect_from_paths: true
 ```
+
+## Troubleshooting Setup Failures
+
+When message generation fails during setup (for example missing credentials, unavailable model, or account access issues), the CLI now reports:
+
+- The failed role/model input (for example `role:commit` or `codex:mini`)
+- The underlying provider/model error when available
+- Setup checks:
+
+  - `ace-llm --list-providers`
+  - `ace-config doctor`
+
+- Deterministic fallback commit command:
+
+```bash
+ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+```
+
+Explicit `-m/--message` remains deterministic and bypasses LLM generation.
 
 ## Common Commands
 

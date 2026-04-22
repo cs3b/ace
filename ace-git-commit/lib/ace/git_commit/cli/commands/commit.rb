@@ -83,6 +83,8 @@ module Ace
             raise Ace::Support::Cli::Error.new("Commit failed") unless success
           rescue GitError => e
             raise Ace::Support::Cli::Error.new(e.message)
+          rescue Ace::GitCommit::Error => e
+            raise Ace::Support::Cli::Error.new(e.message)
           rescue Interrupt
             raise Ace::Support::Cli::Error.new("Commit cancelled", exit_code: 130)
           end

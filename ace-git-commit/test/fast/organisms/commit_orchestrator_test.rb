@@ -255,6 +255,55 @@ class CommitOrchestratorTest < TestCase
     @mock_message_generator.verify
   end
 
+  def test_explicit_message_bypasses_message_generator
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["file.rb"])
+    @mock_git.expect :execute, nil, ["commit", "-m", "chore: explicit message"]
+    @mock_git.expect :execute, "sha1234", ["rev-parse", "HEAD"]
+
+    def @mock_message_generator.generate(*)
+      raise "message generator should not be called when explicit message is provided"
+    end
+
+    original_stdout = $stdout
+    $stdout = StringIO.new
+    result = @orchestrator.execute(create_options(message: "chore: explicit message", quiet: true))
+    $stdout = original_stdout
+
+    assert result, "Commit should succeed with explicit message"
+    @mock_git.verify
+    @mock_file_stager.verify
+  end
+
+  def test_dry_run_llm_failure_includes_setup_guidance
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, true
+    @mock_diff_analyzer.expect :get_staged_diff, "diff content"
+    @mock_diff_analyzer.expect :changed_files, ["file.txt"] do |**kwargs|
+      kwargs == {staged_only: true}
+    end
+    expect_single_group(["file.txt"], config: {"model" => "role:commit"})
+    @mock_message_generator.expect :generate, nil do |_diff, **_kwargs|
+      raise Ace::GitCommit::Error, "Failed to generate commit message with ACE role 'role:commit': Provider unavailable\n\nLLM setup checks:\n  ace-llm --list-providers\n  ace-config doctor\n\nFallback commit command:\n  ace-git-commit --only-staged --no-split -m \"chore: set up ace tooling\""
+    end
+
+    error = assert_raises(Ace::GitCommit::Error) do
+      @orchestrator.execute(create_options(intention: "set up ace tooling", dry_run: true, quiet: true))
+    end
+
+    assert_includes error.message, "ace-llm --list-providers"
+    assert_includes error.message, "ace-config doctor"
+    assert_includes error.message, "ace-git-commit --only-staged --no-split -m \"chore: set up ace tooling\""
+
+    @mock_git.verify
+    @mock_file_stager.verify
+    @mock_diff_analyzer.verify
+    @mock_message_generator.verify
+  end
+
   def test_split_commit_executes_split_executor
     @mock_git.expect :in_repository?, true
     @mock_file_stager.expect :stage_all, true

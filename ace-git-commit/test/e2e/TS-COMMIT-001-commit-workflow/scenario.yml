@@ -15,6 +15,7 @@ sandbox-layout:
   results/tc/05/:  "Auto-split evidence (multiple commits from different scopes)"
   results/tc/06/:  "No-split override evidence (single commit across scopes)"
   results/tc/07/:  "Only-staged evidence (staged commit, unstaged preserved)"
+  results/tc/08/:  "Setup failure guidance evidence"
 
 e2e-justification: >
   All goals require the real ace-git-commit binary executing through a shell
