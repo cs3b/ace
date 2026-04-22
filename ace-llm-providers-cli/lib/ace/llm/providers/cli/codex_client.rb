@@ -98,11 +98,6 @@ module Ace
             prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
 
             env = subprocess_env ? subprocess_env.to_h.dup : {}
-            overlay_home = Atoms::InteractiveStartupPolicy.codex_overlay_home(
-              working_dir: working_dir,
-              subprocess_env: subprocess_env
-            )
-            env["HOME"] = overlay_home if overlay_home
 
             cmd = build_codex_interactive_command(
               prompt,
@@ -239,10 +234,18 @@ module Ace
               cmd << "--add-dir" << git_dir
             end
 
+            cmd << "-C" << working_dir
+
+            if (trust_override = Atoms::InteractiveStartupPolicy.codex_trust_override(
+              working_dir: working_dir
+            ))
+              cmd << "-c" << trust_override
+            end
+
             cmd.concat(
               normalized_cli_args_without_conflicts(
                 options,
-                forbidden_flags: ["exec", "review", "--output-last-message"],
+                forbidden_flags: ["exec", "review", "-C", "--cd", "--output-last-message"],
                 label: "Codex"
               )
             )

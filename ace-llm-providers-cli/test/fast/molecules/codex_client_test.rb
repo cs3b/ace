@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
-require "digest"
 require "fileutils"
 require "tmpdir"
 require "yaml"
@@ -45,6 +44,8 @@ describe "CodexClient" do
     assert_equal "gpt-5.4", config.dig("aliases", "model", "gpt")
     assert_equal "gpt-5.3-codex", config.dig("aliases", "model", "codex")
     assert_equal "gpt-5.4-mini", config.dig("aliases", "model", "mini")
+    refute_includes(config.fetch("models"), "gpt-5-mini")
+    refute_includes(config.fetch("aliases").fetch("model").values, "gpt-5-mini")
   end
 
   it "formats string prompts correctly" do
@@ -148,23 +149,25 @@ describe "CodexClient" do
       end
     end
 
-    it "uses an overlay HOME in tmux context" do
+    it "trusts the working directory without changing HOME" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           invocation = @client.build_interactive_invocation(
             [{role: "user", content: "/as-assign-drive abc123@010"}],
             working_dir: "/tmp/demo-sandbox",
-            subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
+            subprocess_env: {"HOME" => "/home/tester"}
           )
 
-          expected_home = File.join("/tmp/demo-sandbox", ".ace-local", "llm", "codex-home", Digest::SHA256.hexdigest("/tmp/demo-sandbox")[0, 12])
-          assert_equal expected_home, invocation[:env]["HOME"]
-          refute_includes invocation[:command], "-c"
+          assert_equal "/home/tester", invocation[:env]["HOME"]
+          assert_includes invocation[:command], "-C"
+          assert_includes invocation[:command], "/tmp/demo-sandbox"
+          assert_includes invocation[:command], "-c"
+          assert_includes invocation[:command], 'projects."/tmp/demo-sandbox".trust_level="trusted"'
         end
       end
     end
 
-    it "does not change HOME outside tmux context" do
+    it "trusts the working directory outside tmux context" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           invocation = @client.build_interactive_invocation(
@@ -174,39 +177,43 @@ describe "CodexClient" do
           )
 
           refute invocation[:env].key?("HOME")
+          assert_includes invocation[:command], "-C"
+          assert_includes invocation[:command], "/tmp/demo-sandbox"
+          assert_includes invocation[:command], 'projects."/tmp/demo-sandbox".trust_level="trusted"'
         end
       end
     end
 
-    it "writes a trusted project entry into the overlay config" do
+    it "escapes trust override paths" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           Dir.mktmpdir do |tmp_dir|
-            real_home = File.join(tmp_dir, "real-home")
-            FileUtils.mkdir_p(File.join(real_home, ".codex"))
-            File.write(File.join(real_home, ".codex", "config.toml"), "[foo]\nbar = 1\n")
-            File.write(File.join(real_home, ".codex", "auth.json"), "{}")
-            File.write(File.join(real_home, ".codex", "installation_id"), "abc123")
+            trusted_path = File.join(tmp_dir, 'demo-"sandbox"')
+            invocation = @client.build_interactive_invocation(
+              [{role: "user", content: "/as-assign-drive abc123@010"}],
+              working_dir: trusted_path,
+              subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
+            )
 
-            previous_home = ENV["HOME"]
-            invocation = nil
-            begin
-              ENV["HOME"] = real_home
-              invocation = @client.build_interactive_invocation(
+            assert_includes invocation[:command], %{projects."#{trusted_path.gsub("\\", "\\\\").gsub("\"", "\\\"")}".trust_level="trusted"}
+          end
+        end
+      end
+    end
+
+    it "rejects user-provided interactive cd cli args" do
+      @client.stub(:codex_available?, true) do
+        @client.stub(:codex_authenticated?, true) do
+          ["--cd /tmp/other", "-C /tmp/other"].each do |cli_args|
+            error = assert_raises(Ace::LLM::ProviderError) do
+              @client.build_interactive_invocation(
                 [{role: "user", content: "/as-assign-drive abc123@010"}],
-                working_dir: File.join(tmp_dir, 'demo-"sandbox"'),
-                subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
+                working_dir: "/tmp/demo-sandbox",
+                cli_args: cli_args
               )
-            ensure
-              ENV["HOME"] = previous_home
             end
 
-            config_path = File.join(invocation[:env]["HOME"], ".codex", "config.toml")
-            content = File.read(config_path)
-            trusted_path = File.join(tmp_dir, 'demo-"sandbox"')
-            expected_header = %{[projects."#{trusted_path.gsub("\\", "\\\\").gsub("\"", "\\\"")}"]}
-            assert_includes content, expected_header
-            assert_includes content, 'trust_level = "trusted"'
+            assert_match(/--cd|-C/, error.message)
           end
         end
       end
