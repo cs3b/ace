@@ -73,6 +73,7 @@ Ask: "Why did this happen?" Categorize the root cause:
 | **Scope creep** | Agent over-scoped the task | Made changes beyond what was requested |
 | **Missing example** | No example of correct behavior | Workflow lacks example showing full scope discovery |
 | **Redundant computation** | Multiple agents derive same value independently, causing divergence | Orchestrator computes path one way, agent re-derives differently |
+| **Wrong layer / owner not identified** | Agent fixed the symptom package before identifying the package that owns the shared primitive | `ace-assign` exposed a tmux window-name failure, but `ace-tmux` owned window creation, naming, and navigation |
 
 ### Step 3: Find the Source
 
