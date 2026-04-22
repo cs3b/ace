@@ -266,11 +266,14 @@ module Ace
           registry.add_client("google", MockClient.new(errors: [mock_server_error(503)]))
           registry.add_client("anthropic", MockClient.new(response: "claude success"), model: "claude-3.5-sonnet")
 
-          result = orchestrator.execute(primary_provider: "google", registry: registry) do |client|
-            client.call
-          end
+          # Stub wait to avoid making this routing test depend on retry delays.
+          orchestrator.stub :wait, nil do
+            result = orchestrator.execute(primary_provider: "google", registry: registry) do |client|
+              client.call
+            end
 
-          assert_equal "claude success", result
+            assert_equal "claude success", result
+          end
         end
 
         def test_respects_max_total_timeout

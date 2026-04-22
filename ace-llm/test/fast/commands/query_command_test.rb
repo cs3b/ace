@@ -159,12 +159,23 @@ class QueryCommandTest < AceLlmTestCase
   end
 
   def test_positional_provider_model_still_works
-    stub_llm_api_success
-    with_real_config do
-      output = invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?"])
-      # Should not show help - CLI routing should work and return API response (mocked)
-      refute_match(/^Usage: ace-llm query/, output)
+    captured_provider_model = nil
+
+    query_stub = lambda do |provider_model, prompt, **_kwargs|
+      captured_provider_model = provider_model
+      assert_equal "What is Ruby?", prompt
+      {text: "Mock response", usage: {}, metadata: {}}
     end
+
+    with_real_config do
+      Ace::LLM::QueryInterface.stub(:query, query_stub) do
+        output = invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?"])
+        # Should not show help - CLI routing should work and return query output
+        refute_match(/^Usage: ace-llm query/, output)
+      end
+    end
+
+    assert_equal "google:gemini-2.5-flash", captured_provider_model
   end
 
   def test_positional_provider_only_shows_help
