@@ -28,6 +28,7 @@ require_relative "config/organisms/config_resolver"
 require_relative "config/organisms/virtual_config_resolver"
 require_relative "config/organisms/config_initializer"
 require_relative "config/organisms/config_diff"
+require_relative "config/organisms/setup_doctor"
 require_relative "config/models/config_templates"
 
 module Ace

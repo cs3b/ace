@@ -13,6 +13,7 @@ module Ace
 
           assert_includes output, "ace-config - Configuration management"
           assert_includes output, "ace-config COMMAND [OPTIONS]"
+          assert_includes output, "doctor"
         end
 
         def test_version_prints_ace_support_config_version
@@ -47,6 +48,48 @@ module Ace
           assert_includes output, "Use 'ace-config init [GEM]'"
         ensure
           Models::ConfigTemplates.reset!
+        end
+
+        def test_doctor_invokes_setup_doctor_with_default_options
+          received = nil
+          doctor = Object.new
+          doctor.define_singleton_method(:run) do |**kwargs|
+            received = kwargs
+            0
+          end
+
+          Organisms::SetupDoctor.stub(:new, doctor) do
+            capture_io { CLI.start(["doctor"]) }
+          end
+
+          assert_equal({json: false, no_probe: false}, received)
+        end
+
+        def test_doctor_supports_json_and_no_probe
+          received = nil
+          doctor = Object.new
+          doctor.define_singleton_method(:run) do |**kwargs|
+            received = kwargs
+            0
+          end
+
+          Organisms::SetupDoctor.stub(:new, doctor) do
+            capture_io { CLI.start(["doctor", "--json", "--no-probe"]) }
+          end
+
+          assert_equal({json: true, no_probe: true}, received)
+        end
+
+        def test_doctor_exits_non_zero_when_blockers_exist
+          doctor = Object.new
+          doctor.define_singleton_method(:run) do |**_kwargs|
+            1
+          end
+
+          Organisms::SetupDoctor.stub(:new, doctor) do
+            error = assert_raises(SystemExit) { capture_io { CLI.start(["doctor"]) } }
+            assert_equal 1, error.status
+          end
         end
       end
     end

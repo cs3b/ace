@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Extended `SetupDoctor` stale-alias detection to validate `aliases.global` provider targets (`provider:model`) in addition to provider-local model aliases.
+- Made `.ace-local` artifact-hygiene detection accept equivalent `.gitignore` forms (for example `/.ace-local/`, `.ace-local`, `.ace-local/**`) instead of requiring an exact literal line.
+
+### Technical
+- Added fast-test coverage for stale global alias detection and semantic `.ace-local` ignore pattern acceptance.
+
+## [0.12.0] - 2026-04-22
+
+### Added
+- Added `ace-config doctor` with text/JSON readiness output and `--no-probe` support for non-mutating setup diagnostics.
+
+### Changed
+- Extended `ace-config` command routing and help output to include the new `doctor` workflow.
+
+### Technical
+- Added `SetupDoctor` organism coverage for blocker/warn/skip classification and CLI contract behavior.
+
 ## [0.11.2] - 2026-04-13
 
 ### Fixed

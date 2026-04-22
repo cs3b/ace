@@ -3,8 +3,8 @@ doc-type: user
 title: ace-support-config Usage Guide
 purpose: Documentation for ace-support-config/docs/usage.md
 ace-docs:
-  last-updated: '2026-03-31'
-  last-checked: '2026-03-31'
+  last-updated: '2026-04-22'
+  last-checked: '2026-04-22'
 ---
 
 # ace-support-config Usage Guide
@@ -19,11 +19,26 @@ The `ace-support-config` gem provides a generic configuration cascade system tha
 
 ```bash
 ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config doctor [--json] [--no-probe]
 ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
 ace-config list [--verbose]
 ace-config version
 ace-config help
 ```
+
+### Setup Readiness Doctor
+
+Run `ace-config doctor` after `ace-config init` and provider setup to verify that the quick-start path is ready without changing files.
+
+The doctor checks:
+
+- `.ace-local/` gitignore hygiene
+- `ace-llm-providers-cli` availability
+- `ace-llm --list-providers` discovery
+- configured provider aliases
+- optional tiny provider probe readiness
+
+Use `--json` for structured output in automation. Use `--no-probe` to skip the live provider probe when credentials, local CLIs, or network access are intentionally unavailable.
 
 ## Testing Contract
 
