@@ -89,4 +89,74 @@ class MessageGeneratorTest < TestCase
     end
     assert_equal 2, call_count
   end
+
+  def test_generate_includes_setup_guidance_for_role_based_missing_credentials
+    error = assert_raises(Ace::GitCommit::Error) do
+      Ace::LLM::QueryInterface.stub(:query, proc { |_model, _prompt, **_opts|
+        raise Ace::LLM::Error, "Missing API key for provider"
+      }) do
+        @generator.generate("diff --git a/a.rb b/a.rb", intention: "setup", files: ["a.rb"], config: {"model" => "role:commit"})
+      end
+    end
+
+    assert_includes error.message, "Failed to generate commit message with ACE role 'role:commit': Missing API key for provider"
+    assert_includes error.message, "ace-llm --list-providers"
+    assert_includes error.message, "ace-config doctor"
+    assert_includes error.message, 'ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"'
+  end
+
+  def test_generate_includes_setup_guidance_for_unsupported_model
+    error = assert_raises(Ace::GitCommit::Error) do
+      Ace::LLM::QueryInterface.stub(:query, proc { |_model, _prompt, **_opts|
+        raise Ace::LLM::Error, "Model codex:mini is not available"
+      }) do
+        @generator.generate("diff --git a/a.rb b/a.rb", intention: "setup", files: ["a.rb"], config: {"model" => "codex:mini"})
+      end
+    end
+
+    assert_includes error.message, "Failed to generate commit message with LLM model 'codex:mini': Model codex:mini is not available"
+    assert_includes error.message, "ace-llm --list-providers"
+    assert_includes error.message, "ace-config doctor"
+    assert_includes error.message, 'ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"'
+  end
+
+  def test_generate_batch_includes_setup_guidance_when_repair_query_fails
+    groups = [
+      {
+        scope_name: "ace-assign",
+        diff: "diff --git a/x b/x",
+        files: ["ace-assign/lib/x.rb"],
+        type_hint: nil,
+        description: nil
+      },
+      {
+        scope_name: "ace-docs",
+        diff: "diff --git a/y b/y",
+        files: ["ace-docs/docs/usage.md"],
+        type_hint: nil,
+        description: nil
+      }
+    ]
+
+    call_count = 0
+    error = assert_raises(Ace::GitCommit::Error) do
+      Ace::LLM::QueryInterface.stub(:query, proc { |_model, _prompt, **_opts|
+        call_count += 1
+        if call_count == 1
+          {text: "not-json"}
+        else
+          raise Ace::LLM::Error, "Provider unavailable"
+        end
+      }) do
+        @generator.generate_batch(groups, intention: "improve parser")
+      end
+    end
+
+    assert_equal 2, call_count
+    assert_includes error.message, "Failed to generate batch commit messages"
+    assert_includes error.message, "Provider unavailable"
+    assert_includes error.message, "ace-llm --list-providers"
+    assert_includes error.message, "ace-config doctor"
+    assert_includes error.message, 'ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"'
+  end
 end

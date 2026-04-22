@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-04-22
+
+### Technical
+- Tightened `TS-COMMIT-001` Goal 7/8 staging contracts to require explicit-path staging and prove `results/` artifacts are excluded from the cached staged set before `--only-staged` execution.
+
+## [0.26.0] - 2026-04-22
+
+### Changed
+- Improved setup-time LLM failure diagnostics to include failed role/model context, provider/setup remediation commands, and a deterministic `--only-staged --no-split -m` fallback commit path.
+
+### Technical
+- Extended `TS-COMMIT-001` with goal 8 setup-failure guidance coverage and added fast tests for role/model failure guidance and explicit CLI error routing.
+
 ## [0.25.4] - 2026-04-16
 
 ### Technical

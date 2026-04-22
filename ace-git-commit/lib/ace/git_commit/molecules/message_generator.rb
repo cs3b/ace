@@ -29,10 +29,11 @@ module Ace
         def generate(diff, intention: nil, files: [], config: nil)
           system_prompt = load_system_prompt
           user_prompt = build_user_prompt(diff, intention, files)
+          model = resolve_model(config)
 
           # Use QueryInterface with named parameters matching CLI
           response = Ace::LLM::QueryInterface.query(
-            resolve_model(config),
+            model,
             user_prompt,
             system: system_prompt,
             temperature: 0.7,
@@ -42,7 +43,7 @@ module Ace
 
           clean_commit_message(response[:text])
         rescue Ace::LLM::Error => e
-          raise Error, "Failed to generate commit message: #{e.message}"
+          raise Error, llm_failure_message("Failed to generate commit message", model, e)
         end
 
         # Generate commit messages for multiple groups in one LLM call
@@ -60,9 +61,10 @@ module Ace
 
           system_prompt = load_batch_system_prompt
           user_prompt = build_batch_user_prompt(groups_context, intention)
+          model = resolve_model(config)
 
           response = Ace::LLM::QueryInterface.query(
-            resolve_model(config),
+            model,
             user_prompt,
             system: system_prompt,
             temperature: 0.7,
@@ -77,7 +79,7 @@ module Ace
 
           raise Error, "Failed to generate batch commit messages: #{e.message}"
         rescue Ace::LLM::Error => e
-          raise Error, "Failed to generate batch commit messages: #{e.message}"
+          raise Error, llm_failure_message("Failed to generate batch commit messages", model, e)
         end
 
         private
@@ -260,10 +262,11 @@ module Ace
 
         def retry_batch_parse(groups_context, intention, previous_response, reason, config)
           warn "[ace-git-commit] Batch parse failed, retrying with strict JSON repair: #{reason}"
+          model = resolve_model(config)
 
           repair_prompt = build_batch_repair_user_prompt(groups_context, intention, previous_response, reason)
           repair_response = Ace::LLM::QueryInterface.query(
-            resolve_model(config),
+            model,
             repair_prompt,
             system: load_batch_system_prompt,
             temperature: 0.2,
@@ -275,6 +278,8 @@ module Ace
         rescue BatchParseError => e
           warn "[ace-git-commit] Batch parse retry failed: #{e.message}"
           nil
+        rescue Ace::LLM::Error => e
+          raise Error, llm_failure_message("Failed to generate batch commit messages", model, e)
         end
 
         def build_batch_repair_user_prompt(groups_context, intention, bad_response, reason)
@@ -297,6 +302,25 @@ module Ace
           return @model unless config_override.is_a?(Hash)
 
           config_override.fetch("model", @model)
+        end
+
+        def llm_failure_message(prefix, model, error)
+          effective_model = model.to_s.empty? ? DEFAULT_MODEL : model
+          surface = setup_surface_label(effective_model)
+          lines = []
+          lines << "#{prefix} with #{surface} '#{effective_model}': #{error.message}"
+          lines << ""
+          lines << "LLM setup checks:"
+          lines << "  ace-llm --list-providers"
+          lines << "  ace-config doctor"
+          lines << ""
+          lines << "Fallback commit command:"
+          lines << '  ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"'
+          lines.join("\n")
+        end
+
+        def setup_surface_label(model)
+          model.start_with?("role:") ? "ACE role" : "LLM model"
         end
 
         # Load system prompt from template
