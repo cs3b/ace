@@ -156,7 +156,29 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
    - Contributing factors (conditions that enable the bug)
    - Impact scope (what else might be affected)
 
-### 5. Propose Regression Tests
+### 5. Layer Ownership Triage
+
+Before finalizing the fix plan, identify the layer that owns the failing primitive. This is required when the bug crosses package boundaries or involves shared external resources, protocols, command routing, configuration namespaces, or reusable helper APIs.
+
+Classify each relevant package/component:
+
+- **Owner/creator**: creates, names, persists, routes, or navigates the primitive
+- **Adapter/orchestrator**: coordinates owner APIs for a workflow
+- **Consumer/symptom**: exposes the failure but does not own the primitive
+
+Answer these questions in the analysis:
+
+- What is the failing primitive or contract?
+- Which package creates or names it?
+- Which package navigates, reuses, or cleans it up?
+- Which package only exposed the symptom?
+- Is there a shared package/API that all callers should use?
+
+Default fix rule: fix the owner layer first, then update adapters/consumers only to call the shared behavior. Do not propose a consumer-only fix when an owner layer exists and has not been inspected.
+
+Example: if `ace-assign` fails because `ace-t.k5a-fs` is parsed incorrectly as a tmux target, the failing primitive is tmux window naming/targeting. `ace-tmux` owns window creation, naming, and navigation, so the primary fix belongs in `ace-tmux`; `ace-assign` and `ace-overseer` should reuse the shared policy.
+
+### 6. Propose Regression Tests
 
 **Design tests to catch this bug:**
 
@@ -191,18 +213,20 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
 - Scenario: Given [setup], when [action], then [verification]
 ```
 
-### 6. Create Fix Plan
+### 7. Create Fix Plan
 
 **Document the fix strategy:**
 
 1. **Files to modify:**
    - List each file that needs changes
    - Describe the type of change for each
+   - Mark each file as owner, adapter/orchestrator, or consumer/symptom when layer ownership triage applies
 
 2. **Fix approach:**
    - Describe the technical solution
    - Explain why this approach was chosen
    - Note any alternative approaches considered
+   - Explain why the fix is placed in the owner layer, or why no owner-layer change is needed
 
 3. **Risks and side effects:**
    - What else might be affected by the fix
@@ -213,7 +237,7 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
    - How to revert if issues arise
    - What to check after reverting
 
-### 7. Save Analysis Results
+### 8. Save Analysis Results
 
 **Cache the analysis for fix-bug workflow:**
 
@@ -228,6 +252,14 @@ mkdir -p .ace-local/task/bug-analysis/{session}
 # .ace-local/task/bug-analysis/{session}/analysis.yml
 root_cause: "Description of root cause"
 repro_status: confirmed | not_reproducible | intermittent
+layer_ownership:
+  primitive: "Shared resource/protocol/API involved, if any"
+  owner: "Package/component that owns creation/naming/routing"
+  adapters:
+    - "Adapter/orchestrator package, if any"
+  consumers:
+    - "Symptom package, if any"
+  fix_layer: "owner | adapter | consumer | not_applicable"
 affected_files:
   - path: path/to/file.rb
     change_summary: "Description of what change is needed"

@@ -67,12 +67,23 @@ ls .ace-local/task/bug-analysis/
 - Load the analysis.yml from the most recent session
 - Review root cause, affected files, and proposed tests
 - Confirm the fix plan with user if needed
+- Review `layer_ownership` when present and verify the planned fix targets the owner layer before adapters or consumers
 
 **If no analysis exists:**
 
 - Ask user for fix plan or run analyze-bug workflow first
 - Gather: affected files, root cause, proposed solution
 - Document the fix approach before proceeding
+
+**Layer ownership guard:**
+
+When the bug crosses package boundaries or involves a shared primitive, classify packages before editing:
+
+- **Owner/creator**: creates, names, persists, routes, or navigates the primitive
+- **Adapter/orchestrator**: coordinates owner APIs for a workflow
+- **Consumer/symptom**: exposes the failure but does not own the primitive
+
+If the loaded/user-provided plan changes only a consumer/symptom package while an owner layer exists and was not inspected, stop and return to analysis. Do not implement a local workaround before checking the owner package.
 
 ### 2. Prepare for Fix
 
@@ -100,12 +111,14 @@ git checkout -b fix/[bug-description]
    - Review surrounding code
    - Understand dependencies
    - Check for similar patterns in codebase
+   - If the file is a consumer of a shared primitive, inspect the owner package/API before changing local policy
 
 2. **Apply the fix:**
    - Make minimal changes to fix the bug
    - Follow existing code style and patterns
    - Add appropriate error handling
    - Include inline comments only if logic is non-obvious
+   - Put shared policy in the owner layer and have adapters/consumers call that policy
 
 3. **Review the change:**
    - Verify the fix addresses root cause
