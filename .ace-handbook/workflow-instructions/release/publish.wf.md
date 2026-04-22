@@ -273,12 +273,6 @@ Checklist:
   entry, and root changelog bullet
 * `Gemfile.lock` reflects the new internal versions
 * no unrelated package was released
-* RubyGems propagation proof from `ace-test-e2e ace-monorepo-e2e TS-MONO-001` is recorded with one classification:
-  `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`
-* release is treated as onboarding-safe only when the classification is `SAFE`
-* if classification is `LAG_DETECTED`, release notes/docs include the temporary mitigation:
-  `bundle install --full-index`
-* if classification is `METADATA_BROKEN`, stop and fix release metadata before claiming stable onboarding
 
 ## Notes
 
@@ -286,5 +280,4 @@ Checklist:
 * Use `/as-release` for coordinated multi-package releases.
 * When no package arguments are supplied, package selection comes from the current diff rather than from user
   prompts.
-* Run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` after publishing to verify installation propagation.
-* See `ace-handbook/docs/release-rubygems-proof.md` for the operator-facing interpretation contract.
+* Run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` after publishing only if you need RubyGems propagation verification.
