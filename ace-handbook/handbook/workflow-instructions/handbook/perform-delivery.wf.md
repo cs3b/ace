@@ -39,7 +39,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * [ ] Enter plan mode if implementation required
 * [ ] Execute implementation via `ace-bundle wfi://task/work` or inline instructions
 * [ ] Commit all changes (`ace-git-commit`)
-* [ ] Release modified packages (`ace-bundle wfi://release/publish` if applicable)
+* [ ] Release modified packages (`ace-bundle wfi://release/local` if applicable)
 * [ ] Mark task done and push to remote
 
 ### Phase 2: PR & Initial Review
@@ -76,7 +76,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    ```
    1. Implement task (via `ace-bundle wfi://task/work` or inline)
    2. Commit all changes (`ace-git-commit`)
-   3. Release modified packages (`ace-bundle wfi://release/publish`)
+   3. Release modified packages (`ace-bundle wfi://release/local`)
    4. Mark task done and push to remote
    5. Create/update PR (`ace-bundle wfi://github/pr/create`)
    6. Initial review (`ace-bundle wfi://review/pr`)
@@ -109,7 +109,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Use descriptive commit message
 
 5. **Release Packages (if applicable):**
-   * Load `ace-bundle wfi://release/publish` when a release is required
+   * Load `ace-bundle wfi://release/local` when a release is required
    * Follow versioning conventions
 
 6. **Complete Task:**

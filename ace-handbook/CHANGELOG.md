@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-04-22
+
+### Changed
+- **ace-handbook v0.28.0**: Added the local release workflow (`release/local`) and switched the package release workflow to a local-only preparation flow.
+
+### Technical
+- **ace-handbook v0.28.0**: Kept `as-release` behavior focused on local release prep without publishing to RubyGems.
+
 ## [0.27.4] - 2026-04-16
 
 ### Technical

@@ -83,5 +83,5 @@ Reference workflows:
 
 - `ace-monorepo-e2e/test-e2e/scenarios/TS-MONO-001-rubygems-install/` (primary — E2E scenario with proof logic)
 - `ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/` (primary — E2E scenario with proof logic)
-- `wfi://release/rubygems-publish` (recommends running the verification after publish)
-- `wfi://release/publish` (references proof classification in final checklist)
+- `wfi://release/rubygems-publish` (includes post-publish verification and proof handoff)
+- `wfi://release/local` (coordinated release preparation; does not publish)

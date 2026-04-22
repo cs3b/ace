@@ -140,7 +140,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       "description" => "Release modified ACE packages",
       "source" => "ace-demo",
       "argument-hint" => "package-name... bump-level",
-      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://release/publish"}},
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://release/local"}},
       "integration" => {
         "providers" => {
           "claude" => {
@@ -165,7 +165,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       ## Execution
 
       - You are working in the current project.
-      - Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+      - Run `ace-bundle wfi://release/local` in the current project to load the workflow instructions.
       - Read the loaded workflow and execute it end-to-end in this project.
       - Follow the workflow as the source of truth.
       - Do the work described by the workflow instead of only summarizing it.
@@ -184,7 +184,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_includes codex_rendered, "## Variables"
     assert_includes codex_rendered, "None"
     assert_includes codex_rendered, "## Execution"
-    assert_includes codex_rendered, "Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions."
+    assert_includes codex_rendered, "Run `ace-bundle wfi://release/local` in the current project to load the workflow instructions."
     refute_includes claude_rendered, "integration:"
     refute_includes codex_rendered, "integration:"
   end

@@ -236,11 +236,12 @@ Review these refactored workflow instructions that demonstrate self-containment 
 
 ### Command Reference Example
 
-`wfi://release/publish`:
+`wfi://release/local`:
 
 - Embeds package registry commands for all major platforms
 - Includes changelog format specification
-- Contains complete release process without external references
+- Contains complete multi-package release preparation process without external references
+- `wfi://release/publish` remains a compatibility alias that forwards to this workflow.
 
 ## Key Refactoring Principles
 

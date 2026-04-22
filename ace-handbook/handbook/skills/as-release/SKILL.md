@@ -1,7 +1,7 @@
 ---
 name: as-release
 description: Release modified ACE packages with coordinated package and root changelog updates
-# bundle: wfi://release/publish
+# bundle: wfi://release/local
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -29,7 +29,7 @@ integration:
 skill:
   kind: workflow
   execution:
-    workflow: wfi://release/publish
+    workflow: wfi://release/local
 ---
 
 ## Arguments
@@ -43,7 +43,8 @@ None
 ## Execution
 
 - You are working in the current project.
-- Run `ace-bundle wfi://release/publish` in the current project to load the workflow instructions.
+- This is a local release-preparation workflow and does **not** publish to RubyGems.
+- Run `ace-bundle wfi://release/local` in the current project to load the workflow instructions.
 - Read the loaded workflow and execute it end-to-end in this project.
 - Follow the workflow as the source of truth.
 - Do the work described by the workflow instead of only summarizing it.
