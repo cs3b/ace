@@ -57,6 +57,7 @@ module Ace
 
         def with_socket_target(cmd)
           return cmd unless tmux_command?(cmd)
+          return cmd if in_tmux_session?
 
           socket = explicit_socket_path
           return cmd unless socket
@@ -70,6 +71,13 @@ module Ace
 
         def tmux_command?(cmd)
           Array(cmd).first == "tmux"
+        end
+
+        def in_tmux_session?
+          tmux_env = ENV["TMUX"]
+          return false if tmux_env.nil? || tmux_env.empty?
+
+          true
         end
 
         def explicit_socket_path

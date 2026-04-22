@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed session targeting so commands now respect an active `TMUX` session and avoid forcing legacy `tmux -S` socket targeting when already inside tmux.
+
 ## [0.14.3] - 2026-04-16
 
 ### Technical
