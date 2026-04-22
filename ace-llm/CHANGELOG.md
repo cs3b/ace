@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.5] - 2026-04-22
+
+### Fixed
+- Stabilized deterministic verification by stubbing CLI query routing away from provider fallback HTTP calls and removing retry sleep from the provider/model fallback test.
+
+## [0.36.4] - 2026-04-22
+
+### Technical
+- Added regression coverage to keep fresh `commit` role defaults from reintroducing stale `codex:gpt-5-mini` mappings while preserving `codex:mini` fallback behavior.
+
 ## [0.36.3] - 2026-04-19
 
 ### Fixed

@@ -81,7 +81,9 @@ module Ace
 
         with_temp_dir do
           configuration = Configuration.new
-          assert_equal ["google:lite", "codex:mini", "claude:haiku"], configuration.roles["commit"]
+          commit_role = configuration.roles["commit"]
+          assert_equal ["google:lite", "codex:mini", "claude:haiku"], commit_role
+          refute_includes commit_role, "codex:gpt-5-mini"
         end
       ensure
         Ace::Support::Config.test_mode = original_test_mode
