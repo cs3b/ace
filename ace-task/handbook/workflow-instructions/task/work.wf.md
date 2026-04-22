@@ -60,6 +60,7 @@ Work through the plan checklist, step by step:
 - If spec and plan conflict, spec wins — the plan is a HOW, not a WHAT
 - If the spec is ambiguous or incomplete: stop and ask, don't assume
 - If runtime work materially changes a public contract promised by a spike (flags, naming, fallback behavior, proof surface, ownership boundary), do not silently drift. Update the task/spec or create a follow-up task before release or demo cleanup.
+- If implementation reveals the plan targets only a symptom/consumer package for a shared primitive, stop and re-plan at the owner layer before editing. The owner layer is the package that creates, names, persists, routes, or navigates the primitive; adapters and consumers should reuse owner APIs instead of duplicating policy.
 
 **Prior implementation awareness:**
 - Before creating new modules, search for existing implementations of the same concern — especially spike or prototype code from prior subtasks

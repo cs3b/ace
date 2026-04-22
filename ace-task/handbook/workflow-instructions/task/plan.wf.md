@@ -137,6 +137,16 @@ The plan will be consumed by a separate execution agent that has no access to th
      - List consumer packages that will need coordinated updates
    - Document the full downstream scope before implementation begins
 
+   **Layer Ownership Triage:**
+   - For tasks involving shared resources, external protocols, command routing, configuration namespaces, or cross-package helpers, identify the owner layer before choosing files to edit.
+   - Classify relevant packages/components as:
+     - **Owner/creator**: creates, names, persists, routes, or navigates the primitive
+     - **Adapter/orchestrator**: coordinates owner APIs for a workflow
+     - **Consumer/symptom**: exposes the issue but does not own the primitive
+   - Default to implementing shared policy in the owner layer, then update adapters/consumers to call it.
+   - Do not plan a consumer-only fix when an owner layer exists and has not been inspected.
+   - Example: for tmux window-name failures surfaced by `ace-assign`, inspect `ace-tmux` first because it owns tmux window creation, naming, and navigation.
+
    **Document Research Findings:**
    - Summarize key technical insights
    - Note recommended approaches with pros/cons
@@ -164,6 +174,7 @@ The plan will be consumed by a separate execution agent that has no access to th
    - Identify existing files requiring changes
    - Document specific modifications and their impact
    - Plan integration points and interfaces
+   - Mark cross-package files as owner, adapter/orchestrator, or consumer/symptom when layer ownership triage applies
 
    **Delete Files:**
    - Identify obsolete files to be removed
