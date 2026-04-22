@@ -1,24 +1,17 @@
 ---
 id: 8rl.t.ks9.2
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-support-config/README.md
-    - ace-support-config/docs/usage.md
-    - ace-llm/docs/usage.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/2-add-setup-readiness-doctor/8rl.t.k5a.2-add-setup-readiness-doctor.s.md
-    - .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.ks9.2 --content
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-support-config/README.md, ace-support-config/docs/usage.md, ace-llm/docs/usage.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/2-add-setup-readiness-doctor/8rl.t.k5a.2-add-setup-readiness-doctor.s.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]
+  commands: [ace-task show 8rl.t.ks9.2 --content]
 tags: []
 parent: 8rl.t.ks9
 created_at: "2026-04-22 13:51:35"
+needs_review: false
 ---
 
 # Align setup readiness runtime guidance

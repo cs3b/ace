@@ -1,23 +1,17 @@
 ---
 id: 8rl.t.ks9.3
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - docs/quick-start.md
-    - ace-git-commit/docs/usage.md
-    - ace-git-commit/docs/getting-started.md
-    - ace-git-commit/handbook/workflow-instructions/git/commit.wf.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/3-improve-ace-git-commit-setup/8rl.t.k5a.3-improve-ace-git-commit-setup-failure-guidance.s.md
-    - .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.ks9.3 --content
+  presets: [project]
+  files: [docs/quick-start.md, ace-git-commit/docs/usage.md, ace-git-commit/docs/getting-started.md, ace-git-commit/handbook/workflow-instructions/git/commit.wf.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/3-improve-ace-git-commit-setup/8rl.t.k5a.3-improve-ace-git-commit-setup-failure-guidance.s.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]
+  commands: [ace-task show 8rl.t.ks9.3 --content]
 tags: []
 parent: 8rl.t.ks9
 created_at: "2026-04-22 13:51:35"
+needs_review: false
 ---
 
 # Clarify first setup commit recovery

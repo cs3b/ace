@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.ks9.1
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - docs/tools.md
-    - ace-support-config/README.md
-    - ace-llm/docs/usage.md
-  commands:
-    - ace-task show 8rl.t.ks9.1 --content
+  presets: [project]
+  files: [README.md, docs/quick-start.md, docs/tools.md, ace-support-config/README.md, ace-llm/docs/usage.md]
+  commands: [ace-task show 8rl.t.ks9.1 --content]
 tags: []
 parent: 8rl.t.ks9
 created_at: "2026-04-22 13:51:35"
+needs_review: false
 ---
 
 # Standardize repo-local command examples

@@ -1,22 +1,17 @@
 ---
 id: 8rl.t.ks9.0
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-handbook-integration-codex/README.md
-    - ace-handbook-integration-claude/README.md
-    - .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.ks9.0 --content
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-handbook-integration-codex/README.md, ace-handbook-integration-claude/README.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]
+  commands: [ace-task show 8rl.t.ks9.0 --content]
 tags: []
 parent: 8rl.t.ks9
 created_at: "2026-04-22 13:51:35"
+needs_review: false
 ---
 
 # Document setup modes and generated artifacts

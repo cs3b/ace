@@ -1,24 +1,17 @@
 ---
 id: 8rl.t.ks9.4
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-support-config/lib/ace/support/config/organisms/config_initializer.rb
-    - ace-support-config/test/feat/config_initializer_bootstrap_test.rb
-    - ace-llm/test/e2e/TS-LLM-002-provider-discovery/TC-001-list-providers-public-surface.runner.md
-    - ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-007-only-staged-contract.runner.md
-    - .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.ks9.4 --content
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, ace-support-config/test/feat/config_initializer_bootstrap_test.rb, ace-support-core/.ace-defaults/project-root/AGENTS.md, ace-support-core/.ace-defaults/project-root/CLAUDE.md, ace-support-core/.ace-defaults/README.md, ace-llm/test/e2e/TS-LLM-002-provider-discovery/TC-001-list-providers-public-surface.runner.md, ace-git-commit/test/e2e/TS-COMMIT-001-commit-workflow/TC-007-only-staged-contract.runner.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]
+  commands: [ace-task show 8rl.t.ks9.4 --content]
 tags: []
 parent: 8rl.t.ks9
 created_at: "2026-04-22 13:51:35"
+needs_review: false
 ---
 
 # Verify fresh-repo first-use walkthrough

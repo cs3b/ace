@@ -1,28 +1,17 @@
 ---
 id: 8rl.t.ks9
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files:
-    - README.md
-    - docs/quick-start.md
-    - ace-support-config/README.md
-    - ace-llm/docs/usage.md
-    - ace-git-commit/docs/usage.md
-    - ace-git-commit/docs/getting-started.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/8rl.t.k5a-make-ace-quick-start-ready-out-of.s.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/2-add-setup-readiness-doctor/8rl.t.k5a.2-add-setup-readiness-doctor.s.md
-    - .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/3-improve-ace-git-commit-setup/8rl.t.k5a.3-improve-ace-git-commit-setup-failure-guidance.s.md
-    - .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md
-  commands:
-    - ace-task show 8rl.t.ks9 --tree
-    - ace-task show 8rl.t.ks9 --content
+  presets: [project]
+  files: [README.md, docs/quick-start.md, ace-support-config/README.md, ace-llm/docs/usage.md, ace-git-commit/docs/usage.md, ace-git-commit/docs/getting-started.md, ace-support-core/.ace-defaults/project-root/AGENTS.md, ace-support-core/.ace-defaults/project-root/CLAUDE.md, ace-support-core/.ace-defaults/README.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/8rl.t.k5a-make-ace-quick-start-ready-out-of.s.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/2-add-setup-readiness-doctor/8rl.t.k5a.2-add-setup-readiness-doctor.s.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/3-improve-ace-git-commit-setup/8rl.t.k5a.3-improve-ace-git-commit-setup-failure-guidance.s.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]
+  commands: [ace-task show 8rl.t.ks9 --tree, ace-task show 8rl.t.ks9 --content]
 tags: []
 created_at: "2026-04-22 13:51:24"
 github_issue: 299
+needs_review: false
 ---
 
 # Clarify ACE quick-start first-use setup flow
