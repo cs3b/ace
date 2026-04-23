@@ -15,7 +15,7 @@ Validation order (impact-first):
 2. **Saved report structure is valid** — `saved-report.json` includes `tokens` and `scan_metadata` keys.
 3. **Whitelist config is explicit** — `whitelist-config.yml` includes a file rule for `test/**`.
 4. **Whitelist behavior preserves true findings** — whitelist scan exit remains non-zero and evidence indicates non-whitelisted secret detection still occurs.
-5. **Whitelist behavior evidence is explicit** — whitelist scan artifacts include explicit filtering evidence (for example, a `Whitelisted: <n> token(s)` line or equivalent structured indicator).
+5. **Whitelist behavior evidence is explicit** — whitelist scan artifacts show that `test/mock_tokens.json` is no longer reported while a non-whitelisted finding such as `config.env` still remains.
 
 ## Verdict
 

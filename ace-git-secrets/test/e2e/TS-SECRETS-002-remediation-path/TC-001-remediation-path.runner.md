@@ -21,6 +21,7 @@ Save all output to `results/tc/01/`. Capture:
 
 ## Constraints
 
+- Use the default full-history `ace-git-secrets scan`; do not pass `--since` or any scope-narrowing flag.
 - Resolve the saved report path from real scan output or `.ace-local/git-secrets/sessions/`.
 - Use that exact path for both revoke and rewrite dry-run `--scan-file` commands.
 - Record HEAD before and after rewrite dry-run and preserve invariance evidence.

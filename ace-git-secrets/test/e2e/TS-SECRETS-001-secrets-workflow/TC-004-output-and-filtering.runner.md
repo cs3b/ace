@@ -20,5 +20,5 @@ Save all output to `results/tc/04/`. Capture:
 - Use real `ace-git-secrets scan` execution; do not fabricate report artifacts.
 - For JSON/report validation, use options discovered in Goal 1 (`--report-format json` and optional `--verbose --format json`).
 - Resolve the report path from scan output or `.ace-local/git-secrets/sessions/`, then copy that file into `results/tc/04/saved-report.json`.
-- For whitelist behavior, create `.ace/git-secrets/config.yml` with a file whitelist rule for `test/**` and preserve that exact YAML in `results/tc/04/whitelist-config.yml`.
+- For whitelist behavior, create `.ace/git-secrets/config.yml` with a documented file whitelist rule using `file: "test/**"` and preserve that exact YAML in `results/tc/04/whitelist-config.yml`.
 - Whitelist outcome should still detect the non-whitelisted secret in `config.env`.
