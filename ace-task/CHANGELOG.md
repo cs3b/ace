@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.2] - 2026-04-23
+
+
+### Changed
+- Added layer-ownership triage into task bug-work and planning workflows to reduce cross-package misrouting of root-cause fixes.
+- Tightened task planning workflows to improve issue linkage and work-on sequencing with clearer workflow ownership validation.
+
+
 ### Changed
 - Added layer-ownership triage to bug analysis/fix and task planning/work workflows so agents identify owner, adapter, and symptom packages before implementing cross-package shared-primitive fixes.
 - Tightened the task draft workflow so GitHub issue URL inputs must create the parent or single task with `--github-issue <number>` and sync the linked issue.
