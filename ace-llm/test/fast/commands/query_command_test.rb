@@ -22,7 +22,9 @@ class QueryCommandTest < AceLlmTestCase
     super
   end
 
-  # Stub Google LLM API for tests that verify CLI routing (not API functionality)
+  # Stub common LLM API endpoints for tests that verify CLI routing rather than
+  # provider-specific HTTP wiring. Fallback selection can route through Google
+  # or Z.ai depending on the active provider configuration.
   def stub_llm_api_success
     stub_request(:post, /generativelanguage\.googleapis\.com/)
       .to_return(
@@ -33,6 +35,17 @@ class QueryCommandTest < AceLlmTestCase
             "content" => {"parts" => [{"text" => "Mock response"}]}
           }],
           "usageMetadata" => {"promptTokenCount" => 5, "candidatesTokenCount" => 10}
+        }.to_json
+      )
+    stub_request(:post, /api\.z\.ai/)
+      .to_return(
+        status: 200,
+        headers: {"Content-Type" => "application/json"},
+        body: {
+          "choices" => [{
+            "message" => {"content" => "Mock response"}
+          }],
+          "usage" => {"prompt_tokens" => 5, "completion_tokens" => 10}
         }.to_json
       )
   end
