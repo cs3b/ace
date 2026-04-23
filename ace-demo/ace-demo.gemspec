@@ -41,6 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", "~> 0.29"
   spec.add_dependency "ace-support-config", "~> 0.9"
   spec.add_dependency "ace-b36ts", "~> 0.13"
+  spec.add_dependency "ace-tmux", "~> 0.17"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.13"
   spec.add_development_dependency "bundler", "~> 2.0"

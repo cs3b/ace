@@ -27,6 +27,8 @@ module Ace
             lines << "# Scene: #{scene_name}" unless scene_name.to_s.strip.empty?
 
             scene.fetch("commands", []).each do |command|
+              next unless command["type"]
+
               lines << command.fetch("type")
               sleep_value = validate_sleep!(command["sleep"] || default_timeout)
               lines << "sleep #{sleep_value}"

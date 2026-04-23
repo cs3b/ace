@@ -3,8 +3,8 @@ doc-type: reference
 title: ace-demo Usage Guide
 purpose: Complete CLI reference for recording demos and attaching them to PRs
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-16
+  last-checked: 2026-04-16
 ---
 
 # ace-demo Usage Guide
@@ -148,6 +148,8 @@ ace-demo record hello --pr 42 --dry-run
 - Any non-pass verification fails the record command, writes an error report to `.ace-local/demo/`, and prevents PR upload/comment.
 - `ace-demo verify <cast> --tape <tape>` re-runs verification for an existing `.cast` file; include `--sandbox-path` when you need assertion replay from a preserved failed-recording sandbox.
 - `.tape.yml` settings can define `backend`, `playback_speed`, and `output`; CLI flags override those values.
+- Scene commands are additive: existing visible `type:` commands still work, and YAML/asciinema tapes may also use structured `tmux:` recorder-control directives for `attach`, `detach`, `wait`, and `send`.
+- `tmux:` directives reuse shared `ace-tmux` control semantics and are intended for recorder-control plumbing, not as a replacement for on-camera feature commands that should still be expressed visibly.
 - Raw `.tape` and inline recordings use VHS-compatible flow.
 - `mp4` recording output is unsupported; use `gif`, or use `--backend vhs --format webm` for compatibility output.
 - `webm` requires `--backend vhs` for YAML tape recordings.
@@ -164,6 +166,31 @@ Retimed: .ace-local/demo/hello-4x.gif (4x)
 Uploaded: hello-1700000000.gif -> https://github.com/OWNER/REPO/releases/download/demo-assets/hello-1700000000.gif
 Posted demo comment to PR #42
 ```
+
+### YAML tmux directive example
+
+```yaml
+scenes:
+  - name: Show tmux-backed fork transition
+    commands:
+      - tmux:
+          action: wait
+          for: window-active
+          session: fork-demo
+          window: work
+      - type: ACE_TMUX_SESSION=fork-demo ace-assign fork-run --assignment "$ASSIGN_ID@010" --launch-mode tmux
+      - tmux:
+          action: wait
+          for: window-exists
+          session: fork-demo
+          window: work-fs
+      - tmux:
+          action: detach
+          session: fork-demo
+```
+
+- Use `type:` for visible on-camera commands that should appear in the recorded shell.
+- Use `tmux:` for deterministic recorder-control orchestration that previously required raw `tmux ...` shell glue or sleep-led detach hacks.
 
 ## `ace-demo verify <cast> --tape <tape>`
 

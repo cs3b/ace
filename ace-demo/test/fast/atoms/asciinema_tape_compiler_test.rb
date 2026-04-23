@@ -54,4 +54,22 @@ class AsciinemaTapeCompilerTest < AceDemoTestCase
 
     assert_includes error.message, "sleep must be a numeric duration"
   end
+
+  def test_ignores_tmux_directives_when_compiling_script
+    spec = {
+      "scenes" => [
+        {
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}},
+            {"type" => "echo setup", "sleep" => "1s"}
+          ]
+        }
+      ]
+    }
+
+    script = Ace::Demo::Atoms::AsciinemaTapeCompiler.compile(spec: spec)
+
+    refute_includes script, "window-active"
+    assert_includes script, "echo setup"
+  end
 end

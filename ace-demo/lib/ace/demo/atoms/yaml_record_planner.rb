@@ -28,6 +28,7 @@ module Ace
             allow_nil: false
           )
           RecordOptionValidator.validate_yaml_backend_format!(backend: selected_backend, format: selected_format)
+          RecordOptionValidator.validate_yaml_backend_capabilities!(backend: selected_backend, spec: spec)
 
           selected_speed = playback_speed.nil? ? settings["playback_speed"] : playback_speed
           selected_speed = Atoms::PlaybackSpeedParser.parse(selected_speed)

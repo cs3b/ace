@@ -6,10 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Fixed
 - Failed YAML tape verification by default when the final asciinema shell exit is non-zero, unless `verify.allow_nonzero_exit: true` opts out explicitly.
 - Surfaced non-zero cast exit codes in `record` / `verify` output and verification reports so broken recordings are diagnosable without opening the raw cast.
+
+## [0.25.6] - 2026-04-16
+
+### Added
+- Added additive YAML `tmux:` recorder-control directives for asciinema-backed demo tapes, covering shared-surface `attach`, `detach`, `wait`, `send`, and optional `capture` actions alongside existing visible `type:` commands.
+
+### Changed
+- Updated `ace-demo` recording/docs to treat tmux orchestration as structured recorder control instead of canonical raw tmux shell glue.
+
+### Fixed
+- Updated the `ace-tmux` runtime dependency constraint to `~> 0.17` so recorder-side tmux directives stay aligned with the new runtime inspection release line.
+- Rejected unsupported YAML `tmux.action: capture` directives during parsing, forwarded recording env values into recorder-side tmux control resolution, and clarified that tmux directives are supported only for the asciinema backend.
+- Rejected YAML `tmux:` directives when the resolved recording backend is `vhs` so unsupported backend/control-surface combinations fail fast instead of being silently ignored during VHS compilation.
 
 ## [0.25.1] - 2026-04-16
 

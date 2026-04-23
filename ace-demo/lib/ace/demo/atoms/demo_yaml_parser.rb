@@ -219,18 +219,88 @@ module Ace
               "scenes[#{scene_index}].commands[#{command_index}] must be a map in #{source_path}"
           end
 
-          type = command["type"]&.to_s
-          if type.nil? || type.strip.empty?
+          normalized = {"sleep" => command["sleep"]&.to_s}.compact
+          has_type = !command["type"].to_s.strip.empty?
+          has_tmux = command["tmux"].is_a?(Hash)
+
+          if has_type && has_tmux
             raise DemoYamlParseError,
-              "scenes[#{scene_index}].commands[#{command_index}].type is required in #{source_path}"
+              "scenes[#{scene_index}].commands[#{command_index}] cannot define both type and tmux in #{source_path}"
           end
 
-          {
-            "type" => type,
-            "sleep" => command["sleep"]&.to_s
-          }
+          if has_type
+            normalized["type"] = command["type"].to_s
+            return normalized
+          end
+
+          if has_tmux
+            normalized["tmux"] = normalize_tmux_command(
+              command["tmux"],
+              scene_index,
+              command_index,
+              source_path: source_path
+            )
+            return normalized
+          end
+
+          raise DemoYamlParseError,
+            "scenes[#{scene_index}].commands[#{command_index}] must define either type or tmux in #{source_path}"
         end
         private_class_method :normalize_command
+
+        def normalize_tmux_command(tmux, scene_index, command_index, source_path:)
+          directive = tmux.transform_keys(&:to_s)
+          action = directive["action"]&.to_s&.strip
+          if action.nil? || action.empty?
+            raise DemoYamlParseError,
+              "scenes[#{scene_index}].commands[#{command_index}].tmux.action is required in #{source_path}"
+          end
+
+          allowed = %w[attach detach wait send]
+          unless allowed.include?(action)
+            raise DemoYamlParseError,
+              "Unknown tmux action '#{action}' in #{source_path}. Allowed: #{allowed.join(', ')}"
+          end
+
+          normalized = {"action" => action}
+          %w[session window pane pattern].each do |field|
+            normalized[field] = directive[field].to_s if directive.key?(field)
+          end
+
+          case action
+          when "attach", "detach"
+            normalized["session"] = required_string!(directive, "session", scene_index, command_index, source_path)
+          when "wait"
+            normalized["for"] = required_string!(directive, "for", scene_index, command_index, source_path)
+            normalized["pattern"] = normalized["pattern"] if normalized["pattern"]
+            normalized["timeout"] = Float(directive["timeout"]) if directive.key?("timeout")
+          when "send"
+            command_text = directive["command"]&.to_s&.strip
+            key_text = directive["key"]&.to_s&.strip
+            if command_text.to_s.empty? == key_text.to_s.empty?
+              raise DemoYamlParseError,
+                "tmux send must define exactly one of command or key in #{source_path}"
+            end
+            normalized["command"] = command_text unless command_text.to_s.empty?
+            normalized["key"] = key_text unless key_text.to_s.empty?
+          end
+
+          normalized
+        rescue ArgumentError, TypeError => e
+          raise DemoYamlParseError, "#{e.message} (#{source_path})"
+        end
+        private_class_method :normalize_tmux_command
+
+        def required_string!(directive, field, scene_index, command_index, source_path)
+          value = directive[field]&.to_s&.strip
+          if value.nil? || value.empty?
+            raise DemoYamlParseError,
+              "scenes[#{scene_index}].commands[#{command_index}].tmux.#{field} is required in #{source_path}"
+          end
+
+          value
+        end
+        private_class_method :required_string!
       end
     end
   end

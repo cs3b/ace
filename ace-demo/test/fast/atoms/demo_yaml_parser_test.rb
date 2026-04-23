@@ -131,4 +131,67 @@ class DemoYamlParserTest < AceDemoTestCase
     assert_includes error.message, "Invalid playback speed"
     assert_includes error.message, "Use one of: 1x, 2x, 4x, 8x"
   end
+
+  def test_accepts_tmux_commands_alongside_type_commands
+    parsed = Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+      {
+        "description" => "demo",
+        "scenes" => [
+          {
+            "name" => "main",
+            "commands" => [
+              {"type" => "echo hi", "sleep" => "1s"},
+              {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}},
+              {"tmux" => {"action" => "send", "pane" => "fork-demo:work.0", "key" => "Enter"}}
+            ]
+          }
+        ]
+      },
+      source_path: "demo.tape.yml"
+    )
+
+    assert_equal "echo hi", parsed["scenes"][0]["commands"][0]["type"]
+    assert_equal "wait", parsed["scenes"][0]["commands"][1]["tmux"]["action"]
+    assert_equal "Enter", parsed["scenes"][0]["commands"][2]["tmux"]["key"]
+  end
+
+  def test_rejects_tmux_send_without_exactly_one_command_or_key
+    error = assert_raises(Ace::Demo::DemoYamlParseError) do
+      Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+        {
+          "description" => "demo",
+          "scenes" => [
+            {
+              "commands" => [
+                {"tmux" => {"action" => "send", "pane" => "fork-demo:work.0"}}
+              ]
+            }
+          ]
+        },
+        source_path: "demo.tape.yml"
+      )
+    end
+
+    assert_includes error.message, "tmux send must define exactly one of command or key"
+  end
+
+  def test_rejects_tmux_capture_action
+    error = assert_raises(Ace::Demo::DemoYamlParseError) do
+      Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+        {
+          "description" => "demo",
+          "scenes" => [
+            {
+              "commands" => [
+                {"tmux" => {"action" => "capture", "pane" => "fork-demo:work.0"}}
+              ]
+            }
+          ]
+        },
+        source_path: "demo.tape.yml"
+      )
+    end
+
+    assert_includes error.message, "Unknown tmux action 'capture'"
+  end
 end
