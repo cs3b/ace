@@ -1,6 +1,6 @@
 ---
 id: 8re.t.n1d.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-15 15:21:37"
 estimate: TBD
@@ -54,25 +54,27 @@ ace-tmux detach --session <name>
 ```
 
 Error Handling:
+
 - explicit targets that cannot be resolved return a clear target-resolution failure
 - wait operations return a clear timeout outcome when the requested condition is not met
 - unsupported named keys return a clear validation failure instead of passing through raw tmux syntax
 
 Edge Cases:
+
 - ACE-managed default targeting and explicit targeting must be described as one coherent contract
 - quiet or exited panes remain capturable as evidence when the runtime can still observe them
 - commands run outside live tmux fail clearly when neither explicit flags nor ACE env vars resolve the target
 
 ### Success Criteria
 
-- [ ] The draft defines the shared `ace-tmux` control commands and their behavior-level contracts.
-- [ ] Ruby API first plus CLI wrapper behavior is explicit.
-- [ ] ACE-managed default plus explicit targeting behavior is explicit.
-- [ ] The ambient target-resolution precedence is explicit and consistent across commands.
-- [ ] The v1 `wait` condition set is explicit and bounded.
-- [ ] The `send` contract covers command text plus bounded named-key dispatch.
-- [ ] Dynamic window/pane interaction needs for consumers are covered without consumer-specific drift.
-- [ ] The boundary with sibling `8r6.t.xeu` is explicit and stable.
+- [x] The draft defines the shared `ace-tmux` control commands and their behavior-level contracts.
+- [x] Ruby API first plus CLI wrapper behavior is explicit.
+- [x] ACE-managed default plus explicit targeting behavior is explicit.
+- [x] The ambient target-resolution precedence is explicit and consistent across commands.
+- [x] The v1 `wait` condition set is explicit and bounded.
+- [x] The `send` contract covers command text plus bounded named-key dispatch.
+- [x] Dynamic window/pane interaction needs for consumers are covered without consumer-specific drift.
+- [x] The boundary with sibling `8r6.t.xeu` is explicit and stable.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 

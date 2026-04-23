@@ -1,6 +1,6 @@
 ---
 id: 8re.t.n1d.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-15 15:21:37"
 estimate: TBD
@@ -86,11 +86,11 @@ Edge Cases:
 
 ### Success Criteria
 
-- [ ] The draft specifies first-class tmux-aware recording directives for attach, detach, wait, send, and optional capture.
-- [ ] Recorder-control behavior is defined as reuse of shared `ace-tmux` control semantics.
-- [ ] The tmux-aware surface is explicitly additive to existing `type:` scene commands.
-- [ ] The task clearly distinguishes recorder-control directives from visible on-camera feature commands.
-- [ ] The contract removes reliance on raw tmux shell glue as the canonical orchestration model.
+- [x] The draft specifies first-class tmux-aware recording directives for attach, detach, wait, send, and optional capture.
+- [x] Recorder-control behavior is defined as reuse of shared `ace-tmux` control semantics.
+- [x] The tmux-aware surface is explicitly additive to existing `type:` scene commands.
+- [x] The task clearly distinguishes recorder-control directives from visible on-camera feature commands.
+- [x] The contract removes reliance on raw tmux shell glue as the canonical orchestration model.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
