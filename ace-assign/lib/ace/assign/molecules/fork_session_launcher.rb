@@ -38,21 +38,11 @@ module Ace
         def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, tmux_runner: nil, interactive_builder: nil)
           @config = config || Ace::Assign.config
           @query_interface = query_interface
-          @tmux_runner = tmux_runner || TmuxForkRunner.new
+          @tmux_runner = tmux_runner || TmuxControlSurfaceRunner.new
           @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
         end
 
-        # Launch forked subtree execution synchronously.
-        #
-        # @param assignment_id [String] Assignment identifier
-        # @param fork_root [String] Subtree root step number
-        # @param provider [String, nil] Optional provider override
-        # @param cli_args [String, nil] Optional provider CLI args
-        # @param timeout [Integer, nil] Optional timeout override (seconds)
-        # @param cache_dir [String, nil] Assignment cache directory for last-message capture
-        # @param launch_mode [String, nil] Launch mode override (auto|headless|tmux)
-        # @return [Hash] QueryInterface response
-        def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, launch_mode: nil)
+        def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, launch_mode: nil, callback_pane: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
@@ -65,7 +55,8 @@ module Ace
               provider: resolved_provider,
               cli_args: cli_args,
               timeout: resolved_timeout,
-              cache_dir: cache_dir
+              cache_dir: cache_dir,
+              callback_pane: callback_pane
             )
           else
             launch_provider_session(
@@ -77,6 +68,10 @@ module Ace
               cache_dir: cache_dir
             )
           end
+        end
+
+        def callback_pane
+          tmux_runner.current_pane
         end
 
         def launch_provider_session(assignment_id:, fork_root:, provider:, cli_args: nil, timeout: nil, cache_dir: nil,
@@ -100,9 +95,6 @@ module Ace
             subprocess_env: scope_env
           )
 
-          # Layer 1 write: capture last message for non-Codex providers (or when Codex didn't write).
-          # Safety: `query` blocks until the subprocess exits, so by this point Layer 2 (Codex
-          # --output-last-message) has already finished writing. No other writer exists at this point.
           if last_msg_file && result[:text] && !result[:text].strip.empty?
             existing = File.exist?(last_msg_file) ? File.read(last_msg_file).strip : ""
             File.write(last_msg_file, result[:text]) if existing.empty?
@@ -121,6 +113,7 @@ module Ace
 
         def resolve_launch_mode(explicit_mode)
           mode = explicit_mode.to_s.strip
+          mode = config.dig("execution", "launch_mode").to_s.strip if mode.empty?
           mode = DEFAULT_LAUNCH_MODE if mode.empty?
           unless VALID_LAUNCH_MODES.include?(mode)
             raise Error, "Invalid launch mode '#{mode}'. Expected one of: #{VALID_LAUNCH_MODES.join(', ')}"
@@ -131,7 +124,7 @@ module Ace
           tmux_runner.tmux_context? ? "tmux" : "headless"
         end
 
-        def launch_tmux(assignment_id:, fork_root:, provider:, cli_args:, timeout:, cache_dir:)
+        def launch_tmux(assignment_id:, fork_root:, provider:, cli_args:, timeout:, cache_dir:, callback_pane: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           session = tmux_runner.current_session
           raise Error, "Launch mode tmux requires an active tmux session (TMUX or ACE_TMUX_SESSION)." unless session
@@ -158,7 +151,8 @@ module Ace
             assignment_id: assignment_id,
             fork_root: fork_root,
             session: session,
-            fork_window: fork_window
+            fork_window: fork_window,
+            callback_pane: callback_pane
           )
           invocation = interactive_builder.build(
             provider_model: provider,
@@ -186,8 +180,12 @@ module Ace
             session: session,
             window: fork_window,
             pane: pane_target,
-            window_id: window_info[:window_id]
+            window_id: window_info[:window_id],
+            callback_pane: callback_pane
           )
+
+          return {tmux: true, pane_target: pane_target, callback_mode: true, callback_pane: callback_pane} if callback_pane
+
           wait_for_subtree_terminal(
             assignment_id: assignment_id,
             fork_root: fork_root,
@@ -261,13 +259,15 @@ module Ace
             "Cannot fork-run subtree #{assignment_id}@#{fork_root}: already running inside that scoped subtree. Continue inline instead of calling fork-run again."
         end
 
-        def tmux_subprocess_env(assignment_id:, fork_root:, session:, fork_window:)
-          self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root).merge(
+        def tmux_subprocess_env(assignment_id:, fork_root:, session:, fork_window:, callback_pane: nil)
+          env = self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root).merge(
             "PROJECT_ROOT_PATH" => Dir.pwd,
             "ACE_TMUX_SESSION" => session,
             "ACE_ASSIGN_LAUNCH_MODE" => "tmux",
             "ACE_ASSIGN_FORK_WINDOW" => fork_window
           )
+          env["ACE_ASSIGN_CALLBACK_PANE"] = callback_pane if callback_pane && !callback_pane.empty?
+          env
         end
 
         def wait_for_subtree_terminal(assignment_id:, fork_root:, cache_dir:, timeout:)

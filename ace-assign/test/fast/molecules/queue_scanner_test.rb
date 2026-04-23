@@ -121,6 +121,7 @@ class QueueScannerTest < AceAssignTestCase
         context: fork
         fork:
           provider: claude:sonnet@yolo
+          mode: tmux
         ---
 
         Run research.
@@ -132,6 +133,7 @@ class QueueScannerTest < AceAssignTestCase
 
       assert_equal "fork", step.context
       assert_equal "claude:sonnet@yolo", step.fork_provider
+      assert_equal "tmux", step.fork_mode
     end
   end
 end

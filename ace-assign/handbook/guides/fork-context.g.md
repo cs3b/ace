@@ -14,13 +14,14 @@ ace-docs:
 
 Fork context enables step files to run in isolated agent contexts using the Task tool. When a step has `context: fork` in its frontmatter, ace-assign outputs instructions for the orchestrating agent to execute the step via a subagent.
 
-You can also set a per-step provider override with `fork.provider`:
+You can also set per-step launch overrides with `fork.provider` and `fork.mode`:
 
 ```yaml
 ---
 context: fork
 fork:
   provider: "claude:sonnet@yolo"
+  mode: "tmux"
 ---
 ```
 
@@ -30,6 +31,13 @@ Provider precedence during `ace-assign fork-run`:
 2. Step `fork.provider`
 3. Assign config `execution.provider`
 4. Built-in default
+
+Launch-mode precedence during `ace-assign fork-run`:
+
+1. CLI `--launch-mode`
+2. Step `fork.mode`
+3. Assign config `execution.launch_mode`
+4. Built-in default `auto`
 
 For hierarchical split workflows, use **parent-only** fork markers:
 - Split parent step: `context: fork`

@@ -22,6 +22,7 @@ module Ace
           option :cli_args, desc: "Extra CLI args for provider process"
           option :timeout, type: :integer, desc: "Execution timeout in seconds"
           option :launch_mode, desc: "Launch mode: auto, headless, or tmux"
+          option :callback, type: :boolean, default: false, desc: "Capture the origin tmux pane and let the forked agent send a final callback message there"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
@@ -41,6 +42,8 @@ module Ace
             root_step = resolve_root_step(state, current, options[:root], target.scope)
             ensure_root_is_fork!(root_step)
             resolved_provider = resolved_provider_for(root_step, options[:provider])
+            resolved_launch_mode = resolved_launch_mode_for(root_step, options[:launch_mode])
+            callback_pane = resolve_callback_pane(options[:callback], resolved_launch_mode)
 
             if state.subtree_complete?(root_step.number)
               puts "Subtree #{root_step.number} is already complete." unless options[:quiet]
@@ -54,7 +57,8 @@ module Ace
               puts "Starting fork subtree execution: #{root_step.number} - #{root_step.name}"
               puts "Assignment: #{assignment.id}"
               puts "Provider: #{resolved_provider}"
-              puts "Launch mode: #{options[:launch_mode] || Molecules::ForkSessionLauncher::DEFAULT_LAUNCH_MODE}"
+              puts "Launch mode: #{resolved_launch_mode}"
+              puts "Callback pane: #{callback_pane}" if callback_pane
               puts "Timeout: #{options[:timeout] || Ace::Assign.config.dig("execution", "timeout") || Molecules::ForkSessionLauncher::DEFAULT_TIMEOUT}s"
               puts "Next step: #{next_step.number} - #{next_step.name}" if next_step
             end
@@ -76,9 +80,15 @@ module Ace
               cli_args: options[:cli_args],
               timeout: options[:timeout],
               cache_dir: assignment.cache_dir,
-              launch_mode: options[:launch_mode]
+              launch_mode: resolved_launch_mode,
+              callback_pane: callback_pane
             )
             record_fork_pid_info(root_step, launch_result)
+
+            if callback_pane
+              puts "Fork subtree #{root_step.number} launched in callback mode." unless options[:quiet]
+              return
+            end
 
             refreshed = executor.status
             refreshed_state = refreshed[:state]
@@ -201,6 +211,29 @@ module Ace
 
             raise Error,
               "Cannot fork-run subtree #{assignment_id}@#{fork_root}: already running inside that scoped subtree. Continue inline instead of calling fork-run again."
+          end
+
+          def resolved_launch_mode_for(root_step, cli_launch_mode)
+            explicit = cli_launch_mode&.to_s&.strip
+            return explicit unless explicit.nil? || explicit.empty?
+
+            root_step.fork_mode ||
+              Ace::Assign.config.dig("execution", "launch_mode") ||
+              Molecules::ForkSessionLauncher::DEFAULT_LAUNCH_MODE
+          end
+
+          def resolve_callback_pane(callback_enabled, launch_mode)
+            return nil unless callback_enabled
+
+            unless launch_mode == "tmux"
+              raise Error, "--callback requires tmux launch mode so the origin pane can be addressed."
+            end
+
+            pane = launcher.respond_to?(:callback_pane) ? launcher.callback_pane : nil
+            pane = pane.to_s.strip
+            raise Error, "--callback requires a resolvable origin tmux pane." if pane.empty?
+
+            pane
           end
 
           def record_fork_pid_info(root_step, launch_result)

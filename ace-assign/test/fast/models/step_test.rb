@@ -321,6 +321,19 @@ class StepTest < AceAssignTestCase
     assert_equal "claude:sonnet@yolo", step.fork_provider
   end
 
+  def test_fork_mode_from_fork_options
+    step = Ace::Assign::Models::Step.new(
+      number: "020",
+      name: "research",
+      status: :pending,
+      instructions: "Run research",
+      context: "fork",
+      fork_options: {"mode" => "tmux"}
+    )
+
+    assert_equal "tmux", step.fork_mode
+  end
+
   def test_to_frontmatter_includes_fork_options
     step = Ace::Assign::Models::Step.new(
       number: "020",
@@ -328,11 +341,11 @@ class StepTest < AceAssignTestCase
       status: :pending,
       instructions: "Run research",
       context: "fork",
-      fork_options: {"provider" => "claude:sonnet@yolo"}
+      fork_options: {"provider" => "claude:sonnet@yolo", "mode" => "tmux"}
     )
 
     fm = step.to_frontmatter
-    assert_equal({"provider" => "claude:sonnet@yolo"}, fm["fork"])
+    assert_equal({"provider" => "claude:sonnet@yolo", "mode" => "tmux"}, fm["fork"])
   end
 
   def test_to_frontmatter_excludes_empty_fork_options

@@ -420,6 +420,14 @@ fi
 
 After launching `ace-assign fork-run`, the driver remains inside the same drive session.
 
+- If fork session metadata includes `callback_pane`, callback mode is active. In that case:
+
+  - do not poll the forked subtree on a timer
+  - do not run the `sleep 360` loop
+  - remain idle after launch and wait for the child forked agent to send a final status message back into the origin pane
+  - treat the callback message as the trigger to resume the parent drive loop
+  - if the callback never arrives and the session is resumed later, recover from assignment state and scoped status instead of waiting forever
+
 - Treat "fork subtree is still running" as an internal progress state, not as a stop condition.
 - Do not end the turn, emit a final user-facing completion summary, or hand control back to the user merely because the driver is waiting on fork completion.
 - Poll the forked subtree every 6 minutes by default. Use two signals on each poll:
@@ -437,6 +445,26 @@ After launching `ace-assign fork-run`, the driver remains inside the same drive 
 - If scoped subtree status is terminal, immediately treat the fork as complete even if the PTY stayed quiet or the original terminal handle has already disappeared.
 - A quiet terminal is not a stall by itself. Only treat the fork as stalled when there is no scoped status movement, no new subtree reports, and no process exit for about 30 minutes.
 - When the wait ends, immediately re-enter the parent drive loop. Do not stop between "fork finished" and "next runnable step started."
+
+#### Fork Callback Rule
+
+When `ACE_ASSIGN_CALLBACK_PANE` is present in the forked child environment:
+
+- before stopping for either success or failure, send one final sentence back to the origin pane with direct `ace-tmux send`
+- use the exact pane target from `ACE_ASSIGN_CALLBACK_PANE`
+- use a success sentence shaped like:
+
+  ```bash
+  ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} completed. Resume parent assignment drive now." --key Enter
+  ```
+
+- use a failure sentence shaped like:
+
+  ```bash
+  ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} failed. Resume parent assignment drive and inspect scoped status." --key Enter
+  ```
+
+- do not invent a new skill or wrapper for this callback; use `ace-tmux send` directly
 
 #### Post-Fork Resume Checklist
 

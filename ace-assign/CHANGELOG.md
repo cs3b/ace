@@ -6,95 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-## [0.54.8] - 2026-04-24
-
-### Fixed
-- Resolved tmux fork-window naming from the launcher origin pane so fork launches keep targeting the originating `<window>-fs` name even when another tmux window is currently active.
-- Stopped tmux fork launches from stealing focus by creating fork windows and panes detached and removing the automatic fork-window selection step.
-
-### Technical
-- Added regressions for origin-pane window resolution, detached pane/window creation, and no-focus tmux fork launching.
-
-## [0.54.7] - 2026-04-24
-
-### Fixed
-- Made forked `ace-assign` workers honor an explicit default assignment target so scoped subtree execution stays inside the passed `<assignment>@<root>` boundary instead of widening back to parent assignment status.
-- Restored root-first fork scheduling for unscoped resume so global queue selection and `start --assignment <id>` activate pending fork roots before child steps.
-
-### Technical
-- Propagated `ACE_ASSIGN_DEFAULT_TARGET` through headless and tmux fork launches, tightened scoped `fail` and `retry` handling, and aligned drive workflow plus queue/command regressions with the explicit scoped-target contract.
-
-## [0.54.6] - 2026-04-24
-
-### Fixed
-- Ordered tmux fork-launch environment unsets before assignments so mixed `env -u NAME` and `NAME=value` invocations stay valid during pane execution.
-
-### Technical
-- Preserved explicit `fork_retry_limit: 0` values during preset expansion and tightened the assignment-drive workflow guidance so scoped subtree resumes scan all active descendants before auto-starting child work.
-
-## [0.54.5] - 2026-04-24
-
-### Fixed
-- Corrected scoped subtree-drive guidance so agents already running inside `/as-assign-drive <assignment>@<root>` start child work inline instead of attempting a same-root `fork-run` first.
-
-### Technical
-- Replaced tmux fork-pane wrapper-script bootstrapping with direct interactive pane launches built from the resolved invocation environment and added regressions for scoped subtree-root instructions and tmux launch transport.
-
-## [0.54.4] - 2026-04-24
-
-### Fixed
-- Blocked same-root scoped `fork-run` re-entry so forked assignment drivers continue inline instead of launching duplicate panes into the shared tmux fork window.
-
-### Technical
-- Propagated explicit fork-scope environment markers through headless and tmux launches and added command, launcher, and workflow regressions for the no-refork contract.
-
-## [0.54.3] - 2026-04-24
-
-### Fixed
-- Restored metadata-driven batch scheduling for generated `work-on-task` assignments so top-level batch parents remain the next global step until the driver delegates a child fork root.
-
-### Technical
-- Preserved `batch_parent`, scheduling, and fork-retry metadata during preset expansion and aligned queue/start behavior so explicit batch-parent starts match unscoped next-step selection.
-
-## [0.54.2] - 2026-04-23
-
-### Technical
-- Updated retained assignment E2E contracts to use the valid public recovery path (`add` with `steps[].name`, positional `retry STEP_REF`), require explicit `start` transitions under the active-step lifecycle, and declare concrete hierarchy/scoped status artifacts for runner-enforced verification.
-
-## [0.54.1] - 2026-04-23
-
-### Technical
-- Updated retained `TS-ASSIGN-001` lifecycle and fork-context E2E contracts to require explicit `start` transitions and explicit assignment targeting under the active-step lifecycle.
-
-## [0.54.0] - 2026-04-23
+## [0.55.0] - 2026-04-23
 
 ### Changed
-- Replaced the persisted/public step status word `in_progress` with `active` across step files, CLI output, and JSON status payloads.
-- Split execution truth from queue prediction so assignments stay `paused` until an explicit `start`, `finish` no longer auto-starts future work, and scoped/unscoped status now reports `active_steps` plus `next_step` only when nothing is active.
-- Updated forked subtree lifecycle semantics so delegated roots remain active while owned, only one deepest in-subtree child becomes active at a time, and unscoped queue selection ignores pending descendants under active fork roots.
-
-### Technical
-- Aligned `ace-overseer` integration points, operator docs, workflow instructions, and retained verification coverage with the new active-step lifecycle contract.
-
-## [0.53.7] - 2026-04-23
-
-### Technical
-- Updated assignment-drive generated-output guidance to reference `ace-config sync` instead of the removed `ace-config init` command.
-
-## [0.53.6] - 2026-04-23
-
-
-### Changed
-- Improved tmux-backed fork launch behavior so fork windows are resolved through shared window-name sanitation and active-session targeting updates.
-- Added test coverage for fork window lifecycle paths where window lookup and pane targeting previously depended on brittle parsing.
-
-
-## [0.53.5] - 2026-04-22
+- Migrated tmux-backed `fork-run` orchestration to consume the shared `ace-tmux` runtime/control surface instead of maintaining a private `ace-assign` tmux runner.
+- Added step-level `fork.mode` plus config-level `execution.launch_mode` so `ace-assign fork-run` can default subtree launch behavior to `auto`, `headless`, or `tmux` while still letting `--launch-mode` override both.
+- Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so a fork can capture the origin pane, launch the child subtree, and let the child send one final status sentence back with `ace-tmux send` instead of keeping the parent on a polling loop.
+- Updated the `/as-assign-drive` fork workflow contract to document callback-mode idle waiting, direct `ace-tmux send` callback delivery, and assignment-state recovery when a callback is missing on re-entry.
 
 ### Fixed
-- Reused the shared `ace-tmux` window-name sanitizer for tmux fork windows so dotted base windows produce safe fork names such as `ace-t-k5a-fs`.
-- Targeted fork-window pane setup and selection by tmux window ID after lookup or creation, avoiding name parsing failures and duplicate-name ambiguity.
+- Updated the `ace-tmux` runtime dependency constraint to `~> 0.17` so assignment tmux delegation stays aligned with the new runtime inspection release line.
+
+### Technical
+- Kept assignment queue state as the authoritative fork completion signal while limiting tmux pane capture to launch and failure diagnostics.
+- Persisted fork callback pane metadata in tmux session files, exported it into tmux fork launch environments as `ACE_ASSIGN_CALLBACK_PANE`, and added command/launcher/runner contract coverage for the new non-blocking callback path.
+- Added parser/model/launcher/command regression coverage for launch-mode precedence across CLI, step frontmatter, and assign config defaults.
 
 ## [0.53.4] - 2026-04-20
 
