@@ -193,13 +193,13 @@ class ContextLimitResolverTest < AceReviewTest
   def test_anthropic_prefix_stripped
     result = @resolver.resolve("anthropic:claude-3-sonnet")
 
-    assert_equal 1_000_000, result
+    assert_equal 200_000, result
   end
 
   def test_openai_prefix_stripped
     result = @resolver.resolve("openai:gpt-4o")
 
-    assert_equal 1_050_000, result
+    assert_equal 128_000, result
   end
 
   def test_codex_prefix_stripped
@@ -282,19 +282,19 @@ class ContextLimitResolverTest < AceReviewTest
   end
 
   def test_anthropic_provider_uses_config_limit
-    # anthropic:claude-3-sonnet should use ace-llm's provider config (1M)
+    # anthropic:claude-3-sonnet should use ace-llm's provider config (200K)
     # which matches the hardcoded fallback
     result = @resolver.resolve("anthropic:claude-3-sonnet")
 
-    assert_equal 1_000_000, result
+    assert_equal 200_000, result
   end
 
   def test_openai_provider_uses_config_limit
-    # openai:gpt-4o should use ace-llm's provider config (1.05M)
+    # openai:gpt-4o should use ace-llm's provider config (128K)
     # which matches the hardcoded fallback
     result = @resolver.resolve("openai:gpt-4o")
 
-    assert_equal 1_050_000, result
+    assert_equal 128_000, result
   end
 
   def test_unknown_provider_falls_back_to_pattern
