@@ -103,7 +103,7 @@ module Ace
             values = option_values(option)
             details << "(values: #{Array(values).join(", ")})" if values && !Array(values).empty?
             default = option_default(option)
-            details << "(default: #{default.inspect})" unless default.nil?
+            details << "(default: #{default.inspect})" unless suppress_default_display?(option, default)
             details << "(required)" if option_required?(option)
 
             return label if details.empty?
@@ -200,6 +200,19 @@ module Ace
           def self.option_required?(option)
             return option.required if option.respond_to?(:required)
             return option.required? if option.respond_to?(:required?)
+
+            false
+          end
+
+          def self.option_optional_value?(option)
+            return option.optional_value if option.respond_to?(:optional_value)
+
+            false
+          end
+
+          def self.suppress_default_display?(option, default)
+            return true if default.nil?
+            return true if option_optional_value?(option) && default == false
 
             false
           end

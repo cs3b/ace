@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Cli
-      VERSION = "0.6.5"
+      VERSION = "0.6.7"
     end
   end
 end

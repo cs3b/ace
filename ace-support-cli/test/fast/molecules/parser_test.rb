@@ -10,8 +10,13 @@ class ParserTest < AceSupportCliTestCase
     option :tags, type: :array, default: []
     option :headers, type: :hash, default: {}
     option :name, type: :string, repeat: true
+    option :capture, type: :string, optional_value: true
     argument :target, type: :string, required: true
     argument :level, type: :integer, required: false
+  end
+
+  class OptionalOnlyCommand < Ace::Support::Cli::Command
+    option :capture, type: :string, default: false, optional_value: true
   end
 
   def setup
@@ -46,6 +51,26 @@ class ParserTest < AceSupportCliTestCase
     parsed = @parser.parse(["--count", "1", "--no-verbose", "dest"])
 
     assert_equal false, parsed[:verbose]
+  end
+
+  def test_parses_optional_string_value_when_present
+    parsed = @parser.parse(["--count", "1", "--capture", "80:5", "dest"])
+
+    assert_equal "80:5", parsed[:capture]
+  end
+
+  def test_parses_optional_string_value_when_omitted
+    parser = Ace::Support::Cli::Parser.new(OptionalOnlyCommand)
+    parsed = parser.parse(["--capture"])
+
+    assert_nil parsed[:capture]
+  end
+
+  def test_optional_string_value_defaults_when_flag_absent
+    parser = Ace::Support::Cli::Parser.new(OptionalOnlyCommand)
+    parsed = parser.parse([])
+
+    assert_equal false, parsed[:capture]
   end
 
   def test_honors_double_dash

@@ -115,7 +115,7 @@ module Ace
                 options[option.name] = current.merge(key => parsed_value)
               end
             else
-              switches = value_switches(option, "VALUE")
+              switches = option.optional_value ? optional_value_switches(option, "VALUE") : value_switches(option, "VALUE")
               parser.on(*switches, String, desc) { |value| assign_option_value(options, option, value) }
             end
           end
@@ -133,6 +133,12 @@ module Ace
         def value_switches(option, value_label)
           (option.aliases + [option.long_switch]).map do |switch|
             "#{switch} #{value_label}"
+          end
+        end
+
+        def optional_value_switches(option, value_label)
+          (option.aliases + [option.long_switch]).map do |switch|
+            "#{switch} [#{value_label}]"
           end
         end
 

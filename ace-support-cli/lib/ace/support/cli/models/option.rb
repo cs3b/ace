@@ -7,9 +7,9 @@ module Ace
         class Option
           VALID_TYPES = %i[string integer float boolean array hash].freeze
 
-          attr_reader :name, :type, :default, :desc, :aliases, :values, :required, :repeat
+          attr_reader :name, :type, :default, :desc, :aliases, :values, :required, :repeat, :optional_value
 
-          def initialize(name:, type: :string, default: nil, desc: "", aliases: [], values: nil, required: false, repeat: false)
+          def initialize(name:, type: :string, default: nil, desc: "", aliases: [], values: nil, required: false, repeat: false, optional_value: false)
             @name = name.to_sym
             @type = type.to_sym
             @default = default
@@ -18,6 +18,7 @@ module Ace
             @values = values
             @required = required
             @repeat = repeat
+            @optional_value = optional_value
             validate!
           end
 

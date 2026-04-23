@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-04-16
+
+### Fixed
+- Hid misleading rich-help `(default: false)` output for optional-value flags so shorthand CLI forms like bare `--capture` and `--wait` are documented accurately.
+
+## [0.6.6] - 2026-04-16
+
+### Fixed
+- Added optional-value string flag parsing so ACE CLIs can accept shorthand forms like bare `--capture` without breaking existing option and positional parsing behavior.
+
 ## [0.6.5] - 2026-04-13
 
 ### Changed
