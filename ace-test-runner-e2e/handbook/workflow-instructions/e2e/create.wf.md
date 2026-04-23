@@ -41,7 +41,10 @@ This workflow guides an agent through creating a new E2E test scenario.
 ## Authoring Contract
 
 - Runner files (`runner.yml.md`, `TC-*.runner.md`) are execution-only.
-- Goal-style TCs must prove two things:
+- Every TC must be authored as one of:
+  - **public-surface** — a user job from docs/usage/`--help` and the CLI
+  - **retained-contract** — a deterministic integrated regression check with declared supporting evidence
+- Goal-style/public-surface TCs must prove two things:
   - the tool works
   - a user can do the job from the public surface (`README`, usage docs, `--help`, and the CLI itself) without hidden recipes or workarounds
 - Verifier files (`verifier.yml.md`, `TC-*.verify.md`) are verdict-only with impact-first evidence order:
@@ -52,7 +55,10 @@ This workflow guides an agent through creating a new E2E test scenario.
   4. debug captures as fallback
 
 - Setup belongs to `scenario.yml` `setup:` and fixtures; do not duplicate setup in runner TC instructions.
-- Keep `results/tc/{NN}/` for real outcome artifacts only; do not ask the runner to write helper YAML, path files, command files, reflections, or verifier-facing manifests there.
+- Keep `results/tc/{NN}/` for declared verifier-dependent evidence only.
+- Declare every verifier-dependent path in the runner or setup. Grouped shorthand such as ``foo.stdout`, `.stderr`, `.exit`` is allowed for exact sibling captures.
+- Do not use wildcard artifact paths.
+- Do not ask the runner to write reflections, verifier-facing manifests, or undeclared helper files there.
 - Do not encode hidden command recipes, fallback detours, or workaround sequences in runner TC files. If the job cannot be done from the public surface, treat that as a product/docs/help gap or remove/narrow the TC.
 
 ## Workflow Steps
@@ -248,9 +254,12 @@ Rules:
 - `existence-only` is never valid for KEEP/ADD. Use it only for SKIP rows with explicit unit-test replacement.
 - `helper-artifact-driven` is never valid for KEEP/ADD when final sandbox state could prove the goal directly.
 - `hidden-recipe-driven` and `workaround-driven` are never valid for KEEP/ADD.
+- Every verifier-dependent artifact must be declared by runner/setup; verifier-only references are invalid.
+- Wildcard artifact paths are never valid for KEEP/ADD.
 - `SKIP` rows must include replacement unit-test evidence.
 - Non-skipped rows must identify the primary oracle for the TC: final sandbox state, real product output, or debug fallback.
 - Non-skipped rows must state why the job is achievable from the public surface without hidden recipes.
+- Non-skipped rows must identify TC style: `public-surface` or `retained-contract`.
 - At least one `unit tests reviewed` path is required for every row.
 - The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
 
@@ -267,6 +276,7 @@ Rules:
 - No TC may be created without a row in this table.
 - If decision is `SKIP`, include the unit-test evidence that replaces it.
 - If the public-surface path is missing or workaround-driven, the TC must be `SKIP` or explicitly planned as a product/docs/help improvement before creation.
+- If the TC uses live refresh or watch behavior, include a bounded-session capture plan with explicit shutdown behavior and exit-code expectations.
 - At least one `unit tests reviewed` path is required for each row.
 - The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
 
@@ -301,7 +311,7 @@ If a context description was provided, enhance the test with:
 - Write runner goals as user outcomes, not “create a report” chores for the verifier
 - Check specific exit codes for error commands (not just "non-zero")
 - Make final sandbox state or real product output the primary oracle whenever possible
-- Do not require runner-authored helper files under `results/tc/{NN}/`
+- Do not require undeclared or verifier-facing helper files under `results/tc/{NN}/`
 - Add at least one behavioral/content assertion when CLI output itself is part of the outcome being tested
 
 **SHOULD (strongly recommended):**

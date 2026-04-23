@@ -69,7 +69,8 @@ module Ace
             runner = @prompt_bundler.prepare_runner(
               scenario: scenario,
               sandbox_path: sandbox_path,
-              test_cases: test_cases
+              test_cases: test_cases,
+              artifact_contract: declared_artifact_contract(scenario, test_cases: test_cases)
             )
             runner_response = run_llm(
               prompt_path: runner[:prompt_path],
@@ -78,10 +79,44 @@ module Ace
               cli_args: cli_args,
               env_vars: merged_env,
               subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: merged_env),
-              provider: @provider
+              provider: @provider,
+              fallback: false
             )
             runner_observations = extract_runner_observations(runner_response[:text])
-            artifact_contract = snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases: test_cases)
+            initial_artifact_contract = snapshot_artifacts(
+              report_dir,
+              sandbox_path,
+              scenario,
+              test_cases: test_cases,
+              snapshot_name: "artifact-snapshot.initial.json"
+            )
+            artifact_contract = initial_artifact_contract
+
+            if missing_required_artifacts?(artifact_contract)
+              write_command_record(report_dir, "runner-repair", provider: @provider, cli_args: cli_args)
+              repair_runner = @prompt_bundler.prepare_runner(
+                scenario: scenario,
+                sandbox_path: sandbox_path,
+                test_cases: test_cases,
+                artifact_contract: artifact_contract,
+                repair_mode: true
+              )
+              repair_response = run_llm(
+                prompt_path: repair_runner[:prompt_path],
+                system_path: repair_runner[:system_path],
+                output_path: repair_runner[:output_path],
+                cli_args: cli_args,
+                env_vars: merged_env,
+                subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: merged_env),
+                provider: @provider,
+                fallback: false
+              )
+              repair_observations = extract_runner_observations(repair_response[:text])
+              runner_observations = merge_runner_observations(runner_observations, repair_observations)
+              artifact_contract = snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases: test_cases)
+            else
+              write_artifact_snapshot(report_dir, "artifact-snapshot.json", artifact_contract)
+            end
 
             verifier = @prompt_bundler.prepare_verifier(
               scenario: scenario,
@@ -98,7 +133,8 @@ module Ace
               cli_args: cli_args,
               env_vars: merged_env,
               subprocess_command_prefix: sandbox_backend.command_prefix(chdir: sandbox_path, env: merged_env),
-              provider: @verifier_provider
+              provider: @verifier_provider,
+              fallback: query_fallback_for(@verifier_provider)
             )
 
             @report_generator.generate(
@@ -111,7 +147,8 @@ module Ace
               metadata: base_metadata(
                 report_dir,
                 runner_observations: runner_observations,
-                artifact_contract: artifact_contract
+                artifact_contract: artifact_contract,
+                initial_artifact_contract: initial_artifact_contract
               )
             )
           rescue => e
@@ -140,7 +177,7 @@ module Ace
 
           private
 
-          def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:, subprocess_command_prefix:, provider:)
+          def run_llm(prompt_path:, system_path:, output_path:, cli_args:, env_vars:, subprocess_command_prefix:, provider:, fallback:)
             prompt = File.read(prompt_path)
             system = File.read(system_path)
             sandbox_dir = env_vars["PROJECT_ROOT_PATH"] || env_vars[:PROJECT_ROOT_PATH]
@@ -151,12 +188,16 @@ module Ace
               system: system,
               cli_args: cli_args,
               timeout: @timeout,
-              fallback: false,
+              fallback: fallback,
               output: output_path,
               subprocess_env: env_vars,
               subprocess_command_prefix: subprocess_command_prefix,
               working_dir: sandbox_dir
             )
+          end
+
+          def query_fallback_for(provider)
+            provider.to_s.start_with?("role:")
           end
 
           def write_tc_manifests(report_dir, scenario, test_cases:)
@@ -190,12 +231,18 @@ module Ace
             )
           end
 
-          def snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases:)
-            snapshot = select_test_cases(scenario, test_cases).to_h do |test_case|
+          def snapshot_artifacts(report_dir, sandbox_path, scenario, test_cases:, snapshot_name: "artifact-snapshot.json")
+            snapshot = declared_artifact_contract(scenario, test_cases: test_cases, sandbox_path: sandbox_path)
+            write_artifact_snapshot(report_dir, snapshot_name, snapshot)
+            snapshot
+          end
+
+          def declared_artifact_contract(scenario, test_cases:, sandbox_path: nil)
+            select_test_cases(scenario, test_cases).to_h do |test_case|
               required = Array(test_case.declared_artifacts).sort
               optional = Array(test_case.optional_artifacts).sort
-              present_required = required.select { |path| File.exist?(File.join(sandbox_path, path)) }
-              present_optional = optional.select { |path| File.exist?(File.join(sandbox_path, path)) }
+              present_required = present_artifacts(required, sandbox_path)
+              present_optional = present_artifacts(optional, sandbox_path)
               missing_required = required - present_required
 
               [test_case.tc_id, {
@@ -207,8 +254,31 @@ module Ace
                 "present_optional_artifacts" => present_optional
               }]
             end
-            File.write(File.join(report_dir, "artifact-snapshot.json"), JSON.pretty_generate(snapshot))
-            snapshot
+          end
+
+          def write_artifact_snapshot(report_dir, snapshot_name, snapshot)
+            File.write(File.join(report_dir, snapshot_name), JSON.pretty_generate(snapshot))
+          end
+
+          def present_artifacts(paths, sandbox_path)
+            return [] unless sandbox_path
+
+            Array(paths).select { |path| File.exist?(File.join(sandbox_path, path)) }
+          end
+
+          def missing_required_artifacts?(artifact_contract)
+            artifact_contract.any? do |_tc_id, entry|
+              Array(entry["missing_required_artifacts"]).any?
+            end
+          end
+
+          def merge_runner_observations(initial_observations, repair_observations)
+            initial = initial_observations.to_s.strip
+            repair = repair_observations.to_s.strip
+            return initial if repair.empty?
+            return repair if initial.empty?
+
+            "#{initial}\n\nRepair pass:\n#{repair}"
           end
 
           def select_test_cases(scenario, test_cases)
@@ -218,7 +288,7 @@ module Ace
             Array(scenario.test_cases).select { |tc| wanted.include?(tc.tc_id.to_s.upcase) }
           end
 
-          def base_metadata(report_dir, runner_observations: nil, artifact_contract: nil)
+          def base_metadata(report_dir, runner_observations: nil, artifact_contract: nil, initial_artifact_contract: nil)
             metadata = {
               "runner_provider" => @provider,
               "verifier_provider" => @verifier_provider,
@@ -231,6 +301,12 @@ module Ace
               metadata["missing_required_artifacts"] = artifact_contract.to_h.transform_values do |entry|
                 Array(entry["missing_required_artifacts"])
               end.reject { |_tc_id, paths| paths.empty? }
+            end
+            if initial_artifact_contract
+              metadata["initial_missing_required_artifacts"] = initial_artifact_contract.to_h.transform_values do |entry|
+                Array(entry["missing_required_artifacts"])
+              end.reject { |_tc_id, paths| paths.empty? }
+              metadata["artifact_repair_attempted"] = true if missing_required_artifacts?(initial_artifact_contract)
             end
             metadata
           end

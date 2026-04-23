@@ -36,6 +36,57 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_git_init_seeds_default_and_custom_git_excludes
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: ["git-init"],
+        sandbox_dir: sandbox,
+        git_excludes: ["ace-demo/", ".ace-handbook/"]
+      )
+
+      assert result[:success]
+
+      exclude_path = File.join(sandbox, ".git", "info", "exclude")
+      patterns = File.readlines(exclude_path, chomp: true)
+
+      assert_includes patterns, ".ace-local/"
+      assert_includes patterns, "reports/"
+      assert_includes patterns, "results/"
+      assert_includes patterns, "ace-demo/"
+      assert_includes patterns, ".ace-handbook/"
+    end
+  end
+
+  def test_git_excludes_keep_support_paths_out_of_fixture_commit
+    Dir.mktmpdir do |sandbox|
+      FileUtils.mkdir_p(File.join(sandbox, ".ace-local", "e2e-runtime"))
+      FileUtils.mkdir_p(File.join(sandbox, "ace-demo"))
+      FileUtils.mkdir_p(File.join(sandbox, "results", "tc", "01"))
+      File.write(File.join(sandbox, ".ace-local", "e2e-runtime", "runtime.txt"), "runtime")
+      File.write(File.join(sandbox, "ace-demo", "copied.txt"), "copied")
+      File.write(File.join(sandbox, "results", "tc", "01", "artifact.txt"), "artifact")
+      File.write(File.join(sandbox, "keep.txt"), "keep")
+
+      result = @executor.execute(
+        setup_steps: [
+          "git-init",
+          {"run" => "git add -A && git commit -m 'initial' --quiet"},
+          {"run" => "git ls-files > tracked.txt"}
+        ],
+        sandbox_dir: sandbox,
+        git_excludes: ["ace-demo/"]
+      )
+
+      assert result[:success]
+
+      tracked = File.read(File.join(sandbox, "tracked.txt"))
+      assert_includes tracked, "keep.txt"
+      refute_includes tracked, ".ace-local/e2e-runtime/runtime.txt"
+      refute_includes tracked, "ace-demo/copied.txt"
+      refute_includes tracked, "results/tc/01/artifact.txt"
+    end
+  end
+
   def test_copy_fixtures
     Dir.mktmpdir do |tmpdir|
       sandbox = File.join(tmpdir, "sandbox")

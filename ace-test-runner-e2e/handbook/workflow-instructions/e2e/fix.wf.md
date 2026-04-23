@@ -110,6 +110,7 @@ Apply fixes in this order:
 - Preserve role split: runner is execution-only, verifier is impact-first verdict
 - Keep implementation unchanged unless analysis is revised
 - Remove hidden recipes, workaround branches, and unsupported internal-detail checks from goal-style TCs
+- Repair undeclared or wildcard artifact contracts before weakening product assertions
 
 4. Rerun the selected failing scope after each fix
 
@@ -150,6 +151,12 @@ ace-test-e2e ace-bundle TS-BUNDLE-001
 - Keep one active scenario/TC at a time
 - Preserve cost-conscious rerun discipline
 
+6a. If the fix changes a public contract, run a downstream retained-E2E sweep
+
+- Trigger this sweep when the fix changes status words, JSON keys, command shapes, lifecycle semantics, or ownership/state semantics
+- Grep impacted scenarios and downstream consumers before concluding the fix
+- Update retained runner/verifier contracts in the same change set whenever feasible
+
 7. Run a final explicit failing-scenario checkpoint before concluding the fix session
 
 After the currently targeted failures are addressed, require one final:
@@ -177,6 +184,18 @@ Analysis Source: reused existing analysis | generated via `wfi://e2e/analyze-fai
 | Scenario / TC | Category | Change Applied | Verification Command | Result |
 |---|---|---|---|---|
 | ... | ... | ... | ... | pass/fail |
+```
+
+Also include:
+
+```markdown
+## Fix Classification Totals
+
+| Bucket | Count |
+|---|---|
+| Product bug | {n} |
+| Harness bug | {n} |
+| Retained test/spec drift | {n} |
 ```
 
 If the analysis reported docs/help drift, include:

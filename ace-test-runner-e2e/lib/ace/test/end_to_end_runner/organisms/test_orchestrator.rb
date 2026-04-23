@@ -133,6 +133,7 @@ module Ace
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
+            setup_steps = effective_setup_steps_for(scenario)
             package_copy = Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir)
             package_source = File.join(@base_dir, scenario.package.to_s)
             package_copy_result = if File.directory?(package_source)
@@ -148,7 +149,8 @@ module Ace
                 }
               }
             end
-            Molecules::PipelineSandboxBuilder.new(config_root: @base_dir).sync_protocol_sources_into(sandbox_dir)
+            sandbox_builder = Molecules::PipelineSandboxBuilder.new(config_root: @base_dir)
+            protocol_packages = sandbox_builder.sync_protocol_sources_into(sandbox_dir)
             runtime_result = @runtime_builder.prepare(
               sandbox_root: sandbox_dir,
               env: package_copy_result[:env],
@@ -164,12 +166,17 @@ module Ace
               @setup_executor_factory.call(sandbox_backend: sandbox_backend)
             end
             result = setup_executor.execute(
-              setup_steps: effective_setup_steps_for(scenario),
+              setup_steps: setup_steps,
               sandbox_dir: sandbox_dir,
               fixture_source: scenario.fixture_path,
               scenario_name: scenario.test_id,
               run_id: timestamp,
-              initial_env: runtime_result[:env]
+              initial_env: runtime_result[:env],
+              git_excludes: sandbox_support_git_excludes(
+                scenario,
+                protocol_packages,
+                setup_steps: setup_steps
+              )
             )
 
             unless result[:success]
@@ -206,6 +213,30 @@ module Ace
           def setup_contains_command?(steps, fragment)
             steps.any? do |step|
               step.is_a?(Hash) && step["run"].to_s.include?(fragment)
+            end
+          end
+
+          def sandbox_support_git_excludes(scenario, protocol_packages, setup_steps:)
+            package_paths = ([scenario.package] + Array(protocol_packages))
+              .map(&:to_s)
+              .map(&:strip)
+              .reject(&:empty?)
+              .uniq
+              .sort
+              .map { |name| "#{name}/" }
+
+            # Most scenarios need the copied package tree to stay visible to tools
+            # like rg/fd. Only fixture-commit setup flows should hide the copied
+            # support trees from git staging.
+            return [] unless setup_contains_initial_commit?(setup_steps)
+
+            support_paths = [".ace-handbook/", ".ace/git/", ".ace/llm/providers/"]
+            (package_paths + support_paths).uniq
+          end
+
+          def setup_contains_initial_commit?(steps)
+            steps.any? do |step|
+              step.is_a?(Hash) && step["run"].to_s.match?(/\bgit\s+add\b.*\bgit\s+commit\b/m)
             end
           end
 

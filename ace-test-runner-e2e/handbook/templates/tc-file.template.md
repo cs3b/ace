@@ -22,7 +22,9 @@ ace-docs:
 
 - Use only declared scenario tools (`ace-*` and explicit exceptions)
 - Keep only product outcomes or essential command captures under `results/tc/{NN}/`
-- Do not write helper inputs, reflections, manifests, or temp files under `results/tc/{NN}/`
+- Declare every verifier-dependent path explicitly in the runner or scenario setup
+- Grouped capture shorthand such as ``results/tc/{NN}/cmd.stdout`, `.stderr`, `.exit`` is allowed for exact sibling files
+- Do not write helper inputs, reflections, PASS/FAIL summaries, manifests, or temp files under `results/tc/{NN}/`
 - Do not write outside sandbox
 - Execute actions only; do not assign PASS/FAIL in runner file
 - Follow the public user path from docs/usage/`--help`; do not embed hidden recipes or workaround branches in the TC
@@ -51,5 +53,5 @@ Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
 
 ## Verdict
 
-- Pass when the public path works from sandbox evidence. Missing helper artifacts alone should not fail the goal.
+- Pass when the public path or retained contract is satisfied from sandbox evidence. Undeclared helper artifacts alone should not fail the goal.
 -->

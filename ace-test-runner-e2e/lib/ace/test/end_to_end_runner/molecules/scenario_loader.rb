@@ -256,27 +256,39 @@ module Ace
 
           def declared_artifacts_for(scenario_dir, tc_id, runner_content, verify_content)
             scenario_frontmatter = parse_scenario_yml(File.join(scenario_dir, "scenario.yml"))
-            required_artifacts = []
-            optional_artifacts = []
-
-            required_artifacts.concat(
+            scenario_references = Atoms::ArtifactContractValidator.references_from_paths(
               Array((scenario_frontmatter["sandbox-layout"] || {}).keys).select do |path|
                 declared_artifact_matches_tc?(path, tc_id)
-              end
+              end,
+              source: File.join(scenario_dir, "scenario.yml")
+            )
+            runner_references = Atoms::ArtifactContractValidator.extract(
+              runner_content,
+              source: File.join(scenario_dir, "#{tc_id}.runner.md")
+            )
+            verifier_references = Atoms::ArtifactContractValidator.extract(
+              verify_content,
+              source: File.join(scenario_dir, "#{tc_id}.verify.md")
             )
 
-            [runner_content, verify_content].each do |content|
-              extract_declared_artifacts(content).each do |entry|
-                if entry[:optional]
-                  optional_artifacts << entry[:path]
-                else
-                  required_artifacts << entry[:path]
-                end
-              end
-            end
+            Atoms::ArtifactContractValidator.validate!(
+              tc_id: tc_id,
+              scenario_dir: scenario_dir,
+              runner_references: runner_references,
+              verifier_references: verifier_references,
+              scenario_references: scenario_references
+            )
 
-            required = required_artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq
-            optional = optional_artifacts.map { |path| normalize_declared_artifact(path) }.compact.uniq
+            required = (scenario_references + runner_references)
+              .reject(&:optional)
+              .map(&:path)
+              .compact
+              .uniq
+            optional = runner_references
+              .select(&:optional)
+              .map(&:path)
+              .compact
+              .uniq
             optional = optional.reject { |path| required.include?(path) }
 
             [required.sort, optional.sort]
@@ -298,20 +310,6 @@ module Ace
           def extract_tc_index(tc_id)
             match = tc_id.to_s.match(/\ATC-(\d+)/i)
             match ? match[1].to_i : nil
-          end
-
-          def extract_declared_artifacts(markdown)
-            markdown.to_s.scan(%r{(?:`|"|')?(results/tc/\d{2}/[^\s`)"']+|results/tc/\d{2}/)(?:`|"|')?(\s*\(optional\))?}i).map do |match|
-              path, optional = match
-              {path: path, optional: !optional.to_s.empty?}
-            end
-          end
-
-          def normalize_declared_artifact(path)
-            value = path.to_s.strip
-            return nil unless value.start_with?("results/tc/")
-
-            value.sub(%r{/+\z}, "")
           end
 
           # Infer package name from scenario directory path

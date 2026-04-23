@@ -46,7 +46,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 |-------|------|---------|-------------|
 | `priority` | string | `medium` | Test priority: `high`, `medium`, `low` |
 | `tool-under-test` | string | — | Primary command/tool validated |
-| `sandbox-layout` | object | `{}` | Outcome-path hints used to precreate directories and guide verification |
+| `sandbox-layout` | object | `{}` | Directory-level outcome hints used to precreate `results/tc/*` paths and guide verification |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `timeout` | integer | — | Optional per-scenario execution timeout in seconds |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
@@ -73,7 +73,10 @@ Pairing rule:
 Artifact layout conventions:
 - canonical: `results/tc/{NN}/`
 - avoid non-TC-scoped result folders
-- keep only real outcome artifacts under `results/tc/{NN}/`; runner observations live in harness reports, not sandbox helper files
+- keep only declared verifier-dependent evidence under `results/tc/{NN}/`; runner observations live in harness reports, not sandbox helper files
+- file-level verifier checks must be declared by the runner; `sandbox-layout` does not replace exact file declarations
+- grouped shorthand such as ``results/tc/01/help.stdout`, `.stderr`, `.exit`` is valid for exact sibling captures
+- wildcard artifact paths are not supported
 - absence of a declared path is debug context, not a standalone failure reason
 
 Canonical summary report fields:
@@ -85,7 +88,8 @@ Canonical summary report fields:
 Role contract:
 - `runner.yml.md` + `TC-*.runner.md` are execution-only.
 - `verifier.yml.md` + `TC-*.verify.md` are verification-only with impact-first checks.
-- Goal-style scenarios should be solvable from the public surface (docs/usage/`--help` + tool under test) without hidden recipes or workaround instructions.
+- Public-surface TCs should be solvable from the public surface (docs/usage/`--help` + tool under test) without hidden recipes or workaround instructions.
+- Retained-contract TCs may keep small declared supporting captures when they materially improve confidence.
 
 ## `requires` Object
 
@@ -130,6 +134,7 @@ setup:
 Setup rules:
 - Setup is fail-fast. Do not hide setup failures with `|| true`.
 - Setup belongs in `scenario.yml` and fixtures, not in TC runner instructions.
+- Use setup to create prerequisite state, not verifier-facing helper files under `results/`.
 - If setup fails (for example, missing `mise trust` support), stop scenario execution and report infrastructure failure.
 
 ## Complete Example

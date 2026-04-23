@@ -14,7 +14,8 @@ This workflow performs deep exploration of a package to produce a **coverage mat
 During review, treat the runner/verifier split as a first-class quality check:
 - Runner must be execution-only (no verdict language).
 - Verifier must be impact-first (sandbox impact before runner observations and debug).
-- `results/tc/{NN}/` must not be used for helper inputs or verifier-feeding helper reports.
+- `results/tc/{NN}/` must contain only declared verifier-dependent evidence.
+- Every verifier-dependent artifact path must be declared by runner/setup; verifier-only or wildcard references are contract drift.
 - Goal-style TCs must also pass the public-surface check: the runner should be able to do the job from docs/usage/`--help` and the tool under test, without hidden recipes or workarounds.
 
 **Pipeline position:** Stage 1 of 3 (Explore)
@@ -117,6 +118,9 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
   - `tags`, `cost-tier`, `e2e-justification`, `unit-coverage-reviewed`
   - `last-verified`, `verified-by`
 - Extract the objective (what the TC verifies)
+- Record TC style:
+  - `public-surface`
+  - `retained-contract`
 - Record the TC's primary oracle:
   - final sandbox state / real product output
   - runner observations as supporting context
@@ -134,15 +138,15 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 - Mark TC evidence status:
   - `complete` when `e2e-justification` is present, the verifier is end-state-first, and `unit-coverage-reviewed` has at least one path
   - `missing` otherwise
-  - `at-risk` when evidence is existence-only, helper-artifact-driven, duplicate command invocations are detected, or the TC is hidden-recipe/workaround-driven
+  - `at-risk` when evidence is existence-only, helper-artifact-driven, duplicate command invocations are detected, the TC is hidden-recipe/workaround-driven, or verifier-dependent artifacts are undeclared
 
 If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | Command Invocations | Feature Tested | Primary Oracle | Public Surface Fit | Friction | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
-|-------|-------|-------------|----------------|----------------|--------------------|----------|------|-----------|-------------------|------------------------|----------|---------------------|
-| {id} | {title} | {command list} | {feature} | {state / output / observations+fallback} | {valid/hidden-recipe/workaround/unsupported-detail} | {low/medium/high} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
+| TC ID | Style | Title | Command Invocations | Feature Tested | Primary Oracle | Public Surface Fit | Artifact Contract | Friction | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence | False-Positive Risk |
+|-------|-------|-------|-------------|----------------|----------------|--------------------|-------------------|----------|------|-----------|-------------------|------------------------|----------|---------------------|
+| {id} | {public-surface/retained-contract} | {title} | {command list} | {feature} | {state / output / observations+fallback} | {valid/hidden-recipe/workaround/unsupported-detail} | {declared/undeclared/wildcard} | {low/medium/high} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing/at-risk} | {low/medium/high} |
 
 ### 5. Build Coverage Matrix
 
@@ -214,12 +218,12 @@ TCs that may fail the E2E Value Gate (unit tests cover the same behavior or high
 
 ### E2E Decision Record Coverage
 
-| TC ID | Evidence Status | Public Surface Fit | Friction | Missing Fields / Contract Drift |
-|-------|------------------|--------------------|----------|-------------------------------|
-| {id} | complete | valid | low | none |
-| {id} | missing | hidden-recipe-driven | high | e2e-justification, unit-coverage-reviewed, end-state oracle |
+| TC ID | Style | Evidence Status | Public Surface Fit | Artifact Contract | Friction | Missing Fields / Contract Drift |
+|-------|-------|------------------|--------------------|-------------------|----------|-------------------------------|
+| {id} | public-surface | complete | valid | declared | low | none |
+| {id} | retained-contract | missing | hidden-recipe-driven | undeclared | high | e2e-justification, unit-coverage-reviewed, end-state oracle |
 
-**Action:** Any TC with missing evidence, helper-artifact drift, hidden recipes, workaround dependence, or unsupported internal-detail checks should be updated during the next rewrite cycle.
+**Action:** Any TC with missing evidence, undeclared/wildcard artifact drift, hidden recipes, workaround dependence, or unsupported internal-detail checks should be updated during the next rewrite cycle.
 
 ### Gap Analysis
 
