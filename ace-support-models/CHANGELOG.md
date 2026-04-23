@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-04-23
+
+### Technical
+- Kept retained provider smoke coverage on one explicit `XDG_CACHE_HOME` across `sync`, `list`, and `show` so the scenario reads a single deterministic cache root.
+
 ## [0.11.2] - 2026-04-16
 
 ### Fixed
