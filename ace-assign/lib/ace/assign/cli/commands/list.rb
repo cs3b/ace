@@ -93,7 +93,7 @@ module Ace
             # Header
             puts format(
               "%-#{COL_ID}s %-#{COL_NAME}s %-#{COL_STATUS}s %-#{COL_PROGRESS}s %-#{COL_STEP}s %s",
-              "ID", "NAME", "STATUS", "PROGRESS", "CURRENT STEP", "UPDATED"
+              "ID", "NAME", "STATUS", "PROGRESS", "ACTIVE/NEXT", "UPDATED"
             )
             puts "-" * 95
 
@@ -104,7 +104,7 @@ module Ace
 
               name_display = truncate(info.name.to_s, COL_NAME - 1)
               state_display = STATE_LABELS[info.state] || info.state.to_s
-              step_display = truncate(info.current_step, COL_STEP - 1)
+              step_display = truncate(info.step_focus, COL_STEP - 1)
               updated_display = format_relative_time(info.updated_at)
 
               puts format(
@@ -130,7 +130,8 @@ module Ace
                 name: info.name,
                 state: info.state.to_s,
                 progress: info.progress,
-                current_step: info.current_step,
+                active_steps: info.active_steps.map(&:name),
+                next_step: info.next_step&.name,
                 updated_at: info.updated_at.iso8601,
                 is_current: info.id == current_id
               }

@@ -114,7 +114,7 @@ class StepTest < AceAssignTestCase
     step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
-      status: :in_progress,
+      status: :active,
       instructions: "Test",
       started_at: now
     )
@@ -122,7 +122,7 @@ class StepTest < AceAssignTestCase
     fm = step.to_frontmatter
 
     assert_equal "init", fm["name"]
-    assert_equal "in_progress", fm["status"]
+    assert_equal "active", fm["status"]
     assert_equal "2026-01-28T12:00:00Z", fm["started_at"]
   end
 
@@ -211,7 +211,7 @@ class StepTest < AceAssignTestCase
     step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "work-on-task",
-      status: :in_progress,
+      status: :active,
       instructions: "Run fork execution",
       fork_launch_pid: 35_5349,
       fork_tracked_pids: [3_553_666, 3_553_667],
@@ -242,7 +242,7 @@ class StepTest < AceAssignTestCase
     step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
-      status: :in_progress,
+      status: :active,
       instructions: "Test",
       stall_reason: "I need direction before continuing."
     )
@@ -254,7 +254,7 @@ class StepTest < AceAssignTestCase
     step = Ace::Assign::Models::Step.new(
       number: "010",
       name: "init",
-      status: :in_progress,
+      status: :active,
       instructions: "Test",
       stall_reason: "Unexpected state encountered."
     )

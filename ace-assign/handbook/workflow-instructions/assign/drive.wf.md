@@ -12,8 +12,8 @@ doc-type: workflow
 title: Drive Assignment Workflow
 purpose: workflow instruction for driving ace-assign assignment execution
 ace-docs:
-  last-updated: 2026-04-12
-  last-checked: 2026-03-21
+  last-updated: '2026-04-23'
+  last-checked: '2026-04-23'
 ---
 
 # Drive Assignment Workflow
@@ -25,7 +25,7 @@ Drive agent execution through an active assignment by continuously checking stat
 ## Prerequisites
 
 - An active assignment exists (created via `ace-assign create` or `/as-assign-create`)
-- Assignment has at least one pending or in_progress step
+- Assignment has at least one pending or active step
 
 ## Assignment Context Propagation
 
@@ -81,7 +81,7 @@ ace-assign status --assignment abc123@010.01
 ace-assign finish --message done.md --assignment abc123@010.01
 ```
 
-When an assignment target includes scope (`<id>@<root>`), `ace-assign finish --message` advances only within that subtree and stops when the subtree is complete.
+When an assignment target includes scope (`<id>@<root>`), `ace-assign finish --message` finishes only within that subtree. Pending descendants remain pending until scoped execution explicitly starts them.
 
 Helper command:
 
@@ -139,7 +139,7 @@ ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json
 
 You may only stop and send a final response when one of these is true:
 
-- the pinned assignment has no remaining runnable `pending` or `in_progress` work
+- the pinned assignment has no remaining runnable `pending` or `active` work
 - the workflow recorded an explicit blocker or unrecoverable failure stop condition
 - the user explicitly interrupted or canceled execution
 
@@ -148,11 +148,11 @@ Do **not** send a final response merely because:
 - one child subtree completed
 - useful progress was made
 - a prior terminal session ended
-- the parent assignment auto-advanced to the next active step
+- the parent assignment surfaced the next pending step after active work finished
 
 Concrete example:
 
-- `010.01 done` and `010.02.01 in_progress` means continue driving the assignment. It is not a completion boundary.
+- `010.01 done` and `010.02.01 active` means continue driving the assignment. It is not a completion boundary.
 
 ### Step Execution Policy
 
@@ -216,7 +216,7 @@ echo "$STATUS_OUTPUT"
 Read the output to identify:
 
 - Assignment ID (must remain equal to pinned `ASSIGNMENT_ID`)
-- Current step number, name, and status
+- Active step list in scope, or next step when nothing is active
 - Remaining visible steps in the queue preview
 - Hidden-step counts for large queues
 
@@ -375,7 +375,7 @@ Conversational boundary rule:
 STATUS_JSON=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
 ASSIGNMENT_ID=$(echo "$STATUS_JSON" | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
 FORK_ROOT=$(echo "$STATUS_JSON" | ruby -rjson -e '
-  p = JSON.parse(STDIN.read)["current_step"]
+  p = Array(JSON.parse(STDIN.read)["active_steps"]).first
   puts p["number"] if p && p["context"] == "fork"
 ')
 if [ -n "$FORK_ROOT" ]; then
@@ -423,7 +423,7 @@ Immediately after the fork wait ends, run this checklist in order:
    ace-assign start --assignment "$ASSIGNMENT_TARGET"
    ```
 
-6. If pending or `in_progress` work remains and no blocker was recorded, continue the main loop immediately.
+6. If pending or `active` work remains and no blocker was recorded, continue the main loop immediately.
 7. Only stop if the assignment now satisfies a real stop condition from [Run-Until-Blocked Contract](#run-until-blocked-contract).
 
 Detached-resume rule:
@@ -509,7 +509,7 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 
 After all fork subtrees within a batch container complete, the container auto-marks as Done. However, the queue pointer may not automatically advance to the next top-level step.
 
-**After verifying all fork subtree reports**, if `ace-assign status` shows no Active step (all completed steps but no new in-progress step), run:
+**After verifying all fork subtree reports**, if `ace-assign status` shows no active step (all completed steps but no new active step), run:
 
 ```bash
 ace-assign start --assignment "$ASSIGNMENT_TARGET"
@@ -717,7 +717,7 @@ Creates a new step linked to the original. Original remains visible as failed.
 ace-assign add "fix-issue" --instructions "Fix the failing tests and verify" --assignment "$ASSIGNMENT_TARGET"
 ```
 
-New step is inserted after the current in-progress step.
+New step is inserted after the current active step.
 
 When the failure evidence is E2E-specific (`ace-test-e2e`, scenario IDs, or `.ace-local/test-e2e/` artifacts), prefer:
 
@@ -748,8 +748,8 @@ echo "$FINAL_STATUS"
 
 Required checks:
 
-- If any steps remain `pending` or `in_progress` and no explicit blocker was recorded, resume the loop instead of stopping.
-- If the assignment is `paused`, `current_step` is `null`, and pending steps remain, run:
+- If any steps remain `pending` or `active` and no explicit blocker was recorded, resume the loop instead of stopping.
+- If the assignment is `paused`, `active_steps` is empty, and `next_step` is present, run:
 
   ```bash
   ace-assign start --assignment "$ASSIGNMENT_TARGET"
@@ -832,7 +832,7 @@ When executing a step with a `skill:` field:
 | Status | Meaning | Next Action |
 |--------|---------|-------------|
 | `pending` | Step not started | Cannot execute (wait for queue) |
-| `in_progress` | Step is active | Execute this step |
+| `active` | Step is active | Execute this step |
 | `done` | Step completed | Move to next step |
 | `failed` | Step failed | Decide: retry, add fix, or abort |
 
@@ -846,11 +846,11 @@ When executing a step with a `skill:` field:
 │   ├── assignment.yaml           # Assignment metadata
 │   ├── steps/                   # Step files (.st.md extension)
 │   │   ├── 010-init.st.md       # done
-│   │   ├── 020-implement.st.md  # in_progress
+│   │   ├── 020-implement.st.md  # active
 │   │   └── 030-test.st.md       # pending
 │   └── reports/                  # Report files (.r.md extension)
 │       ├── 010-init.r.md        # completed report
-│       └── 020-implement.r.md   # in-progress report
+│       └── 020-implement.r.md   # active-step report
 └── def456/
     ├── assignment.yaml
     ├── steps/
@@ -897,28 +897,33 @@ $ ASSIGNMENT_TARGET=8or5kx
 
 # 1. Check status
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
-Step 010: onboard [in_progress]
+Next: 010 onboard
 
-# 2. Execute step (has skill: onboard)
+# 2. Start the next pending step
+$ ace-assign start --assignment "$ASSIGNMENT_TARGET"
+[Step 010 becomes active]
+
+# 3. Execute step (has skill: onboard)
 $ /as-onboard
 [Onboarding workflow runs...]
 
-# 3. Write report
+# 4. Write report
 $ ace-assign finish --message onboard-complete.md --assignment "$ASSIGNMENT_TARGET"
-Step 010 marked done, advancing to 020
+[Step 010 marked done]
 
-# 4. Check status again
+# 5. Check status again
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
-Step 020: work-on-task [in_progress]
+Next: 020 work-on-task
 
-# 5. Execute next step (has skill: as-task-work)
+# 6. Start and execute next step (has skill: as-task-work)
+$ ace-assign start --assignment "$ASSIGNMENT_TARGET"
 $ /as-task-work 148
 [Task workflow runs...]
 
-# 6. Report and continue...
+# 7. Report and continue...
 $ ace-assign finish --message task-done.md --assignment "$ASSIGNMENT_TARGET"
 
-# 7. Eventually...
+# 8. Eventually...
 $ ace-assign status --assignment "$ASSIGNMENT_TARGET"
 All steps complete!
 ```

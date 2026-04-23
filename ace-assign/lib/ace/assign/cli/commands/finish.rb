@@ -4,12 +4,12 @@ module Ace
   module Assign
     module CLI
       module Commands
-        # Complete in-progress step with report content
+        # Complete active step with report content
         class Finish < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
           include AssignmentTarget
 
-          desc "Complete in-progress step with report content"
+          desc "Complete active step with report content"
 
           argument :step, required: false, desc: "Step number to finish (active assignment only)"
           option :message, aliases: ["-m"], desc: "Report content: string, file path, or pipe stdin"
@@ -41,9 +41,23 @@ module Ace
             report_path = File.join(assignment.reports_dir, report_filename)
             puts "Report saved to: #{report_path}"
 
-            if result[:current]
-              puts "Advancing to step #{result[:current].number}: #{result[:current].name}"
-              puts "Next: ace-assign step#{step_target_suffix(result[:current].number, options[:assignment])}"
+            scoped_state = if target.scope && !target.scope.to_s.strip.empty?
+              Ace::Assign::Models::QueueState.new(
+                steps: result[:state].subtree_steps(target.scope.strip),
+                assignment: assignment
+              )
+            else
+              result[:state]
+            end
+
+            active_steps = scoped_state.active_steps
+            if active_steps.any?
+              focused = scoped_state.current
+              puts "Active steps remaining: #{active_steps.map { |step| "#{step.number} #{step.name}" }.join(', ')}"
+              puts "Next: ace-assign step#{step_target_suffix(focused.number, options[:assignment])}" if focused
+            elsif (next_step = scoped_state.next_workable)
+              puts "No active step selected."
+              puts "Next pending step: #{next_step.number} - #{next_step.name}"
             else
               fork_root = target.scope&.strip
               if fork_root && result[:state].subtree_complete?(fork_root)

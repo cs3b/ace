@@ -45,7 +45,7 @@ class CreateCommandTest < AceAssignTestCase
         File.join(Dir.pwd, ".ace-local", "assign", "8qqgyk"),
         path
       )
-      current = Struct.new(:number, :name, :status, :instructions).new("010", "onboard", "in_progress", "Load context")
+      current = Struct.new(:number, :name, :status, :instructions).new("010", "onboard", "active", "Load context")
       {assignment: assignment, current: current}
     end
   end

@@ -98,12 +98,6 @@ module Ace
             )
           end
 
-          # Mark first workable step as in_progress.
-          # This skips batch parent containers that have incomplete children.
-          initial_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
-          first_workable = initial_state.next_workable
-          step_writer.mark_in_progress(first_workable.file_path) if first_workable
-
           # Archive source config into task's steps directory and update assignment metadata
           archived_path = archive_source_config(config_path, assignment.id)
           assignment = Models::Assignment.new(
@@ -145,7 +139,6 @@ module Ace
         # Start a pending step.
         #
         # Rules:
-        # - Fails if any step is already in progress (strict mode)
         # - Starts an explicit pending target when provided
         # - Otherwise starts the next workable pending step
         #
@@ -157,7 +150,6 @@ module Ace
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
-          raise StepErrors::InvalidState, "Cannot start: step #{state.current.number} is already in progress. Finish or fail it first." if state.current
 
           fork_root = fork_root&.strip
           target_step = if step_number && !step_number.to_s.strip.empty?
@@ -176,7 +168,8 @@ module Ace
             raise StepErrors::InvalidState, "No pending workable step found."
           end
 
-          step_writer.mark_in_progress(target_step.file_path)
+          validate_start_activation!(state, target_step, fork_root: fork_root)
+          step_writer.mark_active(target_step.file_path)
           assignment_manager.update(assignment)
 
           new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
@@ -188,10 +181,10 @@ module Ace
           }
         end
 
-        # Finish an in-progress step and advance queue state.
+        # Finish an active step and update queue state.
         #
         # @param report_content [String] Completion report content
-        # @param step_number [String, nil] Optional in-progress step number to finish
+        # @param step_number [String, nil] Optional active step number to finish
         # @param fork_root [String, nil] Optional subtree root to constrain advancement
         # @return [Hash] Result with completed step and updated state
         def finish_step(report_content:, step_number: nil, fork_root: nil)
@@ -200,7 +193,7 @@ module Ace
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           current = find_target_step_for_finish(state, step_number, fork_root)
-          raise Error, "No step currently in progress. Try 'ace-assign start' or 'ace-assign retry'." unless current
+          raise Error, "No step currently active. Try 'ace-assign start' or 'ace-assign retry'." unless current
 
           # Enforce hierarchy: cannot mark parent as done with incomplete children
           if state.has_incomplete_children?(current.number)
@@ -221,18 +214,6 @@ module Ace
           # Re-scan to get fresh state after auto-completions
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
 
-          fork_root = fork_root&.strip
-          # Find next step to work on using hierarchical rules.
-          # When fork_root is provided, keep advancement inside that subtree.
-          next_step = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
-            find_next_step_in_subtree(state, current.number, fork_root)
-          else
-            find_next_step(state, current.number)
-          end
-          if next_step
-            step_writer.mark_in_progress(next_step.file_path)
-          end
-
           assignment_manager.update(assignment)
 
           new_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
@@ -244,39 +225,13 @@ module Ace
           }
         end
 
-        # Complete current step with report and advance
-        #
-        # Legacy bridge: preserves single-call semantics for fork-run callers.
-        # Previously, advance() auto-started the next step as a side effect.
-        # The new start/finish split makes this explicit, but advance() retains
-        # the auto-start behavior for subtree entry so fork-run workflows
-        # (which call advance() with fork_root) continue to work unchanged.
+        # Complete current step with report content from a file.
         #
         # @param report_path [String] Path to report file
         # @param fork_root [String, nil] Optional subtree root to constrain advancement
         # @return [Hash] Result with updated state
         def advance(report_path, fork_root: nil)
           raise ConfigErrors::NotFound, "Report file not found: #{report_path}" unless File.exist?(report_path)
-
-          # Auto-start the next workable subtree step when fork_root is given but
-          # no step in the subtree is yet in_progress (subtree entry case).
-          fork_root_str = fork_root&.strip
-          if fork_root_str && !fork_root_str.empty?
-            assignment = assignment_manager.find_active
-            if assignment
-              state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
-              active_in_subtree = state.in_progress_in_subtree(fork_root_str)
-              if active_in_subtree.size > 1
-                active_refs = active_in_subtree.map { |step| "#{step.number}(#{step.name})" }.join(", ")
-                raise StepErrors::InvalidState, "Cannot advance subtree #{fork_root_str}: multiple steps are in progress (#{active_refs})."
-              end
-
-              if active_in_subtree.empty?
-                next_workable = state.next_workable_in_subtree(fork_root_str)
-                step_writer.mark_in_progress(next_workable.file_path) if next_workable
-              end
-            end
-          end
 
           finish_step(report_content: File.read(report_path), fork_root: fork_root)
         end
@@ -291,7 +246,7 @@ module Ace
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           current = state.current
-          raise Error, "No step currently in progress. Try 'ace-assign add' to add a new step or 'ace-assign retry' to retry a failed step." unless current
+          raise Error, "No step currently active. Try 'ace-assign add' to add a new step or 'ace-assign retry' to retry a failed step." unless current
 
           # Mark step as failed
           step_writer.mark_failed(current.file_path, error_message: message)
@@ -344,9 +299,6 @@ module Ace
             queue_scanner.step_numbers(assignment.steps_dir)
           end
 
-          # Determine initial status upfront to avoid redundant I/O
-          initial_status = state.current ? :pending : :in_progress
-
           # Build added_by metadata for audit trail
           added_by ||= if after && as_child
             "child_of:#{after}"
@@ -364,7 +316,7 @@ module Ace
             number: new_number,
             name: step_name,
             instructions: instructions,
-            status: initial_status,
+            status: :pending,
             added_by: added_by,
             parent: as_child ? after : nil,
             extra: extra_frontmatter
@@ -1394,13 +1346,11 @@ module Ace
         end
 
         def rebalance_after_child_injection(assignment:, state:, parent_number:)
-          current = state.current
-          return unless current && current.number == parent_number
+          parent = state.find_by_number(parent_number)
+          return unless parent&.status == :active
+          return if parent.fork?
 
-          step_writer.mark_pending(current.file_path)
-          rebalanced_state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
-          next_step = rebalanced_state.next_workable_in_subtree(parent_number)
-          step_writer.mark_in_progress(next_step.file_path) if next_step
+          step_writer.mark_pending(parent.file_path)
         end
 
         # Normalize instructions to a string.
@@ -1730,6 +1680,33 @@ module Ace
           target
         end
 
+        def validate_start_activation!(state, target, fork_root:)
+          root_ref = fork_root if fork_root && !fork_root.empty?
+          active_fork_root = if root_ref
+            state.find_by_number(root_ref)
+          else
+            state.nearest_fork_ancestor(target.number)
+          end
+
+          if active_fork_root &&
+              target.number != active_fork_root.number &&
+              active_fork_root.status != :active
+            raise StepErrors::InvalidState,
+              "Cannot start step #{target.number}: fork root #{active_fork_root.number} is not active."
+          end
+
+          return unless active_fork_root
+
+          if state.active_branch_conflict_in_subtree?(active_fork_root.number, extra_active: [target.number])
+            active_refs = (
+              state.active_in_subtree(active_fork_root.number).map { |step| "#{step.number}(#{step.name})" } +
+              ["#{target.number}(#{target.name})"]
+            ).uniq.join(", ")
+            raise StepErrors::InvalidState,
+              "Cannot start step #{target.number}: subtree #{active_fork_root.number} already has multiple active branches (#{active_refs})."
+          end
+        end
+
         def find_target_step_for_finish(state, step_number, fork_root)
           fork_root = fork_root&.strip
           if step_number && !step_number.to_s.strip.empty?
@@ -1738,7 +1715,7 @@ module Ace
             if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
               raise StepErrors::InvalidState, "Step #{target.number} is outside scoped subtree #{fork_root}."
             end
-            raise StepErrors::InvalidState, "Cannot finish step #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
+            raise StepErrors::InvalidState, "Cannot finish step #{target.number}: status is #{target.status}, expected active." unless target.status == :active
 
             return target
           end
@@ -1746,10 +1723,9 @@ module Ace
           current = state.current
           if fork_root && !fork_root.empty?
             raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
-            active_in_subtree = state.in_progress_in_subtree(fork_root)
-            if active_in_subtree.size > 1
-              active_refs = active_in_subtree.map { |step| "#{step.number}(#{step.name})" }.join(", ")
-              raise StepErrors::InvalidState, "Cannot finish in subtree #{fork_root}: multiple steps are in progress (#{active_refs})."
+            if state.active_branch_conflict_in_subtree?(fork_root)
+              active_refs = state.active_in_subtree(fork_root).map { |step| "#{step.number}(#{step.name})" }.join(", ")
+              raise StepErrors::InvalidState, "Cannot finish in subtree #{fork_root}: multiple active branches exist (#{active_refs})."
             end
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root)
@@ -1782,9 +1758,9 @@ module Ace
             iterations += 1
             completed_any = false
 
-            # Find all pending/in_progress parent steps that have children
+            # Find all pending/active parent steps that have children
             eligible_parents = state.steps.select do |s|
-              (s.status == :pending || s.status == :in_progress) &&
+              (s.status == :pending || s.status == :active) &&
                 !completed_this_pass.include?(s.number)
             end
 

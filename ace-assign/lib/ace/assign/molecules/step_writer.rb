@@ -59,13 +59,13 @@ module Ace
           file_path
         end
 
-        # Mark step as in progress
+        # Mark step as active
         #
         # @param file_path [String] Path to step file
         # @return [String] Updated file path
-        def mark_in_progress(file_path)
+        def mark_active(file_path)
           update_frontmatter(file_path, {
-            "status" => "in_progress",
+            "status" => "active",
             "started_at" => Time.now.utc.iso8601
           })
         end

@@ -11,7 +11,9 @@ class StartCommandTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
-      executor.advance(report_path) # 010 done, 020 in_progress
+      executor.start_step
+      executor.advance(report_path) # 010 done, 020 pending
+      executor.start_step
       executor.fail("Blocked for retry") # no active step, 030 remains pending
 
       output = capture_io do
@@ -26,19 +28,20 @@ class StartCommandTest < AceAssignTestCase
     end
   end
 
-  def test_start_fails_when_step_already_in_progress
+  def test_start_can_activate_another_pending_step_while_work_is_already_active
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
-      error = assert_raises(Ace::Support::Cli::Error) do
+      output = capture_io do
         Ace::Assign::CLI::Commands::Start.new.call
       end
 
-      assert_includes error.message, "already in progress"
+      assert_includes output.first, "Step 020 (build) started"
     ensure
       Ace::Assign.reset_config!
     end
@@ -52,7 +55,9 @@ class StartCommandTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
-      executor.advance(report_path) # 010 done, 020 in_progress
+      executor.start_step
+      executor.advance(report_path) # 010 done, 020 pending
+      executor.start_step
       executor.fail("Skipping build")  # 020 failed, 030 pending
 
       output = capture_io do

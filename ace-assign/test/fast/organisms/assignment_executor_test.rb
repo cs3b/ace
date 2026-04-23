@@ -5,6 +5,13 @@ require_relative "../../test_helper"
 class AssignmentExecutorTest < AceAssignTestCase
   include Ace::TestSupport::ConfigHelpers
 
+  def complete_steps(executor, cache_dir, count)
+    count.times do
+      executor.start_step
+      executor.advance(create_report(cache_dir, "Step completed"))
+    end
+  end
+
   def test_start_creates_assignment_and_steps
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -14,8 +21,8 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       assert_equal "test-session", result[:assignment].name
       assert_equal 3, result[:state].size
-      assert_equal "init", result[:current].name
-      assert_equal :in_progress, result[:current].status
+      assert_nil result[:current]
+      assert_equal :pending, result[:state].find_by_number("010").status
     end
   end
 
@@ -40,7 +47,7 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       assert_equal "test-session", result[:assignment].name
       assert_equal 3, result[:state].size
-      assert_equal "init", result[:current].name
+      assert_nil result[:current]
     end
   end
 
@@ -68,12 +75,13 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       result = executor.advance(report_path)
 
       assert_equal "init", result[:completed].name
-      assert_equal "build", result[:current].name
-      assert_equal :in_progress, result[:current].status
+      assert_nil result[:current]
+      assert_equal :pending, result[:state].find_by_number("020").status
     end
   end
 
@@ -83,6 +91,7 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       result = executor.fail("Something went wrong")
 
@@ -112,7 +121,9 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
       executor.advance(report_path) # Complete init
+      executor.start_step
       executor.fail("Tests failed") # Fail build
 
       result = executor.retry_step("020")
@@ -162,7 +173,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert_equal "ace_custom_work", result[:current].skill
+      assert_equal "ace_custom_work", result[:state].steps.first.skill
       assert_nil result[:state].steps[1].skill
     end
   end
@@ -179,11 +190,11 @@ class AssignmentExecutorTest < AceAssignTestCase
       result = executor.start(config_path)
 
       # Array instructions should be joined with newlines
-      current = result[:current]
-      assert_equal "array-step", current.name
-      assert_includes current.instructions, "Line one."
-      assert_includes current.instructions, "Line two."
-      assert_includes current.instructions, "Line three."
+      first_step = result[:state].steps.first
+      assert_equal "array-step", first_step.name
+      assert_includes first_step.instructions, "Line one."
+      assert_includes first_step.instructions, "Line two."
+      assert_includes first_step.instructions, "Line three."
 
       # String instructions should pass through unchanged
       string_step = result[:state].steps[1]
@@ -255,13 +266,10 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
 
       # Start
-      result = executor.start(config_path)
+      executor.start(config_path)
 
       # Complete all steps
-      3.times do
-        report_path = create_report(cache_dir, "Step completed")
-        result = executor.advance(report_path)
-      end
+      complete_steps(executor, cache_dir, 3)
 
       result = executor.status
 
@@ -282,6 +290,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       assignment = result[:assignment]
       reports_dir = assignment.reports_dir
 
+      executor.start_step
       executor.advance(report_path)
 
       # Report should be in reports/ directory
@@ -341,9 +350,10 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # First step (current) has no context
-      assert_nil result[:current].context
-      refute result[:current].fork?
+      # First step has no context
+      first_step = result[:state].steps.first
+      assert_nil first_step.context
+      refute first_step.fork?
 
       # Second step has fork context
       implement_step = result[:state].steps[1]
@@ -419,13 +429,14 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert_equal "010", result[:current].number
+      assert_nil result[:current]
+      executor.start_step
 
       result = executor.add("child-task-1", "Child work", after: "010", as_child: true)
 
-      assert_equal "010.01", result[:state].current.number
+      assert_nil result[:state].current
       assert_equal :pending, result[:state].find_by_number("010").status
-      assert_equal :in_progress, result[:state].find_by_number("010.01").status
+      assert_equal :pending, result[:state].find_by_number("010.01").status
       assert_nil result[:state].find_by_number("010").started_at
     end
   end
@@ -439,15 +450,16 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
       child_result = executor.add("parent", "Parent work", after: "010", as_child: true)
 
-      assert_equal "010.01", child_result[:state].current.number
+      assert_nil child_result[:state].current
 
       result = executor.add("grandchild", "Grandchild work", after: "010.01", as_child: true)
 
-      assert_equal "010.01.01", result[:state].current.number
+      assert_nil result[:state].current
       assert_equal :pending, result[:state].find_by_number("010.01").status
-      assert_equal :in_progress, result[:state].find_by_number("010.01.01").status
+      assert_equal :pending, result[:state].find_by_number("010.01.01").status
     end
   end
 
@@ -458,11 +470,12 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
       executor.advance(report_path)
 
       result = executor.add("late-child", "Late child", after: "010", as_child: true)
 
-      assert_equal "020", result[:state].current.number
+      assert_nil result[:state].current
       assert_equal :done, result[:state].find_by_number("010").status
       assert_equal :pending, result[:state].find_by_number("010.01").status
     end
@@ -475,12 +488,12 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert_equal "010", result[:current].number
+      assert_nil result[:current]
 
       result = executor.add("sibling-check", "Sibling work", after: "010")
 
-      assert_equal "010", result[:state].current.number
-      assert_equal :in_progress, result[:state].find_by_number("010").status
+      assert_nil result[:state].current
+      assert_equal :pending, result[:state].find_by_number("010").status
       assert_equal :pending, result[:added].status
     end
   end
@@ -691,7 +704,8 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
-      assert_equal "010", result[:current].number
+      assert_nil result[:current]
+      executor.start_step
 
       result = executor.add_batch(
         steps: [
@@ -703,9 +717,9 @@ class AssignmentExecutorTest < AceAssignTestCase
         source_file: "/tmp/children.yml"
       )
 
-      assert_equal "010.01", result[:state].current.number
+      assert_nil result[:state].current
       assert_equal :pending, result[:state].find_by_number("010").status
-      assert_equal :in_progress, result[:state].find_by_number("010.01").status
+      assert_equal :pending, result[:state].find_by_number("010.01").status
       assert_equal :pending, result[:state].find_by_number("010.02").status
       assert_equal "child_of:010", result[:state].find_by_number("010.01").added_by
       assert_equal "child_of:010", result[:state].find_by_number("010.02").added_by
@@ -1086,8 +1100,9 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_equal "verify-test", verify_step.name
             assert_equal "release-minor", release_step.name
 
-            # First actionable child is activated (parent container is skipped)
-            assert_equal "010.01", result[:current].number
+            # First actionable child stays pending until scoped execution explicitly starts it.
+            assert_nil result[:current]
+            assert_equal "010.01", result[:state].next_workable.number
 
             # Skill-backed steps materialize from canonical skill bodies with provenance metadata.
             assert_nil onboard_step.skill
@@ -1655,12 +1670,17 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert_equal "010.01", result[:current].number
+      writer = Ace::Assign::Molecules::StepWriter.new
+      writer.mark_active(result[:state].find_by_number("010").file_path)
+      executor.start_step(fork_root: "010")
 
       report_path = create_report(cache_dir, "Done")
 
       result = executor.advance(report_path, fork_root: "010")
-      assert_equal "010.02", result[:current].number
+      assert_equal "010", result[:current].number
+      assert_equal :pending, result[:state].find_by_number("010.02").status
+
+      executor.start_step(fork_root: "010")
 
       result = executor.advance(report_path, fork_root: "010")
       assert_nil result[:current], "Subtree-scoped execution should stop after subtree completes"
@@ -1683,20 +1703,23 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       start_result = executor.start(config_path)
-      assert_equal "010", start_result[:current].number
+      executor.start_step(step_number: "010")
+      writer = Ace::Assign::Molecules::StepWriter.new
+      writer.mark_active(start_result[:state].find_by_number("020").file_path)
+      executor.start_step(fork_root: "020")
 
       report_path = create_report(cache_dir, "Scoped progress")
       result = executor.advance(report_path, fork_root: "020")
 
       scoped_state = result[:state]
-      refute_equal :done, scoped_state.find_by_number("010").status
+      assert_equal :active, scoped_state.find_by_number("010").status
       assert_equal :done, scoped_state.find_by_number("020.01").status
-      assert_equal :in_progress, scoped_state.find_by_number("020.02").status
+      assert_equal :pending, scoped_state.find_by_number("020.02").status
       assert_equal "010", result[:current]&.number
     end
   end
 
-  def test_advance_with_fork_root_raises_when_multiple_subtree_steps_are_in_progress
+  def test_advance_with_fork_root_raises_when_multiple_subtree_steps_are_active
     with_temp_cache do |cache_dir|
       steps = [
         {"name" => "precheck", "instructions" => "Run precheck"},
@@ -1716,15 +1739,15 @@ class AssignmentExecutorTest < AceAssignTestCase
       scanner = Ace::Assign::Molecules::QueueScanner.new
       writer = Ace::Assign::Molecules::StepWriter.new
       state = scanner.scan(assignment.steps_dir, assignment: assignment)
-      writer.mark_in_progress(state.find_by_number("020.01").file_path)
-      writer.mark_in_progress(state.find_by_number("020.02").file_path)
+      writer.mark_active(state.find_by_number("020.01").file_path)
+      writer.mark_active(state.find_by_number("020.02").file_path)
 
       report_path = create_report(cache_dir, "Scoped progress")
       error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
         executor.advance(report_path, fork_root: "020")
       end
 
-      assert_includes error.message, "multiple steps are in progress"
+      assert_includes error.message, "multiple active branches"
     end
   end
 

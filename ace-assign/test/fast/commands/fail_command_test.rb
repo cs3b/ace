@@ -11,6 +11,7 @@ class FailCommandTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step(step_number: "010")
 
       result = nil
       output = capture_io do
@@ -52,6 +53,10 @@ class FailCommandTest < AceAssignTestCase
       result2 = executor.start(config2)
       target_id = result2[:assignment].id
 
+      target_executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      target_executor.assignment_manager.define_singleton_method(:find_active) { result2[:assignment] }
+      target_executor.start_step(step_number: "010")
+
       output = capture_io do
         Ace::Assign::CLI::Commands::Fail.new.call(
           message: "Build broke",
@@ -69,7 +74,7 @@ class FailCommandTest < AceAssignTestCase
 
       # Verify the first assignment was not affected
       first_state = scanner.scan(result1[:assignment].steps_dir, assignment: result1[:assignment])
-      assert_equal :running, first_state.assignment_state
+      assert_equal :paused, first_state.assignment_state
 
       Ace::Assign.reset_config!
     end

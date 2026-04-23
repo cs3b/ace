@@ -57,20 +57,14 @@ module Ace
               puts "Next step: #{next_step.number} - #{next_step.name}" if next_step
             end
 
-            active_in_subtree = state.in_progress_in_subtree(root_step.number)
-            if active_in_subtree.size > 1
-              active_refs = active_in_subtree.map { |step| "#{step.number}(#{step.name})" }.join(", ")
-              raise StepErrors::InvalidState, "Cannot fork-run subtree #{root_step.number}: multiple steps are already in progress (#{active_refs})."
+            if state.active_branch_conflict_in_subtree?(root_step.number)
+              active_refs = state.active_in_subtree(root_step.number).map { |step| "#{step.number}(#{step.name})" }.join(", ")
+              raise StepErrors::InvalidState, "Cannot fork-run subtree #{root_step.number}: multiple active branches already exist (#{active_refs})."
             end
 
-            # Mark the next workable step as in_progress only when no subtree step is active.
-            # For leaf fork roots, this activates the root itself.
-            if active_in_subtree.empty?
-              first_workable = state.next_workable_in_subtree(root_step.number)
-              if first_workable
-                step_writer = Molecules::StepWriter.new
-                step_writer.mark_in_progress(first_workable.file_path)
-              end
+            if root_step.status == :pending
+              step_writer = Molecules::StepWriter.new
+              step_writer.mark_active(root_step.file_path)
             end
 
             launch_result = launcher.launch(
@@ -94,7 +88,7 @@ module Ace
             end
 
             unless refreshed_state.subtree_complete?(root_step.number)
-              active = refreshed_state.in_progress_in_subtree(root_step.number).first || refreshed_state.current
+              active = refreshed_state.current_in_subtree(root_step.number) || refreshed_state.current
               active_msg = active ? " Current step: #{active.number} (#{active.name})." : ""
               last_msg = read_last_message(assignment.cache_dir, root_step.number)
               stall_reason = build_stall_reason(last_msg)
@@ -176,10 +170,10 @@ module Ace
             end
 
             # Fallback for legacy behavior when no root is explicitly scoped.
-            raise Error, "No current step. Use --root <step-number> or --assignment <id>@<step-number>." unless current
+            raise Error, "No active step. Use --root <step-number> or --assignment <id>@<step-number>." unless current
 
             root = state.nearest_fork_ancestor(current.number)
-            raise Error, "Current step is not in a forked subtree. Provide --root or --assignment <id>@<step-number>." unless root
+            raise Error, "Active step is not in a forked subtree. Provide --root or --assignment <id>@<step-number>." unless root
 
             root
           end

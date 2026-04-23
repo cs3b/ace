@@ -1,6 +1,6 @@
 steps:
-  - title: Fix stalled implementation issue
-    instructions:
-      - Investigate the stalled implementation state
-      - Apply the minimal fix needed to unblock the queue
-      - Report what changed and why the retry should now succeed
+  - name: fix-stalled-implementation-issue
+    instructions: |
+      Investigate the stalled implementation state.
+      Apply the minimal fix needed to unblock the queue.
+      Report what changed and why the retry should now succeed.

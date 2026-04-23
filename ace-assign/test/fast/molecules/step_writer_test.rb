@@ -68,7 +68,7 @@ class StepWriterTest < AceAssignTestCase
     end
   end
 
-  def test_mark_in_progress
+  def test_mark_active
     with_temp_cache do |cache_dir|
       steps_dir = File.join(cache_dir, "steps")
       FileUtils.mkdir_p(steps_dir)
@@ -82,10 +82,10 @@ class StepWriterTest < AceAssignTestCase
         status: :pending
       )
 
-      writer.mark_in_progress(file_path)
+      writer.mark_active(file_path)
 
       content = File.read(file_path)
-      assert_includes content, "status: in_progress"
+      assert_includes content, "status: active"
       assert_includes content, "started_at:"
     end
   end
@@ -104,7 +104,7 @@ class StepWriterTest < AceAssignTestCase
         status: :pending
       )
 
-      writer.mark_in_progress(file_path)
+      writer.mark_active(file_path)
       writer.update_frontmatter(file_path, {
         "completed_at" => Time.now.utc.iso8601,
         "error" => "stale error",
@@ -135,7 +135,7 @@ class StepWriterTest < AceAssignTestCase
         number: "010",
         name: "init",
         instructions: "Do it.",
-        status: :in_progress
+        status: :active
       )
 
       writer.mark_done(file_path, report_content: "All done!", reports_dir: reports_dir)
@@ -168,7 +168,7 @@ class StepWriterTest < AceAssignTestCase
         number: "040",
         name: "tests",
         instructions: "Run tests.",
-        status: :in_progress
+        status: :active
       )
 
       writer.mark_failed(file_path, error_message: "2 tests failed")
@@ -193,10 +193,10 @@ class StepWriterTest < AceAssignTestCase
         status: :pending
       )
 
-      writer.update_frontmatter(file_path, {"status" => "in_progress", "custom" => "value"})
+      writer.update_frontmatter(file_path, {"status" => "active", "custom" => "value"})
 
       content = File.read(file_path)
-      assert_includes content, "status: in_progress"
+      assert_includes content, "status: active"
       assert_includes content, "custom: value"
     end
   end
@@ -214,7 +214,7 @@ class StepWriterTest < AceAssignTestCase
         number: "010",
         name: "init",
         instructions: "Do it.",
-        status: :in_progress
+        status: :active
       )
 
       writer.append_report(file_path, "Partial report.", reports_dir: reports_dir)
@@ -239,7 +239,7 @@ class StepWriterTest < AceAssignTestCase
         number: "010",
         name: "init",
         instructions: "Do it.",
-        status: :in_progress
+        status: :active
       )
 
       # First append
@@ -268,7 +268,7 @@ class StepWriterTest < AceAssignTestCase
         number: "010",
         name: "init",
         instructions: "Do it.",
-        status: :in_progress
+        status: :active
       )
 
       # Empty content should raise error
@@ -298,7 +298,7 @@ class StepWriterTest < AceAssignTestCase
         number: "010",
         name: "init",
         instructions: "Do it.",
-        status: :in_progress
+        status: :active
       )
 
       error = assert_raises(ArgumentError) do

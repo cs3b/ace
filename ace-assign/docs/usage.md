@@ -4,8 +4,8 @@ title: ace-assign Usage Guide
 purpose: Complete command reference for ace-assign queue orchestration, hierarchy,
   and fork execution.
 ace-docs:
-  last-updated: '2026-04-01'
-  last-checked: '2026-04-01'
+  last-updated: '2026-04-23'
+  last-checked: '2026-04-23'
 ---
 
 # ace-assign Usage Guide
@@ -47,6 +47,7 @@ ace-test-suite --target all
 ```bash
 ace-assign create --yaml job.yaml
 ace-assign status
+ace-assign start
 ace-assign step
 ace-assign finish --message step-010.md
 ace-assign status
@@ -57,6 +58,7 @@ Use scoped targeting when needed:
 
 ```bash
 ace-assign status --assignment abc123@010.01
+ace-assign start --assignment abc123@010.01
 ace-assign finish --message done.md --assignment abc123@010.01
 ```
 
@@ -118,6 +120,7 @@ Text modes:
 - `compact` (default) prints a short summary, hidden-step stats, and up to 5 upcoming step lines
 - `progress` prints a single summary line
 - `full` prints the full tree/table without step instructions
+- JSON emits `active_steps` for all active steps in scope and `next_step` only when no step is active in that scope
 
 HITL stall behavior:
 
@@ -133,7 +136,7 @@ HITL stall behavior:
 
 ### `ace-assign step [STEP]`
 
-Show instructions for the current in-progress step, the next workable step, or an explicit step number.
+Show instructions for the deepest active step in scope, the next workable pending step when nothing is active, or an explicit step number.
 
 Options:
 
@@ -143,7 +146,7 @@ Options:
 
 ### `ace-assign start [STEP]`
 
-Start next workable pending step, or an explicit pending step in the active assignment.
+Mark the next workable pending step active, or mark an explicit pending step active in the targeted assignment or subtree.
 
 Options:
 
@@ -153,11 +156,11 @@ Options:
 
 ### `ace-assign finish [STEP] --message VALUE`
 
-Complete current in-progress step (or explicit step in active assignment) with report content.
+Complete the current active step (or explicit active step in the active assignment) with report content.
 Use positional `STEP` only for the active assignment. When targeting another
 assignment or a scoped subtree, pass `--assignment <id>` or
 `--assignment <id@step>` without a positional `STEP`; the command finishes the
-current in-progress step in that target.
+deepest active step in that target.
 
 `--message` accepts:
 

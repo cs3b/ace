@@ -9,6 +9,18 @@ injected-sibling, renumbered, and dynamic step mutations.
 
 Save output to `results/tc/03/`.
 
+Required captures:
+- `results/tc/03/create-tree.stdout`, `results/tc/03/create-tree.stderr`, `results/tc/03/create-tree.exit`
+- `results/tc/03/status-tree-full.stdout`, `results/tc/03/status-tree-full.stderr`, `results/tc/03/status-tree-full.exit`
+- `results/tc/03/create-audit.stdout`, `results/tc/03/create-audit.stderr`, `results/tc/03/create-audit.exit`
+- `results/tc/03/add-audit-child.stdout`, `results/tc/03/add-audit-child.stderr`, `results/tc/03/add-audit-child.exit`
+- `results/tc/03/status-audit-child-full.stdout`, `results/tc/03/status-audit-child-full.stderr`, `results/tc/03/status-audit-child-full.exit`
+- `results/tc/03/add-audit-sibling.stdout`, `results/tc/03/add-audit-sibling.stderr`, `results/tc/03/add-audit-sibling.exit`
+- `results/tc/03/status-audit-sibling-full.stdout`, `results/tc/03/status-audit-sibling-full.stderr`, `results/tc/03/status-audit-sibling-full.exit`
+- `results/tc/03/add-audit-top.stdout`, `results/tc/03/add-audit-top.stderr`, `results/tc/03/add-audit-top.exit`
+- `results/tc/03/status-audit-final-full.stdout`, `results/tc/03/status-audit-final-full.stderr`, `results/tc/03/status-audit-final-full.exit`
+- `results/tc/03/step-files/` (optional)
+
 ## Constraints
 
 ### Tree Display

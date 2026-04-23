@@ -34,7 +34,7 @@ class StepFileParserTest < AceAssignTestCase
     parsed = {
       frontmatter: {
         "name" => "build",
-        "status" => "in_progress",
+        "status" => "active",
         "error" => nil,
         "added_by" => "dynamic"
       },
@@ -44,7 +44,7 @@ class StepFileParserTest < AceAssignTestCase
     result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
 
     assert_equal "build", result[:name]
-    assert_equal :in_progress, result[:status]
+    assert_equal :active, result[:status]
     assert_nil result[:source]
     assert_equal "Build the project.", result[:instructions]
     assert_nil result[:report] # Reports are now in separate files
@@ -117,7 +117,7 @@ class StepFileParserTest < AceAssignTestCase
     parsed = {
       frontmatter: {
         "name" => "work-on-task",
-        "status" => "in_progress",
+        "status" => "active",
         "fork_launch_pid" => "355349",
         "fork_tracked_pids" => %w[355366 355367],
         "fork_pid_updated_at" => "2026-02-25T18:30:00Z",
@@ -258,7 +258,7 @@ class StepFileParserTest < AceAssignTestCase
     parsed = {
       frontmatter: {
         "name" => "release",
-        "status" => "in_progress",
+        "status" => "active",
         "stall_reason" => "I encountered an unexpected state."
       },
       body: "Release instructions."
@@ -272,7 +272,7 @@ class StepFileParserTest < AceAssignTestCase
     parsed = {
       frontmatter: {
         "name" => "release",
-        "status" => "in_progress"
+        "status" => "active"
       },
       body: "Release instructions."
     }

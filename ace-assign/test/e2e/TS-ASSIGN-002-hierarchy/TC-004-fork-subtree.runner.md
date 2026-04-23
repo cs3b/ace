@@ -8,11 +8,21 @@ Test scoped assignment syntax (`<id>@<step>`) to inspect only a subtree without 
 
 Save all output to `results/tc/04/`. Required artifact:
 - `results/tc/04/` — fork subtree scope evidence
+- `results/tc/04/create.stdout`, `results/tc/04/create.stderr`, `results/tc/04/create.exit`
+- `results/tc/04/assignment-id.txt`
+- `results/tc/04/status-initial.stdout`, `results/tc/04/status-initial.stderr`, `results/tc/04/status-initial.exit`
+- `results/tc/04/status-initial.json`, `results/tc/04/status-initial-json.stderr`, `results/tc/04/status-initial-json.exit`
+- `results/tc/04/status-scoped.stdout`, `results/tc/04/status-scoped.stderr`, `results/tc/04/status-scoped.exit`
+- `results/tc/04/status-scoped.json`, `results/tc/04/status-scoped-json.stderr`, `results/tc/04/status-scoped-json.exit`
+- `results/tc/04/status-after-scope.stdout`, `results/tc/04/status-after-scope.stderr`, `results/tc/04/status-after-scope.exit`
+- `results/tc/04/status-after-scope.json`, `results/tc/04/status-after-scope-json.stderr`, `results/tc/04/status-after-scope-json.exit`
+- `results/tc/04/step-states-before.stdout`
+- `results/tc/04/step-states-after.stdout`
 
 ## Constraints
 
 - Create assignment from `subtree/job.yaml`. Capture assignment ID.
-- Verify initial current step is outside the subtree (010-precheck).
+- Verify initial next-step identity is outside the subtree (`010-precheck`).
 - Derive the assignment ID from this goal's own `create.stdout` artifact and
   save it to `assignment-id.txt`. Never reuse IDs from fixture filenames,
   examples, prior goals, or previous runs.
@@ -38,7 +48,7 @@ Save all output to `results/tc/04/`. Required artifact:
 - Do **not** reuse unscoped output for scoped capture.
 - Verify scoped status detects fork subtree root (020-subtree-a).
 - Verify scoped status shows only subtree steps: 020, 020.01, 020.02, 020.03.
-- Verify scoped current step resolves to subtree child (020.01-onboard).
+- Verify scoped next-step identity resolves to subtree child (020.01-onboard).
 - Verify NO step state changes occurred: all steps remain in their original state.
 - Verify unscoped status still shows 010-precheck as current step.
 - Fail fast in the runner if the post-scope unscoped capture does not still show

@@ -17,7 +17,7 @@ module Ace
       #   )
       class Step
         # Valid status values
-        STATUSES = %i[pending in_progress done failed].freeze
+        STATUSES = %i[pending active done failed].freeze
 
         # Valid context values for execution context
         VALID_CONTEXTS = %w[fork].freeze
@@ -31,7 +31,7 @@ module Ace
 
         # @param number [String] Step number (e.g., "010", "010.01")
         # @param name [String] Step name
-        # @param status [Symbol] Step status (:pending, :in_progress, :done, :failed)
+        # @param status [Symbol] Step status (:pending, :active, :done, :failed)
         # @param instructions [String] Step instructions (markdown)
         # @param report [String, nil] Completion report content
         # @param error [String, nil] Error message (if failed)
@@ -103,7 +103,7 @@ module Ace
         # Check if step can be worked on
         # @return [Boolean]
         def workable?
-          status == :pending || status == :in_progress
+          status == :pending || status == :active
         end
 
         # Check if this is a retry of another step

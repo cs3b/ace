@@ -13,7 +13,7 @@ module Ace
 
           STATUS_ICONS = {
             done: "✓ Done",
-            in_progress: "▶ Active",
+            active: "▶ Active",
             pending: "○ Pending",
             failed: "✗ Failed"
           }.freeze
@@ -51,9 +51,8 @@ module Ace
             return if options[:quiet]
 
             if options[:format] == "json"
-              scoped_fork_step = scoped_fork_metadata_step(view.state, view.current_step, target.scope, view.scope_root)
               puts JSON.pretty_generate(
-                status_to_h(view.assignment, view.scoped_state, view.current_step, scoped_fork_step: scoped_fork_step)
+                status_to_h(view.assignment, view.scoped_state, view.active_steps, view.next_step, target: target, scope_root: view.scope_root)
               )
               return
             end
@@ -64,7 +63,7 @@ module Ace
 
             case mode
             when "progress"
-              puts progress_summary_line(view.assignment, view.scoped_state, view.current_step)
+              puts progress_summary_line(view.assignment, view.scoped_state, view.active_steps, view.next_step)
             when "full"
               print_full_status(view, target, flat: options[:flat], include_completed: options[:all])
             else
@@ -83,20 +82,20 @@ module Ace
             mode
           end
 
-          def status_to_h(assignment, state, current_step, scoped_fork_step: nil)
-            {
+          def status_to_h(assignment, state, active_steps, next_step, target:, scope_root:)
+            payload = {
               assignment: {
                 id: assignment.id,
                 name: assignment.name,
                 state: state.assignment_state.to_s
               },
               steps: state.steps.map { |step| step_to_h(step) },
-              current_step: step_to_h(
-                current_step,
-                effective_fork_provider: effective_fork_provider_for(current_step, scoped_fork_step)
-              ),
+              active_steps: active_steps.map { |step| step_to_h(step, effective_fork_provider: effective_fork_provider_for(step, scoped_fork_metadata_step(state, step, target.scope, scope_root))) },
               progress: "#{state.done.size}/#{state.size} done"
             }
+
+            payload[:next_step] = step_to_h(next_step, effective_fork_provider: effective_fork_provider_for(next_step, scoped_fork_metadata_step(state, next_step, target.scope, scope_root))) if active_steps.empty? && next_step
+            payload
           end
 
           def step_to_h(step, effective_fork_provider: nil)
@@ -120,7 +119,7 @@ module Ace
 
           def print_compact_status(view, target, include_completed:)
             lines = []
-            lines.concat(compact_summary_lines(view.assignment, view.scoped_state, view.current_step))
+            lines.concat(compact_summary_lines(view.assignment, view.scoped_state, view.active_steps, view.next_step))
 
             unless target.assignment_id
               other_line = compact_other_assignments_line(view.assignment.id, include_completed: include_completed)
@@ -130,9 +129,9 @@ module Ace
             puts lines.take(10).join("\n")
           end
 
-          def compact_summary_lines(assignment, state, current_step)
+          def compact_summary_lines(assignment, state, active_steps, next_step)
             lines = [
-              compact_assignment_line(assignment, state, current_step),
+              compact_assignment_line(assignment, state, active_steps, next_step),
               compact_last_done_line(state)
             ]
 
@@ -148,14 +147,16 @@ module Ace
             lines
           end
 
-          def progress_summary_line(assignment, state, current_step)
+          def progress_summary_line(assignment, state, active_steps, next_step)
             state_label = STATE_LABELS[state.assignment_state] || state.assignment_state.to_s
             details = ["State: #{state_label}", "Progress: #{state.done.size}/#{state.size} done"]
 
-            if current_step
-              details << "Current: #{current_step.number} #{current_step.name}"
+            if active_steps.any?
+              details << "Active: #{step_refs(active_steps)}"
+            elsif next_step
+              details << "Next: #{next_step.number} #{next_step.name}"
             elsif state.complete?
-              details << "Current: complete"
+              details << "Next: complete"
             end
 
             if state.last_done
@@ -165,12 +166,14 @@ module Ace
             details.join(" | ")
           end
 
-          def compact_assignment_line(assignment, state, current_step)
+          def compact_assignment_line(assignment, state, active_steps, next_step)
             state_label = STATE_LABELS[state.assignment_state] || state.assignment_state.to_s
             details = ["Assignment: #{assignment.id}  #{compact_assignment_name(assignment.name)}", "Status: #{state_label}"]
 
-            if current_step
-              details << "Current: #{current_step.number} #{current_step.name}"
+            if active_steps.any?
+              details << "Active: #{step_refs(active_steps)}"
+            elsif next_step
+              details << "Next: #{next_step.number} #{next_step.name}"
             end
             details.join(" | ")
           end
@@ -191,7 +194,7 @@ module Ace
           end
 
           def compact_preview(state)
-            active_or_pending = state.steps.select { |step| %i[in_progress pending].include?(step.status) }.first(PREVIEW_LIMIT)
+            active_or_pending = state.steps.select { |step| %i[active pending].include?(step.status) }.first(PREVIEW_LIMIT)
             return ["Pending steps:", active_or_pending] unless active_or_pending.empty?
 
             failed_preview = state.failed.first(PREVIEW_LIMIT)
@@ -202,7 +205,7 @@ module Ace
 
           def preview_step_line(step)
             status = case step.status
-            when :in_progress then "active"
+            when :active then "active"
             when :pending then "next"
             when :failed then "failed"
             else step.status.to_s
@@ -229,21 +232,43 @@ module Ace
             "other assignments: #{others.size} total | active: #{active} paused: #{pending} failed: #{failed}"
           end
 
+          def step_refs(steps, limit: 3)
+            refs = steps.first(limit).map { |step| "#{step.number} #{step.name}" }
+            refs << "+#{steps.size - limit} more" if steps.size > limit
+            refs.join(" | ")
+          end
+
           def print_full_status(view, target, flat:, include_completed:)
             print_queue_status(view.assignment, view.scoped_state, flat: flat, root_number: view.scope_root)
 
-            if view.current_step
-              scoped_fork_step = scoped_fork_metadata_step(view.state, view.current_step, target.scope, view.scope_root)
+            if view.active_steps.any?
+              puts
+              puts "Active Steps:"
+              view.active_steps.each do |step|
+                puts "  #{step.number} - #{step.name}"
+              end
+
+              if view.focus_step
+                scoped_fork_step = scoped_fork_metadata_step(view.state, view.focus_step, target.scope, view.scope_root)
+
+                puts
+                puts "Focused Step: #{view.focus_step.number} - #{view.focus_step.name}"
+                puts "Focused Status: #{view.focus_step.status}"
+                print_stall_details(view.focus_step)
+                puts "Workflow: #{view.focus_step.workflow}" if view.focus_step.workflow
+                puts "Skill: #{view.focus_step.skill}" if !view.focus_step.workflow && view.focus_step.skill
+                puts "Context: #{view.focus_step.context}" if view.focus_step.context
+
+                effective_fork_provider = effective_fork_provider_for(view.focus_step, scoped_fork_step)
+                puts "Fork Provider: #{effective_fork_provider}" if effective_fork_provider
+                print_scoped_fork_pid_info(scoped_fork_step)
+              end
+            elsif view.next_step
+              scoped_fork_step = scoped_fork_metadata_step(view.state, view.next_step, target.scope, view.scope_root)
 
               puts
-              puts "Current Step: #{view.current_step.number} - #{view.current_step.name}"
-              puts "Current Status: #{view.current_step.status}"
-              print_stall_details(view.current_step)
-              puts "Workflow: #{view.current_step.workflow}" if view.current_step.workflow
-              puts "Skill: #{view.current_step.skill}" if !view.current_step.workflow && view.current_step.skill
-              puts "Context: #{view.current_step.context}" if view.current_step.context
-
-              effective_fork_provider = effective_fork_provider_for(view.current_step, scoped_fork_step)
+              puts "Next Step: #{view.next_step.number} - #{view.next_step.name}"
+              effective_fork_provider = effective_fork_provider_for(view.next_step, scoped_fork_step)
               puts "Fork Provider: #{effective_fork_provider}" if effective_fork_provider
               print_scoped_fork_pid_info(scoped_fork_step)
             elsif view.scoped_state.complete?
@@ -397,12 +422,13 @@ module Ace
             col_progress = 10
             col_step = 20
             puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
-              "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT STEP", "UPDATED")
+              "ASSIGNMENT", "STATUS", "PROGRESS", "ACTIVE/NEXT", "UPDATED")
 
             others.each do |info|
               state_label = STATE_LABELS[info.state] || info.state.to_s
               updated = format_relative_time(info.updated_at)
-              step = info.current_step.length > col_step ? "#{info.current_step[0..col_step - 4]}..." : info.current_step
+              step = info.step_focus
+              step = step.length > col_step ? "#{step[0..col_step - 4]}..." : step
               puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_step}s %s",
                 info.id, state_label, info.progress, step, updated)
             end
