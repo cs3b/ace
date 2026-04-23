@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-04-23
+
+### Changed
+- Updated the monorepo setup cookbook to use `ace-config sync ace-llm-providers-cli` before handbook sync.
+
 ## [0.28.0] - 2026-04-22
 
 ### Changed
