@@ -3,8 +3,8 @@ doc-type: user
 title: ace-demo Getting Started
 purpose: Tutorial for first-run ace-demo workflows
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-16
+  last-checked: 2026-04-16
 ---
 
 # Getting Started with ace-demo
@@ -151,6 +151,38 @@ Each scene has a `name` (optional) and a `commands` array. Each command has:
 
 - `type` — the shell command to execute (compiled to VHS `Type` + `Enter`)
 - `sleep` — delay after the command (default `2s`, compiled to VHS `Sleep`)
+
+Scenes may also include structured `tmux:` directives for recorder control:
+
+- `attach` — attach the recorder shell to a tmux session
+- `detach` — detach the recorder shell from a tmux session
+- `wait` — block until a tmux condition such as `window-active` or `window-exists` is true
+- `send` — send a command or key to a specific pane without typing it visibly in the recorder shell
+Example:
+
+```yaml
+scenes:
+- name: Observe tmux-backed fork launch
+  commands:
+  - tmux:
+      action: attach
+      session: fork-demo
+  - tmux:
+      action: wait
+      for: window-active
+      session: fork-demo
+      window: work
+  - type: ACE_TMUX_SESSION=fork-demo ace-assign fork-run --assignment "$ASSIGN_ID@010" --launch-mode tmux
+    sleep: 3s
+  - tmux:
+      action: wait
+      for: window-exists
+      session: fork-demo
+      window: work-fs
+  - tmux:
+      action: detach
+      session: fork-demo
+```
 
 Multiple scenes record sequentially into the same output file. Use them to organize logically distinct steps.
 

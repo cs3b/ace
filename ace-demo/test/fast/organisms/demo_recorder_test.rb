@@ -29,14 +29,28 @@ class DemoRecorderTest < AceDemoTestCase
   end
 
   class StubInteractiveExecutor < StubExecutor
-    attr_reader :commands, :env
+    attr_reader :commands, :env, :handler
 
-    def run_interactive(cmd, commands:, env:, chdir: nil)
+    def run_interactive(cmd, commands:, env:, handler: nil, chdir: nil)
       @cmd = cmd
       @commands = commands
       @env = env
+      @handler = handler
       @chdir = chdir
       Ace::Demo::Models::ExecutionResult.new(stdout: "ok", stderr: "", success: true, exit_code: 0)
+    end
+  end
+
+  class StubTmuxDirectiveExecutor
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def execute(command, env = nil)
+      @calls << {command: command, env: env}
+      nil
     end
   end
 
@@ -241,6 +255,38 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal sandbox_path, executor.chdir
     assert_equal ["cleanup"], teardown_executor.steps
     assert_equal sandbox_path, teardown_executor.sandbox_path
+  end
+
+  def test_rejects_tmux_directives_for_vhs_yaml_backend
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+
+    resolver = StubResolver.new(yaml_path)
+    executor = StubExecutor.new
+    parser = StubYamlParser.new(
+      "settings" => {"format" => "gif"},
+      "scenes" => [
+        {
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}}
+          ]
+        }
+      ]
+    )
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: resolver,
+      executor: executor,
+      yaml_parser: parser,
+      default_backend: "vhs"
+    )
+
+    error = assert_raises(ArgumentError) do
+      recorder.record(tape_ref: "demo")
+    end
+
+    assert_includes error.message, "does not support tmux directives"
+    assert_nil executor.cmd
   end
 
   def test_records_yaml_tape_with_preparsed_spec_without_reparsing
@@ -468,6 +514,7 @@ class DemoRecorderTest < AceDemoTestCase
       ),
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
+      tmux_directive_executor: StubTmuxDirectiveExecutor.new,
       default_backend: "asciinema"
     )
 
@@ -495,6 +542,110 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal "agg", agg_executor.cmd.first
     assert_includes agg_executor.cmd, "--font-family"
     assert_includes agg_executor.cmd, "Hack Nerd Font Mono"
+  end
+
+  def test_records_yaml_tape_with_tmux_directives_as_additive_commands
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    asciinema_executor = StubInteractiveExecutor.new
+    tmux_executor = StubTmuxDirectiveExecutor.new
+    verification_result = Ace::Demo::Models::VerificationResult.new(
+      success: true,
+      status: "pass",
+      commands_found: ["echo ok"],
+      commands_missing: [],
+      details: {}
+    )
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: StubExecutor.new,
+      asciinema_executor: asciinema_executor,
+      agg_executor: StubExecutor.new,
+      cast_verifier: StubCastVerifier.new(result: verification_result),
+      yaml_parser: StubYamlParser.new(
+        "settings" => {"format" => "gif"},
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{
+          "name" => "Main flow",
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}},
+            {"type" => "echo ok", "sleep" => "1s"},
+            {"tmux" => {"action" => "detach", "session" => "fork-demo"}}
+          ]
+        }]
+      ),
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      tmux_directive_executor: tmux_executor,
+      default_backend: "asciinema"
+    )
+
+    recorder.record(tape_ref: "demo")
+
+    assert_equal :tmux, asciinema_executor.commands[0][:kind]
+    assert_equal :shell, asciinema_executor.commands[1][:kind]
+    assert_equal :tmux, asciinema_executor.commands[2][:kind]
+    asciinema_executor.handler.call(asciinema_executor.commands[0], write_io: StringIO.new)
+    asciinema_executor.handler.call(asciinema_executor.commands[2], write_io: StringIO.new)
+    assert_equal "wait", tmux_executor.calls[0][:command]["tmux"]["action"]
+    assert_equal "detach", tmux_executor.calls[1][:command]["tmux"]["action"]
+    assert_equal sandbox_path, tmux_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
+  end
+
+  def test_passes_settings_env_to_tmux_directive_executor
+    yaml_path = File.join(@tmp, "demo.tape.yml")
+    File.write(yaml_path, "description: demo\n")
+    sandbox_path = File.join(@tmp, "sandbox")
+    FileUtils.mkdir_p(sandbox_path)
+    asciinema_executor = StubInteractiveExecutor.new
+    tmux_executor = StubTmuxDirectiveExecutor.new
+    verification_result = Ace::Demo::Models::VerificationResult.new(
+      success: true,
+      status: "pass",
+      commands_found: ["echo ok"],
+      commands_missing: [],
+      details: {}
+    )
+
+    recorder = Ace::Demo::Organisms::DemoRecorder.new(
+      resolver: StubResolver.new(yaml_path),
+      executor: StubExecutor.new,
+      asciinema_executor: asciinema_executor,
+      agg_executor: StubExecutor.new,
+      cast_verifier: StubCastVerifier.new(result: verification_result),
+      yaml_parser: StubYamlParser.new(
+        "settings" => {
+          "format" => "gif",
+          "env" => {
+            "ACE_TMUX_SESSION" => "fork-demo",
+            "ACE_TMUX_WINDOW" => "work"
+          }
+        },
+        "setup" => ["sandbox"],
+        "teardown" => ["cleanup"],
+        "scenes" => [{
+          "name" => "Main flow",
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active"}}
+          ]
+        }]
+      ),
+      sandbox_builder: StubSandboxBuilder.new(sandbox_path),
+      teardown_executor: StubTeardownExecutor.new,
+      tmux_directive_executor: tmux_executor,
+      default_backend: "asciinema"
+    )
+
+    recorder.record(tape_ref: "demo")
+
+    asciinema_executor.handler.call(asciinema_executor.commands[0], write_io: StringIO.new)
+    assert_equal "fork-demo", tmux_executor.calls[0][:env]["ACE_TMUX_SESSION"]
+    assert_equal "work", tmux_executor.calls[0][:env]["ACE_TMUX_WINDOW"]
+    assert_equal sandbox_path, tmux_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
   end
 
   def test_preserves_asciinema_sandbox_on_failed_verification

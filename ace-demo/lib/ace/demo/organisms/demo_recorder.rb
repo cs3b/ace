@@ -19,6 +19,7 @@ module Ace
           yaml_compiler: Atoms::VhsTapeCompiler,
           asciinema_tape_compiler: Atoms::AsciinemaTapeCompiler,
           media_retimer: Molecules::MediaRetimer.new,
+          tmux_directive_executor: Molecules::TmuxDirectiveExecutor.new,
           sandbox_builder: Molecules::DemoSandboxBuilder.new,
           teardown_executor: Molecules::DemoTeardownExecutor.new,
           output_dir: Demo.config["output_dir"],
@@ -37,6 +38,7 @@ module Ace
           @yaml_compiler = yaml_compiler
           @asciinema_tape_compiler = asciinema_tape_compiler
           @media_retimer = media_retimer
+          @tmux_directive_executor = tmux_directive_executor
           @sandbox_builder = sandbox_builder
           @teardown_executor = teardown_executor
           @output_dir = output_dir || ".ace-local/demo"
@@ -176,7 +178,15 @@ module Ace
               tty_size: settings.fetch("tty_size", "80x24"),
               asciinema_bin: @asciinema_bin
             )
-            @asciinema_executor.run_interactive(record_cmd, commands: commands, env: env, chdir: sandbox[:path])
+            @asciinema_executor.run_interactive(
+              record_cmd,
+              commands: commands,
+              env: env,
+              chdir: sandbox[:path],
+              handler: lambda { |command, write_io:|
+                handle_interactive_command(command, write_io: write_io, env: env)
+              }
+            )
             normalize_cast_terminal_size(cast_output_path, tty_size: settings.fetch("tty_size", "80x24"))
 
             convert_cmd = Atoms::AggCommandBuilder.build(
@@ -230,11 +240,35 @@ module Ace
         def interactive_commands_for(spec:)
           spec.fetch("scenes", []).flat_map do |scene|
             scene.fetch("commands", []).map do |command|
-              {
-                command: command.fetch("type"),
-                sleep: sleep_seconds(command["sleep"] || "2s")
-              }
+              normalize_interactive_command(command)
             end
+          end
+        end
+
+        def normalize_interactive_command(command)
+          if command["type"]
+            return {
+              kind: :shell,
+              command: command.fetch("type"),
+              sleep: sleep_seconds(command["sleep"] || "2s")
+            }
+          end
+
+          {
+            kind: :tmux,
+            directive: command.fetch("tmux"),
+            sleep: sleep_seconds(command["sleep"] || "2s")
+          }
+        end
+
+        def handle_interactive_command(command, write_io:, env:)
+          case command[:kind]
+          when :shell
+            write_io.write("#{command.fetch(:command)}\n")
+            write_io.flush
+            nil
+          when :tmux
+            @tmux_directive_executor.execute({"tmux" => command.fetch(:directive)}, env)
           end
         end
 

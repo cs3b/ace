@@ -42,7 +42,7 @@ module Ace
           raise AsciinemaNotFoundError, "Asciinema not found (#{effective_bin}). Install: #{INSTALL_URL}"
         end
 
-        def run_interactive(cmd, commands:, env: {}, asciinema_bin: "asciinema", chdir: nil)
+        def run_interactive(cmd, commands:, env: {}, handler: nil, asciinema_bin: "asciinema", chdir: nil)
           effective_bin = cmd.first || asciinema_bin
           options = {}
           options[:chdir] = chdir if chdir
@@ -80,8 +80,16 @@ module Ace
             wait_for_prompt(buffer, buffer_mutex, buffer_cv)
 
             commands.each do |command|
-              write_io.write("#{command.fetch(:command)}\n")
-              write_io.flush
+              if handler && command[:kind] != :shell
+                outcome = handler.call(command, write_io: write_io)
+                if outcome.is_a?(Hash) && outcome[:shell_command]
+                  write_io.write("#{outcome[:shell_command]}\n")
+                  write_io.flush
+                end
+              else
+                write_io.write("#{command.fetch(:command)}\n")
+                write_io.flush
+              end
               @sleeper.sleep(command.fetch(:sleep))
             end
 

@@ -18,7 +18,7 @@
 
 ![ace-demo demo](docs/demo/ace-demo-getting-started.gif)
 
-`ace-demo` records terminal sessions as proof-of-work evidence for agent-driven workflows. Tapes define what to capture — either as simple [VHS](https://github.com/charmbracelet/vhs) scripts (`.tape`) or as YAML specs (`.tape.yml`) with sandbox setup, scenes, and teardown.
+`ace-demo` records terminal sessions as proof-of-work evidence for agent-driven workflows. Tapes define what to capture — either as simple [VHS](https://github.com/charmbracelet/vhs) scripts (`.tape`) or as YAML specs (`.tape.yml`) with sandbox setup, scenes, teardown, and optional tmux recorder-control directives.
 
 Recordings attach directly to GitHub pull requests as reviewable evidence. Requires `vhs`, `chromium`, and `ttyd` for deterministic rendering (see [setup requirements](docs/setup.md)).
 
@@ -43,6 +43,11 @@ scenes:
   commands:
   - type: ace-demo list
     sleep: 4s
+  - tmux:
+      action: wait
+      for: window-active
+      session: fork-demo
+      window: work
   - type: ace-demo record hello
     sleep: 6s
 
@@ -51,9 +56,11 @@ teardown:
 ```
 
 - **setup** — sandbox isolation, git init, fixture copying, or arbitrary shell via `run: <cmd>`
-- **scenes** — named command sequences compiled to VHS directives (`Type`, `Enter`, `Sleep`)
+- **scenes** — named command sequences with visible `type:` shell commands and optional `tmux:` recorder-control directives for asciinema-backed recordings
 - **teardown** — cleanup directives that always run (even on failure)
 - **settings** — optional `font_size`, `width`, `height`, `format` overrides
+
+Use `type:` for on-camera shell commands that should appear in the recording. Use `tmux:` only with the asciinema backend for recorder-control actions such as `attach`, `detach`, `wait`, and `send` when the demo needs deterministic tmux choreography without raw shell glue. YAML tapes recorded with the `vhs` backend must not include `tmux:` directives.
 
 Legacy `.tape` files use raw VHS syntax directly. See the [Usage Guide](docs/usage.md) for the full tape specification.
 

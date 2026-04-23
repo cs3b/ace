@@ -37,4 +37,37 @@ class RecordOptionValidatorTest < AceDemoTestCase
 
     assert_includes error.message, "requires --backend vhs"
   end
+
+  def test_validate_yaml_backend_capabilities_rejects_tmux_directives_for_vhs
+    spec = {
+      "scenes" => [
+        {
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}}
+          ]
+        }
+      ]
+    }
+
+    error = assert_raises(ArgumentError) do
+      Ace::Demo::Atoms::RecordOptionValidator.validate_yaml_backend_capabilities!(backend: "vhs", spec: spec)
+    end
+
+    assert_includes error.message, "does not support tmux directives"
+    assert_includes error.message, "backend 'asciinema'"
+  end
+
+  def test_validate_yaml_backend_capabilities_allows_tmux_directives_for_asciinema
+    spec = {
+      "scenes" => [
+        {
+          "commands" => [
+            {"tmux" => {"action" => "wait", "for" => "window-active", "session" => "fork-demo", "window" => "work"}}
+          ]
+        }
+      ]
+    }
+
+    Ace::Demo::Atoms::RecordOptionValidator.validate_yaml_backend_capabilities!(backend: "asciinema", spec: spec)
+  end
 end

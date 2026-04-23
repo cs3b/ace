@@ -34,11 +34,25 @@ module Ace
           raise ArgumentError, "Format 'webm' requires --backend vhs when recording YAML tapes"
         end
 
+        def validate_yaml_backend_capabilities!(backend:, spec:)
+          return unless backend == "vhs"
+          return unless yaml_uses_tmux_directives?(spec)
+
+          raise ArgumentError, "Backend 'vhs' does not support tmux directives in YAML tapes; use backend 'asciinema' or remove tmux commands"
+        end
+
         def validate_raw_tape_backend!(backend:)
           return if backend.nil? || backend == "vhs"
 
           raise ArgumentError, "Raw .tape recordings support backend 'vhs' only"
         end
+
+        def yaml_uses_tmux_directives?(spec)
+          Array(spec["scenes"]).any? do |scene|
+            Array(scene["commands"]).any? { |command| command.is_a?(Hash) && command["tmux"].is_a?(Hash) }
+          end
+        end
+        private_class_method :yaml_uses_tmux_directives?
       end
     end
   end
