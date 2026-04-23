@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.12] - 2026-04-23
+
+### Changed
+- Updated default ACE sandbox bootstrap to use `ace-config sync ace-llm-providers-cli` before `ace-handbook sync`, matching the renamed config sync command and minimal quick-start config requirement.
+
 ## [0.38.11] - 2026-04-20
 
 ### Fixed

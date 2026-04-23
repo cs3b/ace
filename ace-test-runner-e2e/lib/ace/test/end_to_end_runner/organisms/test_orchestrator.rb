@@ -190,10 +190,10 @@ module Ace
             steps = Array(scenario.setup_steps)
             return steps unless scenario.sandbox_profile == "ace-default"
 
-            has_config_init = setup_contains_command?(steps, "ace-config init")
+            has_config_sync = setup_contains_command?(steps, "ace-config sync")
             has_handbook_sync = setup_contains_command?(steps, "ace-handbook sync")
             bootstrap = []
-            bootstrap << {"run" => "ace-config init"} unless has_config_init
+            bootstrap << {"run" => "ace-config sync ace-llm-providers-cli"} unless has_config_sync
             bootstrap << {"run" => "ace-handbook sync"} unless has_handbook_sync
             return steps if bootstrap.empty?
 
