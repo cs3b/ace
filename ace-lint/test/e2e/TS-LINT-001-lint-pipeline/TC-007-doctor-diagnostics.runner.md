@@ -22,3 +22,41 @@ Save all output to `results/tc/07/`. Capture:
   - `results/tc/07/healthy/doctor.stdout`, `.stderr`, `.exit`
   - `results/tc/07/malformed/doctor.stdout`, `.stderr`, `.exit`
 - All artifacts must come from real tool execution, not fabricated.
+
+## Steps
+
+1. Create the two doctor environments with the exact tool-specific config path:
+
+   ```bash
+   mkdir -p valid-config/.ace/lint syntax-error/.ace/lint
+
+   cat > valid-config/.ace/lint/.rubocop.yml <<'EOF'
+   AllCops:
+     TargetRubyVersion: 3.2
+   EOF
+
+   cat > syntax-error/.ace/lint/.rubocop.yml <<'EOF'
+   AllCops:
+     TargetRubyVersion: [3.2
+   EOF
+   ```
+
+2. Run the healthy doctor check from inside `valid-config/`:
+
+   ```bash
+   (
+     cd valid-config || exit 1
+     ace-lint --doctor > ../results/tc/07/healthy/doctor.stdout 2> ../results/tc/07/healthy/doctor.stderr
+     echo $? > ../results/tc/07/healthy/doctor.exit
+   )
+   ```
+
+3. Run the malformed doctor check from inside `syntax-error/`:
+
+   ```bash
+   (
+     cd syntax-error || exit 1
+     ace-lint --doctor > ../results/tc/07/malformed/doctor.stdout 2> ../results/tc/07/malformed/doctor.stderr
+     echo $? > ../results/tc/07/malformed/doctor.exit
+   )
+   ```

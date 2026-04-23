@@ -13,14 +13,14 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ### Checks
 1. **Artifacts exist** — `results/tc/08/` contains capture files for command output and exit status.
-2. **Command contract is explicit** — captured command evidence includes `--no-report`.
+2. **Command contract is explicit** — `results/tc/08/command.txt` exists and includes `ace-lint valid.rb --no-report`.
 3. **Successful execution** — The captured exit code is `0`.
-4. **No report emission** — Captured output does not include a `Reports:` section or emitted report path.
-5. **No copied report artifacts** — `results/tc/08/` has no copied `report.json`, `ok.md`, `fixed.md`, or `pending.md`.
+4. **No report emission** — `results/tc/08/artifact-check.txt` confirms `Reports:` is absent from `lint.stdout`.
+5. **No copied report artifacts** — `results/tc/08/artifact-check.txt` confirms there are no copied `report.json`, `ok.md`, `fixed.md`, or `pending.md` files in `results/tc/08/`.
 
 ## Verdict
 
 - **PASS**: Exit code is 0 and evidence confirms `--no-report` suppressed report output/artifacts.
 - **FAIL**: Non-zero exit or evidence shows report output/artifacts were produced.
 
-Report: `PASS` or `FAIL` with evidence (exit code and no-report checks).
+Report: `PASS` or `FAIL` with evidence from `command.txt`, `artifact-check.txt`, and the lint captures.
