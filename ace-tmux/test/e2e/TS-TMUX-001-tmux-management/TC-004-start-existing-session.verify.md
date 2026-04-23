@@ -9,7 +9,6 @@ Validation order (impact-first):
 
 1. A run-scoped target session name is explicitly recoverable from one of:
    - `results/tc/04/session-name.txt`, or
-   - `results/tc/02/session-name.txt`, or
    - the shared session name visible across `initial-start.stdout`,
      `reuse-start.stdout`, and `force-start.stdout`.
 2. Evidence shows one explicit branch:
