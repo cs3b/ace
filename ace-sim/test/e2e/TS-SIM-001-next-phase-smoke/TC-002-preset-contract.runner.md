@@ -13,7 +13,9 @@ Run the default preset flow and capture artifacts that prove the shipped preset 
    - `results/tc/02/run.exit`
 3. Extract `Run Dir:` value from stdout and save it to `results/tc/02/run-dir.txt`.
 4. If a run dir is present, recursively list it into `results/tc/02/run-tree.txt`.
-5. If present, capture `session.yml` and `synthesis.yml` into `results/tc/02/`.
+5. If present, capture:
+   - `session.yml` -> `results/tc/02/session.yml`
+   - `synthesis.yml` -> `results/tc/02/synthesis.yml`
 6. If present, capture these files from `chains/glite-1`:
    - `01-draft/input.md`, `01-draft/user.bundle.md`, `01-draft/user.prompt.md`, `01-draft/output.md`
    - `02-plan/input.md`, `02-plan/output.md`
