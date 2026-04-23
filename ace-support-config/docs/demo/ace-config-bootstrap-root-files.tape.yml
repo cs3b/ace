@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-config init bootstrapping project-root guidance files from a subdirectory
+description: Showcase ace-config sync bootstrapping project-root guidance files from a subdirectory
 tags:
 - ace-config
 - ace-support-config
@@ -10,11 +10,11 @@ settings:
   height: 700
   format: gif
 scenes:
-- name: Initialize config from a nested working directory
+- name: Sync config from a nested working directory
   commands:
   - type: mkdir -p repo/subdir && cd repo && git init
     sleep: 3s
-  - type: cd subdir && ace-config init support-core
+  - type: cd subdir && ace-config sync support-core
     sleep: 5s
 - name: Verify bootstrap files landed at the repository root
   commands:

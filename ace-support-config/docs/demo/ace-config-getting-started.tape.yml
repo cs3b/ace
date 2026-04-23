@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-config CLI for listing, initializing, and diffing ace-* gem configurations
+description: Showcase ace-config CLI for listing, syncing, and diffing ace-* gem configurations
 tags:
 - ace-config
 - ace-support-config
@@ -14,9 +14,9 @@ scenes:
   commands:
   - type: ace-config list
     sleep: 3s
-- name: Preview config initialization
+- name: Preview config sync
   commands:
-  - type: ace-config init --dry-run
+  - type: ace-config sync --dry-run
     sleep: 4s
 - name: Diff configs against defaults
   commands:

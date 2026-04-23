@@ -8,7 +8,7 @@ module Ace
   module Support
     module Config
       module Organisms
-        class ConfigInitializer
+        class ConfigSynchronizer
           PROJECT_ROOT_DIR = "project-root"
           GITIGNORE_ACE_LOCAL_ENTRY = ".ace-local/"
 
@@ -21,17 +21,17 @@ module Ace
             @skipped_files = []
           end
 
-          def init_all
-            puts "Initializing all ace-* gem configurations..." if @verbose
+          def sync_all
+            puts "Syncing all ace-* gem configurations..." if @verbose
 
             Models::ConfigTemplates.all_gems.each do |gem_name|
-              init_gem(gem_name)
+              sync_gem(gem_name)
             end
 
             print_summary
           end
 
-          def init_gem(gem_name)
+          def sync_gem(gem_name)
             gem_name = normalize_gem_name(gem_name)
 
             unless Models::ConfigTemplates.gem_exists?(gem_name)
@@ -39,7 +39,7 @@ module Ace
               return
             end
 
-            puts "\nInitializing #{gem_name}..." if @verbose
+            puts "\nSyncing #{gem_name}..." if @verbose
 
             source_dir = Models::ConfigTemplates.example_dir_for(gem_name)
             target_dir = target_directory
@@ -182,7 +182,7 @@ module Ace
           def print_summary
             return if @dry_run
 
-            puts "\nConfiguration initialization complete:"
+            puts "\nConfiguration sync complete:"
             puts "  Files copied: #{@copied_files.size}"
             puts "  Files skipped: #{@skipped_files.size}"
 

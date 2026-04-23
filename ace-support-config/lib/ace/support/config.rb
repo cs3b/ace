@@ -22,11 +22,12 @@ require_relative "config/molecules/yaml_loader"
 require_relative "config/molecules/config_finder"
 require_relative "config/molecules/file_config_resolver"
 require_relative "config/molecules/project_config_scanner"
+require_relative "config/molecules/setup_doctor_reporter"
 
 # Load organisms (depend on molecules)
 require_relative "config/organisms/config_resolver"
 require_relative "config/organisms/virtual_config_resolver"
-require_relative "config/organisms/config_initializer"
+require_relative "config/organisms/config_synchronizer"
 require_relative "config/organisms/config_diff"
 require_relative "config/organisms/setup_doctor"
 require_relative "config/models/config_templates"

@@ -22,15 +22,15 @@
 This package now owns the `ace-config` executable for managing `.ace` configuration files and templates.
 
 ```bash
-ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
-ace-config doctor [--json] [--no-probe]
+ace-config sync [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config doctor [--json] [--hygiene] [--probe] [--no-probe] [--verbose] [--quiet] [--no-color]
 ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
 ace-config list [--verbose]
 ace-config version
 ace-config help
 ```
 
-Use `ace-config doctor` after a fresh setup to check quick-start readiness without mutating the project. It verifies local setup hygiene, provider package availability, `ace-llm --list-providers` discovery, configured aliases, and optional provider probe readiness. Add `--json` for machine-readable output or `--no-probe` when credentials or network probes should be skipped.
+Use `ace-config doctor` after a fresh setup to check quick-start readiness without mutating the project. By default it prints each fast setup check as it completes, streams concurrent `ace-llm TARGET "ping" --no-fallback` results for deduped `_utility` and `commit` role candidates, and then prints a final doctor report. The report separates health warnings from informational config-default drift and hidden-by-default hygiene findings. Add `--hygiene` to print full hygiene details, `--json` for machine-readable output, or `--no-probe` to skip live provider pings.
 
 ## Testing
 
