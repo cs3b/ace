@@ -1,6 +1,6 @@
 ---
 id: 8rl.t.ks9
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
@@ -12,6 +12,12 @@ tags: []
 created_at: "2026-04-22 13:51:24"
 github_issue: 299
 needs_review: false
+worktree:
+  branch: ks9-clarify-ace-quick-start-first-use-setup-flow
+  path: ../ace-t.ks9
+  created_at: "2026-04-23 17:42:16"
+  updated_at: "2026-04-23 17:42:16"
+  target_branch: main
 ---
 
 # Clarify ACE quick-start first-use setup flow
