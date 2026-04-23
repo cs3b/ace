@@ -1,10 +1,14 @@
 name: claude
+last_synced: 2026-04-23
 class: Ace::LLM::Providers::CLI::ClaudeCodeClient
 gem: ace-llm-providers-cli
+models_dev_id: anthropic
+context_limit: 1000000
 models:
-  - claude-opus-4-1
-  - claude-sonnet-4-0
-  - claude-3-5-haiku-latest
+  - claude-haiku-4-5
+  - claude-opus-4-6
+  - claude-opus-4-7
+  - claude-sonnet-4-6
 aliases:
   global:
     cc: claude:sonnet
@@ -12,9 +16,9 @@ aliases:
     cc-sonnet: claude:sonnet
     cc-haiku: claude:haiku
   model:
-    opus: claude-opus-4-1
-    sonnet: claude-sonnet-4-0
-    haiku: claude-3-5-haiku-latest
+    opus: claude-opus-4-6
+    sonnet: claude-sonnet-4-6
+    haiku: claude-haiku-4-5
 capabilities:
   - text_generation
   - streaming

@@ -39,7 +39,11 @@ describe "CodexClient" do
   end
 
   it "ships current codex aliases in provider defaults" do
-    config = YAML.safe_load_file(File.expand_path("../../../.ace-defaults/llm/providers/codex.yml", __dir__))
+    config = YAML.safe_load_file(
+      File.expand_path("../../../.ace-defaults/llm/providers/codex.yml", __dir__),
+      permitted_classes: [Date],
+      aliases: true
+    )
 
     assert_equal "gpt-5.4", config.dig("aliases", "model", "gpt")
     assert_equal "gpt-5.3-codex", config.dig("aliases", "model", "codex")

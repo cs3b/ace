@@ -34,10 +34,14 @@ describe "GeminiClient" do
   end
 
   it "ships latest gemini aliases in provider defaults" do
-    config = YAML.safe_load_file(File.expand_path("../../../.ace-defaults/llm/providers/gemini.yml", __dir__))
+    config = YAML.safe_load_file(
+      File.expand_path("../../../.ace-defaults/llm/providers/gemini.yml", __dir__),
+      permitted_classes: [Date],
+      aliases: true
+    )
 
-    assert_equal "gemini-2.5-flash", config.dig("aliases", "model", "flash-latest")
-    assert_equal "gemini-2.5-pro", config.dig("aliases", "model", "pro-latest")
+    assert_equal "gemini-3-flash-preview", config.dig("aliases", "model", "flash-latest")
+    assert_equal "gemini-3.1-pro-preview", config.dig("aliases", "model", "pro-latest")
   end
 
   it "formats string prompts correctly" do

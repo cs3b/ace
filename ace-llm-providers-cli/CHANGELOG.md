@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.5] - 2026-04-23
+
+
+### Changed
+- Refined Codex CLI client startup behavior and startup-policy handling for interactive launches so provider metadata and override paths stay aligned.
+- Updated provider client behavior and tests around interactive policy resolution to keep alias and model mapping stable under tmux launches.
+
+
 ## [0.31.4] - 2026-04-22
 
 ### Fixed
