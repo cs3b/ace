@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.6] - 2026-04-23
+
+### Technical
+- Removed the stale cross-TC `session-name` fallback from retained existing-session verification so the goal now relies only on in-scope session continuity evidence.
+
 ## [0.14.5] - 2026-04-23
 
 
