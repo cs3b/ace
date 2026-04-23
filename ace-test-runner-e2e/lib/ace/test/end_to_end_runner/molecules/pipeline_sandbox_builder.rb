@@ -214,7 +214,7 @@ module Ace
 
             stdout, stderr, status = Open3.capture3(
               env,
-              "bash", "--noprofile", "--norc", "-c", "ace-config init && ace-handbook sync",
+              "bash", "--noprofile", "--norc", "-c", "ace-config sync ace-llm-providers-cli && ace-handbook sync",
               chdir: sandbox_path
             )
             return if status.success?

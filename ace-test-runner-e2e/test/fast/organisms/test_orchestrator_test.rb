@@ -852,6 +852,46 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_ace_default_setup_injects_config_sync_before_handbook_sync
+    scenario = TestScenario.new(
+      test_id: "TS-TEST-001",
+      title: "Setup",
+      area: "test",
+      package: "my-pkg",
+      file_path: "scenario.yml",
+      content: "",
+      setup_steps: ["git-init"],
+      sandbox_profile: "ace-default"
+    )
+    orchestrator = create_orchestrator
+
+    steps = orchestrator.send(:effective_setup_steps_for, scenario)
+
+    assert_equal "git-init", steps[0]
+    assert_equal({"run" => "ace-config sync ace-llm-providers-cli"}, steps[1])
+    assert_equal({"run" => "ace-handbook sync"}, steps[2])
+    refute steps.any? { |step| step.is_a?(Hash) && step["run"].to_s.include?("ace-config init") }
+  end
+
+  def test_ace_default_setup_does_not_duplicate_existing_config_sync
+    scenario = TestScenario.new(
+      test_id: "TS-TEST-001",
+      title: "Setup",
+      area: "test",
+      package: "my-pkg",
+      file_path: "scenario.yml",
+      content: "",
+      setup_steps: ["git-init", {"run" => "ace-config sync ace-llm-providers-cli"}],
+      sandbox_profile: "ace-default"
+    )
+    orchestrator = create_orchestrator
+
+    steps = orchestrator.send(:effective_setup_steps_for, scenario)
+
+    assert_equal 1, steps.count { |step| step.is_a?(Hash) && step["run"].to_s.include?("ace-config sync") }
+    assert_equal 1, steps.count { |step| step.is_a?(Hash) && step["run"].to_s.include?("ace-handbook sync") }
+  end
+
   def test_cli_provider_passes_run_id_to_setup_tmux_session
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_run_id_tmux_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
