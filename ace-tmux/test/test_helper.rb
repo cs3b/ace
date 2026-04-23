@@ -23,6 +23,8 @@ module TmuxTestHelper
       @captured_commands << cmd
       key = cmd.join(" ")
       response = @capture_responses[key] || @capture_responses[:default]
+      response = response.call(cmd) if response.respond_to?(:call)
+      response = response.length > 1 ? response.shift : response.first if response.is_a?(Array)
 
       response || Ace::Tmux::Molecules::ExecutionResult.new(
         stdout: "",

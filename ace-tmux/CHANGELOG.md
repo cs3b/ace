@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.17.0] - 2026-04-16
+
+### Added
+- Added a shared tmux runtime control surface with public `ace-tmux send`, `capture`, `wait`, `attach`, and `detach` commands.
+- Added `send --wait` plus a new `agent` wait condition so interactive CLI panes, including shell-wrapped Codex/Claude/pi launches, can accept a prompt, block until the visible response settles, and then capture the final same-pane screen tail in one command.
+
+### Changed
+- Added runtime target resolution, bounded named-key validation, and the v1 tmux wait-condition set for ACE-managed live control flows.
+- Reworked `ace-tmux send` around `--cmd`, repeatable `--msg` / `--key`, and inline `--capture` output so one call can submit pane input and immediately tail feedback.
+- Split preset discovery from runtime inspection: `ace-tmux --list-presets [TYPE]` now lists preset names, while `ace-tmux list` inspects live tmux panes in the current window by default and supports `--all-panes`, `--windows`, and `--sessions`.
+- Tightened `ace-tmux send --wait output` so it matches post-send output instead of succeeding on stale visible text, and added `ace-tmux wait --lines` to control the observed pane tail.
+- Expanded README, CLI help, docs, demo tape, and retained E2E coverage to document the control-side contract and the `--list-presets` plus runtime `list` split.
+
+### Fixed
+- Qualified the default shared-control executor path so public `ace-tmux` control commands construct correctly without injected dependencies.
+- Restored detached explicit-session active-window fallback so `ACE_TMUX_SESSION` launches can still resolve the current window outside a live tmux client.
+- Validate `ace-tmux` pane targets before dispatch so invalid `session:window:pane` input now returns a corrective error that points users to `%pane_id`, `session:window.pane`, `.pane`, or `--window ... --pane ...`.
+- Bound `capture-pane` with `-E -1` so `ace-tmux capture --lines N` and `ace-tmux send --capture N` return the last `N` visible pane rows instead of an oversized scrollback slice.
+- Resolve pane shorthands through stable tmux window ids so `.pane`, bare pane indexes, and dotted window names like `ace-t.n1d` target the intended pane instead of producing invalid pane targets.
+- Pace the first submit `Enter` for interactive CLI panes such as `codex`, `claude`, and `pi`, and capture their visible bottom screen rows so sends submit reliably and `--capture` reflects the current TUI screen instead of stale scrollback.
+- `ace-tmux wait --for pane-exited` now succeeds when the pane disappears entirely instead of timing out on missing-pane targets.
+- `ace-tmux detach` now reports the resolved target session name, even when the session came from ACE env vars or live tmux context.
+
+### Technical
+- Added optional `split-window -P -F` command building so shared tmux consumers can capture the created pane id without private command arrays.
 
 ## [0.14.6] - 2026-04-23
 

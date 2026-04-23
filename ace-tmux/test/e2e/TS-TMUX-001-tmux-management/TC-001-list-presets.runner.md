@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run `ace-tmux list sessions` and capture output listing available session
+Run `ace-tmux --list-presets sessions` and capture output listing available session
 presets.
 
 If one or more presets exist, record a selected preset name in a dedicated
