@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-04-23
+
+
+### Changed
+- Clarified staged-only and setup-failure commit workflows, including explicit path-scoped command contracts for single-package commits and recovery guidance.
+- Added commit contract coverage for staged-first and fallback paths so split/no-split behavior is deterministic before automatic path-scoped commit flow.
+
+
 ## [0.26.1] - 2026-04-22
 
 ### Technical
