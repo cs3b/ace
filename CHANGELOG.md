@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.38.16**: Enforced runner-owned verifier artifact contracts, expanded grouped capture shorthand, and rejected verifier-only or wildcard artifact declarations so retained E2E drift fails at scenario-load time instead of leaking into later reruns.
+- **ace-test-runner-e2e v0.38.15**: Passed required artifact contracts into runner prompts and added a bounded repair pass so retained E2E scenarios can recover missing declared captures before verification.
+- **ace-test-runner-e2e v0.38.14**: Limited deterministic sandbox git excludes to setup-commit scenarios so copied package trees stay visible to ignore-aware tools while fixture-repo support paths stay unstaged.
 - **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
 - **ace-support-config v0.12.1**: Hardened `ace-config doctor` readiness checks by validating stale `aliases.global` provider targets and accepting semantic `.ace-local` ignore patterns instead of exact-line matching.
 - **ace-support-config v0.13.0**: Made `ace-config doctor` fast by default with structural role-default checks and moved live provider probes behind explicit `--probe`.
@@ -12,12 +15,15 @@ All notable changes to this project will be documented in this file.
 - **ace-tmux v0.14.4**: Centralized ACE-managed tmux window-name sanitization so dotted or punctuation-bearing worktree/window names become safe tmux targets and startup selection uses window IDs.
 - **ace-assign v0.53.5**: Reused the shared tmux sanitizer for fork windows and targeted fork panes/windows by tmux window ID after lookup or creation.
 - **ace-overseer v0.14.13**: Reused sanitized tmux window-name matching so worktrees with punctuation do not reopen duplicate windows.
+- **ace-test-runner-e2e v0.38.13**: Enabled verifier fallback for role-based verifier aliases and kept deterministic E2E sandboxes from staging copied package/support files into fixture-repo history.
 
 ### Added
 - **ace-llm v0.37.0**: Added `ace-llm --no-fallback` so ordinary prompts such as `ping` can verify the exact requested provider/model without fallback routing.
 - **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
 ### Changed
+- **ace-assign v0.54.0**: Replaced persisted/public `in_progress` state with `active`, stopped treating queue prediction as started work, and introduced scope-aware `active_steps` plus `next_step` status semantics for normal and forked assignment execution.
+- **ace-overseer v0.15.0**: Updated status collection and work-on orchestration to consume the new `ace-assign` active-step contract, including `active_steps`, `next_step`, and focused-step resume behavior.
 - **ace-assign v0.53.6**: Improved tmux-backed fork launch behavior so fork windows are resolved through shared window-name sanitation and active-session targeting updates.
 - Added test coverage for fork window lifecycle paths where window lookup and pane targeting previously depended on brittle parsing.
 - **ace-git-commit v0.26.2**: Clarified staged-only and setup-failure commit workflows, including explicit path-scoped command contracts for single-package commits and recovery guidance.
@@ -36,12 +42,19 @@ All notable changes to this project will be documented in this file.
 - **ace-git-commit v0.26.0**: Improved setup-time LLM failure guidance to include failed role/model context, provider/setup remediation commands, deterministic direct-message fallback (`--only-staged --no-split -m`), and matching docs/test coverage including `TS-COMMIT-001` goal 8.
 
 ### Technical
+- Retained E2E contract follow-ups for the stricter artifact model: `ace-git-secrets v0.15.8`, `ace-lint v0.30.7`, `ace-sim v0.15.5`, and `ace-tmux v0.14.6`.
+- **ace-monorepo-e2e**: Hardened `TS-MONO-002` quick-start sandbox setup and setup-commit fallback so copied repo context stays out of fixture history and goal-based commits stay scoped to the staged `QUICKSTART_SETUP.md` marker.
+- Retained E2E contract refreshes after the latest targeted scenario sweep: `ace-git-worktree v0.21.6`, `ace-lint v0.30.6`, and `ace-overseer v0.15.3`.
+- Retained E2E contract refreshes after the runner repair-path update: `ace-assign v0.54.2` and `ace-overseer v0.15.2`.
+- Retained E2E contract refreshes after the sandbox exclude fix: `ace-assign v0.54.1`, `ace-git-secrets v0.15.7`, `ace-git-worktree v0.21.5`, and `ace-support-models v0.11.3`.
+- Dependency-following patch release: `ace-overseer v0.15.1` to align its `ace-git-worktree` runtime constraint with the `0.21` line.
 - **Config sync follow-ups**: Patch-released docs, cookbook, assignment guidance, and E2E bootstrap surfaces for the `ace-config sync` rename: `ace-test-runner-e2e v0.38.12`, `ace-support-core v0.29.9`, `ace-handbook v0.28.1`, and `ace-assign v0.53.7`.
 - **Dependency follow-up**: Patch-released handbook integrations to match the new core version line: `ace-handbook-integration-claude` v0.3.8, `ace-handbook-integration-codex` v0.3.7, `ace-handbook-integration-gemini` v0.3.7, `ace-handbook-integration-opencode` v0.3.7, and `ace-handbook-integration-pi` v0.3.8.
 - **ace-llm v0.36.5**: Stabilized deterministic verification by stubbing CLI routing tests away from provider fallback HTTP calls and removing retry sleep from fallback model-format coverage.
 - **ace-support-config v0.12.0**: Added doctor command/spec coverage for CLI wiring, alias/package/discovery checks, and probe skip behavior.
 - **ace-assign v0.53.5 / ace-overseer v0.14.13**: Tightened runtime dependency constraints to `ace-tmux ~> 0.14.4` for the shared sanitizer API.
 - **ace-git-commit v0.26.1**: Tightened `TS-COMMIT-001` Goal 7/8 staging contracts to prevent generated `results/` artifacts from contaminating staged-only commit evidence.
+- **ace-git-secrets v0.15.6**: Tightened the remediation-path E2E contract so saved-report coverage requires a full-history scan and rejects narrowed `--since HEAD` false-clean artifacts.
 
 ## [0.9.939] - 2026-04-20
 
