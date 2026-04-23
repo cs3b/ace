@@ -22,7 +22,7 @@ Save all output to `results/tc/06/`.
 2. Attempt goal-based commit and capture evidence:
 
    ```bash
-   ace-git-commit -i "set up ace tooling" > results/tc/06/goal-commit.stdout 2> results/tc/06/goal-commit.stderr
+   ace-git-commit --only-staged --no-split -i "set up ace tooling" > results/tc/06/goal-commit.stdout 2> results/tc/06/goal-commit.stderr
    echo $? > results/tc/06/goal-commit.exit
    ```
 
@@ -51,5 +51,6 @@ Save all output to `results/tc/06/`.
 ## Constraints
 
 - Use real `git` and `ace-git-commit` execution only.
+- Keep the intent-based attempt scoped to the already staged `QUICKSTART_SETUP.md` change only.
 - Do not fabricate failures or fallback output.
 - Keep all artifacts under `results/tc/06/`.

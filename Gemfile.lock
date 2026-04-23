@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.53.7)
+    ace-assign (0.54.2)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.34)
       ace-support-cli (~> 0.6)
@@ -78,7 +78,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.15.5)
+    ace-git-secrets (0.15.8)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -89,7 +89,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.21.4)
+    ace-git-worktree (0.21.6)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -167,7 +167,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.30.5)
+    ace-lint (0.30.7)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -198,10 +198,10 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.14.14)
-      ace-assign (~> 0.53)
+    ace-overseer (0.15.3)
+      ace-assign (~> 0.54)
       ace-git (~> 0.19)
-      ace-git-worktree (~> 0.20)
+      ace-git-worktree (~> 0.21)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)
@@ -259,7 +259,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.15.4)
+    ace-sim (0.15.5)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -312,7 +312,7 @@ PATH
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.11.2)
+    ace-support-models (0.11.3)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.29)
       faraday (~> 2.0)
@@ -349,7 +349,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.38.12)
+    ace-test-runner-e2e (0.38.16)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.30)
       ace-support-cli (~> 0.6)
@@ -378,7 +378,7 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.14.5)
+    ace-tmux (0.14.6)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)

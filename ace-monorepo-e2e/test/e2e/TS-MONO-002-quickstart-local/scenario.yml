@@ -36,6 +36,36 @@ requires:
 
 setup:
   - git-init
+  - run: |
+      cat >> .git/info/exclude <<'EOF'
+      .gitignore
+      .ace/git/
+      .ace/llm/
+      .ace/bundle/
+      .ace-handbook/
+      .ace-ideas/
+      .ace-tasks/
+      docs/
+      mise.toml
+      quick-start.md
+      EOF
+  - run: |
+      # Copy the minimal tracked repo context that quick-start references.
+      source_root="${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}"
+      mkdir -p .ace docs
+      cp "$source_root/.gitignore" .gitignore
+      cp -R "$source_root/.ace/bundle" .ace/
+      cat > .ace/bundle/config.yml <<'EOF'
+      # Sandbox override for deterministic E2E bundle execution.
+      bundle:
+        max_lines: 2100
+        compressor:
+          source_scope: "off"
+          mode: "exact"
+      EOF
+      for doc in vision.md architecture.md decisions.md ace-gems.g.md blueprint.md tools.md; do
+        cp "$source_root/docs/$doc" "docs/$doc"
+      done
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: |
       # Copy the quick-start doc into sandbox for reference
