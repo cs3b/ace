@@ -14,14 +14,14 @@ module Ace
       #   #     +-- onboard (completed)
       #   #     +-- work-on-task (running)
       #   #     |   +-- onboard (completed)
-      #   #     |   +-- implement (in_progress)
+      #   #     |   +-- implement (active)
       #   #     |   \-- verify-tests (pending)
       #   #     \-- review-pr (pending)
       module TreeFormatter
         # State display labels matching list command
         STATE_LABELS = {
           pending: "pending",
-          in_progress: "in_progress",
+          active: "active",
           running: "running",
           paused: "paused",
           completed: "completed",

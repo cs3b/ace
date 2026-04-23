@@ -11,7 +11,7 @@ module Ace
         # - <assignment-id>@<step-number>
         module AssignmentTarget
           Target = Struct.new(:assignment_id, :scope, keyword_init: true)
-          View = Struct.new(:assignment, :state, :scoped_state, :current_step, :scope_root, keyword_init: true)
+          View = Struct.new(:assignment, :state, :scoped_state, :active_steps, :next_step, :focus_step, :scope_root, keyword_init: true)
 
           private
 
@@ -60,45 +60,52 @@ module Ace
               assignment: result[:assignment],
               state: state,
               scoped_state: scoped[:state],
-              current_step: scoped[:current],
+              active_steps: scoped[:active_steps],
+              next_step: scoped[:next_step],
+              focus_step: scoped[:focus_step],
               scope_root: scoped[:root]
             )
           end
 
           def scoped_status_view(state, scope)
-            return {state: state, current: state.current || state.next_workable, root: nil} if scope.nil? || scope.strip.empty?
+            if scope.nil? || scope.strip.empty?
+              active_steps = state.active_steps
+              next_step = active_steps.empty? ? state.next_workable : nil
+              return {state: state, active_steps: active_steps, next_step: next_step, focus_step: state.current || next_step, root: nil}
+            end
 
             root = state.find_by_number(scope.strip)
             raise StepErrors::NotFound, "Step #{scope} not found in queue" unless root
 
             scoped_steps = state.subtree_steps(root.number)
             scoped_state = Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
-            current = scoped_state.current || scoped_state.next_workable
+            active_steps = scoped_state.active_steps
+            next_step = active_steps.empty? ? scoped_state.next_workable : nil
 
-            {state: scoped_state, current: current, root: root.number}
+            {state: scoped_state, active_steps: active_steps, next_step: next_step, focus_step: scoped_state.current || next_step, root: root.number}
           end
 
-          def fork_scope_root(state, current_step)
-            return nil unless current_step
-            return current_step if current_step.fork?
+          def fork_scope_root(state, step)
+            return nil unless step
+            return step if step.fork?
 
-            state.nearest_fork_ancestor(current_step.number)
+            state.nearest_fork_ancestor(step.number)
           end
 
-          def scoped_fork_metadata_step(state, current_step, scope, scope_root)
-            return nil unless current_step
+          def scoped_fork_metadata_step(state, step, scope, scope_root)
+            return nil unless step
 
             if scope && !scope.strip.empty?
               return state.find_by_number(scope_root || scope.strip)
             end
 
-            fork_scope_root(state, current_step)
+            fork_scope_root(state, step)
           end
 
-          def effective_fork_provider_for(current_step, scoped_fork_step)
-            return nil unless current_step
+          def effective_fork_provider_for(step, scoped_fork_step)
+            return nil unless step
 
-            provider = current_step.fork_provider || scoped_fork_step&.fork_provider
+            provider = step.fork_provider || scoped_fork_step&.fork_provider
             provider.to_s.strip.empty? ? nil : provider
           end
         end

@@ -12,7 +12,9 @@ class RetryCmdTest < AceAssignTestCase
 
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step(step_number: "010")
       executor.advance(report_path) # Complete init
+      executor.start_step(step_number: "020")
       executor.fail("Failed")       # Fail build
 
       result = nil
@@ -79,7 +81,9 @@ class RetryCmdTest < AceAssignTestCase
       report_path = create_report(cache_dir, "Done")
       target_executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       target_executor.assignment_manager.define_singleton_method(:find_active) { result2[:assignment] }
+      target_executor.start_step(step_number: "010")
       target_executor.advance(report_path) # Complete step 010
+      target_executor.start_step(step_number: "020")
       target_executor.fail("Failed")       # Fail step 020
 
       output = capture_io do

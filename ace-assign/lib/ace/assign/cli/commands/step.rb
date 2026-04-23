@@ -4,12 +4,12 @@ module Ace
   module Assign
     module CLI
       module Commands
-        # Print instructions for the current, next, or an explicit step.
+        # Print instructions for the focused active, next, or an explicit step.
         class Step < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
           include AssignmentTarget
 
-          desc "Show instructions for the current, next, or explicit step"
+          desc "Show instructions for the active, next, or explicit step"
 
           argument :step, required: false, desc: "Exact step number to inspect"
           option :assignment, desc: "Target specific assignment ID"
@@ -44,7 +44,7 @@ module Ace
               return step
             end
 
-            view.current_step
+            view.focus_step
           end
 
           def no_work_message(view)
@@ -52,7 +52,7 @@ module Ace
             last_done = view.scoped_state.last_done ? "#{view.scoped_state.last_done.number} #{view.scoped_state.last_done.name}" : "none"
             [
               "Assignment: #{view.assignment.id} | Status: #{state_label} | Progress: #{view.scoped_state.done.size}/#{view.scoped_state.size} done",
-              "Last done: #{last_done} | No current or next workable step"
+              "Last done: #{last_done} | No active or next workable step"
             ].join("\n")
           end
         end

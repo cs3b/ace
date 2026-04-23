@@ -17,6 +17,13 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def complete_all_steps(executor, report_path, count)
+    count.times do
+      executor.start_step
+      executor.advance(report_path)
+    end
+  end
+
   def test_status_without_assignment
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
@@ -54,11 +61,13 @@ class StatusCommandTest < AceAssignTestCase
       assert_operator lines.length, :<=, 10
       assert_includes lines.first, "Assignment:"
       assert_includes lines.first, "Status:"
+      assert_includes lines.first, "Status: paused"
+      assert_includes lines.first, "Next: 010 onboard"
       assert_equal "Last done: none", lines[1]
       assert_equal "Pending steps:", lines[2]
-      assert_includes output, "010 active onboard"
+      assert_includes output, "010 next onboard"
       assert_includes lines.last, "Steps:"
-      assert_includes lines.last, "Pending: 5"
+      assert_includes lines.last, "Pending: 6"
       refute_includes output, "Instructions:"
       refute_includes output, "QUEUE - Assignment:"
       refute_includes output, "Preview:"
@@ -77,7 +86,9 @@ class StatusCommandTest < AceAssignTestCase
 
       output = capture_status_command(cache_base: cache_dir, mode: "progress").first
       assert_equal 1, output.lines.count
+      assert_includes output, "State: paused"
       assert_includes output, "Progress: 0/3 done"
+      assert_includes output, "Next: 010 init"
       refute_includes output, "Preview:"
     ensure
       Ace::Assign.reset_config!
@@ -92,7 +103,7 @@ class StatusCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
-      3.times { executor.advance(report) }
+      complete_all_steps(executor, report, 3)
 
       output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id).first
       lines = output.lines.map(&:chomp)
@@ -123,7 +134,9 @@ class StatusCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
+      executor.start_step
       executor.advance(report)
+      executor.start_step
 
       failed_report = create_report(cache_dir, "HITL: stalled implementation requires fix")
       executor.fail(failed_report)
@@ -132,6 +145,7 @@ class StatusCommandTest < AceAssignTestCase
       end
       executor.start_step
       executor.advance(report)
+      executor.start_step
       executor.advance(report)
 
       status_output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id).first
@@ -168,7 +182,7 @@ class StatusCommandTest < AceAssignTestCase
       output = capture_status_command(cache_base: cache_dir, mode: "full", assignment: "#{result[:assignment].id}@010").first
 
       assert_includes output, "QUEUE - Assignment:"
-      assert_includes output, "Current Step: 010.01 - onboard"
+      assert_includes output, "Next Step: 010.01 - onboard"
       assert_includes output, "Fork Provider: codex:gpt-fit"
       refute_includes output, "Instructions:"
       refute_includes output, "Fork subtree detected"
@@ -192,6 +206,7 @@ class StatusCommandTest < AceAssignTestCase
         step_path,
         {"stall_reason" => "HITL: htl123 .ace-local/hitl/next/htl123-need-decision.md"}
       )
+      executor.start_step
 
       output = capture_status_command(cache_base: cache_dir, mode: "full", assignment: result[:assignment].id).first
 
@@ -202,7 +217,7 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
-  def test_status_json_format_remains_backward_compatible
+  def test_status_json_reports_active_steps_and_next_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
       Ace::Assign.config["cache_dir"] = cache_dir
@@ -214,16 +229,17 @@ class StatusCommandTest < AceAssignTestCase
       payload = JSON.parse(output.first)
 
       assert_equal result[:assignment].id, payload.dig("assignment", "id")
-      assert_equal "running", payload.dig("assignment", "state")
+      assert_equal "paused", payload.dig("assignment", "state")
       assert_equal "0/3 done", payload["progress"]
-      assert_equal "010", payload.dig("current_step", "number")
-      assert_equal "init", payload.dig("current_step", "name")
+      assert_equal [], payload["active_steps"]
+      assert_equal "010", payload.dig("next_step", "number")
+      assert_equal "init", payload.dig("next_step", "name")
     ensure
       Ace::Assign.reset_config!
     end
   end
 
-  def test_status_json_with_scope_uses_scope_root_fork_provider
+  def test_status_json_with_scope_uses_scope_root_fork_provider_for_next_step
     with_temp_cache do |cache_dir|
       steps = [
         {
@@ -243,8 +259,9 @@ class StatusCommandTest < AceAssignTestCase
       output = capture_status_command(cache_base: cache_dir, format: "json", assignment: "#{result[:assignment].id}@010")
       payload = JSON.parse(output.first)
 
-      assert_equal "010.01", payload.dig("current_step", "number")
-      assert_equal "codex:gpt-fit", payload.dig("current_step", "fork_provider")
+      assert_equal [], payload["active_steps"]
+      assert_equal "010.01", payload.dig("next_step", "number")
+      assert_equal "codex:gpt-fit", payload.dig("next_step", "fork_provider")
     ensure
       Ace::Assign.reset_config!
     end

@@ -34,7 +34,11 @@ class ForkRunCommandTest < AceAssignTestCase
       loop do
         state = executor.status[:state]
         break if state.subtree_complete?(fork_root) || state.subtree_failed?(fork_root)
-        break unless state.current
+        current = state.current_in_subtree(fork_root)
+        if current.nil? || (current.number == fork_root && state.children_of(fork_root).any?)
+          executor.start_step(fork_root: fork_root)
+          next
+        end
 
         executor.advance(report_path, fork_root: fork_root)
       end
@@ -111,6 +115,10 @@ class ForkRunCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
       executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
+      Ace::Assign::Molecules::StepWriter.new.mark_active(
+        result[:state].find_by_number("010").file_path
+      )
+      executor.start_step(fork_root: "010")
 
       output = capture_fork_run_command(
         cache_base: cache_dir,
@@ -174,10 +182,8 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
-  def test_fork_run_marks_first_workable_child_as_in_progress
+  def test_fork_run_marks_root_active_before_launch_and_keeps_child_pending
     with_temp_cache do |cache_dir|
-      # Two top-level steps: first non-fork, second fork with sub_steps.
-      # start() marks 010 as in_progress, so 020.01 stays pending.
       steps = [
         {"name" => "pre-step", "instructions" => "Run pre-step"},
         {
@@ -198,8 +204,7 @@ class ForkRunCommandTest < AceAssignTestCase
       first_child = state_before.find_by_number("020.01")
       assert_equal :pending, first_child.status, "First fork child should be pending before fork_run"
 
-      # Use a launcher that captures state after mark but before completing
-      marked_status = nil
+      launch_snapshot = {}
       spy_launcher = Class.new do
         define_method(:initialize) { |cache_base:| @cache_base = cache_base }
         define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
@@ -209,7 +214,8 @@ class ForkRunCommandTest < AceAssignTestCase
 
           assignment = manager.load(assignment_id)
           state = scanner.scan(assignment.steps_dir, assignment: assignment)
-          marked_status = state.find_by_number("020.01")&.status
+          launch_snapshot[:root] = state.find_by_number("020")&.status
+          launch_snapshot[:child] = state.find_by_number("020.01")&.status
 
           # Complete all steps so fork_run doesn't error
           state.subtree_steps(fork_root).each do |step|
@@ -226,13 +232,14 @@ class ForkRunCommandTest < AceAssignTestCase
         assignment: result[:assignment].id
       )
 
-      assert_equal :in_progress, marked_status, "First workable child should be marked in_progress before launch"
+      assert_equal :active, launch_snapshot[:root]
+      assert_equal :pending, launch_snapshot[:child]
 
       Ace::Assign.reset_config!
     end
   end
 
-  def test_fork_run_marks_leaf_root_as_in_progress_before_launch
+  def test_fork_run_marks_leaf_root_active_before_launch
     with_temp_cache do |cache_dir|
       steps = [
         {"name" => "pre-step", "instructions" => "Run pre-step"},
@@ -271,7 +278,7 @@ class ForkRunCommandTest < AceAssignTestCase
         assignment: "#{result[:assignment].id}@020"
       )
 
-      assert_equal :in_progress, launch_snapshot[:leaf_status]
+      assert_equal :active, launch_snapshot[:leaf_status]
 
       Ace::Assign.reset_config!
     end
@@ -298,7 +305,7 @@ class ForkRunCommandTest < AceAssignTestCase
       scanner = Ace::Assign::Molecules::QueueScanner.new
       writer = Ace::Assign::Molecules::StepWriter.new
       state_before = scanner.scan(assignment.steps_dir, assignment: assignment)
-      writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
+      writer.mark_active(state_before.find_by_number("020.01").file_path)
 
       launch_snapshot = {}
       spy_launcher = Class.new do
@@ -332,14 +339,14 @@ class ForkRunCommandTest < AceAssignTestCase
         assignment: assignment.id
       )
 
-      assert_equal :in_progress, launch_snapshot[:child_a]
+      assert_equal :active, launch_snapshot[:child_a]
       assert_equal :pending, launch_snapshot[:child_b]
 
       Ace::Assign.reset_config!
     end
   end
 
-  def test_fork_run_fails_when_multiple_steps_are_already_in_progress_in_subtree
+  def test_fork_run_fails_when_multiple_active_branches_exist_in_subtree
     with_temp_cache do |cache_dir|
       steps = [
         {"name" => "pre-step", "instructions" => "Run pre-step"},
@@ -360,8 +367,8 @@ class ForkRunCommandTest < AceAssignTestCase
       scanner = Ace::Assign::Molecules::QueueScanner.new
       writer = Ace::Assign::Molecules::StepWriter.new
       state_before = scanner.scan(assignment.steps_dir, assignment: assignment)
-      writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
-      writer.mark_in_progress(state_before.find_by_number("020.02").file_path)
+      writer.mark_active(state_before.find_by_number("020.01").file_path)
+      writer.mark_active(state_before.find_by_number("020.02").file_path)
 
       error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
         run_fork_run_command(
@@ -373,7 +380,7 @@ class ForkRunCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes error.message, "multiple steps are already in progress"
+      assert_includes error.message, "multiple active branches"
 
       Ace::Assign.reset_config!
     end
@@ -396,7 +403,6 @@ class ForkRunCommandTest < AceAssignTestCase
       executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Initial current step is 010 (pre-step), while requested fork scope is 020.
       output = capture_fork_run_command(
         cache_base: cache_dir,
         launcher: DirectSubtreeCompletingLauncher.new(cache_base: cache_dir),

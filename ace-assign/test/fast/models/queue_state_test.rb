@@ -31,10 +31,10 @@ class QueueStateTest < AceAssignTestCase
     )
   end
 
-  def test_current_finds_in_progress
+  def test_current_finds_active_step
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step(number: "020", name: "second", status: :in_progress),
+      make_step(number: "020", name: "second", status: :active),
       make_step(number: "030", name: "third", status: :pending)
     ]
 
@@ -43,7 +43,7 @@ class QueueStateTest < AceAssignTestCase
     assert_equal "020", state.current.number
   end
 
-  def test_current_nil_when_none_in_progress
+  def test_current_nil_when_none_active
     steps = [
       make_step(number: "010", name: "first", status: :done),
       make_step(number: "020", name: "second", status: :pending)
@@ -54,16 +54,16 @@ class QueueStateTest < AceAssignTestCase
     assert_nil state.current
   end
 
-  def test_in_progress_steps_returns_all_active_steps
+  def test_active_steps_returns_all_active_steps
     steps = [
-      make_step(number: "010", name: "first", status: :in_progress),
-      make_step(number: "020", name: "second", status: :in_progress),
+      make_step(number: "010", name: "first", status: :active),
+      make_step(number: "020", name: "second", status: :active),
       make_step(number: "030", name: "third", status: :pending)
     ]
 
     state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
 
-    assert_equal %w[010 020], state.in_progress_steps.map(&:number)
+    assert_equal %w[010 020], state.active_steps.map(&:number)
     assert_equal "010", state.current.number
   end
 
@@ -143,7 +143,7 @@ class QueueStateTest < AceAssignTestCase
   def test_summary
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step(number: "020", name: "second", status: :in_progress),
+      make_step(number: "020", name: "second", status: :active),
       make_step(number: "030", name: "third", status: :pending),
       make_step(number: "040", name: "fourth", status: :failed)
     ]
@@ -153,7 +153,7 @@ class QueueStateTest < AceAssignTestCase
 
     assert_equal 4, summary[:total]
     assert_equal 1, summary[:done]
-    assert_equal 1, summary[:in_progress]
+    assert_equal 1, summary[:active]
     assert_equal 1, summary[:pending]
     assert_equal 1, summary[:failed]
   end
@@ -352,16 +352,16 @@ class QueueStateTest < AceAssignTestCase
     assert_equal "010.01", workable.number
   end
 
-  def test_in_progress_in_subtree_filters_to_subtree
+  def test_active_in_subtree_filters_to_subtree
     steps = [
       make_step(number: "010", name: "root", status: :pending),
-      make_step(number: "010.01", name: "child-a", status: :in_progress),
-      make_step(number: "010.02", name: "child-b", status: :in_progress),
-      make_step(number: "020", name: "other", status: :in_progress)
+      make_step(number: "010.01", name: "child-a", status: :active),
+      make_step(number: "010.02", name: "child-b", status: :active),
+      make_step(number: "020", name: "other", status: :active)
     ]
     state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
 
-    assert_equal %w[010.01 010.02], state.in_progress_in_subtree("010").map(&:number)
+    assert_equal %w[010.01 010.02], state.active_in_subtree("010").map(&:number)
     assert_equal "010.01", state.current_in_subtree("010").number
   end
 
@@ -388,7 +388,7 @@ class QueueStateTest < AceAssignTestCase
   def test_assignment_state_running_with_recent_activity
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 60),
+      make_step_with_started_at(number: "020", name: "second", status: :active, started_at: Time.now - 60),
       make_step(number: "030", name: "third", status: :pending)
     ]
 
@@ -447,7 +447,7 @@ class QueueStateTest < AceAssignTestCase
   def test_assignment_state_stalled
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 7200),
+      make_step_with_started_at(number: "020", name: "second", status: :active, started_at: Time.now - 7200),
       make_step(number: "030", name: "third", status: :pending)
     ]
 
@@ -459,7 +459,7 @@ class QueueStateTest < AceAssignTestCase
   def test_assignment_state_stalled_when_no_started_at
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step(number: "020", name: "second", status: :in_progress),
+      make_step(number: "020", name: "second", status: :active),
       make_step(number: "030", name: "third", status: :pending)
     ]
 
@@ -469,10 +469,10 @@ class QueueStateTest < AceAssignTestCase
   end
 
   def test_assignment_state_failed_takes_priority_over_running
-    # Failed + in_progress but NOT all complete → :failed (not :running)
+    # Failed + active but NOT all complete → :failed (not :running)
     steps = [
       make_step(number: "010", name: "first", status: :failed),
-      make_step_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 60)
+      make_step_with_started_at(number: "020", name: "second", status: :active, started_at: Time.now - 60)
     ]
 
     state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)

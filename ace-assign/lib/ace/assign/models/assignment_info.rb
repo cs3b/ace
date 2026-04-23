@@ -7,13 +7,13 @@ module Ace
       #
       # Pure data carrier with computed state (ATOM pattern).
       # Wraps an assignment with its queue state to provide
-      # computed state, progress, and current step information.
+      # computed state, progress, and active step information.
       #
       # @example
       #   info = AssignmentInfo.new(assignment: assignment, queue_state: state)
       #   info.state          # => :running
       #   info.progress       # => "2/5"
-      #   info.current_step  # => "020-implement"
+      #   info.step_focus    # => "implement"
       class AssignmentInfo
         attr_reader :assignment, :queue_state
 
@@ -39,11 +39,40 @@ module Ace
           "#{s[:done]}/#{s[:total]}"
         end
 
-        # Current step display string
+        # Active steps in queue order.
         #
-        # @return [String] Current step name or "-"
+        # @return [Array<Step>] Active steps
+        def active_steps
+          queue_state.active_steps
+        end
+
+        # Next pending workable step when nothing is active.
+        #
+        # @return [Step, nil] Next pending step or nil
+        def next_step
+          return nil unless active_steps.empty?
+
+          queue_state.next_workable
+        end
+
+        # Deterministic active step name kept for internal callers.
+        #
+        # @return [String] Focused active step name or "-"
         def current_step
           queue_state.current&.name || "-"
+        end
+
+        # Human-friendly active/next summary for compact tables.
+        #
+        # @return [String] Active step names or next-step hint
+        def step_focus
+          if active_steps.any?
+            active_steps.map(&:name).join(", ")
+          elsif next_step
+            "next: #{next_step.name}"
+          else
+            "-"
+          end
         end
 
         # Check if assignment is completed

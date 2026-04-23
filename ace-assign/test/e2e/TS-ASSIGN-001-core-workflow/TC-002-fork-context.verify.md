@@ -12,10 +12,11 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 1. **Assignment created** — `results/tc/02/create.exit` is `0`.
-2. **Regular view baseline** — `status-regular.*` and `step-regular.*` exist, both exits are `0`, and they show regular step behavior before fork activation.
-3. **Fork view activation** — `finish-010.exit` is `0`, then `status-fork.*` and `step-fork.*` exist, both exits are `0`, and `step-fork.stdout` reflects fork-structured guidance.
-4. **Back-to-regular transition** — `finish-020.exit` is `0`, then `status-return.*` and `step-return.*` exist, both exits are `0`, and `step-return.stdout` shows the queue returned to regular step behavior.
-5. **Workflow completion** — `finish-030.exit`, `finish-040.exit`, and `status-final.exit` are `0`, and final status evidence shows all workflow steps terminal.
+2. **Regular view baseline** — `status-regular.*` and `step-regular.*` exist, both exits are `0`, and they show regular step behavior before any step is active.
+3. **Explicit activation before finishing** — `start-010.exit`, `start-020.exit`, `start-030.exit`, and `start-040.exit` are all `0`.
+4. **Fork view transition** — `finish-010.exit` is `0`, then `status-fork.*` and `step-fork.*` exist, both exits are `0`, and `step-fork.stdout` reflects fork-structured guidance for the next paused step.
+5. **Back-to-regular transition** — `finish-020.exit` is `0`, then `status-return.*` and `step-return.*` exist, both exits are `0`, and `step-return.stdout` shows the queue returned to regular step behavior for the next paused step.
+6. **Workflow completion** — `finish-030.exit`, `finish-040.exit`, and `status-final.exit` are `0`, and final status evidence shows all workflow steps terminal.
 
 ## Verdict
 

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.2] - 2026-04-23
+
+### Technical
+- Updated retained assignment E2E contracts to use the valid public recovery path (`add` with `steps[].name`, positional `retry STEP_REF`), require explicit `start` transitions under the active-step lifecycle, and declare concrete hierarchy/scoped status artifacts for runner-enforced verification.
+
+## [0.54.1] - 2026-04-23
+
+### Technical
+- Updated retained `TS-ASSIGN-001` lifecycle and fork-context E2E contracts to require explicit `start` transitions and explicit assignment targeting under the active-step lifecycle.
+
+## [0.54.0] - 2026-04-23
+
+### Changed
+- Replaced the persisted/public step status word `in_progress` with `active` across step files, CLI output, and JSON status payloads.
+- Split execution truth from queue prediction so assignments stay `paused` until an explicit `start`, `finish` no longer auto-starts future work, and scoped/unscoped status now reports `active_steps` plus `next_step` only when nothing is active.
+- Updated forked subtree lifecycle semantics so delegated roots remain active while owned, only one deepest in-subtree child becomes active at a time, and unscoped queue selection ignores pending descendants under active fork roots.
+
+### Technical
+- Aligned `ace-overseer` integration points, operator docs, workflow instructions, and retained verification coverage with the new active-step lifecycle contract.
+
 ## [0.53.7] - 2026-04-23
 
 ### Technical

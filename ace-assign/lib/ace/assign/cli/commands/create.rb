@@ -32,7 +32,7 @@ module Ace
             unless options[:quiet]
               print_terminal_skip_summary(result[:skipped_terminal])
               print_assignment_header(result[:assignment])
-              print_step_instructions(result[:current])
+              print_step_instructions(result[:current] || result[:state]&.next_workable)
             end
           end
 

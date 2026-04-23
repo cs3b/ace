@@ -44,7 +44,7 @@ class QueueScannerTest < AceAssignTestCase
       File.write(File.join(steps_dir, "020-build.st.md"), <<~MD)
         ---
         name: build
-        status: in_progress
+        status: active
         ---
 
         Build project.
@@ -99,7 +99,7 @@ class QueueScannerTest < AceAssignTestCase
       FileUtils.mkdir_p(steps_dir)
 
       File.write(File.join(steps_dir, "010-init.st.md"), "---\nname: init\nstatus: done\n---\nInit")
-      File.write(File.join(steps_dir, "020-build.st.md"), "---\nname: build\nstatus: in_progress\n---\nBuild")
+      File.write(File.join(steps_dir, "020-build.st.md"), "---\nname: build\nstatus: active\n---\nBuild")
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
       current = scanner.current(steps_dir, assignment: @assignment)
@@ -117,7 +117,7 @@ class QueueScannerTest < AceAssignTestCase
       File.write(File.join(steps_dir, "020-research.st.md"), <<~MD)
         ---
         name: research
-        status: in_progress
+        status: active
         context: fork
         fork:
           provider: claude:sonnet@yolo

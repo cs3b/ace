@@ -1,10 +1,11 @@
 ---
 doc-type: guide
 title: Fork Context Guide
-purpose: Explain fork context execution model, boundaries, and recovery patterns for ace-assign subtree delegation.
+purpose: Explain fork context execution model, boundaries, and recovery patterns for
+  ace-assign subtree delegation.
 ace-docs:
-  last-updated: 2026-03-18
-  last-checked: 2026-03-21
+  last-updated: '2026-04-23'
+  last-checked: '2026-04-23'
 ---
 
 # Fork Context Guide
@@ -126,6 +127,21 @@ The orchestrating agent:
 - Coordinates between steps
 - Processes subagent reports
 - Handles failures and retries
+
+## Scoped Status Semantics
+
+Fork execution uses two layers of active ownership:
+
+- The fork root stays `active` while the delegated session owns that subtree.
+- Inside that subtree, zero or one deepest started descendant may also be `active`.
+
+Status reporting is scope-aware:
+
+- Unscoped status lists all `active_steps` in queue order and hides pending descendants under an active fork root from global `next_step` selection.
+- Scoped status (`--assignment <id>@<root>`) reports activity only inside that subtree.
+- When nothing is active inside the current scope, status reports `next_step` instead of predicting started work.
+
+This keeps queue eligibility separate from execution state: pending descendants stay pending until scoped execution explicitly starts them.
 
 ## Recovery From Failed Fork Subtrees
 

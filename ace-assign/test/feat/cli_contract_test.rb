@@ -41,8 +41,13 @@ class CliContractTest < AceAssignTestCase
       end
       payload = JSON.parse(status_output.first)
       assignment_id = payload.dig("assignment", "id")
-      assert_equal "running", payload.dig("assignment", "state")
-      assert_equal "010", payload.dig("current_step", "number")
+      assert_equal "paused", payload.dig("assignment", "state")
+      assert_equal [], payload["active_steps"]
+      assert_equal "010", payload.dig("next_step", "number")
+
+      capture_io do
+        assert_equal 0, Ace::Assign::CLI.start(["start"])
+      end
 
       capture_io do
         assert_equal 0, Ace::Assign::CLI.start([
@@ -65,7 +70,8 @@ class CliContractTest < AceAssignTestCase
       end
       completed = JSON.parse(completed_output.first)
       assert_equal "completed", completed.dig("assignment", "state")
-      assert_nil completed["current_step"]
+      assert_equal [], completed["active_steps"]
+      assert_nil completed["next_step"]
       assert_equal "1/1 done", completed["progress"]
 
       Ace::Assign.reset_config!

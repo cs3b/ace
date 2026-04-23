@@ -17,8 +17,9 @@ class AssignmentDiscovererTest < AceAssignTestCase
       assert_equal 1, results.size
       info = results.first
       assert_instance_of Ace::Assign::Models::AssignmentInfo, info
-      assert_equal :running, info.state
-      assert_equal "init", info.current_step
+      assert_equal :paused, info.state
+      assert_equal "-", info.current_step
+      assert_equal "next: init", info.step_focus
     end
   end
 
@@ -32,6 +33,7 @@ class AssignmentDiscovererTest < AceAssignTestCase
       ])
       executor.start(config_path)
       report_path = create_report(cache_dir, "Done!")
+      executor.start_step
       executor.advance(report_path)
 
       discoverer = Ace::Assign::Molecules::AssignmentDiscoverer.new(cache_base: cache_dir)

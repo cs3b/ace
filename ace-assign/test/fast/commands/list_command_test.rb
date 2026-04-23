@@ -16,7 +16,8 @@ class ListCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "test-session"
-      assert_includes output.first, "running"
+      assert_includes output.first, "paused"
+      assert_includes output.first, "next: init"
       assert_includes output.first, "1 assignment(s) found"
 
       Ace::Assign.reset_config!
@@ -53,7 +54,9 @@ class ListCommandTest < AceAssignTestCase
       assert_instance_of Array, parsed
       assert_equal 1, parsed.size
       assert_equal "test-session", parsed.first["name"]
-      assert_equal "running", parsed.first["state"]
+      assert_equal "paused", parsed.first["state"]
+      assert_equal [], parsed.first["active_steps"]
+      assert_equal "init", parsed.first["next_step"]
 
       Ace::Assign.reset_config!
     end
@@ -69,6 +72,7 @@ class ListCommandTest < AceAssignTestCase
         {"name" => "only-step", "instructions" => "Do it"}
       ])
       executor.start(config_path)
+      executor.start_step(step_number: "010")
       report_path = create_report(cache_dir, "Done!")
       executor.advance(report_path)
 
@@ -94,6 +98,7 @@ class ListCommandTest < AceAssignTestCase
         {"name" => "only-step", "instructions" => "Do it"}
       ])
       executor.start(config_path)
+      executor.start_step(step_number: "010")
       report_path = create_report(cache_dir, "Done!")
       executor.advance(report_path)
 

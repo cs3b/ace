@@ -39,7 +39,9 @@ class StepCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       start = executor.start(config_path)
+      executor.start_step
       executor.advance(report_path)
+      executor.start_step
       executor.fail("blocked")
 
       output = capture_step_command(cache_base: cache_dir, assignment: start[:assignment].id).first
@@ -96,7 +98,10 @@ class StepCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       result = executor.start(config_path)
-      3.times { executor.advance(report) }
+      3.times do
+        executor.start_step
+        executor.advance(report)
+      end
 
       output = capture_step_command(cache_base: cache_dir, assignment: result[:assignment].id).first
       lines = output.lines.map(&:chomp)
@@ -105,7 +110,7 @@ class StepCommandTest < AceAssignTestCase
       assert_includes lines[0], "Assignment: #{result[:assignment].id}"
       assert_includes lines[0], "Status: completed"
       assert_includes lines[0], "Progress: 3/3 done"
-      assert_equal "Last done: 030 test | No current or next workable step", lines[1]
+      assert_equal "Last done: 030 test | No active or next workable step", lines[1]
     ensure
       Ace::Assign.reset_config!
     end

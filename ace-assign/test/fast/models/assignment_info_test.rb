@@ -24,7 +24,7 @@ class AssignmentInfoTest < AceAssignTestCase
   def test_state_running
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      Ace::Assign::Models::Step.new(number: "020", name: "second", status: :in_progress, instructions: "Test", started_at: Time.now - 60),
+      Ace::Assign::Models::Step.new(number: "020", name: "second", status: :active, instructions: "Test", started_at: Time.now - 60),
       make_step(number: "030", name: "third", status: :pending)
     ]
     state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
@@ -93,7 +93,7 @@ class AssignmentInfoTest < AceAssignTestCase
     steps = [
       make_step(number: "010", name: "first", status: :done),
       make_step(number: "020", name: "second", status: :done),
-      make_step(number: "030", name: "third", status: :in_progress),
+      make_step(number: "030", name: "third", status: :active),
       make_step(number: "040", name: "fourth", status: :pending),
       make_step(number: "050", name: "fifth", status: :pending)
     ]
@@ -106,7 +106,7 @@ class AssignmentInfoTest < AceAssignTestCase
   def test_current_step
     steps = [
       make_step(number: "010", name: "first", status: :done),
-      make_step(number: "020", name: "implement", status: :in_progress)
+      make_step(number: "020", name: "implement", status: :active)
     ]
     state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
     info = Ace::Assign::Models::AssignmentInfo.new(assignment: @assignment, queue_state: state)

@@ -13,6 +13,7 @@ class FinishCommandTest < AceAssignTestCase
       # Start an assignment first
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       result = nil
       output = capture_io do
@@ -23,8 +24,8 @@ class FinishCommandTest < AceAssignTestCase
       end
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "Step 010 (init) completed"
-      assert_includes output.first, "Advancing to step 020"
-      assert_includes output.first, "Next: ace-assign step 020"
+      assert_includes output.first, "No active step selected."
+      assert_includes output.first, "Next pending step: 020 - build"
       refute_includes output.first, "Instructions:"
 
       Ace::Assign.reset_config!
@@ -39,7 +40,8 @@ class FinishCommandTest < AceAssignTestCase
       Ace::Assign.config["cache_dir"] = cache_dir
 
       executor = build_fast_executor(cache_base: cache_dir)
-      executor.start(config_path) # 010 in_progress
+      executor.start(config_path)
+      executor.start_step
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
@@ -49,8 +51,8 @@ class FinishCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "Step 010 (init) completed"
-      assert_includes output.first, "Advancing to step 020"
-      assert_includes output.first, "Next: ace-assign step 020"
+      assert_includes output.first, "No active step selected."
+      assert_includes output.first, "Next pending step: 020 - build"
 
       Ace::Assign.reset_config!
     end
@@ -64,6 +66,8 @@ class FinishCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
+      executor.start_step
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
@@ -115,6 +119,7 @@ class FinishCommandTest < AceAssignTestCase
       config2 = create_test_config(cache_dir, name: "second-task")
       result2 = executor.start(config2)
       target_id = result2[:assignment].id
+      executor.start_step
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
@@ -127,17 +132,19 @@ class FinishCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "Step 010 (init) completed"
-      assert_includes output.first, "Advancing to step 020"
-      assert_includes output.first, "Next: ace-assign step 020 --assignment"
+      assert_includes output.first, "No active step selected."
+      assert_includes output.first, "Next pending step: 020 - build"
 
       # Verify the targeted assignment advanced
       scanner = Ace::Assign::Molecules::QueueScanner.new
       target_state = scanner.scan(result2[:assignment].steps_dir, assignment: result2[:assignment])
-      assert_equal "020", target_state.current.number
+      assert_nil target_state.current
+      assert_equal "020", target_state.next_workable.number
 
-      # Verify the first assignment was not affected (still on 010)
+      # Verify the first assignment was not affected (still paused on 010)
       first_state = scanner.scan(result1[:assignment].steps_dir, assignment: result1[:assignment])
-      assert_equal "010", first_state.current.number
+      assert_nil first_state.current
+      assert_equal "010", first_state.next_workable.number
 
       Ace::Assign.reset_config!
     end
@@ -162,7 +169,11 @@ class FinishCommandTest < AceAssignTestCase
       executor = build_fast_executor(cache_base: cache_dir)
       start = executor.start(config_path)
       target_id = start[:assignment].id
-      executor.advance(report_path) # complete 010 precheck, activate 020.01
+      executor.start_step(step_number: "010")
+      executor.advance(report_path)
+      step_path = File.join(start[:assignment].steps_dir, "020-work-on-task.st.md")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(step_path)
+      executor.start_step(fork_root: "020")
 
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
@@ -175,13 +186,15 @@ class FinishCommandTest < AceAssignTestCase
       end
 
       assert_includes output.first, "Step 020.01 (onboard) completed"
+      assert_includes output.first, "Active steps remaining: 020 work-on-task"
 
       scanner = Ace::Assign::Molecules::QueueScanner.new
       state = scanner.scan(start[:assignment].steps_dir, assignment: start[:assignment])
 
       assert_equal :done, state.find_by_number("010").status
       assert_equal :done, state.find_by_number("020.01").status
-      assert_equal :in_progress, state.find_by_number("020.02").status
+      assert_equal :active, state.find_by_number("020").status
+      assert_equal :pending, state.find_by_number("020.02").status
 
       Ace::Assign.reset_config!
     end
@@ -194,6 +207,7 @@ class FinishCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
       stdin = StringIO.new("stdin report")
@@ -221,6 +235,7 @@ class FinishCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
       stdin = StringIO.new("")
@@ -250,6 +265,7 @@ class FinishCommandTest < AceAssignTestCase
 
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
       cmd = Ace::Assign::CLI::Commands::Finish.new
       stdin = StringIO.new("stdin report content")
@@ -282,11 +298,12 @@ class FinishCommandTest < AceAssignTestCase
       report_path = create_report(cache_dir, "Step done!")
       Ace::Assign.config["cache_dir"] = cache_dir
 
-      # Create assignment via executor — 010 is in_progress
+      # Create assignment via executor, then explicitly start 010
       executor = build_fast_executor(cache_base: cache_dir)
       executor.start(config_path)
+      executor.start_step
 
-      # Finish 010 via CLI — auto-advances to 020
+      # Finish 010 via CLI — leaves 020 pending until explicitly started
       finish_output = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
         with_fast_command_executor(command, cache_base: cache_dir) do
@@ -294,16 +311,15 @@ class FinishCommandTest < AceAssignTestCase
         end
       end
       assert_includes finish_output.first, "Step 010 (init) completed"
-      assert_includes finish_output.first, "Advancing to step 020"
-      assert_includes finish_output.first, "Next: ace-assign step 020"
+      assert_includes finish_output.first, "No active step selected."
+      assert_includes finish_output.first, "Next pending step: 020 - build"
 
-      # start fails — 020 is already in_progress after auto-advance
-      error = assert_raises(Ace::Support::Cli::Error) do
+      start_output = capture_io do
         Ace::Assign::CLI::Commands::Start.new.call
       end
-      assert_includes error.message, "already in progress"
+      assert_includes start_output.first, "Step 020 (build) started"
 
-      # Finish 020 via CLI — auto-advances to 030
+      # Finish 020 via CLI — leaves 030 pending until explicitly started
       finish_output2 = capture_io do
         command = Ace::Assign::CLI::Commands::Finish.new
         with_fast_command_executor(command, cache_base: cache_dir) do
@@ -311,8 +327,8 @@ class FinishCommandTest < AceAssignTestCase
         end
       end
       assert_includes finish_output2.first, "Step 020 (build) completed"
-      assert_includes finish_output2.first, "Advancing to step 030"
-      assert_includes finish_output2.first, "Next: ace-assign step 030"
+      assert_includes finish_output2.first, "No active step selected."
+      assert_includes finish_output2.first, "Next pending step: 030 - test"
     ensure
       Ace::Assign.reset_config!
     end
@@ -343,7 +359,7 @@ class FinishCommandTest < AceAssignTestCase
         end
       end
 
-      assert_equal "Cannot finish step 010: status is pending, expected in_progress.", error.message
+      assert_equal "Cannot finish step 010: status is pending, expected active.", error.message
     ensure
       Ace::Assign.reset_config!
     end

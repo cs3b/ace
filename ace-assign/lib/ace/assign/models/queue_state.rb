@@ -10,7 +10,7 @@ module Ace
       #
       # @example
       #   state = QueueState.new(steps: steps, assignment: assignment)
-      #   state.current  # => Step with status :in_progress
+      #   state.current  # => Deepest active step
       #   state.pending  # => Array of pending steps
       class QueueState
         attr_reader :steps, :assignment
@@ -23,16 +23,21 @@ module Ace
           @children_index = build_children_index(steps)
         end
 
-        # Get current in-progress step
-        # @return [Step, nil] Current step or nil
+        # Get the deterministic single-step active target.
+        #
+        # Returns the deepest active step in queue order. When several active
+        # branches exist globally, this is an internal convenience only; public
+        # status should use active_steps.
+        #
+        # @return [Step, nil] Deepest active step or nil
         def current
-          in_progress_steps.first
+          deepest_active
         end
 
-        # Get all in-progress steps
-        # @return [Array<Step>] In-progress steps
-        def in_progress_steps
-          steps.select { |s| s.status == :in_progress }
+        # Get all active steps in queue order.
+        # @return [Array<Step>] Active steps
+        def active_steps
+          steps.select { |s| s.status == :active }
         end
 
         # Get all pending steps
@@ -65,7 +70,7 @@ module Ace
           steps.empty?
         end
 
-        # Check if all steps are complete (no pending or in_progress)
+        # Check if all steps are complete (no pending or active)
         # @return [Boolean]
         def complete?
           steps.all?(&:complete?)
@@ -107,28 +112,28 @@ module Ace
         # - :empty     - No steps in queue
         # - :completed - All steps complete (done or failed)
         # - :failed    - Has failed step(s) but NOT all complete (stuck)
-        # - :running   - Has in_progress step with recent activity (< 1 hour)
-        # - :stalled   - Has in_progress step but stale (> 1 hour)
-        # - :paused    - Has pending but no in_progress (interrupted)
+        # - :running   - Has active step(s) with recent activity (< 1 hour)
+        # - :stalled   - Has active step(s) but all are stale (> 1 hour)
+        # - :paused    - Has pending but no active step (interrupted)
         #
         # @return [Symbol] Assignment state
         def assignment_state
           return :empty if empty?
           return :completed if complete?
           return :failed if failed.any?
-          return :running if current && recently_active?
-          return :stalled if current
+          return :running if active_steps.any? && recently_active?
+          return :stalled if active_steps.any?
 
           :paused
         end
 
-        # Check if the current in_progress step has recent activity
+        # Check if any active step has recent activity.
         # @param threshold [Integer] Seconds since started_at to consider active (default: 1 hour)
         # @return [Boolean]
         def recently_active?(threshold: 3600)
-          return false unless current&.started_at
-
-          (Time.now - current.started_at) < threshold
+          active_steps.any? do |step|
+            step.started_at && ((Time.now - step.started_at) < threshold)
+          end
         end
 
         # Summary for display
@@ -137,10 +142,17 @@ module Ace
           {
             total: size,
             done: done.size,
-            in_progress: in_progress_steps.size,
+            active: active_steps.size,
             pending: pending.size,
             failed: failed.size
           }
+        end
+
+        # Get deepest active step in queue order.
+        #
+        # @return [Step, nil] Deepest active step
+        def deepest_active
+          deepest_active_from(active_steps)
         end
 
         # Get all direct children of a step (O(1) via index)
@@ -193,21 +205,29 @@ module Ace
           subtree_steps(root_number).any? { |s| s.status == :failed }
         end
 
-        # Get the current in-progress step within a subtree.
+        # Get the deterministic active target within a subtree.
         #
         # @param root_number [String] Subtree root step number
-        # @return [Step, nil] In-progress step inside subtree, if any
+        # @return [Step, nil] Deepest active step inside subtree, if any
         def current_in_subtree(root_number)
-          in_progress_in_subtree(root_number).first
+          deepest_active_in_subtree(root_number)
         end
 
-        # Get all in-progress steps within a subtree.
+        # Get all active steps within a subtree.
         #
         # @param root_number [String] Subtree root step number
-        # @return [Array<Step>] In-progress steps inside subtree
-        def in_progress_in_subtree(root_number)
+        # @return [Array<Step>] Active steps inside subtree
+        def active_in_subtree(root_number)
           subtree_steps(root_number)
-            .select { |s| s.status == :in_progress }
+            .select { |s| s.status == :active }
+        end
+
+        # Get the deepest active step within a subtree.
+        #
+        # @param root_number [String] Subtree root step number
+        # @return [Step, nil] Deepest active step in subtree
+        def deepest_active_in_subtree(root_number)
+          deepest_active_from(active_in_subtree(root_number))
         end
 
         # Get next workable step constrained to a subtree.
@@ -215,10 +235,7 @@ module Ace
         # @param root_number [String] Subtree root step number
         # @return [Step, nil] Next pending workable step inside subtree
         def next_workable_in_subtree(root_number)
-          subtree_steps(root_number)
-            .select { |s| s.status == :pending }
-            .reject { |s| has_incomplete_children?(s.number) }
-            .first
+          next_workable(scope_root: root_number)
         end
 
         # Build ancestor chain from closest parent to root.
@@ -260,19 +277,41 @@ module Ace
           children_of(parent_number).any? { |s| s.status != :done }
         end
 
-        # Get next workable step considering hierarchy.
+        # Get next workable pending step considering hierarchy and active fork ownership.
         # A step is workable if it's pending and has no incomplete children.
-        # Prefers children of current/recent work.
+        #
+        # Pending descendants under an active fork root are hidden unless the caller
+        # is explicitly scoped inside that root.
+        #
+        # @param scope_root [String, nil] Optional subtree scope
         # @return [Step, nil] Next step to work on
-        def next_workable
-          # First, find pending steps
-          pending_steps = pending
+        def next_workable(scope_root: nil)
+          candidate_steps = scope_root ? subtree_steps(scope_root) : steps
+          candidate_steps
+            .select { |s| s.status == :pending }
+            .reject { |s| has_incomplete_children?(s.number) }
+            .reject { |s| hidden_by_active_fork_root?(s.number, scope_root: scope_root) }
+            .first
+        end
 
-          # Filter to steps that don't have incomplete children
-          workable = pending_steps.reject { |s| has_incomplete_children?(s.number) }
+        # Get active fork roots in queue order.
+        #
+        # @return [Array<Step>] Active fork-scoped steps
+        def active_fork_roots
+          active_steps.select(&:fork?)
+        end
 
-          # Return first workable step (already sorted by number)
-          workable.first
+        # Check whether active steps inside a subtree fan out across more than one branch.
+        #
+        # @param root_number [String] Subtree root step number
+        # @param extra_active [Array<String>] Additional active step numbers to include
+        # @return [Boolean] True when active steps inside the subtree are not on a single path
+        def active_branch_conflict_in_subtree?(root_number, extra_active: [])
+          active_numbers = active_in_subtree(root_number).map(&:number) + Array(extra_active).map(&:to_s)
+          unique_active = active_numbers.uniq
+          unique_active.combination(2).any? do |left, right|
+            !(in_subtree?(left, right) || in_subtree?(right, left))
+          end
         end
 
         # Get all step numbers as an array
@@ -319,6 +358,23 @@ module Ace
               step: step,
               children: build_hierarchy(step.number)
             }
+          end
+        end
+
+        def deepest_active_from(active)
+          return nil if active.empty?
+
+          max_depth = active.map { |step| step.number.to_s.split(".").length }.max
+          active.find { |step| step.number.to_s.split(".").length == max_depth }
+        end
+
+        def hidden_by_active_fork_root?(step_number, scope_root:)
+          active_fork_roots.any? do |root|
+            next false if step_number == root.number
+            next false unless in_subtree?(root.number, step_number)
+            next false if scope_root && in_subtree?(root.number, scope_root)
+
+            true
           end
         end
       end
