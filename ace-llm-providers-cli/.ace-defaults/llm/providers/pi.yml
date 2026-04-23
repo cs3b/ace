@@ -4,6 +4,10 @@ gem: ace-llm-providers-cli
 models:
   # ZAI (default provider)
   - zai/glm-4.7
+  - zai/glm-4.6
+  - zai/glm-4.5
+  - zai/glm-5.1
+  - zai/glm-5-turbo 
   # Anthropic
   - anthropic/claude-opus-4-6
   - anthropic/claude-opus-4-5
@@ -22,15 +26,11 @@ models:
   - openai-codex/gpt-5.1
 aliases:
   global:
-    pi: pi:zai/glm-4.7
+    pi: pi:zai/glm-5.1
   model:
-    glm: zai/glm-4.7
-    opus: anthropic/claude-opus-4-6
-    sonnet: anthropic/claude-sonnet-4-5
-    haiku: anthropic/claude-haiku-4-5
-    gemini-pro: google-gemini-cli/gemini-2.5-pro
-    gemini: google-gemini-cli/gemini-2.5-flash
-    gpt: openai-codex/gpt-5.2
+    glm: zai/glm-5.1
+    glmturbo: zai/glm-5-turbo
+    gpt: openai-codex/gpt-5.4
 capabilities:
   - text_generation
   - streaming
@@ -40,4 +40,4 @@ capabilities:
   - skill_rewriting
 default_options:
   temperature: 0.7
-  skills_dir: .pi/skills
+  skills_dir: .claude/skills
