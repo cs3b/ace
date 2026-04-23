@@ -1,14 +1,17 @@
 name: codex
-last_synced: 2026-02-06
+last_synced: 2026-04-23
 class: Ace::LLM::Providers::CLI::CodexClient
 gem: ace-llm-providers-cli
 models_dev_id: openai
 context_limit: 1050000
 models:
+  - gpt-5.3-chat-latest
   - gpt-5.3-codex
   - gpt-5.3-codex-spark
   - gpt-5.4
   - gpt-5.4-mini
+  - gpt-5.4-nano
+  - gpt-5.4-pro
 aliases:
   model:
     gpt: gpt-5.4

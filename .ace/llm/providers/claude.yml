@@ -1,5 +1,5 @@
 name: claude
-last_synced: 2026-02-06
+last_synced: 2026-04-23
 class: Ace::LLM::Providers::CLI::ClaudeCodeClient
 gem: ace-llm-providers-cli
 models_dev_id: anthropic
@@ -7,6 +7,7 @@ context_limit: 1000000
 models:
   - claude-haiku-4-5
   - claude-opus-4-6
+  - claude-opus-4-7
   - claude-sonnet-4-6
 aliases:
   global:

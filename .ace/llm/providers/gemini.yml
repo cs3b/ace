@@ -1,5 +1,5 @@
 name: gemini
-last_synced: 2026-01-13
+last_synced: 2026-04-23
 class: Ace::LLM::Providers::CLI::GeminiClient
 gem: ace-llm-providers-cli
 models_dev_id: google
@@ -9,6 +9,12 @@ models:
   - gemini-2.5-pro
   - gemini-3-flash-preview
   - gemini-3-pro-preview
+  - gemini-3.1-flash-image-preview
+  - gemini-3.1-flash-lite-preview
+  - gemini-3.1-pro-preview
+  - gemini-3.1-pro-preview-customtools
+  - gemma-4-26b-a4b-it
+  - gemma-4-31b-it
 aliases:
   model:
     flash: gemini-2.5-flash

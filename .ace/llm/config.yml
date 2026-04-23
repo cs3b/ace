@@ -73,8 +73,8 @@ llm:
     # --- Utility ---
     prompt-enhance: *utility
     commit:
-      - glite
       - codex:mini
+      - glite
     # *utility
     docs-analysis: *utility
     compressor: *utility
