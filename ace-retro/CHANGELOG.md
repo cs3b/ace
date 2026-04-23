@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-04-23
+
+
+### Changed
+- Added self-improvement and layer-ownership workflow refinements for retro-driven cycle analysis and root-cause tracing workflows.
+- Extended retro contract checks so workflow-layer attribution is stable across contract verification paths.
+
+
 ### Changed
 - Added a self-improvement root-cause category for wrong-layer fixes where the symptom package is patched before the shared primitive owner is identified.
 
