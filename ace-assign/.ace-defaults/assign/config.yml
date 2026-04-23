@@ -26,6 +26,7 @@ workflow_source_paths:
 execution:
   provider: "claude:opus@yolo"
   timeout: 1800
+  launch_mode: auto # auto | headless | tmux
 
 # Subtree execution behavior
 subtree:

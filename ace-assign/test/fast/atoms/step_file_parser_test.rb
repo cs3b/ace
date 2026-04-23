@@ -140,14 +140,14 @@ class StepFileParserTest < AceAssignTestCase
         "name" => "research",
         "status" => "pending",
         "context" => "fork",
-        "fork" => {"provider" => "claude:sonnet@yolo"}
+        "fork" => {"provider" => "claude:sonnet@yolo", "mode" => "tmux"}
       },
       body: "Run research."
     }
 
     result = Ace::Assign::Atoms::StepFileParser.extract_fields(parsed)
 
-    assert_equal({"provider" => "claude:sonnet@yolo"}, result[:fork_options])
+    assert_equal({"provider" => "claude:sonnet@yolo", "mode" => "tmux"}, result[:fork_options])
   end
 
   def test_extract_fields_with_batch_scheduler_metadata

@@ -6,10 +6,11 @@ class ForkSessionLauncherTest < AceAssignTestCase
   class FakeTmuxRunner
     attr_reader :last_prepare, :last_invocation, :last_select, :last_ensure
 
-    def initialize(enabled: false, session: "dev", window: "task")
+    def initialize(enabled: false, session: "dev", window: "task", pane: "%8")
       @enabled = enabled
       @session = session
       @window = window
+      @pane = pane
     end
 
     def tmux_context?
@@ -22,6 +23,10 @@ class ForkSessionLauncherTest < AceAssignTestCase
 
     def current_window
       @window if @enabled
+    end
+
+    def current_pane
+      @pane if @enabled
     end
 
     def fork_window_name(base_window)
@@ -54,13 +59,14 @@ class ForkSessionLauncherTest < AceAssignTestCase
       @last_select = {session: session, window: window, window_target: window_target}
     end
 
-    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:, window_id: nil)
+    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:, window_id: nil, callback_pane: nil)
       meta = File.exist?(session_meta_file) ? YAML.safe_load_file(session_meta_file) : {}
       meta["launch_mode"] = "tmux"
       meta["tmux_session"] = session
       meta["tmux_window"] = window
       meta["tmux_window_id"] = window_id if window_id
       meta["tmux_pane_id"] = pane
+      meta["callback_pane"] = callback_pane if callback_pane
       File.write(session_meta_file, meta.to_yaml)
     end
   end
@@ -113,12 +119,12 @@ class ForkSessionLauncherTest < AceAssignTestCase
     original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
   end
 
-  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", interactive_builder: nil,
+  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", pane: "%8", interactive_builder: nil,
     tmux_runner: nil)
     Ace::Assign::Molecules::ForkSessionLauncher.new(
       config: config,
       query_interface: query_interface,
-      tmux_runner: tmux_runner || FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window),
+      tmux_runner: tmux_runner || FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window, pane: pane),
       interactive_builder: interactive_builder
     )
   end
@@ -139,14 +145,14 @@ class ForkSessionLauncherTest < AceAssignTestCase
     assert_nil call[:options][:cli_args]
     assert_equal 900, call[:options][:timeout]
     assert_equal false, call[:options][:fallback]
-      assert_equal(
-        {
-          "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010.01",
-          "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
-          "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010.01"
-        },
-        call[:options][:subprocess_env]
-      )
+    assert_equal(
+      {
+        "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010.01",
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010.01"
+      },
+      call[:options][:subprocess_env]
+    )
   end
 
   def test_launch_passes_user_cli_args_without_merging
@@ -368,6 +374,16 @@ class ForkSessionLauncherTest < AceAssignTestCase
     assert_includes error.message, "requires an active tmux session"
   end
 
+  def test_launch_uses_config_launch_mode_when_explicit_mode_missing
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800, "launch_mode" => "headless"}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: true)
+
+    launcher.launch(assignment_id: "abc123", fork_root: "010")
+
+    assert_equal 1, fake.calls.size
+  end
+
   def test_launch_mode_auto_uses_tmux_when_context_available
     fake = FakeQueryInterface.new
     interactive = FakeInteractiveBuilder.new
@@ -456,6 +472,47 @@ class ForkSessionLauncherTest < AceAssignTestCase
       assert_equal "ace-t-ks9-fs", tmux_runner.last_ensure[:name]
       assert_equal "ace-t-ks9-fs", tmux_runner.last_prepare[:window]
       assert_nil tmux_runner.last_select, "tmux fork launch should not steal focus"
+    end
+  end
+
+  def test_callback_pane_uses_tmux_runner_current_pane
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: true, pane: "%11")
+
+    assert_equal "%11", launcher.callback_pane
+  end
+
+  def test_launch_tmux_callback_mode_skips_subtree_wait_and_exports_callback_pane
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      tmux_enabled: true,
+      session: "dev",
+      window: "work",
+      pane: "%9",
+      interactive_builder: interactive
+    )
+
+    with_temp_cache do |tmp_dir|
+      result = launcher.launch(
+        assignment_id: "abc123",
+        fork_root: "010",
+        cache_dir: tmp_dir,
+        launch_mode: "tmux",
+        callback_pane: "%9"
+      )
+
+      assert_equal true, result[:callback_mode]
+      assert_equal "%9", result[:callback_pane]
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "%9", meta["callback_pane"]
+      assert_equal "%9", interactive.calls.last[:options][:subprocess_env]["ACE_ASSIGN_CALLBACK_PANE"]
     end
   end
 

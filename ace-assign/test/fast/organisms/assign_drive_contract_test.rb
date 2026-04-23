@@ -13,9 +13,14 @@ class AssignDriveContractTest < AceAssignTestCase
     refute_includes content, "Skip Assessment"
   end
 
-  def test_drive_workflow_requires_status_driven_fork_resume
+  def test_drive_workflow_documents_status_and_callback_fork_resume_paths
     content = drive_workflow
 
+    assert_includes content, "If fork session metadata includes `callback_pane`, callback mode is active."
+    assert_includes content, "do not poll the forked subtree on a timer"
+    assert_includes content, "wait for the child forked agent to send a final status message back into the origin pane"
+    assert_includes content, "ACE_ASSIGN_CALLBACK_PANE"
+    assert_includes content, 'ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE"'
     assert_includes content, "Poll the forked subtree every 6 minutes by default."
     assert_includes content, "Treat scoped assignment status as the source of truth for subtree completion."
     assert_includes content, "ace-assign step --assignment \"$ASSIGNMENT_TARGET\""

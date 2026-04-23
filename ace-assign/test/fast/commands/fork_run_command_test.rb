@@ -73,6 +73,24 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  class CallbackLauncher
+    attr_reader :calls
+
+    def initialize(pane: "%8")
+      @pane = pane
+      @calls = []
+    end
+
+    def callback_pane
+      @pane
+    end
+
+    def launch(**kwargs)
+      @calls << kwargs
+      {tmux: true, pane_target: "%42", callback_mode: true, callback_pane: @pane}
+    end
+  end
+
   class DirectSubtreeCompletingLauncher
     def initialize(cache_base:)
       @cache_base = cache_base
@@ -201,6 +219,97 @@ class ForkRunCommandTest < AceAssignTestCase
 
       assert_includes error.message, "did not complete"
 
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_callback_mode_returns_after_launch_without_waiting_for_completion
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_steps" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      launcher = CallbackLauncher.new(pane: "%8")
+
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: launcher,
+        root: "010",
+        assignment: result[:assignment].id,
+        launch_mode: "tmux",
+        callback: true
+      )
+
+      assert_includes output.first, "Callback pane: %8"
+      assert_includes output.first, "Fork subtree 010 launched in callback mode."
+      assert_equal "%8", launcher.calls.last[:callback_pane]
+
+      state = executor.status[:state]
+      refute state.subtree_complete?("010")
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_callback_requires_tmux_launch_mode
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "work-on-task", "instructions" => "Implement task", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: CallbackLauncher.new,
+          root: "010",
+          assignment: result[:assignment].id,
+          launch_mode: "headless",
+          callback: true
+        )
+      end
+
+      assert_includes error.message, "--callback requires tmux launch mode"
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_callback_requires_origin_pane
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "work-on-task", "instructions" => "Implement task", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        run_fork_run_command(
+          cache_base: cache_dir,
+          launcher: CallbackLauncher.new(pane: "  "),
+          root: "010",
+          assignment: result[:assignment].id,
+          launch_mode: "tmux",
+          callback: true
+        )
+      end
+
+      assert_includes error.message, "resolvable origin tmux pane"
       Ace::Assign.reset_config!
     end
   end
@@ -889,6 +998,162 @@ class ForkRunCommandTest < AceAssignTestCase
       )
 
       assert_equal "codex:gpt-5", launch_snapshot[:provider]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_uses_step_fork_mode_when_cli_launch_mode_absent
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"mode" => "tmux"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign.config["execution"] ||= {}
+      Ace::Assign.config["execution"]["launch_mode"] = "headless"
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, launch_mode:, **_kwargs|
+          @snapshot[:launch_mode] = launch_mode
+
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          writer = Ace::Assign::Molecules::StepWriter.new
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
+          root = state.find_by_number(fork_root)
+          writer.mark_done(root.file_path, report_content: "done", reports_dir: assignment.reports_dir)
+        end
+      end
+
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020"
+      )
+
+      assert_equal "tmux", launch_snapshot[:launch_mode]
+      assert_includes output.first, "Launch mode: tmux"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_uses_config_launch_mode_when_step_and_cli_are_absent
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork"
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign.config["execution"] ||= {}
+      Ace::Assign.config["execution"]["launch_mode"] = "tmux"
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, launch_mode:, **_kwargs|
+          @snapshot[:launch_mode] = launch_mode
+
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          writer = Ace::Assign::Molecules::StepWriter.new
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
+          root = state.find_by_number(fork_root)
+          writer.mark_done(root.file_path, report_content: "done", reports_dir: assignment.reports_dir)
+        end
+      end
+
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020"
+      )
+
+      assert_equal "tmux", launch_snapshot[:launch_mode]
+      assert_includes output.first, "Launch mode: tmux"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_cli_launch_mode_overrides_step_fork_mode
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {
+          "name" => "research",
+          "instructions" => "Run research",
+          "context" => "fork",
+          "fork" => {"mode" => "tmux"}
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      Ace::Assign.config["execution"] ||= {}
+      Ace::Assign.config["execution"]["launch_mode"] = "tmux"
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, launch_mode:, **_kwargs|
+          @snapshot[:launch_mode] = launch_mode
+
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          writer = Ace::Assign::Molecules::StepWriter.new
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.steps_dir, assignment: assignment)
+          root = state.find_by_number(fork_root)
+          writer.mark_done(root.file_path, report_content: "done", reports_dir: assignment.reports_dir)
+        end
+      end
+
+      output = capture_fork_run_command(
+        cache_base: cache_dir,
+        launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot),
+        assignment: "#{result[:assignment].id}@020",
+        launch_mode: "headless"
+      )
+
+      assert_equal "headless", launch_snapshot[:launch_mode]
+      assert_includes output.first, "Launch mode: headless"
 
       Ace::Assign.reset_config!
     end

@@ -128,6 +128,16 @@ module Ace
           provider.empty? ? nil : provider
         end
 
+        # Resolve per-step launch-mode override from fork options.
+        # @return [String, nil]
+        def fork_mode
+          return nil unless fork_options
+
+          mode = fork_options["mode"]
+          mode = mode.to_s.strip
+          mode.empty? ? nil : mode
+        end
+
         # Get the original step number if this is a retry
         # @return [String, nil] Original step number
         def retry_of

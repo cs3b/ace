@@ -31,7 +31,7 @@ require_relative "molecules/step_writer"
 require_relative "molecules/step_renumberer"
 require_relative "molecules/skill_assign_source_resolver"
 require_relative "molecules/fork_session_launcher"
-require_relative "molecules/tmux_fork_runner"
+require_relative "molecules/tmux_control_surface_runner"
 require_relative "molecules/preset_inferrer"
 
 # Organisms

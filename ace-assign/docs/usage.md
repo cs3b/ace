@@ -225,6 +225,7 @@ Options:
 - `--cli-args <args>`
 - `--timeout <seconds>`
 - `--launch-mode auto|headless|tmux`
+- `--callback`
 - `--quiet, -q`
 - `--debug, -d`
 
@@ -233,6 +234,24 @@ Launch modes:
 - `auto` (default): use tmux when the current process is already inside tmux or `ACE_TMUX_SESSION` is set; otherwise use the headless subprocess path
 - `headless`: force the existing provider subprocess path and never create tmux panes
 - `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically. The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`. Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
+- `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically
+  - This mode consumes the shared `ace-tmux` runtime/control surface for tmux targeting, pane dispatch, and diagnostics.
+  - The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`.
+  - Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
+  - Assignment step state remains the source of truth for subtree completion or failure; pane capture is diagnostic support only.
+
+Callback mode:
+
+- `--callback`: tmux-only fork mode that captures the pane where `fork-run` was started and passes it into the child fork session as `ACE_ASSIGN_CALLBACK_PANE`
+- In callback mode the child agent is instructed to send one final status sentence back to the origin pane with `ace-tmux send` before stopping
+- Callback mode is intended for interactive parent/child agent tmux flows where the parent stays idle until the child sends the final message back
+
+Launch-mode precedence for fork execution:
+
+1. CLI `--launch-mode`
+2. Step frontmatter `fork.mode`
+3. Config `execution.launch_mode`
+4. Built-in default `auto`
 
 Provider resolution precedence for fork execution:
 
@@ -250,6 +269,7 @@ status: pending
 context: fork
 fork:
   provider: "claude:sonnet@yolo"
+  mode: "tmux"
 ---
 ```
 
