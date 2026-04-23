@@ -1,6 +1,6 @@
 ---
 id: 8re.t.n1d.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-15 15:21:37"
 estimate: TBD
@@ -61,11 +61,11 @@ Edge Cases:
 
 ### Success Criteria
 
-- [ ] `ace-assign` is specified as a consumer of shared `ace-tmux` control behavior rather than a private tmux wrapper owner.
-- [ ] The draft covers session/window resolution, `work-fs` reuse, pane creation or reuse, dispatch, focus, and diagnostics.
-- [ ] Assignment state remains the source of truth for subtree completion and failure.
-- [ ] Diagnostic pane capture is specified as supportive evidence, not primary state.
-- [ ] All public examples use the current shipped `ace-assign fork-run` CLI shape.
+- [x] `ace-assign` is specified as a consumer of shared `ace-tmux` control behavior rather than a private tmux wrapper owner.
+- [x] The draft covers session/window resolution, `work-fs` reuse, pane creation or reuse, dispatch, focus, and diagnostics.
+- [x] Assignment state remains the source of truth for subtree completion and failure.
+- [x] Diagnostic pane capture is specified as supportive evidence, not primary state.
+- [x] All public examples use the current shipped `ace-assign fork-run` CLI shape.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
