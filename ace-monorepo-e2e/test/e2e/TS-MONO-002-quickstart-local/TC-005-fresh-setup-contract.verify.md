@@ -11,7 +11,7 @@ Validation order (impact-first):
 2. Confirm explicit artifacts under `results/tc/{NN}/`.
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) as fallback.
 
-1. **Setup commands succeed** -- `results/tc/05/config-init.exit` and `results/tc/05/handbook-sync.exit` are `0`.
+1. **Setup commands succeed** -- `results/tc/05/config-sync.exit` and `results/tc/05/handbook-sync.exit` are `0`.
 2. **Provider discovery output is captured** -- `results/tc/05/list-providers.exit` is `0`, and `results/tc/05/list-providers.stdout` is non-empty with provider/status style content.
 3. **Doctor output is actionable** -- `results/tc/05/config-doctor.exit` is `0`, and `results/tc/05/config-doctor.stdout` is non-empty.
 4. **`.ace-local/` ignore evidence exists** -- `results/tc/05/gitignore.snapshot` exists and either:

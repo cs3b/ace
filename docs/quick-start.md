@@ -27,15 +27,13 @@ bundle add --group "development, test" \
 bundle install
 ```
 
-3. Initialize project config (`ace-config` comes from `ace-support-config`, not a separate gem):
+3. Sync CLI provider config (`ace-config` comes from `ace-support-config`, not a separate gem):
 
 ```bash
-ace-config init
+ace-config sync ace-llm-providers-cli
 ```
 
-This seeds your local `.ace/` config, adds starter agent guidance files when missing, and ensures `.ace-local/` is ignored for project-local ACE artifacts.
-On first run, expect a large tracked setup diff under `.ace/`, projected agent directories (for example `.claude/skills/`,
-`.codex/skills/`, `.gemini/skills/`), guidance files, and Bundler files.
+Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local overrides.
 
 4. Sync handbook assets to your agent platforms:
 
@@ -43,9 +41,10 @@ On first run, expect a large tracked setup diff under `.ace/`, projected agent d
 ace-handbook sync
 ```
 
-5. Verify providers and project context:
+5. Verify setup, providers, and project context:
 
 ```bash
+ace-config doctor
 ace-llm --list-providers
 ace-bundle project
 ```
