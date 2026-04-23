@@ -77,7 +77,7 @@ module Ace
           # non-mutating.
           #
           # @param sandbox_path [String]
-          # @return [void]
+          # @return [Array<String>]
           def sync_protocol_sources_into(sandbox_path)
             sync_protocol_sources(File.expand_path(sandbox_path))
           end
@@ -108,12 +108,13 @@ module Ace
           end
 
           def sync_protocol_sources(sandbox_path)
-            %w[skill wfi].each do |protocol|
+            packages = %w[skill wfi].flat_map do |protocol|
               Dir.glob(File.join(@config_root, "*", ".ace-defaults", "nav", "protocols",
-                "#{protocol}-sources", "*.yml")).sort.each do |manifest_path|
+                "#{protocol}-sources", "*.yml")).sort.filter_map do |manifest_path|
                 sync_protocol_source_manifest(protocol, manifest_path, sandbox_path)
               end
             end
+            packages.compact.uniq.sort
           end
 
           def sync_protocol_source_manifest(protocol, manifest_path, sandbox_path)
@@ -137,11 +138,12 @@ module Ace
 
             FileUtils.mkdir_p(File.dirname(target_manifest_path))
             FileUtils.cp(manifest_path, target_manifest_path) unless File.exist?(target_manifest_path)
-            return unless File.directory?(source_dir)
+            return package_name unless File.directory?(source_dir)
             return if File.exist?(target_dir)
 
             FileUtils.mkdir_p(File.dirname(target_dir))
             FileUtils.cp_r(source_dir, target_dir)
+            package_name
           rescue Psych::SyntaxError
             nil
           end

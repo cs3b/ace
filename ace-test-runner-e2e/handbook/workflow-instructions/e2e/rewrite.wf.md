@@ -42,7 +42,9 @@ ace-bundle wfi://e2e/review  →  ace-bundle wfi://e2e/plan-changes  →  ace-bu
 - Normalize runner files to execution-only language.
 - Normalize verifier files to verdict-only, impact-first validation.
 - Keep setup concerns in `scenario.yml` and fixtures, not in TC runner setup sections.
-- Remove helper artifact requirements from `results/tc/{NN}/`; use runner observations instead.
+- Keep only declared verifier-dependent evidence under `results/tc/{NN}/`.
+- Move verifier-only artifact references into explicit runner/setup declarations.
+- Replace wildcard artifact paths with exact declared files.
 - Rewrite goal-style TCs around the public user path. Do not preserve hidden recipes, workaround branches, or supporting-tool probes as the way the runner reaches the goal.
 
 ## Workflow Steps
@@ -128,12 +130,14 @@ Follow the E2E test writing rules:
 - Target 2-5 TCs per scenario
 - Test through the CLI interface, not library imports
 - Write runner goals as “do the job” outcomes, not “write a report for the verifier” chores
-- Keep `results/tc/{NN}/` for real outcomes only; avoid helper YAML, path files, command files, and reflections
+- Keep `results/tc/{NN}/` for declared verifier-dependent evidence only; avoid undeclared helper YAML, reflections, and verifier-facing manifests
+- Keep only declared verifier-dependent evidence under `results/tc/{NN}/`; small supporting captures are acceptable when they are explicit and necessary
 - Use runner observations as the only non-filesystem secondary evidence source
 - Make final sandbox state or real product output the primary oracle whenever possible
 - Add behavioral/content assertions only when CLI output itself is part of the user-visible outcome
 - Remove duplicate command-only TCs; fold related assertions into one TC where possible
 - Do not encode exact workaround procedures, hidden command recipes, or internal debugging tricks the user would not infer from docs/usage/`--help`
+- For watch/live-output flows, rewrite to a bounded-session pattern with explicit shutdown evidence
 - If the job is valid but the public surface is too weak, plan a product/docs/help fix instead of hardcoding the workaround into the TC
 
 **Load the TC template for reference:**
@@ -152,6 +156,8 @@ For each TC classified as MODIFY:
    - **Broaden scope** — add assertions for related behavior tested by the same CLI invocation
    - **Fix structure** — add missing sections, fix formatting issues
    - **Replace helper-artifact oracles** — if the existing TC relies on runner-written helper files, rewrite it around final sandbox state plus runner observations
+   - **Declare verifier-dependent artifacts** — if the verifier names a `results/tc/...` file, ensure the runner or setup declares the exact same path
+   - **Remove wildcard declarations** — replace `results/tc/.../*` or `results/tc/.../foo.*` with exact paths
    - **Add evidence gates** — if the existing TC relies on existence-only or missing end-state checks, strengthen the primary oracle before falling back to debug captures
    - **Remove hidden recipes/workarounds** — if the existing TC teaches the runner how to bypass the public surface, rewrite it around the supported user path or narrow/remove the TC
 3. Update the `last-verified` field if the TC was re-run during modification
@@ -241,7 +247,8 @@ Present the execution summary:
 - [ ] TC count matches plan: {yes/no}
 - [ ] No stale references: {yes/no}
 - [ ] All scenarios have 2-5 TCs: {yes/no}
-- [ ] Modified/created TCs avoid helper files in `results/tc/{NN}/`: {yes/no}
+- [ ] Modified/created TCs avoid undeclared helper files in `results/tc/{NN}/`: {yes/no}
+- [ ] Modified/created TCs declare every verifier-dependent artifact path: {yes/no}
 
 ### Next Steps
 

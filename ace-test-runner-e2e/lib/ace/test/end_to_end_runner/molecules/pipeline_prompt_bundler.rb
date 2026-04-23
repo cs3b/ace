@@ -53,21 +53,23 @@ module Ace
           # @param sandbox_path [String]
           # @param test_cases [Array<String>, nil]
           # @return [Hash]
-          def prepare_runner(scenario:, sandbox_path:, test_cases: nil)
+          def prepare_runner(scenario:, sandbox_path:, test_cases: nil, artifact_contract: nil, repair_mode: false)
             cache_dir = ensure_cache_dir(sandbox_path)
-            system_path = File.join(cache_dir, "runner-system.md")
-            prompt_path = File.join(cache_dir, "runner-prompt.md")
+            file_prefix = repair_mode ? "runner-repair" : "runner"
+            system_path = File.join(cache_dir, "#{file_prefix}-system.md")
+            prompt_path = File.join(cache_dir, "#{file_prefix}-prompt.md")
 
             File.write(system_path, RUNNER_SYSTEM_PROMPT)
 
             bundled = bundle_markdown_file(File.join(scenario.dir_path, "runner.yml.md"), test_cases: test_cases)
             bundled = bundled.gsub("Workspace root: (current directory)", "Workspace root: #{File.expand_path(sandbox_path)}")
-            File.write(prompt_path, bundled)
+            contract = build_runner_artifact_contract_section(artifact_contract, repair_mode: repair_mode)
+            File.write(prompt_path, [bundled, contract].reject(&:empty?).join("\n\n---\n\n"))
 
             {
               system_path: system_path,
               prompt_path: prompt_path,
-              output_path: File.join(cache_dir, "runner-output.md")
+              output_path: File.join(cache_dir, "#{file_prefix}-output.md")
             }
           end
 
@@ -249,6 +251,42 @@ module Ace
 
               #{runner_observations.to_s.strip.empty? ? "(none provided)" : runner_observations.to_s.strip}
             MARKDOWN
+          end
+
+          def build_runner_artifact_contract_section(artifact_contract, repair_mode:)
+            return "" if artifact_contract.nil? || artifact_contract.empty?
+
+            parts = []
+            parts << "# Artifact Contract"
+            parts << ""
+            if repair_mode
+              parts << "This is a bounded repair pass."
+              parts << "- Do not rerun goals whose required artifacts are already complete."
+              parts << "- For each goal with missing required artifacts, produce only the missing files."
+              parts << "- Prefer the minimal real public command needed to create the missing capture set."
+              parts << "- If the missing file is supporting evidence copied from an already-generated real artifact, copy that real artifact into `results/`."
+              parts << "- Do not invent content, fabricate captures, or rewrite unrelated artifacts."
+            else
+              parts << "A goal is not complete unless every required artifact for that goal exists on disk under `results/`."
+              parts << "- After finishing each goal, self-check the required artifact list below."
+              parts << "- If a required artifact is missing, fix it before moving on."
+            end
+            parts << ""
+
+            artifact_contract.sort.each do |tc_id, entry|
+              parts << "## #{tc_id}"
+              parts << ""
+              parts << "- Required artifacts: #{format_artifact_list(entry["required_artifacts"])}"
+              missing = Array(entry["missing_required_artifacts"])
+              unless missing.empty?
+                parts << "- Missing required artifacts: #{format_artifact_list(missing)}"
+              end
+              optional = Array(entry["optional_artifacts"])
+              parts << "- Optional artifacts: #{format_artifact_list(optional)}" unless optional.empty?
+              parts << ""
+            end
+
+            parts.join("\n").rstrip
           end
 
           def build_artifact_contract_section(artifact_contract)

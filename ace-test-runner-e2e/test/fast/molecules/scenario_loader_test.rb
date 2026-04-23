@@ -383,6 +383,30 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_standalone_expands_grouped_command_captures
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-CAPTURE-001",
+        standalone_tcs: {
+          "TC-001-first" => {
+            runner: "# Goal\n\n- `results/tc/01/help.stdout`, `.stderr`, `.exit`",
+            verify: "# Verify\n\n- `results/tc/01/help.exit` is `0`."
+          }
+        })
+
+      scenario = @loader.load(scenario_dir)
+      test_case = scenario.test_cases.first
+
+      assert_equal(
+        %w[
+          results/tc/01/help.exit
+          results/tc/01/help.stderr
+          results/tc/01/help.stdout
+        ],
+        test_case.declared_artifacts
+      )
+    end
+  end
+
   def test_standalone_declared_artifact_required_takes_precedence_over_optional
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-OPTIONAL-002",
@@ -393,8 +417,8 @@ class ScenarioLoaderTest < Minitest::Test
         YAML
         standalone_tcs: {
           "TC-001-first" => {
-            runner: "# Goal\n\n- `results/tc/01/summary.md` (optional)",
-            verify: "# Verify\n\n- `results/tc/01/summary.md` required artifact."
+            runner: "# Goal\n\n- `results/tc/01/summary.md` (optional)\n- `results/tc/01/summary.md`",
+            verify: "# Verify\n\n- Confirm `results/tc/01/summary.md`."
           }
         })
 
@@ -403,6 +427,45 @@ class ScenarioLoaderTest < Minitest::Test
 
       assert_equal ["results/tc/01/summary.md"], test_case.declared_artifacts
       assert_equal [], test_case.optional_artifacts
+    end
+  end
+
+  def test_load_standalone_rejects_verifier_only_artifact_reference
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-VERIFY-ONLY-001",
+        scenario_yml: <<~YAML,
+          test-id: TS-VERIFY-ONLY-001
+          title: Verify Only
+          area: test
+          sandbox-layout:
+            results/tc/01/: "Goal 1 artifacts"
+        YAML
+        standalone_tcs: {
+          "TC-001-first" => {
+            runner: "# Goal\n\n- `results/tc/01/`",
+            verify: "# Verify\n\n- `results/tc/01/output.txt` exists."
+          }
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Verifier references undeclared artifact/, error.message)
+      assert_match(/results\/tc\/01\/output\.txt/, error.message)
+    end
+  end
+
+  def test_load_standalone_rejects_wildcard_artifact_reference
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-WILDCARD-001",
+        standalone_tcs: {
+          "TC-001-first" => {
+            runner: "# Goal\n\n- `results/tc/01/output.*`",
+            verify: "# Verify\n\n- Confirm results."
+          }
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Wildcard artifact path/, error.message)
+      assert_match(/results\/tc\/01\/output\.\*/, error.message)
     end
   end
 

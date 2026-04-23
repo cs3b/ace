@@ -18,7 +18,14 @@ class PipelinePromptBundlerTest < Minitest::Test
       output = bundler.prepare_runner(
         scenario: scenario,
         sandbox_path: sandbox,
-        test_cases: ["TC-002"]
+        test_cases: ["TC-002"],
+        artifact_contract: {
+          "TC-002" => {
+            "required_artifacts" => ["results/tc/02/sample.txt", "results/tc/02/sample.exit"],
+            "missing_required_artifacts" => ["results/tc/02/sample.txt", "results/tc/02/sample.exit"],
+            "optional_artifacts" => ["results/tc/02/notes.md"]
+          }
+        }
       )
 
       assert File.exist?(output[:system_path]), "runner system prompt should be written"
@@ -38,6 +45,40 @@ class PipelinePromptBundlerTest < Minitest::Test
       assert_includes content, "Goal 2"
       refute_includes content, "Goal 1"
       assert_includes content, "Workspace root: #{File.expand_path(sandbox)}"
+      assert_includes content, "Artifact Contract"
+      assert_includes content, "results/tc/02/sample.txt"
+      assert_includes content, "A goal is not complete unless every required artifact"
+    end
+  end
+
+  def test_prepare_runner_repair_mode_writes_repair_prompt
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_goal_scenario_files(tmpdir)
+      sandbox = File.join(tmpdir, "sandbox")
+      FileUtils.mkdir_p(sandbox)
+
+      bundler = PromptBundler.new
+      scenario = build_scenario(scenario_dir)
+      output = bundler.prepare_runner(
+        scenario: scenario,
+        sandbox_path: sandbox,
+        test_cases: ["TC-002"],
+        artifact_contract: {
+          "TC-002" => {
+            "required_artifacts" => ["results/tc/02/sample.txt", "results/tc/02/sample.exit"],
+            "missing_required_artifacts" => ["results/tc/02/sample.exit"],
+            "optional_artifacts" => []
+          }
+        },
+        repair_mode: true
+      )
+
+      assert_equal "runner-repair-output.md", File.basename(output[:output_path])
+
+      content = File.read(output[:prompt_path])
+      assert_includes content, "bounded repair pass"
+      assert_includes content, "produce only the missing files"
+      assert_includes content, "results/tc/02/sample.exit"
     end
   end
 

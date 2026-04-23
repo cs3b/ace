@@ -56,6 +56,15 @@ Build a change inventory:
 - **Removed features** — deleted files or deprecated modules
 - **Unchanged features** — stable code with no recent modifications
 
+Before classifying TCs, also check whether the package change alters a public contract that downstream retained E2E tests commonly pin:
+- status words
+- JSON keys or output schema
+- CLI command/flag shapes
+- lifecycle semantics
+- ownership/state semantics
+
+If yes, add an explicit downstream retained-E2E sweep list to the plan instead of limiting scope to the package under edit.
+
 ### 3. Classify Each Existing TC
 
 For each TC listed in the coverage matrix, assign exactly one classification:
@@ -80,6 +89,7 @@ For REMOVE due to overlap, replacement evidence is mandatory:
 - TC scope is too broad (should be narrowed to only E2E-exclusive aspects)
 - TC scope is too narrow (missing assertions for related behavior in same CLI invocation)
 - TC has structure issues flagged in the review
+- TC has undeclared or wildcard verifier-dependent artifact paths
 - TC is hidden-recipe-driven or workaround-driven but the underlying user job should still be supported by the public surface after scenario/docs/help correction
 
 **CONSOLIDATE** — The TC should merge with another TC. Criteria (any one is sufficient):
@@ -192,6 +202,12 @@ Format the complete change plan:
 | Action | Target | Why |
 |--------|--------|-----|
 | Update docs/help/CLI | {package/path} | {job is valid but current public surface is too weak for the E2E path} |
+
+### Downstream Retained-E2E Sweep ({n} actions)
+
+| Scenario | Trigger | Change Needed |
+|----------|---------|---------------|
+| {scenario-id} | {renamed key / lifecycle shift / command-shape change} | {update retained verifier/runner contract} |
 
 ### CONSOLIDATE ({n} TCs → {n} TCs)
 

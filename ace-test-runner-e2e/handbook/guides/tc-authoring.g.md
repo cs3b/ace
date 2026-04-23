@@ -32,6 +32,11 @@ Inline `.tc.md` and frontmatter `mode` values are no longer supported.
 - TC outcome artifacts write to `results/tc/{NN}/`
 - Summary counters use `tcs-passed`, `tcs-failed`, and `tcs-total`
 
+## TC Styles
+
+- **Public-surface**: prove a documented user job from docs/usage/`--help` and the CLI.
+- **Retained-contract**: pin an integrated behavior with deterministic, explicitly declared supporting evidence when end-state checks alone are insufficient.
+
 ## File Naming
 
 - `TC-{NNN}` — test case number (e.g., TC-001)
@@ -82,8 +87,9 @@ Run `ace-lint` and produce report artifacts for a valid file.
 ## Constraints
 
 - Use only sandbox paths
-- Keep only final outcome evidence under `results/tc/01/`
-- Do not place helper inputs, manifests, command transcripts, or reflections under `results/tc/01/`
+- Keep only declared verifier-dependent evidence under `results/tc/01/`
+- Declare exact paths for any verifier-dependent captures, for example ``results/tc/01/help.stdout`, `.stderr`, `.exit``
+- Do not place helper inputs, manifests, PASS/FAIL summaries, or reflections under `results/tc/01/`
 - Execute actions only; do not assign PASS/FAIL or final verdicts
 ```
 
@@ -122,14 +128,19 @@ Pass only when all expectations are satisfied by on-disk evidence.
 
 - Keep each TC focused on one coherent behavior path.
 - Ensure goal numbers and TC numbers remain aligned (`TC-001` -> Goal 1).
+- Choose the TC style up front: `public-surface` or `retained-contract`.
 - Keep runner files execution-only and verifier files verdict-only.
 - Make verifier expectations deterministic with impact-first ordering.
-- Keep `results/tc/{NN}/` for outcome artifacts only.
+- Keep `results/tc/{NN}/` for declared verifier-dependent evidence only.
+- Declare every verifier-dependent path in the runner or setup. Do not rely on verifier-only references.
+- Grouped capture shorthand is valid only for exact sibling files, for example ``foo.stdout`, `.stderr`, `.exit``.
+- Do not use wildcard artifact paths.
 - Use harness-provided runner observations as the only non-filesystem secondary evidence source.
 - Prefer final sandbox state and real product output over raw debug captures.
-- Do not ask the runner to write setup inputs, audit manifests, or final reflections for the verifier.
+- Do not ask the runner to write setup inputs, audit manifests, verifier-facing summaries, or final reflections for the verifier.
 - Do not teach the runner hidden recipes or workaround sequences; if the path is not discoverable from docs/usage/`--help`, the TC is wrong or the public surface needs improvement.
 - Use runner observations to record friction and workaround pressure, not to normalize it.
+- For watch/live-output flows, use a bounded-session pattern with explicit shutdown and captured exit code.
 - Record why each scenario remains E2E via `e2e-justification` and `unit-coverage-reviewed` in `scenario.yml`.
 
 ## Related

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.16] - 2026-04-23
+
+### Fixed
+- Enforced runner-owned verifier artifact contracts in scenario loading, expanded grouped `.stdout` / `.stderr` / `.exit` shorthand, and rejected verifier-only or wildcard artifact declarations that previously let retained E2E drift slip through.
+
+### Technical
+- Updated E2E guides, templates, and create/review/plan/rewrite/fix workflows to distinguish `public-surface` versus `retained-contract` TCs and require explicit downstream retained-E2E sweeps after public contract changes.
+
+## [0.38.15] - 2026-04-23
+
+### Fixed
+- Passed declared artifact contracts directly into runner prompts, added one bounded runner repair pass when required captures are still missing, and persisted repair metadata so missing-artifact E2E failures can recover before verifier judgment.
+
+## [0.38.14] - 2026-04-23
+
+### Fixed
+- Limited deterministic sandbox git excludes to setup-commit scenarios so copied package trees remain visible to ignore-aware tools while fixture-repo support paths stay unstaged.
+
+## [0.38.13] - 2026-04-23
+
+### Fixed
+- Enabled role-based verifier fallback in pipeline execution so successful runner phases still produce verifier results when the first verifier provider is unavailable.
+- Seeded deterministic sandbox git excludes for copied package trees and fixture-commit support paths so setup-time `git add -A` no longer stages runner support files or copied package content into fixture repositories.
+
 ## [0.38.12] - 2026-04-23
 
 ### Changed

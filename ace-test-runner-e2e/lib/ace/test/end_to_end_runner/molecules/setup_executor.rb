@@ -39,13 +39,15 @@ module Ace
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
-          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {})
+          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
+            git_excludes: [])
             FileUtils.mkdir_p(sandbox_dir)
             env = if @sandbox_backend
               @sandbox_backend.prepared_env(initial_env.dup)
             else
               initial_env.dup
             end
+            @git_excludes = normalize_git_excludes(git_excludes)
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
@@ -162,6 +164,7 @@ module Ace
             run_command("git", "init", "-b", "main", chdir: sandbox_dir, env: env)
             run_command("git", "config", "user.name", "Test User", chdir: sandbox_dir, env: env)
             run_command("git", "config", "user.email", "test@example.com", chdir: sandbox_dir, env: env)
+            seed_git_excludes(sandbox_dir)
           end
 
           # Copy fixture files into sandbox
@@ -243,6 +246,26 @@ module Ace
 
           def capture3(*args, **kwargs)
             Open3.capture3(*args, **kwargs)
+          end
+
+          def seed_git_excludes(sandbox_dir)
+            patterns = (default_git_excludes + @git_excludes).uniq
+            return if patterns.empty?
+
+            exclude_path = File.join(sandbox_dir, ".git", "info", "exclude")
+            existing = File.exist?(exclude_path) ? File.readlines(exclude_path, chomp: true) : []
+            additions = patterns.reject { |pattern| existing.include?(pattern) }
+            return if additions.empty?
+
+            File.write(exclude_path, (existing + additions).join("\n") + "\n")
+          end
+
+          def normalize_git_excludes(git_excludes)
+            Array(git_excludes).map(&:to_s).map(&:strip).reject(&:empty?).uniq
+          end
+
+          def default_git_excludes
+            [".ace-local/", "reports/", "results/"]
           end
 
           def sanitized_process_environment
