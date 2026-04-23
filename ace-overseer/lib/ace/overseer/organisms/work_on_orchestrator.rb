@@ -70,9 +70,10 @@ module Ace
           end
           assignment_result = if existing
             progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
+            focused_step = existing.dig("focus_step", "number") || existing.dig("next_step", "number")
             {
               assignment_id: existing.dig("assignment", "id"),
-              first_step: existing.dig("current_step", "number"),
+              first_step: focused_step,
               created: false
             }
           else
@@ -185,15 +186,29 @@ module Ace
             Ace::Assign.reset_config!
             executor = Ace::Assign::Organisms::AssignmentExecutor.new
             result = executor.status
+            focus_step = result[:current]
+            next_step = result[:state].active_steps.empty? ? result[:state].next_workable : nil
             {
               "assignment" => {
                 "id" => result[:assignment].id,
                 "name" => result[:assignment].name,
                 "state" => result[:state].assignment_state.to_s
               },
-              "current_step" => result[:current] && {
-                "number" => result[:current].number,
-                "name" => result[:current].name
+              "active_steps" => result[:state].active_steps.map do |step|
+                {
+                  "number" => step.number,
+                  "name" => step.name
+                }
+              end,
+              "next_step" => if result[:state].active_steps.empty? && result[:state].next_workable
+                {
+                  "number" => next_step.number,
+                  "name" => next_step.name
+                }
+              end,
+              "focus_step" => focus_step && {
+                "number" => focus_step.number,
+                "name" => focus_step.name
               }
             }
           rescue Ace::Assign::AssignmentErrors::NoActive

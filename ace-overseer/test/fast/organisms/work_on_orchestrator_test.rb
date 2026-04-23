@@ -166,7 +166,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       messages = []
       existing = {
         "assignment" => {"id" => "existing-id"},
-        "current_step" => {"number" => "020-implement"}
+        "focus_step" => {"number" => "020-implement"}
       }
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
         task_loader: FakeTaskManager.new("234" => {metadata: {}}),
@@ -181,9 +181,10 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         assignment_detector: ->(_path) { existing }
       )
 
-      orchestrator.call(task_ref: "234", on_progress: ->(msg) { messages << msg })
+      result = orchestrator.call(task_ref: "234", on_progress: ->(msg) { messages << msg })
 
       assert messages.any? { |m| m.include?("Assignment already active: existing-id") }
+      assert_equal "020-implement", result[:first_step]
     end
   end
 

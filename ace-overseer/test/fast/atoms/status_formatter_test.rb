@@ -3,12 +3,13 @@
 require_relative "../../test_helper"
 
 class StatusFormatterTest < AceOverseerTestCase
-  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_step: nil)
+  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, active: 1, pending: 2, active_steps: nil, next_step: nil)
     h = {
       "assignment" => {"state" => state, "id" => id, "name" => name},
-      "step_summary" => {"total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending}
+      "step_summary" => {"total" => total, "done" => done, "failed" => failed, "active" => active, "pending" => pending}
     }
-    h["current_step"] = current_step if current_step
+    h["active_steps"] = active_steps if active_steps
+    h["next_step"] = next_step if next_step
     h
   end
 
@@ -17,7 +18,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/tmp/ace-task.230",
       branch: "230-feature",
-      assignments: [make_assignment(id: "8op2ab", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "8op2ab", state: "completed", total: 5, done: 5, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true, "pr_metadata" => {"number" => 206, "state" => "MERGED", "isDraft" => false}}
     )
 
@@ -29,7 +30,7 @@ class StatusFormatterTest < AceOverseerTestCase
   end
 
   def test_formats_assignment_sub_row
-    assignment = make_assignment(id: "8op2ab", state: "completed", name: "work-on-task-230", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
+    assignment = make_assignment(id: "8op2ab", state: "completed", name: "work-on-task-230", total: 5, done: 5, failed: 0, active: 0, pending: 0)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -47,7 +48,7 @@ class StatusFormatterTest < AceOverseerTestCase
       branch: "230-feature",
       assignments: [
         make_assignment(id: "8or5kx", state: "running"),
-        make_assignment(id: "8or5ky", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0)
+        make_assignment(id: "8or5ky", state: "completed", total: 3, done: 3, failed: 0, active: 0, pending: 0)
       ],
       git_status: {"clean" => true}
     )
@@ -75,7 +76,7 @@ class StatusFormatterTest < AceOverseerTestCase
   end
 
   def test_progress_with_failures
-    assignment = make_assignment(id: "8fail1", state: "failed", total: 5, done: 3, failed: 1, in_progress: 0, pending: 1)
+    assignment = make_assignment(id: "8fail1", state: "failed", total: 5, done: 3, failed: 1, active: 0, pending: 1)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -104,7 +105,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "265",
       worktree_path: "/tmp/ace-task.265",
       branch: "265-feature",
-      assignments: [make_assignment(id: "8abc12", state: "paused", total: 3, done: 0, failed: 0, in_progress: 0, pending: 3)],
+      assignments: [make_assignment(id: "8abc12", state: "paused", total: 3, done: 0, failed: 0, active: 0, pending: 3)],
       git_status: {"clean" => true, "pr_metadata" => {"number" => 210, "state" => "OPEN", "isDraft" => true}}
     )
 
@@ -132,7 +133,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "270",
       worktree_path: "/tmp/ace-task.270",
       branch: "270-feature",
-      assignments: [make_assignment(id: "a1", state: "paused", total: 1, done: 0, failed: 0, in_progress: 0, pending: 1)],
+      assignments: [make_assignment(id: "a1", state: "paused", total: 1, done: 0, failed: 0, active: 0, pending: 1)],
       git_status: {"clean" => true}
     )
 
@@ -140,7 +141,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/tmp/ace-task.230",
       branch: "230-feature",
-      assignments: [make_assignment(id: "a2", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "a2", state: "completed", total: 5, done: 5, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true, "pr_metadata" => {"number" => 200, "state" => "MERGED", "isDraft" => false}}
     )
 
@@ -169,7 +170,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/tmp/ace-task.230",
       branch: "230-feature",
-      assignments: [make_assignment(id: "8op2ab", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "8op2ab", state: "completed", total: 5, done: 5, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true, "pr_metadata" => {"number" => 206, "state" => "MERGED", "isDraft" => false}}
     )
 
@@ -180,7 +181,7 @@ class StatusFormatterTest < AceOverseerTestCase
   end
 
   def test_stalled_state_icon
-    assignment = make_assignment(id: "8stall", state: "stalled", total: 2, done: 0, failed: 0, in_progress: 1, pending: 1)
+    assignment = make_assignment(id: "8stall", state: "stalled", total: 2, done: 0, failed: 0, active: 1, pending: 1)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -193,7 +194,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "265",
       worktree_path: "/tmp/ace-task.265",
       branch: "265-feature",
-      assignments: [make_assignment(id: "8abc12", state: "paused", total: 3, done: 0, failed: 0, in_progress: 0, pending: 3)],
+      assignments: [make_assignment(id: "8abc12", state: "paused", total: 3, done: 0, failed: 0, active: 0, pending: 3)],
       git_status: {"dirty_files" => 4}
     )
 
@@ -222,8 +223,8 @@ class StatusFormatterTest < AceOverseerTestCase
       worktree_path: "/project",
       branch: "main",
       assignments: [
-        make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0),
-        make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, in_progress: 1, pending: 3)
+        make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, active: 0, pending: 0),
+        make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, active: 1, pending: 3)
       ],
       git_status: {"clean" => true},
       location_type: :main
@@ -242,7 +243,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "main",
       worktree_path: "/project",
       branch: "main",
-      assignments: [make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true},
       location_type: :main
     )
@@ -275,7 +276,7 @@ class StatusFormatterTest < AceOverseerTestCase
       task_id: "266",
       worktree_path: "/tmp/ace-task.266",
       branch: "266-feature",
-      assignments: [make_assignment(id: "a2", state: "completed", total: 4, done: 4, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "a2", state: "completed", total: 4, done: 4, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true}
     )
 
@@ -288,7 +289,7 @@ class StatusFormatterTest < AceOverseerTestCase
   end
 
   def test_progress_bar_in_assignment_row
-    assignment = make_assignment(id: "8op2ab", state: "completed", total: 10, done: 10, failed: 0, in_progress: 0, pending: 0)
+    assignment = make_assignment(id: "8op2ab", state: "completed", total: 10, done: 10, failed: 0, active: 0, pending: 0)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -297,7 +298,7 @@ class StatusFormatterTest < AceOverseerTestCase
   end
 
   def test_progress_bar_partial_fill
-    assignment = make_assignment(id: "8half1", state: "running", total: 10, done: 5, failed: 0, in_progress: 1, pending: 4)
+    assignment = make_assignment(id: "8half1", state: "running", total: 10, done: 5, failed: 0, active: 1, pending: 4)
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -306,8 +307,8 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "5/10"
   end
 
-  def test_current_step_shown_when_present
-    assignment = make_assignment(id: "8run1", state: "running", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_step: "implement")
+  def test_active_steps_shown_when_present
+    assignment = make_assignment(id: "8run1", state: "running", total: 5, done: 2, failed: 0, active: 1, pending: 2, active_steps: ["implement"])
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
@@ -315,13 +316,13 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "2/5"
   end
 
-  def test_current_step_absent_when_nil
-    assignment = make_assignment(id: "8done1", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
+  def test_next_step_shown_when_no_active_steps
+    assignment = make_assignment(id: "8done1", state: "paused", total: 5, done: 2, failed: 0, active: 0, pending: 3, next_step: "plan")
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
 
+    assert_includes row, "next: plan"
     refute_includes row, "implement"
-    assert_includes row, "5/5"
   end
 
   def test_format_watch_footer_with_minutes_and_seconds
@@ -349,7 +350,7 @@ class StatusFormatterTest < AceOverseerTestCase
   def test_assignment_row_with_missing_id
     assignment = {
       "assignment" => {"state" => "running", "name" => "work-on-task"},
-      "step_summary" => {"total" => 3, "done" => 1, "failed" => 0, "in_progress" => 1, "pending" => 1}
+      "step_summary" => {"total" => 3, "done" => 1, "failed" => 0, "active" => 1, "pending" => 1}
     }
 
     row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)

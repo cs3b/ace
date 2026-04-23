@@ -54,7 +54,8 @@ module Ace
         end
 
         def assignment_info_to_h(info)
-          current = info.queue_state.current
+          active_steps = info.queue_state.active_steps
+          next_step = active_steps.empty? ? info.queue_state.next_workable : nil
           {
             "assignment" => {
               "id" => info.id,
@@ -65,10 +66,11 @@ module Ace
               "total" => info.queue_state.summary[:total],
               "done" => info.queue_state.summary[:done],
               "failed" => info.queue_state.summary[:failed],
-              "in_progress" => info.queue_state.summary[:in_progress],
+              "active" => info.queue_state.summary[:active],
               "pending" => info.queue_state.summary[:pending]
             },
-            "current_step" => current ? current.name : nil
+            "active_steps" => active_steps.map(&:name),
+            "next_step" => next_step&.name
           }
         end
 

@@ -35,7 +35,7 @@ class StatusCommandTest < AceOverseerTestCase
   def make_assignment(id:, state:)
     {
       "assignment" => {"state" => state, "id" => id, "name" => "work-on-task"},
-      "step_summary" => {"total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2}
+      "step_summary" => {"total" => 5, "done" => 2, "failed" => 0, "active" => 1, "pending" => 2}
     }
   end
 
