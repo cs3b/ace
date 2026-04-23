@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.7] - 2026-04-23
+
+### Technical
+- Updated assignment-drive generated-output guidance to reference `ace-config sync` instead of the removed `ace-config init` command.
+
+## [0.53.6] - 2026-04-23
+
+
+### Changed
+- Improved tmux-backed fork launch behavior so fork windows are resolved through shared window-name sanitation and active-session targeting updates.
+- Added test coverage for fork window lifecycle paths where window lookup and pane targeting previously depended on brittle parsing.
+
+
 ## [0.53.5] - 2026-04-22
 
 ### Fixed
