@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-04-23
+
+### Technical
+- Declared retained preset-contract metadata captures explicitly in the runner so `session.yml` and `synthesis.yml` checks follow the exact artifact-contract model enforced by `ace-test-runner-e2e`.
+
 ## [0.15.4] - 2026-04-16
 
 ### Fixed
