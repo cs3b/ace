@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.14] - 2026-04-23
+
+
+### Changed
+- Reworked tmux window-open behavior to align with shared session targeting and reduce ambiguity when launching and reusing worktree windows.
+- Updated overseer tmux-window coverage to verify the current session/window lifecycle against the improved launcher behavior.
+
+
 ## [0.14.13] - 2026-04-22
 
 ### Fixed
