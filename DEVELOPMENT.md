@@ -31,7 +31,7 @@ Dependencies like `ace-llm`, `ace-git`, `ace-tmux`, and all `ace-support-*` gems
 
 ```bash
 bundle install
-ace-config init
+ace-config sync ace-llm-providers-cli
 ace-handbook sync
 ```
 
@@ -39,6 +39,7 @@ ace-handbook sync
 
 ```bash
 ace-llm --list-providers
+ace-config doctor
 ace-bundle project
 ```
 

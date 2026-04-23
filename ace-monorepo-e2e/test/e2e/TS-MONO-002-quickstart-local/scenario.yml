@@ -41,8 +41,8 @@ setup:
       # Copy the quick-start doc into sandbox for reference
       cp "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/docs/quick-start.md" quick-start.md
   - run: |
-      # Follow quick-start steps 3-4: initialize config and sync handbook
-      ace-config init
+      # Follow quick-start steps 3-4: sync CLI provider config and handbook assets
+      ace-config sync ace-llm-providers-cli
       ace-handbook sync
   - agent-env:
       PROJECT_ROOT_PATH: .

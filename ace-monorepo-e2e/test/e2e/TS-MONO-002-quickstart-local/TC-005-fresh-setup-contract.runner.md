@@ -3,7 +3,7 @@
 ## Goal
 
 Follow the quick-start install/setup surface and capture deterministic evidence for
-fresh-repo initialization behavior, provider/doctor diagnostics, and Codex alias
+fresh-repo sync behavior, provider/doctor diagnostics, and Codex alias
 model defaults.
 
 ## Workspace
@@ -15,8 +15,8 @@ Save all output to `results/tc/05/`.
 1. Re-run setup commands and capture outputs:
 
    ```bash
-   ace-config init > results/tc/05/config-init.stdout 2> results/tc/05/config-init.stderr
-   echo $? > results/tc/05/config-init.exit
+   ace-config sync ace-llm-providers-cli > results/tc/05/config-sync.stdout 2> results/tc/05/config-sync.stderr
+   echo $? > results/tc/05/config-sync.exit
 
    ace-handbook sync > results/tc/05/handbook-sync.stdout 2> results/tc/05/handbook-sync.stderr
    echo $? > results/tc/05/handbook-sync.exit
@@ -69,7 +69,7 @@ Save all output to `results/tc/05/`.
 5. Summarize exits and key artifacts:
 
    ```bash
-   printf 'config_init_exit=%s\n' "$(cat results/tc/05/config-init.exit)" > results/tc/05/setup-summary.txt
+   printf 'config_sync_exit=%s\n' "$(cat results/tc/05/config-sync.exit)" > results/tc/05/setup-summary.txt
    printf 'handbook_sync_exit=%s\n' "$(cat results/tc/05/handbook-sync.exit)" >> results/tc/05/setup-summary.txt
    printf 'list_providers_exit=%s\n' "$(cat results/tc/05/list-providers.exit)" >> results/tc/05/setup-summary.txt
    printf 'config_doctor_exit=%s\n' "$(cat results/tc/05/config-doctor.exit)" >> results/tc/05/setup-summary.txt

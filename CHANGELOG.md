@@ -7,19 +7,36 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
 - **ace-support-config v0.12.1**: Hardened `ace-config doctor` readiness checks by validating stale `aliases.global` provider targets and accepting semantic `.ace-local` ignore patterns instead of exact-line matching.
+- **ace-support-config v0.13.0**: Made `ace-config doctor` fast by default with structural role-default checks and moved live provider probes behind explicit `--probe`.
 - **ace-llm-providers-cli v0.31.4**: Replaced tmux Codex HOME overlays with per-launch `-C` and trust config overrides so interactive Codex sessions keep the user's normal `HOME` for git, GitHub CLI, and other auth-sensitive tools.
 - **ace-tmux v0.14.4**: Centralized ACE-managed tmux window-name sanitization so dotted or punctuation-bearing worktree/window names become safe tmux targets and startup selection uses window IDs.
 - **ace-assign v0.53.5**: Reused the shared tmux sanitizer for fork windows and targeted fork panes/windows by tmux window ID after lookup or creation.
 - **ace-overseer v0.14.13**: Reused sanitized tmux window-name matching so worktrees with punctuation do not reopen duplicate windows.
 
 ### Added
+- **ace-llm v0.37.0**: Added `ace-llm --no-fallback` so ordinary prompts such as `ping` can verify the exact requested provider/model without fallback routing.
 - **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
 ### Changed
+- **ace-assign v0.53.6**: Improved tmux-backed fork launch behavior so fork windows are resolved through shared window-name sanitation and active-session targeting updates.
+- Added test coverage for fork window lifecycle paths where window lookup and pane targeting previously depended on brittle parsing.
+- **ace-git-commit v0.26.2**: Clarified staged-only and setup-failure commit workflows, including explicit path-scoped command contracts for single-package commits and recovery guidance.
+- **ace-support-config v0.16.0**: Renamed `ace-config init` to `ace-config sync`, removed the old `init` command path, and updated quick-start guidance so only `ace-config sync ace-llm-providers-cli` is required by default.
+- **ace-llm v0.37.1**: Added concurrent provider ping support in query execution and refreshed fallback orchestration behavior used by provider-driven query flows.
+- **ace-llm-providers-cli v0.31.5**: Refined Codex CLI client startup behavior and startup-policy handling for interactive launches so provider metadata and override paths stay aligned.
+- **ace-overseer v0.14.14**: Reworked tmux window-open behavior to align with shared session targeting and reduce ambiguity when launching and reusing worktree windows.
+- **ace-retro v0.18.4**: Added self-improvement and layer-ownership workflow refinements for retro-driven cycle analysis and root-cause tracing workflows.
+- **ace-support-config v0.15.0**: Extended `ace-config doctor` with informational project `.ace` vs package `.ace-defaults` counts, provider skill projection sync warnings, streamed fast-check progress before the final report, API-first provider ping ordering, and API/CLI-specific timeout handling.
+- **ace-support-config v0.14.1**: Updated `ace-config doctor` live provider checks to probe `_utility` plus `commit` candidates, show alias/full-model progress, and summarize passed/total utility-provider ping counts.
+- **ace-task v0.36.2**: Added layer-ownership triage into task bug-work and planning workflows to reduce cross-package misrouting of root-cause fixes.
+- **ace-tmux v0.14.5**: Improved tmux session targeting so session-aware commands respect existing `TMUX` context instead of forcing socket-level targeting when already attached.
+
+- **ace-support-config v0.14.0**: Split `ace-config doctor` into health-gated output plus summarized hygiene findings, restored live utility-provider pings through concurrent `ace-llm TARGET "ping" --no-fallback`, and streamed alias/full-model progress with pass counts as checks complete.
 - **ace-handbook v0.28.0**: Added local `as-release` workflow support and documented a dedicated `release/local` flow for repository preparation.
 - **ace-git-commit v0.26.0**: Improved setup-time LLM failure guidance to include failed role/model context, provider/setup remediation commands, deterministic direct-message fallback (`--only-staged --no-split -m`), and matching docs/test coverage including `TS-COMMIT-001` goal 8.
 
 ### Technical
+- **Config sync follow-ups**: Patch-released docs, cookbook, assignment guidance, and E2E bootstrap surfaces for the `ace-config sync` rename: `ace-test-runner-e2e v0.38.12`, `ace-support-core v0.29.9`, `ace-handbook v0.28.1`, and `ace-assign v0.53.7`.
 - **Dependency follow-up**: Patch-released handbook integrations to match the new core version line: `ace-handbook-integration-claude` v0.3.8, `ace-handbook-integration-codex` v0.3.7, `ace-handbook-integration-gemini` v0.3.7, `ace-handbook-integration-opencode` v0.3.7, and `ace-handbook-integration-pi` v0.3.8.
 - **ace-llm v0.36.5**: Stabilized deterministic verification by stubbing CLI routing tests away from provider fallback HTTP calls and removing retry sleep from fallback model-format coverage.
 - **ace-support-config v0.12.0**: Added doctor command/spec coverage for CLI wiring, alias/package/discovery checks, and probe skip behavior.
@@ -4498,7 +4515,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.12.7**: Graceful return in `advance()` when fork subtree is exhausted (prevents "No phase currently in progress" error)
 - **ace-assign v0.12.7**: Fix ISO8601 regex to handle quoted YAML values in TC-002
 - **ace-assign v0.12.7**: Correct `CACHE_BASE` path in TS-ASSIGN-003d scenario
-- **ace-assign**: Update stale workflow path in TS-ASSIGN-005 E2E test after namespace rename
+- **ace-assign v0.53.6**: Update stale workflow path in TS-ASSIGN-005 E2E test after namespace rename
 - **ace-b36ts**: Correct scenario.yml test-id fields for E2E tests
 - **ace-git-commit v0.18.2**: Add `.gitignore` for test infrastructure files in TS-COMMIT-002 E2E scenario to prevent untracked file pollution
 - **ace-git-commit**: Add staged-rename verification guard in TS-COMMIT-002 TC-003 to prevent out-of-order execution

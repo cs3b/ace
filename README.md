@@ -99,10 +99,10 @@ Dependencies like `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled
 bundle install
 ```
 
-3. Initialize project config (`ace-config` is provided by `ace-support-config`):
+3. Sync CLI provider config (`ace-config` is provided by `ace-support-config`):
 
 ```bash
-ace-config init
+ace-config sync ace-llm-providers-cli
 ```
 
 4. Sync agent assets:
@@ -111,12 +111,13 @@ ace-config init
 ace-handbook sync
 ```
 
-`ace-config init` and `ace-handbook sync` intentionally generate a large tracked setup set on first run, including `.ace/`,
-project guidance files, projected agent skill folders (for example `.claude/skills/` and `.codex/skills/`), and Bundler files.
+Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local overrides.
+`ace-handbook sync` projects agent skill folders (for example `.claude/skills/` and `.codex/skills/`).
 
-5. Verify provider discovery and project context:
+5. Verify setup, provider discovery, and project context:
 
 ```bash
+ace-config doctor
 ace-llm --list-providers
 ace-bundle project
 ```
