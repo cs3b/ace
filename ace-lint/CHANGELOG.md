@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.7] - 2026-04-23
+
+### Technical
+- Replaced the retained public-surface survey helper manifest with direct `ace-lint --help` evidence so the scenario stays compatible with strict declared-artifact contracts.
+
+## [0.30.6] - 2026-04-23
+
+### Technical
+- Tightened retained `TS-LINT-001` no-report and doctor diagnostics coverage so `--no-report` assertions come from same-run command evidence and malformed-config checks write the exact `.ace/lint/.rubocop.yml` path inspected by `ace-lint --doctor`.
+
 ## [0.30.5] - 2026-04-20
 
 ### Technical

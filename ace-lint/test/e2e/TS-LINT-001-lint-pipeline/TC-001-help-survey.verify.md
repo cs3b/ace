@@ -12,14 +12,14 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 ### Checks
-1. **Mapping file exists** — `results/tc/01/public-surface-map.md` exists.
-2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions key flags** — The content references at least two of: --fix, --no-report, --validators, --doctor.
-4. **Source mapping present** — The content explicitly maps later goals to either `--help` output or sections in `ace-lint/docs/usage.md`.
+1. **Help capture exists** — `results/tc/01/help.stdout`, `results/tc/01/help.stderr`, and `results/tc/01/help.exit` exist.
+2. **Help command succeeded** — `results/tc/01/help.exit` is `0`.
+3. **Mentions key flags** — `results/tc/01/help.stdout` references at least three of: `--fix`, `--no-report`, `--validators`, `--doctor`.
+4. **Public surface is substantive** — `results/tc/01/help.stdout` contains more than 5 non-empty lines.
 
 ## Verdict
 
-- **PASS**: All expectations met. Mapping file exists with substantive public-surface references.
-- **FAIL**: Mapping file missing, empty, boilerplate-only, or lacks source mapping.
+- **PASS**: The retained help capture exists, succeeded, and exposes the key public flags used later in the scenario.
+- **FAIL**: The help capture is missing, failed, or does not expose the expected public surface.
 
-Report: `PASS` or `FAIL` with evidence (quote relevant lines or note their absence).
+Report: `PASS` or `FAIL` with evidence from the help capture.
