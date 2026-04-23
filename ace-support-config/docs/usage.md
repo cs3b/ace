@@ -15,11 +15,11 @@ The `ace-support-config` gem provides a generic configuration cascade system tha
 
 ## ace-config Command
 
-`ace-support-config` ships the `ace-config` CLI for template discovery, initialization, and drift checks.
+`ace-support-config` ships the `ace-config` CLI for template discovery, config sync, and drift checks.
 
 ```bash
-ace-config init [GEM] [--force] [--dry-run] [--global] [--verbose]
-ace-config doctor [--json] [--no-probe]
+ace-config sync [GEM] [--force] [--dry-run] [--global] [--verbose]
+ace-config doctor [--json] [--hygiene] [--probe] [--no-probe]
 ace-config diff [GEM] [--global] [--local] [--file PATH] [--one-line]
 ace-config list [--verbose]
 ace-config version
@@ -28,17 +28,20 @@ ace-config help
 
 ### Setup Readiness Doctor
 
-Run `ace-config doctor` after `ace-config init` and provider setup to verify that the quick-start path is ready without changing files.
+Run `ace-config doctor` after `ace-config sync ace-llm-providers-cli` and provider setup to verify that the quick-start path is ready without changing files.
 
 The doctor checks:
 
-- `.ace-local/` gitignore hygiene
+- health markers for `.ace-local/` gitignore readiness
 - `ace-llm-providers-cli` availability
 - `ace-llm --list-providers` discovery
-- configured provider aliases
-- optional tiny provider probe readiness
+- project `.ace` vs package `.ace-defaults` config-default mode counts
+- usable core role defaults
+- provider-native skill projection sync status from `ace-handbook status`
+- a one-line hygiene summary for configured provider aliases and wider role/default drift
+- concurrent `ace-llm TARGET "ping" --no-fallback` checks for deduped `_utility` and `commit` role candidates
 
-Use `--json` for structured output in automation. Use `--no-probe` to skip the live provider probe when credentials, local CLIs, or network access are intentionally unavailable.
+Use `--hygiene` to expand full hygiene findings and `--json` for structured output in automation. By default, doctor prints fast health/info checks as they complete, runs concurrent `ace-llm TARGET "ping" --no-fallback` checks for deduped `_utility` and `commit` role candidates, and then prints the final report; use `--no-probe` to skip live provider calls.
 
 ## Testing Contract
 

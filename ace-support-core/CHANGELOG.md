@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.9] - 2026-04-23
+
+### Changed
+- Updated config documentation examples from `ace-config init` to `ace-config sync`.
+
 ## [0.29.8] - 2026-04-13
 
 ### Technical

@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-04-23
+
+### Changed
+- Renamed `ace-config init` to `ace-config sync` and removed the old `init` command path.
+- Updated quick-start setup guidance to sync only `ace-llm-providers-cli` config by default because other package config should come from packaged `.ace-defaults` unless project overrides are needed.
+
+## [0.15.0] - 2026-04-23
+
+### Changed
+- Extended `ace-config doctor` with informational project `.ace` vs package `.ace-defaults` counts, provider skill projection sync warnings, and streamed fast-check progress before the final report.
+- Updated doctor provider pings to order API targets before CLI targets, use 15-second API timeouts and 30-second CLI timeouts, and distinguish timeout failures from other provider errors.
+
+### Technical
+- Added doctor coverage for config-default counts, skill sync drift, provider timeout selection, timeout row formatting, and progress ordering.
+
+## [0.14.1] - 2026-04-23
+
+### Changed
+- Updated `ace-config doctor` live provider checks to probe deduped `_utility` plus `commit` role candidates, preserving alias labels alongside resolved provider/model names.
+- Changed doctor provider-ping progress and summaries to show pass/fail/running glyphs, live TTY line updates, and explicit passed/total counts for full and partial success.
+
+### Technical
+- Added doctor regression coverage for utility-plus-commit target selection, alias-preserving ping commands, append-only non-TTY progress, and partial-success summary output.
+
+## [0.14.0] - 2026-04-23
+
+### Changed
+- Split `ace-config doctor` output into health checks that control exit status and a concise hygiene summary, with `--hygiene` for full alias/role drift details.
+- Made provider health live by default again through concurrent `ace-llm TARGET "ping" --no-fallback` checks against deduped `_utility` and `commit` role candidates; `--no-probe` disables live pings.
+- Streamed human `ace-config doctor` output so utility provider ping lines show alias labels, resolved model names, and pass counts as checks complete.
+
+### Technical
+- Added doctor coverage for health-only exit status, hidden-by-default hygiene findings, expanded hygiene output, JSON health/hygiene counts, first-role base-provider distillation, and concurrent ping delegation.
+
+## [0.13.0] - 2026-04-22
+
+### Fixed
+- Made `ace-config doctor` fast by default by replacing automatic live probes with structural role-default readiness checks; live probes now require `--probe` and target only resolved role-default providers.
+
+### Technical
+- Added doctor regression coverage for non-live defaults, opt-in provider probes, blocker-gated probes, and role-default target validation.
+
+## [0.12.1] - 2026-04-22
+
 ### Fixed
 - Extended `SetupDoctor` stale-alias detection to validate `aliases.global` provider targets (`provider:model`) in addition to provider-local model aliases.
 - Made `.ace-local` artifact-hygiene detection accept equivalent `.gitignore` forms (for example `/.ace-local/`, `.ace-local`, `.ace-local/**`) instead of requiring an exact literal line.

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "optparse"
-require_relative "organisms/config_initializer"
+require_relative "organisms/config_synchronizer"
 require_relative "organisms/config_diff"
 require_relative "organisms/setup_doctor"
 require_relative "models/config_templates"
@@ -20,8 +20,8 @@ module Ace
           command = argv.shift
 
           case command
-          when "init"
-            run_init(argv)
+          when "sync"
+            run_sync(argv)
           when "diff"
             run_diff(argv)
           when "list"
@@ -42,16 +42,16 @@ module Ace
 
         private
 
-        def run_init(argv)
+        def run_sync(argv)
           options = {}
 
           parser = OptionParser.new do |opts|
             opts.banner = <<~BANNER.chomp
               NAME
-                ace-config init - Initialize configuration for ace-* gems
+                ace-config sync - Sync configuration for ace-* gems
 
               USAGE
-                ace-config init [GEM] [OPTIONS]
+                ace-config sync [GEM] [OPTIONS]
 
               OPTIONS
             BANNER
@@ -68,12 +68,12 @@ module Ace
           parser.parse!(argv)
           gem_name = argv.shift
 
-          initializer = Organisms::ConfigInitializer.new(**options)
+          synchronizer = Organisms::ConfigSynchronizer.new(**options)
 
           if gem_name
-            initializer.init_gem(gem_name)
+            synchronizer.sync_gem(gem_name)
           else
-            initializer.init_all
+            synchronizer.sync_all
           end
         end
 
@@ -163,12 +163,12 @@ module Ace
             end
           end
 
-          puts "\nUse 'ace-config init [GEM]' to initialize a specific gem's configuration"
-          puts "Use 'ace-config init' to initialize all configurations"
+          puts "\nUse 'ace-config sync [GEM]' to sync a specific gem's configuration"
+          puts "Use 'ace-config sync' to sync all configurations"
         end
 
         def run_doctor(argv)
-          options = {json: false, no_probe: false}
+          options = {json: false, no_probe: false, probe: false, hygiene: false, verbose: false, no_color: false, quiet: false}
 
           parser = OptionParser.new do |opts|
             opts.banner = <<~BANNER.chomp
@@ -181,7 +181,12 @@ module Ace
               OPTIONS
             BANNER
             opts.on("--json", "Output checks as JSON") { options[:json] = true }
-            opts.on("--no-probe", "Skip tiny live provider probes") { options[:no_probe] = true }
+            opts.on("--hygiene", "Show full hygiene findings") { options[:hygiene] = true }
+            opts.on("-v", "--verbose", "Show full diagnostic detail") { options[:verbose] = true }
+            opts.on("-q", "--quiet", "Suppress output; use exit status only") { options[:quiet] = true }
+            opts.on("--no-color", "Disable colored output") { options[:no_color] = true }
+            opts.on("--probe", "Run live provider probes (default)") { options[:probe] = true }
+            opts.on("--no-probe", "Disable live provider probes") { options[:no_probe] = true }
             opts.on("-h", "--help", "Show this help") do
               puts opts
               exit
@@ -190,7 +195,15 @@ module Ace
 
           parser.parse!(argv)
 
-          exit_code = Organisms::SetupDoctor.new.run(json: options[:json], no_probe: options[:no_probe])
+          exit_code = Organisms::SetupDoctor.new.run(
+            json: options[:json],
+            no_probe: options[:no_probe],
+            probe: options[:probe],
+            hygiene: options[:hygiene],
+            verbose: options[:verbose],
+            colors: !options[:no_color],
+            quiet: options[:quiet]
+          )
           exit(exit_code) if exit_code.positive?
         end
 
@@ -207,7 +220,7 @@ module Ace
               ace-config COMMAND [OPTIONS]
 
             COMMANDS
-              init [GEM]                        Initialize configuration for specific gem or all
+              sync [GEM]                        Sync configuration for specific gem or all
               diff [GEM]                        Compare configs with examples
               list                              List available ace-* gems with example configs
               doctor                            Check setup readiness for quick-start workflows

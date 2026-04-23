@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ace/support/config/organisms/config_initializer"
+require "ace/support/config/organisms/config_synchronizer"
 
 module Ace
   module Support
     module Config
-      class ConfigInitializerBootstrapTest < TestCase
-        def test_init_copies_generic_bootstrap_files
+      class ConfigSynchronizerBootstrapTest < TestCase
+        def test_sync_copies_generic_bootstrap_files
           with_temp_config do
-            initializer = Organisms::ConfigInitializer.new(force: true)
-            initializer.send(:init_gem, "ace-bundle")
-            initializer.send(:init_gem, "ace-support-core")
+            synchronizer = Organisms::ConfigSynchronizer.new(force: true)
+            synchronizer.send(:sync_gem, "ace-bundle")
+            synchronizer.send(:sync_gem, "ace-support-core")
 
             assert File.exist?(".ace/bundle/presets/project.md")
             assert File.exist?(".ace/bundle/presets/project-base.md")
@@ -35,14 +35,14 @@ module Ace
           end
         end
 
-        def test_init_appends_gitignore_but_preserves_existing_agent_guidance_without_force
+        def test_sync_appends_gitignore_but_preserves_existing_agent_guidance_without_force
           with_temp_config(
             ".gitignore" => "node_modules/\n",
             "AGENTS.md" => "# Custom AGENTS\n",
             "CLAUDE.md" => "# Custom CLAUDE\n"
           ) do
-            initializer = Organisms::ConfigInitializer.new
-            initializer.send(:init_gem, "ace-support-core")
+            synchronizer = Organisms::ConfigSynchronizer.new
+            synchronizer.send(:sync_gem, "ace-support-core")
 
             gitignore = File.read(".gitignore")
 
@@ -53,26 +53,26 @@ module Ace
           end
         end
 
-        def test_init_force_refreshes_generated_agent_guidance
+        def test_sync_force_refreshes_generated_agent_guidance
           with_temp_config(
             "AGENTS.md" => "# Old AGENTS\n",
             "CLAUDE.md" => "# Old CLAUDE\n"
           ) do
-            initializer = Organisms::ConfigInitializer.new(force: true)
-            initializer.send(:init_gem, "ace-support-core")
+            synchronizer = Organisms::ConfigSynchronizer.new(force: true)
+            synchronizer.send(:sync_gem, "ace-support-core")
 
             assert_includes File.read("AGENTS.md"), "Run `ace-*` commands directly."
             assert_includes File.read("CLAUDE.md"), "Do not use pipes, redirects, or shell post-processors"
           end
         end
 
-        def test_init_force_preserves_existing_gitignore_rules
+        def test_sync_force_preserves_existing_gitignore_rules
           with_temp_config(
             ".gitignore" => "node_modules/\n",
             ".git" => {}
           ) do
-            initializer = Organisms::ConfigInitializer.new(force: true)
-            initializer.send(:init_gem, "ace-support-core")
+            synchronizer = Organisms::ConfigSynchronizer.new(force: true)
+            synchronizer.send(:sync_gem, "ace-support-core")
 
             gitignore = File.read(".gitignore")
 
@@ -81,13 +81,13 @@ module Ace
           end
         end
 
-        def test_init_appends_gitignore_entry_when_existing_mentions_are_only_comments_or_negations
+        def test_sync_appends_gitignore_entry_when_existing_mentions_are_only_comments_or_negations
           with_temp_config(
             ".gitignore" => "# TODO ignore .ace-local/\n!.ace-local/\nnode_modules/\n",
             ".git" => {}
           ) do
-            initializer = Organisms::ConfigInitializer.new(force: true)
-            initializer.send(:init_gem, "ace-support-core")
+            synchronizer = Organisms::ConfigSynchronizer.new(force: true)
+            synchronizer.send(:sync_gem, "ace-support-core")
 
             gitignore_lines = File.readlines(".gitignore", chomp: true)
 
@@ -97,14 +97,14 @@ module Ace
           end
         end
 
-        def test_init_from_subdirectory_targets_repo_root_for_project_root_files
+        def test_sync_from_subdirectory_targets_repo_root_for_project_root_files
           with_temp_config(
             ".git" => {},
             "subdir" => {}
           ) do |tmpdir|
             Dir.chdir(File.join(tmpdir, "subdir")) do
-              initializer = Organisms::ConfigInitializer.new(force: true)
-              initializer.send(:init_gem, "ace-support-core")
+              synchronizer = Organisms::ConfigSynchronizer.new(force: true)
+              synchronizer.send(:sync_gem, "ace-support-core")
             end
 
             assert File.exist?(File.join(tmpdir, "AGENTS.md"))

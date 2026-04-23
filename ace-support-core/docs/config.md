@@ -20,11 +20,11 @@ ace-docs:
 ## Common Commands
 
 ```bash
-# Initialize all ACE config defaults
-ace-config init
+# Sync all ACE config defaults
+ace-config sync
 
-# Preview initialization without writing files
-ace-config init --dry-run
+# Preview sync without writing files
+ace-config sync --dry-run
 
 # Compare current config against defaults
 ace-config diff --one-line
