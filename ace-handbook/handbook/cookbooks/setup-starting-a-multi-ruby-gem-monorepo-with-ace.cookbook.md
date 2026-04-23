@@ -32,7 +32,7 @@ This cookbook distills monorepo setup patterns from ACE package conventions and 
   - Add one monorepo quickstart page that covers prerequisites, workspace bootstrap, and E2E smoke checks.
   - Add a short troubleshooting section for permission and timeout pitfalls during E2E runs.
 - Agent guidance updates to apply:
-  - Add concise rules only: "use `ace-test` (not bundle exec)", "run `ace-config init` + `ace-handbook sync` before nav/bundle checks", and "scope E2E scenarios to monorepo-level concerns".
+  - Add concise rules only: "use `ace-test` (not bundle exec)", "run `ace-config sync ace-llm-providers-cli` + `ace-handbook sync` before nav/bundle checks", and "scope E2E scenarios to monorepo-level concerns".
 - Summary-only propagation target notes (do not copy full cookbook body):
   - `README.md`
   - `docs/quick-start.md`
@@ -64,7 +64,7 @@ rg --files | rg "handbook/"
 **Commands/Actions:**
 
 ```bash
-ace-config init
+ace-config sync ace-llm-providers-cli
 ace-handbook sync
 ```
 
@@ -125,7 +125,7 @@ Document these defaults in repo docs and concise agent guidance:
 **Validation:**
 
 ```bash
-rg -n "ace-config init|ace-handbook sync|ace-test-e2e" README.md docs AGENTS.md
+rg -n "ace-config sync|ace-handbook sync|ace-test-e2e" README.md docs AGENTS.md
 ```
 
 ## Validation & Testing
