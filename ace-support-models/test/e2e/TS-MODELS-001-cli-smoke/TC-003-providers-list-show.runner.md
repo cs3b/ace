@@ -10,7 +10,7 @@ Sync cache through the public CLI path, then verify `ace-llm-providers list` and
 Save artifacts to `results/tc/03/`.
 
 Actions:
-1. Set `XDG_CACHE_HOME` to `$(pwd)/results/tc/03/xdg-cache`.
+1. Use `XDG_CACHE_HOME=$(pwd)/results/tc/03/xdg-cache` for every command in this goal.
 2. Export `ACE_MODELS_FIXTURE_JSON` with fixture data containing providers
    `anthropic` and `openai` and at least one explicit model `id` each.
 3. Run `ace-models sync` and capture stdout/stderr/exit to:
@@ -30,4 +30,6 @@ Actions:
 ## Constraints
 
 - Keep all writes under `results/tc/03/`.
+- Prefix `ace-models sync`, `ace-llm-providers list`, and `ace-llm-providers show anthropic`
+  with the same `XDG_CACHE_HOME` path so they read the same cache.
 - Use real executable commands only.
