@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.5] - 2026-04-23
+
+
+### Fixed
+- Improved tmux session targeting so session-aware commands respect existing `TMUX` context instead of forcing socket-level targeting when already attached.
+- Added regression coverage for active-session command paths that previously depended on socket-legacy behavior.
+
+
 ### Fixed
 - Fixed session targeting so commands now respect an active `TMUX` session and avoid forcing legacy `tmux -S` socket targeting when already inside tmux.
 
