@@ -67,8 +67,8 @@ Common aliases in current defaults:
 | `gflash` | `google:flash` -> `google:gemini-flash-latest` |
 | `glite` | `google:lite` -> `google:gemini-flash-lite-latest` |
 | `gpro` | `google:pro` -> `google:gemini-2.5-pro` |
-| `gemini:flash-latest` | `gemini:gemini-2.5-flash` |
-| `gemini:pro-latest` | `gemini:gemini-2.5-pro` |
+| `gemini:flash-latest` | `gemini:gemini-3-flash-preview` |
+| `gemini:pro-latest` | `gemini:gemini-3.1-pro-preview` |
 | `codex:gpt` | `codex:gpt-5.4` |
 | `codex:mini` | `codex:gpt-5.4-mini` |
 | `codex:codex` | `codex:gpt-5.3-codex` |
