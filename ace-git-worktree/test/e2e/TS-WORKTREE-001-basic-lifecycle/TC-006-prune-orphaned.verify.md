@@ -18,6 +18,8 @@ Validation order (impact-first):
 5. **Final list is consistent** — list-after.stdout matches the clean post-prune state (no orphaned worktree entry).
 
 `prune --dry-run` output is diagnostic only and must not override final-state checks.
+It is acceptable for `prune.stdout` to report that nothing remained to prune if
+the final git metadata, list output, and filesystem evidence are already clean.
 
 ## Verdict
 

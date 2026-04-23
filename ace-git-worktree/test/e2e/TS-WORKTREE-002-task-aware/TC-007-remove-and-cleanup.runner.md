@@ -22,4 +22,6 @@ Save all output to `results/tc/07/`. Capture:
 - For task 8pp.t.r8x: remove by task ID without deleting the branch.
 - For task 8pp.t.q7w: remove by task ID with --delete-branch to also delete the associated branch.
 - After removal, verify clean state via list, git branch, and filesystem checks.
+- Capture `list-after.*` last, after the branch and filesystem checks, so it is
+  the final post-cleanup snapshot for the scenario.
 - All artifacts must come from real tool execution, not fabricated.

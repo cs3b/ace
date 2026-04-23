@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.21.6] - 2026-04-23
+
+### Technical
+- Narrowed retained `switch` E2E verification to the documented public contract by proving the returned task worktree path exists immediately and appears in `switch --list` instead of asserting deeper internal layout details.
+
+## [0.21.5] - 2026-04-23
+
+### Technical
+- Tightened retained basic-lifecycle and task-aware E2E coverage so remove/prune cleanup is verified from the exact removed worktree path and final post-cleanup snapshots.
+
 ### Fixed
 - **ace-git-worktree v0.20.5**: Used `ace-tmux window` when already in a tmux session and `ace-tmux start` otherwise, so nested worktree creation stays correctly in-session.
 - **ace-git-worktree v0.20.4**: Fixed `create --pr <number>` to avoid an `ace-tmux` subcommand mismatch when launching project tmux sessions.

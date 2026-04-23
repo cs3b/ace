@@ -21,5 +21,8 @@ Save all output to `results/tc/05/`. Capture:
   2. `ace-git-worktree list`
 - Remove the `feature/test-worktree` worktree specifically so the verifier can validate one exact target.
 - Use the exact worktree path reported by the remove command when writing `fs-check.txt`.
+- Parse the `Worktree path:` line from `remove.stdout` and copy that full absolute
+  path verbatim into `fs-check.txt`; do not shorten it to a branch fragment such
+  as `/test-worktree`.
 - After removal, run list for diagnostics, capture `git worktree list --porcelain`, and check the filesystem to confirm that exact worktree directory is gone.
 - All artifacts must come from real tool execution, not fabricated.
