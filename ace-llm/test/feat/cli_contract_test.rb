@@ -14,6 +14,14 @@ class CliContractTest < AceLlmTestCase
     assert_match(/ace-llm --list-providers/, output)
   end
 
+  def test_no_fallback_query_failure_returns_non_zero_from_executable
+    result = run_cli("nope:model", "ping", "--no-fallback", "--json")
+    output = "#{result[:stdout]}#{result[:stderr]}"
+
+    refute result[:status].success?
+    assert_match(/Unknown provider: nope/i, output)
+  end
+
   private
 
   def run_cli(*args)

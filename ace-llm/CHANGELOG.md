@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.1] - 2026-04-23
+
+
+### Changed
+- Added concurrent provider ping support in query execution and refreshed fallback orchestration behavior used by provider-driven query flows.
+- Updated provider ping coverage so live query failures no longer block local diagnostics and stale fallback assumptions are exercised more explicitly.
+
+
+## [0.37.0] - 2026-04-23
+
+### Added
+- Added `ace-llm --no-fallback` so callers can run ordinary prompts such as `ping` against the exact requested provider/model without fallback routing.
+
 ## [0.36.5] - 2026-04-22
 
 ### Fixed

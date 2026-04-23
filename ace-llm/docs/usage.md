@@ -47,6 +47,8 @@ ace-llm PROVIDER PROMPT --model MODEL [options]
 | `--cli-args TEXT` | | Extra flags for CLI providers | none |
 | `--timeout SECONDS` | | Request timeout in seconds | `120` |
 | `--interactive` / `--no-interactive` | | Start the provider's native interactive CLI instead of one-shot query | `false` |
+| `--json` / `--no-json` | | Output command results as JSON | `false` |
+| `--no-fallback` | | Disable provider fallback for this query | `false` |
 | `--force` / `--no-force` | | Overwrite output path | `false` |
 | `--quiet` / `--no-quiet` | `-q` | Suppress non-essential output | `false` |
 | `--verbose` / `--no-verbose` | | Verbose output | `false` |
@@ -164,6 +166,15 @@ Output uses the format:
 ### Provider credential setup reference
 
 Use `ace-llm --list-providers` as the canonical source of truth for active providers and setup hints.
+
+### Check exact provider reachability
+
+```bash
+ace-llm gemini:pro "ping" --no-fallback --timeout 15 --max-tokens 4
+ace-llm codex:mini "ping" --no-fallback --json --timeout 15 --max-tokens 4
+```
+
+Fallback is enabled by default through `llm.fallback`. Add `--no-fallback` when you want the result or failure to represent the requested provider/model rather than a configured fallback provider.
 
 Common credential env keys:
 
