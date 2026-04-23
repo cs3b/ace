@@ -264,7 +264,7 @@ Dirty-tree classification rule:
 
 Example:
 
-- A bulk untracked `.ace/...` tree created by `ace-config init` is generated side-effect output. Clean it; do not create a "pre-fork" commit for it.
+- A bulk untracked `.ace/...` tree created by `ace-config sync` is generated side-effect output. Clean it; do not create a "pre-fork" commit for it.
 
 #### Delegation Rule
 
