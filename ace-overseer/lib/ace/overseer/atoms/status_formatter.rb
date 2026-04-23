@@ -128,9 +128,14 @@ module Ace
           bar = progress_bar(done.to_i, total.to_i)
           counts = "#{done}/#{total}"
           counts = "#{counts} (#{failed} failed)" if failed.positive?
-          current = assignment["current_step"] || assignment[:current_step]
+          active_steps = assignment["active_steps"] || assignment[:active_steps]
+          next_step = assignment["next_step"] || assignment[:next_step]
           parts = "#{bar} #{counts}"
-          parts = "#{parts} #{colorize(current, :dim)}" if current
+          if active_steps.is_a?(Array) && !active_steps.empty?
+            parts = "#{parts} #{colorize(active_steps.join(", "), :dim)}"
+          elsif next_step
+            parts = "#{parts} #{colorize("next: #{next_step}", :dim)}"
+          end
           parts
         end
         private_class_method :format_progress

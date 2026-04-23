@@ -12,9 +12,17 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
   FakeStep = Struct.new(:name)
 
-  FakeQueueState = Struct.new(:summary_data, :current) do
+  FakeQueueState = Struct.new(:summary_data, :active_steps_data, :next_step_data) do
     def summary
       summary_data
+    end
+
+    def active_steps
+      Array(active_steps_data)
+    end
+
+    def next_workable
+      next_step_data
     end
   end
 
@@ -36,8 +44,13 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
-  def make_info(id:, name:, state:, total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
-    queue_state = FakeQueueState.new({total: total, done: done, failed: failed, in_progress: in_progress, pending: pending})
+  def make_info(id:, name:, state:, total: 5, done: 2, failed: 0, active: 1, pending: 2, active_steps: nil, next_step: nil)
+    active_steps ||= active.positive? ? [FakeStep.new("implement")] : []
+    queue_state = FakeQueueState.new(
+      {total: total, done: done, failed: failed, active: active, pending: pending},
+      active_steps,
+      next_step
+    )
     FakeAssignmentInfo.new(id, name, state, queue_state)
   end
 
@@ -63,8 +76,8 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
   def test_collect_returns_multiple_assignments
     infos = [
-      make_info(id: "8pdt3d", name: "work-on-task-266", state: :stalled, total: 2, done: 0, failed: 0, in_progress: 0, pending: 2),
-      make_info(id: "8pdtdb", name: "work-on-task-270", state: :completed, total: 10, done: 10, failed: 0, in_progress: 0, pending: 0)
+      make_info(id: "8pdt3d", name: "work-on-task-266", state: :stalled, total: 2, done: 0, failed: 0, active: 0, pending: 2),
+      make_info(id: "8pdtdb", name: "work-on-task-270", state: :completed, total: 10, done: 10, failed: 0, active: 0, pending: 0)
     ]
 
     Dir.mktmpdir("task.266") do |worktree|
@@ -190,10 +203,11 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
-  def test_collect_includes_current_step_when_running
+  def test_collect_includes_active_steps_when_running
     queue_state = FakeQueueState.new(
-      {total: 5, done: 2, failed: 0, in_progress: 1, pending: 2},
-      FakeStep.new("implement")
+      {total: 5, done: 2, failed: 0, active: 1, pending: 2},
+      [FakeStep.new("implement")],
+      nil
     )
     info = FakeAssignmentInfo.new("8run1", "work-on-task-280", :running, queue_state)
 
@@ -205,12 +219,13 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
       context = collector.collect(worktree)
 
-      assert_equal "implement", context.assignments[0]["current_step"]
+      assert_equal ["implement"], context.assignments[0]["active_steps"]
+      assert_nil context.assignments[0]["next_step"]
     end
   end
 
-  def test_collect_current_step_nil_when_not_running
-    info = make_info(id: "8done1", name: "work-on-task-281", state: :completed, total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
+  def test_collect_active_steps_empty_when_not_running
+    info = make_info(id: "8done1", name: "work-on-task-281", state: :completed, total: 5, done: 5, failed: 0, active: 0, pending: 0)
 
     Dir.mktmpdir("task.281") do |worktree|
       collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
@@ -220,7 +235,8 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
       context = collector.collect(worktree)
 
-      assert_nil context.assignments[0]["current_step"]
+      assert_equal [], context.assignments[0]["active_steps"]
+      assert_nil context.assignments[0]["next_step"]
     end
   end
 

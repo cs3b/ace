@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-04-23
+
+### Technical
+- Tightened retained `status --watch` E2E coverage to use a controlled bounded-session shutdown with explicit command captures, keeping refresh verification aligned with the documented watch contract.
+
+## [0.15.2] - 2026-04-23
+
+### Technical
+- Aligned retained `work-on` E2E verification with the current prepared-assignment contract so post-launch status accepts `paused` plus `next_step` until `/ace-assign-drive` actually starts work.
+
+## [0.15.1] - 2026-04-23
+
+### Technical
+- Updated the `ace-git-worktree` runtime dependency constraint to `~> 0.21` so overseer stays aligned with the current worktree minor release line.
+
+## [0.15.0] - 2026-04-23
+
+### Changed
+- Updated overseer status collection, formatting, and work-on orchestration to consume `ace-assign`'s `active_steps`/`next_step` lifecycle contract instead of the old singular `current_step`/`in_progress` model.
+- Revised overseer test fixtures and resume behavior so existing assignments now prefer the focused active step and otherwise fall back to the next pending step in scope.
+
 ## [0.14.14] - 2026-04-23
 
 

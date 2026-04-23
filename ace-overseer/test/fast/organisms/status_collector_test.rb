@@ -53,10 +53,10 @@ class StatusCollectorTest < AceOverseerTestCase
     end
   end
 
-  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
+  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, active: 1, pending: 2)
     {
       "assignment" => {"state" => state, "id" => id, "name" => name},
-      "step_summary" => {"total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending}
+      "step_summary" => {"total" => total, "done" => done, "failed" => failed, "active" => active, "pending" => pending}
     }
   end
 
@@ -101,8 +101,8 @@ class StatusCollectorTest < AceOverseerTestCase
       worktree_path: "/project",
       branch: "main",
       assignments: [
-        make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0),
-        make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, in_progress: 1, pending: 3)
+        make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, active: 0, pending: 0),
+        make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, active: 1, pending: 3)
       ],
       git_status: {"clean" => true},
       location_type: :main
@@ -133,7 +133,7 @@ class StatusCollectorTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
-      assignments: [make_assignment(id: "8or5kx", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
+      assignments: [make_assignment(id: "8or5kx", state: "completed", total: 5, done: 5, failed: 0, active: 0, pending: 0)],
       git_status: {"clean" => true, "pr_metadata" => {"number" => 99}}
     )
 
