@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.8] - 2026-04-23
+
+### Technical
+- Tightened retained history-persistence verification so the post-removal rescan must come from the explicit TC-local `rescan` capture instead of wildcard fallback references to later scenario artifacts.
+
+## [0.15.7] - 2026-04-23
+
+### Technical
+- Updated retained whitelist E2E coverage to use the documented `file:` rule shape and verify filtered findings from concrete scan output instead of synthetic whitelist counters.
+
+## [0.15.6] - 2026-04-23
+
+### Technical
+- Hardened `TS-SECRETS-002` remediation-path coverage to require the default full-history `scan` flow and reject saved-report artifacts narrowed with `--since HEAD`.
+
 ## [0.15.5] - 2026-04-20
 
 ### Technical
