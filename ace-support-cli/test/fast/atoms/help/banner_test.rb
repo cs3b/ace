@@ -42,4 +42,16 @@ class HelpBannerTest < AceSupportCliTestCase
 
     refute_includes output, "DESCRIPTION"
   end
+
+  class OptionalValueCommand < Ace::Support::Cli::Command
+    desc "Command with optional-value flag"
+    option :capture, type: :string, default: false, optional_value: true, desc: "Capture output"
+  end
+
+  def test_omits_false_default_for_optional_value_flags
+    output = Ace::Support::Cli::Banner.call(OptionalValueCommand, "ace-tool tail")
+
+    refute_includes output, "(default: false)"
+    assert_includes output, "--capture=VALUE"
+  end
 end
