@@ -10,6 +10,7 @@ bundle:
     - ./TC-002-start-session.verify.md
     - ./TC-003-add-window.verify.md
     - ./TC-004-start-existing-session.verify.md
+    - ./TC-005-runtime-list.verify.md
 ---
 
 # E2E Verification: ace-tmux Management
@@ -37,4 +38,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/4 passed**
+Final line: **Results: X/5 passed**

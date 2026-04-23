@@ -3,8 +3,8 @@ doc-type: user
 title: ace-tmux Getting Started
 purpose: Tutorial for creating sessions and adding windows with ace-tmux.
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-04-16
+  last-checked: 2026-04-16
 ---
 
 # Getting Started with ace-tmux
@@ -21,6 +21,8 @@ Install from RubyGems: `gem install ace-tmux`.
 Verify command availability: `ace-tmux --help`.
 
 ## Start Your First Session
+
+See available presets first with `ace-tmux --list-presets sessions`.
 
 Run: `ace-tmux start`.
 
@@ -78,9 +80,11 @@ Use it in a session or add it directly with `ace-tmux window cc`.
 
 | Command | Purpose |
 | --- | --- |
+| `ace-tmux --list-presets [TYPE]` | Show available preset names |
 | `ace-tmux start [PRESET]` | Start or attach to a session preset |
 | `ace-tmux window [PRESET]` | Add a window preset to a running session |
-| `ace-tmux list` | Show available session/window/pane presets |
+| `ace-tmux list` | Show live panes in the current window |
+| `ace-tmux list --windows` | Show windows in the current session |
 
 ## Next steps
 

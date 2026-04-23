@@ -1,5 +1,5 @@
 ---
-description: Showcase ace-tmux preset discovery, session start, and window management
+description: Showcase ace-tmux preset discovery, runtime listing, session start, and window management
 tags:
 - ace-tmux
 - docs
@@ -11,6 +11,10 @@ settings:
   format: gif
 scenes:
 - name: Discover available presets (sessions, windows, panes)
+  commands:
+  - type: ace-tmux --list-presets
+    sleep: 4s
+- name: Inspect panes in the current tmux window
   commands:
   - type: ace-tmux list
     sleep: 4s

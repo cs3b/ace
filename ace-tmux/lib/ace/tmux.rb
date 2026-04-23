@@ -13,6 +13,10 @@ module Ace
 
     # Raised when not running inside tmux
     class NotInTmuxError < Error; end
+
+    class TargetResolutionError < Error; end
+    class WaitTimeoutError < Error; end
+    class ValidationError < Error; end
   end
 end
 
@@ -21,14 +25,20 @@ require_relative "tmux/models/pane"
 require_relative "tmux/models/layout_node"
 require_relative "tmux/models/window"
 require_relative "tmux/models/session"
+require_relative "tmux/models/runtime_target"
 require_relative "tmux/atoms/tmux_command_builder"
+require_relative "tmux/atoms/named_key_registry"
 require_relative "tmux/atoms/layout_string_builder"
 require_relative "tmux/atoms/preset_resolver"
 require_relative "tmux/atoms/window_name_sanitizer"
 require_relative "tmux/molecules/config_loader"
+require_relative "tmux/molecules/local_process_inspector"
 require_relative "tmux/molecules/preset_loader"
 require_relative "tmux/molecules/tmux_executor"
+require_relative "tmux/molecules/runtime_target_resolver"
 require_relative "tmux/molecules/session_builder"
+require_relative "tmux/molecules/wait_condition_validator"
+require_relative "tmux/organisms/control_surface"
 require_relative "tmux/organisms/session_manager"
 require_relative "tmux/organisms/window_manager"
 require_relative "tmux/cli"

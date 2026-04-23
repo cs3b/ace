@@ -10,6 +10,7 @@ bundle:
     - ./TC-002-start-session.runner.md
     - ./TC-003-add-window.runner.md
     - ./TC-004-start-existing-session.runner.md
+    - ./TC-005-runtime-list.runner.md
 ---
 
 # E2E Test Runner: ace-tmux Management
@@ -18,13 +19,13 @@ Tool under test: ace-tmux
 Required tools: ace-tmux
 Workspace root: (current directory)
 
-Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, Goal 3 adds a window, and Goal 4 exercises
-existing-session start behavior.
+Run goals sequentially. Goal 1 discovers presets, Goal 2 starts a session, Goal 3 adds a window, Goal 4 exercises
+existing-session start behavior, and Goal 5 inspects the live tmux runtime through `ace-tmux list`.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 4)
+- Execute each goal in order (1 through 5)
 - Use only declared scenario tools
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

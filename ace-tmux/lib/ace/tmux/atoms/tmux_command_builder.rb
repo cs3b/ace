@@ -63,11 +63,12 @@ module Ace
         # @param horizontal [Boolean] Split horizontally (default: vertically)
         # @param tmux [String] tmux binary path
         # @return [Array<String>]
-        def split_window(target, root: nil, horizontal: false, tmux: "tmux")
+        def split_window(target, root: nil, horizontal: false, print_format: nil, tmux: "tmux")
           cmd = [tmux, "split-window"]
           cmd << "-h" if horizontal
           cmd.concat(["-t", target])
           cmd.concat(["-c", File.expand_path(root)]) if root
+          cmd.concat(["-P", "-F", print_format]) if print_format
           cmd
         end
 
@@ -78,6 +79,10 @@ module Ace
         # @return [Array<String>]
         def send_keys(target, keys, tmux: "tmux")
           [tmux, "send-keys", "-t", target, keys, "Enter"]
+        end
+
+        def send_raw_keys(target, *keys, tmux: "tmux")
+          [tmux, "send-keys", "-t", target, *keys]
         end
 
         # Set the layout for a window
@@ -127,6 +132,12 @@ module Ace
         # @return [Array<String>]
         def list_sessions(format: nil, tmux: "tmux")
           cmd = [tmux, "list-sessions"]
+          cmd.concat(["-F", format]) if format
+          cmd
+        end
+
+        def list_windows(target, format: nil, tmux: "tmux")
+          cmd = [tmux, "list-windows", "-t", target]
           cmd.concat(["-F", format]) if format
           cmd
         end
@@ -196,6 +207,22 @@ module Ace
           cmd = [tmux, "list-panes", "-t", target]
           cmd.concat(["-F", format]) if format
           cmd
+        end
+
+        def capture_pane(target, lines: 40, tmux: "tmux")
+          start = -Integer(lines.to_i.abs)
+          [tmux, "capture-pane", "-p", "-t", target, "-S", start.to_s, "-E", "-1"]
+        end
+
+        def capture_pane_visible(target, start_line:, end_line:, include_alternate: false, tmux: "tmux")
+          cmd = [tmux, "capture-pane", "-p"]
+          cmd << "-a" if include_alternate
+          cmd.concat(["-t", target, "-S", Integer(start_line).to_s, "-E", Integer(end_line).to_s])
+          cmd
+        end
+
+        def detach_client(session, tmux: "tmux")
+          [tmux, "detach-client", "-s", session]
         end
       end
     end

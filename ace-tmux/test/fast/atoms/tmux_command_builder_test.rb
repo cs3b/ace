@@ -86,9 +86,19 @@ class TmuxCommandBuilderTest < Minitest::Test
     assert_includes cmd, "-c"
   end
 
+  def test_split_window_with_print_format
+    cmd = Builder.split_window("dev:editor", print_format: '#{pane_id}')
+    assert_equal ["tmux", "split-window", "-t", "dev:editor", "-P", "-F", '#{pane_id}'], cmd
+  end
+
   def test_send_keys
     cmd = Builder.send_keys("dev:editor.0", "vim .")
     assert_equal ["tmux", "send-keys", "-t", "dev:editor.0", "vim .", "Enter"], cmd
+  end
+
+  def test_send_raw_keys
+    cmd = Builder.send_raw_keys("dev:editor.0", "C-c")
+    assert_equal ["tmux", "send-keys", "-t", "dev:editor.0", "C-c"], cmd
   end
 
   def test_select_layout
@@ -159,6 +169,31 @@ class TmuxCommandBuilderTest < Minitest::Test
   def test_list_panes_with_format
     cmd = Builder.list_panes("dev:main", format: '#{pane_index}')
     assert_equal ["tmux", "list-panes", "-t", "dev:main", "-F", '#{pane_index}'], cmd
+  end
+
+  def test_list_windows_with_format
+    cmd = Builder.list_windows("dev", format: '#{window_name}')
+    assert_equal ["tmux", "list-windows", "-t", "dev", "-F", '#{window_name}'], cmd
+  end
+
+  def test_capture_pane
+    cmd = Builder.capture_pane("%1", lines: 12)
+    assert_equal ["tmux", "capture-pane", "-p", "-t", "%1", "-S", "-12", "-E", "-1"], cmd
+  end
+
+  def test_capture_pane_visible
+    cmd = Builder.capture_pane_visible("%1", start_line: 64, end_line: 73)
+    assert_equal ["tmux", "capture-pane", "-p", "-t", "%1", "-S", "64", "-E", "73"], cmd
+  end
+
+  def test_capture_pane_visible_with_alternate_screen
+    cmd = Builder.capture_pane_visible("%1", start_line: 10, end_line: 19, include_alternate: true)
+    assert_equal ["tmux", "capture-pane", "-p", "-a", "-t", "%1", "-S", "10", "-E", "19"], cmd
+  end
+
+  def test_detach_client
+    cmd = Builder.detach_client("dev")
+    assert_equal ["tmux", "detach-client", "-s", "dev"], cmd
   end
 
   def test_set_environment_with_value

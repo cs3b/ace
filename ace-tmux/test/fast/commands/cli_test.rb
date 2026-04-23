@@ -15,6 +15,12 @@ class CliTest < Minitest::Test
     assert commands.any? { |cmd, _| cmd == "start" }
     assert commands.any? { |cmd, _| cmd == "window" }
     assert commands.any? { |cmd, _| cmd == "list" }
+    assert commands.any? { |cmd, _| cmd == "--list-presets" }
+    assert commands.any? { |cmd, _| cmd == "send" }
+    assert commands.any? { |cmd, _| cmd == "capture" }
+    assert commands.any? { |cmd, _| cmd == "wait" }
+    assert commands.any? { |cmd, _| cmd == "attach" }
+    assert commands.any? { |cmd, _| cmd == "detach" }
   end
 
   def test_help_examples_defined
@@ -23,6 +29,8 @@ class CliTest < Minitest::Test
     assert examples.any? { |ex| ex.include?("start") }
     assert examples.any? { |ex| ex.include?("window") }
     assert examples.any? { |ex| ex.include?("list") }
+    assert examples.any? { |ex| ex.include?("--list-presets") }
+    assert examples.any? { |ex| ex.include?("send") }
   end
 
   def test_help_output
@@ -30,6 +38,12 @@ class CliTest < Minitest::Test
     assert_match(/start/, output)
     assert_match(/window/, output)
     assert_match(/list/, output)
+    assert_match(/--list-presets/, output)
+    assert_match(/send/, output)
+    assert_match(/capture/, output)
+    assert_match(/wait/, output)
+    assert_match(/attach/, output)
+    assert_match(/detach/, output)
     assert_match(/EXAMPLES|Examples:/, output)
   end
 
@@ -61,9 +75,16 @@ class CliTest < Minitest::Test
 
   def test_list_command_runs
     Ace::Tmux.reset_config!
-    output = capture_io { CLI.start(["list"]) }[0]
-    # Should list preset types
+    output = capture_io { CLI.start(["--list-presets"]) }[0]
     assert_match(/sessions|windows|panes/, output)
+  end
+
+  def test_list_command_no_longer_accepts_preset_type_argument
+    error = assert_raises(Ace::Support::Cli::Error) do
+      CLI.start(["list", "sessions"])
+    end
+
+    assert_includes error.message, "Unexpected arguments"
   end
 
   def test_start_command_registered
