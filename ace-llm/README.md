@@ -51,6 +51,8 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 **Build resilient prompt workflows** - configure fallback chains and retry behavior through the [config cascade](.ace-defaults/llm/config.yml) so transient provider issues do not block work.
 
+**Check exact provider reachability** - use `ace-llm gemini:pro "ping" --no-fallback --timeout 15 --max-tokens 4` to verify the requested provider/model without fallback routing.
+
 **Power LLM-enhanced flows in sibling packages** - serve as the execution backend for [ace-git-commit](../ace-git-commit), [ace-idea](../ace-idea), [ace-review](../ace-review), [ace-sim](../ace-sim), [ace-prompt-prep](../ace-prompt-prep), and more.
 
 ---

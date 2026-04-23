@@ -87,6 +87,42 @@ class QueryCommandTest < AceLlmTestCase
     assert_equal 600.0, captured_timeout
   end
 
+  def test_no_fallback_option_disables_query_fallback
+    captured_fallback = :unset
+
+    Ace::LLM::QueryInterface.stub(
+      :query,
+      ->(*_args, **kwargs) do
+        captured_fallback = kwargs[:fallback]
+        {text: "ok", usage: {}, metadata: {}}
+      end
+    ) do
+      with_real_config do
+        invoke_llm_cli_result(["google:gemini-2.5-flash", "ping", "--no-fallback"])
+      end
+    end
+
+    assert_equal false, captured_fallback
+  end
+
+  def test_default_query_does_not_override_fallback
+    captured_fallback = :unset
+
+    Ace::LLM::QueryInterface.stub(
+      :query,
+      ->(*_args, **kwargs) do
+        captured_fallback = kwargs[:fallback]
+        {text: "ok", usage: {}, metadata: {}}
+      end
+    ) do
+      with_real_config do
+        invoke_llm_cli_result(["google:gemini-2.5-flash", "ping"])
+      end
+    end
+
+    assert_nil captured_fallback
+  end
+
   def test_interactive_mode_builds_and_executes_invocation
     invocation = {
       command: ["codex", "$as-assign-drive abc123@010"],
@@ -261,4 +297,5 @@ class QueryCommandTest < AceLlmTestCase
       end
     end
   end
+
 end

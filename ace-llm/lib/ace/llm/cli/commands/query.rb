@@ -33,6 +33,8 @@ module Ace
           option :prompt, type: :string, desc: "Prompt text (overrides positional PROMPT)"
           option :force, type: :boolean, default: false, desc: "Force overwrite existing files"
           option :interactive, type: :boolean, default: false, desc: "Start an interactive CLI session instead of one-shot query"
+          option :fallback, type: :boolean, default: true, desc: "Use provider fallback for this query"
+          option :json, type: :boolean, default: false, desc: "Output command results as JSON"
 
           option :version, type: :boolean, desc: "Show version information"
           option :list_providers, type: :boolean, desc: "List available LLM providers"
@@ -55,6 +57,7 @@ module Ace
             end
 
             @prompt = options[:prompt] || prompt_text
+            options[:format] ||= "json" if options[:json]
 
             return show_help if @provider_model.nil? && @prompt.nil?
             return show_provider_help if @prompt.nil? || @prompt.empty?
@@ -90,6 +93,8 @@ module Ace
             puts "      --model MODEL              Model name (overrides PROVIDER[:MODEL])"
             puts "      --prompt PROMPT            Prompt text (overrides positional PROMPT)"
             puts "      --interactive              Start an interactive CLI session"
+            puts "      --no-fallback              Disable provider fallback for this query"
+            puts "      --json                     Output command results as JSON"
             puts "      --force                    Force overwrite existing files"
             puts "  -q, --quiet                    Suppress config summary output"
             puts "  -d, --debug                    Enable debug output"
@@ -104,6 +109,7 @@ module Ace
             puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
             puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
             puts '  ace-llm codex:gpt@yolo "/as-assign-drive abc123@010" --interactive'
+            puts '  ace-llm gemini:pro "ping" --no-fallback --timeout 15 --max-tokens 4'
             puts ""
             puts "Provider Aliases:"
             puts "  Short aliases for common provider:MODEL combinations:"
@@ -136,7 +142,7 @@ module Ace
             return if quiet?(options)
 
             require "ace/core"
-            summary_keys = %w[provider_model preset temperature max_tokens format timeout system_append cli_args]
+            summary_keys = %w[provider_model preset temperature max_tokens format timeout system_append cli_args fallback]
             Ace::Core::Atoms::ConfigSummary.display(
               command: "query",
               config: options.merge(provider_model: @provider_model),
@@ -183,7 +189,8 @@ module Ace
               model: resolved_model_override,
               cli_args: options[:cli_args],
               system_append: system_append_text,
-              preset: options[:preset]
+              preset: options[:preset],
+              fallback: (options[:fallback] == false ? false : nil)
             )
 
             output_response(response, options)
@@ -207,6 +214,7 @@ module Ace
             conflicts << "--max-tokens" unless options[:max_tokens].nil?
             explicit_format = options[:format]
             conflicts << "--format" if explicit_format && explicit_format != "text"
+            conflicts << "--no-fallback" if options[:fallback] == false
             return if conflicts.empty?
 
             raise Ace::Support::Cli::Error, "Interactive mode does not support #{conflicts.join(', ')}"
