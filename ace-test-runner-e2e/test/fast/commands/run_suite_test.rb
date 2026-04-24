@@ -28,15 +28,37 @@ class RunSuiteTest < Minitest::Test
   end
 
   class StubRunSuite < RunSuite
-    def initialize(orchestrator)
+    def initialize(orchestrator, pruner: StubArtifactPruner.new)
       super()
       @orchestrator = orchestrator
+      @pruner = pruner
     end
 
     private
 
     def build_orchestrator(max_parallel:, output:, progress:)
       @orchestrator
+    end
+
+    def build_artifact_pruner
+      @pruner
+    end
+  end
+
+  class StubArtifactPruner
+    attr_reader :calls
+
+    def initialize(result = nil)
+      @result = result || {
+        root_display: ".ace-local/test-e2e",
+        deleted_count: 5
+      }
+      @calls = []
+    end
+
+    def prune(base_dir: Dir.pwd)
+      @calls << {base_dir: base_dir}
+      @result
     end
   end
 
@@ -252,6 +274,83 @@ class RunSuiteTest < Minitest::Test
 
       assert_equal 1, orchestrator.calls.length
       assert_equal true, orchestrator.calls.first[:only_failures]
+    end
+  end
+
+  def test_prune_artifacts_runs_once_before_suite_execution
+    Dir.mktmpdir do |tmpdir|
+      pass_dir = create_scenario_report(
+        tmpdir,
+        report_dir_name: "8rnipru-lint-ts001-reports",
+        test_id: "TS-LINT-001",
+        title: "ace-lint Goal-Based E2E",
+        package: "ace-lint",
+        status: "pass",
+        failed: []
+      )
+      pass_report = create_suite_report(tmpdir, "8rni888-suite-report.md")
+      pruner = StubArtifactPruner.new
+      orchestrator = StubSuiteOrchestrator.new(
+        suite_results_for("pass", "TS-LINT-001-lint-pipeline", pass_dir, pass_report)
+      )
+      command = StubRunSuite.new(orchestrator, pruner: pruner)
+
+      Dir.chdir(tmpdir) { command.call(parallel: "0", quiet: true, prune_artifacts: true) }
+
+      assert_equal 1, pruner.calls.length
+      assert_equal 1, orchestrator.calls.length
+    end
+  end
+
+  def test_prune_artifacts_is_rejected_with_only_failures
+    pruner = StubArtifactPruner.new
+    orchestrator = StubSuiteOrchestrator.new
+    command = StubRunSuite.new(orchestrator, pruner: pruner)
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(only_failures: true, prune_artifacts: true, parallel: "0", quiet: true)
+    end
+
+    assert_match(/cannot be used with --only-failures/, error.message)
+    assert_equal 0, pruner.calls.length
+    assert_equal 0, orchestrator.calls.length
+  end
+
+  def test_prune_artifacts_does_not_run_again_on_retry
+    Dir.mktmpdir do |tmpdir|
+      first_dir = create_scenario_report(
+        tmpdir,
+        report_dir_name: "8rnir1-tmux-ts002-reports",
+        test_id: "TS-TMUX-002",
+        title: "ace-tmux Outside-Tmux Window Targeting",
+        package: "ace-tmux",
+        status: "fail",
+        failed: [
+          {"tc" => "TC-005", "category" => "test-spec-error", "evidence" => "attempt 1"}
+        ]
+      )
+      retry_dir = create_scenario_report(
+        tmpdir,
+        report_dir_name: "8rnir2-tmux-ts002-reports",
+        test_id: "TS-TMUX-002",
+        title: "ace-tmux Outside-Tmux Window Targeting",
+        package: "ace-tmux",
+        status: "pass",
+        failed: []
+      )
+      first_report = create_suite_report(tmpdir, "8rni999-suite-report.md")
+      retry_report = create_suite_report(tmpdir, "8rniaaa-suite-report.md")
+      pruner = StubArtifactPruner.new
+      orchestrator = StubSuiteOrchestrator.new(
+        suite_results_for("fail", "TS-TMUX-002-window-targeting", first_dir, first_report),
+        suite_results_for("pass", "TS-TMUX-002-window-targeting", retry_dir, retry_report)
+      )
+      command = StubRunSuite.new(orchestrator, pruner: pruner)
+
+      Dir.chdir(tmpdir) { command.call(parallel: "0", quiet: true, prune_artifacts: true) }
+
+      assert_equal 1, pruner.calls.length
+      assert_equal 2, orchestrator.calls.length
     end
   end
 

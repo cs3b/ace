@@ -35,6 +35,7 @@ module Ace
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
               "ace-lint --tags smoke         # Run only smoke-tagged scenarios",
+              "ace-lint --prune-artifacts    # Remove stale .ace-local/test-e2e artifacts before running",
               "ace-lint TS-LINT-003 --dry-run  # Preview preflight and scenario phases"
             ]
 
@@ -60,6 +61,8 @@ module Ace
               desc: "Comma-separated scenario tags to include"
             option :verify, type: :boolean,
               desc: "Run independent verifier pass after runner execution"
+            option :prune_artifacts, type: :boolean,
+              desc: "Remove stale .ace-local/test-e2e artifacts before running (preserves suite reports and runtime-cache)"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -67,13 +70,22 @@ module Ace
             def call(package:, test_id: nil, **options)
               options = coerce_types(options, timeout: :integer, parallel: :integer)
               output = quiet?(options) ? StringIO.new : $stdout
+              prune_artifacts = !!options[:prune_artifacts]
+
+              if options[:dry_run] && prune_artifacts
+                raise Ace::Support::Cli::Error.new(
+                  "--prune-artifacts cannot be used with --dry-run"
+                )
+              end
+
+              prune_artifacts_if_requested(output: output, prune_artifacts: prune_artifacts, quiet: quiet?(options))
 
               # Handle dry-run mode
               if options[:dry_run]
                 return handle_dry_run(package, test_id, output, tags: parse_tags(options[:tags]))
               end
 
-              orchestrator = Organisms::TestOrchestrator.new(
+              orchestrator = build_orchestrator(
                 provider: options[:provider],
                 timeout: options[:timeout],
                 parallel: options[:parallel],
@@ -109,6 +121,30 @@ module Ace
             end
 
             private
+
+            def build_orchestrator(provider:, timeout:, parallel:, progress:)
+              Organisms::TestOrchestrator.new(
+                provider: provider,
+                timeout: timeout,
+                parallel: parallel,
+                progress: progress
+              )
+            end
+
+            def build_artifact_pruner
+              Molecules::ArtifactPruner.new
+            end
+
+            def prune_artifacts_if_requested(output:, prune_artifacts:, quiet:)
+              return unless prune_artifacts
+
+              result = build_artifact_pruner.prune(base_dir: Dir.pwd)
+              return if quiet
+
+              output.puts(
+                "Pruned #{result[:deleted_count]} artifact(s) from #{result[:root_display]} (preserved suite reports and runtime-cache)"
+              )
+            end
 
             # Handle dry-run mode: preview which preflight tests and scenarios would run
             #

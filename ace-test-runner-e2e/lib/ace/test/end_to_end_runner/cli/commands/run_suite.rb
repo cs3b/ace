@@ -43,6 +43,7 @@ module Ace
               "--only-failures               # Re-run failed scenarios from cache",
               "--affected --only-failures    # Re-run failed scenarios in affected packages",
               "--no-retry-failures-once      # Disable default retry for a full suite run",
+              "--prune-artifacts             # Remove stale .ace-local/test-e2e artifacts before running",
               "--tags smoke,happy-path       # Include scenarios by tag",
               "--exclude-tags deep           # Exclude scenarios by tag",
               "--cli-args dangerously-skip-permissions  # Pass args to provider"
@@ -66,6 +67,8 @@ module Ace
             option :progress, type: :boolean, desc: "Enable live animated display"
             option :verify, type: :boolean,
               desc: "Run independent verifier pass for each scenario"
+            option :prune_artifacts, type: :boolean,
+              desc: "Remove stale .ace-local/test-e2e artifacts before running (preserves suite reports and runtime-cache)"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -76,8 +79,14 @@ module Ace
               parallel = options[:parallel]
               affected = !!options[:affected]
               only_failures = !!options[:only_failures]
+              prune_artifacts = !!options[:prune_artifacts]
               tags = parse_csv_list(options[:tags])
               exclude_tags = parse_csv_list(options[:exclude_tags])
+              if only_failures && prune_artifacts
+                raise Ace::Support::Cli::Error.new(
+                  "--prune-artifacts cannot be used with --only-failures"
+                )
+              end
               retry_failures_once = resolve_retry_failures_once(
                 requested: options[:retry_failures_once],
                 packages: packages,
@@ -89,6 +98,7 @@ module Ace
 
               output = quiet?(options) ? StringIO.new : $stdout
               progress = options[:progress] && !quiet?(options)
+              prune_artifacts_if_requested(output: output, prune_artifacts: prune_artifacts, quiet: quiet?(options))
 
               orchestrator = build_orchestrator(
                 max_parallel: [parallel, 1].max,
@@ -149,6 +159,21 @@ module Ace
 
             def build_retry_report_writer
               Molecules::SuiteReportWriter.new(config: Molecules::ConfigLoader.load)
+            end
+
+            def build_artifact_pruner
+              Molecules::ArtifactPruner.new
+            end
+
+            def prune_artifacts_if_requested(output:, prune_artifacts:, quiet:)
+              return unless prune_artifacts
+
+              result = build_artifact_pruner.prune(base_dir: Dir.pwd)
+              return if quiet
+
+              output.puts(
+                "Pruned #{result[:deleted_count]} artifact(s) from #{result[:root_display]} (preserved suite reports and runtime-cache)"
+              )
             end
 
             def run_suite_with_retry(orchestrator, run_options:, output:, retry_failures_once:)

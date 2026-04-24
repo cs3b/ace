@@ -32,6 +32,7 @@ ace-test-e2e PACKAGE [TEST_ID] [OPTIONS]
 - `--dry-run` / `--no-dry-run`: preview scenarios without execution
 - `--tags=VALUE`: comma-separated tags to include
 - `--verify` / `--no-verify`: run independent verifier pass
+- `--prune-artifacts` / `--no-prune-artifacts`: remove stale `.ace-local/test-e2e` artifacts before running while preserving suite reports and `runtime-cache/`
 - `--quiet`, `-q`: suppress non-essential output
 - `--verbose`, `-v`: verbose output
 - `--debug`, `-d`: debug output
@@ -51,6 +52,7 @@ ace-test-e2e ace-lint
 ace-test-e2e ace-lint --provider gemini:flash
 ace-test-e2e ace-lint --provider glite
 ace-test-e2e ace-lint --tags smoke
+ace-test-e2e ace-lint --prune-artifacts
 ace-test-e2e ace-lint TS-LINT-003 --dry-run
 ```
 
@@ -75,6 +77,7 @@ ace-test-e2e-suite [PACKAGES] [OPTIONS]
 - `--exclude-tags=VALUE`: comma-separated tags to exclude
 - `--progress` / `--no-progress`: animated progress display
 - `--verify` / `--no-verify`: run independent verifier pass per scenario
+- `--prune-artifacts` / `--no-prune-artifacts`: remove stale `.ace-local/test-e2e` artifacts before running while preserving suite reports and `runtime-cache/`
 - `--quiet`, `-q`: suppress non-essential output
 - `--verbose`, `-v`: verbose output
 - `--debug`, `-d`: debug output
@@ -93,6 +96,7 @@ ace-test-e2e-suite
 ace-test-e2e-suite ace-bundle,ace-lint
 ace-test-e2e-suite --parallel 4
 ace-test-e2e-suite --no-retry-failures-once
+ace-test-e2e-suite --prune-artifacts
 ace-test-e2e-suite --affected
 ace-test-e2e-suite --affected --parallel 8
 ace-test-e2e-suite --only-failures
@@ -138,5 +142,6 @@ When using default report paths, derive the newest directory from `.ace-local/te
 - Grouped runner shorthand such as ``results/tc/02/help.stdout`, `.stderr`, `.exit`` counts as an explicit declaration of all three files.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.
+- Use `--prune-artifacts` to clear stale `.ace-local/test-e2e` run artifacts before a fresh run; it preserves suite reports and `runtime-cache/`.
 - Auto-retry is intended for full-suite stabilization. Explicit reruns such as `--only-failures` stay single-pass so targeted fix loops preserve clean scenario-level evidence.
 - Package and suite reports are aggregate summaries. When failed TC IDs or evidence matter, use the referenced per-scenario `report.md` as the canonical source of truth.
