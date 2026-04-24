@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.54.7**: Made forked assignment workers honor an explicit default scoped target so `/as-assign-drive <assignment>@<root>` cannot widen back to parent status, and restored root-first fork scheduling so unscoped resume activates pending fork roots before child steps.
+- **ace-assign v0.54.6**: Ordered tmux fork-launch environment unsets before assignments so mixed unset/set pane launches remain valid, preserved explicit `fork_retry_limit: 0` values during preset expansion, and corrected scoped drive guidance to scan all active descendants before auto-starting subtree work.
+- **ace-test-runner-e2e v0.40.1**: Removed suite-specific wording from the single-command `ace-test-e2e` help path so `--help` stays scoped to the run-test CLI while preserving prune-artifacts guidance.
+- **ace-assign v0.54.5**: Corrected scoped `/as-assign-drive <assignment>@<root>` execution so already-forked subtree agents start child work inline instead of attempting a same-root refork, and launched tmux fork sessions directly in-pane without wrapper scripts.
+- **ace-assign v0.54.4**: Blocked same-root scoped `fork-run` re-entry so forked assignment drivers continue inline instead of launching duplicate panes into the shared tmux fork window.
+- **ace-assign v0.54.3**: Restored metadata-driven batch scheduling for generated `work-on-task` assignments so top-level batch parents remain the next global step until the driver delegates a child fork root.
 - **ace-test-runner-e2e v0.39.1**: Fixed suite-shared runtime reuse in child `ace-test-e2e` subprocesses so inherited `ACE_E2E_SHARED_RUNTIME_ROOT` is honored and per-sandbox Bundler/native-extension rebuilds stop after prewarm.
 - **ace-test-runner-e2e v0.38.17**: Restored fixture-commit detection for split-step setup flows so sandbox support paths stay excluded from git-backed fixture commits even when `git add` and `git commit` run in separate setup steps.
 - **ace-review v0.53.6**: Sized review prompts and adaptive review execution against the resolved concrete provider/model target instead of provider-wide context assumptions.
@@ -28,6 +34,11 @@ All notable changes to this project will be documented in this file.
 - **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
 ### Changed
+- **ace-support-core v0.29.11**: Clarified quick-start bootstrap guidance so root `AGENTS.md` / `CLAUDE.md` starter files are documented as part of the explicit `ace-support-core` sync flow, and updated the shipped starter refresh commands to use `bundle exec` for repo-local installs.
+- **ace-support-core v0.29.10**: Updated generated `AGENTS.md` and `CLAUDE.md` starter guidance to identify ACE provenance, safe customization, and the refresh flow for project bootstrap files.
+- **ace-git-commit v0.26.3**: Clarified first-setup commit recovery across quick-start, package docs, and workflow guidance, including staged-state inspection and the deterministic `--only-staged --no-split -m` path.
+- **ace-support-config v0.16.1**: Clarified setup-readiness docs so `ace-llm --list-providers` stays the discovery command and `ace-config doctor` is the quick-start readiness check, including blocker/warning and `--no-probe` guidance.
+- **ace-llm v0.38.1**: Clarified provider-listing docs so discovery/setup hints are distinguished from readiness validation, which now points users to `ace-config doctor`.
 - **ace-test-runner-e2e v0.40.0**: Added `--[no-]prune-artifacts` to both E2E run commands so stale `.ace-local/test-e2e` sandboxes and report artifacts can be cleared before a fresh run while preserving suite reports and the shared `runtime-cache/`.
 - **ace-test-runner-e2e v0.39.0**: Added default retry-once handling for full suite runs with explicit flaky recovery reporting, and reused a suite-shared runtime cache under `.ace-local/test-e2e/runtime-cache/` so sandbox workers stop rebuilding the same Bundler/native-extension environment per scenario.
 - **ace-assign v0.54.0**: Replaced persisted/public `in_progress` state with `active`, stopped treating queue prediction as started work, and introduced scope-aware `active_steps` plus `next_step` status semantics for normal and forked assignment execution.
@@ -50,6 +61,9 @@ All notable changes to this project will be documented in this file.
 - **ace-git-commit v0.26.0**: Improved setup-time LLM failure guidance to include failed role/model context, provider/setup remediation commands, deterministic direct-message fallback (`--only-staged --no-split -m`), and matching docs/test coverage including `TS-COMMIT-001` goal 8.
 
 ### Technical
+- **ace-support-config v0.16.2**: Added bootstrap regression coverage for generated `AGENTS.md` and `CLAUDE.md` provenance/customization/refresh guidance.
+- **ace-llm v0.38.2**: Tightened `TS-LLM-002` verification so provider listing remains discovery-only evidence and does not imply readiness.
+- **ace-assign v0.54.3**: Preserved `batch_parent`, scheduling, and fork-retry metadata during preset expansion and aligned queue/start behavior so explicit batch-parent starts match unscoped next-step selection.
 - Retained E2E contract follow-ups for the stricter artifact model: `ace-git-secrets v0.15.8`, `ace-lint v0.30.7`, `ace-sim v0.15.5`, and `ace-tmux v0.14.6`.
 - **ace-monorepo-e2e**: Hardened `TS-MONO-002` quick-start sandbox setup and setup-commit fallback so copied repo context stays out of fixture history and goal-based commits stay scoped to the staged `QUICKSTART_SETUP.md` marker.
 - Retained E2E contract refreshes after the latest targeted scenario sweep: `ace-git-worktree v0.21.6`, `ace-lint v0.30.6`, and `ace-overseer v0.15.3`.
