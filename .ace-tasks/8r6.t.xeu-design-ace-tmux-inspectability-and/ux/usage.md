@@ -9,7 +9,7 @@
 
 ## Usage Scenarios
 
-This usage draft covers the read-side follow-up only. The current public baseline is `ace-tmux list`, and any future enhancement extends that command rather than introducing a separate `state` entrypoint. Interactive control commands such as `send`, `wait`, live pane-tail `capture`, `attach`, and `detach` already belong to sibling task `8re.t.n1d`.
+This usage draft covers the read-side follow-up only. The current public baseline is `ace-tmux list`, and the validated spike outcome is that no additional read-side CLI surface is justified in the current repo state. Interactive control commands such as `send`, `wait`, live pane-tail `capture`, `attach`, and `detach` already belong to sibling task `8re.t.n1d`.
 
 ### Scenario 1: Inspect current tmux runtime state through the shipped CLI
 
@@ -28,20 +28,15 @@ ace-tmux list --sessions
 - Window rows identify active state, tmux window id, session/index, name, and pane count.
 - Session rows identify session name, attached-client count, and window count.
 
-### Scenario 2: Evaluate a future machine-readable runtime surface
+### Scenario 2: Reopen machine-readable runtime output only if a concrete consumer appears
 
-**Goal**: A later follow-up may expose machine-readable runtime inspection, but it must be additive to the shipped `list` baseline rather than a contradiction of it.
-
-```bash
-# Candidate follow-up surface only; not shipped today.
-ace-tmux list --format json
-```
+**Goal**: Keep speculative CLI JSON work out of the accepted contract unless a concrete consumer later requires it.
 
 #### Expected Output
 
-- This scenario is a candidate follow-up, not shipped behavior.
-- If implemented, it should report the same runtime entities already exposed by the shipped `list` scopes.
-- It must not imply recording provenance or artifacts, which are out of scope for this task.
+- This is not an accepted follow-up contract today.
+- Current structured consumers already use Ruby APIs or local metadata rather than a shared CLI JSON schema.
+- If a later consumer justifies this, it must stay additive to the shipped `list` scopes and must not imply recording provenance or artifacts.
 
 ### Scenario 3: Recording/provenance is out of scope for this task
 
@@ -63,4 +58,5 @@ ace-tmux list --format json
 
 - Shipped visible fork launch behavior is owned by sibling task `8r6.t.u53`.
 - Interactive control behavior is owned by sibling task `8re.t.n1d`.
-- Full usage documentation should be completed only after a concrete additive `ace-tmux list` follow-up is selected for implementation.
+- Current repo evidence supports no new read-side CLI implementation task.
+- Reopen this task only if a concrete consumer needs more than the shipped `ace-tmux list` surface or the existing Ruby read-side APIs.
