@@ -1,24 +1,44 @@
 name: openai
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::OpenAIClient
 gem: ace-llm
-context_limit: 128000
 models:
-  - gpt-5.1
-  - gpt-5.1-chat-latest
-  - gpt-5.1-codex
-  - gpt-5.1-codex-max
-  - gpt-5.1-codex-mini
-  - gpt-5.2
-  - gpt-5.2-chat-latest
-  - gpt-5.2-pro
-  - gpt-5.3-chat-latest
-  - gpt-5.3-codex
-  - gpt-5.3-codex-spark
-  - gpt-5.4
-  - gpt-5.4-mini
-  - gpt-5.4-nano
-  - gpt-5.4-pro
+- gpt-5.1
+- gpt-5.1-chat-latest
+- gpt-5.1-codex
+- gpt-5.1-codex-max
+- gpt-5.1-codex-mini
+- gpt-5.2
+- gpt-5.2-chat-latest
+- gpt-5.2-pro
+- gpt-5.3-chat-latest
+- gpt-5.3-codex
+- gpt-5.3-codex-spark
+- gpt-5.4
+- gpt-5.4-mini
+- gpt-5.4-nano
+- gpt-5.4-pro
+limits:
+  default:
+    context: 400000
+    output: 128000
+  models:
+    gpt-5.1-chat-latest:
+      context: 128000
+      output: 16384
+    gpt-5.2-chat-latest:
+      context: 128000
+      output: 16384
+    gpt-5.3-chat-latest:
+      context: 128000
+      output: 16384
+    gpt-5.3-codex-spark:
+      context: 128000
+      output: 32000
+    gpt-5.4:
+      context: 1050000
+    gpt-5.4-pro:
+      context: 1050000
 aliases:
   global:
     oagpt: openai:gpt
@@ -35,11 +55,11 @@ api_key:
   required: true
   description: OpenAI API key
 capabilities:
-  - text_generation
-  - streaming
-  - function_calling
-  - vision
-  - embeddings
+- text_generation
+- streaming
+- function_calling
+- vision
+- embeddings
 default_options:
   temperature: 0.7
   max_tokens: 16384

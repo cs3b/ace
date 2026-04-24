@@ -1,18 +1,30 @@
 name: anthropic
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::AnthropicClient
 gem: ace-llm
-context_limit: 200000
 models:
-  - claude-haiku-4-5
-  - claude-haiku-4-5-20251001
-  - claude-opus-4-5
-  - claude-opus-4-5-20251101
-  - claude-opus-4-6
-  - claude-opus-4-7
-  - claude-sonnet-4-5
-  - claude-sonnet-4-5-20250929
-  - claude-sonnet-4-6
+- claude-haiku-4-5
+- claude-haiku-4-5-20251001
+- claude-opus-4-5
+- claude-opus-4-5-20251101
+- claude-opus-4-6
+- claude-opus-4-7
+- claude-sonnet-4-5
+- claude-sonnet-4-5-20250929
+- claude-sonnet-4-6
+limits:
+  default:
+    context: 200000
+    output: 64000
+  models:
+    claude-opus-4-6:
+      context: 1000000
+      output: 128000
+    claude-opus-4-7:
+      context: 1000000
+      output: 128000
+    claude-sonnet-4-6:
+      context: 1000000
 aliases:
   global:
     opus: anthropic:o
@@ -28,10 +40,10 @@ api_key:
   required: true
   description: Anthropic API key
 capabilities:
-  - text_generation
-  - streaming
-  - function_calling
-  - vision
+- text_generation
+- streaming
+- function_calling
+- vision
 default_options:
   temperature: 0.7
   max_tokens: 16384

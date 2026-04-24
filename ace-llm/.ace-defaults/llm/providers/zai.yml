@@ -1,21 +1,29 @@
 name: zai
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::ZaiClient
 gem: ace-llm
-context_limit: 128000
 models:
-  - glm-4.7
-  - glm-4.7-flashx
-  - glm-5
-  - glm-5-turbo
-  - glm-5.1
-  - glm-5v-turbo
+- glm-4.7
+- glm-4.7-flashx
+- glm-5
+- glm-5-turbo
+- glm-5.1
+- glm-5v-turbo
+limits:
+  default:
+    context: 200000
+    output: 131072
+  models:
+    glm-4.7:
+      context: 204800
+    glm-5:
+      context: 204800
 api_key:
   env: ZAI_API_KEY
   required: true
   description: Z.AI API key
 capabilities:
-  - text_generation
+- text_generation
 default_options:
   temperature: 0.7
   max_tokens: 16384

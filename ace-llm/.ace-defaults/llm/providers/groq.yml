@@ -1,26 +1,66 @@
 name: groq
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::GroqClient
 gem: ace-llm
-context_limit: 128000
 models:
-  - allam-2-7b
-  - canopylabs/orpheus-arabic-saudi
-  - canopylabs/orpheus-v1-english
-  - groq/compound
-  - groq/compound-mini
-  - llama-3.1-8b-instant
-  - llama-3.3-70b-versatile
-  - meta-llama/llama-4-scout-17b-16e-instruct
-  - meta-llama/llama-prompt-guard-2-22m
-  - meta-llama/llama-prompt-guard-2-86m
-  - moonshotai/kimi-k2-instruct-0905
-  - openai/gpt-oss-120b
-  - openai/gpt-oss-20b
-  - openai/gpt-oss-safeguard-20b
-  - qwen/qwen3-32b
-  - whisper-large-v3
-  - whisper-large-v3-turbo
+- allam-2-7b
+- canopylabs/orpheus-arabic-saudi
+- canopylabs/orpheus-v1-english
+- groq/compound
+- groq/compound-mini
+- llama-3.1-8b-instant
+- llama-3.3-70b-versatile
+- meta-llama/llama-4-scout-17b-16e-instruct
+- meta-llama/llama-prompt-guard-2-22m
+- meta-llama/llama-prompt-guard-2-86m
+- moonshotai/kimi-k2-instruct-0905
+- openai/gpt-oss-120b
+- openai/gpt-oss-20b
+- openai/gpt-oss-safeguard-20b
+- qwen/qwen3-32b
+- whisper-large-v3
+- whisper-large-v3-turbo
+limits:
+  default:
+    context: 131072
+    output: 65536
+  models:
+    allam-2-7b:
+      context: 4096
+      output: 4096
+    canopylabs/orpheus-arabic-saudi:
+      context: 4000
+      output: 50000
+    canopylabs/orpheus-v1-english:
+      context: 4000
+      output: 50000
+    groq/compound:
+      output: 8192
+    groq/compound-mini:
+      output: 8192
+    llama-3.1-8b-instant:
+      output: 131072
+    llama-3.3-70b-versatile:
+      output: 32768
+    meta-llama/llama-4-scout-17b-16e-instruct:
+      output: 8192
+    meta-llama/llama-prompt-guard-2-22m:
+      context: 512
+      output: 512
+    meta-llama/llama-prompt-guard-2-86m:
+      context: 512
+      output: 512
+    moonshotai/kimi-k2-instruct-0905:
+      context: 262144
+      output: 16384
+    qwen/qwen3-32b:
+      output: 40960
+    whisper-large-v3:
+      context: 448
+      output: 448
+    whisper-large-v3-turbo:
+      context: 448
+      output: 448
 aliases:
   global:
     groq: groq:openai/gpt-oss-120b
@@ -38,7 +78,7 @@ api_key:
   required: true
   description: Groq API key
 capabilities:
-  - text_generation
+- text_generation
 default_options:
   temperature: 0.7
   max_tokens: 16384

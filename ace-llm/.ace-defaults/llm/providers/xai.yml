@@ -1,17 +1,27 @@
 name: xai
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::XAIClient
 gem: ace-llm
-context_limit: 131072
 models:
-  - grok-4
-  - grok-4-1-fast
-  - grok-4-1-fast-non-reasoning
-  - grok-4-fast-non-reasoning
-  - grok-4.20-0309-non-reasoning
-  - grok-4.20-0309-reasoning
-  - grok-4.20-multi-agent-0309
-  - grok-code-fast-1
+- grok-4
+- grok-4-1-fast
+- grok-4-1-fast-non-reasoning
+- grok-4-fast-non-reasoning
+- grok-4.20-0309-non-reasoning
+- grok-4.20-0309-reasoning
+- grok-4.20-multi-agent-0309
+- grok-code-fast-1
+limits:
+  default:
+    context: 2000000
+    output: 30000
+  models:
+    grok-4:
+      context: 256000
+      output: 64000
+    grok-code-fast-1:
+      context: 256000
+      output: 10000
 aliases:
   global:
     grok: xai:grok-4
@@ -27,7 +37,7 @@ api_key:
   required: true
   description: x.ai API key
 capabilities:
-  - text_generation
+- text_generation
 default_options:
   temperature: 0.7
   max_tokens: 16384
