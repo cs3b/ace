@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.y6j
-status: draft
+status: skipped
 priority: medium
 created_at: "2026-04-24 22:47:17"
 estimate: TBD
