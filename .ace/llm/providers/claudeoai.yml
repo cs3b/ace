@@ -1,7 +1,6 @@
 name: claudeoai
 class: Ace::LLM::Providers::CLI::ClaudeOaiClient
 gem: ace-llm-providers-cli
-context_limit: 128000
 backends:
   zai:
     base_url: "https://api.z.ai/api/anthropic"
@@ -15,6 +14,10 @@ models:
   - zai/glm-5
   - zai/glm-4.7
   - zai/glm-4.6
+limits:
+  default:
+    context: 204800
+    output: 131072
 aliases:
   global:
     claude-oai: claudeoai:zai/glm-5

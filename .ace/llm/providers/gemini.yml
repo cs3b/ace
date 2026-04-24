@@ -1,20 +1,36 @@
 name: gemini
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Providers::CLI::GeminiClient
 gem: ace-llm-providers-cli
 models_dev_id: google
-context_limit: 1000000
 models:
-  - gemini-2.5-flash
-  - gemini-2.5-pro
-  - gemini-3-flash-preview
-  - gemini-3-pro-preview
-  - gemini-3.1-flash-image-preview
-  - gemini-3.1-flash-lite-preview
-  - gemini-3.1-pro-preview
-  - gemini-3.1-pro-preview-customtools
-  - gemma-4-26b-a4b-it
-  - gemma-4-31b-it
+- gemini-2.5-flash
+- gemini-2.5-pro
+- gemini-3-flash-preview
+- gemini-3-pro-preview
+- gemini-3.1-flash-image-preview
+- gemini-3.1-flash-lite-preview
+- gemini-3.1-pro-preview
+- gemini-3.1-pro-preview-customtools
+- gemma-4-26b-a4b-it
+- gemma-4-31b-it
+limits:
+  default:
+    context: 1048576
+    output: 65536
+  models:
+    gemini-3-pro-preview:
+      context: 1000000
+      output: 64000
+    gemini-3.1-flash-image-preview:
+      context: 131072
+      output: 32768
+    gemma-4-26b-a4b-it:
+      context: 256000
+      output: 8192
+    gemma-4-31b-it:
+      context: 256000
+      output: 8192
 aliases:
   model:
     flash: gemini-2.5-flash
@@ -22,8 +38,8 @@ aliases:
     flash-latest: gemini-3-flash-preview
     pro-latest: gemini-3.1-pro-preview
 capabilities:
-  - text_generation
-  - code_generation
-  - vision
+- text_generation
+- code_generation
+- vision
 default_options:
   temperature: 0.7
