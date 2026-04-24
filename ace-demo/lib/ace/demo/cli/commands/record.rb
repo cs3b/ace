@@ -322,6 +322,8 @@ module Ace
             puts "Missing output: #{missing_output.join(', ')}" unless missing_output.empty?
             missing_sequence = verification.details&.fetch(:missing_output_sequence, []) || []
             puts "Missing output sequence: #{missing_sequence.join(' -> ')}" unless missing_sequence.empty?
+            exit_code = verification.details&.fetch(:exit_code, nil)
+            puts "Exit code: #{exit_code}" unless exit_code.nil? || exit_code.zero?
             puts "Assertions replay: skipped" if verification.details&.fetch(:assertions_skipped, false)
           end
 

@@ -38,6 +38,7 @@ class DemoYamlParserTest < AceDemoTestCase
       {
         "description" => "demo",
         "verify" => {
+          "allow_nonzero_exit" => true,
           "require_vars" => ["DEMO_ISSUE_NUMBER"],
           "require_output" => ["work-fs"],
           "require_output_sequence" => ["work", "work-fs"],
@@ -51,11 +52,29 @@ class DemoYamlParserTest < AceDemoTestCase
       source_path: "demo.tape.yml"
     )
 
+    assert_equal true, parsed["verify"]["allow_nonzero_exit"]
     assert_equal ["DEMO_ISSUE_NUMBER"], parsed["verify"]["require_vars"]
     assert_equal ["work-fs"], parsed["verify"]["require_output"]
     assert_equal ["work", "work-fs"], parsed["verify"]["require_output_sequence"]
     assert_equal ["GitHub sync warning"], parsed["verify"]["forbid_output"]
     assert_equal ['test "$DEMO_ISSUE_NUMBER" = "123"'], parsed["verify"]["assert_commands"]
+  end
+
+  def test_rejects_non_boolean_verify_allow_nonzero_exit
+    error = assert_raises(Ace::Demo::DemoYamlParseError) do
+      Ace::Demo::Atoms::DemoYamlParser.parse_hash(
+        {
+          "description" => "demo",
+          "verify" => {"allow_nonzero_exit" => "yes"},
+          "scenes" => [
+            {"name" => "main", "commands" => [{"type" => "echo hi", "sleep" => "1s"}]}
+          ]
+        },
+        source_path: "demo.tape.yml"
+      )
+    end
+
+    assert_includes error.message, "verify.allow_nonzero_exit must be a boolean"
   end
 
   def test_rejects_non_array_verify_require_vars

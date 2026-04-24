@@ -26,6 +26,8 @@ module Ace
           recorded_commands = (recorded_inputs + echoed_commands + script_commands).uniq
           verification_spec = tape_spec.fetch("verify", {})
           captured_vars = extract_output_vars(echoed_commands)
+          exit_code = final_exit_code(recording.events)
+          nonzero_exit_disallowed = exit_code && exit_code != 0 && !verification_spec.fetch("allow_nonzero_exit", false)
 
           commands_found = expected.select { |command| include_command?(recorded_commands, command) }
           commands_missing = expected - commands_found
@@ -43,14 +45,16 @@ module Ace
           )
 
           success = commands_missing.empty? && missing_vars.empty? && missing_output.empty? &&
-            missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty?
+            missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty? &&
+            !nonzero_exit_disallowed
           classification, status, summary, retryable = classify(
             commands_missing: commands_missing,
             missing_vars: missing_vars,
             missing_output: missing_output,
             missing_output_sequence: missing_output_sequence,
             forbidden_hits: forbidden_hits,
-            assertion_failures: assertion_failures
+            assertion_failures: assertion_failures,
+            nonzero_exit_disallowed: nonzero_exit_disallowed
           )
 
           Models::VerificationResult.new(
@@ -68,6 +72,7 @@ module Ace
               script_commands_recorded: script_commands.length,
               commands_expected: expected.length,
               captured_vars: captured_vars,
+              exit_code: exit_code,
               missing_vars: missing_vars,
               missing_output: missing_output,
               missing_output_sequence: missing_output_sequence,
@@ -117,10 +122,12 @@ module Ace
           end
         end
 
-        def classify(commands_missing:, missing_vars:, missing_output:, missing_output_sequence:, forbidden_hits:, assertion_failures:)
+        def classify(commands_missing:, missing_vars:, missing_output:, missing_output_sequence:, forbidden_hits:, assertion_failures:, nonzero_exit_disallowed:)
           return ["pass", "pass", "Verification passed", false] if commands_missing.empty? && missing_vars.empty? &&
-            missing_output.empty? && missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty?
-          unless commands_missing.empty? && missing_vars.empty? && missing_output.empty? && missing_output_sequence.empty?
+            missing_output.empty? && missing_output_sequence.empty? && forbidden_hits.empty? && assertion_failures.empty? &&
+            !nonzero_exit_disallowed
+          unless commands_missing.empty? && missing_vars.empty? && missing_output.empty? && missing_output_sequence.empty? &&
+              !nonzero_exit_disallowed
             return ["scenario_defect", "scenario-defect", "Recording scenario failed verification", true]
           end
 
@@ -224,6 +231,15 @@ module Ace
           end
         rescue StandardError
           []
+        end
+
+        def final_exit_code(events)
+          exit_event = events.reverse.find { |event| event.type == "x" }
+          return nil unless exit_event
+
+          Integer(exit_event.data)
+        rescue ArgumentError, TypeError
+          nil
         end
 
         ANSI_ESCAPE_PATTERN = /\e\[[0-9;?]*[A-Za-z]/.freeze

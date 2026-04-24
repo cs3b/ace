@@ -41,6 +41,7 @@ module Ace
           append_list(lines, "Missing Vars", details[:missing_vars])
           append_list(lines, "Missing Output", details[:missing_output])
           append_list(lines, "Missing Output Sequence", details[:missing_output_sequence])
+          append_exit_code(lines, details[:exit_code])
           append_hits(lines, "Forbidden Output Hits", details[:forbidden_hits])
           append_assertion_skip(lines, details[:assertions_skipped])
           append_assertions(lines, details[:assertion_failures])
@@ -87,6 +88,15 @@ module Ace
             lines << "- Pattern: `#{hit[:pattern]}`"
             lines << "  Line: `#{hit[:line]}`"
           end
+          lines << ""
+        end
+
+        def append_exit_code(lines, exit_code)
+          return if exit_code.nil? || exit_code.to_i.zero?
+
+          lines << "## Exit Code"
+          lines << ""
+          lines << "- `#{exit_code}`"
           lines << ""
         end
 
