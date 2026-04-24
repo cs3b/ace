@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-review v0.53.6**: Sized review prompts and adaptive review execution against the resolved concrete provider/model target instead of provider-wide context assumptions.
+- **ace-llm-providers-cli v0.31.6**: Always passed explicit resolved model names to Codex, Gemini, and Claude Code CLIs so runtime execution matches config lookup and limit resolution.
 - **ace-test-runner-e2e v0.38.16**: Enforced runner-owned verifier artifact contracts, expanded grouped capture shorthand, and rejected verifier-only or wildcard artifact declarations so retained E2E drift fails at scenario-load time instead of leaking into later reruns.
 - **ace-test-runner-e2e v0.38.15**: Passed required artifact contracts into runner prompts and added a bounded repair pass so retained E2E scenarios can recover missing declared captures before verification.
 - **ace-test-runner-e2e v0.38.14**: Limited deterministic sandbox git excludes to setup-commit scenarios so copied package trees stay visible to ignore-aware tools while fixture-repo support paths stay unstaged.
@@ -18,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e v0.38.13**: Enabled verifier fallback for role-based verifier aliases and kept deterministic E2E sandboxes from staging copied package/support files into fixture-repo history.
 
 ### Added
+- **ace-support-models v0.12.0**: Synced provider context and output token limits into managed provider YAML via `limits.default` plus per-model overrides while keeping normal sync constrained to the tracked model set.
+- **ace-llm v0.38.0**: Added shared resolved-model limit lookup so alias, role, and preset-expanded concrete targets drive provider config validation and downstream prompt sizing.
 - **ace-llm v0.37.0**: Added `ace-llm --no-fallback` so ordinary prompts such as `ping` can verify the exact requested provider/model without fallback routing.
 - **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
