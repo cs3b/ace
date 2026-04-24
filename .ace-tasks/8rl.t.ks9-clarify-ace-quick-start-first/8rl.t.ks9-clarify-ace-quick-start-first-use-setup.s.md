@@ -15,8 +15,8 @@ needs_review: false
 worktree:
   branch: ks9-clarify-ace-quick-start-first-use-setup-flow
   path: ../ace-t.ks9
-  created_at: "2026-04-23 17:42:16"
-  updated_at: "2026-04-23 17:42:16"
+  created_at: "2026-04-24 14:44:17"
+  updated_at: "2026-04-24 14:44:17"
   target_branch: main
 ---
 
