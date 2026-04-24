@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-task**: Removed spike as an active task type from drafting/review guidance. Drafts now create real child tasks for each original intention, and `as-task-review` is responsible for deep analysis, draft reshaping, and dependency repair for uncertain task families.
 - **ace-task v0.36.6**: redesigned spike-task workflow around explicit parent-goal evaluation, in-folder post-spike task-tree rewrites, later review handoff, and same-parent follow-up subtasks for any out-of-folder drift.
 
 ### Fixed
