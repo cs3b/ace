@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Ensured parent task auto-close for child task closure uses the same `TaskManager#update` flow as explicit task closes, so linked GitHub issues close through one consistent code path.
+
 ## [0.36.2] - 2026-04-23
 
 

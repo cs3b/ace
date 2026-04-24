@@ -336,10 +336,10 @@ module Ace
             parent_dir, recursive: true
           )
 
-          # Auto-move the parent folder to archive
-          parent_stub = Struct.new(:path).new(parent_dir)
-          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-          mover.move(parent_stub, to: "archive")
+          parent = load_parent_from_directory(parent_dir, loader)
+          return unless parent
+
+          archive_parent_via_update(parent)
         end
 
         def parse_archive_date(task)
@@ -387,25 +387,44 @@ module Ace
             }
           end
 
-          unless Atoms::TaskValidationRules.terminal_status?(parent.status.to_s.downcase)
-            Ace::Support::Items::Molecules::FieldUpdater.update(
-              parent.file_path, set: {"status" => "done"}
-            )
-            parent = loader.load(parent.path, id: parent.id, special_folder: parent.special_folder)
-          end
-
-          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-          new_parent_path = mover.move(parent, to: "archive", date: parse_archive_date(parent))
-          new_special_folder = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-            new_parent_path, root: @root_dir
-          )
+          archived_parent = archive_parent_via_update(parent)
+          return {
+            path: task.path,
+            special_folder: task.special_folder,
+            id: task.id
+          } unless archived_parent
 
           @last_update_note = "Archived parent task #{parent.id} because all subtasks are terminal."
           {
-            path: File.join(new_parent_path, File.basename(task.path)),
-            special_folder: new_special_folder,
+            path: File.join(archived_parent.path, File.basename(task.path)),
+            special_folder: archived_parent.special_folder,
             id: task.id
           }
+        end
+
+        def archive_parent_via_update(parent)
+          previous_note = @last_update_note
+          archived_parent = update(
+            parent.id,
+            set: {"status" => "done"},
+            move_to: "archive"
+          )
+
+          if archived_parent && @last_update_note == previous_note
+            @last_update_note = "Archived parent task #{parent.id} because all subtasks are terminal."
+          end
+
+          archived_parent
+        end
+
+        def load_parent_from_directory(parent_dir, loader)
+          parent_id = File.basename(parent_dir).split("-", 2).first
+          return nil unless parent_id
+
+          parent_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+            parent_dir, root: @root_dir
+          )
+          loader.load(parent_dir, id: parent_id, special_folder: parent_special)
         end
 
         # Value accessor for FilterApplier

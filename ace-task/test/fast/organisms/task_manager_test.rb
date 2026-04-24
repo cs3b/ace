@@ -230,6 +230,60 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal "_archive", reloaded_parent.special_folder
   end
 
+  def test_update_subtask_move_to_archive_when_parent_linked_syncs_parent_issue_via_update
+    sync_calls = []
+    fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    parent = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      parent = @manager.create("Parent task", github_issue: 901)
+      first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
+      @manager.create_subtask(parent.id, "Subtask two", status: "skipped")
+
+      sync_calls.clear
+      @manager.update(first.id, move_to: "archive")
+    end
+
+    assert_equal 1, sync_calls.length
+    assert_equal "update", sync_calls.first[:reason]
+    assert_equal parent.id, sync_calls.first[:task].id
+    assert_equal 901, sync_calls.first[:task].metadata["github_issue"]
+    assert_equal "done", sync_calls.first[:task].status
+    assert_equal "_archive", sync_calls.first[:task].special_folder
+  end
+
+  def test_update_subtask_status_auto_archive_syncs_parent_issue_via_update
+    sync_calls = []
+    fake_sync = Object.new
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    parent = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      parent = @manager.create("Parent task", status: "done", github_issue: 902)
+      first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
+      second = @manager.create_subtask(parent.id, "Subtask two", status: "pending")
+
+      sync_calls.clear
+      @manager.update(second.id, set: {"status" => "done"})
+    end
+
+    assert_equal 1, sync_calls.length
+    assert_equal "update", sync_calls.first[:reason]
+    assert_equal parent.id, sync_calls.first[:task].id
+    assert_equal 902, sync_calls.first[:task].metadata["github_issue"]
+    assert_equal "done", sync_calls.first[:task].status
+    assert_equal "_archive", sync_calls.first[:task].special_folder
+  end
+
   # --- create_subtask ---
 
   def test_create_subtask_allocates_char
