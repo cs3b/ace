@@ -1,58 +1,142 @@
 name: opencode
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Providers::CLI::OpenCodeClient
 gem: ace-llm-providers-cli
-context_limit: 128000
 models:
-  - big-pickle
-  - claude-haiku-4-5
-  - claude-opus-4-5
-  - claude-opus-4-6
-  - claude-opus-4-7
-  - claude-sonnet-4-5
-  - claude-sonnet-4-6
-  - gemini-3-flash
-  - gemini-3-pro
-  - gemini-3.1-pro
-  - glm-4.6
-  - glm-4.7-free
-  - glm-5
-  - glm-5.1
-  - gpt-5.1
-  - gpt-5.1-codex
-  - gpt-5.1-codex-max
-  - gpt-5.2-codex
-  - gpt-5.3-codex
-  - gpt-5.3-codex-spark
-  - gpt-5.4
-  - gpt-5.4-mini
-  - gpt-5.4-nano
-  - gpt-5.4-pro
-  - hy3-preview-free
-  - kimi-k2
-  - kimi-k2-thinking
-  - kimi-k2.5
-  - kimi-k2.6
-  - ling-2.6-flash-free
-  - minimax-m2.5
-  - minimax-m2.5-free
-  - minimax-m2.7
-  - nemotron-3-super-free
-  - qwen3.5-plus
-  - qwen3.6-plus
+- big-pickle
+- claude-haiku-4-5
+- claude-opus-4-5
+- claude-opus-4-6
+- claude-opus-4-7
+- claude-sonnet-4-5
+- claude-sonnet-4-6
+- gemini-3-flash
+- gemini-3-pro
+- gemini-3.1-pro
+- glm-4.6
+- glm-4.7-free
+- glm-5
+- glm-5.1
+- gpt-5.1
+- gpt-5.1-codex
+- gpt-5.1-codex-max
+- gpt-5.2-codex
+- gpt-5.3-codex
+- gpt-5.3-codex-spark
+- gpt-5.4
+- gpt-5.4-mini
+- gpt-5.4-nano
+- gpt-5.4-pro
+- hy3-preview-free
+- kimi-k2
+- kimi-k2-thinking
+- kimi-k2.5
+- kimi-k2.6
+- ling-2.6-flash-free
+- minimax-m2.5
+- minimax-m2.5-free
+- minimax-m2.7
+- nemotron-3-super-free
+- qwen3.5-plus
+- qwen3.6-plus
+limits:
+  default:
+    context: 400000
+    output: 128000
+  models:
+    big-pickle:
+      context: 200000
+    claude-haiku-4-5:
+      context: 200000
+      output: 64000
+    claude-opus-4-5:
+      context: 200000
+      output: 64000
+    claude-opus-4-6:
+      context: 1000000
+    claude-opus-4-7:
+      context: 1000000
+    claude-sonnet-4-5:
+      context: 1000000
+      output: 64000
+    claude-sonnet-4-6:
+      context: 1000000
+      output: 64000
+    gemini-3-flash:
+      context: 1048576
+      output: 65536
+    gemini-3-pro:
+      context: 1048576
+      output: 65536
+    gemini-3.1-pro:
+      context: 1048576
+      output: 65536
+    glm-4.6:
+      context: 204800
+      output: 131072
+    glm-4.7-free:
+      context: 204800
+      output: 131072
+    glm-5:
+      context: 204800
+      output: 131072
+    glm-5.1:
+      context: 204800
+      output: 131072
+    gpt-5.3-codex-spark:
+      context: 128000
+    gpt-5.4:
+      context: 1050000
+    gpt-5.4-pro:
+      context: 1050000
+    hy3-preview-free:
+      context: 256000
+      output: 64000
+    kimi-k2:
+      context: 262144
+      output: 262144
+    kimi-k2-thinking:
+      context: 262144
+      output: 262144
+    kimi-k2.5:
+      context: 262144
+      output: 65536
+    kimi-k2.6:
+      context: 262144
+      output: 65536
+    ling-2.6-flash-free:
+      context: 262100
+      output: 32800
+    minimax-m2.5:
+      context: 204800
+      output: 131072
+    minimax-m2.5-free:
+      context: 204800
+      output: 131072
+    minimax-m2.7:
+      context: 204800
+      output: 131072
+    nemotron-3-super-free:
+      context: 204800
+    qwen3.5-plus:
+      context: 262144
+      output: 65536
+    qwen3.6-plus:
+      context: 262144
+      output: 65536
 aliases:
   global:
     oc: opencode:glm
   model:
     google: google/gemini-3-pro
     claude: anthropic/claude-opus-4-6
-    codex: openai/gpt-5.1-codex 
-    glm:  zai-coding-plan/glm-5.1
+    codex: openai/gpt-5.1-codex
+    glm: zai-coding-plan/glm-5.1
 capabilities:
-  - text_generation
-  - streaming
-  - function_calling
-  - vision
-  - multi_provider
+- text_generation
+- streaming
+- function_calling
+- vision
+- multi_provider
 default_options:
   temperature: 0.7

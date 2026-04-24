@@ -1,7 +1,6 @@
 name: codexoai
 class: Ace::LLM::Providers::CLI::CodexOaiClient
 gem: ace-llm-providers-cli
-context_limit: 128000
 backends:
   zai:
     name: "Z.ai GLM"
@@ -12,6 +11,10 @@ models:
   - zai/glm-5
   - zai/glm-4.7
   - zai/glm-4.6
+limits:
+  default:
+    context: 204800
+    output: 131072
 aliases:
   global:
     codex-oai: codexoai:zai/glm-5
