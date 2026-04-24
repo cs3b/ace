@@ -424,6 +424,38 @@ class ForkSessionLauncherTest < AceAssignTestCase
       assert_equal({"FROM_BUILDER" => "1"}, tmux_runner.last_invocation[:env])
       assert_equal Dir.pwd, tmux_runner.last_invocation[:working_dir]
       assert_equal "$as-assign-drive abc123@010", tmux_runner.last_invocation[:visible_handoff]
+      assert_nil tmux_runner.last_select, "tmux fork launch should not steal focus"
+    end
+  end
+
+  def test_launch_mode_tmux_uses_origin_window_name_for_fork_target
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "ace-t-ks9")
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      interactive_builder: interactive,
+      tmux_runner: tmux_runner
+    )
+
+    with_temp_cache do |tmp_dir|
+      steps_dir = File.join(tmp_dir, "steps")
+      FileUtils.mkdir_p(steps_dir)
+      File.write(File.join(steps_dir, "010-demo-root.st.md"), <<~STEP)
+        ---
+        name: demo-root
+        status: done
+        context: fork
+        ---
+        done
+      STEP
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "tmux")
+
+      assert_equal "ace-t-ks9-fs", tmux_runner.last_ensure[:name]
+      assert_equal "ace-t-ks9-fs", tmux_runner.last_prepare[:window]
+      assert_nil tmux_runner.last_select, "tmux fork launch should not steal focus"
     end
   end
 

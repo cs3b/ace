@@ -60,12 +60,50 @@ class TmuxForkRunnerTest < AceAssignTestCase
     assert_equal [], runner.commands
   end
 
+  def test_current_window_prefers_origin_pane_window
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "display-message", "-t", "%42", "-p", "#S"] => "demo",
+        ["tmux", "display-message", "-t", "%42", "-p", "#W"] => "ace-t-ks9"
+      }
+    )
+
+    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX_PANE" => "%42", "TMUX" => nil) do
+      assert_equal "ace-t-ks9", runner.current_window
+    end
+
+    assert_equal [
+      ["tmux", "display-message", "-t", "%42", "-p", "#S"],
+      ["tmux", "display-message", "-t", "%42", "-p", "#W"]
+    ], runner.commands
+  end
+
+  def test_current_window_falls_back_when_origin_pane_session_mismatches_target_session
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "display-message", "-t", "%42", "-p", "#S"] => "other",
+        ["tmux", "display-message", "-t", "%42", "-p", "#W"] => "ace-t-n1d",
+        ["tmux", "display-message", "-t", "demo:", "-p", "#W"] => "work"
+      }
+    )
+
+    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX_PANE" => "%42", "TMUX" => nil) do
+      assert_equal "work", runner.current_window
+    end
+
+    assert_equal [
+      ["tmux", "display-message", "-t", "%42", "-p", "#S"],
+      ["tmux", "display-message", "-t", "%42", "-p", "#W"],
+      ["tmux", "display-message", "-t", "demo:", "-p", "#W"]
+    ], runner.commands
+  end
+
   def test_current_window_uses_explicit_tmux_session_without_tmux_env
     runner = FakeTmuxForkRunner.new(
       results: {["tmux", "display-message", "-t", "demo:", "-p", "#W"] => "work"}
     )
 
-    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX" => nil) do
+    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX_PANE" => nil, "TMUX" => nil) do
       assert_equal "work", runner.current_window
     end
 
@@ -80,7 +118,7 @@ class TmuxForkRunnerTest < AceAssignTestCase
       }
     )
 
-    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX" => nil) do
+    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => "demo", "TMUX_PANE" => nil, "TMUX" => nil) do
       assert_equal "work", runner.current_window
     end
 
@@ -95,7 +133,8 @@ class TmuxForkRunnerTest < AceAssignTestCase
       results: {["tmux", "display-message", "-p", "#W"] => "work"}
     )
 
-    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => nil, "TMUX" => "/tmp/tmux-1000/default,1,0") do
+    with_env("ACE_ASSIGN_FORK_WINDOW" => nil, "ACE_TMUX_SESSION" => nil, "TMUX_PANE" => nil,
+      "TMUX" => "/tmp/tmux-1000/default,1,0") do
       assert_equal "work", runner.current_window
     end
 
@@ -141,7 +180,7 @@ class TmuxForkRunnerTest < AceAssignTestCase
     runner = FakeTmuxForkRunner.new(
       results: {
         ["tmux", "list-windows", "-t", "demo", "-F", "#{'#{window_id}'}\t#{'#{window_name}'}"] => "",
-        ["tmux", "new-window", "-t", "demo:", "-n", "ace-t-k5a-fs", "-c", File.expand_path(Dir.pwd),
+        ["tmux", "new-window", "-d", "-t", "demo:", "-n", "ace-t-k5a-fs", "-c", File.expand_path(Dir.pwd),
           "-P", "-F", '#{window_id}'] => "@9"
       }
     )
@@ -168,6 +207,27 @@ class TmuxForkRunnerTest < AceAssignTestCase
 
     assert_equal "%1", pane
     assert_includes runner.commands, ["tmux", "list-panes", "-t", "@9", "-F", '#{pane_id}']
+    assert_includes runner.commands, ["tmux", "select-layout", "-t", "@9", "tiled"]
+  end
+
+  def test_prepare_pane_creates_detached_split_when_adding_new_pane
+    runner = FakeTmuxForkRunner.new(
+      results: {
+        ["tmux", "split-window", "-d", "-t", "@9", "-c", File.expand_path(Dir.pwd), "-P", "-F", '#{pane_id}'] => "%3"
+      }
+    )
+
+    pane = runner.prepare_pane(
+      session: "demo",
+      window: "ace-t-k5a-fs",
+      window_target: "@9",
+      root: Dir.pwd,
+      keep_existing: false
+    )
+
+    assert_equal "%3", pane
+    assert_includes runner.commands,
+      ["tmux", "split-window", "-d", "-t", "@9", "-c", File.expand_path(Dir.pwd), "-P", "-F", '#{pane_id}']
     assert_includes runner.commands, ["tmux", "select-layout", "-t", "@9", "tiled"]
   end
 
