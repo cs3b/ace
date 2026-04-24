@@ -16,6 +16,17 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  def with_env(vars)
+    original = {}
+    vars.each_key do |key|
+      original[key] = ENV[key]
+    end
+    vars.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    yield
+  ensure
+    original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
+
   class CompletingLauncher
     def initialize(cache_base:)
       @cache_base = cache_base
@@ -47,6 +58,18 @@ class ForkRunCommandTest < AceAssignTestCase
 
   class NoopLauncher
     def launch(**_kwargs)
+    end
+  end
+
+  class SpyLauncher
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def launch(**kwargs)
+      @calls << kwargs
     end
   end
 
@@ -416,6 +439,78 @@ class ForkRunCommandTest < AceAssignTestCase
       assert state.find_by_number("020").complete?, "Scoped subtree step should be done"
       refute state.find_by_number("010").complete?, "Outside step 010 should stay incomplete"
       refute state.find_by_number("030").complete?, "Outside step 030 should stay incomplete"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_rejects_same_scoped_refork_before_launch_or_activation
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {"name" => "leaf-fork", "instructions" => "Run leaf in fork", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      launcher = SpyLauncher.new
+
+      with_env(
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => result[:assignment].id,
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "020"
+      ) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          run_fork_run_command(
+            cache_base: cache_dir,
+            launcher: launcher,
+            assignment: "#{result[:assignment].id}@020",
+            quiet: true
+          )
+        end
+
+        assert_includes error.message, "already running inside that scoped subtree"
+      end
+
+      state = executor.status[:state]
+      assert_equal :pending, state.find_by_number("020").status
+      assert_equal [], launcher.calls
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_allows_different_root_in_same_assignment_scope
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "pre-step", "instructions" => "Run pre-step"},
+        {"name" => "first-fork", "instructions" => "Run first fork", "context" => "fork"},
+        {"name" => "second-fork", "instructions" => "Run second fork", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      with_env(
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => result[:assignment].id,
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "020"
+      ) do
+        output = capture_fork_run_command(
+          cache_base: cache_dir,
+          launcher: DirectSubtreeCompletingLauncher.new(cache_base: cache_dir),
+          assignment: "#{result[:assignment].id}@030"
+        )
+
+        assert_includes output.first, "Starting fork subtree execution: 030 - second-fork"
+        assert_includes output.first, "Fork subtree 030 completed successfully."
+      end
+
+      state = executor.status[:state]
+      assert state.find_by_number("030").complete?
+      refute state.find_by_number("020").complete?
 
       Ace::Assign.reset_config!
     end

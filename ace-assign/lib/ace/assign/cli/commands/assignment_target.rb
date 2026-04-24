@@ -10,6 +10,7 @@ module Ace
         # - <assignment-id>
         # - <assignment-id>@<step-number>
         module AssignmentTarget
+          DEFAULT_TARGET_ENV = "ACE_ASSIGN_DEFAULT_TARGET"
           Target = Struct.new(:assignment_id, :scope, keyword_init: true)
           View = Struct.new(:assignment, :state, :scoped_state, :active_steps, :next_step, :focus_step, :scope_root, keyword_init: true)
 
@@ -17,11 +18,18 @@ module Ace
 
           def resolve_assignment_target(options)
             assignment_raw = options[:assignment]
-            unless assignment_raw.nil? || assignment_raw.to_s.strip.empty?
-              return parse_assignment_target(assignment_raw)
+            explicit_target = unless assignment_raw.nil? || assignment_raw.to_s.strip.empty?
+              parse_assignment_target(assignment_raw)
             end
 
-            Target.new(assignment_id: nil, scope: nil)
+            env_target = env_assignment_target
+            if explicit_target && env_target && target_identity(explicit_target) != target_identity(env_target)
+              raise Ace::Support::Cli::Error,
+                "Conflicting assignment targets: --assignment #{target_identity(explicit_target)} " \
+                "does not match #{DEFAULT_TARGET_ENV}=#{target_identity(env_target)}"
+            end
+
+            explicit_target || env_target || Target.new(assignment_id: nil, scope: nil)
           end
 
           def parse_assignment_target(raw)
@@ -36,6 +44,22 @@ module Ace
             raise Ace::Support::Cli::Error, "Assignment target scope after '@' cannot be empty" if value.include?("@") && (scope.nil? || scope.empty?)
 
             Target.new(assignment_id: assignment_id, scope: scope)
+          end
+
+          def env_assignment_target
+            raw = ENV[DEFAULT_TARGET_ENV].to_s.strip
+            return nil if raw.empty?
+
+            parse_assignment_target(raw)
+          end
+
+          def target_identity(target)
+            return "" unless target
+
+            scope = target.scope.to_s.strip
+            return target.assignment_id.to_s if scope.empty?
+
+            "#{target.assignment_id}@#{scope}"
           end
 
           def build_executor_for_target(target)
@@ -80,7 +104,7 @@ module Ace
             scoped_steps = state.subtree_steps(root.number)
             scoped_state = Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
             active_steps = scoped_state.active_steps
-            next_step = active_steps.empty? ? scoped_state.next_workable : nil
+            next_step = active_steps.empty? ? state.next_workable_in_subtree(root.number) : nil
 
             {state: scoped_state, active_steps: active_steps, next_step: next_step, focus_step: scoped_state.current || next_step, root: root.number}
           end

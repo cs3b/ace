@@ -47,6 +47,54 @@ class AssignmentTargetTest < AceAssignTestCase
     assert_equal "010.01", target.scope
   end
 
+  def test_resolve_assignment_target_uses_default_target_env_when_explicit_assignment_missing
+    previous = ENV["ACE_ASSIGN_DEFAULT_TARGET"]
+    ENV["ACE_ASSIGN_DEFAULT_TARGET"] = "8pg4g1@010.01"
+
+    target = Resolver.new.resolve_assignment_target({})
+    assert_equal "8pg4g1", target.assignment_id
+    assert_equal "010.01", target.scope
+  ensure
+    if previous.nil?
+      ENV.delete("ACE_ASSIGN_DEFAULT_TARGET")
+    else
+      ENV["ACE_ASSIGN_DEFAULT_TARGET"] = previous
+    end
+  end
+
+  def test_resolve_assignment_target_rejects_conflicting_default_target_env
+    previous = ENV["ACE_ASSIGN_DEFAULT_TARGET"]
+    ENV["ACE_ASSIGN_DEFAULT_TARGET"] = "8pg4g1@010.01"
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Resolver.new.resolve_assignment_target(assignment: "8pg4g1")
+    end
+
+    assert_includes error.message, "Conflicting assignment targets"
+  ensure
+    if previous.nil?
+      ENV.delete("ACE_ASSIGN_DEFAULT_TARGET")
+    else
+      ENV["ACE_ASSIGN_DEFAULT_TARGET"] = previous
+    end
+  end
+
+  def test_resolve_assignment_target_accepts_matching_default_target_env
+    previous = ENV["ACE_ASSIGN_DEFAULT_TARGET"]
+    ENV["ACE_ASSIGN_DEFAULT_TARGET"] = "8pg4g1@010.01"
+
+    target = Resolver.new.resolve_assignment_target(assignment: "8pg4g1@010.01")
+
+    assert_equal "8pg4g1", target.assignment_id
+    assert_equal "010.01", target.scope
+  ensure
+    if previous.nil?
+      ENV.delete("ACE_ASSIGN_DEFAULT_TARGET")
+    else
+      ENV["ACE_ASSIGN_DEFAULT_TARGET"] = previous
+    end
+  end
+
   def test_resolve_assignment_target_ignores_ace_assign_id_env
     previous = ENV["ACE_ASSIGN_ID"]
     ENV["ACE_ASSIGN_ID"] = "8pg4g1@010.01"

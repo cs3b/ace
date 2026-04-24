@@ -93,9 +93,14 @@ module Ace
           run!([tmux_binary, "select-window", "-t", target], "select tmux fork window #{window}")
         end
 
-        def run_script_in_pane(pane_target:, script_path:)
-          command = "bash #{Shellwords.escape(File.expand_path(script_path))}"
-          run!([tmux_binary, "send-keys", "-t", pane_target, command, "Enter"], "send tmux fork command")
+        def run_invocation_in_pane(pane_target:, command:, env: nil, working_dir: nil, visible_handoff: nil)
+          shell_command = build_pane_shell_command(
+            command: command,
+            env: env,
+            working_dir: working_dir,
+            visible_handoff: visible_handoff
+          )
+          run!([tmux_binary, "send-keys", "-t", pane_target, shell_command, "Enter"], "send tmux fork command")
         end
 
         def wait_for_completion(status_file:, timeout:)
@@ -168,6 +173,40 @@ module Ace
 
         def select_layout(target)
           run!([tmux_binary, "select-layout", "-t", target, "tiled"], "apply tiled layout")
+        end
+
+        def build_pane_shell_command(command:, env:, working_dir:, visible_handoff:)
+          steps = []
+          resolved_working_dir = working_dir.to_s.strip
+          steps << "cd #{Shellwords.escape(File.expand_path(resolved_working_dir))}" unless resolved_working_dir.empty?
+
+          handoff = visible_handoff.to_s
+          steps << "printf '%s\\n' #{Shellwords.escape(handoff)}" unless handoff.empty?
+
+          steps << "exec #{build_exec_command(command: command, env: env)}"
+          steps.join(" && ")
+        end
+
+        def build_exec_command(command:, env:)
+          cmd = Array(command).map { |part| Shellwords.escape(part.to_s) }.join(" ")
+          env_hash = env.respond_to?(:to_h) ? env.to_h : {}
+          unset_parts = []
+          assign_parts = []
+
+          env_hash.each do |key, value|
+            next if key.to_s.strip.empty?
+
+            if value.nil?
+              unset_parts << "-u #{Shellwords.escape(key.to_s)}"
+            else
+              assign_parts << "#{key}=#{Shellwords.escape(value.to_s)}"
+            end
+          end
+          env_parts = unset_parts + assign_parts
+
+          return cmd if env_parts.empty?
+
+          "env #{env_parts.join(' ')} #{cmd}"
         end
 
         def run!(cmd, action)

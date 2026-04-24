@@ -10,9 +10,11 @@ instructions:
     - "If subtree execution fails: use adaptive minimal-safe replay (do not replay whole subtree by default)."
     - "Inject only required recovery steps before retrying failed or affected steps."
   fork:
-    - "Delegate this subtree into forked context:"
+    - "Unscoped driver action: delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
-    - "Inside the forked agent, continue execution within this subtree scope only."
+    - "Scoped forked agent action: do not call fork-run again for {{parent_number}}."
+    - "If this scoped root is active and no child step is active yet: ace-assign start --assignment <assignment-id>@{{parent_number}}"
+    - "After a child step becomes active, continue execution within this subtree scope only."
     - "Note: fork-run may take 10-30 minutes. If your environment has bash timeout limits, run in background and poll scoped status with stepped backoff (5m -> 3m -> 1m -> every 60s)."
     - "After fork-run completes: read all subtree report files before continuing. The driver is the guard — review reports to verify quality before advancing."
     - "For failed subtrees: recovery typically includes context refresh (onboard + report review) and verify-test-suite before retry."

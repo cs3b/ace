@@ -196,6 +196,9 @@ class PresetExpanderTest < AceAssignTestCase
         "batch-parent" => {
           "name" => "batch-tasks",
           "number" => "010",
+          "batch_parent" => true,
+          "parallel" => false,
+          "fork_retry_limit" => 1,
           "instructions" => "Container for batch work."
         }
       },
@@ -207,7 +210,28 @@ class PresetExpanderTest < AceAssignTestCase
     assert_equal 1, result.length
     assert_equal "010", result[0]["number"]
     assert_equal "batch-tasks", result[0]["name"]
+    assert_equal true, result[0]["batch_parent"]
+    assert_equal false, result[0]["parallel"]
+    assert_equal 1, result[0]["fork_retry_limit"]
     assert_equal "Container for batch work.", result[0]["instructions"]
+  end
+
+  def test_expand_batch_parent_preserves_zero_fork_retry_limit
+    preset = {
+      "expansion" => {
+        "batch-parent" => {
+          "name" => "batch-tasks",
+          "number" => "010",
+          "fork_retry_limit" => 0,
+          "instructions" => "Container for batch work."
+        }
+      },
+      "steps" => []
+    }
+
+    result = Ace::Assign::Atoms::PresetExpander.expand(preset, {})
+
+    assert_equal 0, result[0]["fork_retry_limit"]
   end
 
   def test_expand_foreach_children

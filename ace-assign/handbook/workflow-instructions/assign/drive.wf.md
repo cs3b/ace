@@ -36,11 +36,11 @@ When working with multiple concurrent assignments, the active assignment is reso
 3. `.latest` symlink (auto-updated on any activity)
 4. Scan all assignments (fallback)
 
-If this workflow is invoked with an argument (for example `/as-assign-drive abc123@010.01`), treat that value as the initial assignment target. If no argument is provided, resolve one active assignment and pin it for the entire loop.
+If this workflow is invoked with an argument (for example `/as-assign-drive abc123@010.01`), treat that exact value as the initial assignment target. If no argument is provided, resolve one active assignment and pin it for the entire loop.
 
 ```bash
-# Set once from workflow argument (empty when not provided)
-ASSIGNMENT_TARGET="${1:-}"
+# Set once from workflow argument or internal scoped default (empty when neither is provided)
+ASSIGNMENT_TARGET="${1:-${ACE_ASSIGN_DEFAULT_TARGET:-}}"
 
 # Resolve and pin assignment identity for the full drive loop
 if [ -n "$ASSIGNMENT_TARGET" ]; then
@@ -58,6 +58,8 @@ if [ -z "$ASSIGNMENT_TARGET" ]; then
   ASSIGNMENT_TARGET="$ASSIGNMENT_ID"
 fi
 ```
+
+`ACE_ASSIGN_DEFAULT_TARGET` is an internal fallback passed by `fork-run` launches. If it is present, use it exactly. Do not widen it back to the parent assignment, do not drop the `@<root>` scope suffix, and do not re-resolve an unscoped assignment target later in the loop.
 
 ### Explicit Assignment Targeting (Recommended)
 
@@ -115,7 +117,7 @@ Repeat the following cycle until all steps are done or failed:
 
 ### Run-Until-Blocked Contract
 
-Once `ASSIGNMENT_TARGET` is pinned, keep driving the same assignment until exactly one of these stop conditions is true:
+Once `ASSIGNMENT_TARGET` is pinned, keep driving that exact target until exactly one of these stop conditions is true:
 
 1. `ace-assign status --assignment "$ASSIGNMENT_TARGET"` shows all steps complete
 2. A workflow step explicitly requires HITL or other user judgment before execution can continue
@@ -127,6 +129,7 @@ Do **not** stop merely because you have useful progress to report.
 - Intermediate progress belongs in short progress updates, not in a final completion response.
 - `pending` steps with no active step are not a stop condition. They mean the queue must be advanced and the loop must continue.
 - A batch child subtree finishing is not a completion boundary for the parent assignment.
+- If `ASSIGNMENT_TARGET` includes `@<root>`, that scoped subtree is the entire execution boundary.
 - A paused assignment with remaining runnable work is not "done"; treat it as a recoverable scheduler state and resume the loop.
 
 ### Final Response Gate
@@ -145,7 +148,7 @@ You may only stop and send a final response when one of these is true:
 
 Do **not** send a final response merely because:
 
-- one child subtree completed
+- one child subtree completed in the parent assignment
 - useful progress was made
 - a prior terminal session ended
 - the parent assignment surfaced the next pending step after active work finished
@@ -153,6 +156,7 @@ Do **not** send a final response merely because:
 Concrete example:
 
 - `010.01 done` and `010.02.01 active` means continue driving the assignment. It is not a completion boundary.
+- `040.01 done`, `040.02 done`, and `040.03 done` under `/as-assign-drive <id>@040` means stop the scoped worker. Do not inspect parent step `070` from that scoped process.
 
 ### Step Execution Policy
 
@@ -293,8 +297,15 @@ ace-assign fork-run --assignment <id>@020
 **Delegation boundary rule**
 
 - Outside a delegated fork scope, do NOT execute fork steps inline.
+- First decide whether the fork boundary is already entered before issuing `fork-run`.
 - If scoped status for `--assignment <id>@<root>` already resolves work inside `<root>`, the fork boundary is already entered: continue inline and never call `fork-run` again for the same `<root>`.
-- If the current step is a top-level step with `FORK: yes` and no matching scope is active, delegate immediately.
+- A same-root call to `ace-assign fork-run --assignment <id>@<root>` from inside that exact scoped subtree is invalid and must be treated as an error, not a retry path.
+- If the scoped root itself is active and no child in that subtree is active yet, run:
+
+  - `ace-assign start --assignment "$ASSIGNMENT_TARGET"`
+
+- After a child step inside the scoped subtree becomes active, continue executing that child inline within the same scope.
+- Only if the current step is a top-level step with `FORK: yes` and no matching scope is already active should the driver delegate via `fork-run`.
 
 #### Nested Batch Containers (Container → Fork Children)
 
@@ -374,11 +385,29 @@ Conversational boundary rule:
 ```bash
 STATUS_JSON=$(ace-assign status --assignment "$ASSIGNMENT_TARGET" --format json)
 ASSIGNMENT_ID=$(echo "$STATUS_JSON" | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
+SCOPED_ROOT="${ASSIGNMENT_TARGET#*@}"
+ACTIVE_STEP=$(echo "$STATUS_JSON" | ruby -rjson -e '
+  scoped_root = ARGV[0].to_s
+  active = Array(JSON.parse(STDIN.read)["active_steps"])
+  child = active.find { |step| step["number"] != scoped_root && step["number"].start_with?("#{scoped_root}.") }
+  puts(child ? child["number"] : active.first&.fetch("number", nil))
+' "$SCOPED_ROOT")
+
+if [ -n "$SCOPED_ROOT" ] && [ "$ACTIVE_STEP" = "$SCOPED_ROOT" ]; then
+  ace-assign start --assignment "$ASSIGNMENT_TARGET"
+  continue
+fi
+
 FORK_ROOT=$(echo "$STATUS_JSON" | ruby -rjson -e '
-  p = Array(JSON.parse(STDIN.read)["active_steps"]).first
-  puts p["number"] if p && p["context"] == "fork"
-')
-if [ -n "$FORK_ROOT" ]; then
+  scoped_root = ARGV[0].to_s
+  active = Array(JSON.parse(STDIN.read)["active_steps"])
+  next_fork = active.find do |step|
+    step["context"] == "fork" &&
+      (scoped_root.empty? || (step["number"] != scoped_root && !step["number"].start_with?("#{scoped_root}.")))
+  end
+  puts next_fork["number"] if next_fork
+' "$SCOPED_ROOT")
+if [ -n "$FORK_ROOT" ] && [ "$FORK_ROOT" != "$SCOPED_ROOT" ]; then
   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
   # Re-check status after subtree delegation completes
   continue
@@ -425,6 +454,17 @@ Immediately after the fork wait ends, run this checklist in order:
 
 6. If pending or `active` work remains and no blocker was recorded, continue the main loop immediately.
 7. Only stop if the assignment now satisfies a real stop condition from [Run-Until-Blocked Contract](#run-until-blocked-contract).
+
+#### Scoped Worker Completion Boundary
+
+When `ASSIGNMENT_TARGET` already includes `@<root>`, the current process is the subtree worker, not the parent orchestrator.
+
+- After report review, re-check `ace-assign status --assignment "$ASSIGNMENT_TARGET"`.
+- If that scoped status is terminal, stop immediately.
+- Do not query the parent assignment from that scoped worker.
+- Do not widen a scoped target back to parent assignment status.
+- Do not continue into later sibling roots such as `070` from `/as-assign-drive <id>@040`.
+- Parent resume after subtree completion belongs only to the unscoped driver that launched the fork.
 
 Detached-resume rule:
 

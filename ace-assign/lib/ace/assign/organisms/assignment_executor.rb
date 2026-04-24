@@ -240,12 +240,12 @@ module Ace
         #
         # @param message [String] Error message
         # @return [Hash] Result with updated state
-        def fail(message)
+        def fail(message, fork_root: nil)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
-          current = state.current
+          current = find_target_step_for_fail(state, fork_root)
           raise Error, "No step currently active. Try 'ace-assign add' to add a new step or 'ace-assign retry' to retry a failed step." unless current
 
           # Mark step as failed
@@ -270,7 +270,7 @@ module Ace
         # @param after [String, nil] Insert after this step number (optional)
         # @param as_child [Boolean] Insert as child of 'after' step (default: false, sibling)
         # @return [Hash] Result with new step
-        def add(name, instructions, after: nil, as_child: false, added_by: nil, extra: {})
+        def add(name, instructions, after: nil, as_child: false, added_by: nil, extra: {}, fork_root: nil)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
@@ -278,6 +278,7 @@ module Ace
           raise Error, "Step name cannot be empty." if step_name.empty?
 
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          after, as_child = normalize_scoped_insertion_anchor(state, after: after, as_child: as_child, fork_root: fork_root)
           existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
 
           # Validate --after step exists
@@ -348,7 +349,7 @@ module Ace
         # @note Structural validation is performed for the full batch before any writes.
         #   Runtime I/O failures can still interrupt insertion after partial writes.
         # @return [Hash] Result with added steps and final state
-        def add_batch(steps:, after: nil, as_child: false, source_file: nil)
+        def add_batch(steps:, after: nil, as_child: false, source_file: nil, fork_root: nil)
           unless steps.is_a?(Array) && steps.any?
             source_label = source_file.to_s.strip.empty? ? "batch input" : source_file
             raise Error, "No steps defined in #{source_label}"
@@ -359,6 +360,12 @@ module Ace
           end
 
           prevalidate_batch_trees!(steps)
+
+          assignment = assignment_manager.find_active
+          raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
+
+          state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
+          after, as_child = normalize_scoped_insertion_anchor(state, after: after, as_child: as_child, fork_root: fork_root)
 
           added_steps = []
           renumbered = []
@@ -377,7 +384,6 @@ module Ace
             sibling_cursor = inserted[:root_number] unless as_child
           end
 
-          assignment = assignment_manager.find_active
           state = queue_scanner.scan(assignment.steps_dir, assignment: assignment)
           {
             assignment: assignment,
@@ -391,7 +397,7 @@ module Ace
         #
         # @param step_ref [String] Step number or reference to retry
         # @return [Hash] Result with new retry step
-        def retry_step(step_ref)
+        def retry_step(step_ref, fork_root: nil)
           assignment = assignment_manager.find_active
           raise AssignmentErrors::NoActive, "No active assignment. Use 'ace-assign create --yaml <job.yaml>' to begin." unless assignment
 
@@ -400,16 +406,18 @@ module Ace
           # Find the step to retry
           original = state.find_by_number(step_ref.to_s)
           raise StepErrors::NotFound, "Step #{step_ref} not found in queue" unless original
+          validate_retry_scope!(state, original, fork_root)
 
           # Get existing numbers
           existing_numbers = queue_scanner.step_numbers(assignment.steps_dir)
 
           # Insert after all current steps (at end of queue before pending)
           # Find last done or failed step
-          base_number = if state.current
-            state.current.number
-          elsif state.last_done
-            state.last_done.number
+          scoped_state = scoped_retry_state(state, assignment: assignment, fork_root: fork_root)
+          base_number = if scoped_state.current
+            scoped_state.current.number
+          elsif scoped_state.last_done
+            scoped_state.last_done.number
           else
             original.number
           end
@@ -633,9 +641,11 @@ module Ace
           if parent_context == "fork"
             lines.concat(
               [
-                "Delegate this subtree into forked context:",
+                "Unscoped driver action: delegate this subtree into forked context:",
                 "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}",
-                "Inside the forked agent, continue execution within this subtree scope only."
+                "Scoped forked agent action: do not call fork-run again for {{parent_number}}.",
+                "If this scoped root is active and no child step is active yet: ace-assign start --assignment <assignment-id>@{{parent_number}}",
+                "After a child step becomes active, continue execution within this subtree scope only."
               ]
             )
           else
@@ -1664,6 +1674,28 @@ module Ace
           DEFAULT_DYNAMIC_STEP_INSTRUCTIONS
         end
 
+        def targeted_batch_parent_startable?(target, fork_root:)
+          return false unless fork_root.nil? || fork_root.empty?
+
+          target.batch_parent == true
+        end
+
+        def find_target_step_for_fail(state, fork_root)
+          fork_root = fork_root&.strip
+          current = state.current
+          return current if fork_root.nil? || fork_root.empty?
+
+          raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+          if state.active_branch_conflict_in_subtree?(fork_root)
+            active_refs = state.active_in_subtree(fork_root).map { |step| "#{step.number}(#{step.name})" }.join(", ")
+            raise StepErrors::InvalidState, "Cannot fail in subtree #{fork_root}: multiple active branches exist (#{active_refs})."
+          end
+
+          return current if current && state.in_subtree?(fork_root, current.number)
+
+          state.current_in_subtree(fork_root)
+        end
+
         def find_target_step_for_start(state, step_number, fork_root)
           target = state.find_by_number(step_number)
           raise StepErrors::NotFound, "Step #{step_number} not found in queue" unless target
@@ -1673,7 +1705,7 @@ module Ace
             raise StepErrors::InvalidState, "Step #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
           end
           raise StepErrors::InvalidState, "Cannot start step #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
-          if state.has_incomplete_children?(target.number)
+          if state.has_incomplete_children?(target.number) && !targeted_batch_parent_startable?(target, fork_root: fork_root)
             raise StepErrors::InvalidState, "Cannot start step #{target.number}: has incomplete children."
           end
 
@@ -1734,6 +1766,48 @@ module Ace
           end
 
           current
+        end
+
+        def scoped_retry_state(state, assignment:, fork_root:)
+          fork_root = fork_root&.strip
+          return state if fork_root.nil? || fork_root.empty?
+
+          scoped_steps = state.subtree_steps(fork_root)
+          Models::QueueState.new(steps: scoped_steps, assignment: assignment)
+        end
+
+        def validate_retry_scope!(state, original, fork_root)
+          fork_root = fork_root&.strip
+          return if fork_root.nil? || fork_root.empty?
+
+          raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+          return if state.in_subtree?(fork_root, original.number)
+
+          raise StepErrors::InvalidState, "Step #{original.number} is outside scoped subtree #{fork_root}."
+        end
+
+        def normalize_scoped_insertion_anchor(state, after:, as_child:, fork_root:)
+          fork_root = fork_root&.strip
+          return [after, as_child] if fork_root.nil? || fork_root.empty?
+
+          root = state.find_by_number(fork_root)
+          raise StepErrors::NotFound, "Subtree root #{fork_root} not found in assignment." unless root
+
+          after_ref = after&.to_s&.strip
+          if after_ref && !after_ref.empty?
+            unless state.in_subtree?(fork_root, after_ref)
+              raise StepErrors::InvalidState, "Step #{after_ref} is outside scoped subtree #{fork_root}."
+            end
+
+            return [after_ref, as_child]
+          end
+
+          subtree = state.subtree_steps(fork_root)
+          last_subtree_step = subtree.last
+          return [fork_root, true] unless last_subtree_step
+          return [fork_root, true] if last_subtree_step.number == fork_root
+
+          [last_subtree_step.number, false]
         end
 
         # Auto-complete parent steps when all their children are done.

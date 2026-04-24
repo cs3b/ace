@@ -12,22 +12,24 @@ class QueueStateTest < AceAssignTestCase
     )
   end
 
-  def make_step(number:, name:, status:)
-    Ace::Assign::Models::Step.new(
-      number: number,
-      name: name,
-      status: status,
-      instructions: "Test"
-    )
-  end
-
-  def make_step_with_started_at(number:, name:, status:, started_at:)
+  def make_step(number:, name:, status:, **attrs)
     Ace::Assign::Models::Step.new(
       number: number,
       name: name,
       status: status,
       instructions: "Test",
-      started_at: started_at
+      **attrs
+    )
+  end
+
+  def make_step_with_started_at(number:, name:, status:, started_at:, **attrs)
+    Ace::Assign::Models::Step.new(
+      number: number,
+      name: name,
+      status: status,
+      instructions: "Test",
+      started_at: started_at,
+      **attrs
     )
   end
 
@@ -311,6 +313,30 @@ class QueueStateTest < AceAssignTestCase
     assert_includes ["010.01", "020"], workable.number
   end
 
+  def test_next_workable_prefers_marked_batch_parent_globally
+    steps = [
+      make_step(number: "010", name: "batch-tasks", status: :pending, batch_parent: true, parallel: false, fork_retry_limit: 1),
+      make_step(number: "010.01", name: "work-on-task", status: :pending, context: "fork"),
+      make_step(number: "020", name: "finalize", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
+
+    assert_equal "010", state.next_workable.number
+  end
+
+  def test_next_workable_in_subtree_keeps_batch_parent_children_first
+    steps = [
+      make_step(number: "010", name: "batch-tasks", status: :pending, batch_parent: true, parallel: false, fork_retry_limit: 1),
+      make_step(number: "010.01", name: "work-on-task", status: :pending, context: "fork"),
+      make_step(number: "020", name: "finalize", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
+
+    assert_equal "010.01", state.next_workable_in_subtree("010").number
+  end
+
   def test_in_subtree_matches_root_and_descendants
     steps = [
       make_step(number: "010", name: "root", status: :pending),
@@ -350,6 +376,19 @@ class QueueStateTest < AceAssignTestCase
     # root has incomplete children, so first workable in subtree should be child
     workable = state.next_workable_in_subtree("010")
     assert_equal "010.01", workable.number
+  end
+
+  def test_next_workable_globally_prefers_pending_fork_root_over_child_descendants
+    steps = [
+      make_step(number: "010", name: "precheck", status: :done),
+      Ace::Assign::Models::Step.new(number: "020", name: "review-cycle", status: :pending, instructions: "x", context: "fork"),
+      make_step(number: "020.01", name: "review-pr", status: :pending),
+      make_step(number: "030", name: "postcheck", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(steps: steps, assignment: @assignment)
+
+    workable = state.next_workable
+    assert_equal "020", workable.number
   end
 
   def test_active_in_subtree_filters_to_subtree

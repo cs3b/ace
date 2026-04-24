@@ -85,6 +85,38 @@ class FinishCommandTest < AceAssignTestCase
     end
   end
 
+  def test_finish_reports_marked_batch_parent_as_next_pending_step
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"number" => "000", "name" => "onboard", "instructions" => "Load context"},
+        {"number" => "010", "name" => "batch-tasks", "instructions" => "Batch container instructions", "batch_parent" => true, "parallel" => false, "fork_retry_limit" => 1},
+        {"number" => "010.01", "name" => "work-on-148", "parent" => "010", "context" => "fork", "instructions" => "Task context:\nWork on task 148"},
+        {"number" => "020", "name" => "finalize", "instructions" => "Finalize"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      report_path = create_report(cache_dir, "Step done!")
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      executor.start(config_path)
+      executor.start_step
+
+      output = capture_io do
+        command = Ace::Assign::CLI::Commands::Finish.new
+        with_fast_command_executor(command, cache_base: cache_dir) do
+          command.call(message: report_path)
+        end
+      end
+
+      assert_includes output.first, "Step 000 (onboard) completed"
+      assert_includes output.first, "No active step selected."
+      assert_includes output.first, "Next pending step: 010 - batch-tasks"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_finish_without_assignment
     with_temp_cache do |cache_dir|
       report_path = create_report(cache_dir)

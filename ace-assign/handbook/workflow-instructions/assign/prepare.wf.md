@@ -141,6 +141,11 @@ For `--taskrefs 148,149,150`, expansion generates:
 030 finalize
 ```
 
+Generated batch parents should carry scheduler metadata:
+
+- `010 batch-tasks (parent, auto-completes, batch_parent: true, parallel: false)`
+- `fork_retry_limit: 1`
+
 The hierarchical numbering enables:
 - Parent auto-completion when all children are done
 - Parent-only fork markers for subtree delegation

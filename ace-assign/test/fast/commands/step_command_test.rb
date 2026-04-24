@@ -51,6 +51,30 @@ class StepCommandTest < AceAssignTestCase
     end
   end
 
+  def test_step_falls_back_to_marked_batch_parent_when_paused_at_batch_boundary
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"number" => "000", "name" => "onboard", "instructions" => "Load context"},
+        {"number" => "010", "name" => "batch-tasks", "instructions" => "Batch container instructions", "batch_parent" => true, "parallel" => false, "fork_retry_limit" => 1},
+        {"number" => "010.01", "name" => "work-on-148", "parent" => "010", "context" => "fork", "instructions" => "Task context:\nWork on task 148"},
+        {"number" => "020", "name" => "finalize", "instructions" => "Finalize"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      report_path = create_report(cache_dir, "done")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      start = executor.start(config_path)
+      executor.start_step
+      executor.advance(report_path)
+
+      output = capture_step_command(cache_base: cache_dir, assignment: start[:assignment].id).first
+      assert_equal "Batch container instructions\n", output
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_step_with_explicit_step_uses_exact_lookup
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -85,6 +109,33 @@ class StepCommandTest < AceAssignTestCase
 
       output = capture_step_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010").first
       assert_includes output, "Task context:"
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_step_shows_root_guidance_when_scoped_root_is_active
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_steps" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      root = executor.status[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+
+      output = capture_step_command(cache_base: cache_dir, assignment: "#{result[:assignment].id}@010").first
+      assert_includes output, "Scoped forked agent action: do not call fork-run again for 010."
+      assert_includes output, "ace-assign start --assignment <assignment-id>@010"
+      assert_includes output, "After a child step becomes active, continue execution within this subtree scope only."
     ensure
       Ace::Assign.reset_config!
     end

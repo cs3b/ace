@@ -2,8 +2,6 @@
 
 require "ace/llm"
 require "fileutils"
-require "rbconfig"
-require "shellwords"
 
 module Ace
   module Assign
@@ -15,6 +13,27 @@ module Ace
         DEFAULT_LAUNCH_MODE = "auto"
         VALID_LAUNCH_MODES = %w[auto headless tmux].freeze
         TMUX_POLL_INTERVAL = 0.5
+        DEFAULT_TARGET_ENV = "ACE_ASSIGN_DEFAULT_TARGET"
+        CURRENT_ASSIGNMENT_ID_ENV = "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID"
+        CURRENT_FORK_ROOT_ENV = "ACE_ASSIGN_CURRENT_FORK_ROOT"
+
+        def self.fork_scope_env(assignment_id:, fork_root:)
+          scoped_target = "#{assignment_id}@#{fork_root}"
+          {
+            DEFAULT_TARGET_ENV => scoped_target,
+            CURRENT_ASSIGNMENT_ID_ENV => assignment_id.to_s,
+            CURRENT_FORK_ROOT_ENV => fork_root.to_s
+          }
+        end
+
+        def self.same_scoped_refork?(assignment_id:, fork_root:, env: ENV)
+          assignment_ref = assignment_id.to_s.strip
+          root_ref = fork_root.to_s.strip
+          return false if assignment_ref.empty? || root_ref.empty?
+
+          env[CURRENT_ASSIGNMENT_ID_ENV].to_s.strip == assignment_ref &&
+            env[CURRENT_FORK_ROOT_ENV].to_s.strip == root_ref
+        end
 
         def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, tmux_runner: nil, interactive_builder: nil)
           @config = config || Ace::Assign.config
@@ -34,6 +53,7 @@ module Ace
         # @param launch_mode [String, nil] Launch mode override (auto|headless|tmux)
         # @return [Hash] QueryInterface response
         def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, launch_mode: nil)
+          ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
           resolved_mode = resolve_launch_mode(launch_mode)
@@ -61,11 +81,13 @@ module Ace
 
         def launch_provider_session(assignment_id:, fork_root:, provider:, cli_args: nil, timeout: nil, cache_dir: nil,
           last_message_file: nil, session_meta_file: nil)
+          ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
           scoped_assignment = "#{assignment_id}@#{fork_root}"
           prompt = "/as-assign-drive #{scoped_assignment}"
           last_msg_file = last_message_file || build_last_message_file(cache_dir, fork_root)
+          scope_env = self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root)
 
           result = query_interface.query(
             resolved_provider,
@@ -74,7 +96,8 @@ module Ace
             cli_args: cli_args,
             timeout: resolved_timeout,
             fallback: false,
-            last_message_file: last_msg_file
+            last_message_file: last_msg_file,
+            subprocess_env: scope_env
           )
 
           # Layer 1 write: capture last message for non-Codex providers (or when Codex didn't write).
@@ -109,6 +132,7 @@ module Ace
         end
 
         def launch_tmux(assignment_id:, fork_root:, provider:, cli_args:, timeout:, cache_dir:)
+          ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           session = tmux_runner.current_session
           raise Error, "Launch mode tmux requires an active tmux session (TMUX or ACE_TMUX_SESSION)." unless session
           raise Error, "Tmux launch requires assignment cache_dir for subtree polling." if cache_dir.to_s.strip.empty?
@@ -130,24 +154,27 @@ module Ace
 
           session_meta_file = build_session_meta_file(cache_dir, fork_root)
           prompt = "/as-assign-drive #{assignment_id}@#{fork_root}"
+          tmux_env = tmux_subprocess_env(
+            assignment_id: assignment_id,
+            fork_root: fork_root,
+            session: session,
+            fork_window: fork_window
+          )
           invocation = interactive_builder.build(
             provider_model: provider,
             prompt: prompt,
-            cli_args: cli_args
-          )
-          script_path = build_tmux_wrapper(
-            assignment_id: assignment_id,
-            fork_root: fork_root,
-            provider: provider,
             cli_args: cli_args,
-            timeout: timeout,
-            session_meta_file: session_meta_file,
-            session: session,
-            fork_window: fork_window,
-            visible_handoff: invocation[:prompt]
+            working_dir: Dir.pwd,
+            subprocess_env: tmux_env
           )
 
-          tmux_runner.run_script_in_pane(pane_target: pane_target, script_path: script_path)
+          tmux_runner.run_invocation_in_pane(
+            pane_target: pane_target,
+            command: invocation[:command],
+            env: invocation[:env],
+            working_dir: invocation[:working_dir],
+            visible_handoff: invocation[:prompt]
+          )
           if window_info[:created] && current_window != fork_window
             tmux_runner.select_window(session: session, window: fork_window, window_target: window_info[:target])
           end
@@ -230,32 +257,20 @@ module Ace
           File.join(sessions_dir, "#{fork_root}-session.yml")
         end
 
-        def build_tmux_wrapper(assignment_id:, fork_root:, provider:, cli_args:, timeout:, session_meta_file:, session:, fork_window:, visible_handoff:)
-          sessions_dir = File.dirname(session_meta_file)
-          FileUtils.mkdir_p(sessions_dir)
-          script_path = File.join(sessions_dir, "#{fork_root}-tmux-launch.sh")
+        def ensure_not_same_scoped_refork!(assignment_id:, fork_root:)
+          return unless self.class.same_scoped_refork?(assignment_id: assignment_id, fork_root: fork_root)
 
-          command = [
-            "ace-llm", provider, "/as-assign-drive #{assignment_id}@#{fork_root}",
-            "--interactive"
-          ]
-          command.concat(["--cli-args", cli_args]) if cli_args && !cli_args.strip.empty?
+          raise Error,
+            "Cannot fork-run subtree #{assignment_id}@#{fork_root}: already running inside that scoped subtree. Continue inline instead of calling fork-run again."
+        end
 
-          script = <<~BASH
-            #!/usr/bin/env bash
-            set -uo pipefail
-            cd #{Shellwords.escape(Dir.pwd)}
-            export PROJECT_ROOT_PATH=#{Shellwords.escape(Dir.pwd)}
-            export ACE_TMUX_SESSION=#{Shellwords.escape(session)}
-            export ACE_ASSIGN_LAUNCH_MODE=tmux
-            export ACE_ASSIGN_FORK_WINDOW=#{Shellwords.escape(fork_window)}
-            printf '%s\n' #{Shellwords.escape(visible_handoff.to_s)}
-            exec #{command.map { |part| Shellwords.escape(part) }.join(" ")}
-          BASH
-
-          File.write(script_path, script)
-          FileUtils.chmod(0o755, script_path)
-          script_path
+        def tmux_subprocess_env(assignment_id:, fork_root:, session:, fork_window:)
+          self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root).merge(
+            "PROJECT_ROOT_PATH" => Dir.pwd,
+            "ACE_TMUX_SESSION" => session,
+            "ACE_ASSIGN_LAUNCH_MODE" => "tmux",
+            "ACE_ASSIGN_FORK_WINDOW" => fork_window
+          )
         end
 
         def wait_for_subtree_terminal(assignment_id:, fork_root:, cache_dir:, timeout:)

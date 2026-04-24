@@ -47,6 +47,8 @@ module Ace
               return
             end
 
+            ensure_not_same_scoped_refork!(assignment_id: assignment.id, fork_root: root_step.number)
+
             unless options[:quiet]
               next_step = state.next_workable_in_subtree(root_step.number)
               puts "Starting fork subtree execution: #{root_step.number} - #{root_step.name}"
@@ -189,6 +191,16 @@ module Ace
             return explicit unless explicit.nil? || explicit.empty?
 
             root_step.fork_provider || Ace::Assign.config.dig("execution", "provider") || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER
+          end
+
+          def ensure_not_same_scoped_refork!(assignment_id:, fork_root:)
+            return unless Molecules::ForkSessionLauncher.same_scoped_refork?(
+              assignment_id: assignment_id,
+              fork_root: fork_root
+            )
+
+            raise Error,
+              "Cannot fork-run subtree #{assignment_id}@#{fork_root}: already running inside that scoped subtree. Continue inline instead of calling fork-run again."
           end
 
           def record_fork_pid_info(root_step, launch_result)

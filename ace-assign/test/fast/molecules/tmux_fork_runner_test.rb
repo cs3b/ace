@@ -170,4 +170,49 @@ class TmuxForkRunnerTest < AceAssignTestCase
     assert_includes runner.commands, ["tmux", "list-panes", "-t", "@9", "-F", '#{pane_id}']
     assert_includes runner.commands, ["tmux", "select-layout", "-t", "@9", "tiled"]
   end
+
+  def test_run_invocation_in_pane_builds_direct_shell_command
+    runner = FakeTmuxForkRunner.new
+
+    runner.run_invocation_in_pane(
+      pane_target: "%1",
+      command: ["ace-llm", "claude:sonnet", "/as-assign-drive abc123@010", "--interactive"],
+      env: {
+        "PROJECT_ROOT_PATH" => "/tmp/project",
+        "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010",
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010",
+        "CLAUDECODE" => nil
+      },
+      working_dir: "/tmp/project",
+      visible_handoff: "$as-assign-drive abc123@010"
+    )
+
+    sent = runner.commands.last
+    assert_equal ["tmux", "send-keys", "-t", "%1", sent[4], "Enter"], sent
+    assert_includes sent[4], "cd /tmp/project"
+    assert_includes sent[4], "printf '%s\\n' \\$as-assign-drive\\ abc123@010"
+    assert_includes sent[4], "env -u CLAUDECODE PROJECT_ROOT_PATH=/tmp/project ACE_ASSIGN_DEFAULT_TARGET=abc123@010 ACE_ASSIGN_CURRENT_ASSIGNMENT_ID=abc123 ACE_ASSIGN_CURRENT_FORK_ROOT=010"
+    assert_includes sent[4], "ace-llm claude:sonnet /as-assign-drive\\ abc123@010 --interactive"
+  end
+
+  def test_run_invocation_in_pane_puts_multiple_unsets_before_assignments
+    runner = FakeTmuxForkRunner.new
+
+    runner.run_invocation_in_pane(
+      pane_target: "%1",
+      command: ["ace-assign", "status"],
+      env: {
+        "KEEP" => "1",
+        "DROP_ONE" => nil,
+        "SET_TWO" => "2",
+        "DROP_TWO" => nil
+      },
+      working_dir: "/tmp/project",
+      visible_handoff: ""
+    )
+
+    sent = runner.commands.last
+    assert_includes sent[4], "env -u DROP_ONE -u DROP_TWO KEEP=1 SET_TWO=2 ace-assign status"
+  end
 end
