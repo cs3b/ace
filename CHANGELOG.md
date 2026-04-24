@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-assign v0.54.8**: Corrected tmux fork-window naming to derive from the launcher origin pane instead of the session's currently active window, and stopped tmux fork launches from stealing focus by creating fork windows and panes detached.
 - **ace-assign v0.54.7**: Made forked assignment workers honor an explicit default scoped target so `/as-assign-drive <assignment>@<root>` cannot widen back to parent status, and restored root-first fork scheduling so unscoped resume activates pending fork roots before child steps.
 - **ace-assign v0.54.6**: Ordered tmux fork-launch environment unsets before assignments so mixed unset/set pane launches remain valid, preserved explicit `fork_retry_limit: 0` values during preset expansion, and corrected scoped drive guidance to scan all active descendants before auto-starting subtree work.
 - **ace-test-runner-e2e v0.40.1**: Removed suite-specific wording from the single-command `ace-test-e2e` help path so `--help` stays scoped to the run-test CLI while preserving prune-artifacts guidance.
