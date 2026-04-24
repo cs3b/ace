@@ -111,6 +111,24 @@ module Ace
               end
             end
 
+            # Extract normalized limit configuration from a provider config.
+            # @param config [Hash]
+            # @return [Hash] normalized {"default"=>{"context"=>..., "output"=>...}, "models"=>{...}}
+            def extract_limits(config)
+              limits = config["limits"]
+              return {} unless limits.is_a?(Hash)
+
+              normalized = {}
+
+              default_limits = normalize_limit_entry(limits["default"])
+              normalized["default"] = default_limits if default_limits.any?
+
+              model_limits = normalize_model_limits(limits["models"])
+              normalized["models"] = model_limits if model_limits.any?
+
+              normalized
+            end
+
             # Extract models.dev provider ID from config
             # Falls back to provider name if not specified
             # @param config [Hash] Provider config
@@ -137,6 +155,38 @@ module Ace
             end
 
             private
+
+            def normalize_model_limits(model_limits)
+              return {} unless model_limits.is_a?(Hash)
+
+              model_limits.each_with_object({}) do |(model, entry), normalized|
+                next if model.to_s.strip.empty?
+
+                normalized_entry = normalize_limit_entry(entry)
+                normalized[model.to_s] = normalized_entry if normalized_entry.any?
+              end
+            end
+
+            def normalize_limit_entry(entry)
+              return {} unless entry.is_a?(Hash)
+
+              normalized = {}
+
+              context = normalize_limit_value(entry["context"] || entry[:context])
+              output = normalize_limit_value(entry["output"] || entry[:output])
+
+              normalized["context"] = context unless context.nil?
+              normalized["output"] = output unless output.nil?
+              normalized
+            end
+
+            def normalize_limit_value(value)
+              return nil if value.nil?
+
+              Integer(value)
+            rescue ArgumentError, TypeError
+              nil
+            end
 
             def project_config_dir
               # Use ace-core if available and has project_root method

@@ -76,7 +76,7 @@ class ProviderConfigWriterTest < AceModelsTestCase
     end
   end
 
-  def test_update_models_raises_for_inline_comment
+  def test_update_models_handles_inline_comment_style_yaml
     with_temp_config_dir do |dir|
       path = File.join(dir, "provider.yml")
       original = <<~YAML
@@ -86,15 +86,14 @@ class ProviderConfigWriterTest < AceModelsTestCase
       YAML
       File.write(path, original)
 
-      error = assert_raises(Ace::Support::Models::ConfigError) do
-        @writer.update_models(path, ["new-model"])
-      end
-      assert_match(/inline comment/i, error.message)
-      assert_match(/models:/i, error.message)
+      @writer.update_models(path, ["new-model"])
+
+      result = YAML.safe_load_file(path)
+      assert_equal ["new-model"], result["models"]
     end
   end
 
-  def test_update_models_raises_for_flow_style_array
+  def test_update_models_handles_flow_style_arrays
     with_temp_config_dir do |dir|
       path = File.join(dir, "provider.yml")
       original = <<~YAML
@@ -103,10 +102,10 @@ class ProviderConfigWriterTest < AceModelsTestCase
       YAML
       File.write(path, original)
 
-      error = assert_raises(Ace::Support::Models::ConfigError) do
-        @writer.update_models(path, ["new-model"])
-      end
-      assert_match(/flow-style/i, error.message)
+      @writer.update_models(path, ["new-model"])
+
+      result = YAML.safe_load_file(path)
+      assert_equal ["new-model"], result["models"]
     end
   end
 
@@ -219,6 +218,36 @@ class ProviderConfigWriterTest < AceModelsTestCase
     end
   end
 
+  def test_update_models_and_sync_date_updates_limits_and_removes_legacy_context_limit
+    with_temp_config_dir do |dir|
+      path = File.join(dir, "provider.yml")
+      original = <<~YAML
+        name: openai
+        context_limit: 128000
+        models:
+          - gpt-5.4
+      YAML
+      File.write(path, original)
+
+      @writer.update_models_and_sync_date(
+        path,
+        ["gpt-5.4", "gpt-5.4-mini"],
+        Date.new(2026, 4, 24),
+        limits: {
+          "default" => {"context" => 1_050_000, "output" => 128_000},
+          "models" => {
+            "gpt-5.4-mini" => {"context" => 400_000}
+          }
+        }
+      )
+
+      result = YAML.safe_load_file(path, permitted_classes: [Date])
+      refute result.key?("context_limit")
+      assert_equal({"context" => 1_050_000, "output" => 128_000}, result["limits"]["default"])
+      assert_equal({"context" => 400_000}, result.dig("limits", "models", "gpt-5.4-mini"))
+    end
+  end
+
   def test_update_models_and_sync_date_preserves_other_fields
     with_temp_config_dir do |dir|
       path = File.join(dir, "provider.yml")
@@ -241,6 +270,16 @@ class ProviderConfigWriterTest < AceModelsTestCase
       assert_equal Date.new(2025, 12, 5), result["last_synced"]
       assert_equal "anthropic", result["models_dev_id"]
       assert_equal({"model" => {"s" => "sonnet"}}, result["aliases"])
+    end
+  end
+
+  def test_write_formats_config_without_yaml_document_header
+    with_temp_config_dir do |dir|
+      path = File.join(dir, "provider.yml")
+
+      @writer.write(path, {"name" => "provider", "models" => ["model-1"]})
+
+      refute_match(/\A---\n/, File.read(path))
     end
   end
 

@@ -111,6 +111,46 @@ class ProviderConfigReaderTest < AceModelsTestCase
     assert_equal [], result
   end
 
+  def test_extract_limits_returns_normalized_default_and_model_overrides
+    config = {
+      "limits" => {
+        "default" => {"context" => "1050000", "output" => 128_000},
+        "models" => {
+          "gpt-5.4-mini" => {"context" => 400_000},
+          "gpt-5.4-nano" => {"output" => "32768"}
+        }
+      }
+    }
+
+    result = @reader.extract_limits(config)
+
+    assert_equal({"context" => 1_050_000, "output" => 128_000}, result["default"])
+    assert_equal({"context" => 400_000}, result.dig("models", "gpt-5.4-mini"))
+    assert_equal({"output" => 32_768}, result.dig("models", "gpt-5.4-nano"))
+  end
+
+  def test_extract_limits_returns_empty_for_missing_limits
+    assert_equal({}, @reader.extract_limits({"name" => "provider"}))
+  end
+
+  def test_extract_limits_ignores_invalid_entries
+    config = {
+      "limits" => {
+        "default" => {"context" => "bad"},
+        "models" => {
+          "good-model" => {"output" => 1024},
+          "bad-model" => "oops"
+        }
+      }
+    }
+
+    result = @reader.extract_limits(config)
+
+    refute result.key?("default")
+    assert_equal({"output" => 1024}, result.dig("models", "good-model"))
+    refute result.dig("models", "bad-model")
+  end
+
   def test_config_directories_with_override
     with_temp_config_dir do |dir|
       result = @reader.config_directories(config_dir: dir)

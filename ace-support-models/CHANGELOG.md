@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-04-24
+
+### Added
+- Synced provider context and output token limits from the models catalog into managed provider YAML via `limits.default` plus per-model overrides.
+
+### Fixed
+- Kept normal provider sync constrained to the tracked model set while still updating limit metadata, and fixed exact-suffix model matching so repeated sync runs stay idempotent.
+
 ## [0.11.3] - 2026-04-23
 
 ### Technical

@@ -81,11 +81,11 @@ module Ace
 
             # Build a mapping of canonical names to original names for current models
             # This handles cases like "model:nitro" -> "model"
-            current_canonical_to_original = {}
+            current_lookup = Set.new
             current_models.each do |model_id|
+              current_lookup << model_id
               canonical = Atoms::ModelNameCanonicalizer.canonicalize(model_id, provider: provider_name)
-              current_canonical_to_original[canonical] ||= []
-              current_canonical_to_original[canonical] << model_id
+              current_lookup << canonical
             end
 
             added = []
@@ -98,7 +98,7 @@ module Ace
             # Use canonical names for matching
             models_dev_models.each do |model_id, model_data|
               # Check if any current model (or its canonical form) matches this models.dev model
-              has_match = current_canonical_to_original.key?(model_id)
+              has_match = current_lookup.include?(model_id)
 
               if has_match
                 if model_data[:status] == "deprecated"
@@ -126,10 +126,15 @@ module Ace
             # Use canonical names to avoid false positives for suffixed models
             current_models.each do |model_id|
               canonical = Atoms::ModelNameCanonicalizer.canonicalize(model_id, provider: provider_name)
-              unless models_dev_canonical.include?(canonical)
+              unless models_dev_canonical.include?(model_id) || models_dev_canonical.include?(canonical)
                 removed << model_id
               end
             end
+
+            desired_models = (current_models.to_a + added - removed).uniq.sort
+            desired_limits = build_desired_limits(desired_models, models_dev_models, provider_name: provider_name)
+            current_limits = Atoms::ProviderConfigReader.extract_limits(config)
+            limits_changed = current_limits != desired_limits
 
             {
               status: :ok,
@@ -138,6 +143,8 @@ module Ace
               removed: removed.sort,
               unchanged: unchanged.sort,
               deprecated: deprecated.sort,
+              desired_limits: desired_limits,
+              limits_changed: limits_changed,
               models_dev_count: models_dev_models.size,
               current_count: current_models.size,
               filtered_by_date: !since_date.nil?
@@ -152,6 +159,7 @@ module Ace
             total_removed = 0
             total_unchanged = 0
             total_deprecated = 0
+            total_limit_updates = 0
             providers_synced = 0
             providers_skipped = 0
 
@@ -162,6 +170,7 @@ module Ace
                 total_removed += result[:removed].size
                 total_unchanged += result[:unchanged].size
                 total_deprecated += result[:deprecated].size
+                total_limit_updates += 1 if result[:limits_changed]
               else
                 providers_skipped += 1
               end
@@ -172,6 +181,7 @@ module Ace
               removed: total_removed,
               unchanged: total_unchanged,
               deprecated: total_deprecated,
+              limit_updates: total_limit_updates,
               providers_synced: providers_synced,
               providers_skipped: providers_skipped
             }
@@ -184,7 +194,7 @@ module Ace
             results.any? do |_provider, result|
               next false unless result[:status] == :ok
 
-              result[:added].any? || result[:removed].any?
+              result[:added].any? || result[:removed].any? || result[:limits_changed]
             end
           end
 
@@ -223,10 +233,13 @@ module Ace
 
             models.each do |model_id, model_data|
               release_date = parse_date(model_data["release_date"])
+              limit = model_data["limit"] || {}
               result[model_id] = {
                 status: model_data["status"],
                 name: model_data["name"] || model_id,
-                release_date: release_date
+                release_date: release_date,
+                context_limit: limit["context"],
+                output_limit: limit["output"]
               }
             end
 
@@ -254,6 +267,63 @@ module Ace
 
             # Otherwise use last_synced from config
             Atoms::ProviderConfigReader.extract_last_synced(config)
+          end
+
+          def build_desired_limits(models, models_dev_models, provider_name:)
+            limit_entries = models.each_with_object({}) do |model_id, acc|
+              entry = extract_limit_entry(model_id, models_dev_models, provider_name: provider_name)
+              acc[model_id] = entry if entry.any?
+            end
+
+            return {} if limit_entries.empty?
+
+            default_pair = select_default_limit_pair(limit_entries.values)
+            default_limits = {}
+            unless default_pair.nil?
+              default_limits["context"] = default_pair[0]
+              default_limits["output"] = default_pair[1]
+            end
+
+            overrides = limit_entries.each_with_object({}) do |(model_id, entry), acc|
+              override = entry.dup
+              override.delete("context") if default_limits["context"] && override["context"] == default_limits["context"]
+              override.delete("output") if default_limits["output"] && override["output"] == default_limits["output"]
+              acc[model_id] = override if override.any?
+            end
+
+            desired = {}
+            desired["default"] = default_limits if default_limits.any?
+            desired["models"] = overrides.sort.to_h if overrides.any?
+            desired
+          end
+
+          def select_default_limit_pair(entries)
+            counts = Hash.new(0)
+
+            entries.each do |entry|
+              context = entry["context"]
+              output = entry["output"]
+              next if context.nil? || output.nil?
+
+              counts[[context, output]] += 1
+            end
+
+            counts.max_by { |(context, output), count| [count, context, output] }&.first
+          end
+
+          def extract_limit_entry(model_id, models_dev_models, provider_name:)
+            model_data = lookup_model_data(model_id, models_dev_models, provider_name: provider_name)
+            return {} unless model_data
+
+            entry = {}
+            entry["context"] = model_data[:context_limit] unless model_data[:context_limit].nil?
+            entry["output"] = model_data[:output_limit] unless model_data[:output_limit].nil?
+            entry
+          end
+
+          def lookup_model_data(model_id, models_dev_models, provider_name:)
+            models_dev_models[model_id] ||
+              models_dev_models[Atoms::ModelNameCanonicalizer.canonicalize(model_id, provider: provider_name)]
           end
 
           def suggest_models_dev_id(models_dev_data, provider_name)

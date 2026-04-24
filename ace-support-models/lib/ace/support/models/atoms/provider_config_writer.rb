@@ -18,11 +18,9 @@ module Ace
             # @return [Boolean] true on success
             # @raise [ConfigError] on write errors
             def update_models(path, models)
-              content = read_file_content(path)
-              raise ConfigError, "Config file not found: #{path}" unless content
-
-              updated_content = replace_models_section(content, models)
-              write_file(path, updated_content)
+              config = read_config(path)
+              config["models"] = Array(models)
+              write(path, config)
               true
             end
 
@@ -32,7 +30,7 @@ module Ace
             # @return [Boolean] true on success
             def write(path, config)
               ensure_directory(File.dirname(path))
-              content = YAML.dump(config)
+              content = format_config(config)
               write_file(path, content)
               true
             end
@@ -55,11 +53,9 @@ module Ace
             # @return [Boolean] true on success
             # @raise [ConfigError] on write errors
             def update_last_synced(path, date = Date.today)
-              content = read_file_content(path)
-              raise ConfigError, "Config file not found: #{path}" unless content
-
-              updated_content = replace_or_add_field(content, "last_synced", date.to_s)
-              write_file(path, updated_content)
+              config = read_config(path)
+              config["last_synced"] = date
+              write(path, config)
               true
             end
 
@@ -68,29 +64,30 @@ module Ace
             # @param models [Array<String>] New list of model IDs
             # @param date [Date] Date to set for last_synced
             # @return [Boolean] true on success
-            def update_models_and_sync_date(path, models, date = Date.today)
-              content = read_file_content(path)
-              raise ConfigError, "Config file not found: #{path}" unless content
+            def update_models_and_sync_date(path, models, date = Date.today, limits: nil)
+              config = read_config(path)
+              config["models"] = Array(models)
+              config["last_synced"] = date
 
-              updated_content = replace_models_section(content, models)
-              updated_content = replace_or_add_field(updated_content, "last_synced", date.to_s)
-              write_file(path, updated_content)
+              unless limits.nil?
+                normalized_limits = normalize_limits(limits)
+                if normalized_limits.empty?
+                  config.delete("limits")
+                else
+                  config["limits"] = normalized_limits
+                end
+                config.delete("context_limit")
+              end
+
+              write(path, config)
               true
             end
 
             private
 
-            def read_file_content(path)
-              return nil unless File.exist?(path)
-
-              File.read(path)
-            rescue Errno::EACCES => e
-              raise ConfigError, "Permission denied reading #{path}: #{e.message}"
-            end
-
             def write_file(path, content)
               # Validate YAML before writing to catch regex manipulation errors
-              YAML.safe_load(content, permitted_classes: [Symbol, Date])
+              YAML.safe_load(content, permitted_classes: [Symbol, Date], aliases: true)
               File.write(path, content)
             rescue Psych::SyntaxError => e
               raise ConfigError, "Generated invalid YAML for #{path}: #{e.message}"
@@ -108,119 +105,98 @@ module Ace
               raise ConfigError, "Permission denied creating directory #{dir}: #{e.message}"
             end
 
-            # Replace the models section in YAML content while preserving structure
-            # @param content [String] Original YAML content
-            # @param models [Array<String>] New models list
-            # @return [String] Updated content
-            # @raise [ConfigError] if unsupported YAML styles are detected
-            def replace_models_section(content, models)
-              # Check for flow-style arrays which are not supported
-              if /^\s*models:\s*\[/m.match?(content)
-                raise ConfigError, "Flow-style arrays (models: [...]) are not supported for auto-update. " \
-                                   "Please convert to block style (models: followed by list items)."
-              end
+            def read_config(path)
+              raise ConfigError, "Config file not found: #{path}" unless File.exist?(path)
 
-              # Check for inline comments on models: line which are not preserved
-              if /^\s*models:\s*#/m.match?(content)
-                raise ConfigError, "Inline comments on 'models:' line (e.g., 'models: # comment') are not supported. " \
-                                   "Please move the comment to a separate line above 'models:'."
-              end
-
-              lines = content.lines
-              result = []
-              in_models_section = false
-              models_base_indent = 0
-
-              lines.each do |line|
-                # Detect start of models section (with or without items on same line)
-                if line =~ /^(\s*)models:\s*$/
-                  in_models_section = true
-                  models_base_indent = $1.length
-                  result << line
-
-                  # Add new models with standard YAML indent
-                  models.each do |model|
-                    result << "#{" " * (models_base_indent + 2)}- #{model}\n"
-                  end
-                  next
-                end
-
-                # If in models section, skip old model items
-                if in_models_section
-                  # Check if this line is a list item (model entry)
-                  if line =~ /^(\s*)-\s+/
-                    item_indent = $1.length
-                    # Skip if it's at the expected indent for models (base + 0 or base + 2)
-                    if item_indent == models_base_indent || item_indent == models_base_indent + 2
-                      next
-                    end
-                  end
-
-                  # Empty line - keep but stay in models section
-                  if line.strip.empty?
-                    result << line
-                    next
-                  end
-
-                  # A new key at base level (not indented more) ends models section
-                  if line =~ /^(\s*)\S/
-                    current_indent = $1.length
-                    if current_indent <= models_base_indent
-                      in_models_section = false
-                      result << line
-                    end
-                    # Otherwise skip (shouldn't happen for well-formed YAML)
-                  end
-                  next
-                end
-
-                result << line
-              end
-
-              result.join
+              YAML.safe_load(File.read(path), permitted_classes: [Symbol, Date], aliases: true) || {}
+            rescue Errno::EACCES => e
+              raise ConfigError, "Permission denied reading #{path}: #{e.message}"
+            rescue Psych::SyntaxError => e
+              raise ConfigError, "Invalid YAML in #{path}: #{e.message}"
             end
 
-            # Replace or add a field in YAML content
-            # @param content [String] Original YAML content
-            # @param field_name [String] Field name to replace or add
-            # @param value [String] New value
-            # @return [String] Updated content
-            def replace_or_add_field(content, field_name, value)
-              lines = content.lines
+            def normalize_limits(limits)
+              return {} unless limits.is_a?(Hash)
 
-              # Try to find and replace existing field
-              field_found = false
-              result = lines.map do |line|
-                if line =~ /^(\s*)#{Regexp.escape(field_name)}:\s*(.*)$/
-                  field_found = true
-                  "#{$1}#{field_name}: #{value}\n"
-                else
-                  line
-                end
+              normalized = {}
+
+              default_limits = normalize_limit_entry(limits["default"] || limits[:default])
+              normalized["default"] = default_limits if default_limits.any?
+
+              models = limits["models"] || limits[:models]
+              normalized_models = normalize_model_limits(models)
+              normalized["models"] = normalized_models if normalized_models.any?
+
+              normalized
+            end
+
+            def normalize_model_limits(models)
+              return {} unless models.is_a?(Hash)
+
+              models.each_with_object({}) do |(model, entry), normalized|
+                next if model.to_s.strip.empty?
+
+                normalized_entry = normalize_limit_entry(entry)
+                normalized[model.to_s] = normalized_entry if normalized_entry.any?
+              end.sort.to_h
+            end
+
+            def normalize_limit_entry(entry)
+              return {} unless entry.is_a?(Hash)
+
+              normalized = {}
+
+              context = normalize_limit_value(entry["context"] || entry[:context])
+              output = normalize_limit_value(entry["output"] || entry[:output])
+
+              normalized["context"] = context unless context.nil?
+              normalized["output"] = output unless output.nil?
+              normalized
+            end
+
+            def normalize_limit_value(value)
+              return nil if value.nil?
+
+              Integer(value)
+            rescue ArgumentError, TypeError
+              nil
+            end
+
+            def format_config(config)
+              YAML.dump(canonicalize_config(config)).sub(/\A---\n/, "")
+            end
+
+            def canonicalize_config(config)
+              config = config.dup
+              config.delete("_source_file")
+
+              ordered = {}
+              preferred_order = %w[
+                name
+                last_synced
+                class
+                gem
+                models_dev_id
+                models
+                limits
+                aliases
+                api_key
+                capabilities
+                default_options
+                backends
+                endpoint
+                version
+              ]
+
+              preferred_order.each do |key|
+                ordered[key] = config.delete(key) if config.key?(key)
               end
 
-              # If field not found, add it after the name or first line
-              unless field_found
-                insert_index = 0
-                result.each_with_index do |line, idx|
-                  if /^name:/.match?(line)
-                    insert_index = idx + 1
-                    break
-                  end
-                end
-                # If no name field, add after first non-comment, non-blank line
-                if insert_index == 0
-                  result.each_with_index do |line, idx|
-                    next if line.strip.empty? || line.strip.start_with?("#") || line.strip.start_with?("---")
-
-                    insert_index = idx + 1
-                    break
-                  end
-                end
-                result.insert(insert_index, "#{field_name}: #{value}\n")
+              config.each do |key, value|
+                ordered[key] = value
               end
 
-              result.join
+              ordered
             end
           end
         end
