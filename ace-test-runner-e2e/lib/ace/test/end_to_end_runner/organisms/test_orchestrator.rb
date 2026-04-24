@@ -235,8 +235,16 @@ module Ace
           end
 
           def setup_contains_initial_commit?(steps)
-            steps.any? do |step|
-              step.is_a?(Hash) && step["run"].to_s.match?(/\bgit\s+add\b.*\bgit\s+commit\b/m)
+            staged_changes = false
+
+            Array(steps).any? do |step|
+              next false unless step.is_a?(Hash)
+
+              command = step["run"].to_s
+              staged_changes ||= command.match?(/\bgit\s+add\b/m)
+
+              command.match?(/\bgit\s+commit\b/m) &&
+                (staged_changes || command.match?(/\bgit\s+commit\b(?=.*(?:\s--all\b|\s-[A-Za-z]*a[A-Za-z]*\b))/m))
             end
           end
 

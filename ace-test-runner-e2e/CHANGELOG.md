@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.17] - 2026-04-24
+
+### Fixed
+- Detected fixture-commit setup flows across the full setup sequence instead of only single-step `git add && git commit` commands, restoring support-path git excludes for split-step fixture repositories.
+
 ## [0.38.16] - 2026-04-23
 
 ### Fixed
