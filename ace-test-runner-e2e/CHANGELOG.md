@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.1] - 2026-04-24
+
+### Fixed
+- Removed suite-specific wording from the single-command `ace-test-e2e` help/output path so the `RunTest` CLI stays scoped to the single-command surface while preserving prune-artifact guidance.
+
 ## [0.40.0] - 2026-04-24
 
 ### Changed

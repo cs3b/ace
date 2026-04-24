@@ -62,7 +62,7 @@ module Ace
             option :verify, type: :boolean,
               desc: "Run independent verifier pass after runner execution"
             option :prune_artifacts, type: :boolean,
-              desc: "Remove stale .ace-local/test-e2e artifacts before running (preserves suite reports and runtime-cache)"
+              desc: "Remove stale .ace-local/test-e2e artifacts before running (preserves final reports and runtime-cache)"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -142,7 +142,7 @@ module Ace
               return if quiet
 
               output.puts(
-                "Pruned #{result[:deleted_count]} artifact(s) from #{result[:root_display]} (preserved suite reports and runtime-cache)"
+                "Pruned #{result[:deleted_count]} artifact(s) from #{result[:root_display]} (preserved final reports and runtime-cache)"
               )
             end
 

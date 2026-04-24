@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Test::EndToEndRunner Getting Started
 purpose: Tutorial for running your first E2E scenario with ace-test-runner-e2e
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: '2026-04-24'
+  last-checked: '2026-04-24'
 ---
 
 # Getting Started with ace-test-runner-e2e
@@ -68,7 +68,7 @@ Each run writes reports under `.ace-local/test-e2e/` with timestamped folders.
 ls .ace-local/test-e2e
 ```
 
-If you want a fresh run surface without deleting the shared E2E runtime cache, use `--prune-artifacts` on `ace-test-e2e` or `ace-test-e2e-suite`. It removes stale run artifacts under `.ace-local/test-e2e/` while preserving suite reports and `runtime-cache/`.
+If you want a fresh run surface without deleting the shared E2E runtime cache, use `--prune-artifacts` on `ace-test-e2e` or `ace-test-e2e-suite`. It removes stale run artifacts under `.ace-local/test-e2e/` while preserving final reports for single-package runs, suite reports for suite runs, and `runtime-cache/`.
 
 Typical run output includes:
 

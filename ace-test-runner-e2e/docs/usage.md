@@ -3,8 +3,8 @@ doc-type: user
 title: Ace::Test::EndToEndRunner Usage Reference
 purpose: Complete CLI reference for ace-test-e2e and ace-test-e2e-suite
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: '2026-04-24'
+  last-checked: '2026-04-24'
 ---
 
 # ace-test-runner-e2e Usage Reference
@@ -32,7 +32,7 @@ ace-test-e2e PACKAGE [TEST_ID] [OPTIONS]
 - `--dry-run` / `--no-dry-run`: preview scenarios without execution
 - `--tags=VALUE`: comma-separated tags to include
 - `--verify` / `--no-verify`: run independent verifier pass
-- `--prune-artifacts` / `--no-prune-artifacts`: remove stale `.ace-local/test-e2e` artifacts before running while preserving suite reports and `runtime-cache/`
+- `--prune-artifacts` / `--no-prune-artifacts`: remove stale `.ace-local/test-e2e` artifacts before running while preserving final reports and `runtime-cache/`
 - `--quiet`, `-q`: suppress non-essential output
 - `--verbose`, `-v`: verbose output
 - `--debug`, `-d`: debug output
@@ -142,6 +142,6 @@ When using default report paths, derive the newest directory from `.ace-local/te
 - Grouped runner shorthand such as ``results/tc/02/help.stdout`, `.stderr`, `.exit`` counts as an explicit declaration of all three files.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.
-- Use `--prune-artifacts` to clear stale `.ace-local/test-e2e` run artifacts before a fresh run; it preserves suite reports and `runtime-cache/`.
+- Use `--prune-artifacts` to clear stale `.ace-local/test-e2e` run artifacts before a fresh run. On `ace-test-e2e` it preserves final reports and `runtime-cache/`; on `ace-test-e2e-suite` it preserves suite reports and `runtime-cache/`.
 - Auto-retry is intended for full-suite stabilization. Explicit reruns such as `--only-failures` stay single-pass so targeted fix loops preserve clean scenario-level evidence.
 - Package and suite reports are aggregate summaries. When failed TC IDs or evidence matter, use the referenced per-scenario `report.md` as the canonical source of truth.
