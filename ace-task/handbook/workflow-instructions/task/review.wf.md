@@ -128,6 +128,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **File Slug**: 4-7 word action slug for spec file
    - [ ] **No Slug Repetition**: Subtask slugs do not repeat words from parent folder slug
    - [ ] **Usage Documentation Present**: If task changes CLI/API/workflow/config interfaces, `ux/usage.md` exists with concrete usage scenarios
+   - [ ] **Spike Completion Contract Present**: Spike tasks explicitly declare completion mode, parent sync target, related artifact sync targets, final review command, and done gate
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**
@@ -252,11 +253,16 @@ When the reviewed task is a completed spike, treat spike usefulness as a review 
   - explicit next task(s) exist
   - deferred gaps are named, not implied
   - any promised proof artifact exists if the spike was a proof-of-concept
+- Verify that spike closure happened cleanly:
+  - the parent/orchestrator task was synchronized to the spike outcome
+  - all declared related artifact sync targets were updated or explicitly confirmed unaffected
+  - the declared final parent review command was rerun
 - Fail closed on spike usefulness if the spike completed without an explicit follow-up task, even if later implementation succeeded through ad-hoc decisions.
 - In the review summary for completed spikes, explicitly state whether the spike produced:
   - a reusable contract
   - a reusable proof artifact
   - a reusable next-task decision
+  - a synchronized parent review outcome
 
 Treat "concept inventory exists" as insufficient by itself for a successful spike review when the spike was meant to guide real runtime or UX work.
 

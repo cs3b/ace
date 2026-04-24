@@ -2,6 +2,7 @@
 name: task-work
 description: Execute task implementation against behavioral spec using pre-loaded
   plan
+allowed-tools: Bash, Read, Write
 assign:
   sub-steps:
   - onboard-base
@@ -16,7 +17,7 @@ assign:
 doc-type: workflow
 purpose: Execute task implementation from plan with quality gates
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-24'
 ---
 
 # Work on Task
@@ -75,20 +76,22 @@ Work through the plan checklist, step by step:
 - If a test failure is undiagnosable after one attempt: stop and report
 
 **Task lifecycle:**
-- `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress — the assignment creation layer is responsible for blocking draft tasks before they reach this point.
+- `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress -- the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification
-- Never modify task frontmatter directly — use `ace-task update <ref> --set key=value`
+- Never modify task frontmatter directly -- use `ace-task update <ref> --set key=value`
 - If the task implements a spike outcome, verify before marking done that deferred gaps and adoption follow-ups are explicit rather than left implicit in release notes or retrospectives.
+- If the task is a spike, treat the spec's **Spike Completion Contract** as mandatory. Before marking the spike done, update the parent sync target, update all declared related artifact sync targets, and rerun `as-task-review` on the declared parent task.
+- Do not mark a spike done while the parent task or directly affected sibling/public docs still describe the pre-spike contract.
 
 ## Code Conventions
 
-- Follow established project patterns — don't introduce new abstractions or styles
+- Follow established project patterns -- don't introduce new abstractions or styles
 - 2-space indentation (Ruby); keep lines under 120 characters
 - Write tests for all new logic; run `ace-test` before committing
 
 ## Task Folder
 
-**Documents:** Task-specific docs (reports, findings, usage docs) go in the task folder — never in the project root.
+**Documents:** Task-specific docs (reports, findings, usage docs) go in the task folder -- never in the project root.
 
 **Codemods** (scripts that transform files): create in `{task-folder}/codemods/`, never in `bin/`
 
@@ -98,7 +101,7 @@ Work through the plan checklist, step by step:
 
 All plan steps checked, all success criteria pass:
 
-1. **Verify working tree is clean** — no uncommitted changes:
+1. **Verify working tree is clean** -- no uncommitted changes:
    ```bash
    git status --short
    ```
@@ -108,3 +111,17 @@ All plan steps checked, all success criteria pass:
    ```bash
    ace-task update <ref> --set status=done
    ```
+
+### Spike-Specific Done Gate
+
+Before a spike task is marked done:
+1. Update the spike file with the final outcome, concept inventory, and adopted/rejected/deferred decisions.
+2. Update the declared parent/orchestrator task so its contract matches the spike outcome.
+3. Update every declared related artifact sync target whose written contract changed:
+   - sibling task specs
+   - task-local `ux/usage.md`
+   - public package docs
+4. Run the declared final review command, normally `as-task-review <parent-ref>`.
+5. Reflect that parent-review outcome in the task tree before `status=done`.
+
+If any of those steps remain undone, the spike is still in progress even if the analytical work is finished.

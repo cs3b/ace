@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.4] - 2026-04-24
+
+### Changed
+- Tightened spike-task workflow guidance so spike drafts must declare a decision-complete Spike Completion Contract naming completion mode, parent sync target, related artifact sync targets, and the final `as-task-review <parent-ref>` rerun.
+
 ### Fixed
 - Ensured parent task auto-close for child task closure uses the same `TaskManager#update` flow as explicit task closes, so linked GitHub issues close through one consistent code path.
+- Tightened spike work/review guidance so a spike cannot be considered complete until its parent and declared related task/doc artifacts are synchronized and the parent review has been rerun.
 
 ## [0.36.2] - 2026-04-23
 

@@ -6,7 +6,7 @@ description: Create behavior-first draft tasks and subtasks with vertical slicin
 doc-type: workflow
 purpose: task draft workflow instruction
 ace-docs:
-  last-updated: '2026-04-22'
+  last-updated: '2026-04-24'
 ---
 
 # Draft Task - Behavior-First Specification
@@ -195,12 +195,20 @@ For both spike types, the draft must include:
 2. one **Concept Inventory** with kept / changed / new / rejected outcomes
 3. one **Adopted Decisions / Rejected Decisions / Deferred Gaps** section
 4. one **Follow-up Tasks After Spike** section naming the next implementation or adoption work that must happen if the spike succeeds
+5. one **Spike Completion Contract** section naming how the spike closes the loop when work finishes
 
 For proof-of-concept spikes, the draft must additionally include:
 1. one concrete **Proof Artifact Plan** describing what runnable evidence will prove the spike
 2. success criteria that require the proof artifact, not only the concept inventory
 
 Do not treat "we now understand the design" as sufficient spike completion when the spike affects a runtime, UX, or execution-path contract. A useful spike must also leave a clear proof path and explicit next task.
+
+The **Spike Completion Contract** must be decision-complete. It must state:
+1. **Completion mode**: `recommendation-only`, `decompose-follow-up`, or `archive/no-go`
+2. **Parent sync target**: which parent/orchestrator task must be updated when the spike finishes
+3. **Related artifact sync targets**: which sibling tasks, task-local docs, and public docs must be updated if the spike changes their stated contract
+4. **Final review command**: the required `as-task-review <parent-ref>` rerun that closes the spike
+5. **Done gate**: the spike is not complete until the declared sync targets are updated and the parent review result is reflected in the task tree
 
 8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
@@ -276,6 +284,7 @@ Do not treat "we now understand the design" as sufficient spike completion when 
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
      * [ ] Spike tasks declare whether they are `design-contract` or `proof-of-concept`
      * [ ] Spike tasks include explicit follow-up task(s) after the spike
+     * [ ] Spike tasks include a decision-complete Spike Completion Contract
      * [ ] Proof-of-concept spikes include a runnable proof artifact plan
 
 12. **Run Quality Pass (Better, Not More)**
@@ -507,6 +516,18 @@ GET/POST/PUT/DELETE /endpoint
 
 #### Verification Commands
 - [ ] [Command/check]: [Expected outcome]
+
+### Spike Completion Contract (Spike Tasks Only)
+<!-- Required for spike tasks. Remove if this is not a spike. -->
+<!-- Make the spike end-state explicit so completion cannot drift. -->
+
+- **Spike Type**: [Design-contract | Proof-of-concept]
+- **Completion Mode**: [recommendation-only | decompose-follow-up | archive/no-go]
+- **Parent Sync Target**: [Parent/orchestrator task ref that must be updated]
+- **Related Artifact Sync Targets**:
+  - [Task-local docs / sibling tasks / public docs to update, or "none"]
+- **Final Review Command**: [Usually `as-task-review <parent-ref>`]
+- **Done Gate**: [What must be synchronized before the spike can be marked done]
 
 ## Objective
 
