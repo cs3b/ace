@@ -88,8 +88,8 @@ describe "CodexClient" do
 
       assert_equal "codex", cmd[0]
       assert_includes cmd, "exec"
-      # Default model doesn't add --model flag
-      refute_includes cmd, "--model"
+      assert_includes cmd, "--model"
+      assert_includes cmd, "gpt-5.4"
     end
 
     it "includes model flag when non-default model specified" do

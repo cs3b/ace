@@ -192,7 +192,7 @@ module Ace
             end
 
             # Add model selection if not default
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 
@@ -226,7 +226,7 @@ module Ace
               cmd << "--sandbox" << options[:sandbox].to_s
             end
 
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 

@@ -105,7 +105,8 @@ describe "GeminiClient" do
     refute_includes cmd, "-i"        # No interactive flag
     assert_includes cmd, "--output-format"
     assert_includes cmd, "json"
-    refute_includes cmd, "--model"
+    assert_includes cmd, "--model"
+    assert_includes cmd, "gemini-2.5-flash"
     # Prompt should be in the command (as positional argument)
     assert cmd.any? { |arg| arg.include?("Test prompt") }
   end
