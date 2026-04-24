@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Corrected `ace-config-bootstrap-root-files` to sync `ace-support-core` and record from the sandbox root layout where the bootstrap files are actually created.
+
 ## [0.16.2] - 2026-04-24
 
 ### Technical
