@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
+
 ### Changed
 - **ace-assign v0.55.0**: Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so the forked child can send one final status sentence back to the origin pane with `ace-tmux send` while the parent drive session stays idle until that callback arrives.
 
