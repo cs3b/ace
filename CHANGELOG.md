@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **ace-task v0.36.4**: Tightened spike draft/work/review guidance so spike tasks must declare a completion contract, synchronize affected task/doc artifacts, and rerun parent `as-task-review` before they can be considered complete.
+- **ace-task v0.36.5**: Tightened spike outcome rules so every spike must leave a concrete outcome task whose type matches the completion mode, and so open-ended `reopen later if needed` closures are no longer valid.
+- **ace-tmux v0.17.2**: Clarified tmux usage guidance so speculative shared read-side follow-up is closed for now and any future expansion must start as a new task rather than reopening `8r6.t.xeu`.
 - **ace-assign v0.55.0**: Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so the forked child can send one final status sentence back to the origin pane with `ace-tmux send` while the parent drive session stays idle until that callback arrives.
 
 ### Technical
