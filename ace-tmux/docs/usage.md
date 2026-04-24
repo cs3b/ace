@@ -3,8 +3,8 @@ doc-type: user
 title: ace-tmux Usage
 purpose: Full CLI and configuration reference for ace-tmux.
 ace-docs:
-  last-updated: 2026-04-16
-  last-checked: 2026-04-16
+  last-updated: 2026-04-24
+  last-checked: 2026-04-24
 ---
 
 # Usage
@@ -186,7 +186,7 @@ Options:
 
 Behavior notes:
 
-- Capture is a live control-side pane-tail operation, not the persisted recording/reporting surface from `ace-tmux state`.
+- Capture is a live control-side pane-tail operation, not a generic read-side runtime inventory surface.
 - `--lines N` captures the visible bottom `N` rows for interactive CLI panes such as `codex`, `claude`, and `pi`.
 - Generic shell panes keep using a recent history tail instead of the current visible screen.
 - Interactive CLI captures may include visible draft/composer text when it is on screen.
@@ -356,7 +356,7 @@ Chained preset references are supported (depth-limited).
 ## Boundary Notes
 
 - `ace-tmux` control commands (`send`, `capture`, `wait`, `attach`, `detach`) define the live interaction surface.
-- Read-side runtime inventory and recording provenance remain separate concerns owned by the `ace-tmux state` / recording work tracked in sibling task `8r6.t.xeu`.
+- Read-side runtime inventory currently uses the shipped `ace-tmux list` surface; any richer follow-up remains a separate consumer-driven question tracked in sibling task `8r6.t.xeu`.
 
 ## Testing Contract
 
