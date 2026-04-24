@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-04-24
+
+### Changed
+- Clarified first-setup commit recovery across quick-start, package docs, and workflow guidance so users can inspect staged setup files, use the deterministic `--only-staged --no-split -m` path, and treat LLM-backed generation as optional after readiness checks.
+
 ## [0.26.2] - 2026-04-23
 
 

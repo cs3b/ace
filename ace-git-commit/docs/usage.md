@@ -136,16 +136,23 @@ When message generation fails during setup (for example missing credentials, una
 - The underlying provider/model error when available
 - Setup checks:
 
-  - `ace-llm --list-providers`
-  - `ace-config doctor`
+  - `bundle exec ace-llm --list-providers`
+  - `bundle exec ace-config doctor`
 
 - Deterministic fallback commit command:
 
 ```bash
-ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+bundle exec ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
 ```
 
-Explicit `-m/--message` remains deterministic and bypasses LLM generation.
+If a failed setup attempt may already have staged files, inspect the index first:
+
+```bash
+git status
+```
+
+Use `--no-split` for the initial setup snapshot when setup changes span multiple configuration scopes. Explicit
+`-m/--message` remains deterministic and bypasses LLM generation.
 
 ## Common Commands
 
