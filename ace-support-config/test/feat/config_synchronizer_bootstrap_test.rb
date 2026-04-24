@@ -30,7 +30,15 @@ module Ace
             refute_includes project_preset, "Coding Agent Workflow Toolkit (Meta)"
             assert_includes readme, "ace-task"
             assert_includes gitignore, ".ace-local/"
+            assert_includes agents, "ACE generated this starter guidance from `ace-support-core` defaults."
+            assert_includes agents, "Customize it for your repository-specific rules and workflows."
+            assert_includes agents, "ace-config sync ace-support-core --force"
+            assert_includes agents, "ace-handbook sync"
             assert_includes agents, "Run `ace-*` commands directly."
+            assert_includes claude, "ACE generated this starter guidance from `ace-support-core` defaults."
+            assert_includes claude, "Customize it for your repository-specific rules and workflows."
+            assert_includes claude, "ace-config sync ace-support-core --force"
+            assert_includes claude, "ace-handbook sync"
             assert_includes claude, "Do not use pipes, redirects, or shell post-processors"
           end
         end
@@ -61,7 +69,13 @@ module Ace
             synchronizer = Organisms::ConfigSynchronizer.new(force: true)
             synchronizer.send(:sync_gem, "ace-support-core")
 
+            assert_includes File.read("AGENTS.md"), "ACE generated this starter guidance from `ace-support-core` defaults."
+            assert_includes File.read("AGENTS.md"), "Customize it for your repository-specific rules and workflows."
+            assert_includes File.read("AGENTS.md"), "ace-config sync ace-support-core --force"
             assert_includes File.read("AGENTS.md"), "Run `ace-*` commands directly."
+            assert_includes File.read("CLAUDE.md"), "ACE generated this starter guidance from `ace-support-core` defaults."
+            assert_includes File.read("CLAUDE.md"), "Customize it for your repository-specific rules and workflows."
+            assert_includes File.read("CLAUDE.md"), "ace-config sync ace-support-core --force"
             assert_includes File.read("CLAUDE.md"), "Do not use pipes, redirects, or shell post-processors"
           end
         end

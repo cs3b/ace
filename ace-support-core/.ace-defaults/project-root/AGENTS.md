@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+ACE generated this starter guidance from `ace-support-core` defaults.
+Customize it for your repository-specific rules and workflows.
+Refresh the starter version with `bundle exec ace-config sync ace-support-core --force`.
+Run `bundle exec ace-handbook sync` separately when you need to refresh projected skill folders.
+
 Read `CLAUDE.md` first.
 
 ## ACE CLI Command Integrity
