@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Failed YAML tape verification by default when the final asciinema shell exit is non-zero, unless `verify.allow_nonzero_exit: true` opts out explicitly.
+- Surfaced non-zero cast exit codes in `record` / `verify` output and verification reports so broken recordings are diagnosable without opening the raw cast.
+
 ## [0.25.1] - 2026-04-16
 
 ### Fixed

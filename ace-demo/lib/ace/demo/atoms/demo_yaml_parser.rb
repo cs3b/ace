@@ -170,6 +170,13 @@ module Ace
           raise DemoYamlParseError, "verify must be a map in #{source_path}" unless verify.is_a?(Hash)
 
           normalized = {}
+          if verify.key?("allow_nonzero_exit")
+            normalized["allow_nonzero_exit"] = normalize_boolean(
+              verify["allow_nonzero_exit"],
+              "verify.allow_nonzero_exit",
+              source_path
+            )
+          end
           normalized["require_vars"] = normalize_string_list(verify["require_vars"], "verify.require_vars", source_path) if verify.key?("require_vars")
           normalized["require_output"] = normalize_string_list(verify["require_output"], "verify.require_output", source_path) if verify.key?("require_output")
           if verify.key?("require_output_sequence")
@@ -184,6 +191,13 @@ module Ace
           normalized
         end
         private_class_method :normalize_verify
+
+        def normalize_boolean(value, field, source_path)
+          return value if value == true || value == false
+
+          raise DemoYamlParseError, "#{field} must be a boolean in #{source_path}"
+        end
+        private_class_method :normalize_boolean
 
         def normalize_string_list(value, field, source_path)
           raise DemoYamlParseError, "#{field} must be an array in #{source_path}" unless value.is_a?(Array)

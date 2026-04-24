@@ -143,7 +143,7 @@ ace-demo record hello --pr 42 --dry-run
 - If commands are provided after `--`, `record` runs inline mode.
 - In normal mode, `record` uses tape resolution rules (see below).
 - `.tape.yml` paths default to `asciinema` backend: scenes compile to script, record to `.cast`, then convert to GIF with `agg`.
-- Asciinema YAML recordings are verified after capture. `verify:` rules can require exported variables, require visible output, require ordered output transitions, forbid error output, and run final-state assertions.
+- Asciinema YAML recordings are verified after capture. `verify:` rules can require exported variables, require visible output, require ordered output transitions, forbid error output, run final-state assertions, and optionally allow a non-zero final shell exit.
 - Verification failures are classified as `scenario_defect`, `product_bug`, or `verification_error`.
 - Any non-pass verification fails the record command, writes an error report to `.ace-local/demo/`, and prevents PR upload/comment.
 - `ace-demo verify <cast> --tape <tape>` re-runs verification for an existing `.cast` file; include `--sandbox-path` when you need assertion replay from a preserved failed-recording sandbox.
@@ -191,6 +191,7 @@ ace-demo verify /tmp/demo.cast --tape ./demo.tape.yml --report-dir /tmp/demo-rep
 
 - `verify` re-runs cast verification without re-recording the demo.
 - It requires a YAML tape (`.tape.yml` / `.tape.yaml`) because verification reads the `verify:` contract and scene commands from the parsed spec.
+- YAML tapes fail verification on a non-zero final shell exit by default; set `verify.allow_nonzero_exit: true` only for tapes that intentionally demonstrate failure behavior.
 - When `--sandbox-path` is omitted, `assert_commands` are skipped and the output reports that assertion replay did not run.
 - Non-pass results write a markdown+json verification report and exit non-zero.
 

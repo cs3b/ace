@@ -100,6 +100,7 @@ class CastVerifierTest < AceDemoTestCase
     assert_equal [], result.commands_missing
     assert_equal 0, result.details[:inputs_recorded]
     assert_equal 2, result.details[:script_commands_recorded]
+    assert_equal 0, result.details[:exit_code]
   end
 
   def test_uses_echoed_output_commands_for_interactive_asciinema_recordings
@@ -121,6 +122,42 @@ class CastVerifierTest < AceDemoTestCase
     assert_equal [], result.commands_missing
     assert_equal 0, result.details[:inputs_recorded]
     assert_equal 5, result.details[:echoed_commands_recorded]
+  end
+
+  def test_classifies_nonzero_final_exit_as_scenario_defect_by_default
+    cast_path = File.join(@tmp, "nonzero-exit.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","echo hi\\r\\n"]
+      [0.20,"o","pwd\\r\\n"]
+      [0.30,"x","2"]
+    CAST
+
+    result = @verifier.verify(cast_path: cast_path, tape_spec: @spec)
+
+    assert_equal false, result.success?
+    assert_equal "scenario-defect", result.status
+    assert_equal "scenario_defect", result.classification
+    assert_equal 2, result.details[:exit_code]
+  end
+
+  def test_allows_nonzero_final_exit_when_explicitly_configured
+    cast_path = File.join(@tmp, "allowed-nonzero-exit.cast")
+    File.write(cast_path, <<~CAST)
+      {"version":3,"command":"bash --noprofile --norc -i"}
+      [0.10,"o","echo hi\\r\\n"]
+      [0.20,"o","pwd\\r\\n"]
+      [0.30,"x","2"]
+    CAST
+
+    result = @verifier.verify(
+      cast_path: cast_path,
+      tape_spec: @spec.merge("verify" => {"allow_nonzero_exit" => true})
+    )
+
+    assert_equal true, result.success?
+    assert_equal "pass", result.status
+    assert_equal 2, result.details[:exit_code]
   end
 
   def test_classifies_missing_required_vars_as_scenario_defect
