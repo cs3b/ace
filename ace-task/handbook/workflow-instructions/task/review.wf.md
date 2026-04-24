@@ -128,7 +128,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **File Slug**: 4-7 word action slug for spec file
    - [ ] **No Slug Repetition**: Subtask slugs do not repeat words from parent folder slug
    - [ ] **Usage Documentation Present**: If task changes CLI/API/workflow/config interfaces, `ux/usage.md` exists with concrete usage scenarios
-   - [ ] **Spike Completion Contract Present**: Spike tasks explicitly declare completion mode, parent sync target, related artifact sync targets, final review command, and done gate
+   - [ ] **Spike Evaluation Contract Present**: spike-first parents declare Learning Targets Before Decomposition, spike subtasks declare Parent Goal Mapping, and spike tasks declare a Post-Spike Rewrite Contract with lifecycle handoff and done gate
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**
@@ -249,22 +249,22 @@ When the reviewed task is a completed spike, treat spike usefulness as a review 
   - **intentional and adopted**
   - **intentional but deferred to follow-up**
   - **spec miss that must be corrected**
-- Verify that the spike left a reusable adoption path:
-  - explicit outcome task(s) exist
-  - the outcome task type matches the declared completion mode
+- Verify that the spike resolved every declared learning target:
+  - each target ends as exactly one of `keep-in-family`, `split-to-new-subtask`, `already-satisfied`, or `explicitly-abandoned`
+  - no parent goal disappeared via scope rewrite
   - deferred gaps are named, not implied
   - any promised proof artifact exists if the spike was a proof-of-concept
-- Verify that spike closure happened cleanly:
+- Verify that spike rewrite happened cleanly:
   - the parent/orchestrator task was synchronized to the spike outcome
-  - all declared related artifact sync targets were updated or explicitly confirmed unaffected
-  - the declared final parent review command was rerun
-- Fail closed on spike usefulness if the spike completed without an explicit concrete outcome task, even if later implementation succeeded through ad-hoc decisions.
-- Treat `reopen later if needed` without a concrete closure/adoption task as a failed spike closure.
+  - all declared in-folder rewrite targets were updated or created
+  - any declared out-of-folder impacts were captured as new subtasks under the same parent
+- Fail closed on spike usefulness if the spike completed without resolving one or more declared learning targets, even if later implementation succeeded through ad-hoc decisions.
+- Treat `reopen later if needed` without a concrete target resolution as a failed spike result.
 - In the review summary for completed spikes, explicitly state whether the spike produced:
   - a reusable contract
   - a reusable proof artifact
-  - a reusable next-task decision
-  - a synchronized parent review outcome
+  - a rewritten task tree
+  - a synchronized parent outcome
 
 Treat "concept inventory exists" as insufficient by itself for a successful spike review when the spike was meant to guide real runtime or UX work.
 
@@ -299,7 +299,7 @@ Treat "concept inventory exists" as insufficient by itself for a successful spik
 - No loss of existing information
 - Clear improvement in task clarity or completeness
 - User receives actionable list of questions to answer (if any)
-- Completed spike reviews identify contract drift and verify explicit outcome tasks
+- Completed spike reviews identify contract drift and verify learning-target resolution
 
 ## Task Management Integration
 

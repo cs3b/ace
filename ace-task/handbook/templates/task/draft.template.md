@@ -127,6 +127,32 @@ GET/POST/PUT/DELETE /endpoint
 #### Verification Commands
 - [ ] [Command/check]: [Expected outcome]
 
+### Learning Targets Before Decomposition (Spike-First Parent Tasks Only)
+<!-- Required on the parent when decomposition intentionally starts with a spike. -->
+
+| Target ID | Parent goal / unresolved question | Why a spike is needed | If resolved differently, rewrite impact |
+|-----------|-----------------------------------|------------------------|-----------------------------------------|
+| LT1 | [Question / goal] | [Why review/planning alone is insufficient] | [Which in-folder tasks would likely change] |
+
+### Parent Goal Mapping (Spike Tasks Only)
+<!-- Required for spike subtasks. -->
+
+| Parent target ID | What the spike evaluates | Evidence / tracer / comparison | Rewrite targets if answer changes |
+|------------------|--------------------------|--------------------------------|-----------------------------------|
+| LT1 | [Evaluation scope] | [What the spike checks] | [Parent / subtasks in same task folder] |
+
+### Post-Spike Rewrite Contract (Spike Tasks Only)
+<!-- Required for spike tasks. Remove if this is not a spike. -->
+
+- **Spike Type**: [Design-contract | Proof-of-concept]
+- **Parent Rewrite Target**: [Parent/orchestrator task ref that must be rewritten]
+- **Affected Task Rewrite Targets**:
+  - [Active subtasks in the same task folder the spike may rewrite or create, or "none"]
+- **Out-of-Folder Follow-Up Subtasks**:
+  - [Docs/packages/workflows outside the task folder that require a new subtask under the same parent, or "none"]
+- **Lifecycle Handoff**: [Usually "After rewrite, later `as-task-review <parent-ref>` decides lifecycle"]
+- **Done Gate**: [What must be rewritten in-folder, which new subtasks must exist for out-of-folder drift, and how each learning target must be resolved before the spike can be marked done]
+
 ## Objective
 
 Why are we doing this? Focus on user value and behavioral outcomes.

@@ -79,9 +79,11 @@ Work through the plan checklist, step by step:
 - `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress -- the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification
 - Never modify task frontmatter directly -- use `ace-task update <ref> --set key=value`
-- If the task implements a spike outcome, verify before marking done that deferred gaps and adoption follow-ups are explicit rather than left implicit in release notes or retrospectives.
-- If the task is a spike, treat the spec's **Spike Completion Contract** as mandatory. Before marking the spike done, ensure the declared concrete outcome task exists, update the parent sync target, update all declared related artifact sync targets, and rerun `as-task-review` on the declared parent task.
-- Do not mark a spike done while the parent task or directly affected sibling/public docs still describe the pre-spike contract.
+- If the task implements a spike outcome, verify before marking done that deferred gaps and ownership changes are explicit rather than left implicit in release notes or retrospectives.
+- If the task is a spike, treat the spec's **Parent Goal Mapping** and **Post-Spike Rewrite Contract** as mandatory. Before marking the spike done, resolve every declared parent learning target, update the parent rewrite target, and update or create all declared in-folder affected task rewrite targets.
+- Do not mark a spike done while the parent task or directly affected active tasks in the same task folder still describe the pre-spike contract.
+- A spike must not modify files outside its own task folder. If the spike discovers drift in package docs, handbook assets, or any other out-of-folder files, capture that work as a new subtask under the current parent instead of editing those files in the spike.
+- Do not rerun `as-task-review` from inside the spike unless the task explicitly says review is part of a separate non-spike follow-up. Spikes rewrite task truth first; later review decides lifecycle.
 
 ## Code Conventions
 

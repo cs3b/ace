@@ -154,3 +154,38 @@ For complex tasks requiring analysis or design decisions, include both sections:
 7. Do visual markers distinguish planning (`* [ ]`) from execution (`- [ ]`) steps?
 
 Tick them all → merge the ticket.
+
+---
+
+## Spike Tasks: treat them as learning mechanisms, not pseudo-features
+
+Use a spike only when the parent has a real goal but one or more critical questions would make later decomposition unstable.
+
+### Rules
+
+1. The parent must already own a real product/runtime goal.
+2. The spike is only a learning subtask against that parent goal.
+3. The spike may not silently redefine or narrow the parent.
+4. The spike rewrites the task tree inside its own task folder after it learns.
+5. The spike must not edit files outside its own task folder. If it finds out-of-folder drift, it creates a new subtask under the same parent.
+6. Later `as-task-review` decides lifecycle after the rewrite; the spike itself should not fabricate closure work just to satisfy process.
+
+### Required sections for spike-first parents
+
+- `Learning Targets Before Decomposition`
+- one row per unresolved parent goal/question
+- each row states why a spike is needed and what might need to be rewritten
+
+### Required sections for spike subtasks
+
+- `Parent Goal Mapping`
+- `Post-Spike Rewrite Contract`
+
+Every mapped learning target must end as exactly one of:
+
+- `keep-in-family`
+- `split-to-new-subtask`
+- `already-satisfied`
+- `explicitly-abandoned`
+
+`reopen later if needed` is not a valid result. A spike is successful only when the affected in-folder tasks have already been rewritten around what was learned and any out-of-folder impacts have been captured as follow-up subtasks under the same parent.

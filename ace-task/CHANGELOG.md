@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.6] - 2026-04-24
+
+### Changed
+
+- Redesigned spike-task guidance around evaluation against real parent goals instead of closure mechanics alone. Spike-first parents must now declare `Learning Targets Before Decomposition`, spike subtasks must map those targets explicitly, and spikes rewrite the active in-folder task tree before later review decides lifecycle.
+- Restricted spike mutation scope to the task folder. Spikes must no longer edit package docs, handbook files, or other out-of-folder assets directly; they capture those impacts as new subtasks under the same parent instead.
+
 ## [0.36.5] - 2026-04-24
 
 ### Changed
