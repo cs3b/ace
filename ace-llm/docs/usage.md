@@ -165,7 +165,9 @@ Output uses the format:
 
 ### Provider credential setup reference
 
-Use `ace-llm --list-providers` as the canonical source of truth for active providers and setup hints.
+Use `ace-llm --list-providers` as the canonical source of truth for active providers and setup hints. This is a
+discovery command, not a readiness guarantee for configured ACE workflows or roles. After provider discovery, run
+`ace-config doctor` to verify setup readiness, including package/config checks and optional live execution probes.
 
 ### Check exact provider reachability
 
