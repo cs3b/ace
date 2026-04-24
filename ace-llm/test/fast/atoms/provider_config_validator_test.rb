@@ -16,6 +16,10 @@ module Ace
           "class" => "TestProvider::Client",
           "gem" => "test-provider-gem",
           "models" => ["model1", "model2"],
+          "limits" => {
+            "default" => {"context" => 200_000, "output" => 8_192},
+            "models" => {"model2" => {"context" => 400_000}}
+          },
           "api_key" => {
             "env" => "TEST_API_KEY",
             "required" => true
@@ -99,6 +103,24 @@ module Ace
         result = @validator.validate(config)
         assert result.valid?
         assert result.warnings.any? { |w| w.include?("Invalid model entry") }
+      end
+
+      def test_invalid_limits_structure
+        config = {
+          "name" => "test",
+          "class" => "Test::Client",
+          "gem" => "test-gem",
+          "limits" => {
+            "default" => {"context" => "bad"},
+            "models" => {"model1" => {"extra" => 1}}
+          }
+        }
+
+        result = @validator.validate(config)
+
+        refute result.valid?
+        assert_includes result.errors.join(" "), "limits.default.context must be a non-negative Integer"
+        assert_includes result.errors.join(" "), "limits.models.model1 contains unknown keys: extra"
       end
 
       def test_api_key_with_env

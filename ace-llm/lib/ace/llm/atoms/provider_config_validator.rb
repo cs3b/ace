@@ -11,6 +11,7 @@ module Ace
         # Optional fields with expected types
         OPTIONAL_FIELDS = {
           "models" => Array,
+          "limits" => Hash,
           "api_key" => [Hash, NilClass],
           "capabilities" => Array,
           "default_options" => Hash,
@@ -69,6 +70,7 @@ module Ace
           validate_class(config["class"], errors) if config["class"]
           validate_gem(config["gem"], errors) if config["gem"]
           validate_models(config["models"], warnings) if config["models"]
+          validate_limits(config["limits"], errors, warnings) if config["limits"]
           validate_api_key(config["api_key"], errors, warnings) if config["api_key"]
           validate_capabilities(config["capabilities"], warnings) if config["capabilities"]
           validate_default_options(config["default_options"], warnings) if config["default_options"]
@@ -144,6 +146,57 @@ module Ace
             unless model.is_a?(String) && !model.strip.empty?
               warnings << "Invalid model entry: #{model.inspect} (must be non-empty string)"
             end
+          end
+        end
+
+        def validate_limits(limits, errors, warnings)
+          unless limits.is_a?(Hash)
+            errors << "Limits must be a Hash, got #{limits.class}"
+            return
+          end
+
+          valid_limit_keys = %w[default models]
+          unknown_limit_keys = limits.keys - valid_limit_keys
+          unless unknown_limit_keys.empty?
+            warnings << "Unknown limits keys: #{unknown_limit_keys.join(", ")}"
+          end
+
+          validate_limit_entry(limits["default"], "limits.default", errors) if limits["default"]
+
+          return unless limits["models"]
+
+          unless limits["models"].is_a?(Hash)
+            errors << "limits.models must be a Hash, got #{limits["models"].class}"
+            return
+          end
+
+          limits["models"].each do |model_name, entry|
+            if model_name.to_s.strip.empty?
+              errors << "limits.models entries must have non-empty model names"
+              next
+            end
+
+            validate_limit_entry(entry, "limits.models.#{model_name}", errors)
+          end
+        end
+
+        def validate_limit_entry(entry, path, errors)
+          unless entry.is_a?(Hash)
+            errors << "#{path} must be a Hash, got #{entry.class}"
+            return
+          end
+
+          valid_keys = %w[context output]
+          unknown_keys = entry.keys - valid_keys
+          unless unknown_keys.empty?
+            errors << "#{path} contains unknown keys: #{unknown_keys.join(", ")}"
+          end
+
+          entry.each do |field, value|
+            next unless valid_keys.include?(field)
+            next if value.is_a?(Integer) && value >= 0
+
+            errors << "#{path}.#{field} must be a non-negative Integer"
           end
         end
 

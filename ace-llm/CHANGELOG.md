@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-04-24
+
+### Added
+- Added shared resolved-model limit lookup so alias, role, and preset-expanded concrete provider/model targets can read merged context and output limits from provider config.
+
+### Changed
+- Updated provider config validation and downstream callers to use the new `limits` schema and the expanded concrete model target instead of provider-wide limit assumptions.
+
 ## [0.37.1] - 2026-04-23
 
 

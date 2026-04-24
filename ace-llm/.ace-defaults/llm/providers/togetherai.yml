@@ -1,20 +1,45 @@
 name: togetherai
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::TogetherAIClient
 gem: ace-llm
-context_limit: 128000
 models:
-  - MiniMaxAI/MiniMax-M2.5
-  - MiniMaxAI/MiniMax-M2.7
-  - Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
-  - Qwen/Qwen3-Coder-Next-FP8
-  - Qwen/Qwen3.5-397B-A17B
-  - essentialai/Rnj-1-Instruct
-  - google/gemma-4-31B-it
-  - moonshotai/Kimi-K2.5
-  - moonshotai/Kimi-K2.6
-  - openai/gpt-oss-120b
-  - zai-org/GLM-5.1
+- MiniMaxAI/MiniMax-M2.5
+- MiniMaxAI/MiniMax-M2.7
+- Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
+- Qwen/Qwen3-Coder-Next-FP8
+- Qwen/Qwen3.5-397B-A17B
+- essentialai/Rnj-1-Instruct
+- google/gemma-4-31B-it
+- moonshotai/Kimi-K2.5
+- moonshotai/Kimi-K2.6
+- openai/gpt-oss-120b
+- zai-org/GLM-5.1
+limits:
+  default:
+    context: 262144
+    output: 262144
+  models:
+    MiniMaxAI/MiniMax-M2.5:
+      context: 204800
+      output: 131072
+    MiniMaxAI/MiniMax-M2.7:
+      context: 202752
+      output: 131072
+    Qwen/Qwen3.5-397B-A17B:
+      output: 130000
+    essentialai/Rnj-1-Instruct:
+      context: 32768
+      output: 32768
+    google/gemma-4-31B-it:
+      output: 131072
+    moonshotai/Kimi-K2.6:
+      output: 131000
+    openai/gpt-oss-120b:
+      context: 131072
+      output: 131072
+    zai-org/GLM-5.1:
+      context: 202752
+      output: 131072
 aliases:
   model:
     qwen-coder: Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
@@ -27,8 +52,8 @@ api_key:
   required: true
   description: Together AI API key
 capabilities:
-  - text_generation
-  - streaming
+- text_generation
+- streaming
 default_options:
   temperature: 0.7
   max_tokens: 16384

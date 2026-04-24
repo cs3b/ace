@@ -1,20 +1,45 @@
 name: mistral
-last_synced: 2026-04-23
+last_synced: 2026-04-24
 class: Ace::LLM::Organisms::MistralClient
 gem: ace-llm
-context_limit: 128000
 models:
-  - codestral-latest
-  - devstral-2512
-  - devstral-medium-2507
-  - devstral-medium-latest
-  - devstral-small-2507
-  - labs-devstral-small-2512
-  - mistral-large-latest
-  - mistral-medium-2508
-  - mistral-medium-latest
-  - mistral-small-2603
-  - mistral-small-latest
+- codestral-latest
+- devstral-2512
+- devstral-medium-2507
+- devstral-medium-latest
+- devstral-small-2507
+- labs-devstral-small-2512
+- mistral-large-latest
+- mistral-medium-2508
+- mistral-medium-latest
+- mistral-small-2603
+- mistral-small-latest
+limits:
+  default:
+    context: 262144
+    output: 262144
+  models:
+    codestral-latest:
+      context: 256000
+      output: 4096
+    devstral-medium-2507:
+      context: 128000
+      output: 128000
+    devstral-small-2507:
+      context: 128000
+      output: 128000
+    labs-devstral-small-2512:
+      context: 256000
+      output: 256000
+    mistral-medium-latest:
+      context: 128000
+      output: 16384
+    mistral-small-2603:
+      context: 256000
+      output: 256000
+    mistral-small-latest:
+      context: 256000
+      output: 256000
 aliases:
   global:
     mistral-large: mistral:large
@@ -31,9 +56,9 @@ api_key:
   required: true
   description: Mistral AI API key
 capabilities:
-  - text_generation
-  - streaming
-  - code_generation
+- text_generation
+- streaming
+- code_generation
 default_options:
   temperature: 0.7
   max_tokens: 16384
