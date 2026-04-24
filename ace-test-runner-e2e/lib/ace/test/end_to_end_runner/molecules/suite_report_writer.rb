@@ -27,7 +27,8 @@ module Ace
 
           REPORT_KINDS = {
             package: ->(timestamp, package) { "#{timestamp}-#{package}-report.md" },
-            suite: ->(timestamp, _package) { "#{timestamp}-suite-report.md" }
+            suite: ->(timestamp, _package) { "#{timestamp}-suite-report.md" },
+            suite_final: ->(timestamp, _package) { "#{timestamp}-suite-final-report.md" }
           }.freeze
 
           # Write an aggregated report
@@ -68,6 +69,44 @@ module Ace
             report_path
           end
 
+          # Write a deterministic wrapper report for a two-attempt suite run.
+          #
+          # Preserves first-pass failure evidence while reflecting the final retry outcome.
+          def write_retry_summary(initial_results:, retry_results:, timestamp:, base_dir:, package: "suite")
+            cache_dir = File.join(base_dir, ".ace-local", "test-e2e")
+            FileUtils.mkdir_p(cache_dir)
+
+            report_path = File.join(cache_dir, report_filename(:suite_final, timestamp, package))
+            initial_entries = flatten_attempt_results(initial_results, base_dir: base_dir)
+            retry_entries = flatten_attempt_results(retry_results, base_dir: base_dir)
+            retry_by_test = retry_entries.each_with_object({}) { |entry, memo| memo[entry[:test_id]] = entry }
+
+            flaky_entries = initial_entries.filter_map do |entry|
+              next if entry[:status] == "pass"
+
+              retry_entry = retry_by_test[entry[:test_id]]
+              next unless retry_entry && retry_entry[:status] == "pass"
+
+              entry.merge(retry_entry: retry_entry)
+            end.sort_by { |entry| entry[:test_id] }
+            remaining_entries = retry_entries.reject { |entry| entry[:status] == "pass" }.sort_by { |entry| entry[:test_id] }
+            final_status = compute_retry_summary_status(retry_entries)
+
+            content = build_retry_summary_content(
+              timestamp: timestamp,
+              initial_results: initial_results,
+              retry_results: retry_results,
+              initial_entries: initial_entries,
+              flaky_entries: flaky_entries,
+              remaining_entries: remaining_entries,
+              final_status: final_status,
+              base_dir: base_dir
+            )
+
+            File.write(report_path, content)
+            report_path
+          end
+
           private
 
           def report_filename(report_kind, timestamp, package)
@@ -75,6 +114,148 @@ module Ace
             raise ArgumentError, "Unknown report kind: #{report_kind}" unless builder
 
             builder.call(timestamp, package)
+          end
+
+          def flatten_attempt_results(results, base_dir:)
+            results.fetch(:packages, {}).values.flatten.map do |result|
+              report_dir = result[:report_dir]
+              metadata = read_retry_metadata(report_dir)
+              report_frontmatter = read_report_frontmatter(report_dir)
+              test_name = result[:test_name] || result[:test_id] || ""
+              test_id = metadata["test-id"] || canonical_retry_test_id(test_name)
+              failed_entries = Array(metadata["failed"]).filter_map do |entry|
+                next unless entry.is_a?(Hash)
+
+                {
+                  tc: entry["tc"] || entry[:tc],
+                  category: entry["category"] || entry[:category] || "runner-error",
+                  evidence: entry["evidence"] || entry[:evidence] || "See attempt report for details"
+                }
+              end
+              if failed_entries.empty? && result[:status] != "pass"
+                failed_entries << {
+                  tc: nil,
+                  category: result[:status] || "runner-error",
+                  evidence: result[:summary] || result[:error] || "See attempt report for details"
+                }
+              end
+
+              {
+                test_id: test_id,
+                title: report_frontmatter["title"] || test_id,
+                status: result[:status],
+                report_dir: report_dir,
+                report_dir_display: display_path(report_dir, base_dir),
+                report_dir_name: report_dir ? File.basename(report_dir) : nil,
+                failed_entries: failed_entries,
+                passed_cases: result[:passed_cases] || metadata["tcs-passed"] || metadata.dig("results", "passed") || 0,
+                total_cases: result[:total_cases] || metadata["tcs-total"] || metadata.dig("results", "total") || 0
+              }
+            end
+          end
+
+          def read_retry_metadata(report_dir)
+            return {} unless report_dir
+
+            path = File.join(report_dir, "metadata.yml")
+            return {} unless File.exist?(path)
+
+            YAML.safe_load_file(path, permitted_classes: [Time, Date]) || {}
+          rescue
+            {}
+          end
+
+          def canonical_retry_test_id(test_name)
+            match = test_name.to_s.match(/\A(TS-[A-Z0-9]+-\d+[a-z]*)/i)
+            match ? match[1].upcase : test_name
+          end
+
+          def display_path(path, base_dir)
+            return nil if path.nil?
+
+            path.start_with?(base_dir) ? path.delete_prefix("#{base_dir}/") : path
+          end
+
+          def compute_retry_summary_status(entries)
+            executed = entries.reject { |entry| entry[:status] == "skip" }
+            return "skip" if executed.empty?
+            return "pass" if executed.all? { |entry| entry[:status] == "pass" }
+            return "partial" if executed.any? { |entry| entry[:status] == "pass" }
+
+            "fail"
+          end
+
+          def build_retry_summary_content(timestamp:, initial_results:, retry_results:, initial_entries:, flaky_entries:, remaining_entries:, final_status:, base_dir:)
+            total_initial_failures = initial_entries.count { |entry| entry[:status] != "pass" }
+            lines = []
+            lines << "---"
+            lines << "suite-id: #{timestamp}"
+            lines << "package: suite"
+            lines << "status: #{final_status}"
+            lines << "retry-attempted: true"
+            lines << "flaky-scenarios: #{flaky_entries.length}"
+            lines << "remaining-failures: #{remaining_entries.length}"
+            lines << "attempt-1-report: #{display_path(initial_results[:report_path], base_dir)}"
+            lines << "attempt-2-report: #{display_path(retry_results[:report_path], base_dir)}"
+            lines << "---"
+            lines << ""
+            lines << "# E2E Final Suite Report: `suite`"
+            lines << ""
+            lines << "## Attempt Summary"
+            lines << ""
+            lines << "| Attempt | Report | Status | Scenarios | Failures |"
+            lines << "|---|---|---:|---:|---:|"
+            lines << "| 1 | `#{display_path(initial_results[:report_path], base_dir)}` | #{initial_results[:failed].to_i > 0 || initial_results[:errors].to_i > 0 ? "Fail" : "Pass"} | #{initial_results[:total]} | #{initial_results[:failed].to_i + initial_results[:errors].to_i} |"
+            lines << "| 2 | `#{display_path(retry_results[:report_path], base_dir)}` | #{retry_results[:failed].to_i > 0 || retry_results[:errors].to_i > 0 ? "Fail" : "Pass"} | #{retry_results[:total]} | #{retry_results[:failed].to_i + retry_results[:errors].to_i} |"
+            lines << ""
+            lines << "First-pass failing scenarios: #{total_initial_failures}"
+            lines << "Recovered on retry (flaky): #{flaky_entries.length}"
+            lines << "Remaining failures after retry: #{remaining_entries.length}"
+            lines << ""
+            lines << "## Flaky Recoveries"
+            lines << ""
+            if flaky_entries.empty?
+              lines << "None."
+            else
+              flaky_entries.each do |entry|
+                lines << "### #{entry[:test_id]}"
+                lines << ""
+                lines << "- Title: #{entry[:title]}"
+                lines << "- Attempt 1 status: `#{entry[:status]}`"
+                lines << "- Attempt 1 report directory: `#{entry[:report_dir_display]}`"
+                lines << "- Attempt 2 report directory: `#{entry[:retry_entry][:report_dir_display]}`"
+                entry[:failed_entries].each do |failure|
+                  lines << "- #{format_failure_entry(failure)}"
+                end
+                lines << ""
+              end
+            end
+            lines << "## Remaining Failures"
+            lines << ""
+            if remaining_entries.empty?
+              lines << "None."
+            else
+              remaining_entries.each do |entry|
+                lines << "### #{entry[:test_id]}"
+                lines << ""
+                lines << "- Title: #{entry[:title]}"
+                lines << "- Attempt 2 status: `#{entry[:status]}`"
+                lines << "- Attempt 2 report directory: `#{entry[:report_dir_display]}`"
+                entry[:failed_entries].each do |failure|
+                  lines << "- #{format_failure_entry(failure)}"
+                end
+                lines << ""
+              end
+            end
+
+            lines.join("\n")
+          end
+
+          def format_failure_entry(failure)
+            tc = failure[:tc] || failure["tc"]
+            category = failure[:category] || failure["category"] || "runner-error"
+            evidence = failure[:evidence] || failure["evidence"] || "See attempt report for details"
+            tc ? "`#{tc}` (`#{category}`) - #{evidence}" : "`#{category}` - #{evidence}"
           end
 
           # Attempt LLM synthesis for narrative sections only, falling back to

@@ -31,7 +31,8 @@ module Ace
           # @param timestamp_generator Timestamp generator (injectable)
           def initialize(max_parallel: 4, base_dir: nil, discoverer: nil, affected_detector: nil,
             failure_finder: nil, output: $stdout, use_color: nil, progress: false,
-            suite_report_writer: nil, scenario_loader: nil, timestamp_generator: nil)
+            suite_report_writer: nil, scenario_loader: nil, timestamp_generator: nil,
+            runtime_builder: nil, shared_runtime_cache_root: nil)
             @max_parallel = max_parallel
             @base_dir = base_dir || Dir.pwd
             @discoverer = discoverer || Molecules::TestDiscoverer.new
@@ -44,6 +45,14 @@ module Ace
             @suite_report_writer = suite_report_writer || Molecules::SuiteReportWriter.new(config: config)
             @loader = scenario_loader || Molecules::ScenarioLoader.new
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
+            @runtime_builder = runtime_builder || Molecules::SandboxRuntimeBuilder.new(
+              source_root: @base_dir,
+              ruby_version: config.dig("sandbox", "ruby_version") || Molecules::ConfigLoader.default_sandbox_ruby_version
+            )
+            @shared_runtime_cache_root = File.expand_path(
+              shared_runtime_cache_root || File.join(@base_dir, Molecules::SandboxRuntimeBuilder::DEFAULT_SHARED_RUNTIME_CACHE_ROOT)
+            )
+            @shared_runtime_root = nil
           end
 
           # Run E2E tests across all packages
@@ -124,6 +133,7 @@ module Ace
 
             total_tests = package_tests.values.flatten.size
             pkg_count = package_tests.keys.size
+            prepare_shared_runtime_cache if total_tests > 0
 
             # Pre-compute column widths for aligned output
             compute_column_widths(package_tests)
@@ -330,7 +340,7 @@ module Ace
             cmd_array = build_test_command(package, test_file, options, run_id: run_id)
 
             # Spawn process with array form (no shell invocation)
-            stdin, stdout, stderr, thread = Open3.popen3(*cmd_array, chdir: @base_dir)
+            stdin, stdout, stderr, thread = Open3.popen3(suite_subprocess_env, *cmd_array, chdir: @base_dir)
 
             {pid: thread.pid, thread: thread, stdout: stdout, stderr: stderr,
              stdin: stdin, package: package, test_file: test_file, output: String.new}
@@ -393,6 +403,18 @@ module Ace
           def e2e_executable_path
             local = File.join(@base_dir, "bin", "ace-test-e2e")
             File.executable?(local) ? local : "ace-test-e2e"
+          end
+
+          def prepare_shared_runtime_cache
+            @shared_runtime_root = @runtime_builder.prepare_shared_runtime(
+              cache_root: @shared_runtime_cache_root
+            )
+          end
+
+          def suite_subprocess_env
+            return {} if @shared_runtime_root.to_s.empty?
+
+            {Molecules::SandboxRuntimeBuilder::SHARED_RUNTIME_ENV_KEY => @shared_runtime_root}
           end
 
           # Extract test ID from file path
@@ -864,7 +886,7 @@ module Ace
           # @return [Hash] Test result
           def run_single_test(package, test_file, options, run_id: nil)
             cmd_array = build_test_command(package, test_file, options, run_id: run_id)
-            output, stderr, status = Open3.capture3(*cmd_array, chdir: @base_dir)
+            output, stderr, status = Open3.capture3(suite_subprocess_env, *cmd_array, chdir: @base_dir)
 
             # Combine stdout and stderr for parsing
             combined_output = output + stderr

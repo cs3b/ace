@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-04-24
+
+### Changed
+- Added `--[no-]retry-failures-once` for full-suite reruns, including flaky-recovery reporting when a failed first pass succeeds on the retry pass.
+- Reused a suite-shared E2E runtime cache under `.ace-local/test-e2e/runtime-cache/` so parallel sandbox workers stop rebuilding the same Bundler environment and native extensions for every scenario.
+
 ## [0.38.17] - 2026-04-24
 
 ### Fixed
